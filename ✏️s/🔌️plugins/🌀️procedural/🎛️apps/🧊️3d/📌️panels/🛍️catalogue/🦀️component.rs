@@ -27,7 +27,7 @@ fn tree_item_with_icon(id: impl Into<String>, label: impl Into<semio_framework_p
 }
 
 pub fn render(labels: &Procedural3dLabels) -> UiNode {
-    let sections = flow_core::flow_palette_catalogue_sections();
+    let sections = flow::flow_palette_catalogue_sections();
     let items: Vec<UiTreeItemNode> = sections
         .iter()
         .flat_map(|section| {

@@ -132,7 +132,7 @@ pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: None,
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::Many,
+        multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 
@@ -147,7 +147,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: Some("2d.map".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::Many,
+        multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 

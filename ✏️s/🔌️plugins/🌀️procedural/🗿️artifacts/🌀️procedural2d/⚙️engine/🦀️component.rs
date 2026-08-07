@@ -3,10 +3,10 @@
 use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::artifacts::procedural2d::dsl::PROCEDURAL2D_EXAMPLE_TEXT;
 use crate::artifacts::procedural2d::Procedural2dDocument;
-use flow_core::dag::DagFixture;
-use flow_core::forms_bridge::apply_generation_values_to_fixture;
-use flow_core::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowFixture, FlowHost};
-use flow_core::render_scene_json;
+use flow::dag::DagFixture;
+use flow::forms_bridge::apply_generation_values_to_fixture;
+use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowFixture, FlowHost};
+use flow::render_scene_json;
 use playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
 use store::DocumentDsl;
@@ -31,7 +31,7 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: None,
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::One,
+            multiplicity: semio_framework::PortMultiplicity::One,
         },
         semio_framework_plugin::MediaPortSpec {
             id: "drawing:out".into(),
@@ -40,7 +40,7 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
             kind_id: Some("2d.drawing".into()),
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::Many,
+            multiplicity: semio_framework::PortMultiplicity::Many,
         },
     ])
 }
@@ -229,7 +229,7 @@ pub fn procedural2d_document_json_to_svg(value: &Value) -> Result<(String, u32, 
     semio_framework_os::title_card_svg(value, "Procedural 2D", 1024, 768)
 }
 
-pub fn procedural2d_document_from_dwg(_drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
+pub fn procedural2d_document_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
     serde_json::to_value(default_projection()).map_err(|err| err.to_string())
 }
 
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn document_from_dwg_returns_valid_default_projection() {
-        let drawing = semio_framework_core::DwgDrawing::default();
+        let drawing = semio_framework::DwgDrawing::default();
         let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
         let projection: Procedural2dDocument = serde_json::from_value(document).expect("parseable projection");
         assert_eq!(projection.fixture.schema, "flow.fixture");

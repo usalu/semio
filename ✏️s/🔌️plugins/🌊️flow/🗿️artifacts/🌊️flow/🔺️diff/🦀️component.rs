@@ -1,7 +1,7 @@
 //! 🔺️ Flow artifact — the operation diff (constitutional: diff).
 //!
 //! `FlowDiff` and its `protocol::OperationDiff<FlowFixture>` impl are implemented directly in the flow
-//! kernel crate (`flow_core`, `🔖️Operations` region) alongside the `FlowFixture` projection they patch —
+//! kernel crate (`flow`, `🔖️Operations` region) alongside the `FlowFixture` projection they patch —
 //! see `🗿️artifacts/🌊️flow/🦀️component.rs` for why. Re-exported here so the artifact's diff slot names an
 //! artifact-owned symbol.
 
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-pub use flow_core::FlowDiff;
+pub use flow::FlowDiff;
 //#endregion 🔖️Types
 
 //#region 🧪️Tests

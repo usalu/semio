@@ -131,9 +131,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "raster", label: "Raster", version: "0.1.0",
-    setup: artifacts::raster::engine::register,
-    apps: [ apps::raster::create_raster_app => apps::raster::RasterPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

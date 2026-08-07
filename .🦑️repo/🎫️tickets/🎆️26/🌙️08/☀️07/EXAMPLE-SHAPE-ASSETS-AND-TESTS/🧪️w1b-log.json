@@ -1,0 +1,9 @@
+{
+  "wave": "w1b",
+  "status": "done",
+  "changed": [
+    "os/plugin/component.rs ExampleSource+example_source",
+    "fixture-sweep soft-migration for 🖼️assets"
+  ],
+  "notes": "example() delegates to example_source; sweep accepts assets or legacy plural during migration."
+}

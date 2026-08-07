@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧰️ `@semio-tech/framework-core` router: `bun ./📜️script.ts test`. */
+/** @emoji 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {

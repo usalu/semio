@@ -182,7 +182,7 @@ pub fn validate_ui_node(node: &UiNode, limits: &RenderPlanLimits) -> Result<(), 
     walk_ui_node(node, 1, limits, &mut state)
 }
 
-pub fn validate_window_body_surface(kind: &semio_framework_core::WindowKindDefinition, node: &UiNode) -> Result<(), String> {
+pub fn validate_window_body_surface(kind: &semio_framework::WindowKindDefinition, node: &UiNode) -> Result<(), String> {
     match node {
         UiNode::ComponentScene(scene) if scene.component_kind != kind.surface_kind => Err(format!("window {} declared {} but program returned {}", kind.id, kind.surface_kind.as_str(), scene.component_kind.as_str())),
         _ => Ok(()),
@@ -330,16 +330,16 @@ fn decode_drop_payload(payload: &DragPayload) -> Option<serde_json::Map<String, 
 
 /// 🔀️ `{...existing, ...patch}` (patch wins on key collision) — mirrors
 /// `framework/renderer/react/index.tsx`'s `dispatchUiAction` merge order exactly.
-fn merge_action_args(existing: Option<&semio_framework_core::DslValue>, patch: serde_json::Map<String, Value>) -> Option<semio_framework_core::DslValue> {
+fn merge_action_args(existing: Option<&semio_framework::DslValue>, patch: serde_json::Map<String, Value>) -> Option<semio_framework::DslValue> {
     let mut base = match existing {
-        Some(dsl) => match semio_framework_core::from_dsl_value::<Value>(dsl.clone()) {
+        Some(dsl) => match semio_framework::from_dsl_value::<Value>(dsl.clone()) {
             Ok(Value::Object(map)) => map,
             _ => serde_json::Map::new(),
         },
         None => serde_json::Map::new(),
     };
     base.extend(patch);
-    semio_framework_core::optional_json_to_dsl(Some(Value::Object(base)))
+    semio_framework::optional_json_to_dsl(Some(Value::Object(base)))
 }
 
 /// 📋️ Writes to the OS clipboard via `ui_wgpu::wgpu::host` — the one indirection this module's own tests
@@ -692,7 +692,7 @@ mod ui_command_wiring_tests {
     use super::*;
 
     fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args: semio_framework_core::optional_json_to_dsl(args) }
+        ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args: semio_framework::optional_json_to_dsl(args) }
     }
 
     fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
@@ -726,12 +726,12 @@ mod ui_command_wiring_tests {
     #[test]
     fn merge_action_args_lets_the_patch_win_over_existing_args() {
         let existing = serde_json::json!({"id": "abc", "kept": true});
-        let existing_dsl = semio_framework_core::to_dsl_value(&existing).unwrap();
+        let existing_dsl = semio_framework::to_dsl_value(&existing).unwrap();
         let mut patch = serde_json::Map::new();
         patch.insert("id".to_string(), Value::from("overridden"));
         patch.insert("targetId".to_string(), Value::from("t1"));
 
-        let merged = semio_framework_core::from_dsl_value::<Value>(merge_action_args(Some(&existing_dsl), patch).expect("merged args")).expect("json args");
+        let merged = semio_framework::from_dsl_value::<Value>(merge_action_args(Some(&existing_dsl), patch).expect("merged args")).expect("json args");
 
         assert_eq!(merged.get("id").and_then(Value::as_str), Some("overridden"));
         assert_eq!(merged.get("kept").and_then(Value::as_bool), Some(true));
@@ -774,8 +774,8 @@ mod ui_command_wiring_tests {
         assert_eq!(queued[0].controller_id, "ctrl");
         assert_eq!(queued[0].action, "onDrop");
         let args = queued[0].args.as_ref().expect("merged args");
-        assert_eq!(args.get("id").and_then(semio_framework_core::DslValue::as_str), Some("abc"), "the decoded payload should flow through");
-        assert_eq!(args.get("kept").and_then(semio_framework_core::DslValue::as_bool), Some(true), "the drop_action's own existing args should survive");
+        assert_eq!(args.get("id").and_then(semio_framework::DslValue::as_str), Some("abc"), "the decoded payload should flow through");
+        assert_eq!(args.get("kept").and_then(semio_framework::DslValue::as_bool), Some(true), "the drop_action's own existing args should survive");
     }
 
     #[test]

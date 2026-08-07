@@ -23,7 +23,7 @@ import {
   getActiveCatalogueDragPayload,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type ComponentSceneHostProps, type Board2dScene } from "@semio-tech/framework-core";
+import { type ComponentSceneHostProps, type Board2dScene } from "@semio-tech/framework";
 import { type Board2dWasmSession, createBoard2dSession } from "../WasmSessionLoader/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 import { parseSelectionIds } from "../InkCanvasHost/🟦️component.tsx";

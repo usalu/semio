@@ -38,7 +38,7 @@ Manim-class Rust animation compiler technology. Imperative `Scene` timelines ove
 
 ## Stack
 
-- Rust crate `animate_core`
+- Rust crate `animate`
 - kurbo / mathematical_geometry for vector paths
 - typst / typst-svg for math labels
 - framework/hash for Merkle animation hashing

@@ -5,7 +5,7 @@ use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOp
 use crate::artifacts::procedural3d::engine::{default_projection, example_projection, is_procedural3d_example_id};
 use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dOperation};
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::{CameraJson, FlowEvalSession};
+use flow::{CameraJson, FlowEvalSession};
 use playbook::GenerationOperation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -65,7 +65,7 @@ mod tests {
     use crate::apps::procedural3d::testkit::{app, app_with_registry, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
     use crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_BOX_FILLET;
-    use flow_core::Widget;
+    use flow::Widget;
     use semio_framework_plugin::PluginApp;
 
     #[test]

@@ -4,7 +4,7 @@
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation, Procedural3dPreviewCamera};
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

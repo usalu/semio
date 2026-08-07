@@ -8,7 +8,7 @@
 //! never the library type itself.
 
 use base64::Engine as _;
-use semio_framework_core::MeshData;
+use semio_framework::MeshData;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -647,7 +647,7 @@ impl dsl::DslField for PackedU32 {
     }
 }
 
-/// 🌉️ Local structural twin of `semio_framework_core::MeshData`'s numeric buffers, for the DSL
+/// 🌉️ Local structural twin of `semio_framework::MeshData`'s numeric buffers, for the DSL
 /// boundary only — `MeshData` is foreign (`framework/core`, out of scope for this conversion), so
 /// `RemodelMesh.mesh` can't get a derive-generated `dsl::DslField` impl directly (the orphan rule
 /// blocks `impl dsl::DslField for MeshData` here: both the trait and the type are foreign to this
@@ -1018,7 +1018,7 @@ pub fn default_remodel_scene() -> RemodelProjection {
         params: ReconstructionParams::default(),
         gcps: Vec::new(),
         job: ReconstructionJob::default(),
-        results: ReconstructionResults { mesh: RemodelMesh { mesh: semio_framework_core::mesh_from_kind("box"), source: MeshSource::Placeholder, ..RemodelMesh::default() }, ..ReconstructionResults::default() },
+        results: ReconstructionResults { mesh: RemodelMesh { mesh: semio_framework::mesh_from_kind("box"), source: MeshSource::Placeholder, ..RemodelMesh::default() }, ..ReconstructionResults::default() },
     }
 }
 //#endregion 🔖️Domain
@@ -1073,7 +1073,7 @@ mod tests {
         scene.results.dense =
             Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelMesh {
-            mesh: semio_framework_core::mesh_from_kind("box"),
+            mesh: semio_framework::mesh_from_kind("box"),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot {

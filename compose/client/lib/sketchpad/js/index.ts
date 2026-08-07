@@ -78,7 +78,7 @@ import {
   type NavigationDestination,
   type NavigationLevel,
   type SearchItemSpec,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/framework";
 export type RelationshipKind = "owns" | "has" | "is" | "references";
 export type WiresFixture = {
   schema?: string;
@@ -17527,7 +17527,7 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 //#region 🔖️Play
 import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
 import type { AppInstanceHostComponent, AppRendererContribution } from "@semio-tech/framework-platform-core";
-import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import type { OsAppInstance } from "@semio-tech/framework-os";
 import { PlaygroundView } from "@semio-tech/framework-playground-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import type { ReactElement } from "react";
@@ -17578,7 +17578,7 @@ export const sketchpadPlayAppDefinition = createPlaygroundApp({
 //#endregion 🔖️Play
 
 //#region 🔖️OsProgram
-import { createTypedAppVcsHandler, mergeOsWorkflowDefinition, osBaselineArtifact, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import { createTypedAppVcsHandler, mergeOsWorkflowDefinition, osBaselineArtifact, registerAppVcsHandler } from "@semio-tech/framework-os";
 import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
 
 /** @emoji 🏘️ S app VCS handler for compose design documents. */

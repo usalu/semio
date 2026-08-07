@@ -104,7 +104,7 @@ pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
         kind_id: Some("2d.image".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::Many,
+        multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 
@@ -291,7 +291,7 @@ mod tests {
         assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
         assert!(!port.required);
-        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
         assert_eq!(port.media_type.class, semio_framework_plugin::MediaClass::TwoD);
         assert_eq!(port.media_type.form, semio_framework_plugin::MediaForm::Raster);
     }

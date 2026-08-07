@@ -2,7 +2,7 @@
 /** @emoji 🏷️ Shell brand catalog — every brand this shell host can ship as, selected via `SEMIO_BRAND` / a playground registry row's `brand` column. */
 // #endregion 🧲️Header
 
-import type { ShellBrand } from "@semio-tech/framework-core";
+import type { ShellBrand } from "@semio-tech/framework";
 import {
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,

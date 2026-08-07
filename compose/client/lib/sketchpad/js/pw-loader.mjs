@@ -15,7 +15,7 @@ const RESOLVE_ALIASES = [
   ["@semio-tech/compose-js", resolvePath(__dirname, "../../js/index.ts")],
   ["@semio-tech/compose-rs-wasm", resolvePath(__dirname, "../../rs/pkg/compose.js")],
   ["@semio-tech/compose-sketchpad", resolvePath(__dirname, "index.ts")],
-  ["@semio-tech/framework-core", resolvePath(repoRoot, "framework/core/index.ts")],
+  ["@semio-tech/framework", resolvePath(repoRoot, "framework/core/index.ts")],
   ["@semio-tech/framework-platform-core", resolvePath(repoRoot, "framework/product/platform/core/index.ts")],
   ["@semio-tech/framework-platform-renderer-react", resolvePath(repoRoot, "framework/product/platform/renderer/react/index.tsx")],
   ["@semio-tech/framework-playground-core", resolvePath(repoRoot, "framework/product/playground/core/index.ts")],

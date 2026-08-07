@@ -133,9 +133,7 @@ pub use apps::writer::wasm::*;
 //#endregion 🌉️WasmBridge
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "writer", label: "Writer", version: "0.1.0",
-    setup: artifacts::writer::engine::register,
-    apps: [ apps::writer::create_writer_app => apps::writer::WriterPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

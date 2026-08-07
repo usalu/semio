@@ -90,9 +90,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "mathematical", label: "Mathematical", version: "0.1.0",
-    setup: artifacts::mathematical::engine::register,
-    apps: [ apps::mathematical::create_mathematical_app => apps::mathematical::MathematicalPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

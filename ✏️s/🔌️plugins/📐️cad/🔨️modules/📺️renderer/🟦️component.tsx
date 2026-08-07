@@ -51,7 +51,7 @@ import {
   type SearchSpec,
   type ThreeEvent,
 } from "@semio-tech/ui-react";
-import { canvasPickTargetKey, ephemeralBox, ephemeralMap } from "@semio-tech/framework-core";
+import { canvasPickTargetKey, ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/ui-styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌️Adapters
@@ -200,7 +200,7 @@ import {
   typologyStyleCacheKey,
   type ResolvedTypologyStyle,
   type SpatialEntityFlags,
-} from "../🫀️core/🟦️component.ts";
+} from "../🟦️index.ts";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
 type AnchorRef = kernelGeometry.AnchorRef;
@@ -7161,7 +7161,7 @@ if (import.meta.vitest) {
     it("concrete forest fixture keeps committed face visibility toggles", async () => {
       const { readFileSync } = await import("node:fs");
       const { resolve } = await import("node:path");
-      const { ModelSpace } = await import("../🫀️core/🟦️component.ts");
+      const { ModelSpace } = await import("../🟦️index.ts");
       const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json"), "utf8"));
       const model = (ModelSpace.fromJSON(json).models[defaultModelDefinitionId()] ?? ModelSpace.fromJSON(json).models[""])!;
       const mdId = defaultModelDefinitionId();

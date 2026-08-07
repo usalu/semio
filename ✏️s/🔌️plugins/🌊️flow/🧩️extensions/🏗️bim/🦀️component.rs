@@ -709,7 +709,7 @@ mod tests {
 
     #[test]
     fn extension_bundle_extends_flow_and_evaluates() {
-        use semio_framework_core::Contribution;
+        use semio_framework::Contribution;
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
@@ -766,7 +766,7 @@ mod tests {
 mod extension_guest {
     use super::module_registry;
     use flow_extension_sdk::{build_manifest_json, evaluate_json};
-    use semio_framework_core::{Contribution, Fault, FaultCode, FaultOrigin};
+    use semio_framework::{Contribution, Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::ExtensionBundle;
     use serde::Deserialize;
 

@@ -7,7 +7,7 @@ use crate::apps::puzzle3d::{
     Puzzle3dActionCtx, PUZZLE3D_FILL_COUNT_MAX,
 };
 use crate::artifacts::puzzle3d::engine::PrecomputeLane;
-use semio_framework_core::kernel::UiDirtyScope;
+use semio_framework::kernel::UiDirtyScope;
 use serde_json::Value;
 
 pub fn set_fill_count(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {

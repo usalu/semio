@@ -175,3 +175,9 @@ pub use water::*;
 pub use zone_air::*;
 pub use zone_hvac::*;
 //#endregion 🔖️FlatReExports
+
+
+//#region 🔖️Plugin
+#[path = "../../🔌️plugin/🦀️component.rs"]
+pub mod plugin;
+//#endregion 🔖️Plugin

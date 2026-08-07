@@ -4,7 +4,7 @@ use crate::apps::flow::flow_action;
 use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::artifacts::flow::engine::{widget_id, widget_kind_label};
 use crate::artifacts::flow::FlowFixture;
-use flow_core::Widget;
+use flow::Widget;
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,

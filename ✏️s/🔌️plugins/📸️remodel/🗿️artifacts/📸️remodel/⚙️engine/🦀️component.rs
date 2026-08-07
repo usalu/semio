@@ -129,7 +129,7 @@ pub fn remodel_photos_in_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
         kind_id: Some("2d.image".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::Many,
+        multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 
@@ -143,7 +143,7 @@ pub fn remodel_mesh_out_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         kind_id: Some("3d.mesh".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::Many,
+        multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 //#endregion 🔖️Io
@@ -549,12 +549,12 @@ mod tests {
         assert_eq!(photos_in.direction, semio_framework_plugin::MediaPortDirection::In);
         assert_eq!(photos_in.kind_id.as_deref(), Some("2d.image"));
         assert!(!photos_in.required);
-        assert_eq!(photos_in.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(photos_in.multiplicity, semio_framework::PortMultiplicity::Many);
         let mesh_out = io.ports.iter().find(|port| port.id == "mesh:out").expect("mesh:out declared");
         assert_eq!(mesh_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(mesh_out.kind_id.as_deref(), Some("3d.mesh"));
         assert!(!mesh_out.required);
-        assert_eq!(mesh_out.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(mesh_out.multiplicity, semio_framework::PortMultiplicity::Many);
     }
     //#endregion 🔖️IoTests
 

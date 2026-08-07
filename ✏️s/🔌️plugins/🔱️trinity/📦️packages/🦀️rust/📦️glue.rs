@@ -358,14 +358,9 @@ fn register_trinity_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::rewrite::TrinityRewritePlayApp>(artifacts::rewrite::REWRITE_RULE_SCHEMA);
 }
 
-semio_framework_plugin::semio_plugin! {
-    id: "trinity",
-    label: "Trinity",
-    version: "0.1.0",
-    setup: register_trinity_exports,
-    apps: [
-        apps::jack::create_trinity_jack_app => apps::jack::TrinityJackPlayApp,
-        apps::rewrite::create_rewrite_app => apps::rewrite::TrinityRewritePlayApp,
-    ]
-}
+//#region 🔖️Plugin
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
+//#endregion 🔖️Plugin
 //#endregion 🔖️Bundle

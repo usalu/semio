@@ -115,7 +115,7 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
                 media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
                 kind_id: Some("form.dictionary".into()),
                 required: false,
-                multiplicity: semio_framework_core::PortMultiplicity::One,
+                multiplicity: semio_framework::PortMultiplicity::One,
             },
             semio_framework_plugin::MediaPortSpec {
                 id: "layout:out".into(),
@@ -124,7 +124,7 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
                 media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
                 kind_id: Some("2d.layout".into()),
                 required: false,
-                multiplicity: semio_framework_core::PortMultiplicity::Many,
+                multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
         export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],

@@ -1,7 +1,7 @@
 //! ⚙️ Animate present artifact — headless compute (constitutional: engine). Also hosts the plugin's
 //! `register()` entrypoint (moved from the old bundle crate's `📦️glue.rs`, called from the plugin-root
 //! `📦️glue.rs`'s `semio_plugin!{}` `setup:` field), and — as sibling `🦀️<topic>.rs` files, per the
-//! taxonomy's allowance for big engines — the Manim-class animation core (`animate_core`, only ever used
+//! taxonomy's allowance for big engines — the Manim-class animation core (`animate`, only ever used
 //! by this app's own engine and by `animate_video`) and the headless video renderer (`animate_video`,
 //! only ever used by this engine's `compiler` submodule below). Both were their own plugin-level crates
 //! before this migration; neither has a dependent outside this one artifact/app, so per the plan's
@@ -10,7 +10,7 @@
 pub mod compiler {
     //! 🌐️ Headless static-site compiler for animate present decks.
 
-    use crate::artifacts::present::engine::animate_core::{AnimateConfig, QualityPreset};
+    use crate::artifacts::present::engine::animate::{AnimateConfig, QualityPreset};
     use crate::artifacts::present::engine::animate_video::{render_scene, scene_for_hash, OutputFormat};
     use crate::artifacts::present::PresentDeck;
     use serde::{Deserialize, Serialize};
@@ -245,7 +245,7 @@ pub mod compiler {
 pub mod slide {
     //! 🎭️ Scene-based presentation document types for slide/section timelines.
 
-    use crate::artifacts::present::engine::animate_core::Section;
+    use crate::artifacts::present::engine::animate::Section;
     use crate::artifacts::present::PresentDeck;
     use serde::{Deserialize, Serialize};
 
@@ -407,22 +407,22 @@ pub fn register_pilot_languages() {
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `create_animate_present_app`'s
 /// `.artifact_kind(...)` literal (schema/media type copied verbatim) plus the extra `frames:in` input
 /// port (Wave-2 port recipe).
-pub fn present_io() -> semio_framework_core::AppIo {
-    semio_framework_core::AppIo {
+pub fn present_io() -> semio_framework::AppIo {
+    semio_framework::AppIo {
         document_schema: PRESENT_DECK_SCHEMA.into(),
-        document_media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::Presentation, form: semio_framework_core::MediaForm::Deck },
-        ports: vec![semio_framework_core::MediaPortSpec {
+        document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Presentation, form: semio_framework::MediaForm::Deck },
+        ports: vec![semio_framework::MediaPortSpec {
             id: "frames:in".into(),
             label: "Frames".into(),
-            direction: semio_framework_core::MediaPortDirection::In,
-            media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Raster },
+            direction: semio_framework::MediaPortDirection::In,
+            media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Raster },
             kind_id: Some("2d.image".into()),
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::Many,
+            multiplicity: semio_framework::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_core::ArtifactPresentation { id: PRESENT_DECK_SCHEMA.into(), name: "Animate Present Deck".into(), dimension: "2d".into(), component_kind: "panel".into() },
+        artifact: semio_framework::ArtifactPresentation { id: PRESENT_DECK_SCHEMA.into(), name: "Animate Present Deck".into(), dimension: "2d".into(), component_kind: "panel".into() },
     }
 }
 
@@ -611,7 +611,7 @@ pub fn animate_present_document_json_to_svg(value: &serde_json::Value) -> Result
 }
 
 /// 📥️ Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG import path.
-pub fn animate_present_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<serde_json::Value, String> {
+pub fn animate_present_document_json_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<serde_json::Value, String> {
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?;
     let frame = crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
@@ -669,12 +669,12 @@ mod tests {
 
     #[test]
     fn from_dwg_builds_single_slide_deck_from_entity() {
-        let drawing = semio_framework_core::DwgDrawing {
-            layers: vec![semio_framework_core::DwgLayer::default()],
-            entities: vec![semio_framework_core::DwgEntity {
+        let drawing = semio_framework::DwgDrawing {
+            layers: vec![semio_framework::DwgLayer::default()],
+            entities: vec![semio_framework::DwgEntity {
                 layer: 0,
-                color: semio_framework_core::DwgColor::ByLayer,
-                geometry: semio_framework_core::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
+                color: semio_framework::DwgColor::ByLayer,
+                geometry: semio_framework::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
             }],
             extmin: [0.0, 0.0, 0.0],
             extmax: [10.0, 10.0, 0.0],
@@ -689,7 +689,7 @@ mod tests {
 
     #[test]
     fn from_dwg_never_errors_on_empty_drawing() {
-        let drawing = semio_framework_core::DwgDrawing::default();
+        let drawing = semio_framework::DwgDrawing::default();
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
         let deck: crate::artifacts::present::PresentDeck = serde_json::from_value(document).expect("deck");
         assert_eq!(deck.tiles.len(), 1);
@@ -704,8 +704,8 @@ mod tests {
         let port = &io.ports[0];
         assert_eq!(port.id, "frames:in");
         assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
-        assert_eq!(port.direction, semio_framework_core::MediaPortDirection::In);
-        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(port.direction, semio_framework::MediaPortDirection::In);
+        assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
         assert!(!port.required);
     }
 

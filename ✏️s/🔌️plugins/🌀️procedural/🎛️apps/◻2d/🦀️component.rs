@@ -17,7 +17,7 @@ use crate::apps::procedural2d::terminology::{procedural2d_labels, Procedural2dLa
 use crate::artifacts::procedural2d::engine::procedural2d_io;
 use crate::artifacts::procedural2d::op::Procedural2dOperation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -273,8 +273,8 @@ impl DocumentApp for Procedural2dPlayApp {
         for (widget_id_key, value) in object {
             let Some(number) = value.as_f64() else { continue };
             let Some((index, widget)) = doc.projection.fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
-            if let flow_core::Widget::InputSlider { id, min, max, step, .. } = widget {
-                operations.push(Procedural2dOperation::SetWidget { index, widget: flow_core::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
+            if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
+                operations.push(Procedural2dOperation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
             }
         }
         Ok(Emit::operations(operations))
@@ -380,7 +380,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::procedural2d::testkit::{app, app_with_registry, dispatch};
-    use flow_core::Widget;
+    use flow::Widget;
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
     use semio_framework_plugin::PluginApp;
 
@@ -516,7 +516,7 @@ mod tests {
 
     #[test]
     fn document_from_dwg_returns_valid_default_projection() {
-        let drawing = semio_framework_core::DwgDrawing::default();
+        let drawing = semio_framework::DwgDrawing::default();
         let document = crate::artifacts::procedural2d::engine::procedural2d_document_from_dwg(&drawing).expect("dwg import document");
         let projection: Procedural2dDocument = serde_json::from_value(document).expect("parseable projection");
         assert_eq!(projection.fixture.schema, "flow.fixture");

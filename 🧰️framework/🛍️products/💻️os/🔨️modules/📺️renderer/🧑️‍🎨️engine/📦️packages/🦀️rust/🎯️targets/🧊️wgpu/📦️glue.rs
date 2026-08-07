@@ -18,7 +18,7 @@ extern crate infinite_canvas as infinite_world;
 #[macro_export]
 macro_rules! action_args_json {
     ($($tt:tt)*) => {
-        semio_framework_core::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))
+        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))
     };
 }
 

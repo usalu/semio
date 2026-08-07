@@ -1,4 +1,4 @@
-import { ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralBox } from "@semio-tech/framework";
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
@@ -406,17 +406,17 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const here = dirname(fileURLToPath(import.meta.url));
-    const mod = (await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core.js")) as DrawingWasmModule;
-    mod.initSync?.({ module: readFileSync(join(here, "../../../../framework/product/os/module/flow/core/rs/pkg/flow_core_bg.wasm")) });
+    const mod = (await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow.js")) as DrawingWasmModule;
+    mod.initSync?.({ module: readFileSync(join(here, "../../../../framework/product/os/module/flow/core/rs/pkg/flow_bg.wasm")) });
     drawingWasm.current = mod;
     return mod;
   }
   const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments, export_drawing_dwg, import_drawing_dwg }, { default: wasmUrl }] = await Promise.all([
-    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core.js"),
-    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core_bg.wasm?url"),
+    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow.js"),
+    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_bg.wasm?url"),
   ]);
   if (typeof render_drawing_scene !== "function" || typeof export_drawing_svg !== "function" || typeof export_drawing_pdf !== "function" || typeof dispose_drawing !== "function") {
-    throw new Error("flow_core drawing exports missing — rebuild flow/core wasm");
+    throw new Error("flow drawing exports missing — rebuild flow/core wasm");
   }
   if (initFlow) await initFlow({ module_or_path: wasmUrl });
   drawingWasm.current = {

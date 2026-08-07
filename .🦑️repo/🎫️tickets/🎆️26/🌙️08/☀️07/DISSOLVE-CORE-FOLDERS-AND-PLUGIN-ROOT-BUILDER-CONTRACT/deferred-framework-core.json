@@ -1,0 +1,54 @@
+{
+  "rootCargoToml": [
+    {
+      "status": "already-applied-or-observed",
+      "observed": "semio-framework = { path = \"🧰️framework/📦️packages/🦀️rust\" }  # 58 refs",
+      "note": "Wave 2 should confirm no remaining semio-framework-core workspace aliases and regenerate lock if needed."
+    }
+  ],
+  "pluginCargoTomlStillReferencingSemioFrameworkCore": [],
+  "sharedFileEditsDeferred": [
+    {
+      "file": "📜️script.ts",
+      "note": "Policy region ownership is Wave 0/2/4 — any hardcoded 🧩core / framework-core path strings outside package-local scripts need Wave 2 integration."
+    },
+    {
+      "file": "package.json",
+      "note": "Workspace package name listing if it still mentions framework-core (scan showed typescript package path already listed)."
+    },
+    {
+      "file": ".storybook/scopes.ts",
+      "note": "Source roots may still mention 🧩core — Wave 2."
+    },
+    {
+      "file": "eslint.config.mjs",
+      "note": "May still mention 🧩core path — Wave 2."
+    },
+    {
+      "file": ".dependency-cruiser.cjs",
+      "note": "no-core-path already from Wave 0; confirm no allowlist entries for 🧩core — Wave 2."
+    }
+  ],
+  "notes": [
+    "Crate renamed to semio-framework; non-plugin path deps updated to package = semio-framework / dep key semio-framework.",
+    "TS package renamed to @semio-tech/framework; consumer package.json/import strings no longer contain @semio-tech/framework-core in repo scan.",
+    "Plugin Cargo.toml files still listing semio-framework-core are deferred (do not touch plugin trees in this wave).",
+    "Plugin Cargo.toml files updated ONLY for semio-framework-core→semio-framework path-dep/package/feature rename so workspace resolves; no plugin tree restructuring."
+  ],
+  "updatedNonPluginPathDeps": [],
+  "updatedPluginPathDepsRenameOnly": [
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml"
+  ],
+  "remainingCorePathStringHits": [
+    "script.ts",
+    "📜️script.ts",
+    "eslint.config.mjs"
+  ]
+}

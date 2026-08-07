@@ -4,7 +4,7 @@
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation};
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{apply_world3d_sun_action, ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

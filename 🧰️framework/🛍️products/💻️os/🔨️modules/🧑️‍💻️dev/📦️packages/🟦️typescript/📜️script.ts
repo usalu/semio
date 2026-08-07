@@ -35,8 +35,8 @@ import {
   semioBuildMode,
   semioShipEnv,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
-import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os-core";
-import type { PluginSourceEvent } from "@semio-tech/framework-core";
+import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
+import type { PluginSourceEvent } from "@semio-tech/framework";
 import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
 import {
   ensurePreview2ShimVendorAt,
@@ -297,7 +297,7 @@ function scanBuiltPluginModules(root: string = pluginOutRoot): readonly PluginHo
   return rows;
 }
 
-/** @emoji 🔌️ Mirrors `@semio-tech/framework-core`'s `PLUGIN_SOURCE_WATCH_PATH` — kept as a literal here
+/** @emoji 🔌️ Mirrors `@semio-tech/framework`'s `PLUGIN_SOURCE_WATCH_PATH` — kept as a literal here
  * rather than a real (non-`type`) import: `⚙️vite.config.ts` loads this module's exports through Vite's
  * own config loader, which runs under Node's native strip-only TypeScript support rather than esbuild;
  * a genuine runtime import of framework-core's single-file `📦️index.ts` forces Node to parse the WHOLE
@@ -306,7 +306,7 @@ function scanBuiltPluginModules(root: string = pluginOutRoot): readonly PluginHo
  * type` stays safe (fully erased, no runtime import), so `PluginSourceEvent` below is unaffected. */
 const PLUGIN_SOURCE_WATCH_PATH = "/plugin-modules/watch";
 
-/** @emoji 🔌️ Vite middleware backing the shell's `createDevPluginSource` (`@semio-tech/framework-core`):
+/** @emoji 🔌️ Vite middleware backing the shell's `createDevPluginSource` (`@semio-tech/framework`):
  * SSE at `PLUGIN_SOURCE_WATCH_PATH`, mirroring `semioBackboneVitePlugin`'s `/watch` endpoint. Sends one
  * `snapshot` on connect ({@link scanBuiltPluginModules}), then a `built` event every time `buildPlugin`
  * overwrites the shared `.hot-swap` marker — `buildPlugin` writes it last, after every other output
@@ -1093,7 +1093,7 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (process.env.FORCE_ENGINE_BUILD !== "1") {
     const surfacePkgJs = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg/framework_surface.js");
     const editorPkgJs = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js");
-    const flowPkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js");
+    const flowPkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow.js");
     if (existsSync(surfacePkgJs) && existsSync(editorPkgJs) && existsSync(flowPkgJs)) {
       console.log("[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)");
       return;
@@ -1110,7 +1110,7 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (runCmdStatus("bun", [boardScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-board-2d wasm build failed");
   // React renderer always `import("@semio-tech/flow-core")` for `createFlowSession`, so the
   // pkg must exist even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
-  const flowCorePkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js");
+  const flowCorePkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow.js");
   if (!existsSync(flowCorePkgJs)) {
     const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts");
     if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("flow-core wasm build failed");

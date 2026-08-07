@@ -187,19 +187,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-fn register_gis_exports() {
-    artifacts::gismap::engine::register();
-    artifacts::gisterrain::engine::register();
-}
-
-semio_framework_plugin::semio_plugin! {
-    id: "gis",
-    label: "GIS",
-    version: "0.1.0",
-    setup: register_gis_exports,
-    apps: [
-        apps::gis2d::create_gis2d_app => apps::gis2d::Gis2dPlayApp,
-        apps::gis3d::create_gis3d_app => apps::gis3d::Gis3dPlayApp,
-    ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

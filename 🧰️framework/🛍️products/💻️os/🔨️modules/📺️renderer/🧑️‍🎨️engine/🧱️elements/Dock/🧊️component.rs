@@ -6,7 +6,7 @@
 //! call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🪟️ Mode dock — multi-window layout tree with stack chrome and split resize.
 
-use semio_framework_core::AppDefinition;
+use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, even_window_layout, push_chrome_group_border, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Label, Level, Locale, LocalizedLabel, Rect, Rgba,
@@ -1302,7 +1302,7 @@ fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: f32, size: 
 mod tests {
     use super::*;
     use crate::shell::ShellState;
-    use semio_framework_core::{AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
+    use semio_framework::{AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
     use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
@@ -1312,9 +1312,9 @@ mod tests {
             document: vec!["semio".into(), "test".into()],
             icon_id: None,
             controller_id: "test".into(),
-            modes: semio_framework_core::Modes::one(ModeDefinition { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, commands: vec![] }),
+            modes: semio_framework::Modes::one(ModeDefinition { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, commands: vec![] }),
             default_mode_id: "default".into(),
-            window_kinds: semio_framework_core::WindowKinds::try_from(
+            window_kinds: semio_framework::WindowKinds::try_from(
                 window_ids
                     .iter()
                     .map(|id| WindowKindDefinition {
@@ -1351,9 +1351,9 @@ mod tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: semio_framework_core::ConfigSpec::empty(),
-            command_grammar: semio_framework_core::CommandGrammar::empty(),
-            io: semio_framework_core::AppIo::default(),
+            config: semio_framework::ConfigSpec::empty(),
+            command_grammar: semio_framework::CommandGrammar::empty(),
+            io: semio_framework::AppIo::default(),
         }
     }
 
@@ -1767,7 +1767,7 @@ mod tests {
     }
 
     //#region WindowActionsAndUtilitiesTests
-    use semio_framework_core::{ActionArgDef, ActionDefinition, ActionKind, ActionRef, UtilityDefinition, UtilityRef};
+    use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, ActionRef, UtilityDefinition, UtilityRef};
     use ui_wgpu::wgpu::{KeyAction, PointerModifiers};
 
     fn mods(meta: bool, ctrl: bool, shift: bool, alt: bool) -> PointerModifiers {
@@ -1785,7 +1785,7 @@ mod tests {
         app.actions = vec![
             ActionDefinition::new_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
             ActionDefinition {
-                args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework_core::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
+                args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
                 keys: Some("mod+e".into()),
                 ..ActionDefinition::new_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
             },

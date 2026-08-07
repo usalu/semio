@@ -184,11 +184,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "remodel",
-    label: "Remodel",
-    version: "0.1.0",
-    setup: artifacts::remodel::engine::register,
-    apps: [ apps::remodel::create_remodel_app => apps::remodel::RemodelPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

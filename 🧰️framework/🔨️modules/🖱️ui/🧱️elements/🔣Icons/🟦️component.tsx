@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralMap } from "@semio-tech/framework-core";
+import { ephemeralMap } from "@semio-tech/framework";
 import * as React from "react";
 import { domSizePx, activeUiTheme, subscribeActiveUiTheme, STYLING_COMPACT_ROOT_PX, type UiTheme } from "@semio-tech/ui-styling";
 import {

@@ -1,20 +1,21 @@
 //! 🖥️ Flow host: canvas editing, evaluation session, and host errors.
 
+use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::canvas as canvas;
+use neural_engine as neural;
+
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
-use crate::dag;
-use crate::dag::{
+use dag::{
     computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
     slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
 };
-use crate::canvas;
-use crate::neural::{
+use math::graph::manifest::{PropertyBag, PropertyValue};
+use neural::{
     channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
     INPUT_KIND, OUTPUT_KIND,
 };
-use crate::neural;
-use math::graph::manifest::{PropertyBag, PropertyValue};
 use flow_extension_sdk::FlowExtensionManifest;
 use serde::{Deserialize, Serialize};
 
@@ -1273,8 +1274,8 @@ impl FlowHost {
     }
 
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
-        use crate::canvas::camera::{screen_to_world, Camera, Viewport};
-        use crate::canvas::Point;
+        use canvas::camera::{screen_to_world, Camera, Viewport};
+        use canvas::Point;
         let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.viewport_w, height: self.viewport_h, dpr: self.viewport_dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
@@ -2066,10 +2067,10 @@ fn widget_has_input(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec
 #[cfg(test)]
 mod tests {
     use crate::*;
-    use crate::canvas::camera::{world_to_screen, Camera, Viewport};
-    use crate::canvas::Point;
-    use crate::dag::HandleRole;
-    use crate::neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
+    use canvas::camera::{world_to_screen, Camera, Viewport};
+    use canvas::Point;
+    use dag::HandleRole;
+    use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
     use std::sync::{Mutex, OnceLock};
 
     const NUMBER_OPS: &[&str] = &["core.number"];
@@ -2711,7 +2712,7 @@ mod tests {
 
     #[test]
     fn rebuild_dag_preserves_canvas_theme() {
-        use crate::canvas::Color;
+        use canvas::Color;
         let mut host = FlowHost::default();
         host.dag.canvas_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
         host.rebuild_dag();
@@ -3368,8 +3369,8 @@ mod tests {
 
     #[test]
     fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
-        use crate::canvas::camera::{world_to_screen, Camera, Viewport};
-        use crate::canvas::Point;
+        use canvas::camera::{world_to_screen, Camera, Viewport};
+        use canvas::Point;
         let mut host = FlowHost::default();
         host.set_viewport(1280, 800, 1.0);
         host.fixture.widgets = vec![

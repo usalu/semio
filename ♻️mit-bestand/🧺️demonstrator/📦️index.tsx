@@ -24,7 +24,7 @@ import {
   useElementsSurfaceChrome,
   useMediaQuery,
 } from "@semio-tech/ui-react";
-import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework-core";
+import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, type DemonstratorPaneSpec } from "./🟦️brand.ts";

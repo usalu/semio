@@ -8,7 +8,7 @@
 use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
 use crate::artifacts::flow::engine::{eval_tick_effect, host_from_fixture};
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 

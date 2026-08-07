@@ -5,7 +5,7 @@ use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOp
 use crate::artifacts::procedural3d::engine::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::{CameraJson, FlowEvalSession, FlowFixture};
+use flow::{CameraJson, FlowEvalSession, FlowFixture};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

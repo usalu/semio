@@ -116,7 +116,7 @@ mod tests {
 mod extension_guest {
     use super::{extension_manifest_json, module_registry};
     use flow_extension_sdk::evaluate_json;
-    use semio_framework_core::{Contribution, Fault, FaultCode, FaultOrigin};
+    use semio_framework::{Contribution, Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::ExtensionBundle;
     use serde::Deserialize;
 

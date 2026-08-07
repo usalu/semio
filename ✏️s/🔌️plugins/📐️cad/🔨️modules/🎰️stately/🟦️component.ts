@@ -28,7 +28,7 @@ import {
   type Vec3,
   type VertexRef,
   type WireRef,
-} from "../🫀️core/🟦️component.ts";
+} from "../🟦️index.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎭️AdvanceEvent
@@ -258,7 +258,7 @@ export class StatelyStateEngine implements StateEngine {
     this.rebuildMachine(state);
   }
 
-  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: import("../🫀️core/🟦️component.ts").SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
+  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: import("../🟦️index.ts").SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
     if (String(this.actor.getSnapshot().value) !== this.interactionState) {
       this.rebuildMachine(this.interactionState);
     }

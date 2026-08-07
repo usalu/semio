@@ -1,0 +1,12 @@
+{
+  "wave": "w1a",
+  "status": "done",
+  "changed": [
+    "taxonomy.json",
+    "discovery/component.ts",
+    "index.test.ts",
+    "script.ts (policy+ExamplesScript)",
+    "registry/script.ts"
+  ],
+  "notes": "Policy/registry enforce new shape; old trees will breach until W2/W3 migrate."
+}

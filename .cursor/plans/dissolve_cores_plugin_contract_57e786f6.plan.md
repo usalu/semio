@@ -16,22 +16,22 @@ todos:
     status: completed
   - id: wave1-framework-cores
     content: "Wave 1 (Grok): dissolve 🧩core into 🎯️action-bus / 🖥️platform / 🔺️mesh / 🛂️manifest / 🧠️kernel siblings and split its 4090-line 🟦️component.ts; rename the crate to semio-framework and the package to @semio-tech/framework"
-    status: in_progress
+    status: completed
   - id: wave1-os-cores
     content: "Wave 1 (parallel): split flow (7915), dsl, spr, db and pack cores into concept siblings and retire the flow_core / dsl_core / db_core aliases"
-    status: in_progress
+    status: completed
   - id: wave1-plugin-cores
     content: "Wave 1 (parallel): lift UI elements and fem cores, split norm (218 consumers), trinity, cad TS and animate cores, fold block and space cores into their owner leaf, rename the flow-ext and imperative-ext core crates"
-    status: in_progress
+    status: completed
   - id: wave2-integration
     content: "Wave 2 (serial): apply all deferred shared-file edits from the Wave 1 manifests (root Cargo.toml, package.json workspaces, ~261 paths in 📜️script.ts, .storybook/scopes.ts, eslint.config.mjs, sketchpad tsconfig, nx project names) and get cargo check --workspace plus bunx tsc clean"
-    status: pending
+    status: completed
   - id: wave3-plugin-roots
     content: "Wave 3 (32 parallel agents): create 🔌️plugin/ with 🦀️component.rs, 🛂️manifest/, 🎟️capabilities/, 🔧️setup/ and 🎛️apps/ for every plugin, convert registration to Plugin::builder, and reduce each 📦️glue.rs to wiring plus plugin_exports!"
-    status: pending
+    status: completed
   - id: wave4-enforcement
     content: "Wave 4 (serial): flip the new policies to high priority, wire them into VerifyScript.runGate, set areas[\"✏️s/🔌️plugins\"] to clean, regenerate registry artifacts and launch.json, and drive verify gate, policy and test-quick to green"
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

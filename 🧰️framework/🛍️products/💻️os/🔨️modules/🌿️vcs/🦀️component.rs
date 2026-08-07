@@ -152,7 +152,7 @@ pub enum VcsError {
     Backbone(String),
 }
 
-crate::fault_from_thiserror!(VcsError, crate::os_dsl::core::FaultOrigin::Module, "module.vcs");
+crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
 
 //#endregion 🔖️Errors
 //#region 🔖️CollectionDiff

@@ -36,7 +36,7 @@ import {
   type Vec3,
   evalExpr,
   type ExprEnv,
-} from "../🫀️core/🟦️component.ts";
+} from "../🟦️index.ts";
 
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;
@@ -1173,7 +1173,7 @@ export function planConstruct(ast: ConstructAst): ExecutionPlan {
 // #region Executor
 type Row = Record<string, ModelEntityRef | unknown>;
 
-function rowVarsToEnv(row: Row, model: Model, meta: import("../🫀️core/🟦️component.ts").AttributeStore, preview: SpatialKernel, activeModelDefinitionId?: string | null): ExprEnv {
+function rowVarsToEnv(row: Row, model: Model, meta: import("../🟦️index.ts").AttributeStore, preview: SpatialKernel, activeModelDefinitionId?: string | null): ExprEnv {
   const vars: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(row)) {
     if (v && typeof v === "object" && "kind" in (v as object) && "id" in (v as object)) vars[k] = v;
@@ -1641,7 +1641,7 @@ if (import.meta.vitest) {
       const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
       applyModelDiff(model, r);
       model.objects["energy-hull"] = {
-        id: "energy-hull" as import("../🫀️core/🟦️component.ts").ObjectRef,
+        id: "energy-hull" as import("../🟦️index.ts").ObjectRef,
         typology: "energy.energy.hull",
         primitives: { solid: String(r.solid ?? "box") },
       };
@@ -1671,7 +1671,7 @@ if (import.meta.vitest) {
       const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
       applyModelDiff(model, r);
       model.objects["object-box"] = {
-        id: "object-box" as import("../🫀️core/🟦️component.ts").ObjectRef,
+        id: "object-box" as import("../🟦️index.ts").ObjectRef,
         typology: "spatial.shape.primitive.box",
         primitives: { solid: String(r.solid ?? "box") },
       };

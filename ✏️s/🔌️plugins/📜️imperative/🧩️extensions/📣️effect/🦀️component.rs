@@ -129,7 +129,7 @@ const EXTENSION_ID: &str = "imperative-extension-core";
 const MODULE_VERSION: &str = "0.1.0";
 
 /// 🧩️ Host contribution entry for the core imperative module.
-pub fn imperative_module_contribution() -> semio_framework_core::ProgramContributionEntry {
+pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "core", "Actions", "zap", "core", "Core", MODULE_VERSION, &registry, Some(&catalogue))
@@ -141,7 +141,7 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
         .extends("imperative")
         .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
             imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| {
-                semio_framework_core::Fault::new(semio_framework_core::FaultOrigin::Plugin, semio_framework_core::FaultCode::new("extension.evaluate"), message)
+                semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message)
             })
         })
         .contributes(entry.contribution)
@@ -158,7 +158,7 @@ mod tests {
     fn bundle_contributes_core_module_for_imperative_play() {
         let entry = imperative_module_contribution();
         assert_eq!(entry.plugin_id, EXTENSION_ID);
-        let semio_framework_core::Contribution::ImperativeModule { app_id, module_id, manifest_json, .. } = entry.contribution else {
+        let semio_framework::Contribution::ImperativeModule { app_id, module_id, manifest_json, .. } = entry.contribution else {
             panic!("expected ImperativeModule");
         };
         assert_eq!(app_id, imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID);

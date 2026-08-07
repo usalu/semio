@@ -80,10 +80,10 @@ pub fn parse_value_json(value_json: &str) -> Value {
 //#endregion 🔖️Values
 
 //#region 🔖️Contributions
-pub use semio_framework_core::{parse_contributions, ProgramContributionEntry};
+pub use semio_framework::{parse_contributions, ProgramContributionEntry};
 
 pub fn parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
-    semio_framework_core::parse_contributions(&config.contributions_json)
+    semio_framework::parse_contributions(&config.contributions_json)
 }
 
 fn question_kind_match<'a>(contribution: &'a Contribution, kind: &str) -> Option<(&'a str, &'a str, &'a str)> {

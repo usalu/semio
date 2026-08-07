@@ -107,7 +107,7 @@ pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: None,
         required: true,
-        multiplicity: semio_framework_core::PortMultiplicity::One,
+        multiplicity: semio_framework::PortMultiplicity::One,
     }
 }
 
@@ -121,7 +121,7 @@ pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
         kind_id: Some("computation.fem2d".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::One,
+        multiplicity: semio_framework::PortMultiplicity::One,
     }
 }
 // #endregion 🔖️Io
@@ -247,7 +247,7 @@ mod tests {
         assert!(geometry_in.required, "geometry:in is a required input port");
         assert_eq!(geometry_in.media_type.class, semio_framework_plugin::MediaClass::TwoD);
         assert_eq!(geometry_in.media_type.form, semio_framework_plugin::MediaForm::Vector);
-        assert_eq!(geometry_in.multiplicity, semio_framework_core::PortMultiplicity::One);
+        assert_eq!(geometry_in.multiplicity, semio_framework::PortMultiplicity::One);
 
         let results_out = io.ports.iter().find(|port| port.id == "results:out").expect("results:out declared");
         assert_eq!(results_out.direction, semio_framework_plugin::MediaPortDirection::Out);

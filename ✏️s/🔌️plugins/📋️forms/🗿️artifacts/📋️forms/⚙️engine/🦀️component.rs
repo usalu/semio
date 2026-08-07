@@ -105,7 +105,7 @@ pub fn forms_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: Some("form.dictionary".into()),
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::Many,
+            multiplicity: semio_framework::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
@@ -258,7 +258,7 @@ mod tests {
         let dictionary_out = io.ports.iter().find(|port| port.id == "dictionary:out").expect("dictionary:out declared");
         assert_eq!(dictionary_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(dictionary_out.kind_id.as_deref(), Some("form.dictionary"));
-        assert_eq!(dictionary_out.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(dictionary_out.multiplicity, semio_framework::PortMultiplicity::Many);
         let all_ports = io.all_ports();
         assert!(all_ports.iter().any(|port| port.id == "document:in"));
         assert!(all_ports.iter().any(|port| port.id == "document:out"));

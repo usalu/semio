@@ -14,7 +14,7 @@
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
 use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame};
-use crate::os_spr::core::{ActorId, OperationId};
+use crate::os_spr::{ActorId, OperationId};
 use crate::os_spr::PresencePeer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -288,7 +288,7 @@ pub mod backbone_worker_wire {
 // folder-reconstruction path move `crate::os_spr::OperationEnvelope`s without spelling this type), so it
 // stays a native-only import to avoid an unused-import warning on the wasm32 build.
 #[cfg(not(target_arch = "wasm32"))]
-use crate::os_spr::core::DocumentId;
+use crate::os_spr::DocumentId;
 
 /// @emoji 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::operation_envelope_from_edit`'s own
 /// fallback convention (`meta[i].op_id` when present, else `"{edit.id}#{i}"`) so this is the SAME

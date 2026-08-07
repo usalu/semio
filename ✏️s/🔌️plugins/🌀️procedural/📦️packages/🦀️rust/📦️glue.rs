@@ -1,5 +1,5 @@
-extern crate flow_core;
-// geometry side APIs: use flow_core::{tessellate_geometry, ...}
+extern crate flow;
+// geometry side APIs: use flow::{tessellate_geometry, ...}
 //! 🌀️ Procedural plugin — 2D and 3D flow apps bundled as one hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that is
@@ -233,19 +233,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-fn register_procedural_exports() {
-    artifacts::procedural2d::engine::register();
-    artifacts::procedural3d::engine::register();
-}
-
-semio_framework_plugin::semio_plugin! {
-    id: "procedural",
-    label: "Procedural",
-    version: "0.1.0",
-    setup: register_procedural_exports,
-    apps: [
-        apps::procedural2d::create_procedural2d_app => apps::procedural2d::Procedural2dPlayApp,
-        apps::procedural3d::create_procedural3d_app => apps::procedural3d::Procedural3dPlayApp,
-    ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

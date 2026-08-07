@@ -9,7 +9,7 @@
 //! `build_filter_bar`/`build_pool_table`, used only by the pool window).
 
 use crate::artifacts::curate::{CurateDocument, CuratedItem, Filters, GeometryRecipe, ObjectKind, SOURCING_CURATE_SCHEMA};
-use semio_framework_core::{parse_contributions, Contribution};
+use semio_framework::{parse_contributions, Contribution};
 use serde_json::{json, Value};
 use std::sync::Mutex;
 
@@ -96,7 +96,7 @@ pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
             kind_id: Some("kit.catalog".into()),
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::Many,
+            multiplicity: semio_framework::PortMultiplicity::Many,
         }],
         export_formats: vec![],
         import_formats: vec![],
@@ -262,7 +262,7 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
 /// (two consumers, hence engine-owned per this file's DocumentHelpers rule).
 pub fn kind_mesh_json(kind: &ObjectKind) -> Value {
     let spec = mesh_spec_for(&kind.geometry);
-    let mesh = semio_framework_core::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
+    let mesh = semio_framework::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
     json!({ "id": kind.id, "data": mesh })
 }
 
@@ -792,9 +792,9 @@ mod tests {
         sync_sourcing_module_contributions("[]");
         assert!(available_modules().is_empty());
         let beams = beams::BeamsModule;
-        let entry = semio_framework_core::ProgramContributionEntry {
+        let entry = semio_framework::ProgramContributionEntry {
             plugin_id: "sourcing-module-beams".into(),
-            contribution: semio_framework_core::Contribution::SourcingModule {
+            contribution: semio_framework::Contribution::SourcingModule {
                 app_id: SOURCING_CURATE_APP_ID.into(),
                 module_id: beams.module_id().into(),
                 label: beams.label().into(),
@@ -812,7 +812,7 @@ mod tests {
 
     #[test]
     fn sync_sourcing_module_contributions_adds_hot_installed_modules() {
-        use semio_framework_core::{Contribution, ProgramContributionEntry};
+        use semio_framework::{Contribution, ProgramContributionEntry};
         let entry = ProgramContributionEntry {
             plugin_id: "sourcing-module-test".into(),
             contribution: Contribution::SourcingModule {

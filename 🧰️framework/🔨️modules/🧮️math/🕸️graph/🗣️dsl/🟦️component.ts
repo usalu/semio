@@ -206,7 +206,7 @@ export function runJackOnPuzzle3dFixture(fixtureJson: string, query: string): Ja
   return runJackOnBoardFixture(fixtureJson, query);
 }
 
-/** @emoji 🔐️ Mirrors `dsl_core::escape_text` (Rust): the one canonical escape scheme for
+/** @emoji 🔐️ Mirrors `os_dsl::escape_text` (Rust): the one canonical escape scheme for
  * double-quoted text — `\\ \" \n \r \t` plus `\u{XXXX}` for any other control character. Both
  * quote styles are accepted on parse by the unified Rust lexer, but printing is always
  * double-quoted — this TS twin must emit the exact same bytes. */

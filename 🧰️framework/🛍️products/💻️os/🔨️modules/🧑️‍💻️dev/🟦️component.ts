@@ -8,7 +8,7 @@ export type { PluginBuildTarget } from "../🔌️plugin/📦️packages/🟦️
 export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 export { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 
-import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
+import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 import { resolveShellBrandById } from "./🏷️brand/📦️index.ts";
 

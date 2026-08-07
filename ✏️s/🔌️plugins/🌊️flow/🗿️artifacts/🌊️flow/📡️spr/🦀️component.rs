@@ -1,6 +1,6 @@
 //! ⚖️ Flow artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
 //!
-//! `protocol::OpBinary for FlowOperation` is implemented directly in the flow kernel crate (`flow_core`);
+//! `protocol::OpBinary for FlowOperation` is implemented directly in the flow kernel crate (`flow`);
 //! see `🗿️artifacts/🌊️flow/🦀️component.rs` for why. This component only adds the thin artifact-facing
 //! `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law and a whole-store round trip.
 //!

@@ -18,7 +18,8 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
+semio-framework-os-infinite = { path = "../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-os-kernel-neural-engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 semio-s-3d = { path = "../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-s-2d = { path = "../../../../../../../✏️s/🔨️modules/◻2d/📦️packages/🦀️rust" }

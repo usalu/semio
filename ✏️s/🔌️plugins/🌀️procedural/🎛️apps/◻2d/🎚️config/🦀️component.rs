@@ -6,7 +6,7 @@
 //! document. It still round-trips through a real `DocumentStore` (with a real `backwards`), so every
 //! edit is VCS'd exactly like document content.
 
-use flow_core::CameraJson;
+use flow::CameraJson;
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
 

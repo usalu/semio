@@ -10,7 +10,7 @@ use semio_s_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::Serialize;
 use serde_json::Value;
-use semio_framework_core::{parse_contributions, Contribution};
+use semio_framework::{parse_contributions, Contribution};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -780,7 +780,7 @@ mod tests {
 
     #[test]
     fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
-        use semio_framework_core::{Contribution, ProgramContributionEntry};
+        use semio_framework::{Contribution, ProgramContributionEntry};
         let machine = WorkshopMachine {
             id: "hot-saw".into(),
             label: "Hot Saw".into(),

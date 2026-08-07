@@ -1,0 +1,10 @@
+{
+  "id": "26/08/07/EXAMPLE-SHAPE-ASSETS-AND-TESTS",
+  "title": "Example Shape Assets And Tests",
+  "status": "open",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-EXAMPLES",
+  "due": "2026-08-07",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "description": "Replace ad-hoc 📚️examples layout with per-example units: 📚️examples/<emoji-slug>/{🦀️component.rs, 🟦️component.ts, 🖼️assets/, 🧪️tests/}. Enforce via taxonomy, policy, registry, fixture-sweep. Wire ExampleSource into App and migrate all plugins."
+}

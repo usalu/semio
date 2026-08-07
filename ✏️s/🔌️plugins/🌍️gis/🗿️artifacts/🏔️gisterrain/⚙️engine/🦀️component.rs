@@ -187,7 +187,7 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: Some("2d.map".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::One,
+        multiplicity: semio_framework::PortMultiplicity::One,
     }
 }
 
@@ -202,7 +202,7 @@ pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         kind_id: Some("3d.mesh".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::Many,
+        multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 

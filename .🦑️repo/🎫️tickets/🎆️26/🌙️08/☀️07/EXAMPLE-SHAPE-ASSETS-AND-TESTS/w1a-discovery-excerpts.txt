@@ -1,0 +1,137 @@
+74|export interface Taxonomy {
+75|  readonly _comment?: string;
+76|  readonly schemaVersion: number;
+77|  readonly roles: readonly string[];
+78|  readonly langs: readonly string[];
+79|  readonly ecosystems: Readonly<Record<string, Ecosystem>>;
+80|  readonly targets: Readonly<Record<string, TargetSpec>>;
+81|  readonly rustEntryPathRules: RustEntryPathRules;
+82|  readonly packagesDirName: string;
+83|  /** 🎯️ Optional per-lang render-target axis: `<owner>/📦️packages/<lang>/🎯️targets/<target>/<manifest>`. */
+84|  readonly targetsDirName: string;
+85|  /** 🧱️ Flat co-location dir holding one subdir per logical element, each with a sibling leaf file per lang/target (see `taxonomyLeafFilenames`). */
+86|  readonly elementsDirName: string;
+87|  /** 🚪️ Shape V2: the entry file lives inside `📦️packages/<lang>/`, no longer at the owner root. */
+88|  readonly entryLocation: "packages" | "owner-root";
+89|  /** 📦️ Exact filenames allowed inside a `📦️packages/<lang>[/🎯️targets/<target>]/` dir — packaging code only, never data. */
+90|  readonly packagingFileNames: readonly string[];
+91|  /** 📦️ Suffix allowlist complementing `packagingFileNames` (tool configs: `*.config.ts`, …). */
+92|  readonly packagingFileSuffixes: readonly string[];
+93|  readonly artifactsDirName: string;
+94|  readonly appsDirName: string;
+95|  readonly modesDirName: string;
+96|  readonly windowsDirName: string;
+97|  /** ✅️ COMPLETENESS set: every `🗿️artifacts/<a>/` must carry each of these as a leaf. Never merge with `artifactChildDirs`. */
+98|  readonly artifactComponentDirs: readonly string[];
+99|  /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the extra member is `⚙️engine`, allowed but not required). */
+100|  readonly artifactChildDirs: readonly string[];
+101|  readonly exampleAssetsDirName: string;
+102|  readonly exampleTestsDirName: string;
+103|  readonly exampleSlugPattern: string;
+104|  readonly exampleAssetKindPrefixes: Readonly<Record<string, string>>;
+105|  readonly exampleMediaKindPrefixes: Readonly<Record<string, string>>;
+106|  readonly exampleLeafFilenames: Readonly<Record<string, string>>;
+107|  readonly exampleTestLeafFilenames: Readonly<Record<string, string>>;
+108|  readonly forbiddenExampleSlugs: readonly string[];
+109|  readonly forbiddenExamplePluralDirs: readonly string[];
+110|  readonly appChildDirs: readonly string[];
+111|  readonly semioDataLeafPrefix: string;
+112|  readonly semioFileExtension: string;
+113|  /** 📖️ Normative `.semio` spec filename per constitutional artifact facet (`artifactComponentDirs` keys only). */
+114|  readonly artifactSpecFilenames: Readonly<Record<string, string>>;
+115|  readonly windowChildDirs: readonly string[];
+116|  readonly taxonomyLeafParentDirs: readonly string[];
+117|  /** 🍃️ Leaf component filename, keyed by target when a package has one (e.g. `"🧊️wgpu"`), else by lang (e.g. `"🦀️rust"` for plugins, which never have a target level). */
+118|  readonly taxonomyLeafFilenames: Readonly<Record<string, string>>;
+119|  /** 🚪️ PRIMARY entry filename per lang; `ecosystems.<lang>.entryFilenames` carries the full accepted set. */
+120|  readonly entryFilenames: Readonly<Record<string, string>>;
+121|  /** 🧪️ Co-located story leaf filename (does not match a `*.stories.*` glob — callers must list it literally). */
+122|  readonly storyLeafFilename: string;
+123|  readonly libWiringLineBudget: number;
+124|  readonly forbiddenPathSegments: readonly string[];
+125|  /** 🔌️ Required plugin-root folder name under each `✏️s/🔌️plugins/<plugin>/`. */
+126|  readonly pluginDirName: string;
+127|  /** 🔌️ Required child folders of `pluginDirName` (V2 component folders). */
+128|  readonly pluginChildDirs: readonly string[];
+129|  /** 🚫️ Emoji-stripped directory/file stems banned repo-wide (e.g. `core`, `shared`). */
+130|  readonly bannedNameStems: readonly string[];
+131|  /** ✅️ Taxonomy directories must start with an emoji prefix that includes U+FE0F. */
+132|  readonly requireEmojiPrefixWithVs16: boolean;
+133|  readonly rootDataDirNames: readonly string[];
+134|  readonly rootDataFileNames: readonly string[];
+135|  readonly rootDocFileNames: readonly string[];
+136|  readonly areaStates: readonly AreaState[];
+137|  readonly packageMaturityStates: readonly PackageMaturity[];
+138|  /** 🧭️ How migration is detected — structurally, never from a hand-maintained package list. */
+139|  readonly migratedMarker: "packages-dir-exists";
+140|  readonly areas: Readonly<Record<string, AreaState>>;
+141|}
+142|
+143|const cachedTaxonomy = ephemeralBox<Taxonomy | undefined>("framework.products.repo.modules.lib.discovery.component.ts.cachedTaxonomy", undefined);
+144|
+145|/** 📖️ Reads and parses `🔣️taxonomy.json` (sibling to this module, resolved via `import.meta.url` like `getLibRoot` in `📦️index.ts` of this same package) — cached after the first call. */
+146|export function loadTaxonomy(): Taxonomy {
+147|  if (cachedTaxonomy.current) return cachedTaxonomy.current;
+148|  const path = join(__dirname, "../🔣️taxonomy.json");
+149|  cachedTaxonomy.current = JSON.parse(readFileSync(path, "utf8")) as Taxonomy;
+150|  return cachedTaxonomy.current;
+151|}
+152|
+153|/**
+154| * 🚦️ Internal-consistency audit of the vocabulary itself: the completeness/structural artifact lists must
+155| * stay in their superset relation, every declared area state and every projection map (`taxonomyLeafFilenames`,
+156| * `entryFilenames`) must agree with `ecosystems`/`targets`, and every lang must be described. Returns human
+157| * readable problems (empty = healthy) so a vocabulary edit can never silently blind or flood the rules that
+158| * consume it.
+159| */
+160|export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] {
+161|  const problems: string[] = [];
+162|  const areaStates = new Set<string>(taxonomy.areaStates);
+163|  for (const [area, state] of Object.entries(taxonomy.areas)) {
+164|    if (!areaStates.has(state)) problems.push(`areas["${area}"] = "${state}" is not one of areaStates (${taxonomy.areaStates.join(", ")}).`);
+165|  }
+166|  for (const dir of [taxonomy.exampleAssetsDirName, taxonomy.exampleTestsDirName]) {
+167|    if (!dir) {
+168|      problems.push(`exampleAssetsDirName and exampleTestsDirName are required.`);
+169|      continue;
+170|    }
+171|    if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+172|      problems.push(`example dir "${dir}" should appear in taxonomyLeafParentDirs for leaf validation.`);
+173|    }
+174|  }
+175|  if (!taxonomy.appChildDirs.includes("📚️examples")) {
+176|    problems.push(`appChildDirs must include "📚️examples".`);
+177|  }
+178|  if (!taxonomy.exampleSlugPattern) {
+179|    problems.push(`exampleSlugPattern is required.`);
+180|  }
+181|  for (const dir of taxonomy.artifactComponentDirs) {
+182|    if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);
+183|  }
+184|  for (const lang of taxonomy.langs) {
+185|    const ecosystem = taxonomy.ecosystems[lang];
+186|    if (!ecosystem) {
+187|      problems.push(`langs member "${lang}" has no ecosystems entry.`);
+188|      continue;
+189|    }
+190|    const leaf = taxonomy.taxonomyLeafFilenames[lang];
+191|    if (leaf !== ecosystem.leafFilename) problems.push(`taxonomyLeafFilenames["${lang}"] = ${JSON.stringify(leaf)} disagrees with ecosystems["${lang}"].leafFilename = ${JSON.stringify(ecosystem.leafFilename)}.`);
+192|    const primaryEntry = taxonomy.entryFilenames[lang];
+193|    if (primaryEntry !== undefined && ecosystem.entryFilenames[0] !== primaryEntry) {
+194|      problems.push(`entryFilenames["${lang}"] = ${JSON.stringify(primaryEntry)} is not the first of ecosystems["${lang}"].entryFilenames (${ecosystem.entryFilenames.join(", ")}).`);
+195|    }
+196|  }
+197|  for (const [target, spec] of Object.entries(taxonomy.targets)) {
+198|    if (!taxonomy.langs.includes(spec.lang)) problems.push(`targets["${target}"].lang = "${spec.lang}" is not a declared lang.`);
+199|    const leaf = taxonomy.taxonomyLeafFilenames[target];
+200|    if (leaf !== spec.leafFilename) problems.push(`taxonomyLeafFilenames["${target}"] = ${JSON.stringify(leaf)} disagrees with targets["${target}"].leafFilename = ${JSON.stringify(spec.leafFilename)}.`);
+201|  }
+202|  for (const key of Object.keys(taxonomy.taxonomyLeafFilenames)) {
+203|    if (!taxonomy.ecosystems[key] && !taxonomy.targets[key]) problems.push(`taxonomyLeafFilenames key "${key}" is neither a lang nor a target.`);
+204|  }
+205|  for (const [facet, specName] of Object.entries(taxonomy.artifactSpecFilenames ?? {})) {
+206|    if (!taxonomy.artifactComponentDirs.includes(facet)) {
+207|      problems.push(`artifactSpecFilenames key "${facet}" is not in artifactComponentDirs.`);
+208|    }
+209|    if (!specName.endsWith(`.${taxonomy.semioFileExtension}`)) {
+210|      problems.push(`artifactSpecFilenames["${facet}"] must end with .${taxonomy.semioFileExtension}.`);

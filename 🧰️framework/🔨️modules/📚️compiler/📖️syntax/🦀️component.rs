@@ -2,16 +2,16 @@
 //! parser, and canonical printer for the semio-native math snippet syntax (`x^2`, `frac(a, b)`,
 //! `mat(1, 2; 3, 4)`, `:rocket:`, …) that replaces Typst math markup. Follows the same "own
 //! pre-scan lexer for extras outside `dsl_core`'s shared token alphabet, delegate every other run
-//! of characters to `dsl_core::lex`" pattern `dsl_grammar` and `mathematical_graph_dsl` already
+//! of characters to `os_dsl::lex`" pattern `dsl_grammar` and `mathematical_graph_dsl` already
 //! established — this EXTENDS the shared grammar infrastructure, it does not fork it. The
 //! normative spec ships alongside as `📖️math.grammar` (see `math_grammar_parses_under_dsl_grammar`
 //! in the `🧪️Tests` region, a dev-dependency-only check since `dsl_grammar`'s `Recognizer` matches
-//! `dsl_core::lex` tokens directly and can't see this crate's own pre-scanned extras).
+//! `os_dsl::lex` tokens directly and can't see this crate's own pre-scanned extras).
 //!
 //! Scope (Wave 1 of the compiler plan): parses/prints math snippets only. Layout, fonts, and SVG
 //! emission are later waves — this crate produces an AST, nothing renders yet.
 
-use dsl_core::{escape_text, lex as core_lex, unescape_text, Limits, TextError, TextSpan, TokenKind as CoreKind};
+use os_dsl::{escape_text, lex as core_lex, unescape_text, Limits, TextError, TextSpan, TokenKind as CoreKind};
 
 //#region 🔖️Model
 /// @emoji 🌳️ One parsed math expression. Function/structure names (`frac`, `sqrt`, `mat`, `hat`, …)
@@ -136,8 +136,8 @@ fn line_col_at(text: &str, byte_pos: usize) -> (u32, u32) {
 
 /// @emoji 🔬️ Pre-scans `_ ; < > !` — none in `dsl_core`'s shared alphabet, and `_` in particular
 /// would otherwise glue into a preceding ident (`x_1` lexing as one `Ident("x_1")`) since
-/// `dsl_core::lex`'s `is_ident_continue` accepts `_` — and delegates every other run of characters
-/// whole to `dsl_core::lex`, exactly like `dsl_core::grammar::lex` does for its own `? |` extras.
+/// `os_dsl::lex`'s `is_ident_continue` accepts `_` — and delegates every other run of characters
+/// whole to `os_dsl::lex`, exactly like `os_dsl::grammar::lex` does for its own `? |` extras.
 fn lex(text: &str) -> Result<Vec<MToken>, TextError> {
     let bytes = text.as_bytes();
     let mut tokens = Vec::new();
@@ -581,7 +581,7 @@ mod tests {
     #[test]
     fn subscript_does_not_glue_into_the_preceding_ident() {
         // Regression guard for the exact bug this crate's pre-scan lexer exists to avoid:
-        // `dsl_core::lex` alone would swallow `_1` into one `Ident("x_1")`.
+        // `os_dsl::lex` alone would swallow `_1` into one `Ident("x_1")`.
         let node = parse_formula("x_1").expect("parse");
         assert!(matches!(node, MathNode::Sub(..)), "expected Sub(x, 1), got {node:?}");
     }
@@ -728,17 +728,17 @@ mod tests {
 
     /// @emoji 🪞️ This crate's own normative `.grammar` file parses under `dsl_grammar`'s parser and
     /// round-trips — the self-conformance proof for the *format* of the spec (not a recognizer
-    /// check against real math text, which `dsl_core::grammar::Recognizer` cannot do here since it
-    /// matches `dsl_core::lex` tokens directly and has no visibility into this crate's own
+    /// check against real math text, which `os_dsl::grammar::Recognizer` cannot do here since it
+    /// matches `os_dsl::lex` tokens directly and has no visibility into this crate's own
     /// pre-scanned `_ ; < > !` extras — a real, documented gap, not a silent approximation).
     #[test]
     fn math_grammar_parses_under_dsl_grammar() {
         let source = include_str!("📖️math.grammar.semio");
-        let parsed = dsl_core::grammar::parse_grammar(source).expect("📖️math.grammar must parse under dsl_grammar's own parser");
+        let parsed = os_dsl::grammar::parse_grammar(source).expect("📖️math.grammar must parse under dsl_grammar's own parser");
         assert_eq!(parsed.id, "math");
         assert_eq!(parsed.start, "formula");
-        let printed = dsl_core::grammar::print_grammar(&parsed);
-        let reparsed = dsl_core::grammar::parse_grammar(&printed).expect("canonical print of 📖️math.grammar must reparse");
+        let printed = os_dsl::grammar::print_grammar(&parsed);
+        let reparsed = os_dsl::grammar::parse_grammar(&printed).expect("canonical print of 📖️math.grammar must reparse");
         assert_eq!(reparsed, parsed);
     }
 }

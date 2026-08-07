@@ -7,8 +7,8 @@
 //! its own in-file `OsWorkflow`/`OsAppInstance` pair (future work, not this ticket).
 // #endregion 🔖️InstanceIdentity
 
-use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, OsMediaFormat, PortMultiplicity};
-use semio_framework_core::{Locale, Terminology};
+use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, OsMediaFormat, PortMultiplicity};
+use semio_framework::{Locale, Terminology};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -32,7 +32,7 @@ pub const S_AUTOMATION_SCHEMA: &str = "s.automation";
 /// 🤝️ A connect-time negotiated wire contract between two `WorkflowMediaPort`s — stored on
 /// `WorkflowEdge` so later passes (`validate_workflow`, merge reconciliation) can re-check it
 /// without re-resolving the artifact registry. `kind_id`/`media_type` describe the *accepted*
-/// (target) side — see `semio_framework_core::media_types_compatible`. Ported down from
+/// (target) side — see `semio_framework::media_types_compatible`. Ported down from
 /// `framework/product/os/core`'s `workflow` module (`MediaContract`) so the persisted graph carries
 /// its own edge contracts; the negotiation logic itself (`negotiate_media_contract`) stays in
 /// os-core for now since it needs the artifact-kind registry, which doesn't exist at this layer yet.
@@ -57,7 +57,7 @@ pub fn placeholder_media_contract(kind_id: &str) -> MediaContract {
 /// 🧬️ Hand-crafted `dsl::DslField` for `MediaContract` (instead of `#[derive(dsl::DslRecord)]`) —
 /// see the `dsl::` conversion cheat sheet's tuple-field guidance. `conversion: Option<(MediaForm,
 /// MediaForm)>` has no derivable shape (raw Rust tuples don't implement `dsl::DslField`), and
-/// `media_type`/`wire` point at plain-data types from `semio_framework_core` that this crate can't
+/// `media_type`/`wire` point at plain-data types from `semio_framework` that this crate can't
 /// implement `dsl::DslField` for under the orphan rule (neither the trait nor the type is local
 /// here). Since `MediaContract` itself IS local, hand-writing its own impl sidesteps both problems
 /// at once: every foreign sub-value (`MediaClass`/`MediaForm`/`OsMediaFormat`) is bridged directly
@@ -269,7 +269,7 @@ impl dsl::DslField for MediaContract {
 //#region 🔖️WorkflowMediaPort
 /// 🔌️ One instance-scoped wire endpoint on a `WorkflowNode` — `id` is unique within the graph
 /// (`"{node_id}:{spec.id}:{in|out}"`, see `workflow_media_port`), `spec` is the app-level port
-/// declaration it was instantiated from (`semio_framework_core::MediaPortSpec`).
+/// declaration it was instantiated from (`semio_framework::MediaPortSpec`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkflowMediaPort {
@@ -278,7 +278,7 @@ pub struct WorkflowMediaPort {
 }
 
 /// 🧬️ Hand-crafted `dsl::DslField` for `WorkflowMediaPort` — `spec: MediaPortSpec` points at a
-/// plain-data type from `semio_framework_core`, which this crate can't implement `dsl::DslField`
+/// plain-data type from `semio_framework`, which this crate can't implement `dsl::DslField`
 /// for under the orphan rule (same reasoning as `MediaContract` above). Bridges every sub-value
 /// (`MediaPortDirection`/`MediaClass`/`MediaForm`/`PortMultiplicity`) directly to/from a scalar
 /// `dsl::FieldValue`, reusing the `media_class_ordinal`/`media_form_ordinal` tables above.
@@ -837,17 +837,17 @@ pub fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &serde_jso
 /// @emoji ✅️ Type-checks one binding's `field_path` against the target app's declared `ConfigSpec` —
 /// `config_spec` is caller-resolved (os-core looks it up via `os_app_registration`), so this function
 /// itself needs no registry. Ported verbatim from os-core's `validate_parameter_config_binding`.
-pub fn validate_workflow_parameter_config_binding(binding: &WorkflowParameterBinding, parameter_type: &WorkflowParameterType, config_spec: &semio_framework_core::ConfigSpec) -> Result<(), store::SpaceConflict> {
+pub fn validate_workflow_parameter_config_binding(binding: &WorkflowParameterBinding, parameter_type: &WorkflowParameterType, config_spec: &semio_framework::ConfigSpec) -> Result<(), store::SpaceConflict> {
     let uri = format!("{}#{}", binding.node_id, binding.field_path);
     let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
         return Err(store::SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path) });
     };
     let compatible = matches!(
         (parameter_type, &field.shape),
-        (WorkflowParameterType::Numeric, semio_framework_core::ConfigFieldShape::Number { .. })
-            | (WorkflowParameterType::Categorical, semio_framework_core::ConfigFieldShape::Select { .. })
-            | (WorkflowParameterType::Toggle, semio_framework_core::ConfigFieldShape::Toggle)
-            | (WorkflowParameterType::Text, semio_framework_core::ConfigFieldShape::Text)
+        (WorkflowParameterType::Numeric, semio_framework::ConfigFieldShape::Number { .. })
+            | (WorkflowParameterType::Categorical, semio_framework::ConfigFieldShape::Select { .. })
+            | (WorkflowParameterType::Toggle, semio_framework::ConfigFieldShape::Toggle)
+            | (WorkflowParameterType::Text, semio_framework::ConfigFieldShape::Text)
     );
     if compatible {
         Ok(())

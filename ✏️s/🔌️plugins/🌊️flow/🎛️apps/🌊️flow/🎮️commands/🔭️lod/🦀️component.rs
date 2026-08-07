@@ -3,7 +3,7 @@
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
-use flow_core::{dag::DagDrawLod, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{dag::DagDrawLod, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

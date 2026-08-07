@@ -1249,8 +1249,8 @@ fn apply_draw_transform_point(m: [f64; 6], p: [f64; 2]) -> [f64; 2] {
     [m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5]]
 }
 
-fn draw_path_segment_to_dwg(segment: &PathSegment, transform: [f64; 6]) -> semio_framework_core::DwgPathSegment {
-    use semio_framework_core::DwgPathSegment;
+fn draw_path_segment_to_dwg(segment: &PathSegment, transform: [f64; 6]) -> semio_framework::DwgPathSegment {
+    use semio_framework::DwgPathSegment;
     match segment {
         PathSegment::Move { to } => DwgPathSegment::Move { to: apply_draw_transform_point(transform, *to) },
         PathSegment::Line { to } => DwgPathSegment::Line { to: apply_draw_transform_point(transform, *to) },
@@ -1261,8 +1261,8 @@ fn draw_path_segment_to_dwg(segment: &PathSegment, transform: [f64; 6]) -> semio
     }
 }
 
-fn dwg_path_segment_to_draw(segment: &semio_framework_core::DwgPathSegment) -> PathSegment {
-    use semio_framework_core::DwgPathSegment;
+fn dwg_path_segment_to_draw(segment: &semio_framework::DwgPathSegment) -> PathSegment {
+    use semio_framework::DwgPathSegment;
     match segment {
         DwgPathSegment::Move { to } => PathSegment::Move { to: *to },
         DwgPathSegment::Line { to } => PathSegment::Line { to: *to },
@@ -1276,7 +1276,7 @@ fn dwg_path_segment_to_draw(segment: &semio_framework_core::DwgPathSegment) -> P
 /// 📐️ Converts a draw document to DWG bytes with native fidelity: circular/elliptical arcs become bulges (not flattened cubics) and text stays a DWG TEXT entity.
 pub fn draw_document_json_to_dwg_bytes(value: &serde_json::Value) -> Result<Vec<u8>, String> {
     let doc: DrawDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
-    let mut path_groups: Vec<Vec<semio_framework_core::DwgPathSegment>> = Vec::new();
+    let mut path_groups: Vec<Vec<semio_framework::DwgPathSegment>> = Vec::new();
     let mut text_entities: Vec<(f64, f64, f64, String)> = Vec::new();
     for node in flatten_draw_document_to_scene_nodes(&doc) {
         if !node.visible {
@@ -1292,18 +1292,18 @@ pub fn draw_document_json_to_dwg_bytes(value: &serde_json::Value) -> Result<Vec<
         }
         path_groups.push(node.segments.iter().map(|segment| draw_path_segment_to_dwg(segment, node.transform)).collect());
     }
-    let mut drawing = semio_framework_core::paths_to_dwg_drawing(&path_groups);
+    let mut drawing = semio_framework::paths_to_dwg_drawing(&path_groups);
     let layer = drawing.ensure_layer("0");
     for (x, y, size, content) in text_entities {
-        drawing.entities.push(semio_framework_core::DwgEntity { layer, color: semio_framework_core::DwgColor::ByLayer, geometry: semio_framework_core::DwgGeometry::Text { at: [x, y, 0.0], height: size, rotation: 0.0, content } });
+        drawing.entities.push(semio_framework::DwgEntity { layer, color: semio_framework::DwgColor::ByLayer, geometry: semio_framework::DwgGeometry::Text { at: [x, y, 0.0], height: size, rotation: 0.0, content } });
     }
-    semio_framework_core::dwg_to_bytes(&drawing)
+    semio_framework::dwg_to_bytes(&drawing)
 }
 
 /// 📐️ Rebuilds a draw document from an imported DWG drawing: one path layer per polyline/spline entity, DWG text entities become draw text layers.
-pub fn draw_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<serde_json::Value, String> {
+pub fn draw_document_json_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<serde_json::Value, String> {
     let mut doc = default_draw_document("imported-dwg", Some("Imported DWG"));
-    let mut layers: Vec<DrawLayerNode> = semio_framework_core::dwg_drawing_to_paths(drawing)
+    let mut layers: Vec<DrawLayerNode> = semio_framework::dwg_drawing_to_paths(drawing)
         .iter()
         .enumerate()
         .map(|(index, segments)| {
@@ -1312,7 +1312,7 @@ pub fn draw_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -
         })
         .collect();
     for entity in &drawing.entities {
-        if let semio_framework_core::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
+        if let semio_framework::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
             layers.push(DrawLayerNode::Text(DrawTextBody { base: default_layer_base("Text"), x: at[0], y: at[1], content: content.clone(), size: *height }));
         }
     }
@@ -1330,14 +1330,14 @@ pub fn draw_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -
 /// `ArtifactKindSpec` literal `create_draw_app` already declares via `.artifact_kind(...)`
 /// (schema/media type/export+import formats/presentation fields copied verbatim), plus the
 /// app-specific `vector:out` port (see `draw_vector_out_port` below).
-pub fn draw_io() -> semio_framework_core::AppIo {
-    semio_framework_core::AppIo {
+pub fn draw_io() -> semio_framework::AppIo {
+    semio_framework::AppIo {
         document_schema: DRAW_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
+        document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
         ports: vec![draw_vector_out_port()],
-        export_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
-        import_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
-        artifact: semio_framework_core::ArtifactPresentation { id: "2d.drawing".into(), name: "2D Drawing".into(), dimension: "2d".into(), component_kind: "draw".into() },
+        export_formats: vec![semio_framework::OsMediaFormat::Svg, semio_framework::OsMediaFormat::Png],
+        import_formats: vec![semio_framework::OsMediaFormat::Svg, semio_framework::OsMediaFormat::Png],
+        artifact: semio_framework::ArtifactPresentation { id: "2d.drawing".into(), name: "2D Drawing".into(), dimension: "2d".into(), component_kind: "draw".into() },
     }
 }
 
@@ -1347,26 +1347,26 @@ pub fn draw_io() -> semio_framework_core::AppIo {
 /// duplicate — `kind_id` just pins this port to that same catalog entry. `Many`/optional: a
 /// consumer (e.g. raster's Vector→Raster-converted `image:in`) may connect before the canvas has
 /// any content, or fan out to several consumers at once.
-pub fn draw_vector_out_port() -> semio_framework_core::MediaPortSpec {
-    semio_framework_core::MediaPortSpec {
+pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
+    semio_framework::MediaPortSpec {
         id: "vector:out".into(),
         label: "Vector".into(),
-        direction: semio_framework_core::MediaPortDirection::Out,
-        media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
+        direction: semio_framework::MediaPortDirection::Out,
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
         kind_id: Some("2d.drawing".into()),
         required: false,
-        multiplicity: semio_framework_core::PortMultiplicity::Many,
+        multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 
 /// 🖼️ Exports the current draw document as an SVG `Media` payload for the `vector:out` port —
 /// reuses `draw_document_to_svg` (the same renderer the export-svg shell path uses), so there is
 /// exactly one SVG renderer.
-pub fn draw_vector_media(doc: &DrawDocument) -> Result<semio_framework_core::Media, semio_framework_core::MediaError> {
+pub fn draw_vector_media(doc: &DrawDocument) -> Result<semio_framework::Media, semio_framework::MediaError> {
     let (svg, _width, _height) = draw_document_to_svg(doc);
-    Ok(semio_framework_core::Media {
-        media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
-        payload: semio_framework_core::MediaPayload::Structured { schema: "2d.drawing".into(), json: svg },
+    Ok(semio_framework::Media {
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
+        payload: semio_framework::MediaPayload::Structured { schema: "2d.drawing".into(), json: svg },
     })
 }
 //#endregion 🔖️Io
@@ -1393,9 +1393,9 @@ mod tests {
 
         let bytes = draw_document_json_to_dwg_bytes(&value).expect("export dwg");
         assert!(!bytes.is_empty());
-        let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("decode dwg");
-        assert!(drawing.entities.iter().any(|entity| matches!(entity.geometry, semio_framework_core::DwgGeometry::Text { .. })));
-        assert!(drawing.entities.iter().any(|entity| matches!(entity.geometry, semio_framework_core::DwgGeometry::LwPolyline { .. } | semio_framework_core::DwgGeometry::Spline { .. })));
+        let drawing = semio_framework::dwg_from_bytes(&bytes).expect("decode dwg");
+        assert!(drawing.entities.iter().any(|entity| matches!(entity.geometry, semio_framework::DwgGeometry::Text { .. })));
+        assert!(drawing.entities.iter().any(|entity| matches!(entity.geometry, semio_framework::DwgGeometry::LwPolyline { .. } | semio_framework::DwgGeometry::Spline { .. })));
 
         let reimported = draw_document_json_from_dwg(&drawing).expect("import dwg");
         let reimported_doc: DrawDocument = serde_json::from_value(reimported).expect("valid draw document");
@@ -1981,13 +1981,13 @@ mod tests {
         doc.layers = vec![hidden];
         let value = serde_json::to_value(&doc).unwrap();
         let bytes = draw_document_json_to_dwg_bytes(&value).expect("export empty dwg");
-        let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("decode dwg");
+        let drawing = semio_framework::dwg_from_bytes(&bytes).expect("decode dwg");
         assert!(drawing.entities.is_empty());
     }
 
     #[test]
     fn draw_document_json_from_dwg_falls_back_to_single_empty_layer_when_no_entities() {
-        let drawing = semio_framework_core::DwgDrawing::default();
+        let drawing = semio_framework::DwgDrawing::default();
         let value = draw_document_json_from_dwg(&drawing).expect("import empty dwg");
         let doc: DrawDocument = serde_json::from_value(value).expect("valid document");
         assert_eq!(doc.layers.len(), 1);

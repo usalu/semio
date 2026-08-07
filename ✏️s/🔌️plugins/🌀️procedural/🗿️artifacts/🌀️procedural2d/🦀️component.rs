@@ -1,6 +1,6 @@
 //! 📏️ Procedural2d artifact — the document entity the ◻2d app edits (constitutional: general).
 
-use flow_core::{FlowFixture, Widget};
+use flow::{FlowFixture, Widget};
 use playbook::GenerationPlayState;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ pub struct Procedural2dDocument {
     pub generation: GenerationPlayState,
 }
 
-/// 🪪️ A flow widget's stable id, across every widget variant (mirrors flow_core's private accessor).
+/// 🪪️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
 pub fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }

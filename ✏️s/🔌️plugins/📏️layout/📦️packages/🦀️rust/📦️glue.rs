@@ -122,11 +122,7 @@ pub use apps::layout::wasm::LayoutSession;
 //#endregion 🕸️Wasm
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "layout",
-    label: "Layout",
-    version: "0.1.0",
-    setup: artifacts::layout::engine::register,
-    apps: [ apps::layout::create_layout_app => apps::layout::LayoutPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

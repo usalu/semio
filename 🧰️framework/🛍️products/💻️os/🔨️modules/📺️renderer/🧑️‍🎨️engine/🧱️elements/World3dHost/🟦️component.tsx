@@ -52,7 +52,7 @@ import {
   type TutorialCameraDriver,
   type UiLabel,
 } from "@semio-tech/ui-react";
-import { windowElementId, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework-core";
+import { windowElementId, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import {
   cadVec3ToThree,
   computeWorldProjectionPose,

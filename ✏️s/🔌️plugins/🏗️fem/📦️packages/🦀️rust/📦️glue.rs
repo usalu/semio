@@ -223,9 +223,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "fem", label: "FEM", version: "0.1.0",
-    setup: register_all_engines,
-    apps: [ apps::fem2d::create_fem2d_app => apps::fem2d::Fem2dPlayApp, apps::fem3d::create_fem3d_app => apps::fem3d::Fem3dPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

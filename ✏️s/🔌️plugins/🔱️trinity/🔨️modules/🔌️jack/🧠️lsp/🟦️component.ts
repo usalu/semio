@@ -2,7 +2,7 @@
  * guards it depends on (`isJsonRpcRequest`/`isJsonRpcNotification`/`isJsonRpcResponse`/`LanguageServer`/
  * `LspMessage`) are defined locally below (see the `🔖️protocol` region) rather than imported — a
  * sibling `./protocol.ts` never existed on disk, so the previous import of the same names was dead. */
-import { ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralBox } from "@semio-tech/framework";
 import init, { JackLspSession } from "./📦️packages/🦀️rust/pkg/trinity_jack_lsp.js";
 
 const session = ephemeralBox<JackLspSession | null>("s.plugins.trinity.modules.jack.lsp.component.ts.session", null);

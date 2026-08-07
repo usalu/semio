@@ -173,7 +173,7 @@ pub mod cache {
 
 pub mod preview {
     use crate::artifacts::present::engine::animate_video::VideoError;
-    use crate::artifacts::present::engine::animate_core::{preview_scene_loop, AnimateConfig, Scene, SceneFrame};
+    use crate::artifacts::present::engine::animate::{preview_scene_loop, AnimateConfig, Scene, SceneFrame};
     use std::io::Write;
 
     /// 🪟️ Live preview outcome.
@@ -322,7 +322,7 @@ pub mod preview {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::present::engine::animate_core::{BasicStage, Camera, Scene, SectionList, Sobject, VSobject};
+        use crate::artifacts::present::engine::animate::{BasicStage, Camera, Scene, SectionList, Sobject, VSobject};
         use std::collections::HashMap;
 
         struct DemoScene {
@@ -383,7 +383,7 @@ pub mod preview {
 }
 
 pub mod render {
-    use crate::artifacts::present::engine::animate_core::{compile_animations, interpolate_at, AnimateConfig, Animation, Camera, Scene, SectionList, Sobject, Wait};
+    use crate::artifacts::present::engine::animate::{compile_animations, interpolate_at, AnimateConfig, Animation, Camera, Scene, SectionList, Sobject, Wait};
     use std::collections::HashMap;
     use std::fs;
     use std::path::PathBuf;
@@ -577,7 +577,7 @@ pub mod render {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::present::engine::animate_core::{BasicStage, Scene, VSobject};
+        use crate::artifacts::present::engine::animate::{BasicStage, Scene, VSobject};
         use std::time::{SystemTime, UNIX_EPOCH};
 
         struct DemoScene {
@@ -642,7 +642,7 @@ pub mod render {
 
 pub mod renderer {
     use crate::artifacts::present::engine::animate_video::VideoError;
-    use crate::artifacts::present::engine::animate_core::{AnimateConfig, Camera, Color, Sobject};
+    use crate::artifacts::present::engine::animate::{AnimateConfig, Camera, Color, Sobject};
     use pollster::block_on;
     use vello::kurbo::Stroke as KurboStroke;
     use vello::peniko::Color as VelloColor;
@@ -825,7 +825,7 @@ pub mod renderer {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::present::engine::animate_core::VSobject;
+        use crate::artifacts::present::engine::animate::VSobject;
 
         #[test]
         fn vello_renderer_produces_rgba_buffer() {
@@ -845,7 +845,7 @@ pub mod renderer {
 pub mod scenes {
     //! 🎬️ Built-in scenes resolved by content hash for present/video export.
 
-    use crate::artifacts::present::engine::animate_core::{AnimateConfig, BasicStage, Camera, Scene, Section, SectionList, Sobject, VSobject};
+    use crate::artifacts::present::engine::animate::{AnimateConfig, BasicStage, Camera, Scene, Section, SectionList, Sobject, VSobject};
     use std::collections::HashMap;
 
     /// 🧩️ Demo scene used when no bespoke scene is registered for a hash.
@@ -922,7 +922,7 @@ pub mod scenes {
 pub mod writer {
     use crate::artifacts::present::engine::animate_video::render::OutputFormat;
     use crate::artifacts::present::engine::animate_video::VideoError;
-    use crate::artifacts::present::engine::animate_core::{AnimateConfig, SectionList};
+    use crate::artifacts::present::engine::animate::{AnimateConfig, SectionList};
     use image::{ImageBuffer, Rgba};
     use std::fs;
     use std::path::{Path, PathBuf};

@@ -8,7 +8,7 @@
 
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { type ComponentSceneHostProps, inkCanvasActions, windowElementId } from "@semio-tech/framework-core";
+import { type ComponentSceneHostProps, inkCanvasActions, windowElementId } from "@semio-tech/framework";
 import {
   cn,
   ContextMenuController,

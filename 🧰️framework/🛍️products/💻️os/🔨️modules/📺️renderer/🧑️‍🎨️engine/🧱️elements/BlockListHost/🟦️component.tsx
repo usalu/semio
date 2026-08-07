@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useMemo, useState, type MouseEvent } from "react";
-import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework-core";
+import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import {
   Button,
   cn,

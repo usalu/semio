@@ -2,9 +2,9 @@
 /** @emoji 🚀️ `@semio-tech/cad-js/runtime` — CAD composition root: assets glob + module registration. */
 // #endregion 🧭️Header
 
-import { ephemeralBox } from "@semio-tech/framework-core";
-import type { ProgramContributionEntry } from "@semio-tech/framework-core";
-import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "../🫀️core/🟦️component.ts";
+import { ephemeralBox } from "@semio-tech/framework";
+import type { ProgramContributionEntry } from "@semio-tech/framework";
+import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "../🟦️index.ts";
 import * as spatialShape from "@semio-tech/cad-js-module-spatial-shape";
 import * as aecBuilding from "@semio-tech/cad-js-module-aec-building";
 import * as aecBuildingEnergy from "@semio-tech/cad-js-module-aec-building-energy";
@@ -193,7 +193,7 @@ export { spatialShape, aecBuilding, aecBuildingEnergy, aecBuildingStructure };
 // #region 🧪️Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { defaultModelDefinitionId, listModelDefinitionManifests, listTransformationsIntoModelDefinition, loadPropertyDefinition, loadStatDefinition, resolveModelDefinitionScope } = await import("../🫀️core/🟦️component.ts");
+  const { defaultModelDefinitionId, listModelDefinitionManifests, listTransformationsIntoModelDefinition, loadPropertyDefinition, loadStatDefinition, resolveModelDefinitionScope } = await import("../🟦️index.ts");
   const { SPATIAL_SHAPE_VOLUME_PROPERTY_ID } = await import("@semio-tech/cad-js-module-spatial-shape");
   const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID } = await import("@semio-tech/cad-js-module-aec-building-energy");
 

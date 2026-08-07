@@ -1026,48 +1026,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-/// 🗂️ Sole native setup hook for the whole plugin bundle — registers all fifteen family document kinds'
-/// pack↔dsl codecs. Each app's document schema is the single source of truth for its own registration.
-fn register_norm_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::din4108::Din4108PlayApp>(apps::din4108::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::din16798::Din16798PlayApp>(apps::din16798::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::din18599::Din18599PlayApp>(apps::din18599::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1990::En1990PlayApp>(apps::en1990::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1991::En1991PlayApp>(apps::en1991::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1992::En1992PlayApp>(apps::en1992::DOCUMENT_SCHEMA);
-    crate::artifacts::en1992::engine::register_pilot_languages();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1993::En1993PlayApp>(apps::en1993::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1994::En1994PlayApp>(apps::en1994::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1995::En1995PlayApp>(apps::en1995::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1996::En1996PlayApp>(apps::en1996::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1997::En1997PlayApp>(apps::en1997::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1998::En1998PlayApp>(apps::en1998::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1999::En1999PlayApp>(apps::en1999::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::iso16757::Iso16757PlayApp>(apps::iso16757::DOCUMENT_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::vdi3805::Vdi3805PlayApp>(apps::vdi3805::DOCUMENT_SCHEMA);
-}
-
-semio_framework_plugin::semio_plugin! {
-    id: "norm",
-    label: "Norm",
-    version: "0.1.0",
-    setup: register_norm_exports,
-    apps: [
-        apps::din4108::create_din4108_app => apps::din4108::Din4108PlayApp,
-        apps::din16798::create_din16798_app => apps::din16798::Din16798PlayApp,
-        apps::din18599::create_din18599_app => apps::din18599::Din18599PlayApp,
-        apps::en1990::create_en1990_app => apps::en1990::En1990PlayApp,
-        apps::en1991::create_en1991_app => apps::en1991::En1991PlayApp,
-        apps::en1992::create_en1992_app => apps::en1992::En1992PlayApp,
-        apps::en1993::create_en1993_app => apps::en1993::En1993PlayApp,
-        apps::en1994::create_en1994_app => apps::en1994::En1994PlayApp,
-        apps::en1995::create_en1995_app => apps::en1995::En1995PlayApp,
-        apps::en1996::create_en1996_app => apps::en1996::En1996PlayApp,
-        apps::en1997::create_en1997_app => apps::en1997::En1997PlayApp,
-        apps::en1998::create_en1998_app => apps::en1998::En1998PlayApp,
-        apps::en1999::create_en1999_app => apps::en1999::En1999PlayApp,
-        apps::iso16757::create_iso16757_app => apps::iso16757::Iso16757PlayApp,
-        apps::vdi3805::create_vdi3805_app => apps::vdi3805::Vdi3805PlayApp,
-    ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

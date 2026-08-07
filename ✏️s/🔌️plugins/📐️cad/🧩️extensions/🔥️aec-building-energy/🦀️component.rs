@@ -1,6 +1,6 @@
 //! 🧩️ CAD aec-building-energy extension — contributes energy computers and STEP import to `cad-play`.
 
-use semio_framework_core::Contribution;
+use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use serde::Serialize;
 use std::collections::BTreeMap;

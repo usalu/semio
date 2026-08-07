@@ -112,9 +112,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "reasoning-mindmap", label: "Mindmap", version: "0.1.0",
-    setup: artifacts::wires::engine::register,
-    apps: [ apps::wires::create_wires_app => apps::wires::ReasoningWiresPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

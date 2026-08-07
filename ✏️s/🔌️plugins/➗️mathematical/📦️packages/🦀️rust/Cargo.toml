@@ -34,7 +34,7 @@ math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦
 # deps; only the four whose local name already equals the workspace key use `workspace = true`.
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
-semio-framework-core = { workspace = true }
+semio-framework = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

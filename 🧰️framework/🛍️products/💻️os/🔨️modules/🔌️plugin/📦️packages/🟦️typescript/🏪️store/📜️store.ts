@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { strToU8, unzipSync, zipSync } from "fflate";
-import { decodePackValue, encodePackValue } from "@semio-tech/framework-os-core";
+import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
 import {
   PLUGIN_HOST_SHIM_FILE,
   PLUGIN_WORKER_FILE,

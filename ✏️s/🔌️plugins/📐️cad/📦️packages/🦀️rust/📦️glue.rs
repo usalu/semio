@@ -156,9 +156,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "cad", label: "CAD", version: "0.1.0",
-    setup: artifacts::cad::engine::register,
-    apps: [ apps::cad::create_cad_app => apps::cad::CadPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

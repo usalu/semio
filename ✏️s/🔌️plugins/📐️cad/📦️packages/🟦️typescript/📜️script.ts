@@ -31,7 +31,7 @@ class FixtureScript extends BundleScript {
 class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
     const { bootstrapCadModules } = await import("../../🔨️modules/🏃️runtime/🟦️component.ts");
-    const { defaultModelDefinitionId } = await import("../../🔨️modules/🫀️core/🟦️component.ts");
+    const { defaultModelDefinitionId } = await import("../../🔨️modules/🟦️index.ts");
     const { buildSpatialStatelyMachineCatalogView } = await import("../../🔨️modules/🎰️stately/🟦️component.ts");
     bootstrapCadModules();
     let outPath = join(this.root, "../../🔣️machine.json");

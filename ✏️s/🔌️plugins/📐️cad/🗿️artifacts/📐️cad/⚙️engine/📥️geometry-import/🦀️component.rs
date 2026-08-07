@@ -3,7 +3,7 @@
 use crate::artifacts::cad::{CadEdge, CadFace, CadGeometry, CadObject, CadPrimitiveSlot, CadShell, CadSolid, CadWire};
 use semio_s_3d::brep::kernel::mesh_data_from_mesh_transfer;
 use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, Vec3};
-use semio_framework_core::mesh_from_indexed;
+use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::MeshData;
 use serde_json::Value;
 use std::collections::HashMap;

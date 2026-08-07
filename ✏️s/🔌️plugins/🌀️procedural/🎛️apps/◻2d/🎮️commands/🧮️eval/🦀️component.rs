@@ -4,7 +4,7 @@ use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOp
 use crate::artifacts::procedural2d::engine::host_from_fixture_with_session;
 use crate::artifacts::procedural2d::op::Procedural2dOperation;
 use crate::artifacts::procedural2d::Procedural2dDocument;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -37,7 +37,7 @@ pub mod flow_eval_tick {
         let fixture = &doc.projection.fixture;
         let mut host = host_from_fixture_with_session(fixture, session);
         let more = session.tick(&mut host);
-        let mut effects = if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+        let mut effects = if more { vec![semio_framework::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
         if let Some(pending) = host.take_pending_extension_eval() {
             let request_json = serde_json::json!({
                 "operatorId": pending.operator_id,
@@ -45,7 +45,7 @@ pub mod flow_eval_tick {
                 "nodeHash": pending.node_hash,
             })
             .to_string();
-            effects.push(semio_framework_core::kernel::HostEffect::InvokeExtension {
+            effects.push(semio_framework::kernel::HostEffect::InvokeExtension {
                 extension_id: pending.extension_id,
                 capability: "evaluate".into(),
                 request_json,

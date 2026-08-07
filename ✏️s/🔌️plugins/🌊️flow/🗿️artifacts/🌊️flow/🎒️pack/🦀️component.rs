@@ -1,6 +1,6 @@
 //! 📦️ Flow artifact — binary document surface + laws (constitutional: pack).
 //!
-//! `store::DocumentPack for FlowFixture` is implemented directly in the flow kernel crate (`flow_core`);
+//! `store::DocumentPack for FlowFixture` is implemented directly in the flow kernel crate (`flow`);
 //! see `🗿️artifacts/🌊️flow/🦀️component.rs` for why. This component only adds the thin artifact-facing
 //! `encode`/`decode` wrappers plus the pack↔dsl equivalence law.
 

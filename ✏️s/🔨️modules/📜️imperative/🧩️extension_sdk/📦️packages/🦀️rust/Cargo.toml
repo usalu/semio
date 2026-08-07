@@ -16,4 +16,4 @@ path = "📦️glue.rs"
 neural_engine = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 serde.workspace = true
 serde_json.workspace = true
-semio-framework-core = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
+semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

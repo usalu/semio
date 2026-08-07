@@ -4,7 +4,7 @@ use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOp
 use crate::artifacts::procedural2d::engine::host_from_fixture;
 use crate::artifacts::procedural2d::op::{procedural2d_fixture_operations, Procedural2dOperation};
 use crate::artifacts::procedural2d::Procedural2dDocument;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

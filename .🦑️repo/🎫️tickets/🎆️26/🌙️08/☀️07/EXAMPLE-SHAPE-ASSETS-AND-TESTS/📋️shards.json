@@ -1,0 +1,103 @@
+{
+  "w3": [
+    {
+      "id": "s1",
+      "model": "cursor-grok-4.5-high",
+      "plugins": [
+        "📕️norm"
+      ]
+    },
+    {
+      "id": "s2",
+      "model": "cursor-grok-4.5-high",
+      "plugins": [
+        "🌀️procedural",
+        "📐️cad"
+      ]
+    },
+    {
+      "id": "s3",
+      "model": "cursor-grok-4.5-high",
+      "plugins": [
+        "🔱️trinity",
+        "🌊️flow"
+      ]
+    },
+    {
+      "id": "s4",
+      "model": "cursor-grok-4.5-high",
+      "plugins": [
+        "🧱️block",
+        "🕸️dag"
+      ]
+    },
+    {
+      "id": "s5",
+      "model": "cursor-grok-4.5-high",
+      "plugins": [
+        "🪐️space",
+        "🏛️architect",
+        "🪵️sourcing"
+      ]
+    },
+    {
+      "id": "s6",
+      "model": "cursor-grok-4.5-high",
+      "plugins": [
+        "💡️reasoning",
+        "🔋️energy",
+        "🎪️demonstrator"
+      ]
+    },
+    {
+      "id": "s7",
+      "model": "composer-2.5",
+      "plugins": [
+        "🏗️fem",
+        "🏭️process",
+        "💠️lowpoly"
+      ]
+    },
+    {
+      "id": "s8",
+      "model": "composer-2.5",
+      "plugins": [
+        "✒️writer",
+        "🗒️note",
+        "🖍️draw",
+        "🖨️raster"
+      ]
+    },
+    {
+      "id": "s9",
+      "model": "composer-2.5",
+      "plugins": [
+        "📋️forms",
+        "📏️layout",
+        "📖️playbook",
+        "📜️imperative"
+      ]
+    },
+    {
+      "id": "s10",
+      "model": "composer-2.5",
+      "plugins": [
+        "🌍️gis",
+        "🌿️vcs",
+        "📸️remodel"
+      ]
+    },
+    {
+      "id": "s11",
+      "model": "composer-2.5",
+      "plugins": [
+        "🎞️animate",
+        "🎬️sequence",
+        "🎥️shooting",
+        "➗️mathematical"
+      ]
+    }
+  ],
+  "pilot": "🧩️puzzle",
+  "ticket": "26/08/07/EXAMPLE-SHAPE-ASSETS-AND-TESTS"
+}

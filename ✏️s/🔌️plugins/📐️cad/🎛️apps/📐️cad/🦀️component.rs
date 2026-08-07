@@ -33,7 +33,7 @@ use crate::artifacts::cad::op::{CadObjectPatch, CadOperation};
 use crate::artifacts::cad::{artifact_kind, cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects, CadCamera, CadObject, CadPaneId, CadProjection, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle};
-use semio_framework_core::kernel::HostEffect;
+use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView,
     Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaFormat, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
@@ -813,7 +813,7 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
                 kind_id: None,
                 required: false,
-                multiplicity: semio_framework_core::PortMultiplicity::Many,
+                multiplicity: semio_framework::PortMultiplicity::Many,
             },
             semio_framework_plugin::MediaPortSpec {
                 id: "brep:out".into(),
@@ -822,7 +822,7 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
                 kind_id: Some("3d.cad".into()),
                 required: false,
-                multiplicity: semio_framework_core::PortMultiplicity::Many,
+                multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
         export_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Glb],
@@ -1509,14 +1509,14 @@ mod tests {
 
     #[test]
     fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
-        let mut drawing = semio_framework_core::DwgDrawing::default();
+        let mut drawing = semio_framework::DwgDrawing::default();
         let outline = drawing.ensure_layer("outline");
         let empty_layer = drawing.ensure_layer("empty");
         let _ = empty_layer;
-        drawing.entities.push(semio_framework_core::DwgEntity {
+        drawing.entities.push(semio_framework::DwgEntity {
             layer: outline,
-            color: semio_framework_core::DwgColor::ByLayer,
-            geometry: semio_framework_core::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
+            color: semio_framework::DwgColor::ByLayer,
+            geometry: semio_framework::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
         });
         let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
         let scene: CadProjection = serde_json::from_value(value).expect("valid cad scene");
@@ -1526,7 +1526,7 @@ mod tests {
 
     #[test]
     fn cad_document_from_empty_dwg_falls_back_to_default_document() {
-        let drawing = semio_framework_core::DwgDrawing::default();
+        let drawing = semio_framework::DwgDrawing::default();
         let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
         let scene: CadProjection = serde_json::from_value(value).expect("valid cad scene");
         assert!(!scene.objects.is_empty());

@@ -1,4 +1,4 @@
-import { ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralBox } from "@semio-tech/framework";
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
@@ -332,15 +332,15 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
   };
 }
 
-/** @emoji ⏳️ Loads brep tessellation WASM via flow_core (standalone `flow_extension_brep` pack removed in Wave 3.c). */
+/** @emoji ⏳️ Loads brep tessellation WASM via flow (standalone `flow_extension_brep` pack removed in Wave 3.c). */
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
   if (brepWasm.current) return brepWasm.current;
   const [{ default: initFlow, tessellate, dispose }, { default: wasmUrl }] = await Promise.all([
-    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core.js"),
-    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core_bg.wasm?url"),
+    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow.js"),
+    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_bg.wasm?url"),
   ]);
   if (typeof tessellate !== "function" || typeof dispose !== "function") {
-    throw new Error("flow_core brep tessellation exports missing — rebuild flow/core wasm");
+    throw new Error("flow brep tessellation exports missing — rebuild flow/core wasm");
   }
   if (initFlow) await initFlow({ module_or_path: wasmUrl });
   brepWasm.current = { tessellate, dispose };

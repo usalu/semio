@@ -7,7 +7,7 @@
 use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
 use crate::artifacts::flow::engine::{focus_selection_camera, host_operations, sync_host_selection_domains, widget_id};
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

@@ -188,7 +188,38 @@
     "⚙️engine",
     "📚️examples"
   ],
-  "exampleComponentDirs": [
+  "exampleAssetsDirName": "🖼️assets",
+  "exampleTestsDirName": "🧪️tests",
+  "exampleSlugPattern": "^.+\\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$",
+  "exampleAssetKindPrefixes": {
+    "dsl": "🗣️",
+    "op": "🔧️",
+    "spr": "📡️",
+    "pack": "🎒️",
+    "diff": "🔺️",
+    "cmd": "🎮️"
+  },
+  "exampleMediaKindPrefixes": {
+    "image": "🖼️",
+    "mesh": "🧊️",
+    "document": "📄️",
+    "video": "🎬️"
+  },
+  "exampleLeafFilenames": {
+    "🦀️rust": "🦀️component.rs",
+    "🟦️typescript": "🟦️component.ts"
+  },
+  "exampleTestLeafFilenames": {
+    "🦀️rust": "🦀️test.rs",
+    "🟦️typescript": "🟦️test.ts"
+  },
+  "forbiddenExampleSlugs": [
+    "♻️reuse",
+    "♻️default",
+    "📕️default",
+    "♻️semio"
+  ],
+  "forbiddenExamplePluralDirs": [
     "🎒️packs",
     "🗣️dsls",
     "🔧️ops",
@@ -202,7 +233,8 @@
     "🎚️config",
     "🗣️terminology",
     "🌉️wasm",
-    "🧮️config"
+    "🧮️config",
+    "📚️examples"
   ],
   "semioDataLeafPrefix": "🧬️component.",
   "semioFileExtension": "semio",
@@ -226,10 +258,6 @@
     "🎒️pack",
     "🔧️op",
     "📡️spr",
-    "🎒️packs",
-    "🗣️dsls",
-    "🔧️ops",
-    "📡️sprs",
     "🍱️panes",
     "🪀️widgets",
     "🪛️utilities",

@@ -5,7 +5,7 @@
 use crate::apps::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::apps::puzzle2d::panels::{document, inspection};
 use crate::apps::puzzle2d::{apply_brush_place_payload, delete_selection_from_fixture, patch_inspector_nodes, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
-use semio_framework_core::kernel::UiDirtyScope;
+use semio_framework::kernel::UiDirtyScope;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

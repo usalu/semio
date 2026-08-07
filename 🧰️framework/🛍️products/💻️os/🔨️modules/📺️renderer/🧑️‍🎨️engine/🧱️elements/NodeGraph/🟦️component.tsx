@@ -58,8 +58,8 @@ import {
   type PluginContextMenuSurfaceTarget,
   type PresencePeer,
   type UiComponentSceneNode,
-} from "@semio-tech/framework-core";
-import { encodePackValue } from "@semio-tech/framework-os-core";
+} from "@semio-tech/framework";
+import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
 import { mapContextMenuSpecs, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { createDemandFrameScheduler, createFlowSession, createGraphSession, isFlowGraphScene, type FlowWasmSession } from "../WasmSessionLoader/🟦️component.tsx";

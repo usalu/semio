@@ -1068,13 +1068,13 @@ impl BrepKernel for Brep {
 
 /// 🔌️ Format-keyed solid export codec.
 pub trait SolidExporter: Send + Sync {
-    fn format(&self) -> semio_framework_core::OsMediaFormat;
+    fn format(&self) -> semio_framework::OsMediaFormat;
     fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError>;
 }
 
 /// 🔌️ Format-keyed solid import codec.
 pub trait SolidImporter: Send + Sync {
-    fn format(&self) -> semio_framework_core::OsMediaFormat;
+    fn format(&self) -> semio_framework::OsMediaFormat;
     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError>;
 }
 
@@ -1088,16 +1088,16 @@ pub struct GlbSolidExporter;
 pub struct GlbSolidImporter;
 
 impl SolidExporter for StepSolidExporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Step
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Step
     }
     fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], _deflection: f64) -> Result<Vec<u8>, BrepError> {
         Ok(kernel.export_step_sync(shapes)?.into_bytes())
     }
 }
 impl SolidImporter for StepSolidImporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Step
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Step
     }
     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         let text = std::str::from_utf8(bytes).map_err(|e| BrepError::InvalidInput(e.to_string()))?;
@@ -1105,32 +1105,32 @@ impl SolidImporter for StepSolidImporter {
     }
 }
 impl SolidExporter for StlSolidExporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Stl
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Stl
     }
     fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         kernel.export_stl_sync(shapes, deflection)
     }
 }
 impl SolidImporter for StlSolidImporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Stl
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Stl
     }
     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         Ok(vec![kernel.import_stl_sync(bytes, tolerance)?])
     }
 }
 impl SolidExporter for ObjSolidExporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Obj
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Obj
     }
     fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         Ok(kernel.export_obj_sync(shapes, deflection)?.into_bytes())
     }
 }
 impl SolidImporter for ObjSolidImporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Obj
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Obj
     }
     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         let text = std::str::from_utf8(bytes).map_err(|e| BrepError::InvalidInput(e.to_string()))?;
@@ -1138,16 +1138,16 @@ impl SolidImporter for ObjSolidImporter {
     }
 }
 impl SolidExporter for GlbSolidExporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Glb
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Glb
     }
     fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         kernel.export_glb_sync(shapes, deflection)
     }
 }
 impl SolidImporter for GlbSolidImporter {
-    fn format(&self) -> semio_framework_core::OsMediaFormat {
-        semio_framework_core::OsMediaFormat::Glb
+    fn format(&self) -> semio_framework::OsMediaFormat {
+        semio_framework::OsMediaFormat::Glb
     }
     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         Ok(vec![kernel.import_glb_sync(bytes, tolerance)?])

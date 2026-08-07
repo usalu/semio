@@ -3,7 +3,7 @@
 use crate::apps::procedural3d::procedural3d_action;
 use crate::apps::procedural3d::terminology::Procedural3dLabels;
 use crate::artifacts::procedural3d::widget_id;
-use flow_core::{FlowFixture, Widget};
+use flow::{FlowFixture, Widget};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence,
     UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,

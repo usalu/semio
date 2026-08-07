@@ -6,7 +6,7 @@
 
 import "./🎨️globals.css";
 
-import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
+import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
 import * as React from "react";
 import { createRoot } from "react-dom/client";

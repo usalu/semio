@@ -14,7 +14,7 @@ use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, 
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
 use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
 use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
-use semio_framework_core::{parse_contributions, Contribution, MeshImporter};
+use semio_framework::{parse_contributions, Contribution, MeshImporter};
 use std::sync::{Mutex, OnceLock};
 use semio_framework_plugin::{mesh_from_kind, MeshData, OsMediaFormat, WorldProjectionConfig};
 use serde_json::Value;
@@ -597,7 +597,7 @@ pub fn cad_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     Ok(export_mesh_from_scene(&scene))
 }
 
-pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
+pub fn cad_document_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
     let mut scene = default_document();
     let mut kernel = cad_brep_kernel().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
     let objects: Vec<CadObject> = drawing
@@ -610,7 +610,7 @@ pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Resu
             if layer_drawing.entities.is_empty() {
                 return None;
             }
-            let mesh = semio_framework_core::dwg_drawing_to_mesh(&layer_drawing);
+            let mesh = semio_framework::dwg_drawing_to_mesh(&layer_drawing);
             Some(cad_object_from_mesh(&mut **kernel, format!("object-{}", layer.name), layer.name.clone(), "spatial.shape.imported", &mesh))
         })
         .collect();

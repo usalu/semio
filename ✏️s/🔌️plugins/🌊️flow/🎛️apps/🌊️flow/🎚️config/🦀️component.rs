@@ -5,7 +5,7 @@
 //! (with a real `backwards`), so selection/camera/grid edits are VCS'd exactly like document content.
 
 use crate::artifacts::flow::engine::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
-use flow_core::{CameraJson, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{CameraJson, FLOW_LOD_MODE_AUTOMATIC};
 use playbook::GenerationPlayState;
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
@@ -24,8 +24,8 @@ use std::collections::HashMap;
 /// hatch for the same reason. Per-dispatch eval scratch uses a local `FlowEvalSession` in `handle` /
 /// `pending_effects` / `render` (not process globals). `generation_json` stays config-tracked rather than becoming a
 /// document operation (unlike the sibling `procedural_3d`/`procedural_2d` apps' `GenerationOperation`-backed
-/// generations): flow's document model (`flow_core::FlowOperation`) is a shared kernel crate out of scope
-/// for that conversion. `camera` stays a real `#[dsl(block)]` field since `flow_core::CameraJson` DOES
+/// generations): flow's document model (`flow::FlowOperation`) is a shared kernel crate out of scope
+/// for that conversion. `camera` stays a real `#[dsl(block)]` field since `flow::CameraJson` DOES
 /// derive `dsl::DslRecord`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
@@ -43,7 +43,7 @@ pub struct FlowConfig {
     /// 🎥️ The node-graph viewport camera.
     #[dsl(block)]
     pub camera: CameraJson,
-    /// 🎚️ LOD mode id (or `flow_core::FLOW_LOD_MODE_AUTOMATIC`).
+    /// 🎚️ LOD mode id (or `flow::FLOW_LOD_MODE_AUTOMATIC`).
     pub lod_mode: String,
     /// 🖱️ Proximity-select distance.
     pub proximity_distance: f64,
@@ -310,7 +310,7 @@ impl Operation<FlowConfig> for FlowConfigOperation {
             FlowConfigOperation::SetGeneration { json } => next.generation_json = json.clone(),
             FlowConfigOperation::SetContributions { json } => {
                 next.contributions_json = json.clone();
-                flow_core::sync_host_flow_extension_contributions(json);
+                flow::sync_host_flow_extension_contributions(json);
             }
             FlowConfigOperation::SetLocale { value } => next.locale = value.clone(),
         }

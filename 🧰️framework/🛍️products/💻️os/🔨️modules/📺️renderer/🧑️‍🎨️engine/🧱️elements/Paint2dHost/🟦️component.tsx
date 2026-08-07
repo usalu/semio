@@ -27,7 +27,7 @@ import {
   type ContextMenuItem,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework-core";
+import { type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type RasterWasmSession, createRasterSession } from "../WasmSessionLoader/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`Interpreter` already landed in a prior batch.

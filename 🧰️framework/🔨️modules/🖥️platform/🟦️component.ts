@@ -20,7 +20,6 @@ import {
   UI_INSPECTOR_MIXED_PLACEHOLDER,
 } from "../🛂️manifest/🟦️component.ts";
 
-
 //#region 🆔️ElementId
 /** 🆔️ Element id of the app shell's navbar/footer — singular, shell-owned chrome. */
 export const UI_NAVBAR_ELEMENT_ID = "ui.navbar";

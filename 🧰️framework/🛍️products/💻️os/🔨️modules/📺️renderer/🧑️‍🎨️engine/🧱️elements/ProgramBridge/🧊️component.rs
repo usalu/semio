@@ -7,8 +7,8 @@
 //! zero other changes.
 //! 🔌️ Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
-use semio_framework_core::kernel::HostEffect;
-use semio_framework_core::{PluginManifest, ViewModel};
+use semio_framework::kernel::HostEffect;
+use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
 use std::sync::Arc;
 use ui_wgpu::wgpu::{UiNode, UtilityNode, WindowEngagement, WindowMeasure};
@@ -32,7 +32,7 @@ mod wasm_program_exchange {
     use super::*;
     use dsl::{from_dsl_value, to_dsl_value, DslValue};
     use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame, SectionProbe};
-    use semio_framework_core::kernel::{AppEvent, HostEffect, InvocationId, InvocationResult, UndoGroup};
+    use semio_framework::kernel::{AppEvent, HostEffect, InvocationId, InvocationResult, UndoGroup};
     use semio_framework_plugin_host::WasmPluginRuntime;
     use serde::de::DeserializeOwned;
     use serde::Serialize;
@@ -66,7 +66,7 @@ mod wasm_program_exchange {
     }
 
     fn app_frame_fault_summary(fault: &[u8]) -> String {
-        let fault = dsl_core::decode_fault_bytes(fault);
+        let fault = os_dsl::decode_fault_bytes(fault);
         format!("{}: {}", fault.code.0, fault.message)
     }
 
@@ -144,7 +144,7 @@ mod wasm_program_exchange {
             diagnostics,
             requested_effects,
             events,
-            ui_scope: semio_framework_core::kernel::UiDirtyScope::default(),
+            ui_scope: semio_framework::kernel::UiDirtyScope::default(),
         })
     }
 
@@ -322,7 +322,7 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework_core::kernel::InvocationResult, String> {
+    pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
@@ -436,17 +436,17 @@ fn destroy_app_js(handle: &Rc<JsValue>, instance_id: u32) {
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework_core::kernel::InvocationResult, String> {
+async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
     let action = Reflect::get(handle.as_ref(), &JsValue::from_str("handleAction")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(action) = action else {
-        return Ok(semio_framework_core::kernel::InvocationResult {
+        return Ok(semio_framework::kernel::InvocationResult {
             output: DslValue::Null,
             operations: vec![],
-            inverse_group: semio_framework_core::kernel::UndoGroup { invocation_id: semio_framework_core::kernel::InvocationId(String::new()), operations: vec![], inverse_operations: vec![] },
+            inverse_group: semio_framework::kernel::UndoGroup { invocation_id: semio_framework::kernel::InvocationId(String::new()), operations: vec![], inverse_operations: vec![] },
             diagnostics: vec![],
             requested_effects: vec![],
             events: vec![],
-            ui_scope: semio_framework_core::kernel::UiDirtyScope::default(),
+            ui_scope: semio_framework::kernel::UiDirtyScope::default(),
         });
     };
     let context_json = serde_json::json!({
@@ -457,7 +457,7 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
     let result = action.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(action_json), &JsValue::from_str(&context_json)).map_err(|_| "handle_action failed")?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handle_action promise failed")? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
-    serde_json::from_str::<semio_framework_core::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
+    serde_json::from_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
 }
 
 #[cfg(target_arch = "wasm32")]

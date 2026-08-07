@@ -20,7 +20,7 @@
 
 use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
 use crate::os_spr::{Edit, OpBinary, OpText, Operation, OperationDiff, OperationMeta, ReconcileReport};
-use crate::os_spr::core::{ActorId, DocumentId, HybridLogicalTimestamp, OperationId, SchemaId, UndoPolicy};
+use crate::os_spr::{ActorId, DocumentId, HybridLogicalTimestamp, OperationId, SchemaId, UndoPolicy};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -160,7 +160,7 @@ pub type DraftStore<P, Operation> = DocumentStore<P, Operation>;
 /// @emoji 📍️ 1-based line/column position inside DSL or op-log source text. Lives in `dsl_core`
 /// (the token-native DSL engine's foundation crate, which sits below `vcs`); re-exported here so
 /// every existing `crate::os_store::TextSpan`/`crate::os_store::TextError` import across the workspace keeps compiling.
-pub use crate::os_dsl::core::{TextError, TextSpan};
+pub use crate::os_dsl::{TextError, TextSpan};
 
 /// @emoji 📜️ Handcrafted textual representation of a document projection, implemented once per
 /// technology next to its `Projection` type. LAW: `P::parse_dsl(&projection.print_dsl())` recovers
@@ -1079,7 +1079,7 @@ where
 
 /// @emoji 🎞️ `crate::os_spr::UndoPolicy` ordinal, matching `HistoryOpMeta.undo_policy`'s wire shape —
 /// distinct from `undo_policy_ordinal` above, which maps THIS crate's `DocumentCommand`-facing
-/// `UndoPolicy` (currently `semio_framework_core::UndoPolicy`; the two enums have identical
+/// `UndoPolicy` (currently `semio_framework::UndoPolicy`; the two enums have identical
 /// variants and will merge in the kernel-unification wave, see `protocol_core`'s own doc note).
 fn protocol_undo_policy_ordinal(policy: UndoPolicy) -> u8 {
     match policy {
@@ -2586,8 +2586,8 @@ where
                 author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
                 timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
                 undo_policy: operation.undo_policy(),
-                // 🎞️ CW3: direct blake3 (same primitive `crate::os_pack::core::ContentHash` uses) replaces the
-                // old `framework_hash::hash_bytes` String hash — `crate::os_spr::core::PayloadHash` is
+                // 🎞️ CW3: direct blake3 (same primitive `crate::os_pack::ContentHash` uses) replaces the
+                // old `framework_hash::hash_bytes` String hash — `crate::os_spr::PayloadHash` is
                 // now `[u8; 32]`, not a hex string. NOT `crate::os_pack::content_hash`, which reads a pack
                 // FILE's footer rather than hashing arbitrary bytes. 🎯️ B2: hashes the real
                 // `OpBinary` encoding, not a JSON serialization — two ops that encode identically
@@ -3373,7 +3373,7 @@ pub trait SpaceMember {
     fn current_alternative_id(&self) -> Option<String>;
     fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError>;
     fn create_alternative(&mut self, name: String) -> Result<String, VcsError>;
-    // 🎞️ CW3: `crate::os_spr::HybridLogicalTimestamp` (not `semio_framework_core`'s local one) — these
+    // 🎞️ CW3: `crate::os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
     // read `OperationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
     fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
     fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
@@ -3637,7 +3637,7 @@ impl Operation<SpaceHistoryProjection> for SpaceHistoryOperation {
 // `SpaceHost::attach_backbone`'s real backbone-attach path — this dogfooded meta-document DOES
 // cross a real wire once a backbone is attached, see `studio_vcs_host_meta_document_is_backbone_
 // attachable_and_detachable`). `SpaceCheckpoint`/`SpaceAlternative` embed foreign types
-// (`crate::os_vcs::Author`, `crate::os_spr::core::HybridLogicalTimestamp`) that cannot derive `crate::os_dsl::DslRecord`
+// (`crate::os_vcs::Author`, `crate::os_spr::HybridLogicalTimestamp`) that cannot derive `crate::os_dsl::DslRecord`
 // (orphan rule; `dsl`'s own dependency graph would cycle back through `protocol`), so a full
 // `#[derive(DslDocument)]`/`#[derive(DslOps)]` grammar is out of reach here without a larger
 // dedicated field-mirroring effort (tracked as a B9 follow-up, same as the `serde_json::Value`-
@@ -4073,7 +4073,7 @@ pub mod test_support {
     /// `OperationEnvelope` is a runtime struct that is never itself re-serialized back into an
     /// `Edit` (unlike `encode_pack`/`decode_pack`, there is no `envelope_to_edit` inverse — vcs's OWN
     /// `edit_from_operation_envelope` recovers a *whole edit* from vcs's own, differently-shaped,
-    /// per-edit `semio_framework_core::OperationEnvelope`, not from this per-operation
+    /// per-edit `semio_framework::OperationEnvelope`, not from this per-operation
     /// `protocol_causal` one), so a byte-level encode-then-decode law is not meaningful here.
     /// Instead this checks the two LAWS that actually matter for this bridge: (1) whatever
     /// `edit.operation_meta` explicitly recorded for a slot (the ground-truth source

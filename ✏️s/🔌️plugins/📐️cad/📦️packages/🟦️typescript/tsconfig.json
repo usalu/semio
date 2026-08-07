@@ -7,7 +7,7 @@
   },
   "include": [
     "📦️index.ts",
-    "../../🔨️modules/🫀️core/🟦️component.ts",
+    "../../🔨️modules/🟦️index.ts",
     "../../🔨️modules/📺️renderer/🟦️component.tsx",
     "../../🔨️modules/📐️brepjs/🟦️component.ts",
     "../../🔨️modules/🔍️query/🟦️component.ts",

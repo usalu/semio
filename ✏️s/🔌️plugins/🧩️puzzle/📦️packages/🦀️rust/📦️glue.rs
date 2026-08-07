@@ -477,13 +477,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "puzzle", label: "Puzzle", version: "0.1.0",
-    setup: artifacts::puzzle2d::engine::register,
-    apps: [
-        apps::puzzle2d::create_puzzle2d_app => apps::puzzle2d::Puzzle2dPlayApp,
-        apps::puzzle3d::create_puzzle3d_app => apps::puzzle3d::Puzzle3dPlayApp,
-        apps::puzzle5d::create_puzzle5d_app => apps::puzzle5d::Puzzle5dPlayApp,
-    ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

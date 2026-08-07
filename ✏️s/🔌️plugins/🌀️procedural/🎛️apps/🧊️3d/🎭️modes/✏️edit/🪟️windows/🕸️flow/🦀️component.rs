@@ -4,7 +4,7 @@ use crate::apps::procedural3d::config::Procedural3dConfig;
 use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use crate::artifacts::procedural3d::engine::{fixture_to_workflow, host_from_fixture};
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::{flow_backed_node_graph_extras, FlowEvalSession};
+use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphHover, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

@@ -4,7 +4,7 @@
 
 import "./🎨️globals.css";
 import { MDXProvider } from "@mdx-js/react";
-import type { Platform } from "@semio-tech/framework-core";
+import type { Platform } from "@semio-tech/framework";
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
 import { Aside, Button, Card, CardGrid, FileTree, Input, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, useLabel } from "@semio-tech/ui-react";

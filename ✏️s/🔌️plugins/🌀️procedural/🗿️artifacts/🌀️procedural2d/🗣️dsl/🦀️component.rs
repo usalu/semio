@@ -1,6 +1,6 @@
 //! 📜️ Procedural2d artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `FlowFixture`/`Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson` (from `flow_core`) and
+//! `FlowFixture`/`Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson` (from `flow`) and
 //! `GenerationPlayState`/`FormGeneration`/`GenerationOperation` (from `playbook`) are all foreign to
 //! this crate, so none can carry a `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires
 //! the impl target type to live in the crate that also owns the trait or the type, and neither is
@@ -18,8 +18,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::procedural2d::Procedural2dDocument;
-use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
-use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use flow::neural::{Atom, Dictionary, Value as NeuralValue};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.procedural.procedural2d.dsl.semio");
 
 //#region 🔖️DslMirror
-/// 🔒️ `ValueDsl` mirrors `flow_core::neural::Value`/`Atom` field-for-field rather than routing through
+/// 🔒️ `ValueDsl` mirrors `flow::neural::Value`/`Atom` field-for-field rather than routing through
 /// the engine's dynamic `Shape::Value`/`DslValue` escape hatch, which merges `Atom::Integer`/
 /// `Atom::Decimal` into one `Number(f64)` case — a real, observable loss of fidelity `ValueDsl`'s own
 /// mutually-exclusive `Option` fields avoid entirely.
@@ -100,7 +100,7 @@ pub fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictionary {
     entries.iter().fold(Dictionary::new(), |dict, entry| dict.insert(entry.key.clone(), value_dsl_to_value(&entry.value)))
 }
 
-/// 🎥️ Local twin of `flow_core::CameraJson`.
+/// 🎥️ Local twin of `flow::CameraJson`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct CameraJsonDsl {
     x: f64,
@@ -116,7 +116,7 @@ pub fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
     CameraJson { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
-/// 📍️ Local twin of `flow_core::WidgetLayout`.
+/// 📍️ Local twin of `flow::WidgetLayout`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct WidgetLayoutDsl {
     x: f64,
@@ -131,7 +131,7 @@ pub fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
     WidgetLayout { x: layout.x, y: layout.y }
 }
 
-/// 🔗️ Local twin of `flow_core::SynapseSpec` — a graph edge (`from@fromPort->to@toPort`) via the
+/// 🔗️ Local twin of `flow::SynapseSpec` — a graph edge (`from@fromPort->to@toPort`) via the
 /// engine's unified `dsl::Wire` shape.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct SynapseSpecDsl {
@@ -157,7 +157,7 @@ pub fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
     SynapseSpec { id: synapse.id, from: wire.from.id, to: to.id, from_port: wire.from.port.unwrap_or_default(), to_port: to.port.unwrap_or_default() }
 }
 
-/// 🎛️ Local twin of `flow_core::Widget` — `Neuron`/`OutputPreview`'s `Dictionary` fields route
+/// 🎛️ Local twin of `flow::Widget` — `Neuron`/`OutputPreview`'s `Dictionary` fields route
 /// through `ValueDsl`; `Cluster`'s `tree`/`flow` are carried as an opaque `dsl::DslValue`.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 pub enum WidgetDsl {

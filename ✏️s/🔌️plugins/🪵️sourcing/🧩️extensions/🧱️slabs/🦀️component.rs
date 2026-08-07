@@ -1,6 +1,6 @@
 //! 🧩️ Sourcing slabs module — contributes the slabs typology and demo catalogue kinds to the sourcing app.
 
-use semio_framework_core::Contribution;
+use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use sourcing_curate::artifacts::curate::engine::{slabs::SlabsModule, SourcingModule};
 

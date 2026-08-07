@@ -1,10 +1,10 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
-use flow_core::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
-use flow_core::{export_solid_json, import_solid_json, tessellate_geometry};
+use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
+use flow::{export_solid_json, import_solid_json, tessellate_geometry};
 use playbook::{visible_blocks, PlaybookBlock};
 use protocol::{Operation, OperationDiff};
-use semio_framework_core::mesh_from_indexed;
+use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
     Contribution, DocumentApp, DocumentView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,

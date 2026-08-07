@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralBox } from "@semio-tech/framework";
 import * as React from "react";
 import * as THREE from "three";
 import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";

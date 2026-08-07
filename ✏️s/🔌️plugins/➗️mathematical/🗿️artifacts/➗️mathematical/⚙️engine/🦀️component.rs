@@ -93,7 +93,7 @@ pub fn mathematical_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: Some("computation.mathematical".into()),
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::Many,
+            multiplicity: semio_framework::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
@@ -246,7 +246,7 @@ mod tests {
         assert_eq!(port.id, "result:out");
         assert_eq!(port.kind_id.as_deref(), Some("computation.mathematical"));
         assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
-        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
         assert!(!port.required);
     }
     //#endregion MathematicalIo

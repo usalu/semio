@@ -5,7 +5,7 @@
 // #endregion Header
 
 // #region Adapters
-import { type ShellLocale, type ShellTerminology } from "@semio-tech/framework-core";
+import { type ShellLocale, type ShellTerminology } from "@semio-tech/framework";
 // #endregion Adapters
 
 // #region I18n
@@ -570,7 +570,7 @@ export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
   ? true
   : false;
 
-/** @emoji 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework-core`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
+/** @emoji 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
 export type UiChromeTerminologyId = ShellTerminology;
 
 /** @emoji 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */

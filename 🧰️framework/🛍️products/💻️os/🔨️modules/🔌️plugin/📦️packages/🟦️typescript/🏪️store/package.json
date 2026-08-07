@@ -9,7 +9,7 @@
     ".": "./📜️store.ts"
   },
   "dependencies": {
-    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*",
     "fflate": "^0.8.2"
   },
   "license": "LGPL-3.0-or-later"

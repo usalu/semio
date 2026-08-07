@@ -613,11 +613,11 @@ mod tests {
         let fields_in = io.ports.iter().find(|port| port.id == "fields:in").expect("fields:in declared");
         assert_eq!(fields_in.direction, semio_framework_plugin::MediaPortDirection::In);
         assert_eq!(fields_in.kind_id.as_deref(), Some("form.dictionary"));
-        assert_eq!(fields_in.multiplicity, semio_framework_core::PortMultiplicity::One);
+        assert_eq!(fields_in.multiplicity, semio_framework::PortMultiplicity::One);
         let layout_out = io.ports.iter().find(|port| port.id == "layout:out").expect("layout:out declared");
         assert_eq!(layout_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(layout_out.kind_id.as_deref(), Some("2d.layout"));
-        assert_eq!(layout_out.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(layout_out.multiplicity, semio_framework::PortMultiplicity::Many);
         let all_ports = io.all_ports();
         assert!(all_ports.iter().any(|port| port.id == "document:in"));
         assert!(all_ports.iter().any(|port| port.id == "document:out"));

@@ -14,13 +14,13 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
 pub static KERNEL: OnceLock<RwLock<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
-pub static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), semio_framework_core::MeshData>>> = OnceLock::new();
+pub static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), semio_framework::MeshData>>> = OnceLock::new();
 
 pub fn kernel() -> &'static RwLock<Box<dyn BrepKernel + Send + Sync>> {
     KERNEL.get_or_init(|| RwLock::new(Box::new(Brep::new())))
 }
 
-pub fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), semio_framework_core::MeshData>> {
+pub fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), semio_framework::MeshData>> {
     MESH_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -465,7 +465,7 @@ pub fn retain_geometry_handles(live: &[String]) {
 }
 
 /// 🧊️ Tessellates a geometry handle owned by the in-process brep kernel into preview `MeshData`.
-pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framework_core::MeshData, String> {
+pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framework::MeshData, String> {
     let key = (handle.to_string(), tolerance.to_bits());
     if let Ok(cache) = mesh_cache().lock() {
         if let Some(cached) = cache.get(&key) {
@@ -522,8 +522,8 @@ pub fn export_solid_json(handles: &[String], format: &str, deflection: f64) -> S
 
 /// 🧊️ Bridges GLB export through mesh tessellation: tessellates every shape, merges the resulting triangle soup into one `MeshData`, and encodes it with the shared `GlbExporter` mesh codec (the same codec every other app uses for GLB).
 pub fn export_glb_via_tessellation(kernel: &dyn BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepModuleError> {
-    use semio_framework_core::MeshExporter;
-    let mut merged = semio_framework_core::MeshData::default();
+    use semio_framework::MeshExporter;
+    let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
         let transfer = block_on(kernel.tessellate(shape, deflection))?;
         let mesh = semio_s_3d::brep::kernel::mesh_data_from_mesh_transfer(&transfer);
@@ -532,7 +532,7 @@ pub fn export_glb_via_tessellation(kernel: &dyn BrepKernel, shapes: &[GeometryHa
         merged.normals.extend(mesh.normals);
         merged.indices.extend(mesh.indices.into_iter().map(|index| index + offset));
     }
-    semio_framework_core::GlbExporter.export(&merged).map_err(BrepModuleError::Mesh)
+    semio_framework::GlbExporter.export(&merged).map_err(BrepModuleError::Mesh)
 }
 
 /// 📥️ Imports STEP/OBJ/STL solid data (or GLB mesh data, bridged through the kernel's OBJ ingestion since it has no raw-mesh entry point) into the in-process kernel. STEP/OBJ expect UTF-8 text in `data`; STL/GLB expect base64-encoded bytes. Returns `{"handles":[...]}` or `{"error"}` JSON.
@@ -555,9 +555,9 @@ pub fn import_solid_json(format: &str, data: &str, tolerance: f64) -> String {
 
 /// 🧊️ Bridges GLB import through the mesh codec: decodes GLB bytes to `MeshData` via `GlbImporter`, re-encodes it as OBJ text, and ingests that through the kernel's own OBJ importer.
 pub fn import_glb_via_tessellation(kernel: &mut dyn BrepKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<String>, BrepModuleError> {
-    use semio_framework_core::MeshImporter;
-    let mesh = semio_framework_core::GlbImporter.import(bytes).map_err(BrepModuleError::Mesh)?;
-    let obj_text = semio_framework_core::mesh_to_obj(&mesh, "glb-import");
+    use semio_framework::MeshImporter;
+    let mesh = semio_framework::GlbImporter.import(bytes).map_err(BrepModuleError::Mesh)?;
+    let obj_text = semio_framework::mesh_to_obj(&mesh, "glb-import");
     block_on(kernel.import_obj(&obj_text, tolerance)).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)
 }
 // #endregion 🔖️MediaExport

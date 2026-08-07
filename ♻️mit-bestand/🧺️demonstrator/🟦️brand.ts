@@ -11,7 +11,7 @@ import {
   type ShellBrand,
   type ShellLocale,
   type TutorialDefinition,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/framework";
 import type { IconName } from "@semio-tech/ui-react";
 
 //#region 🏷️DemonstratorShared

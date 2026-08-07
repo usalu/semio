@@ -17,7 +17,7 @@ export {
   type StylingAppearanceName,
   type StylingTokenKey,
 } from "./🟦️tokens.generated.ts";
-import { ephemeralMap, ephemeralBox, ephemeralSet } from "@semio-tech/framework-core";
+import { ephemeralMap, ephemeralBox, ephemeralSet } from "@semio-tech/framework";
 import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "./🟦️tokens.generated.ts";
 
 //#region 🔖️ThemeModel

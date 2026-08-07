@@ -6,10 +6,10 @@ use crate::artifacts::procedural3d::dsl::{
     PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT,
 };
 use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
-use flow_core::dag::DagFixture;
-use flow_core::forms_bridge::apply_generation_values_to_fixture;
-use flow_core::{flow_host_with_session, FlowEvalSession, FlowFixture, FlowHost, Widget};
-use flow_core::tessellate_geometry; // crate-root re-export via flow alias
+use flow::dag::DagFixture;
+use flow::forms_bridge::apply_generation_values_to_fixture;
+use flow::{flow_host_with_session, FlowEvalSession, FlowFixture, FlowHost, Widget};
+use flow::tessellate_geometry; // crate-root re-export via flow alias
 use playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
 use store::DocumentDsl;
@@ -26,7 +26,7 @@ pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 //#endregion 🔖️Constants
 
 //#region 🔖️ExtensionContributions
-use semio_framework_core::Contribution;
+use semio_framework::Contribution;
 use std::sync::Mutex;
 
 /// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
@@ -44,13 +44,13 @@ pub fn sync_flow_extension_contributions(contributions_json: &str) {
     if *last == contributions_json {
         return;
     }
-    for info in flow_core::installed_flow_extensions() {
-        flow_core::uninstall_flow_extension(&info.id);
+    for info in flow::installed_flow_extensions() {
+        flow::uninstall_flow_extension(&info.id);
     }
     if let Ok(entries) = serde_json::from_str::<Vec<ProgramContributionEntry>>(contributions_json) {
         for entry in entries {
             if let Contribution::FlowExtension { manifest_json, .. } = entry.contribution {
-                flow_core::install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
+                flow::install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
             }
         }
     }
@@ -76,7 +76,7 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: None,
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::One,
+            multiplicity: semio_framework::PortMultiplicity::One,
         },
         semio_framework_plugin::MediaPortSpec {
             id: "geometry:out".into(),
@@ -85,7 +85,7 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
             kind_id: Some("3d.mesh".into()),
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::Many,
+            multiplicity: semio_framework::PortMultiplicity::Many,
         },
     ])
 }
@@ -207,7 +207,7 @@ pub fn preview_scene_status_json(session: &FlowEvalSession, preview_status: Opti
 
 pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
     let mut host = FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
+    host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
     host
 }
 
@@ -412,7 +412,7 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::M
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);
-    host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
+    host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
     host.evaluate().unwrap_or_default()
 }
 
@@ -582,7 +582,7 @@ mod tests {
 
     fn preview_payload_from_evaluated_fixture(fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
         let mut host = FlowHost::from_fixture(fixture.clone());
-        host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
+        host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
         let eval_json = host.evaluate().unwrap_or_default();
         preview_payload_from_eval(&eval_json, fixture, cfg)
     }
@@ -602,7 +602,7 @@ mod tests {
         for mesh in &meshes {
             let id = mesh.get("id").and_then(|value| value.as_str()).unwrap_or("");
             assert!(id.starts_with("eval-"), "mesh id must be tessellated eval handle, got {id}");
-            let data: semio_framework_core::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
+            let data: semio_framework::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
             assert!(data.positions.len() >= 9, "mesh has too few positions");
             assert!(data.indices.len() >= 3, "mesh has too few indices");
             assert!(!data.edge_positions.is_empty(), "brep preview should include edge geometry");
@@ -621,7 +621,7 @@ mod tests {
         for instance in instances {
             let mesh_id = instance.get("meshId").or_else(|| instance.get("mesh_id")).and_then(|value| value.as_str()).unwrap_or("eval-missing");
             let mesh = meshes.iter().find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id)).expect("mesh record");
-            let data: semio_framework_core::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
+            let data: semio_framework::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
             let mesh3d = Mesh3d::from_buffers(data.positions, data.normals, data.indices);
             let position =
                 instance.get("position").and_then(|value| value.as_array()).map_or([0.0, 0.0, 0.0], |items| [items[0].as_f64().unwrap_or(0.0) as f32, items[1].as_f64().unwrap_or(0.0) as f32, items[2].as_f64().unwrap_or(0.0) as f32]);
@@ -676,7 +676,7 @@ mod tests {
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty(), "rectangle wire preview should tessellate curve edges");
-        let data: semio_framework_core::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        let data: semio_framework::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
         assert!(data.indices.is_empty(), "wire preview has no shaded triangles");
         assert!(data.edge_positions.len() >= 6, "curve preview should include edge polylines");
         assert!(!instances_json.is_empty());
@@ -697,7 +697,7 @@ mod tests {
         let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty());
-        let data: semio_framework_core::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        let data: semio_framework::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
         assert!(data.indices.is_empty());
         assert!(!data.edge_positions.is_empty());
     }
@@ -713,7 +713,7 @@ mod tests {
         let geometry = io.ports.iter().find(|port| port.id == "geometry:out").expect("geometry:out declared");
         assert_eq!(geometry.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(geometry.kind_id.as_deref(), Some("3d.mesh"));
-        assert_eq!(geometry.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(geometry.multiplicity, semio_framework::PortMultiplicity::Many);
     }
 }
 //#endregion 🧪️Tests

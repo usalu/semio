@@ -2,7 +2,7 @@
 //!
 //! Unlike most artifacts, `FlowFixture`'s fields, `Widget`/`SynapseSpec` variants and the
 //! `FLOW_DOCUMENT_SCHEMA` constant are NOT owned here — they live in the shared flow kernel crate
-//! ([`flow_core`], `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core`) because multiple apps compile
+//! ([`flow`], `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core`) because multiple apps compile
 //! against the same flow domain model. This component re-exports the app-facing surface so every sibling
 //! taxonomy node (`🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`) names one artifact-owned
 //! symbol instead of reaching into the kernel path directly.
@@ -10,7 +10,7 @@
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️Types
-pub use flow_core::{FlowFixture, FLOW_DOCUMENT_SCHEMA};
+pub use flow::{FlowFixture, FLOW_DOCUMENT_SCHEMA};
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind

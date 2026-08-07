@@ -423,7 +423,7 @@ pub struct ReconstructionEngine {
     dense_cloud: Option<remodel_dense::PointCloud>,
 
     mesh_pipeline: Option<remodel_mesh::MeshPipeline>,
-    mesh_data: Option<semio_framework_core::MeshData>,
+    mesh_data: Option<semio_framework::MeshData>,
     watertight_report: Option<remodel_mesh::WatertightReport>,
 
     failure: Option<String>,
@@ -874,7 +874,7 @@ impl ReconstructionEngine {
     /// 🕸️ The finished, watertight-guaranteed `MeshData`, once [`EngineStatus::Done`] — consumes it (a
     /// second call returns `None`), mirroring `remodel_mesh::MeshPipeline::result`'s own take-once shape
     /// at the product-extraction boundary.
-    pub fn take_mesh(&mut self) -> Option<semio_framework_core::MeshData> {
+    pub fn take_mesh(&mut self) -> Option<semio_framework::MeshData> {
         self.mesh_data.take()
     }
 
@@ -1196,7 +1196,7 @@ mod tests {
         params
     }
 
-    fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework_core::MeshData {
+    fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework::MeshData {
         loop {
             match engine.advance(budget) {
                 EngineStatus::Working { .. } => {}

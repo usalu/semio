@@ -1,7 +1,7 @@
 //! ⚡️ Flow artifact — the operation type (constitutional: op).
 //!
 //! `FlowOperation`, its `protocol::Operation<FlowFixture>` impl and the private `apply_flow_operation` fn
-//! all live in the shared flow kernel crate (`flow_core`, `🔖️Operations` region) alongside the
+//! all live in the shared flow kernel crate (`flow`, `🔖️Operations` region) alongside the
 //! `FlowFixture` projection they mutate — see `🗿️artifacts/🌊️flow/🦀️component.rs` for why. Re-exported
 //! here so every taxonomy node names an artifact-owned symbol instead of reaching into the kernel path.
 
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-pub use flow_core::FlowOperation;
+pub use flow::FlowOperation;
 //#endregion 🔖️Types
 
 //#region 🧪️Tests

@@ -1,6 +1,6 @@
 module github.com/usalu/semio/repo/server
 
-go 1.25.5
+go 1.25
 
 require (
 	github.com/usalu/semio/repo/go v0.0.0
@@ -19,4 +19,4 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
-replace github.com/usalu/semio/repo/go => ../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib
+replace github.com/usalu/semio/repo/go => ../../📚️lib

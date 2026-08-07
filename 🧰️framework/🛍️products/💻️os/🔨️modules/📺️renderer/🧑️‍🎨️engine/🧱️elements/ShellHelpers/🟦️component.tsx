@@ -86,12 +86,12 @@ import {
   type WindowLayoutStackNode,
   type WindowLayoutWindowNode,
   type WindowMeasure,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/framework";
 import {
   encodeActionWire,
   packValueFromBase64,
   packValueToBase64,
-} from "@semio-tech/framework-os-core";
+} from "@semio-tech/framework-os";
 import {
   decodeWorldProjectionTemplateId,
 } from "@semio-tech/infinite-world-r3f";

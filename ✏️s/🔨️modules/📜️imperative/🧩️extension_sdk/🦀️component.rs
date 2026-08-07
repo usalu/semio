@@ -1,7 +1,7 @@
 //! 🔌️ Shared manifest + evaluate helpers for imperative path extensions.
 
 use neural_engine::{inject_channel_defaults, Dictionary, OperatorInfo, Registry};
-use semio_framework_core::{Contribution, ProgramContributionEntry};
+use semio_framework::{Contribution, ProgramContributionEntry};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Manifest

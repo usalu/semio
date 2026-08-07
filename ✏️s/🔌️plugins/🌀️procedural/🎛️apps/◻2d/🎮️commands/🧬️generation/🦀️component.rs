@@ -9,8 +9,8 @@ use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOp
 use crate::artifacts::procedural2d::engine::refresh_generation_preview;
 use crate::artifacts::procedural2d::op::Procedural2dOperation;
 use crate::artifacts::procedural2d::Procedural2dDocument;
-use flow_core::forms_bridge::flow_fixture_to_form_spec;
-use flow_core::FlowEvalSession;
+use flow::forms_bridge::flow_fixture_to_form_spec;
+use flow::FlowEvalSession;
 use playbook::{apply_generation_operation, generation_operations, select_generation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};

@@ -180,7 +180,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Procedural3dOperation, protocol::Protoc
 mod tests {
     use super::*;
     use crate::artifacts::procedural3d::{Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
-    use flow_core::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+    use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use playbook::GenerationOperation;
     use store::{create_document_envelope, test_support, DocumentCommand};
 

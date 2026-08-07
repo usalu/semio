@@ -8,7 +8,7 @@ use crate::artifacts::procedural3d::engine::{
 };
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::{FlowEvalSession, FlowFixture, FlowHost};
+use flow::{FlowEvalSession, FlowFixture, FlowHost};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -139,7 +139,7 @@ mod tests {
     use crate::apps::procedural3d::testkit::{app, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
     use crate::artifacts::procedural3d::widget_id;
-    use flow_core::Widget;
+    use flow::Widget;
 
     #[test]
     fn translate_selection_persists_transform_into_flow_graph() {

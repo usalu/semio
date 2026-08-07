@@ -6,16 +6,16 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪️ Vitest for `@semio-tech/framework-os-core` (inline `import.meta.vitest`). */
+/** @emoji 🧪️ Vitest for `@semio-tech/framework-os` (inline `import.meta.vitest`). */
 export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-os-core": resolve(root, "📦️index.ts"),
+      "@semio-tech/framework-os": resolve(root, "📦️index.ts"),
     },
   },
   test: {
-    name: "@semio-tech/framework-os-core",
+    name: "@semio-tech/framework-os",
     mode: "test",
     environment: "node",
     include: ["📦️index.ts", "🟦️backbone-worker.ts"],

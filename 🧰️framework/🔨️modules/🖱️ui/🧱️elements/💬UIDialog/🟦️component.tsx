@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework-core";
+import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework";
 import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { veilClass } from "../🏷️ClassNames/🟦️component.tsx";

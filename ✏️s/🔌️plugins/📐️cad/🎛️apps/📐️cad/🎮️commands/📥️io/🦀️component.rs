@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::apps::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, runtime_of, snapshot_of, CadPlayView};
 use crate::artifacts::cad::engine::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload};
 use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
-use semio_framework_core::kernel::HostEffect;
+use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{OsMediaFormat, SelectionSet};
 use serde_json::Value;
 

@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
-import { acquirePluginModule, pluginHandleForBridge } from "@semio-tech/framework-core";
+import { acquirePluginModule, pluginHandleForBridge } from "@semio-tech/framework";
 
 export type FrameworkOsWgpuBootOptions = {
   readonly rootId?: string;

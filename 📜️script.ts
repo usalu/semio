@@ -681,7 +681,7 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] framework-core ts-rs binding freshness…");
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-core-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] ui locale/terminology axes freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");
@@ -717,7 +717,7 @@ export class VerifyScript extends Script {
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/dsl-fixture-sweep-rs) runs at
     // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
-    runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/dsl-core-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs"], {
+    runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs"], {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
     });
@@ -849,7 +849,7 @@ export class TestScript extends Script {
           "-t",
           testTargetForLevel(level),
           "-p",
-          "@semio-tech/dsl-core-rs",
+          "@semio-tech/dsl-rs",
           "@semio-tech/dsl-schema-rs",
           "@semio-tech/dsl-derive-rs",
           "@semio-tech/dsl-rs",
@@ -1323,10 +1323,118 @@ export class SemioScript extends Script {
 }
 //#endregion 🔖️SemioScript
 
+//#region 🔖️ExamplesScript
+/** 📚️Lists and verifies plugin example units against the emoji-slug assets/tests shape. */
+export class ExamplesScript extends Script {
+  run(segments: string[]): void {
+    const sub = segments[0];
+    if (!sub || sub === "help") {
+      console.error("[examples] usage: bun ./📜️script.ts examples <list|verify> [plugin]");
+      process.exit(sub ? 0 : 1);
+    }
+    if (sub === "list") {
+      this.listExamples(segments[1]);
+      return;
+    }
+    if (sub === "verify") {
+      this.verifyExamples(segments[1]);
+      return;
+    }
+    console.error(`[examples] unknown subcommand ${JSON.stringify(sub)}`);
+    process.exit(1);
+  }
+
+  private listExamples(pluginFilter?: string): void {
+    const taxonomy = loadTaxonomy();
+    const roots = this.collectExampleRoots(pluginFilter);
+    if (roots.length === 0) {
+      console.log("[examples.list] (none)");
+      return;
+    }
+    for (const root of roots) {
+      const slug = root.split("/").pop() ?? root;
+      const hasAssets = existsSync(join(this.root, root, taxonomy.exampleAssetsDirName));
+      const hasTests = existsSync(join(this.root, root, taxonomy.exampleTestsDirName));
+      const rustLeaf = taxonomy.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs";
+      const hasLeaf = existsSync(join(this.root, root, rustLeaf));
+      console.log(`${root}  leaf=${hasLeaf ? "yes" : "no"} assets=${hasAssets ? "yes" : "no"} tests=${hasTests ? "yes" : "no"} slug=${slug}`);
+    }
+    console.log(`[examples.list] ${roots.length} example unit(s)`);
+  }
+
+  private verifyExamples(pluginFilter?: string): void {
+    const crateDirs = policyDiscoverCrateDirs(this.root);
+    const filtered = pluginFilter
+      ? crateDirs.filter((crate) => {
+          const id = crate.pluginId || policyStripEmoji(crate.ownerRel.split("/").pop() ?? "");
+          const ascii = policyStripEmoji(pluginFilter);
+          return id === pluginFilter || id === ascii || crate.ownerRel.endsWith(`/${pluginFilter}`) || policyStripEmoji(crate.ownerRel).includes(ascii);
+        })
+      : crateDirs;
+    const breaches = [
+      ...policySemioArtifactExamplesBreaches(this.root, filtered),
+      ...policyDeadExampleLeafBreaches(this.root, filtered),
+      ...policyEmptyExampleBreaches(this.root).filter((breach) => {
+        if (!pluginFilter) return true;
+        const ascii = policyStripEmoji(pluginFilter);
+        return breach.scope.includes(pluginFilter) || policyStripEmoji(breach.scope).includes(ascii);
+      }),
+    ];
+    if (breaches.length === 0) {
+      console.log(`[examples.verify] ok${pluginFilter ? ` (${pluginFilter})` : ""}`);
+      return;
+    }
+    for (const breach of breaches) {
+      console.error(`[examples.verify] ${breach.priority} ${breach.kind}: ${breach.summary}`);
+    }
+    console.error(`[examples.verify] ${breaches.length} breach(es)`);
+    process.exit(1);
+  }
+
+  private collectExampleRoots(pluginFilter?: string): string[] {
+    const taxonomy = loadTaxonomy();
+    const roots: string[] = [];
+    const pluginsRoot = "✏️s/🔌️plugins";
+    let plugins: string[] = [];
+    try {
+      plugins = readdirSync(join(this.root, pluginsRoot)).filter((name) => {
+        const abs = join(this.root, pluginsRoot, name);
+        return existsSync(abs) && statSync(abs).isDirectory();
+      });
+    } catch {
+      return roots;
+    }
+    if (pluginFilter) {
+      const ascii = policyStripEmoji(pluginFilter);
+      plugins = plugins.filter((name) => name === pluginFilter || policyStripEmoji(name) === ascii || name.includes(pluginFilter));
+    }
+    for (const plugin of plugins) {
+      const owner = `${pluginsRoot}/${plugin}`;
+      for (const kind of [taxonomy.artifactsDirName, taxonomy.appsDirName] as const) {
+        const container = join(this.root, owner, kind);
+        if (!existsSync(container)) continue;
+        for (const child of readdirSync(container)) {
+          const examplesRel = `${owner}/${kind}/${child}/📚️examples`;
+          const examplesAbs = join(this.root, examplesRel);
+          if (!existsSync(examplesAbs) || !statSync(examplesAbs).isDirectory()) continue;
+          for (const slug of readdirSync(examplesAbs)) {
+            const slugRel = `${examplesRel}/${slug}`;
+            if (!statSync(join(this.root, slugRel)).isDirectory()) continue;
+            roots.push(slugRel);
+          }
+        }
+      }
+    }
+    return roots.sort();
+  }
+}
+//#endregion 🔖️ExamplesScript
+
 //#region 🔖️Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("os", OsScript)
   .register("semio", SemioScript)
+  .register("examples", ExamplesScript)
   .register("nx", NxScript)
   .register("setup", SetupScript)
   .register("start", StartScript)
@@ -1951,7 +2059,7 @@ const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle#3d", "p
  * these crates are neutral shared domain/library crates that also happen to ship their own minimal
  * playground app (documented via each crate's `AGENTS.md`) — depending on them is not app-to-app coupling.
  */
-const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
+const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
 
 /**
  * 🎫️ dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
@@ -2403,8 +2511,7 @@ const POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS = new Set<string>([]);
 const POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS = new Set<string>([]);
 
 /**
- * ⚖️P3/M4: *.pack.semio/*.spr.semio under 📚️examples with size<=64. Remove once payload examples land.
- * Seeded 20 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ * ⚖️P3/M4: empty/stub `.semio` under `📚️examples/** /🖼️assets/` (size≤64). Kept empty — stubs are breaches.
  */
 const POLICY_EMPTY_EXAMPLE_EXEMPTIONS = new Set<string>([]);
 /**
@@ -3971,18 +4078,142 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
 }
 
 /**
- * 📏️ Semio example layout: artifact-owned `📚️examples` with four component collections; no plugin-root
- * `📚️examples`; every app carries `⚙️engine/📚️examples`.
+ * 📏️ Per-example unit shape: `📚️examples/<emoji-slug>/{definition leaves, 🖼️assets/, 🧪️tests/}` under
+ * every artifact and every app (apps own examples directly — never under `⚙️engine`). Plugin-root
+ * `📚️examples` and plural facet dirs are forbidden.
  */
+function policyExampleSlugOk(slug: string, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+  try {
+    return new RegExp(taxonomy.exampleSlugPattern, "u").test(slug);
+  } catch {
+    return false;
+  }
+}
+
+/** 📚️ True when `relDir` is an immediate child of `📚️examples` (dynamic emoji-slug leaf parent). */
+function policyIsExampleSlugDir(relDir: string): boolean {
+  const parts = relDir.replaceAll("\\", "/").split("/");
+  return parts.length >= 2 && parts[parts.length - 2] === "📚️examples";
+}
+
+function policyValidateExampleUnit(
+  repoRoot: string,
+  exampleRel: string,
+  scope: string,
+  priority: BreachRecord["priority"],
+): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const breaches: BreachRecord[] = [];
+  const slug = exampleRel.split("/").pop() ?? "";
+  if ((taxonomy.forbiddenExampleSlugs ?? []).includes(slug) || !policyExampleSlugOk(slug, taxonomy)) {
+    breaches.push({
+      id: `semio-examples-slug-${exampleRel}`,
+      summary: `"${exampleRel}" is not a valid emoji+VS16+kebab example slug`,
+      kind: "taxonomy/semio-examples",
+      scope,
+      priority,
+      reason: `Example dirs must match exampleSlugPattern and must not be placeholders (${(taxonomy.forbiddenExampleSlugs ?? []).join(", ")}).`,
+      solution: `Rename ${exampleRel} to an emoji+VS16+kebab slug that describes the scenario.`,
+    });
+  }
+  for (const plural of taxonomy.forbiddenExamplePluralDirs ?? []) {
+    if (existsSync(join(repoRoot, exampleRel, plural))) {
+      breaches.push({
+        id: `semio-examples-plural-${exampleRel}-${plural}`,
+        summary: `"${exampleRel}/${plural}" plural example facet dir is forbidden`,
+        kind: "taxonomy/semio-examples",
+        scope,
+        priority,
+        reason: "Example assets live flat under 🖼️assets/ with kind-emoji prefixes — plural dsls/packs/ops/sprs dirs are gone.",
+        solution: `Move files from ${exampleRel}/${plural}/ into ${exampleRel}/${taxonomy.exampleAssetsDirName}/ and delete the plural dir.`,
+      });
+    }
+  }
+  const rustLeaf = taxonomy.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs";
+  const tsLeaf = taxonomy.exampleLeafFilenames?.["🟦️typescript"] ?? "🟦️component.ts";
+  if (!existsSync(join(repoRoot, exampleRel, rustLeaf))) {
+    breaches.push({
+      id: `semio-examples-leaf-rs-${exampleRel}`,
+      summary: `"${exampleRel}" is missing definition leaf ${rustLeaf}`,
+      kind: "taxonomy/semio-examples",
+      scope,
+      priority,
+      reason: "Every example unit needs a Rust definition leaf as the single source of truth for id/labels/assets.",
+      solution: `Add ${exampleRel}/${rustLeaf}.`,
+    });
+  }
+  if (!existsSync(join(repoRoot, exampleRel, tsLeaf))) {
+    breaches.push({
+      id: `semio-examples-leaf-ts-${exampleRel}`,
+      summary: `"${exampleRel}" is missing definition leaf ${tsLeaf}`,
+      kind: "taxonomy/semio-examples",
+      scope,
+      priority,
+      reason: "Every example unit needs a TypeScript definition leaf for TS consumers.",
+      solution: `Add ${exampleRel}/${tsLeaf}.`,
+    });
+  }
+  const assetsRel = `${exampleRel}/${taxonomy.exampleAssetsDirName}`;
+  if (!existsSync(join(repoRoot, assetsRel))) {
+    breaches.push({
+      id: `semio-examples-assets-${exampleRel}`,
+      summary: `"${exampleRel}" is missing ${taxonomy.exampleAssetsDirName}/`,
+      kind: "taxonomy/semio-examples",
+      scope,
+      priority,
+      reason: "Every example unit carries its assets under 🖼️assets/.",
+      solution: `Add ${assetsRel}/ with kind-prefixed asset files.`,
+    });
+  }
+  const testsRel = `${exampleRel}/${taxonomy.exampleTestsDirName}`;
+  if (!existsSync(join(repoRoot, testsRel))) {
+    breaches.push({
+      id: `semio-examples-tests-${exampleRel}`,
+      summary: `"${exampleRel}" is missing ${taxonomy.exampleTestsDirName}/`,
+      kind: "taxonomy/semio-examples",
+      scope,
+      priority,
+      reason: "Every example unit carries co-located tests under 🧪️tests/.",
+      solution: `Add ${testsRel}/ with ${taxonomy.exampleTestLeafFilenames?.["🦀️rust"] ?? "🦀️test.rs"} and ${taxonomy.exampleTestLeafFilenames?.["🟦️typescript"] ?? "🟦️test.ts"}.`,
+    });
+  } else {
+    const rustTest = taxonomy.exampleTestLeafFilenames?.["🦀️rust"] ?? "🦀️test.rs";
+    const tsTest = taxonomy.exampleTestLeafFilenames?.["🟦️typescript"] ?? "🟦️test.ts";
+    if (!existsSync(join(repoRoot, testsRel, rustTest))) {
+      breaches.push({
+        id: `semio-examples-test-rs-${exampleRel}`,
+        summary: `"${testsRel}" is missing ${rustTest}`,
+        kind: "taxonomy/semio-examples",
+        scope,
+        priority,
+        reason: "Example tests must include the Rust test leaf.",
+        solution: `Add ${testsRel}/${rustTest}.`,
+      });
+    }
+    if (!existsSync(join(repoRoot, testsRel, tsTest))) {
+      breaches.push({
+        id: `semio-examples-test-ts-${exampleRel}`,
+        summary: `"${testsRel}" is missing ${tsTest}`,
+        kind: "taxonomy/semio-examples",
+        scope,
+        priority,
+        reason: "Example tests must include the TypeScript test leaf.",
+        solution: `Add ${testsRel}/${tsTest}.`,
+      });
+    }
+  }
+  return breaches;
+}
+
 function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const exampleKinds = taxonomy.exampleComponentDirs ?? [];
   const examplesDir = "📚️examples";
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
     const ownerRoot = crate.ownerRel;
     const scopeId = crate.pluginId || policyStripEmoji(ownerRoot.split("/").pop() ?? "");
+    const priority = policyNewSurfacePriority(crate, "medium");
     if (existsSync(join(repoRoot, ownerRoot, examplesDir))) {
       breaches.push({
         id: `semio-examples-plugin-root-${ownerRoot}`,
@@ -3990,23 +4221,24 @@ function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly 
         kind: "taxonomy/semio-examples",
         scope: scopeId,
         priority: policyNewSurfacePriority(crate, "high"),
-        reason: "Examples belong under each 🗿️artifacts/<artifact>/📚️examples, not at the plugin root.",
-        solution: `Move fixtures into 🗿️artifacts/<artifact>/${examplesDir}/<set>/{🗣️dsls,🎒️packs,🔧️ops,📡️sprs}/…`,
+        reason: "Examples belong under 🗿️artifacts/<artifact>/📚️examples or 🎛️apps/<app>/📚️examples — never at the plugin root.",
+        solution: `Move fixtures into artifact or app ${examplesDir}/<emoji-slug>/ units.`,
       });
     }
     const artifactsRoot = `${ownerRoot}/${taxonomy.artifactsDirName}`;
     for (const artifact of policyReaddirSafe(repoRoot, artifactsRoot).filter((e) => e.isDirectory)) {
       const artifactRel = `${artifactsRoot}/${artifact.name}`;
       const examplesRel = `${artifactRel}/${examplesDir}`;
+      const artScope = `${scopeId}/${policyStripEmoji(artifact.name)}`;
       if (!existsSync(join(repoRoot, examplesRel))) {
         breaches.push({
           id: `semio-examples-missing-${examplesRel}`,
           summary: `"${examplesRel}" is missing`,
           kind: "taxonomy/semio-examples",
-          scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
-          priority: policyNewSurfacePriority(crate, "medium"),
-          reason: "Every artifact must ship at least one example set with all four semio component collections.",
-          solution: `Add ${examplesRel}/<set>/{🗣️dsls,🎒️packs,🔧️ops,📡️sprs}/ with 🧬️component.*.semio leaves.`,
+          scope: artScope,
+          priority,
+          reason: "Every artifact must ship at least one emoji-slug example unit.",
+          solution: `Add ${examplesRel}/<emoji-slug>/{${taxonomy.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs"}, ${taxonomy.exampleAssetsDirName}/, ${taxonomy.exampleTestsDirName}/}.`,
         });
         continue;
       }
@@ -4014,51 +4246,66 @@ function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly 
       if (sets.length === 0) {
         breaches.push({
           id: `semio-examples-empty-${examplesRel}`,
-          summary: `"${examplesRel}" has no example set directory`,
+          summary: `"${examplesRel}" has no example slug directory`,
           kind: "taxonomy/semio-examples",
-          scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
-          priority: policyNewSurfacePriority(crate, "medium"),
-          reason: "Artifact examples must contain at least one named example set (e.g. ♻️reuse).",
-          solution: `Add subdirectories under ${examplesRel}/ with the four example component dirs.`,
+          scope: artScope,
+          priority,
+          reason: "Artifact examples must contain at least one emoji-slug example unit.",
+          solution: `Add ${examplesRel}/<emoji-slug>/ with definition leaves, assets, and tests.`,
         });
       }
       for (const set of sets) {
-        const setRel = `${examplesRel}/${set.name}`;
-        for (const kind of exampleKinds) {
-          if (!existsSync(join(repoRoot, setRel, kind))) {
-            breaches.push({
-              id: `semio-examples-kind-${setRel}-${kind}`,
-              summary: `"${setRel}" is missing ${kind}/`,
-              kind: "taxonomy/semio-examples",
-              scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
-              priority: policyNewSurfacePriority(crate, "medium"),
-              reason: `Every example set must include all of: ${exampleKinds.join(", ")}.`,
-              solution: `Create ${setRel}/${kind}/ with a 🧬️component.*.${policyStripEmoji(kind).replace(/s$/, "")}.semio leaf.`,
-            });
-          }
-        }
+        breaches.push(...policyValidateExampleUnit(repoRoot, `${examplesRel}/${set.name}`, artScope, priority));
       }
     }
     const appsRoot = `${ownerRoot}/${taxonomy.appsDirName}`;
     for (const app of policyReaddirSafe(repoRoot, appsRoot).filter((e) => e.isDirectory)) {
+      const appScope = `${scopeId}/${policyStripEmoji(app.name)}`;
+      const appExamples = `${appsRoot}/${app.name}/${examplesDir}`;
       const engineExamples = `${appsRoot}/${app.name}/⚙️engine/${examplesDir}`;
-      if (!existsSync(join(repoRoot, engineExamples))) {
+      if (existsSync(join(repoRoot, engineExamples))) {
         breaches.push({
-          id: `semio-cmd-examples-${engineExamples}`,
-          summary: `"${engineExamples}" is missing`,
+          id: `semio-examples-engine-${engineExamples}`,
+          summary: `"${engineExamples}" must not live under ⚙️engine — move to the app root`,
           kind: "taxonomy/semio-examples",
-          scope: `${scopeId}/${policyStripEmoji(app.name)}`,
-          priority: policyNewSurfacePriority(crate, "medium"),
-          reason: "Every app must expose cmd examples under ⚙️engine/📚️examples.",
-          solution: `Add ${engineExamples}/<set>/ with 🧬️component.<plugin>.<app>.cmd.semio.`,
+          scope: appScope,
+          priority,
+          reason: "App examples live at 🎛️apps/<app>/📚️examples, not under ⚙️engine.",
+          solution: `Move ${engineExamples} to ${appExamples}.`,
         });
+      }
+      if (!existsSync(join(repoRoot, appExamples))) {
+        breaches.push({
+          id: `semio-examples-app-missing-${appExamples}`,
+          summary: `"${appExamples}" is missing`,
+          kind: "taxonomy/semio-examples",
+          scope: appScope,
+          priority,
+          reason: "Every app must ship at least one emoji-slug example unit under 📚️examples/.",
+          solution: `Add ${appExamples}/<emoji-slug>/{definition leaves, ${taxonomy.exampleAssetsDirName}/, ${taxonomy.exampleTestsDirName}/}.`,
+        });
+        continue;
+      }
+      const sets = policyReaddirSafe(repoRoot, appExamples).filter((e) => e.isDirectory);
+      if (sets.length === 0) {
+        breaches.push({
+          id: `semio-examples-app-empty-${appExamples}`,
+          summary: `"${appExamples}" has no example slug directory`,
+          kind: "taxonomy/semio-examples",
+          scope: appScope,
+          priority,
+          reason: "App examples must contain at least one emoji-slug example unit.",
+          solution: `Add ${appExamples}/<emoji-slug>/ with definition leaves, assets, and tests.`,
+        });
+      }
+      for (const set of sets) {
+        breaches.push(...policyValidateExampleUnit(repoRoot, `${appExamples}/${set.name}`, appScope, priority));
       }
     }
   }
   return breaches;
 }
 
-/** 📏️Taxonomy validator, discovery-contract clause 2: every taxonomy leaf's primary source file is literally named after its lang (`taxonomy.taxonomyLeafFilenames`, e.g. `🦀️component.rs`); sibling `🦀️<topic>.rs` files are allowed alongside it, per the `⚙️engine` big-engine allowance — this only requires the leaf to be present, not exclusive. Artifact facet dirs (`taxonomy.artifactComponentDirs`) may also carry `taxonomy.artifactSpecFilenames` normative specs and the TypeScript `ecosystems["🟦️typescript"].leafFilename` beside the rust leaf (Shape V2 tree purity allows only component leaves + packages; specs are not extra topic siblings). */
 function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const leafFilename = taxonomy.taxonomyLeafFilenames["🦀️rust"] ?? "🦀️component.rs";
@@ -4076,7 +4323,32 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
       const parentName = relDir.split("/").pop() ?? "";
       const hasRustFile = entries.some((e) => !e.isDirectory && e.name.endsWith(sourceExtension));
       const hasTsFile = entries.some((e) => !e.isDirectory && e.name.endsWith(tsSourceExtension));
-      if (taxonomy.taxonomyLeafParentDirs.includes(parentName)) {
+      const exampleRustLeaf = taxonomy.exampleLeafFilenames["🦀️rust"] ?? leafFilename;
+      const exampleTsLeaf = taxonomy.exampleLeafFilenames["🟦️typescript"] ?? tsLeafFilename;
+      if (policyIsExampleSlugDir(relDir)) {
+        if (hasRustFile && !entries.some((e) => !e.isDirectory && e.name === exampleRustLeaf)) {
+          breaches.push({
+            id: `component-file-example-${relDir}`,
+            summary: `"${relDir}" has ${sourceExtension} source but no ${exampleRustLeaf}`,
+            kind: "taxonomy/component-file",
+            scope: crate.pluginId || crate.ownerRel,
+            priority: policyNewSurfacePriority(crate, "medium"),
+            reason: `Example slug dirs (grandparent 📚️examples) use ${exampleRustLeaf} as the definition leaf.`,
+            solution: `Rename ${relDir}'s primary source file to ${exampleRustLeaf}.`,
+          });
+        }
+        if (hasTsFile && !entries.some((e) => !e.isDirectory && e.name === exampleTsLeaf)) {
+          breaches.push({
+            id: `component-file-example-ts-${relDir}`,
+            summary: `"${relDir}" has ${tsSourceExtension} source but no ${exampleTsLeaf}`,
+            kind: "taxonomy/component-file",
+            scope: crate.pluginId || crate.ownerRel,
+            priority: policyNewSurfacePriority(crate, "medium"),
+            reason: `Example slug dirs use ${exampleTsLeaf} as the TypeScript definition leaf.`,
+            solution: `Rename ${relDir}'s primary TypeScript file to ${exampleTsLeaf}.`,
+          });
+        }
+      } else if (taxonomy.taxonomyLeafParentDirs.includes(parentName)) {
         // relDir itself is a vocabulary dir (e.g. 🔧️op/) whose immediate .rs files are the leaf — or,
         // for 🎮️commands/🛠️tools/📌️panels, an extra <name>/ nesting level holds the leaf instead.
         if (hasRustFile && !entries.some((e) => !e.isDirectory && e.name === leafFilename)) {
@@ -4711,13 +4983,22 @@ function policySpecWiringBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 📏️`.pack.semio` / `.spr.semio` under any `📚️examples` tree must carry payload beyond an empty SEM envelope (size > 64).
+ * 📏️ Any asset under `🖼️assets/` inside `📚️examples` must carry real payload (size > 64), covering every
+ * kind suffix (`.dsl.semio`, `.op.semio`, `.spr.semio`, `.pack.semio`, `.diff.semio`, `.cmd.semio`) and media.
+ */
+/**
+ * 📏️Empty/stub `.semio` under `📚️examples/** /🖼️assets/` (all kinds) — size ≤ 64 is a breach.
+ * `POLICY_EMPTY_EXAMPLE_EXEMPTIONS` stays empty.
  */
 function policyEmptyExampleBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const assetsDir = taxonomy.exampleAssetsDirName;
   const breaches: BreachRecord[] = [];
   const files = policyWalkRelFiles(repoRoot, [""], (relPath, name) => {
-    if (!(name.endsWith(".pack.semio") || name.endsWith(".spr.semio"))) return false;
-    return relPath.includes("/📚️examples/") || relPath.startsWith("📚️examples/");
+    if (!name.endsWith(".semio")) return false;
+    const norm = relPath.replaceAll("\\", "/");
+    if (!(norm.includes("/📚️examples/") || norm.startsWith("📚️examples/"))) return false;
+    return norm.includes(`/${assetsDir}/`);
   });
   for (const relPath of files) {
     if (POLICY_EMPTY_EXAMPLE_EXEMPTIONS.has(relPath)) continue;
@@ -4730,22 +5011,17 @@ function policyEmptyExampleBreaches(repoRoot: string): BreachRecord[] {
     if (size > 64) continue;
     breaches.push({
       id: `empty-example-${relPath}`,
-      summary: `"${relPath}" is an empty/envelope-only pack/spr example (${size} bytes ≤ 64)`,
+      summary: `"${relPath}" is an empty/envelope-only example asset (${size} bytes ≤ 64)`,
       kind: "handcrafted-grammar/empty-example",
       scope: relPath,
       priority: "high",
-      reason: "Example pack/spr fixtures must include a real payload, not just the SEM envelope.",
+      reason: "Example `.semio` assets under 🖼️assets/ must include a real payload, not just an empty envelope or stub.",
       solution: `Seed a non-empty example at ${relPath}, then remove it from POLICY_EMPTY_EXAMPLE_EXEMPTIONS.`,
     });
   }
   return breaches;
 }
 
-/**
- * ⚖️P1/M3b staged ban on generic codec derives: flags NEW `#[derive(...DslDocument|DslOps...)]`
- * uses under plugin artifact Rust files outside `POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS`.
- * Those macros are banned after P6; codecs must be handcrafted.
- */
 function policyGenericCodecDeriveBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const files = policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (relPath, name) => {
@@ -4779,6 +5055,85 @@ function policyGenericCodecDeriveBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
+/** 🔗 Cumulative `#[path]` targets declared by one `📦️glue.rs` (absolute resolved paths). */
+function policyCollectGluePathTargets(glueAbs: string): Set<string> {
+  const declared = new Set<string>();
+  if (!existsSync(glueAbs)) return declared;
+  const libDir = dirname(glueAbs);
+  const libText = readFileSync(glueAbs, "utf8");
+  const baseStack: string[] = [libDir];
+  let pendingPath: string | null = null;
+  for (const rawLine of libText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    const pathMatch = line.match(/#\[path\s*=\s*"([^"]+)"\]/);
+    if (pathMatch) {
+      pendingPath = pathMatch[1] ?? null;
+      continue;
+    }
+    const modMatch = line.match(/^(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)/);
+    if (modMatch) {
+      const modName = modMatch[1]!;
+      const base = baseStack[baseStack.length - 1] ?? libDir;
+      let resolved: string;
+      if (pendingPath === null) {
+        resolved = join(base, modName);
+      } else if (pendingPath === ".") {
+        resolved = base;
+      } else {
+        resolved = join(base, pendingPath);
+      }
+      pendingPath = null;
+      const asFile = resolved.endsWith(".rs") ? resolved : `${resolved}.rs`;
+      const asModFile = join(resolved, "mod.rs");
+      if (existsSync(asFile)) declared.add(resolve(asFile));
+      else if (existsSync(asModFile)) declared.add(resolve(asModFile));
+      else declared.add(resolve(asFile));
+      if (line.includes("{")) baseStack.push(resolved.endsWith(".rs") ? dirname(resolved) : resolved);
+      continue;
+    }
+    pendingPath = null;
+    const opens = (line.match(/\{/g) ?? []).length;
+    const closes = (line.match(/\}/g) ?? []).length;
+    for (let i = 0; i < opens; i++) baseStack.push(baseStack[baseStack.length - 1] ?? libDir);
+    for (let i = 0; i < closes; i++) {
+      if (baseStack.length > 1) baseStack.pop();
+    }
+  }
+  return declared;
+}
+
+function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const reachable = new Set<string>();
+  for (const crate of crates) {
+    if (crate.shape !== "taxonomy") continue;
+    for (const target of policyCollectGluePathTargets(join(repoRoot, crate.libRelPath))) reachable.add(target);
+  }
+  for (const glueRel of policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (_p, name) => name === "📦️glue.rs")) {
+    for (const target of policyCollectGluePathTargets(join(repoRoot, glueRel))) reachable.add(target);
+  }
+  const fw = readdirSync(repoRoot).find((name) => name.endsWith("framework"));
+  const exampleRoots = fw ? ["✏️s/🔌️plugins", fw] : ["✏️s/🔌️plugins"];
+  const exampleRs = policyWalkRelFiles(repoRoot, exampleRoots, (relPath, name) => {
+    if (!name.endsWith(".rs")) return false;
+    return relPath.replaceAll("\\", "/").includes("/📚️examples/");
+  });
+  for (const relPath of exampleRs) {
+    const abs = resolve(join(repoRoot, relPath));
+    if (reachable.has(abs)) continue;
+    breaches.push({
+      id: `dead-example-leaf-${relPath}`,
+      summary: `"${relPath}" is not reachable via #[path] from any 📦️glue.rs`,
+      kind: "taxonomy/dead-example-leaf",
+      scope: relPath,
+      priority: "high",
+      reason: "Every .rs under 📚️examples must be wired from the plugin 📦️glue.rs (definition leaf or cfg(test) test leaf).",
+      solution: `Add a #[path] mod declaration for ${relPath} under //#region 📚️Examples in the owning 📦️glue.rs, or delete the dead file.`,
+    });
+  }
+  return breaches;
+}
+
 /** ⚖️Aggregates all P3/M4 handcrafted-grammar high-priority scanners for policy + verify gate. */
 function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
   return [
@@ -4787,6 +5142,7 @@ function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
     ...policyDeclaredUseBreaches(repoRoot),
     ...policySpecWiringBreaches(repoRoot),
     ...policyEmptyExampleBreaches(repoRoot),
+    ...policyDeadExampleLeafBreaches(repoRoot),
     ...policyGenericCodecDeriveBreaches(repoRoot),
   ];
 }
@@ -4828,6 +5184,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyAppCouplingBreaches(repoRoot, crateDirs));
   breaches.push(...policyTaxonomyDirsBreaches(repoRoot, crateDirs));
   breaches.push(...policySemioArtifactExamplesBreaches(repoRoot, crateDirs));
+  breaches.push(...policyDeadExampleLeafBreaches(repoRoot, crateDirs));
   breaches.push(...policyComponentFileBreaches(repoRoot, crateDirs));
   breaches.push(...policyTaxonomyLibShapeBreaches(repoRoot, crateDirs));
   breaches.push(...policyTaxonomyBarrelShapeBreaches(repoRoot));

@@ -1,20 +1,21 @@
 //! 🌉️ Flow WASM session bindings.
 
+use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::canvas as canvas;
+use neural_engine as neural;
+
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
-use crate::dag;
-use crate::dag::{
+use dag::{
     computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
     slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
 };
-use crate::canvas;
-use crate::neural::{
+use math::graph::manifest::{PropertyBag, PropertyValue};
+use neural::{
     channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
     INPUT_KIND, OUTPUT_KIND,
 };
-use crate::neural;
-use math::graph::manifest::{PropertyBag, PropertyValue};
 use flow_extension_sdk::FlowExtensionManifest;
 use serde::{Deserialize, Serialize};
 
@@ -668,11 +669,11 @@ pub fn dispose(handle: &str) {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn dwg_encode_mesh_json(mesh_json: &str) -> String {
-    let Ok(mesh) = serde_json::from_str::<semio_framework_core::MeshData>(mesh_json) else {
+    let Ok(mesh) = serde_json::from_str::<semio_framework::MeshData>(mesh_json) else {
         return serde_json::json!({ "error": "invalid mesh json" }).to_string();
     };
-    let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
-    match semio_framework_core::dwg_to_bytes(&drawing) {
+    let drawing = semio_framework::mesh_to_dwg_drawing(&mesh);
+    match semio_framework::dwg_to_bytes(&drawing) {
         Ok(bytes) => {
             use base64::Engine;
             serde_json::json!({ "dwg": base64::engine::general_purpose::STANDARD.encode(bytes) }).to_string()
@@ -689,9 +690,9 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
     let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(data_base64) else {
         return serde_json::json!({ "error": "invalid base64 dwg payload" }).to_string();
     };
-    match semio_framework_core::dwg_from_bytes(&bytes) {
+    match semio_framework::dwg_from_bytes(&bytes) {
         Ok(drawing) => {
-            let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
+            let mesh = semio_framework::dwg_drawing_to_mesh(&drawing);
             serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "failed to serialize mesh" }).to_string())
         }
         Err(error) => serde_json::json!({ "error": error }).to_string(),

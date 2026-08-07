@@ -69,7 +69,12 @@ const EXAMPLES_DIRNAME = "📚️examples";
 if (!TAXONOMY.artifactChildDirs.includes(EXAMPLES_DIRNAME)) {
   throw new Error(`📇️registry: "${EXAMPLES_DIRNAME}" must be listed in 🔣️taxonomy.json artifactChildDirs (${TAXONOMY.artifactChildDirs.join(", ")})`);
 }
-const EXAMPLE_COMPONENT_DIRS = TAXONOMY.exampleComponentDirs ?? [];
+const EXAMPLE_ASSETS_DIRNAME = TAXONOMY.exampleAssetsDirName ?? "🖼️assets";
+const EXAMPLE_TESTS_DIRNAME = TAXONOMY.exampleTestsDirName ?? "🧪️tests";
+const EXAMPLE_RUST_LEAF = TAXONOMY.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs";
+const FORBIDDEN_EXAMPLE_PLURAL_DIRS = TAXONOMY.forbiddenExamplePluralDirs ?? [];
+const FORBIDDEN_EXAMPLE_SLUGS = new Set(TAXONOMY.forbiddenExampleSlugs ?? []);
+
 const RUST_LANG = "🦀️rust";
 const RUST_MANIFEST_FILENAME = TAXONOMY.ecosystems[RUST_LANG].manifestFilename ?? "Cargo.toml";
 
@@ -300,46 +305,37 @@ function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
  * `framework/ui/tui/rs`'s `discover_examples_for_playground` byte-for-byte.
  */
 function discoverExamplesForPlayground(repoRoot: string, cratePath: string, pluginId: string, variant: string): string[] {
-  const idsIn = (dir: string): string[] => {
-    if (!existsSync(dir)) return [];
-    const ids = readdirSync(dir)
-      .filter((name) => name.endsWith(".json"))
-      .map((name) => name.split(".")[0]);
-    return [...new Set(ids)].sort();
-  };
   const segments = cratePath.split("/");
-  // 🏛️ Inside the plugin area the tech root is the plugin folder (area segments + 1), not `✏️s` itself.
   const areaSegments = PLUGINS_AREA.split("/");
   const inPluginArea = areaSegments.every((segment, index) => segments[index] === segment);
   const techRoot = inPluginArea ? segments.slice(0, areaSegments.length + 1).join("/") : segments[0];
-  const collectJsonExampleIds = (dir: string): string[] => {
-    if (!existsSync(dir)) return [];
-    return idsIn(dir);
+  const slugIds = (examplesRoot: string): string[] => {
+    if (!existsSync(examplesRoot)) return [];
+    return listDirs(examplesRoot)
+      .filter((name) => !FORBIDDEN_EXAMPLE_SLUGS.has(name))
+      .sort();
   };
-  const artifactExampleIds: string[] = [];
+  const ids: string[] = [];
   const artifactsDir = join(repoRoot, techRoot, TAXONOMY.artifactsDirName);
   if (existsSync(artifactsDir)) {
     for (const artifact of listDirs(artifactsDir)) {
-      const examplesRoot = join(artifactsDir, artifact, EXAMPLES_DIRNAME);
-      for (const setName of listDirs(examplesRoot)) {
-        artifactExampleIds.push(...collectJsonExampleIds(join(examplesRoot, setName)));
-      }
-      artifactExampleIds.push(...collectJsonExampleIds(examplesRoot));
+      ids.push(...slugIds(join(artifactsDir, artifact, EXAMPLES_DIRNAME)));
     }
   }
-  if (artifactExampleIds.length > 0) return [...new Set(artifactExampleIds)].sort();
-  const rootDir = join(repoRoot, techRoot, EXAMPLES_DIRNAME);
-  if (existsSync(rootDir)) return idsIn(rootDir);
+  const appsDir = join(repoRoot, techRoot, APPS_DIRNAME);
+  if (existsSync(appsDir)) {
+    for (const app of listDirs(appsDir)) {
+      ids.push(...slugIds(join(appsDir, app, EXAMPLES_DIRNAME)));
+    }
+  }
+  if (ids.length > 0) return [...new Set(ids)].sort();
   if (variant.startsWith(pluginId) && variant.length > pluginId.length) {
     const suffix = variant.slice(pluginId.length);
-    // 🎛️ Uses the shared `APPS_DIRNAME` constant (not an independently hardcoded literal) so this
-    // keeps resolving correctly once a plugin's crate path collapses to one crate per plugin — the
-    // apps-container segment name is single-sourced against the constitutional gate below.
-    const dir = join(repoRoot, techRoot, APPS_DIRNAME, suffix, EXAMPLES_DIRNAME);
-    if (existsSync(dir)) return idsIn(dir);
+    return slugIds(join(repoRoot, techRoot, APPS_DIRNAME, suffix, EXAMPLES_DIRNAME));
   }
   return [];
 }
+
 
 function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, cratePath: string): PlaygroundEntry[] {
   const text = readFileSync(manifestPath, "utf8");
@@ -962,14 +958,26 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     }
     const exampleSets = listDirs(examplesRoot);
     if (exampleSets.length === 0) {
-      findings.push(`${pluginId}: artifact "${artifact}" ${EXAMPLES_DIRNAME} has no example set`);
+      findings.push(`${pluginId}: artifact "${artifact}" ${EXAMPLES_DIRNAME} has no example slug`);
       continue;
     }
     for (const exampleSet of exampleSets) {
-      for (const kind of EXAMPLE_COMPONENT_DIRS) {
-        if (!existsSync(join(examplesRoot, exampleSet, kind))) {
-          findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${kind}/`);
+      if (FORBIDDEN_EXAMPLE_SLUGS.has(exampleSet)) {
+        findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is a forbidden placeholder slug`);
+      }
+      for (const plural of FORBIDDEN_EXAMPLE_PLURAL_DIRS) {
+        if (existsSync(join(examplesRoot, exampleSet, plural))) {
+          findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" still has plural ${plural}/`);
         }
+      }
+      if (!existsSync(join(examplesRoot, exampleSet, EXAMPLE_RUST_LEAF))) {
+        findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${EXAMPLE_RUST_LEAF}`);
+      }
+      if (!existsSync(join(examplesRoot, exampleSet, EXAMPLE_ASSETS_DIRNAME))) {
+        findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${EXAMPLE_ASSETS_DIRNAME}/`);
+      }
+      if (!existsSync(join(examplesRoot, exampleSet, EXAMPLE_TESTS_DIRNAME))) {
+        findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${EXAMPLE_TESTS_DIRNAME}/`);
       }
     }
   }
@@ -981,8 +989,28 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   const appsDir = join(pluginRoot, APPS_DIRNAME);
   for (const app of listDirs(appsDir)) {
     const engineExamples = join(appsDir, app, "⚙️engine", EXAMPLES_DIRNAME);
-    if (!existsSync(engineExamples)) {
-      findings.push(`${pluginId}: app "${app}" is missing ⚙️engine/${EXAMPLES_DIRNAME}/`);
+    if (existsSync(engineExamples)) {
+      findings.push(`${pluginId}: app "${app}" still has ⚙️engine/${EXAMPLES_DIRNAME}/ — move to app-root ${EXAMPLES_DIRNAME}/`);
+    }
+    const appExamples = join(appsDir, app, EXAMPLES_DIRNAME);
+    if (!existsSync(appExamples)) {
+      findings.push(`${pluginId}: app "${app}" is missing ${EXAMPLES_DIRNAME}/`);
+      continue;
+    }
+    const appSets = listDirs(appExamples);
+    if (appSets.length === 0) {
+      findings.push(`${pluginId}: app "${app}" ${EXAMPLES_DIRNAME} has no example slug`);
+    }
+    for (const exampleSet of appSets) {
+      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_RUST_LEAF))) {
+        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_RUST_LEAF}`);
+      }
+      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_ASSETS_DIRNAME))) {
+        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_ASSETS_DIRNAME}/`);
+      }
+      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_TESTS_DIRNAME))) {
+        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_TESTS_DIRNAME}/`);
+      }
     }
   }
 
@@ -1004,7 +1032,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
-  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...EXAMPLE_COMPONENT_DIRS]);
+  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_TESTS_DIRNAME]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;

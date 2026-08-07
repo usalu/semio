@@ -54,8 +54,8 @@ import {
   type UiNode,
   type WindowEngagement,
   type WindowMeasure,
-} from "@semio-tech/framework-core";
-import { type DocumentSyncStatus } from "@semio-tech/framework-os-core";
+} from "@semio-tech/framework";
+import { type DocumentSyncStatus } from "@semio-tech/framework-os";
 // 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
 // this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
 // a non-circular import; routing through the barrel indirection (cleared) hit the same
@@ -72,10 +72,10 @@ import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY } from "../ShellH
 /** 🌐️ Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
 
-/** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewModel` is the established name used throughout this file. */
+/** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework`'s {@link PluginViewState}, kept as a distinct local alias since `ViewModel` is the established name used throughout this file. */
 export type ViewModel = PluginViewState;
 
-/** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps` richly (`AppDefinition[]`) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
+/** ⚠️ Not folded into `@semio-tech/framework`'s `PluginManifest`: this shell-local shape types `apps` richly (`AppDefinition[]`) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
 export type PluginManifest = {
   readonly pluginId: string;
   readonly label: string;

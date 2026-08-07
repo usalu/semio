@@ -32,7 +32,7 @@ use dsl::{from_dsl_value, to_dsl_value};
 /// 🎞️ The exact binary channel a live UI speaks — re-exported so an `AppChannelHost` implementor
 /// never needs a direct `protocol` dependency just to name these types.
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
-use semio_framework_core::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PortMultiplicity};
+use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PortMultiplicity};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -294,12 +294,12 @@ fn decode_fingerprint_wire(bytes: &[u8]) -> Result<String, RunError> {
 }
 
 fn app_frame_fault_summary(fault: &[u8]) -> String {
-    let fault = dsl_core::decode_fault_bytes(fault);
+    let fault = os_dsl::decode_fault_bytes(fault);
     format!("{}: {}", fault.code.0, fault.message)
 }
 
 fn run_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
-    dsl_core::encode_fault_bytes(&dsl_core::Fault::new(dsl_core::FaultOrigin::Os, dsl_core::FaultCode::new(code.into()), message))
+    os_dsl::encode_fault_bytes(&os_dsl::Fault::new(os_dsl::FaultOrigin::Os, os_dsl::FaultCode::new(code.into()), message))
 }
 //#endregion 🔖️MediaArtifact
 
@@ -421,7 +421,7 @@ impl RunSink {
 /// folded into that node's `config_fingerprint` so `--param` overrides correctly dirty/cache-key a
 /// node even though the underlying config pack+spr bytes sent to the app are untouched (this crate is
 /// generic over arbitrary apps' config schemas — it has no per-app `ConfigSpec` to safely patch an
-/// opaque config pack's fields by `field_path` itself; that requires `semio_framework_core::ConfigSpec`,
+/// opaque config pack's fields by `field_path` itself; that requires `semio_framework::ConfigSpec`,
 /// which lives one layer up, at the plugin-manifest layer this crate doesn't depend on). Delivering an
 /// override into the actual bytes the app receives is deferred — see this wave's final report.
 fn node_parameter_overlay_bytes(node_id: &str, bindings: &[WorkflowParameterBinding], parameter_values: &[RunParameterValue]) -> Vec<u8> {
@@ -1227,7 +1227,7 @@ impl AppChannelHost for WasmtimeNodeHost {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_core::{MediaPortDirection, MediaPortSpec};
+    use semio_framework::{MediaPortDirection, MediaPortSpec};
     use workflow::{placeholder_media_contract, WorkflowMediaPort, WORKFLOW_SCHEMA};
 
     /// 🧪️ A fake `AppChannelHost` for tests: no wasm at all, just a per-instance document/config, a
@@ -1616,7 +1616,7 @@ mod tests {
 
     #[test]
     fn vector_to_raster_rejects_non_structured_payload() {
-        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Binary { format: semio_framework_core::OsMediaFormat::Png, blob_hash: "hash".into() } };
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Binary { format: semio_framework::OsMediaFormat::Png, blob_hash: "hash".into() } };
         assert!(vector_to_raster(&media).is_err());
     }
 

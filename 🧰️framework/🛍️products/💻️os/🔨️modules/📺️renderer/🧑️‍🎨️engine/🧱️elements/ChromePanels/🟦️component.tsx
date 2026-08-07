@@ -46,7 +46,7 @@ import {
   uiDataLabel,
   windowTemplatePaletteTreeDragController,
 } from "@semio-tech/ui-react";
-import { type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework-core";
+import { type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../Shell/🟦️component.tsx";
 import { driverDisplayLabel, shellLabel, shellTabIcon, shellTerminologyLabel } from "../ShellHelpers/🟦️component.tsx";

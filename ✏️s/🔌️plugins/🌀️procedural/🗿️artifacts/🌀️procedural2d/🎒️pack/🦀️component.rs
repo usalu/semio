@@ -26,7 +26,7 @@ pub fn decode(bytes: &[u8]) -> Result<Procedural2dDocument, PackError> {
 mod tests {
     use super::*;
     use crate::artifacts::procedural2d::dsl;
-    use flow_core::Widget;
+    use flow::Widget;
     use store::test_support;
 
     #[test]

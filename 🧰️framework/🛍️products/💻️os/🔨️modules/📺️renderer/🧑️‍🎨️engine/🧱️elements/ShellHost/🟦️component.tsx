@@ -92,7 +92,7 @@ import {
   type WindowEngagement,
   type WindowLayout,
   type WindowMeasure,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/framework";
 import {
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
@@ -112,7 +112,7 @@ import {
   operationEnvelopeFromWire,
   operationEnvelopeToWire,
   type PersistenceBinding,
-} from "@semio-tech/framework-os-core";
+} from "@semio-tech/framework-os";
 import {
   decodeWorldProjectionTemplateId,
   worldProjectionSpecIconId,
@@ -753,7 +753,7 @@ function FrameworkOsShellInner({
   /** 🔌️ The exact (possibly cache-busted `?v=`) module URL each currently-loaded plugin was acquired
    * at — `LoadedProgramState`/`PluginWasmHandle` carry no URL of their own, but `reloadPlugin`/
    * `uninstallPlugin` need the OLD url to `evictPluginModule` after swapping in a new lease at a
-   * different url (see the lease pool's key convention in `@semio-tech/framework-core`). */
+   * different url (see the lease pool's key convention in `@semio-tech/framework`). */
   const pluginModuleUrlByIdRef = useRef<Map<string, string>>(new Map());
   /** 🔌️ Per-pluginId mutual exclusion across `installPlugin`/`reloadPlugin`/`uninstallPlugin` — the
    * boot effect and the `PluginSource` subscription effect can both request the same pluginId around

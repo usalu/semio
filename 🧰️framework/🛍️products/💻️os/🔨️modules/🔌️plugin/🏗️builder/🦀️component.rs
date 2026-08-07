@@ -1,7 +1,7 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
 use crate::app::{App, DocumentApp, Plugin, PluginApp};
-use semio_framework_core::{kernel::CapabilityRequirement, CommandDefinition, Contribution};
+use semio_framework::{kernel::CapabilityRequirement, CommandDefinition, Contribution};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -95,7 +95,7 @@ impl PluginBuilder<Ready> {
 
     /// 🎲️ Declares local backbone read+write at plugin scope.
     pub fn local_backbone_storage(self) -> Self {
-        use semio_framework_core::kernel::{ArtifactKind, Rights, Scope};
+        use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         self.capability(CapabilityRequirement {
             artifact: ArtifactKind::Backbone,
             rights: Rights::Read,

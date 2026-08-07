@@ -18,7 +18,7 @@
 //! test`/`nx` target can reach every real `DocumentDsl` type without any of those app crates
 //! depending back on this one — never a real dependency of anything. Registered by extension
 //! (`P::EXTENSION`), not by directory, so a fixture is checked wherever in the repo it actually
-//! lives (plugin-root `📚️examples/`, a nested per-app `⚡️implementations/🦀️rust/📚️examples/`, or a
+//! lives (plugin-root `📚️examples/`, artifact/app `📚️examples/<slug>/🖼️assets/`, or a
 //! framework-level one) — see `POLICY_DSL_ROUND_TRIP_ALLOWLIST`'s doc comment in the root
 //! `📜️script.ts` for the parallel per-file static-analysis view of this same migration.
 
@@ -172,12 +172,17 @@ mod tests {
         }
     }
 
+    const EXAMPLES_DIR_NAME: &str = "📚️examples";
+    const ASSETS_DIR_NAME: &str = "🖼️assets";
+    const LEGACY_KIND_DIRS: &[&str] = &["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
+
+    fn skip_dir_name(name: &str) -> bool {
+        name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
+    }
+
     /// @emoji 📚️ Recursively finds every directory literally named `📚️examples` under `root`,
     /// skipping `node_modules`/`target`/hidden/ticket-scratch directories.
     fn example_dirs(root: &Path) -> Vec<PathBuf> {
-        fn skip(name: &str) -> bool {
-            name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
-        }
         fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
             let entries = match std::fs::read_dir(dir) {
                 Ok(entries) => entries,
@@ -190,10 +195,10 @@ mod tests {
                 }
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if skip(&name) {
+                if skip_dir_name(&name) {
                     continue;
                 }
-                if name == "📚️examples" {
+                if name == EXAMPLES_DIR_NAME {
                     out.push(path.clone());
                 }
                 walk(&path, out);
@@ -204,8 +209,24 @@ mod tests {
         out
     }
 
-    /// @emoji 📄️ Recursively collects every FILE under `dir` (fixture directories occasionally
-    /// nest one level, e.g. `norm/📚️examples/📘️en1990/...`).
+    /// @emoji 🏷️ Direct child directories of a `📚️examples` root — one per example slug.
+    fn example_slug_dirs(examples_dir: &Path) -> Vec<PathBuf> {
+        let mut out = Vec::new();
+        let entries = match std::fs::read_dir(examples_dir) {
+            Ok(entries) => entries,
+            Err(_) => return out,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                out.push(path);
+            }
+        }
+        out.sort();
+        out
+    }
+
+    /// @emoji 📄️ Recursively collects every FILE under `dir`.
     fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let entries = match std::fs::read_dir(dir) {
             Ok(entries) => entries,
@@ -220,6 +241,42 @@ mod tests {
             }
         }
     }
+
+    /// @emoji 🖼️ Collects `.semio` assets for one example slug.
+    /// Prefers `🖼️assets/` (new layout); soft-migrates by walking the slug tree when assets are absent.
+    fn collect_slug_semio_files(slug_dir: &Path) -> Vec<PathBuf> {
+        let assets = slug_dir.join(ASSETS_DIR_NAME);
+        let mut files = Vec::new();
+        if assets.is_dir() {
+            collect_files(&assets, &mut files);
+        } else {
+            collect_files(slug_dir, &mut files);
+        }
+        files.retain(|path| path.extension().and_then(|e| e.to_str()) == Some("semio"));
+        files.sort();
+        files
+    }
+
+    /// @emoji 📚️ Repo-wide `.semio` example assets under every `📚️examples/<slug>/` (assets-first).
+    fn collect_example_semio_files(root: &Path) -> Vec<PathBuf> {
+        let mut out = Vec::new();
+        for examples in example_dirs(root) {
+            for slug in example_slug_dirs(&examples) {
+                out.extend(collect_slug_semio_files(&slug));
+            }
+        }
+        out
+    }
+
+    fn has_semio_under(dir: &Path) -> bool {
+        let mut files = Vec::new();
+        collect_files(dir, &mut files);
+        files.iter().any(|path| path.extension().and_then(|e| e.to_str()) == Some("semio"))
+    }
+
+    fn slug_has_legacy_kind_dirs(slug_dir: &Path) -> bool {
+        LEGACY_KIND_DIRS.iter().any(|kind| slug_dir.join(kind).is_dir())
+    }
     //#endregion 🔖️Walk
 
     //#region 🔖️Sweep
@@ -229,11 +286,8 @@ mod tests {
         let dirs = example_dirs(&root);
         assert!(!dirs.is_empty(), "found zero 📚️examples directories under {root:?} — sweep would vacuously pass");
 
-        let mut fixture_files = Vec::new();
-        for dir in &dirs {
-            collect_files(dir, &mut fixture_files);
-        }
-        assert!(!fixture_files.is_empty(), "found {} 📚️examples dir(s) but zero fixture files under {root:?}", dirs.len());
+        let fixture_files = collect_example_semio_files(&root);
+        assert!(!fixture_files.is_empty(), "found {} 📚️examples dir(s) but zero .semio fixture files under {root:?}", dirs.len());
 
         let registry = registry();
         let mut walked = 0usize;
@@ -241,55 +295,33 @@ mod tests {
         let mut failures: Vec<String> = Vec::new();
 
         for file in &fixture_files {
-            if file.extension().and_then(|e| e.to_str()) == Some("semio") {
-                let bytes = std::fs::read(file).unwrap_or_else(|error| panic!("read {}: {error}", file.display()));
-                let envelope = match crate::os_store::semio_format::sniff(&bytes) {
-                    Ok(envelope) => envelope,
-                    Err(detail) => {
-                        unmapped.push(format!("{} (semio sniff failed: {detail})", file.display()));
-                        continue;
-                    }
-                };
-                if envelope.component != crate::os_store::semio_format::Component::Dsl {
-                    continue;
-                }
-                let key = envelope.envelope_id();
-                let matching: Vec<&(&str, &str, CheckFn)> = registry.iter().filter(|(_, ext, _)| *ext == key).collect();
-                if matching.is_empty() {
-                    unmapped.push(format!("{} (envelope {key} — no registered DocumentDsl)", file.display()));
-                    continue;
-                }
-                let text = std::str::from_utf8(&bytes).unwrap_or_else(|_| panic!("{} is not valid utf-8", file.display()));
-                for (label, _, check) in &matching {
-                    walked += 1;
-                    if let Err(detail) = check(text) {
-                        failures.push(format!("[{label}] {}: {detail}", file.display()));
-                    }
-                }
-                continue;
-            }
-            let extension = match file.extension().and_then(|e| e.to_str()) {
-                Some(extension) => extension,
-                None => {
-                    unmapped.push(format!("{} (no file extension)", file.display()));
+            let bytes = std::fs::read(file).unwrap_or_else(|error| panic!("read {}: {error}", file.display()));
+            let envelope = match crate::os_store::semio_format::sniff(&bytes) {
+                Ok(envelope) => envelope,
+                Err(detail) => {
+                    unmapped.push(format!("{} (semio sniff failed: {detail})", file.display()));
                     continue;
                 }
             };
-            let matching: Vec<&(&str, &str, CheckFn)> = registry.iter().filter(|(_, ext, _)| *ext == extension).collect();
-            if matching.is_empty() {
-                unmapped.push(format!("{} (.{extension} — no app registered with this EXTENSION)", file.display()));
+            if envelope.component != crate::os_store::semio_format::Component::Dsl {
                 continue;
             }
-            let text = std::fs::read_to_string(file).unwrap_or_else(|error| panic!("read {}: {error}", file.display()));
+            let key = envelope.envelope_id();
+            let matching: Vec<&(&str, &str, CheckFn)> = registry.iter().filter(|(_, ext, _)| *ext == key).collect();
+            if matching.is_empty() {
+                unmapped.push(format!("{} (envelope {key} — no registered DocumentDsl)", file.display()));
+                continue;
+            }
+            let text = std::str::from_utf8(&bytes).unwrap_or_else(|_| panic!("{} is not valid utf-8", file.display()));
             for (label, _, check) in &matching {
                 walked += 1;
-                if let Err(detail) = check(&text) {
+                if let Err(detail) = check(text) {
                     failures.push(format!("[{label}] {}: {detail}", file.display()));
                 }
             }
         }
 
-        eprintln!("[dsl-fixture-sweep] {} example dir(s), {} fixture file(s) found, {} law-check(s) run across {} registered app kind(s), {} unmapped fixture(s)", dirs.len(), fixture_files.len(), walked, registry.len(), unmapped.len());
+        eprintln!("[dsl-fixture-sweep] {} example dir(s), {} .semio fixture file(s) found, {} law-check(s) run across {} registered app kind(s), {} unmapped fixture(s)", dirs.len(), fixture_files.len(), walked, registry.len(), unmapped.len());
         if !unmapped.is_empty() {
             eprintln!("[dsl-fixture-sweep] unmapped fixtures (no registered DocumentDsl app matches this extension — not counted as a failure):");
             for entry in &unmapped {
@@ -302,45 +334,267 @@ mod tests {
 
     #[test]
     fn repo_wide_semio_example_kind_coverage() {
+        // Target: each artifact `📚️examples/<slug>/` has `🖼️assets/` with ≥1 `.semio`.
+        // Mid-migration (W1b→W3): soft-skip slugs that still lack `🖼️assets/` with a clear message.
+        // Empty `🖼️assets/` after the dir exists is a hard gap.
         let root = repo_root();
-        let kinds = ["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
         let plugins = root.join("✏️s").join("🔌️plugins");
         let mut gaps: Vec<String> = Vec::new();
+        let mut migrated = 0usize;
+        let mut soft_skipped = 0usize;
         let read_dir = |p: &Path| std::fs::read_dir(p).ok().map(|d| d.filter_map(|e| e.ok()).collect::<Vec<_>>()).unwrap_or_default();
         for plugin in read_dir(&plugins) {
-            let plugin_path = plugin.path();
-            if !plugin_path.is_dir() {
-                continue;
-            }
-            let artifacts = plugin_path.join("🗿️artifacts");
+            let artifacts = plugin.path().join("🗿️artifacts");
             for artifact in read_dir(&artifacts) {
                 let artifact_path = artifact.path();
                 if !artifact_path.is_dir() {
                     continue;
                 }
-                let examples = artifact_path.join("📚️examples");
-                for set in read_dir(&examples) {
-                    let set_path = set.path();
-                    if !set_path.is_dir() {
-                        continue;
-                    }
-                    for kind in kinds {
-                        if !set_path.join(kind).is_dir() {
-                            gaps.push(format!("{} missing {}", set_path.display(), kind));
+                let examples = artifact_path.join(EXAMPLES_DIR_NAME);
+                if !examples.is_dir() {
+                    continue;
+                }
+                for slug in example_slug_dirs(&examples) {
+                    let assets = slug.join(ASSETS_DIR_NAME);
+                    if assets.is_dir() {
+                        if has_semio_under(&assets) {
+                            migrated += 1;
+                        } else {
+                            gaps.push(format!("{}: {}/ present but has zero .semio files", slug.display(), ASSETS_DIR_NAME));
                         }
+                    } else {
+                        soft_skipped += 1;
+                        let legacy_hint = if slug_has_legacy_kind_dirs(&slug) {
+                            "legacy plural kind dirs still present"
+                        } else {
+                            "no legacy kind dirs either"
+                        };
+                        eprintln!(
+                            "[DEBUG] soft-skip example coverage {}: missing {}/ with ≥1 .semio — mid-migration ({})",
+                            slug.display(),
+                            ASSETS_DIR_NAME,
+                            legacy_hint
+                        );
                     }
                 }
             }
         }
-        assert!(gaps.is_empty(), "semio example kind gaps:\n{}", gaps.join("\n"));
+        eprintln!(
+            "[dsl-fixture-sweep] example asset coverage: {migrated} slug(s) on new 🖼️assets layout, {soft_skipped} soft-skipped mid-migration"
+        );
+        assert!(gaps.is_empty(), "semio example asset gaps:\n{}", gaps.join("\n"));
     }
     //#endregion 🔖️Sweep
 }
 
+
+//#region 🔖️ExampleAssetDiscovery
+/// @emoji 🖼️ Path-agnostic example-asset discovery for M5 pilots: prefers
+/// `📚️examples/<slug>/🖼️assets/*.<kind>.semio`, soft-falls back to legacy plural kind dirs.
+#[cfg(test)]
+mod example_asset_discovery {
+    use std::path::{Path, PathBuf};
+
+    pub const EXAMPLES_DIR_NAME: &str = "📚️examples";
+    pub const ASSETS_DIR_NAME: &str = "🖼️assets";
+
+    /// @emoji 🏠️ Ascends from `CARGO_MANIFEST_DIR` to the repo root (`nx.json`).
+    pub fn repo_root() -> PathBuf {
+        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        loop {
+            if dir.join("nx.json").is_file() {
+                return dir;
+            }
+            if !dir.pop() {
+                panic!("could not locate repo root (nx.json) ascending from {}", env!("CARGO_MANIFEST_DIR"));
+            }
+        }
+    }
+
+    fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+        let entries = match std::fs::read_dir(dir) {
+            Ok(entries) => entries,
+            Err(_) => return,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                collect_files(&path, out);
+            } else {
+                out.push(path);
+            }
+        }
+    }
+
+    /// @emoji 🔎 Finds the first `.semio` under an artifact's examples whose file name ends with `suffix`
+    /// (e.g. `.dsl.semio`, `.pack.semio`). Assets-first, then legacy walk.
+    pub fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<PathBuf> {
+        let examples = artifact_dir.join(EXAMPLES_DIR_NAME);
+        if !examples.is_dir() {
+            return None;
+        }
+        let mut candidates: Vec<PathBuf> = Vec::new();
+        let entries = match std::fs::read_dir(&examples) {
+            Ok(entries) => entries,
+            Err(_) => return None,
+        };
+        for entry in entries.flatten() {
+            let slug = entry.path();
+            if !slug.is_dir() {
+                continue;
+            }
+            let assets = slug.join(ASSETS_DIR_NAME);
+            if assets.is_dir() {
+                collect_files(&assets, &mut candidates);
+            } else {
+                collect_files(&slug, &mut candidates);
+            }
+        }
+        candidates.retain(|path| {
+            path.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|name| name.ends_with(suffix))
+        });
+        // Prefer the largest match so handcrafted fixtures win over 64-byte / preamble-only stubs
+        // that still sit beside them under legacy placeholder slug dirs during migration.
+        candidates.sort_by(|a, b| {
+            let size = |path: &PathBuf| std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+            size(b).cmp(&size(a)).then_with(|| a.cmp(b))
+        });
+        candidates.into_iter().next()
+    }
+
+    /// @emoji 📄️ Reads UTF-8 text for the first matching example asset under `artifact_dir`.
+    pub fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
+        let path = find_example_asset(artifact_dir, suffix)?;
+        std::fs::read_to_string(&path).ok()
+    }
+
+    /// @emoji 📒️ Reads bytes for the first matching example asset under `artifact_dir`.
+    pub fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
+        let path = find_example_asset(artifact_dir, suffix)?;
+        std::fs::read(&path).ok()
+    }
+
+    /// @emoji 🗺️ Resolves `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>`.
+    pub fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
+        repo_root().join("✏️s").join("🔌️plugins").join(plugin).join("🗿️artifacts").join(artifact)
+    }
+}
+//#endregion 🔖️ExampleAssetDiscovery
+
+
+//#region 🧭️PilotResolve
+/// 🧭️ Path-agnostic example-asset resolution for M5 pilots.
+/// Prefers `📚️examples/<slug>/🖼️assets/*.<kind>.semio`; falls back to any `.semio` under the
+/// slug tree (legacy `🗣️dsls`/`🎒️packs`/…) so mid-migration does not break compile-time includes.
+#[cfg(test)]
+mod pilot_resolve {
+    use std::path::{Path, PathBuf};
+
+    const EXAMPLES_DIR_NAME: &str = "📚️examples";
+    const ASSETS_DIR_NAME: &str = "🖼️assets";
+
+    /// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json`.
+    pub fn repo_root() -> PathBuf {
+        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        loop {
+            if dir.join("nx.json").is_file() {
+                return dir;
+            }
+            if !dir.pop() {
+                panic!("could not locate repo root (nx.json) ascending from {}", env!("CARGO_MANIFEST_DIR"));
+            }
+        }
+    }
+
+    fn skip_dir_name(name: &str) -> bool {
+        name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
+    }
+
+    fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+        let entries = match std::fs::read_dir(dir) {
+            Ok(entries) => entries,
+            Err(_) => return,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                let name = entry.file_name();
+                let name = name.to_string_lossy();
+                if skip_dir_name(&name) {
+                    continue;
+                }
+                collect_files(&path, out);
+            } else if path.is_file() {
+                out.push(path);
+            }
+        }
+    }
+
+    fn name_matches_kind(path: &Path, kind_suffix: &str) -> bool {
+        path.file_name().and_then(|n| n.to_str()).map(|n| n.ends_with(kind_suffix)).unwrap_or(false)
+    }
+
+    /// 🖼️ Finds one example `.semio` for `artifact_rel` (repo-relative artifact dir) matching `kind_suffix`
+    /// (e.g. `.dsl.semio`, `.pack.semio`, `.spr.semio`). Assets-dir hits win over legacy nested hits.
+    pub fn find_example_semio(artifact_rel: &str, kind_suffix: &str) -> Option<PathBuf> {
+        let examples = repo_root().join(artifact_rel).join(EXAMPLES_DIR_NAME);
+        if !examples.is_dir() {
+            return None;
+        }
+        let mut preferred = Vec::new();
+        let mut fallback = Vec::new();
+        let entries = match std::fs::read_dir(&examples) {
+            Ok(entries) => entries,
+            Err(_) => return None,
+        };
+        for entry in entries.flatten() {
+            let slug = entry.path();
+            if !slug.is_dir() {
+                continue;
+            }
+            let assets = slug.join(ASSETS_DIR_NAME);
+            let mut files = Vec::new();
+            if assets.is_dir() {
+                collect_files(&assets, &mut files);
+                for file in files {
+                    if name_matches_kind(&file, kind_suffix) {
+                        preferred.push(file);
+                    }
+                }
+            } else {
+                collect_files(&slug, &mut files);
+                for file in files {
+                    if name_matches_kind(&file, kind_suffix) {
+                        fallback.push(file);
+                    }
+                }
+            }
+        }
+        preferred.sort();
+        fallback.sort();
+        preferred.into_iter().next().or_else(|| fallback.into_iter().next())
+    }
+
+    /// 📄️ Reads example fixture text; `None` soft-skips the pilot when missing mid-migration.
+    pub fn read_example_text(artifact_rel: &str, kind_suffix: &str) -> Option<String> {
+        let path = find_example_semio(artifact_rel, kind_suffix)?;
+        std::fs::read_to_string(&path).ok()
+    }
+
+    /// 🎒️ Reads example binary/text bytes; `None` soft-skips the pilot when missing mid-migration.
+    pub fn read_example_bytes(artifact_rel: &str, kind_suffix: &str) -> Option<Vec<u8>> {
+        let path = find_example_semio(artifact_rel, kind_suffix)?;
+        std::fs::read(&path).ok()
+    }
+}
+//#endregion 🧭️PilotResolve
+
 //#region 🔖️M5SoftSkip
 /// @emoji 🛟 Soft-skip helpers for M5 pilot laws when a facet has not exported a usable
 /// `COMPONENT_GRAMMAR_SEMIO` / `COMPONENT_PROTOCOL_SEMIO` yet (empty or stub text). Keeps the
-/// fixture-sweep compiling without plugin crate fan-in via `include_str!` of sibling specs.
+/// fixture-sweep compiling without plugin crate fan-in; example payloads are FS-discovered.
 #[cfg(test)]
 mod m5_soft_skip {
     /// @emoji ⏭️ Returns true when the pilot constant/spec text is missing or still a stub.
@@ -366,10 +620,12 @@ mod m5_soft_skip {
 
 //#region 🔖️M5HandcraftedGrammar
 /// @emoji 📖️ M5 grammar conformance on pilots that ship `COMPONENT_GRAMMAR_SEMIO` (lowpoly/dag/cad/en1992
-/// plus note/fem2d when present). Soft-skips empty/stub specs.
+/// plus note/fem2d when present). Soft-skips empty/stub specs. Example fixtures are discovered via
+/// FS walk (🖼️assets-first) so layout migration does not require path edits.
 #[cfg(test)]
 mod m5_handcrafted_grammar_conformance {
     use super::m5_soft_skip::soft_skip_missing;
+    use super::pilot_resolve;
     use crate::os_dsl::{parse_grammar, Recognizer, SemioDialect};
     use crate::os_store::semio_format::split_text_preamble;
 
@@ -398,80 +654,73 @@ mod m5_handcrafted_grammar_conformance {
         );
     }
 
+    fn run_pilot(artifact_rel: &str, grammar: &str, pilot: &str) {
+        let Some(fixture) = pilot_resolve::read_example_text(artifact_rel, ".dsl.semio") else {
+            eprintln!("[DEBUG] soft-skip {pilot}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)");
+            return;
+        };
+        assert_grammar_recognizes_shipped_fixture(grammar, &fixture, pilot);
+    }
+
     #[test]
     fn lowpoly_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🗣️dsl/📖️component.grammar.semio"
         );
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.lowpoly.lowpoly.dsl.semio"
-        );
-        assert_grammar_recognizes_shipped_fixture(GRAMMAR, FIXTURE, "lowpoly");
+        run_pilot("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", GRAMMAR, "lowpoly");
     }
 
     #[test]
     fn dag_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio"
-        );
-        assert_grammar_recognizes_shipped_fixture(GRAMMAR, FIXTURE, "dag");
+        run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", GRAMMAR, "dag");
     }
 
     #[test]
     fn cad_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.cad.cad.dsl.semio"
-        );
-        assert_grammar_recognizes_shipped_fixture(GRAMMAR, FIXTURE, "cad");
+        run_pilot("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", GRAMMAR, "cad");
     }
 
     #[test]
     fn en1992_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🗣️dsls/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.dsl.semio"
-        );
-        assert_grammar_recognizes_shipped_fixture(GRAMMAR, FIXTURE, "en1992");
+        run_pilot("✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992", GRAMMAR, "en1992");
     }
 
     #[test]
     fn note_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📚️examples/♻️semio/🗣️dsls/♻️semio/🧬️component.note.note.dsl.semio"
-        );
-        assert_grammar_recognizes_shipped_fixture(GRAMMAR, FIXTURE, "note");
+        run_pilot("✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note", GRAMMAR, "note");
     }
 
     #[test]
     fn fem2d_dsl_grammar_recognizes_shipped_fixture_tokens() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.fem.fem2d.dsl.semio"
-        );
-        assert_grammar_recognizes_shipped_fixture(GRAMMAR, FIXTURE, "fem2d");
+        run_pilot("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d", GRAMMAR, "fem2d");
     }
 }
 //#endregion 🔖️M5HandcraftedGrammar
 
 
+
 //#region 🔖️M5HandcraftedProtocol
 /// @emoji 📡️ M5 protocol conformance via [`verify_protocol_source`] / [`walk_protocol`] when
 /// `COMPONENT_PROTOCOL_SEMIO` text exists. Soft-skips empty/stub protocols or empty payloads.
+/// Pack/spr example bytes are discovered via FS walk (🖼️assets-first).
 #[cfg(test)]
 mod m5_handcrafted_protocol_conformance {
     use super::m5_soft_skip::{soft_skip_empty_bytes, soft_skip_missing};
+    use super::pilot_resolve;
     use crate::os_dsl::{parse_protocol, verify_protocol_source, walk_protocol};
     use crate::os_store::semio_format::unwrap_binary;
 
-    fn inner_payload_from_semio_example(bytes: &'static [u8], label: &str) -> Option<Vec<u8>> {
+    fn inner_payload_from_semio_example(bytes: &[u8], label: &str) -> Option<Vec<u8>> {
         match unwrap_binary(bytes) {
             Ok((_, inner)) => Some(inner.to_vec()),
             Err(error) => {
@@ -481,7 +730,7 @@ mod m5_handcrafted_protocol_conformance {
         }
     }
 
-    fn assert_protocol_conformance(protocol_semio: &str, pack_or_spr: &'static [u8], pilot: &str) {
+    fn assert_protocol_conformance(protocol_semio: &str, pack_or_spr: &[u8], pilot: &str) {
         if soft_skip_missing(&format!("{pilot}.protocol"), protocol_semio) {
             return;
         }
@@ -500,15 +749,20 @@ mod m5_handcrafted_protocol_conformance {
         });
     }
 
+    fn run_pilot(artifact_rel: &str, kind_suffix: &str, protocol: &str, pilot: &str) {
+        let Some(bytes) = pilot_resolve::read_example_bytes(artifact_rel, kind_suffix) else {
+            eprintln!("[DEBUG] soft-skip {pilot}: no {kind_suffix} under 📚️examples (🖼️assets-first walk)");
+            return;
+        };
+        assert_protocol_conformance(protocol, &bytes, pilot);
+    }
+
     #[test]
     fn handcrafted_lowpoly_pack_bytes_verify_against_pack_protocol_spec() {
         const PROTOCOL: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🎒️pack/📡️component.protocol.semio"
         );
-        const PACK_EXAMPLE: &[u8] = include_bytes!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.lowpoly.lowpoly.pack.semio"
-        );
-        assert_protocol_conformance(PROTOCOL, PACK_EXAMPLE, "lowpoly.pack");
+        run_pilot("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", ".pack.semio", PROTOCOL, "lowpoly.pack");
     }
 
     #[test]
@@ -516,10 +770,7 @@ mod m5_handcrafted_protocol_conformance {
         const PROTOCOL: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🎒️pack/📡️component.protocol.semio"
         );
-        const PACK_EXAMPLE: &[u8] = include_bytes!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.dag.dag.pack.semio"
-        );
-        assert_protocol_conformance(PROTOCOL, PACK_EXAMPLE, "dag.pack");
+        run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", ".pack.semio", PROTOCOL, "dag.pack");
     }
 
     #[test]
@@ -527,10 +778,7 @@ mod m5_handcrafted_protocol_conformance {
         const PROTOCOL: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📡️spr/📡️component.protocol.semio"
         );
-        const SPR_EXAMPLE: &[u8] = include_bytes!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.dag.dag.spr.semio"
-        );
-        assert_protocol_conformance(PROTOCOL, SPR_EXAMPLE, "dag.spr");
+        run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", ".spr.semio", PROTOCOL, "dag.spr");
     }
 
     #[test]
@@ -538,10 +786,7 @@ mod m5_handcrafted_protocol_conformance {
         const PROTOCOL: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎒️pack/📡️component.protocol.semio"
         );
-        const PACK_EXAMPLE: &[u8] = include_bytes!(
-            "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/🎒️packs/♻️default/🧬️component.cad.cad.pack.semio"
-        );
-        assert_protocol_conformance(PROTOCOL, PACK_EXAMPLE, "cad.pack");
+        run_pilot("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", ".pack.semio", PROTOCOL, "cad.pack");
     }
 
     #[test]
@@ -549,10 +794,7 @@ mod m5_handcrafted_protocol_conformance {
         const PROTOCOL: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🎒️pack/📡️component.protocol.semio"
         );
-        const PACK_EXAMPLE: &[u8] = include_bytes!(
-            "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🎒️packs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.pack.semio"
-        );
-        assert_protocol_conformance(PROTOCOL, PACK_EXAMPLE, "en1992.pack");
+        run_pilot("✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992", ".pack.semio", PROTOCOL, "en1992.pack");
     }
 
     #[test]
@@ -560,10 +802,7 @@ mod m5_handcrafted_protocol_conformance {
         const PROTOCOL: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🎒️pack/📡️component.protocol.semio"
         );
-        const PACK_EXAMPLE: &[u8] = include_bytes!(
-            "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.note.note.pack.semio"
-        );
-        assert_protocol_conformance(PROTOCOL, PACK_EXAMPLE, "note.pack");
+        run_pilot("✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note", ".pack.semio", PROTOCOL, "note.pack");
     }
 
     #[test]
@@ -571,19 +810,18 @@ mod m5_handcrafted_protocol_conformance {
         const PROTOCOL: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🎒️pack/📡️component.protocol.semio"
         );
-        const PACK_EXAMPLE: &[u8] = include_bytes!(
-            "../../../../../../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.fem.fem2d.pack.semio"
-        );
-        assert_protocol_conformance(PROTOCOL, PACK_EXAMPLE, "fem2d.pack");
+        run_pilot("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d", ".pack.semio", PROTOCOL, "fem2d.pack");
     }
 }
 //#endregion 🔖️M5HandcraftedProtocol
+
 
 //#region 🔖️M5CrossArtifactRejection
 /// @emoji ⚔️ Cross-artifact anti-genericness: lowpoly recognizer must reject a dag sample (and vice versa).
 #[cfg(test)]
 mod m5_cross_artifact_rejection {
     use super::m5_soft_skip::soft_skip_missing;
+    use super::pilot_resolve;
     use crate::os_dsl::{parse_grammar, Recognizer};
     use crate::os_store::semio_format::split_text_preamble;
 
@@ -602,24 +840,26 @@ mod m5_cross_artifact_rejection {
         );
         const DAG_GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🗣️dsl/📖️component.grammar.semio");
-        const LOWPOLY_FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.lowpoly.lowpoly.dsl.semio"
-        );
-        const DAG_FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio"
-        );
+        let Some(lowpoly_fixture) = pilot_resolve::read_example_text("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", ".dsl.semio") else {
+            eprintln!("[DEBUG] soft-skip lowpoly.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)");
+            return;
+        };
+        let Some(dag_fixture) = pilot_resolve::read_example_text("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", ".dsl.semio") else {
+            eprintln!("[DEBUG] soft-skip dag.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)");
+            return;
+        };
         if soft_skip_missing("lowpoly.grammar", LOWPOLY_GRAMMAR) || soft_skip_missing("dag.grammar", DAG_GRAMMAR) {
             return;
         }
-        if soft_skip_missing("lowpoly.fixture", LOWPOLY_FIXTURE) || soft_skip_missing("dag.fixture", DAG_FIXTURE) {
+        if soft_skip_missing("lowpoly.fixture", &lowpoly_fixture) || soft_skip_missing("dag.fixture", &dag_fixture) {
             return;
         }
         let lowpoly_grammar = parse_grammar(LOWPOLY_GRAMMAR).expect("lowpoly grammar");
         let dag_grammar = parse_grammar(DAG_GRAMMAR).expect("dag grammar");
         let lowpoly = Recognizer::compile(&lowpoly_grammar);
         let dag = Recognizer::compile(&dag_grammar);
-        let lowpoly_body = dsl_body_from_fixture(LOWPOLY_FIXTURE);
-        let dag_body = dsl_body_from_fixture(DAG_FIXTURE);
+        let lowpoly_body = dsl_body_from_fixture(&lowpoly_fixture);
+        let dag_body = dsl_body_from_fixture(&dag_fixture);
         assert!(
             !lowpoly.recognize(dag_body).expect("lowpoly recognize dag body"),
             "lowpoly grammar must reject dag fixture body"
@@ -632,13 +872,16 @@ mod m5_cross_artifact_rejection {
 }
 //#endregion 🔖️M5CrossArtifactRejection
 
+
 //#region 🔖️M5ProductionCoverage
 /// @emoji 📊️ Production coverage hook: [`Recognizer::uncovered_productions`] reports productions
 /// never reached by a shipped pilot fixture. Soft-skips missing specs; logs uncovered names for
 /// pilots still mid-handcraft without failing the gate hard until corpus coverage lands.
+/// Fixtures are discovered via FS walk (🖼️assets-first).
 #[cfg(test)]
 mod m5_production_coverage {
     use super::m5_soft_skip::soft_skip_missing;
+    use super::pilot_resolve;
     use crate::os_dsl::{parse_grammar, Recognizer};
     use crate::os_store::semio_format::split_text_preamble;
 
@@ -676,45 +919,42 @@ mod m5_production_coverage {
         );
     }
 
+    fn run_pilot(artifact_rel: &str, grammar: &str, pilot: &str) {
+        let Some(fixture) = pilot_resolve::read_example_text(artifact_rel, ".dsl.semio") else {
+            eprintln!("[DEBUG] soft-skip {pilot}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)");
+            return;
+        };
+        report_uncovered(grammar, &fixture, pilot);
+    }
+
     #[test]
     fn lowpoly_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str = include_str!(
             "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🗣️dsl/📖️component.grammar.semio"
         );
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.lowpoly.lowpoly.dsl.semio"
-        );
-        report_uncovered(GRAMMAR, FIXTURE, "lowpoly");
+        run_pilot("✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly", GRAMMAR, "lowpoly");
     }
 
     #[test]
     fn dag_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio"
-        );
-        report_uncovered(GRAMMAR, FIXTURE, "dag");
+        run_pilot("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag", GRAMMAR, "dag");
     }
 
     #[test]
     fn cad_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.cad.cad.dsl.semio"
-        );
-        report_uncovered(GRAMMAR, FIXTURE, "cad");
+        run_pilot("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", GRAMMAR, "cad");
     }
 
     #[test]
     fn en1992_reports_uncovered_productions_for_shipped_fixture() {
         const GRAMMAR: &str =
             include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🗣️dsl/📖️component.grammar.semio");
-        const FIXTURE: &str = include_str!(
-            "../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🗣️dsls/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.dsl.semio"
-        );
-        report_uncovered(GRAMMAR, FIXTURE, "en1992");
+        run_pilot("✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992", GRAMMAR, "en1992");
     }
 }
 //#endregion 🔖️M5ProductionCoverage
+

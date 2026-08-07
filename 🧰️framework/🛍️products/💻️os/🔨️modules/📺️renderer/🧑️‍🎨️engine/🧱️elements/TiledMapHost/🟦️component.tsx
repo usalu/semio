@@ -27,7 +27,7 @@ import {
   SelectionMarquee,
   type IconName,
 } from "@semio-tech/ui-react";
-import { type ComponentSceneHostProps } from "@semio-tech/framework-core";
+import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { type MapWasmSession, createMapSession, createDemandFrameScheduler } from "../WasmSessionLoader/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`Interpreter` already landed in a prior batch.

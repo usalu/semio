@@ -3,7 +3,7 @@
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation};
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::{flow_host_with_session, FlowEvalSession};
+use flow::{flow_host_with_session, FlowEvalSession};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 

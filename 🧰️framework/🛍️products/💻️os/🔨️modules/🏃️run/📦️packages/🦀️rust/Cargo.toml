@@ -20,7 +20,7 @@ name = "semio-framework-os-run"
 path = "../../📦️bin.rs"
 
 [dependencies]
-semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
+semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-os = { path = "../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }

@@ -1,0 +1,90 @@
+1110|    expect(resolveCargoPackageNames([], dbActorDir)).toEqual(["semio-framework-os-kernel-db-actor"]);
+1111|  });
+1112|});
+1113|
+1114|describe("loadTaxonomy", () => {
+1115|  test("parses 🔣️taxonomy.json into the expected shape", () => {
+1116|    const taxonomy = loadTaxonomy();
+1117|    expect(taxonomy.artifactComponentDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"]);
+1118|    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
+1119|    expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
+1120|    expect(taxonomy.taxonomyLeafFilenames["🟦️typescript"]).toBe("🟦️component.ts");
+1121|    expect(taxonomy.artifactSpecFilenames["🗣️dsl"]).toBe("📖️component.grammar.semio");
+1122|    expect(taxonomy.artifactSpecFilenames["📡️spr"]).toBe("📡️component.protocol.semio");
+1123|    expect(taxonomy.libWiringLineBudget).toBe(150);
+1124|    expect(taxonomy.packagesDirName).toBe("📦️packages");
+1125|    expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
+1126|  });
+1127|
+1128|  test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
+1129|    const taxonomy = loadTaxonomy();
+1130|    // ⚙️ The disagreement this vocabulary exists to settle: registry's validateTaxonomyTree requires 5
+1131|    // components, root script's POLICY_ARTIFACT_COMPONENT_DIRS allows 6. Both are right — different questions.
+1132|    expect(taxonomy.artifactChildDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
+1133|    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["⚙️engine", "📚️examples"]);
+1134|  });
+1135|
+1136|  test("forbids both the plural and singular implementations spellings", () => {
+1137|    expect(loadTaxonomy().forbiddenPathSegments).toEqual(["⚡️implementations", "⚡️implementation"]);
+1138|  });
+1139|
+1140|  test("describes every declared lang with a manifest/marker/leaf contract", () => {
+1141|    const taxonomy = loadTaxonomy();
+1142|    for (const lang of taxonomy.langs) {
+1143|      const ecosystem = taxonomy.ecosystems[lang];
+1144|      expect(ecosystem).toBeDefined();
+1145|      expect(ecosystem.leafFilename.includes("component")).toBe(true);
+1146|    }
+1147|    expect(taxonomy.ecosystems["🦀️rust"].marker).toEqual({ in: "manifest", format: "toml", table: "package.metadata.semio", roleKey: "role", idKey: "id" });
+1148|    expect(taxonomy.ecosystems["🟦️typescript"].marker).toEqual({ in: "manifest", format: "json", table: "semio", roleKey: "role", idKey: "id" });
+1149|    expect(taxonomy.ecosystems["🐍️python"].marker?.table).toBe("tool.semio");
+1150|    // 🐹️ Go's manifest is 📋️project.json (go.mod must stay at the owner root — a Go module root has to contain its sources).
+1151|    expect(taxonomy.ecosystems["🐹️go"].manifestFilename).toBe("📋️project.json");
+1152|    expect(taxonomy.ecosystems["🐹️go"].moduleRootFilename).toBe("go.mod");
+1153|    expect(taxonomy.ecosystems["🐹️go"].marker?.table).toBe("metadata.semio");
+1154|  });
+1155|
+1156|  test("encodes Shape V2 entry location and both valid rust #[path] base conventions", () => {
+1157|    const taxonomy = loadTaxonomy();
+1158|    expect(taxonomy.entryLocation).toBe("packages");
+1159|    expect(taxonomy.rustEntryPathRules.entryDirFromOwner).toBe("📦️packages/🦀️rust");
+1160|    expect(taxonomy.rustEntryPathRules.resolution).toBe("cumulative");
+1161|    expect(taxonomy.rustEntryPathRules.conventions.map((convention) => convention.id)).toEqual(["leaf-prefixed", "once-reset"]);
+1162|    // 🥞️ A grouping `#[path = "."]` reset is never prefixed under either convention — the bug that only a real compile catches.
+1163|    expect(taxonomy.rustEntryPathRules.conventions.every((convention) => convention.groupingReset === ".")).toBe(true);
+1164|  });
+1165|
+1166|  test("declares the area-state enum that replaces LEGACY_LAYOUT_TOLERANT", () => {
+1167|    const taxonomy = loadTaxonomy();
+1168|    expect(taxonomy.areaStates).toEqual(["legacy", "mixed", "clean", "exempt"]);
+1169|    expect(taxonomy.migratedMarker).toBe("packages-dir-exists");
+1170|  });
+1171|});
+1172|
+1173|describe("validateTaxonomy", () => {
+1174|  test("the shipped vocabulary is internally consistent", () => {
+1175|    expect(validateTaxonomy()).toEqual([]);
+1176|  });
+1177|
+1178|  test("reports an area state outside the declared enum", () => {
+1179|    const taxonomy = loadTaxonomy();
+1180|    const broken = { ...taxonomy, areas: { ...taxonomy.areas, "🧰️framework": "taxonomy" as never } };
+1181|    expect(validateTaxonomy(broken).some((problem) => problem.includes("areaStates"))).toBe(true);
+1182|  });
+1183|
+1184|  test("reports a completeness dir missing from the structural set", () => {
+1185|    const taxonomy = loadTaxonomy();
+1186|    const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
+1187|    expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
+1188|  });
+1189|});
+1190|
+1191|describe("areaOf", () => {
+1192|  test("longest-prefix matches a plugin path to its declared area", () => {
+1193|    expect(areaOf("✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust")).toBe("mixed");
+1194|  });
+1195|
+1196|  test("longest-prefix matches framework paths to legacy", () => {
+1197|    expect(areaOf("🧰️framework/🛍️products/💻️os")).toBe("legacy");
+1198|  });
+1199|

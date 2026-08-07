@@ -10,7 +10,7 @@ use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
 use crate::apps::flow::FLOW_PLAY_APP_ID;
 use crate::artifacts::flow::engine::seed_host_catalogue;
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
-use flow_core::{
+use flow::{
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     FlowEvalSession, FlowHost,
 };

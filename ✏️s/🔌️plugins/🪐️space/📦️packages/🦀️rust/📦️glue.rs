@@ -206,12 +206,8 @@ fn register_s_exports() {
 //#endregion 🔖️DocumentCodecs
 
 //#region 🔖️Manifest
-fn bundle() -> semio_framework_plugin::Plugin {
-    register_s_exports();
-    semio_framework_plugin::Plugin::new("s", "S Studio", "0.1.0")
-        .local_backbone_storage()
-        .register_document_app::<apps::home::HomeApp>(apps::home::create_home_app())
-        .register_document_app::<apps::space::SpaceApp>(apps::space::create_space_app())
-}
-semio_framework_plugin::plugin_exports!(bundle);
+
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Manifest

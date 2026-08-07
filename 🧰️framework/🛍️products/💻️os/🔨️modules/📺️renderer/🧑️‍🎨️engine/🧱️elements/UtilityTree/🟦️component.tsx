@@ -23,7 +23,7 @@ import {
   RibbonZone,
   ToggleGroup,
 } from "@semio-tech/ui-react";
-import { type ActionDescriptor, SET_ACTIVE_UTILITY_ACTION_ID, type UtilityCategory, type UtilityLeaf, type UtilityNode } from "@semio-tech/framework-core";
+import { type ActionDescriptor, SET_ACTIVE_UTILITY_ACTION_ID, type UtilityCategory, type UtilityLeaf, type UtilityNode } from "@semio-tech/framework";
 import { SelectionUtilityOptions } from "../ShellHelpers/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

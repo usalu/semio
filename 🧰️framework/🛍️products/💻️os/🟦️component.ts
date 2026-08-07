@@ -1,6 +1,6 @@
 // #region Header
 /**
- * 🖥️ `@semio-tech/framework-os-core` — JS sync/backbone protocol surface (backbone URIs, document
+ * 🖥️ `@semio-tech/framework-os` — JS sync/backbone protocol surface (backbone URIs, document
  * envelopes, `🟦️backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OperationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/os/renderer/js/react/index.tsx` and
  * `framework/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
@@ -12,7 +12,7 @@
  */
 // #endregion Header
 
-import type { Fault, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework-core";
+import type { Fault, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework";
 
 //#region 🔖️Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
@@ -2031,7 +2031,7 @@ const APP_CHANNEL_VERSION = 4;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
- * double, ...) without importing the rest of `@semio-tech/framework-core`'s plugin-loading surface. */
+ * double, ...) without importing the rest of `@semio-tech/framework`'s plugin-loading surface. */
 export type AppChannelHandle = Pick<PluginWasmHandle, "exchange">;
 
 /**
@@ -2158,7 +2158,7 @@ export class AppChannelClient {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  describe("@semio-tech/framework-os-core backbone", () => {
+  describe("@semio-tech/framework-os backbone", () => {
     it("classifies backbone uri kinds", () => {
       expect(backboneKindFromUri("file:///tmp/a.json")).toBe("file");
       expect(backboneKindFromUri("folder:///tmp")).toBe("folder");
@@ -2217,7 +2217,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@semio-tech/framework-os-core workflow", () => {
+  describe("@semio-tech/framework-os workflow", () => {
     const mediaContract = (): MediaContract => ({ kindId: "2d.drawing", mediaType: { class: "data", form: "value" }, wire: { kind: "document", schema: "2d.drawing" } });
     const mediaNode = (id: string, instanceId: string): OsWorkflowNode => ({
       id,
@@ -2322,7 +2322,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@semio-tech/framework-os-core PackValueCodec", () => {
+  describe("@semio-tech/framework-os PackValueCodec", () => {
     function bytesToHex(bytes: Uint8Array): string {
       return Array.from(bytes)
         .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -2376,7 +2376,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@semio-tech/framework-os-core AppChannelCodec", () => {
+  describe("@semio-tech/framework-os AppChannelCodec", () => {
     const sampleCommands: readonly AppCommandValue[] = [
       { Hello: { channel_version: 3, app_id: "app.demo", actor: "actor-1", config: [1, 2, 3] } },
       { ConfigCommand: { seq: 1, command: [4, 5] } },
@@ -2524,7 +2524,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@semio-tech/framework-os-core AppChannelClient", () => {
+  describe("@semio-tech/framework-os AppChannelClient", () => {
     /** 🧪️ A fake `exchange` that decodes whatever {@link AppChannelClient} encoded and replies with
      * caller-supplied frames — enough to assert the client frames/unframes correctly without a real
      * plugin instance. */

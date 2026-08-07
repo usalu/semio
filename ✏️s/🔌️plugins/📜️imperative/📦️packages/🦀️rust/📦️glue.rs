@@ -110,11 +110,7 @@ pub use apps::imperative::wasm::ImperativeSession;
 //#endregion 🕸️Wasm
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "imperative",
-    label: "Imperative",
-    version: "0.1.0",
-    setup: artifacts::imperative::engine::register,
-    apps: [ apps::imperative::create_imperative_app => apps::imperative::ImperativePlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

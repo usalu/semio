@@ -4,7 +4,7 @@ use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
 use crate::artifacts::flow::engine::host_from_fixture;
 use crate::artifacts::flow::FlowFixture;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

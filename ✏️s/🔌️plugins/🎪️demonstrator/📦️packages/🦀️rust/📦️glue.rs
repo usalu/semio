@@ -43,5 +43,7 @@ pub mod panes {
 //#endregion 🎪️Panes
 
 //#region 🔖️Manifest
-semio_framework_plugin::plugin_exports!(panes::bundle);
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Manifest

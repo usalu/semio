@@ -9,13 +9,13 @@ use ui_wgpu::wgpu::{
     UiComponentSceneNode, Vec3, WidgetContext,
 };
 
-use semio_framework_core::{mesh_from_glb, mesh_from_kind, optional_json_to_dsl, MeshData};
+use semio_framework::{mesh_from_glb, mesh_from_kind, optional_json_to_dsl, MeshData};
 use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 
-fn action_args(value: serde_json::Value) -> Option<semio_framework_core::DslValue> {
+fn action_args(value: serde_json::Value) -> Option<semio_framework::DslValue> {
     optional_json_to_dsl(Some(value))
 }
 
@@ -45,11 +45,11 @@ fn json_id_to_string(value: &serde_json::Value) -> Option<String> {
     value.as_str().map(str::to_string).or_else(|| value.as_u64().map(|id| id.to_string()))
 }
 
-fn dsl_id_to_string(value: &semio_framework_core::DslValue) -> Option<String> {
+fn dsl_id_to_string(value: &semio_framework::DslValue) -> Option<String> {
     value.as_str().map(str::to_string).or_else(|| value.as_f64().map(|n| if n.fract() == 0.0 { format!("{}", n as u64) } else { n.to_string() }))
 }
 
-fn dsl_string_vec(value: &semio_framework_core::DslValue) -> Vec<String> {
+fn dsl_string_vec(value: &semio_framework::DslValue) -> Vec<String> {
     value.as_array().map(|items| items.iter().filter_map(dsl_id_to_string).collect()).unwrap_or_default()
 }
 

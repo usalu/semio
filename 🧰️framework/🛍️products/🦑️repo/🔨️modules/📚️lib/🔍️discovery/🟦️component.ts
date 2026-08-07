@@ -4,7 +4,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { ephemeralMap, ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralMap, ephemeralBox } from "@semio-tech/framework";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -98,7 +98,15 @@ export interface Taxonomy {
   readonly artifactComponentDirs: readonly string[];
   /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the extra member is `⚙️engine`, allowed but not required). */
   readonly artifactChildDirs: readonly string[];
-  readonly exampleComponentDirs: readonly string[];
+  readonly exampleAssetsDirName: string;
+  readonly exampleTestsDirName: string;
+  readonly exampleSlugPattern: string;
+  readonly exampleAssetKindPrefixes: Readonly<Record<string, string>>;
+  readonly exampleMediaKindPrefixes: Readonly<Record<string, string>>;
+  readonly exampleLeafFilenames: Readonly<Record<string, string>>;
+  readonly exampleTestLeafFilenames: Readonly<Record<string, string>>;
+  readonly forbiddenExampleSlugs: readonly string[];
+  readonly forbiddenExamplePluralDirs: readonly string[];
   readonly appChildDirs: readonly string[];
   readonly semioDataLeafPrefix: string;
   readonly semioFileExtension: string;
@@ -155,11 +163,49 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   for (const [area, state] of Object.entries(taxonomy.areas)) {
     if (!areaStates.has(state)) problems.push(`areas["${area}"] = "${state}" is not one of areaStates (${taxonomy.areaStates.join(", ")}).`);
   }
-  for (const dir of taxonomy.exampleComponentDirs ?? []) {
-    if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) {
-      problems.push(`exampleComponentDirs member "${dir}" should appear in taxonomyLeafParentDirs for leaf validation.`);
+  //#region ExampleShapeContract
+  if (!taxonomy.exampleAssetsDirName) problems.push(`exampleAssetsDirName is required.`);
+  if (!taxonomy.exampleTestsDirName) problems.push(`exampleTestsDirName is required.`);
+  if (!taxonomy.exampleSlugPattern) problems.push(`exampleSlugPattern is required.`);
+  try {
+    void new RegExp(taxonomy.exampleSlugPattern, "u");
+  } catch {
+    problems.push(`exampleSlugPattern is not a valid unicode RegExp: ${JSON.stringify(taxonomy.exampleSlugPattern)}`);
+  }
+  if (!taxonomy.appChildDirs.includes("📚️examples")) {
+    problems.push(`appChildDirs must include "📚️examples".`);
+  }
+  if (!taxonomy.artifactChildDirs.includes("📚️examples")) {
+    problems.push(`artifactChildDirs must include "📚️examples".`);
+  }
+  for (const plural of taxonomy.forbiddenExamplePluralDirs ?? []) {
+    if (taxonomy.taxonomyLeafParentDirs.includes(plural)) {
+      problems.push(`forbiddenExamplePluralDirs member "${plural}" must not appear in taxonomyLeafParentDirs.`);
     }
   }
+  for (const dir of [taxonomy.exampleAssetsDirName, taxonomy.exampleTestsDirName]) {
+    if (dir && taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+      problems.push(`"${dir}" must not appear in taxonomyLeafParentDirs — example leaves live on emoji-slug dirs, not assets/tests.`);
+    }
+  }
+  for (const kind of ["dsl", "op", "spr", "pack", "diff", "cmd"] as const) {
+    if (!taxonomy.exampleAssetKindPrefixes?.[kind]) {
+      problems.push(`exampleAssetKindPrefixes must declare "${kind}".`);
+    }
+  }
+  for (const kind of ["image", "mesh", "document", "video"] as const) {
+    if (!taxonomy.exampleMediaKindPrefixes?.[kind]) {
+      problems.push(`exampleMediaKindPrefixes must declare "${kind}".`);
+    }
+  }
+  for (const lang of ["🦀️rust", "🟦️typescript"] as const) {
+    if (!taxonomy.exampleLeafFilenames?.[lang]) problems.push(`exampleLeafFilenames must declare "${lang}".`);
+    if (!taxonomy.exampleTestLeafFilenames?.[lang]) problems.push(`exampleTestLeafFilenames must declare "${lang}".`);
+  }
+  if ("exampleComponentDirs" in taxonomy) {
+    problems.push(`exampleComponentDirs is removed — use emoji-slug examples with exampleAssetsDirName/exampleTestsDirName.`);
+  }
+  //#endregion ExampleShapeContract
   for (const dir of taxonomy.artifactComponentDirs) {
     if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);
   }

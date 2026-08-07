@@ -3,7 +3,7 @@
 use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
 use crate::artifacts::flow::engine::host_operations;
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

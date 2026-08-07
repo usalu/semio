@@ -23,7 +23,7 @@ use crate::apps::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, pu
 use crate::artifacts::puzzle3d::engine::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome, Puzzle3dPrecomputeSession};
 use crate::artifacts::puzzle3d::op::{puzzle3d_document_delta_operations, Puzzle3dOperation, Puzzle3dPlayProjection};
 use crate::artifacts::puzzle3d::Puzzle3dProjection;
-use semio_framework_core::kernel::UiDirtyScope;
+use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, App, AppIo, ConfigView, DialogDefinition,

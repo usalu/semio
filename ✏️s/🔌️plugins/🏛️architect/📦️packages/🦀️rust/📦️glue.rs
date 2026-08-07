@@ -157,15 +157,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-fn register_architect_exports() {
-    artifacts::program::engine::register();
-}
-
-semio_framework_plugin::semio_plugin! {
-    id: "architect",
-    label: "Architect",
-    version: "0.1.0",
-    setup: register_architect_exports,
-    apps: [ apps::architect::create_architect_app => apps::architect::ArchitectPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

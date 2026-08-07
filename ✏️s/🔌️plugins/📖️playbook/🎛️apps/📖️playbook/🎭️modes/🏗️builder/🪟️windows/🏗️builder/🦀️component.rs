@@ -2,7 +2,7 @@
 
 use crate::apps::playbook::config::PlaybookConfig;
 use crate::artifacts::playbook::{PlaybookSpec, PLAYBOOK_BUILTIN_KINDS};
-use semio_framework_core::{parse_contributions, Contribution};
+use semio_framework::{parse_contributions, Contribution};
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn render_builder_palette_includes_contributed_block_kinds() {
         use crate::apps::playbook::config::PlaybookConfig;
-        use semio_framework_core::{Contribution, ProgramContributionEntry};
+        use semio_framework::{Contribution, ProgramContributionEntry};
         let mut config = PlaybookConfig::default();
         let entry = ProgramContributionEntry {
             plugin_id: "playbook-module-procedural".into(),

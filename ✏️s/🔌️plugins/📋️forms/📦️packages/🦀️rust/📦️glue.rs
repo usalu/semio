@@ -113,9 +113,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "forms", label: "Forms", version: "0.1.0",
-    setup: artifacts::forms::engine::register,
-    apps: [ apps::forms::create_forms_app => apps::forms::FormsPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

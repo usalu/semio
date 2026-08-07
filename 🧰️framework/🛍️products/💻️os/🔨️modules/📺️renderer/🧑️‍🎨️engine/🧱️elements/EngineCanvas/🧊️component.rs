@@ -8,7 +8,7 @@
 //! 🎨️ Embeds GraphHost, FlowHost, and EditorHost via vello offscreen compositing.
 
 use crate::interpreter::FrameworkWidgetContext;
-use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
+use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::GraphHost;
 use infinite_canvas as canvas;
@@ -154,12 +154,12 @@ fn effective_json_field(field: &str) -> String {
 }
 
 fn graph_scene_pack(graph: &ui_wgpu::wgpu::NodeGraphScene) -> Vec<u8> {
-    let dsl = semio_framework_core::to_dsl_value(graph).expect("node graph scene pack");
+    let dsl = semio_framework::to_dsl_value(graph).expect("node graph scene pack");
     store::pack_rt::encode_pack_value(&dsl)
 }
 
 fn editor_scene_pack(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<u8> {
-    let dsl = semio_framework_core::to_dsl_value(editor).expect("text editor scene pack");
+    let dsl = semio_framework::to_dsl_value(editor).expect("text editor scene pack");
     store::pack_rt::encode_pack_value(&dsl)
 }
 
@@ -201,11 +201,11 @@ fn is_flow_graph(graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
 }
 
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
 fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
 fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
@@ -457,8 +457,8 @@ pub fn paint_node_graph(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.pane", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
 
-fn note_widget_hit_at_screen(host: &flow_core::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
-    use flow_core::dag::DagNodeKind;
+fn note_widget_hit_at_screen(host: &flow::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+    use flow::dag::DagNodeKind;
     let (world_x, world_y) = dag_screen_to_world(&host.dag, sx, sy);
     let node = host.dag.fixture.nodes.iter().find(|node| matches!(node.kind, DagNodeKind::Note { .. }) && world_x >= node.x && world_x <= node.x + node.width && world_y >= node.y && world_y <= node.y + node.height)?;
     Some((node.id.clone(), world_x, world_y))
@@ -698,10 +698,10 @@ mod catalogue_workflow_drop_tests {
         assert_eq!(action.controller_id, "s-play");
         assert_eq!(action.action, "spawnApp");
         let args = action.args.unwrap();
-        assert_eq!(args.get("pluginId").and_then(semio_framework_core::DslValue::as_str), Some("draw"));
-        assert_eq!(args.get("appId").and_then(semio_framework_core::DslValue::as_str), Some("draw"));
-        assert_eq!(args.get("position").and_then(|value| value.get("x")).and_then(semio_framework_core::DslValue::as_f64), Some(40.0));
-        assert_eq!(args.get("position").and_then(|value| value.get("y")).and_then(semio_framework_core::DslValue::as_f64), Some(40.0));
+        assert_eq!(args.get("pluginId").and_then(semio_framework::DslValue::as_str), Some("draw"));
+        assert_eq!(args.get("appId").and_then(semio_framework::DslValue::as_str), Some("draw"));
+        assert_eq!(args.get("position").and_then(|value| value.get("x")).and_then(semio_framework::DslValue::as_f64), Some(40.0));
+        assert_eq!(args.get("position").and_then(|value| value.get("y")).and_then(semio_framework::DslValue::as_f64), Some(40.0));
     }
 
     #[test]
@@ -1292,7 +1292,7 @@ pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&framework_surface_tile
 }
 
 pub fn map_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
 pub fn map_local_pointer(inner: Rect, x: f32, y: f32) -> (f64, f64) {
@@ -1594,7 +1594,7 @@ pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&puzzle::artifacts::p
 }
 
 pub fn board_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
 /// @emoji 🎯️ Most-specific pick target at a screen point, mirroring `pickMostSpecificCanvasTarget`.

@@ -2653,10 +2653,10 @@ pub fn bake_texture(mesh: &TriMesh, uvs: &[[f32; 2]], atlas_size: u32, views: &[
 
 // #region 🔖️Interchange
 /// 🔄️ Converts a [`TriMesh`] (plus optional UVs/texture) to the framework's interchange
-/// [`semio_framework_core::MeshData`]: `f64` positions/normals cast to `f32` (normals computed
+/// [`semio_framework::MeshData`]: `f64` positions/normals cast to `f32` (normals computed
 /// from face windings), UVs passed through, and a texture PNG-encoded then base64-embedded into
 /// `paint_texture_base64`.
-pub fn to_mesh_data(mesh: &TriMesh, uvs: Option<&[[f32; 2]]>, texture: Option<&remodel_image::ImageRgba8>) -> semio_framework_core::MeshData {
+pub fn to_mesh_data(mesh: &TriMesh, uvs: Option<&[[f32; 2]]>, texture: Option<&remodel_image::ImageRgba8>) -> semio_framework::MeshData {
     use base64::Engine as _;
     let normals = mesh.compute_vertex_normals();
     let positions: Vec<f32> = mesh.positions.iter().flat_map(|p| p.iter().map(|&c| c as f32)).collect();
@@ -2664,7 +2664,7 @@ pub fn to_mesh_data(mesh: &TriMesh, uvs: Option<&[[f32; 2]]>, texture: Option<&r
     let indices: Vec<u32> = mesh.triangles.iter().flatten().copied().collect();
     let uv_flat: Vec<f32> = uvs.map(|u| u.iter().flat_map(|p| [p[0], p[1]]).collect()).unwrap_or_default();
     let paint_texture_base64 = texture.and_then(|tex| remodel_image::encode_png(tex).ok()).map(|bytes| base64::engine::general_purpose::STANDARD.encode(bytes));
-    semio_framework_core::MeshData { positions, normals, indices, uvs: uv_flat, paint_texture_base64, ..Default::default() }
+    semio_framework::MeshData { positions, normals, indices, uvs: uv_flat, paint_texture_base64, ..Default::default() }
 }
 // #endregion 🔖️Interchange
 
@@ -2762,7 +2762,7 @@ pub struct MeshPipeline {
     uvs: Option<Vec<[f32; 2]>>,
     texture: Option<remodel_image::ImageRgba8>,
     views: Vec<TextureView>,
-    result: Option<semio_framework_core::MeshData>,
+    result: Option<semio_framework::MeshData>,
 }
 
 impl MeshPipeline {
@@ -2784,7 +2784,7 @@ impl MeshPipeline {
         self.report.as_ref()
     }
 
-    pub fn result(&self) -> Option<&semio_framework_core::MeshData> {
+    pub fn result(&self) -> Option<&semio_framework::MeshData> {
         self.result.as_ref()
     }
 

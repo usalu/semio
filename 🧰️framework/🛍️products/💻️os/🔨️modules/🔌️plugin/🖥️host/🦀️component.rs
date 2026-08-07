@@ -1,6 +1,6 @@
 //! 🛡️ Sandboxed wasmtime component plugin host with capability-gated imports.
 
-use semio_framework_core::{
+use semio_framework::{
     kernel::{ArtifactKind, CapabilityRequirement, Rights, Scope},
     PluginManifest, ViewModel,
 };
@@ -42,7 +42,7 @@ pub enum PluginHostError {
 
 fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     let code = code.into();
-    dsl_core::encode_fault_bytes(&dsl_core::Fault::new(dsl_core::FaultOrigin::Os, dsl_core::FaultCode::new(code), message))
+    os_dsl::encode_fault_bytes(&os_dsl::Fault::new(os_dsl::FaultOrigin::Os, os_dsl::FaultCode::new(code), message))
 }
 
 //#region 🔖️DocumentSession
@@ -335,7 +335,7 @@ impl WasmPluginRuntime {
     fn plugin_result<T>(result: Result<T, semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
         result.map_err(|error| match error {
             semio::framework::types::PluginError::Fault(bytes) => {
-                let fault = dsl_core::decode_fault_bytes(&bytes);
+                let fault = os_dsl::decode_fault_bytes(&bytes);
                 PluginHostError::Plugin(fault.message)
             }
         })
@@ -606,7 +606,7 @@ impl WasmPluginRuntime {
                     return dsl::from_dsl_value(value).map_err(|error| PluginHostError::Plugin(error));
                 }
                 AppFrame::Error { in_reply_to, fault } if in_reply_to == Some(seq) => {
-                    let decoded = dsl_core::decode_fault_bytes(&fault);
+                    let decoded = os_dsl::decode_fault_bytes(&fault);
                     return Err(PluginHostError::Plugin(decoded.message));
                 }
                 _ => {}

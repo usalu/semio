@@ -20,7 +20,7 @@ use crate::apps::process3d::panels::{catalogue, document as document_panel, insp
 use crate::apps::process3d::terminology::process3d_labels;
 use crate::artifacts::process3d::op::Process3dOperation;
 use crate::artifacts::process3d::Process3dDocument;
-use semio_framework_core::kernel::HostEffect;
+use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
     OsMediaFormat, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,

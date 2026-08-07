@@ -3,7 +3,7 @@
 use crate::apps::procedural3d::procedural3d_action;
 use crate::apps::procedural3d::terminology::Procedural3dLabels;
 use crate::artifacts::procedural3d::widget_id;
-use flow_core::FlowFixture;
+use flow::FlowFixture;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 

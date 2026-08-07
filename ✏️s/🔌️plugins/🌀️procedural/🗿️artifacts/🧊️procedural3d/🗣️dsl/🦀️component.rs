@@ -1,7 +1,7 @@
 //! 📜️ Procedural3d artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
 //! See `procedural2d`'s sibling `🗣️dsl/🦀️component.rs` docstring for why the `*Dsl` mirror types below
-//! are LOCAL structural twins rather than derives on the foreign `flow_core`/`playbook` types directly.
+//! are LOCAL structural twins rather than derives on the foreign `flow`/`playbook` types directly.
 
 
 //#region 📖️SemioGrammar
@@ -12,8 +12,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
-use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use flow::neural::{Atom, Dictionary, Value as NeuralValue};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 

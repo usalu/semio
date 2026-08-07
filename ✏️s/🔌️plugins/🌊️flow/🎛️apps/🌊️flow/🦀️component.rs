@@ -17,7 +17,7 @@ use crate::apps::flow::modes::{edit, generate};
 use crate::apps::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture, FLOW_DOCUMENT_SCHEMA};
-use flow_core::{FlowEvalSession, Widget};
+use flow::{FlowEvalSession, Widget};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
@@ -382,7 +382,7 @@ pub(crate) mod testkit {
                 ("flow-extension-dictionary", semio_s_plugin_flow_extension_dictionary::extension_manifest_json()),
                 ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
             ] {
-                flow_core::install_flow_extension_manifest(plugin_id, &manifest);
+                flow::install_flow_extension_manifest(plugin_id, &manifest);
             }
         });
     }
@@ -490,7 +490,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<FlowCommand> {
-        use flow_core::CameraJson;
+        use flow::CameraJson;
         vec![
             FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None }),
             FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "n1".into() }),

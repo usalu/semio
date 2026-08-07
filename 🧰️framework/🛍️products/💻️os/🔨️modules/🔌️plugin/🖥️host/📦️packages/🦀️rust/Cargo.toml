@@ -15,7 +15,7 @@ workspace = true
 path = "📦️glue.rs"
 
 [dependencies]
-semio-framework-core = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }

@@ -4,7 +4,7 @@ use crate::apps::procedural3d::config::Procedural3dConfig;
 use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use crate::artifacts::procedural3d::engine::{preview_camera_json, preview_payload_from_eval, preview_scene_status_json, preview_selection_json, preview_status_json};
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene, world3d_sun_measures, ActionDescriptor, LocalizedLabel, MeasureSelectItem, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

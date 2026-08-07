@@ -4,8 +4,8 @@ use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOp
 use crate::artifacts::procedural3d::engine::evaluate_generation_preview;
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::forms_bridge::flow_fixture_to_form_spec;
-use flow_core::FlowEvalSession;
+use flow::forms_bridge::flow_fixture_to_form_spec;
+use flow::FlowEvalSession;
 use playbook::{apply_generation_operation, generation_operations, select_generation, selected_generation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};

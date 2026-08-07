@@ -1,6 +1,6 @@
 //! 📜️ Flow artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::DocumentDsl for FlowFixture` is implemented directly in the flow kernel crate (`flow_core`;
+//! `store::DocumentDsl for FlowFixture` is implemented directly in the flow kernel crate (`flow`;
 //! see `🗿️artifacts/🌊️flow/🦀️component.rs` for why the entity itself lives there). This component only
 //! adds the thin artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example-fixture
 //! constant and its round-trip law.

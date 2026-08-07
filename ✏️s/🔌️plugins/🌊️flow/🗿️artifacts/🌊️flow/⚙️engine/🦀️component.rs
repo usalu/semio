@@ -1,6 +1,6 @@
 //! ⚙️ Flow artifact — headless compute over the `FlowFixture` projection (constitutional: engine).
 //!
-//! Everything here is pure over `flow_core` types (`FlowHost`, `Widget`, `DagFixture`) plus the app's
+//! Everything here is pure over `flow` types (`FlowHost`, `Widget`, `DagFixture`) plus the app's
 //! view `FlowConfig`, and takes no label (`FlowPlayLabels`) parameter — labels are app chrome. The rule
 //! for what lands here rather than next to a single caller: a helper with MORE THAN ONE consumer across
 //! the taxonomy tree lives here; a helper with exactly one consumer lives in that consumer's component
@@ -9,7 +9,7 @@
 use crate::apps::flow::config::FlowConfig;
 use crate::artifacts::flow::op::FlowOperation;
 use crate::artifacts::flow::FlowFixture;
-use flow_core::{
+use flow::{
     dag::{DagDrawLod, DagFixture},
     flow_fixture_operations, flow_host_with_session,
     CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
@@ -96,8 +96,8 @@ pub fn register_pilot_languages() {
 
 //#region 🔖️Host
 pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
-    let mut sections = flow_core::flow_catalogue_sections();
-    if let Ok(extra) = serde_json::from_str::<Vec<flow_core::CatalogueSection>>(extra_sections_json) {
+    let mut sections = flow::flow_catalogue_sections();
+    if let Ok(extra) = serde_json::from_str::<Vec<flow::CatalogueSection>>(extra_sections_json) {
         sections.extend(extra);
     }
     host.set_host_catalogue_json(&serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into()));

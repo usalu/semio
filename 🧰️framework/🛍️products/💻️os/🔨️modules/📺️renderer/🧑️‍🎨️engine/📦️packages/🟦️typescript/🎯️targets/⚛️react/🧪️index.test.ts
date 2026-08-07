@@ -20,7 +20,7 @@ import {
   type UtilityNode,
   type UiNode,
   createMemoryStoragePort,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/framework";
 import {
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
@@ -253,7 +253,7 @@ const noopAction = () => {};
 
 describe("framework sync utilities", () => {
   it("builds three sync backbone toggles", async () => {
-    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
+    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os");
     const utilities = buildFrameworkSyncUtilities("file:///demo");
     expect(utilities).toHaveLength(3);
     expect(utilities.map((utility) => utility.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
@@ -261,13 +261,13 @@ describe("framework sync utilities", () => {
   });
 
   it("has no active toggle when detached", async () => {
-    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
+    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os");
     const utilities = buildFrameworkSyncUtilities(null);
     expect(utilities.every((utility) => !utility.pressed)).toBe(true);
   });
 
   it("groups File, Folder, and Remote under a single Sync category collection", async () => {
-    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
+    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os");
     const utilities = buildFrameworkSyncUtilities("file:///demo");
     const grouped = groupUtilityNodesByCategory(utilities as unknown as UtilityNode[], ["sync"]);
     expect(grouped).toHaveLength(1);
@@ -987,7 +987,7 @@ describe("framework plugin runtime", () => {
   // codecs) instead of the old flat `semio_plugin_*` wasm-bindgen JSON exports, which no longer
   // exist anywhere in the ABI (`loadPluginModuleUncached`'s doc comment).
   it("preserves batched UI refreshes through the React program adapter", async () => {
-    const { encodeAppFrame, decodeAppCommand, encodePackValue } = await import("@semio-tech/framework-os-core");
+    const { encodeAppFrame, decodeAppCommand, encodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-refresh", label: "Mock Refresh", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
@@ -1013,8 +1013,8 @@ describe("framework plugin runtime", () => {
   });
 
   it("loads plugin modules through framework-core, refcounted", async () => {
-    const { acquirePluginModule } = await import("@semio-tech/framework-core");
-    const { encodePackValue, decodePackValue } = await import("@semio-tech/framework-os-core");
+    const { acquirePluginModule } = await import("@semio-tech/framework");
+    const { encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
     const manifestBytes = Array.from(encodePackValue({ pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] }));
     const moduleUrl = `data:application/javascript,${encodeURIComponent(
       `export async function createPluginApi(){return {manifest: async()=>new Uint8Array(${JSON.stringify(manifestBytes)}), createApp: async()=>1, destroyApp: async()=>{}, exchange: async()=>[]};}`,
@@ -1025,7 +1025,7 @@ describe("framework plugin runtime", () => {
   });
 
   it("parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response", async () => {
-    const { parseInvocationResponse } = await import("@semio-tech/framework-core");
+    const { parseInvocationResponse } = await import("@semio-tech/framework");
     const response = parseInvocationResponse(
       JSON.stringify({
         output: null,
@@ -1039,13 +1039,13 @@ describe("framework plugin runtime", () => {
   });
 
   it("falls back to an empty InvocationResponse for malformed handle-action JSON", async () => {
-    const { parseInvocationResponse } = await import("@semio-tech/framework-core");
+    const { parseInvocationResponse } = await import("@semio-tech/framework");
     expect(parseInvocationResponse("not json")).toEqual({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } });
     expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } });
   });
 
   it("serializes concurrent program wasm handle calls", async () => {
-    const { withSerializedPluginWasmHandle } = await import("@semio-tech/framework-core");
+    const { withSerializedPluginWasmHandle } = await import("@semio-tech/framework");
     let inFlight = 0;
     let maxInFlight = 0;
     const handle = withSerializedPluginWasmHandle({
@@ -1066,7 +1066,7 @@ describe("framework plugin runtime", () => {
   });
 
   it("adaptPluginHandle.handleAction round-trips an action through AppCommand::Command and reassembles requestedEffects/uiScope-free InvocationResponse", async () => {
-    const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue, encodeActionWire } = await import("@semio-tech/framework-os-core");
+    const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue, encodeActionWire } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 3,
@@ -1090,7 +1090,7 @@ describe("framework plugin runtime", () => {
   });
 
   it("detects jco payload-shaped plugin instance busy errors", async () => {
-    const { isPluginInstanceBusyError, pluginErrorText } = await import("@semio-tech/framework-core");
+    const { isPluginInstanceBusyError, pluginErrorText } = await import("@semio-tech/framework");
     const jcoBusy = Object.assign(new Error("[object Object] (see error.payload)"), {
       payload: { tag: "message", val: "plugin instance busy" },
     });
@@ -1179,8 +1179,8 @@ describe("framework external slots", () => {
   // (see that function's doc comment). This test now asserts that documented Wave 1 behavior instead
   // of the old per-verb `renderWithDocument` round trip.
   it("degrades a resolvable external slot to 'unavailable' until the binary-channel render path lands", async () => {
-    const { resolveExternalSlots } = await import("@semio-tech/framework-core");
-    const { encodePackValue } = await import("@semio-tech/framework-os-core");
+    const { resolveExternalSlots } = await import("@semio-tech/framework");
+    const { encodePackValue } = await import("@semio-tech/framework-os");
     const handle = {
       manifest: async () => encodePackValue({ pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
@@ -1575,7 +1575,7 @@ describe("framework renderer hosts", () => {
   });
 
   it("encodes node graph scenes as pack bytes for wasm sync", async () => {
-    const { packValueToBase64 } = await import("@semio-tech/framework-os-core");
+    const { packValueToBase64 } = await import("@semio-tech/framework-os");
     const scene = {
       nodesJson: packValueToBase64([]),
       edgesJson: packValueToBase64([]),
@@ -3749,7 +3749,7 @@ describe("s workflow flow routing", () => {
     // viewState (the bug was committing the pre-spawn viewState and wiping activeSpawnedId).
     const baseViewState = { panelJson: JSON.stringify(panel) };
     const nextViewState = viewStateWithSpacePanel(baseViewState, focused);
-    const { packValueFromBase64 } = await import("@semio-tech/framework-os-core");
+    const { packValueFromBase64 } = await import("@semio-tech/framework-os");
     expect((packValueFromBase64(nextViewState.panelJson!) as { activeSpawnedId?: string }).activeSpawnedId).toBe("app-draw-1");
     const refocused = studioPanelFocusingSpawned(focused, { ...spawned, label: "Renamed" });
     expect(refocused.spawnedApps).toHaveLength(1);

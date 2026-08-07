@@ -9,7 +9,7 @@ use crate::artifacts::layout::engine::scene::{export_document_pdf, export_docume
 use crate::artifacts::layout::op::LayoutOperation;
 use crate::artifacts::layout::LayoutDocument;
 use base64::Engine;
-use semio_framework_core::kernel::HostEffect;
+use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{engagement_token_matches, ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

@@ -13,7 +13,7 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-core": resolve(root, "../../../../../framework/core/index.ts"),
+      "@semio-tech/framework": resolve(root, "../../../../../framework/core/index.ts"),
       "@semio-tech/framework-platform-core": resolve(root, "../../../../../framework/product/platform/core/index.ts"),
       "@semio-tech/compose-js": resolve(root, "../../js/index.ts"),
       "@semio-tech/reasoning-mindmap-wires-react": resolve(root, "../../../../../reasoning/mindmap/wires/react/index.ts"),

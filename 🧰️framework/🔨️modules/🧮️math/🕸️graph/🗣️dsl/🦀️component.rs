@@ -12,10 +12,10 @@ pub enum GraphDslError {
     #[error("unterminated string literal")]
     UnterminatedString,
     /// ❓️ A byte outside the token grammar was found (Jack's own pre-scan for `'`/`"`/`!=`, ahead
-    /// of delegating the rest of the alphabet to `dsl_core::lex`).
+    /// of delegating the rest of the alphabet to `os_dsl::lex`).
     #[error("unexpected character '{0}'")]
     UnexpectedChar(char),
-    /// 🔢️ A numeric literal did not parse as a float (defensive — `dsl_core::lex` only ever
+    /// 🔢️ A numeric literal did not parse as a float (defensive — `os_dsl::lex` only ever
     /// accumulates well-formed digit runs, so this should be unreachable in practice).
     #[error("invalid number literal: {0}")]
     NumberFormat(#[from] std::num::ParseFloatError),
@@ -41,7 +41,7 @@ pub enum GraphDslError {
     /// used by both the wire-literal delegate (`dsl_schema::parse_wire_text`) and Jack's
     /// `dsl_core`-backed lexer.
     #[error("{0}")]
-    Lex(#[from] dsl_core::TextError),
+    Lex(#[from] os_dsl::TextError),
 }
 // #endregion ⚠️ Errors
 
@@ -838,58 +838,58 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
     if segment.is_empty() {
         return Ok(());
     }
-    let raw = dsl_core::lex(segment, &dsl_core::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
+    let raw = os_dsl::lex(segment, &os_dsl::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
     for token in raw {
-        if token.kind.is_trivia() || token.kind == dsl_core::TokenKind::Eof {
+        if token.kind.is_trivia() || token.kind == os_dsl::TokenKind::Eof {
             continue;
         }
         let start = base_offset + token.byte_range.0 as usize;
         let end = base_offset + token.byte_range.1 as usize;
         let text = token.text.as_str().to_string();
         match token.kind {
-            dsl_core::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
+            os_dsl::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
             // A lone `_` is `dsl_core`'s placeholder sigil; Jack has no placeholder concept of its
             // own, so it round-trips as an ordinary one-character identifier.
-            dsl_core::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
-            dsl_core::TokenKind::Int | dsl_core::TokenKind::Float => {
+            os_dsl::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
+            os_dsl::TokenKind::Int | os_dsl::TokenKind::Float => {
                 let n: f64 = text.parse().map_err(GraphDslError::NumberFormat)?;
                 push_spanned(out, Token::Number(n), start, end);
             }
-            dsl_core::TokenKind::LParen => push_spanned(out, Token::LParen, start, end),
-            dsl_core::TokenKind::RParen => push_spanned(out, Token::RParen, start, end),
-            dsl_core::TokenKind::LBracket => push_spanned(out, Token::LBracket, start, end),
-            dsl_core::TokenKind::RBracket => push_spanned(out, Token::RBracket, start, end),
-            dsl_core::TokenKind::Colon => push_spanned(out, Token::Colon, start, end),
-            dsl_core::TokenKind::Comma => push_spanned(out, Token::Comma, start, end),
-            dsl_core::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
-            dsl_core::TokenKind::At => push_spanned(out, Token::At, start, end),
-            dsl_core::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
-            dsl_core::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
-            dsl_core::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
+            os_dsl::TokenKind::LParen => push_spanned(out, Token::LParen, start, end),
+            os_dsl::TokenKind::RParen => push_spanned(out, Token::RParen, start, end),
+            os_dsl::TokenKind::LBracket => push_spanned(out, Token::LBracket, start, end),
+            os_dsl::TokenKind::RBracket => push_spanned(out, Token::RBracket, start, end),
+            os_dsl::TokenKind::Colon => push_spanned(out, Token::Colon, start, end),
+            os_dsl::TokenKind::Comma => push_spanned(out, Token::Comma, start, end),
+            os_dsl::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
+            os_dsl::TokenKind::At => push_spanned(out, Token::At, start, end),
+            os_dsl::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
+            os_dsl::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
+            os_dsl::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
             // Double-quoted text delegated straight through `dsl_core` — unreachable in practice
             // since `lex_spanned` pre-scans and consumes every quote itself before ever
             // delegating a segment, kept only for defensive completeness.
-            dsl_core::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
+            os_dsl::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
             // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
-            // character" treatment as an outright `dsl_core::TokenKind::Error` below.
-            dsl_core::TokenKind::EdgeArrow
-            | dsl_core::TokenKind::LBrace
-            | dsl_core::TokenKind::RBrace
-            | dsl_core::TokenKind::Caret
-            | dsl_core::TokenKind::DotDot
-            | dsl_core::TokenKind::Plus
-            | dsl_core::TokenKind::Minus
-            | dsl_core::TokenKind::Star
-            | dsl_core::TokenKind::Slash
-            | dsl_core::TokenKind::Fence
-            | dsl_core::TokenKind::Error => {
+            // character" treatment as an outright `os_dsl::TokenKind::Error` below.
+            os_dsl::TokenKind::EdgeArrow
+            | os_dsl::TokenKind::LBrace
+            | os_dsl::TokenKind::RBrace
+            | os_dsl::TokenKind::Caret
+            | os_dsl::TokenKind::DotDot
+            | os_dsl::TokenKind::Plus
+            | os_dsl::TokenKind::Minus
+            | os_dsl::TokenKind::Star
+            | os_dsl::TokenKind::Slash
+            | os_dsl::TokenKind::Fence
+            | os_dsl::TokenKind::Error => {
                 if forgiving {
                     push_spanned(out, Token::Ident(text), start, end);
                 } else {
                     return Err(GraphDslError::UnexpectedChar(text.chars().next().unwrap_or('?')));
                 }
             }
-            dsl_core::TokenKind::Whitespace | dsl_core::TokenKind::Newline | dsl_core::TokenKind::Comment | dsl_core::TokenKind::Eof => {
+            os_dsl::TokenKind::Whitespace | os_dsl::TokenKind::Newline | os_dsl::TokenKind::Comment | os_dsl::TokenKind::Eof => {
                 unreachable!("trivia/Eof filtered above")
             }
         }
@@ -897,13 +897,13 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
     Ok(())
 }
 
-/// 🔬️ Jack's own lexer: unifies on `dsl_core::lex` for the shared token alphabet (idents,
+/// 🔬️ Jack's own lexer: unifies on `os_dsl::lex` for the shared token alphabet (idents,
 /// numbers, punctuation, `(`/`)`/`[`/`]`, `->`/`--`/`<-`) but keeps two genuinely Cypher-specific
 /// pieces local, since neither fits `dsl_core`'s grammar-independent alphabet: dual-quote strings
 /// (`'x'`/`"x"` — Cypher heritage; `dsl_core` only ever lexes `"..."`) and the `!=` comparison
 /// operator (`dsl_core` has no relational operators at all — it's a structural DSL alphabet, not
 /// an expression language). Both are pre-scanned as their own tokens; every remaining run of
-/// characters is delegated whole to `dsl_core::lex` and converted via [`push_dsl_core_segment`].
+/// characters is delegated whole to `os_dsl::lex` and converted via [`push_dsl_core_segment`].
 fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphDslError> {
     let bytes = input.as_bytes();
     let mut tokens = Vec::new();
@@ -940,7 +940,7 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphD
                 return Err(GraphDslError::UnterminatedString);
             }
             i += 1;
-            let text = dsl_core::unescape_text(&raw, forgiving).unwrap_or(raw);
+            let text = os_dsl::unescape_text(&raw, forgiving).unwrap_or(raw);
             push_spanned(&mut tokens, Token::StringLit(text), start, i);
             seg_start = i;
             continue;
@@ -1420,7 +1420,7 @@ fn format_token(tok: &Token) -> String {
         }
         // 🩹️ unified syntax law: strings always PRINT double-quoted with `dsl_core`'s canonical
         // escape, regardless of which quote style the source used.
-        Token::StringLit(s) => format!("\"{}\"", dsl_core::escape_text(s)),
+        Token::StringLit(s) => format!("\"{}\"", os_dsl::escape_text(s)),
         Token::LParen => "(".into(),
         Token::RParen => ")".into(),
         Token::LBracket => "[".into(),
@@ -1634,7 +1634,7 @@ fn idiom_complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
     complete(&EmptyGraph, text, offset).into_iter().map(|c| dsl::CompletionItem { label: c.label, detail: c.detail }).collect()
 }
 
-/// 📍️ Converts a byte-offset half-open range into `dsl_core::TextSpan`'s 1-based line/column/
+/// 📍️ Converts a byte-offset half-open range into `os_dsl::TextSpan`'s 1-based line/column/
 /// length form — Jack's own spans are byte offsets (`TokenSpan`/`SemanticToken`), `dsl_core`'s are
 /// line/column, so this is the one place that needs the source text to translate between them.
 fn byte_range_to_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
@@ -2581,7 +2581,7 @@ mod tests {
     #[test]
     fn parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error() {
         // `$` isn't lexable by `dsl_core` at all (unlike `{`/`}` above, which lex fine but aren't
-        // valid Jack syntax) — `dsl_core::lex` itself fails, surfaced verbatim as `Lex`.
+        // valid Jack syntax) — `os_dsl::lex` itself fails, surfaced verbatim as `Lex`.
         let err = parse("MATCH (a:x) $ WHERE").unwrap_err();
         assert!(matches!(err, GraphDslError::Lex(_)));
         assert!(err.to_string().contains("unexpected character '$'"), "got: {err}");

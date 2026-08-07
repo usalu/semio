@@ -36,7 +36,7 @@ pub struct ArtifactId(pub String);
 // re-exported here under their original names — shapes are unchanged (plain serde-transparent
 // String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
 // crates like `framework/sync`/`framework/product/os/semio_hub` that import them straight from
-// `semio_framework_core`) keeps resolving without edits. `SchemaVersion` below is NOT re-exported
+// `semio_framework`) keeps resolving without edits. `SchemaVersion` below is NOT re-exported
 // from `protocol_core` — that crate's own `SchemaVersion` is `u32`-shaped (a distinct, unrelated
 // protocol-format concept), incompatible with this kernel's `String`-shaped version below, which
 // several external crates (`framework/sync`, semio_hub storage crates) still construct from plain

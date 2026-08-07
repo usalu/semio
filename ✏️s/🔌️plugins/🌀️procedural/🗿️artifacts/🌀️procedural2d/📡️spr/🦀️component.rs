@@ -187,7 +187,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Procedural2dOperation, protocol::Protoc
 mod tests {
     use super::*;
     use crate::artifacts::procedural2d::{Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
-    use flow_core::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+    use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use protocol::OpText;
     use store::{create_document_envelope, test_support, DocumentCommand};
 

@@ -6,21 +6,21 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪️ Vitest for `@semio-tech/framework-core` (inline `import.meta.vitest`). */
+/** @emoji 🧪️ Vitest for `@semio-tech/framework` (inline `import.meta.vitest`). */
 export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-core": resolve(root, "📦️index.ts"),
+      "@semio-tech/framework": resolve(root, "🟦️glue.ts"),
     },
   },
   test: {
-    name: "@semio-tech/framework-core",
+    name: "@semio-tech/framework",
     mode: "test",
     environment: "node",
-    include: ["📦️index.ts"],
-    coverage: { include: ["📦️index.ts"] },
-    includeSource: ["📦️index.ts"],
+    include: ["🟦️glue.ts"],
+    coverage: { include: ["🟦️glue.ts"] },
+    includeSource: ["🟦️glue.ts"],
     passWithNoTests: false,
   },
 });

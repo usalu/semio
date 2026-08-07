@@ -2,8 +2,8 @@
 
 use crate::apps::procedural3d::terminology::Procedural3dLabels;
 use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
-use flow_core::forms_bridge::flow_fixture_to_form_spec;
-use flow_core::FlowFixture;
+use flow::forms_bridge::flow_fixture_to_form_spec;
+use flow::FlowFixture;
 use playbook::{render_generation_form_body, selected_generation, GenerationPlayState};
 use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 

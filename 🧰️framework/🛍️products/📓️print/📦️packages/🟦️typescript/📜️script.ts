@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./📜️script.ts generate|fonts|build|watch|test|test-e2e`. */
-import { ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralBox } from "@semio-tech/framework";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";

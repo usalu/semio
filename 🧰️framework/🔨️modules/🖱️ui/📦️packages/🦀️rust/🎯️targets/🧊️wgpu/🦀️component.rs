@@ -578,7 +578,7 @@ pub mod layout {
     }
 
     /// 🖱️ The plugin-facing on-demand menu request — deliberately does NOT carry view state (this crate
-    /// must never reference `semio_framework_core`'s `ViewModel`, same boundary as every other type
+    /// must never reference `semio_framework`'s `ViewModel`, same boundary as every other type
     /// here). Mirrors `handle_action`/`render`/`tool_measures`, which all take `view_state: &ViewModel`
     /// as a separate `DocumentApp` method parameter rather than embedding it in the request payload; the
     /// plugin SDK's `plugin_context_menu` free function parses the WIT-level combined JSON (which DOES

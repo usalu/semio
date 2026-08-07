@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pluginHandleForBridge } from "@semio-tech/framework-core";
+import { pluginHandleForBridge } from "@semio-tech/framework";
 
 describe("framework renderer wgpu", () => {
   it("builds plugin bridge handles", () => {

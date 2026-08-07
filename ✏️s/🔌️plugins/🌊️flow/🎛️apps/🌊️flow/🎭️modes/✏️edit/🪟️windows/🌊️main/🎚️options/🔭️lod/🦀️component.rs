@@ -4,7 +4,7 @@
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::apps::flow::flow_action;
-use flow_core::{dag::dag_lod_scale_json, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{dag::dag_lod_scale_json, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::{json, Value};
 

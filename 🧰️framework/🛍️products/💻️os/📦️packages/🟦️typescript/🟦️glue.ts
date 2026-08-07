@@ -1,2 +1,2 @@
-/** @emoji 📦️ `@semio-tech/framework-os-core` — package glue (reexports only). */
+/** @emoji 📦️ `@semio-tech/framework-os` — package glue (reexports only). */
 export * from "../../🟦️component.ts";

@@ -9,8 +9,8 @@
 // #region 🔌️Adapters
 import { type ReactElement } from "react";
 import { Button, Input, Popover, PopoverAnchor, PopoverContent, useLabel } from "@semio-tech/ui-react";
-import { type ActionDescriptor, type UtilityNode } from "@semio-tech/framework-core";
-import { type DocumentSyncStatus, type FrameworkSyncUtilityLeaf, buildFileBackboneUri, buildFolderBackboneUri, buildRemoteBackboneUri } from "@semio-tech/framework-os-core";
+import { type ActionDescriptor, type UtilityNode } from "@semio-tech/framework";
+import { type DocumentSyncStatus, type FrameworkSyncUtilityLeaf, buildFileBackboneUri, buildFolderBackboneUri, buildRemoteBackboneUri } from "@semio-tech/framework-os";
 import { type SyncCardKind } from "../Shell/🟦️component.tsx";
 import { UtilityTree, groupUtilityNodesByCategory } from "../UtilityTree/🟦️component.tsx";
 // #endregion 🔌️Adapters

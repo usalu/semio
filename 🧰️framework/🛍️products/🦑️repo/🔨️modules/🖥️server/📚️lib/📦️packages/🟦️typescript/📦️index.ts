@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralBox } from "@semio-tech/framework";
 import { Pool, type PoolClient } from "pg";
 import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";

@@ -22,7 +22,7 @@ path = "📦️glue.rs"
 
 [features]
 default = ["component-guest"]
-component-guest = ["dep:semio-framework-plugin", "dep:semio-framework-core"]
+component-guest = ["dep:semio-framework-plugin", "dep:semio-framework"]
 
 [dependencies]
 flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
@@ -31,4 +31,4 @@ semio-s-2d = { path = "../../../../../../🔨️modules/◻2d/📦️packages/�
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin", optional = true }
-semio-framework-core = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core", optional = true }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework", optional = true }

@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import { type ComponentSceneHostProps, type EventFeedEntry } from "@semio-tech/framework-core";
+import { type ComponentSceneHostProps, type EventFeedEntry } from "@semio-tech/framework";
 import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, type ContextMenuItem, type IconName } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";

@@ -36,7 +36,7 @@ class WasmScript extends BundleScript {
       logPrefix: "framework/os/host/rs",
       wasmBaseName: "semio_framework_os",
       pkg: {
-        name: "@semio-tech/framework-os-core-rs",
+        name: "@semio-tech/framework-os-rs",
         files: [
           "semio_framework_os_bg.wasm",
           "semio_framework_os.js",

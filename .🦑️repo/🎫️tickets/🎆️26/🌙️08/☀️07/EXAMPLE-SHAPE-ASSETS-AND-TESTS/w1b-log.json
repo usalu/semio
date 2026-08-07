@@ -1,0 +1,47 @@
+{
+  "wave": "w1b",
+  "ticket": "26/08/07/EXAMPLE-SHAPE-ASSETS-AND-TESTS",
+  "status": "done",
+  "api_summary": {
+    "ExampleSource": {
+      "fields": [
+        "id",
+        "label: LocalizedLabel (en-de via LocalizedLabel::native)",
+        "icon_id: IconName",
+        "document_json (aliases: document/payload)"
+      ],
+      "constructors": [
+        "ExampleSource::new(id, label, document_json, icon_id)"
+      ],
+      "conversions": [
+        "Into/From ExampleDefinition",
+        "From<&ExampleSource>"
+      ],
+      "App_methods": {
+        "example_source": "canonical — pushes ExampleDefinition into App.examples → PluginManifest.examples at Plugin::register",
+        "example": "thin wrapper calling example_source(ExampleSource::new(...)) for mid-migration call sites"
+      },
+      "reexport": "pub use app::ExampleSource from plugin module root"
+    }
+  },
+  "fixture_sweep": {
+    "layout": "📚️examples/<emoji-slug>/🖼️assets/<kindEmoji><name>.{dsl,op,spr,pack,cmd}.semio",
+    "discovery": "walk-based collect_example_semio_files / pilot_resolve::find_example_semio (assets-first, legacy fallback)",
+    "coverage": "repo_wide_semio_example_kind_coverage soft-skips missing 🖼️assets mid-migration; hard-fails empty 🖼️assets/",
+    "pilots": "grammar/protocol/cross/production M5 pilots load fixtures via FS walk; grammar/protocol facet specs remain include_str!",
+    "feature": "dsl-fixture-sweep-full still gates the repo-wide DocumentDsl law sweep"
+  },
+  "compile_note": "cargo test --lib --features dsl-fixture-sweep-full for semio-framework-os-kernel currently fails due to pre-existing unrelated os_spr::wire / PackSink ambiguity errors; no errors referenced fixture-sweep or ExampleSource.",
+  "files_changed": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs"
+  ],
+  "files_not_touched": [
+    "taxonomy.json",
+    "📜️script.ts",
+    "registry",
+    "discovery",
+    "index.test.ts",
+    "plugin 📚️examples trees"
+  ]
+}

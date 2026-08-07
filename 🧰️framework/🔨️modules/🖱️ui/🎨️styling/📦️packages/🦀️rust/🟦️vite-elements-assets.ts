@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox, ephemeralMap } from "@semio-tech/framework-core";
+import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -197,7 +197,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
     resolveId(id, importer) {
       if (!importer || id.startsWith(PLAYGROUND_WASM_STUB_PREFIX)) return undefined;
       const cleanId = id.split("?", 1)[0] ?? id;
-      const isWasmPkg = cleanId.includes("/pkg/") || cleanId.endsWith(".wasm") || cleanId === "@semio-tech/flow-core" || cleanId === "@semio-tech/flow-core/pkg/flow_core.js" || cleanId === "@semio-tech/flow-core/flow_core.js";
+      const isWasmPkg = cleanId.includes("/pkg/") || cleanId.endsWith(".wasm") || cleanId === "@semio-tech/flow-core" || cleanId === "@semio-tech/flow-core/pkg/flow.js" || cleanId === "@semio-tech/flow-core/flow.js";
       if (!isWasmPkg) return undefined;
       if (cleanId.startsWith(".")) {
         if (existsSync(resolve(dirname(importer), cleanId))) return undefined;
@@ -1612,7 +1612,7 @@ if (import.meta.vitest) {
       const resolved = resolveId("@semio-tech/flow-core", importer);
       expect(resolved).toBeDefined();
       expect(resolved).not.toContain("playground-wasm-stub");
-      expect(resolved).toMatch(/flow_core\.js$/);
+      expect(resolved).toMatch(/flow\.js$/);
       expect(existsSync(resolved!)).toBe(true);
     });
 

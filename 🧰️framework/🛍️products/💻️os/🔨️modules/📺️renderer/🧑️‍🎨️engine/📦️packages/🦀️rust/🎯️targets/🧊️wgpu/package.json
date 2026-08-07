@@ -17,7 +17,7 @@
     "native": "bun nx run @semio-tech/framework-renderer-wgpu:native"
   },
   "dependencies": {
-    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/assets": "workspace:*"
   },
   "devDependencies": {

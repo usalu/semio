@@ -10,8 +10,8 @@
     "./boot": "./🟦️boot.tsx"
   },
   "dependencies": {
-    "@semio-tech/framework-os-core": "workspace:*",
-    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*",
+    "@semio-tech/framework": "workspace:*",
     "@mdx-js/react": "^3.1.1",
     "@semio-tech/compose-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",

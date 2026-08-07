@@ -364,7 +364,7 @@ mod tests {
     fn set_mesh_result_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let mesh = RemodelMesh {
-            mesh: semio_framework_core::mesh_from_kind("box"),
+            mesh: semio_framework::mesh_from_kind("box"),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot { is_watertight: true, is_two_manifold: true, is_closed: true, ..WatertightReportSnapshot::default() }),
@@ -553,7 +553,7 @@ mod tests {
         scene.results.dense =
             Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelMesh {
-            mesh: semio_framework_core::mesh_from_kind("box"),
+            mesh: semio_framework::mesh_from_kind("box"),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot {

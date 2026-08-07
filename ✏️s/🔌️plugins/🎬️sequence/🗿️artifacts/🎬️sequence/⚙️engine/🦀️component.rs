@@ -682,22 +682,22 @@ pub fn ops_from_host_mutation(fixture: &SequenceFixture, mutate: impl FnOnce(&mu
 /// `.artifact_kind(...)` literal (schema/media type copied verbatim) plus the extra `steps:in` input
 /// port (Wave-2 port recipe): incoming computation results from an upstream workflow node insert as
 /// new steps in the sequence document (see `crate::apps::sequence::SequencePlayApp::import_media`).
-pub fn sequence_io() -> semio_framework_core::AppIo {
-    semio_framework_core::AppIo {
+pub fn sequence_io() -> semio_framework::AppIo {
+    semio_framework::AppIo {
         document_schema: SEQUENCE_FIXTURE_SCHEMA.into(),
-        document_media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::Computation, form: semio_framework_core::MediaForm::Sequence },
-        ports: vec![semio_framework_core::MediaPortSpec {
+        document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Sequence },
+        ports: vec![semio_framework::MediaPortSpec {
             id: "steps:in".into(),
             label: "Steps".into(),
-            direction: semio_framework_core::MediaPortDirection::In,
-            media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::Computation, form: semio_framework_core::MediaForm::Any },
+            direction: semio_framework::MediaPortDirection::In,
+            media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Any },
             kind_id: None,
             required: false,
-            multiplicity: semio_framework_core::PortMultiplicity::Many,
+            multiplicity: semio_framework::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_core::ArtifactPresentation { id: "computation.sequence".into(), name: "Sequence".into(), dimension: "graph".into(), component_kind: "sequence".into() },
+        artifact: semio_framework::ArtifactPresentation { id: "computation.sequence".into(), name: "Sequence".into(), dimension: "graph".into(), component_kind: "sequence".into() },
     }
 }
 
@@ -1125,8 +1125,8 @@ mod tests {
         assert_eq!(io.ports.len(), 1);
         let port = &io.ports[0];
         assert_eq!(port.id, "steps:in");
-        assert_eq!(port.direction, semio_framework_core::MediaPortDirection::In);
-        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(port.direction, semio_framework::MediaPortDirection::In);
+        assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
         assert!(!port.required);
     }
 

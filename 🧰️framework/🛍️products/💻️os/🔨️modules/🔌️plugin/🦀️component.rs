@@ -15,7 +15,7 @@ pub mod component {
 
     use exports::semio::framework::plugin::Guest;
     use semio::framework::types::{MigrateDocumentInput, MigrateDocumentOutput, PluginError};
-    use semio_framework_core::{Fault, FaultCode, FaultOrigin};
+    use semio_framework::{Fault, FaultCode, FaultOrigin};
 
     pub struct ComponentGuest;
 
@@ -81,7 +81,7 @@ pub mod app {
 
     use dsl::{to_dsl_value, DslValue};
     use protocol::OpText;
-    use semio_framework_core::{
+    use semio_framework::{
         clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
             ActorId, AppEvent, ArtifactKind, CapabilityRequirement, ClipboardError, ClipboardFragment, DocumentDiff, DocumentHandle, DocumentVersion, HostEffect, HybridLogicalTimestamp, InverseOperation, InvocationId, InvocationResult,
@@ -226,7 +226,7 @@ pub mod app {
         let mut arg_ids = HashSet::new();
         for arg in args {
             assert!(arg_ids.insert(arg.id.clone()), "app {} {} declares duplicate arg id {}", app_id, owner, arg.id);
-            if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
+            if let semio_framework::ActionArgControl::Select { options } = &arg.control {
                 assert!(!options.is_empty(), "app {} {} arg {} is a Select with no options", app_id, owner, arg.id);
             }
         }
@@ -258,8 +258,8 @@ pub mod app {
     /// 👻️ Every `IntroductionPoint` a gesture references (one for click/scroll kinds, two for drag/orbit) —
     /// shared by tutorial gesture-cue validation; only `Element` points are grammar-checked (the other
     /// addressing schemes name windows/entities/curves, not the `ui.*` element-id vocabulary).
-    fn introduction_gesture_points(gesture: &semio_framework_core::IntroductionGesture) -> Vec<&semio_framework_core::IntroductionPoint> {
-        use semio_framework_core::IntroductionGesture;
+    fn introduction_gesture_points(gesture: &semio_framework::IntroductionGesture) -> Vec<&semio_framework::IntroductionPoint> {
+        use semio_framework::IntroductionGesture;
         match gesture {
             IntroductionGesture::LeftClick { at } | IntroductionGesture::RightClick { at } | IntroductionGesture::DoubleClick { at } | IntroductionGesture::Scroll { at, .. } => {
                 vec![at]
@@ -279,22 +279,22 @@ pub mod app {
     /// `semio-framework-os` already depend on it) the same way `OsMediaFormat` already does — re-exported
     /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
     /// `semio_framework_os`'s artifact catalog registry share one definition.
-    pub use semio_framework_core::{ArtifactKindSpec, OsMediaCapability};
+    pub use semio_framework::{ArtifactKindSpec, OsMediaCapability};
     //#endregion 🔖️ArtifactKind
 
     //#region 🔖️MediaPort
     /// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
     /// `DocumentApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
     /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
-    pub use semio_framework_core::mesh::{Media, MediaError, MediaFingerprint, MediaPayload};
+    pub use semio_framework::mesh::{Media, MediaError, MediaFingerprint, MediaPayload};
     /// 🧬️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
     /// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
     /// without a direct `semio-framework-core` dependency.
-    pub use semio_framework_core::{MediaClass, MediaType};
+    pub use semio_framework::{MediaClass, MediaType};
     /// 🎞️ `MediaWireFormat`/`OsMediaFormat` back `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
     /// below) — the plugin ABI's `consume-media`/`produce-media` payload framing, separate from
     /// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
-    pub use semio_framework_core::{MediaWireFormat, OsMediaFormat};
+    pub use semio_framework::{MediaWireFormat, OsMediaFormat};
     //#endregion 🔖️MediaPort
 
     pub struct AppBuilder {
@@ -892,20 +892,20 @@ pub mod app {
             for tutorial in &self.tutorials {
                 assert!(!tutorial.id.trim().is_empty(), "app {} tutorial id must be non-empty", self.id);
                 assert!(tutorial_ids.insert(tutorial.id.clone()), "app {} duplicate tutorial id {}", self.id, tutorial.id);
-                if let Err(reason) = semio_framework_core::validate_tutorial(tutorial) {
+                if let Err(reason) = semio_framework::validate_tutorial(tutorial) {
                     panic!("app {} tutorial {} failed validation: {}", self.id, tutorial.id, reason);
                 }
                 let owner = format!("tutorial {}", tutorial.id);
-                let mut ui_changes: Vec<&semio_framework_core::TutorialUiChange> = Vec::new();
+                let mut ui_changes: Vec<&semio_framework::TutorialUiChange> = Vec::new();
                 for keyframe in &tutorial.tracks.ui {
-                    if let semio_framework_core::TutorialUiSample::Delta { changes } = &keyframe.sample {
+                    if let semio_framework::TutorialUiSample::Delta { changes } = &keyframe.sample {
                         ui_changes.extend(changes.iter());
                     }
                 }
                 for change in ui_changes {
                     match change {
-                        semio_framework_core::TutorialUiChange::ActiveUtility { utility_id: Some(utility_id), .. } => assert!(declared_utility_ids.contains(utility_id), "app {} {} references undeclared utility {}", self.id, owner, utility_id),
-                        semio_framework_core::TutorialUiChange::ActiveTool { id: Some(tool_id) } => assert!(declared_tool_ids.contains(tool_id), "app {} {} references undeclared tool {}", self.id, owner, tool_id),
+                        semio_framework::TutorialUiChange::ActiveUtility { utility_id: Some(utility_id), .. } => assert!(declared_utility_ids.contains(utility_id), "app {} {} references undeclared utility {}", self.id, owner, utility_id),
+                        semio_framework::TutorialUiChange::ActiveTool { id: Some(tool_id) } => assert!(declared_tool_ids.contains(tool_id), "app {} {} references undeclared tool {}", self.id, owner, tool_id),
                         _ => {}
                     }
                 }
@@ -917,14 +917,14 @@ pub mod app {
                 }
                 for event in &tutorial.tracks.events {
                     match &event.kind {
-                        semio_framework_core::TutorialEventKind::Action { action, .. } => assert!(declared_action_ids.contains(action), "app {} {} event references undeclared action {}", self.id, owner, action),
-                        semio_framework_core::TutorialEventKind::Command { command, .. } => assert!(declared_command_scopes.contains_key(command), "app {} {} event references undeclared command {}", self.id, owner, command),
-                        semio_framework_core::TutorialEventKind::Key { .. } => {}
+                        semio_framework::TutorialEventKind::Action { action, .. } => assert!(declared_action_ids.contains(action), "app {} {} event references undeclared action {}", self.id, owner, action),
+                        semio_framework::TutorialEventKind::Command { command, .. } => assert!(declared_command_scopes.contains_key(command), "app {} {} event references undeclared command {}", self.id, owner, command),
+                        semio_framework::TutorialEventKind::Key { .. } => {}
                     }
                 }
                 for gesture_cue in &tutorial.tracks.gestures {
                     for point in introduction_gesture_points(&gesture_cue.gesture) {
-                        if let semio_framework_core::IntroductionPoint::Element { id, .. } = point {
+                        if let semio_framework::IntroductionPoint::Element { id, .. } = point {
                             validate_referenced_element_id(&self.id, &owner, "gesture", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                         }
                     }
@@ -1488,7 +1488,7 @@ pub mod app {
         }
 
         pub fn action(&self, action: &str, args: Option<Value>) -> ActionDescriptor {
-            ActionDescriptor { controller_id: self.controller_id.into(), action: action.into(), args: semio_framework_core::optional_json_to_dsl(args) }
+            ActionDescriptor { controller_id: self.controller_id.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
         }
     }
     //#endregion 🔖️ActionFactory
@@ -1685,7 +1685,7 @@ pub mod app {
 
         /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`.
         pub fn assert_declared_actions_bridge_to_commands<A: DocumentApp + Default>(manifest: fn() -> App) {
-            use semio_framework_core::{effective_action_args, DslValue};
+            use semio_framework::{effective_action_args, DslValue};
             use store::pack_rt::dsl_value_to_json;
             let definition = manifest().definition;
             let app = A::default();
@@ -1951,7 +1951,7 @@ pub mod app {
         #[test]
         fn catalog_chrome_icons_resolve_to_vendored_icon_names() {
             for mode in ["edit", "paint", "generate", "explore", "builder", "review", "report"] {
-                let icon = semio_framework_core::catalog_mode_icon_id(mode);
+                let icon = semio_framework::catalog_mode_icon_id(mode);
                 assert_eq!(IconName::from_str(icon.as_str()), Some(icon), "mode {mode} -> {}", icon.as_str());
             }
             assert_eq!(IconName::from("menu").as_str(), "list");
@@ -2086,7 +2086,7 @@ pub mod app {
 
         #[test]
         fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
-            use semio_framework_core::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
+            use semio_framework::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
             let definition = minimal_app("utility-app")
                 .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush) })
                 .utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
@@ -2101,14 +2101,14 @@ pub mod app {
 
         #[test]
         fn no_utilities_means_no_set_active_utility_action() {
-            use semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID;
+            use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
             let definition = minimal_app("no-utility-app").build_definition();
             assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
         }
 
         #[test]
         fn build_definition_accepts_and_resolves_mode_tools() {
-            use semio_framework_core::ToolRef;
+            use semio_framework::ToolRef;
             let definition = minimal_app("tool-app").tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).mode_tools("edit", vec![ToolRef::new("fill")]).build_definition();
             assert_eq!(definition.tools.len(), 1);
             assert_eq!(definition.modes[0].tools, vec![ToolRef::new("fill")]);
@@ -2116,7 +2116,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_mode_tool_ref_to_undeclared_tool() {
-            use semio_framework_core::ToolRef;
+            use semio_framework::ToolRef;
             let result = std::panic::catch_unwind(|| minimal_app("undeclared-mode-tool-app").mode_tools("edit", vec![ToolRef::new("missing")]).build_definition());
             assert!(result.is_err());
         }
@@ -2129,7 +2129,7 @@ pub mod app {
 
         #[test]
         fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
-            use semio_framework_core::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
+            use semio_framework::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
             let definition =
                 minimal_app("tool-keybinding-app").tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket) }).mode_tools("edit", vec![ToolRef::new("fill")]).build_definition();
             let set_active_tool = definition.actions.iter().find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
@@ -2142,7 +2142,7 @@ pub mod app {
 
         #[test]
         fn no_tools_means_no_set_active_tool_action() {
-            use semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID;
+            use semio_framework::SET_ACTIVE_TOOL_ACTION_ID;
             let definition = minimal_app("no-tool-app").build_definition();
             assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
         }
@@ -2170,7 +2170,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_select_arg_with_no_options() {
-            use semio_framework_core::{ActionArgControl, ActionArgDef};
+            use semio_framework::{ActionArgControl, ActionArgDef};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-select-app")
                     .operation("pick", LocalizedLabel::data("Pick"))
@@ -2182,7 +2182,7 @@ pub mod app {
 
         #[test]
         fn declaring_introduction_injects_start_introduction_action() {
-            use semio_framework_core::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
+            use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
             let definition = minimal_app("intro-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("welcome", "Welcome", "Hi there")] }).build_definition();
             let start_introduction = definition.actions.iter().find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
             assert_eq!(start_introduction.kind, ActionKind::View);
@@ -2191,21 +2191,21 @@ pub mod app {
 
         #[test]
         fn no_introduction_means_no_start_introduction_action() {
-            use semio_framework_core::START_INTRODUCTION_ACTION_ID;
+            use semio_framework::START_INTRODUCTION_ACTION_ID;
             let definition = minimal_app("no-intro-app").build_definition();
             assert!(!definition.actions.iter().any(|action| action.id == START_INTRODUCTION_ACTION_ID));
         }
 
         #[test]
         fn build_definition_rejects_introduction_with_no_steps() {
-            use semio_framework_core::IntroductionDefinition;
+            use semio_framework::IntroductionDefinition;
             let result = std::panic::catch_unwind(|| minimal_app("empty-intro-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![] }).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
         fn build_definition_rejects_duplicate_introduction_step_ids() {
-            use semio_framework_core::{IntroductionDefinition, IntroductionStepDefinition};
+            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-step-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a"), IntroductionStepDefinition::new("step", "B", "b")] }).build_definition()
             });
@@ -2214,7 +2214,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
-            use semio_framework_core::{window_element_id, IntroductionDefinition, IntroductionStepDefinition};
+            use semio_framework::{window_element_id, IntroductionDefinition, IntroductionStepDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-window-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(window_element_id("missing"))] }).build_definition()
             });
@@ -2223,7 +2223,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
-            use semio_framework_core::{panel_tab_element_id, panel_tab_first_draggable_element_id, IntroductionDefinition, IntroductionStepDefinition};
+            use semio_framework::{panel_tab_element_id, panel_tab_first_draggable_element_id, IntroductionDefinition, IntroductionStepDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-panel-tab-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(panel_tab_element_id("missing"))] }).build_definition()
             });
@@ -2238,7 +2238,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
-            use semio_framework_core::{IntroductionDefinition, IntroductionStepDefinition};
+            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-element-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce("not-camel-case")] }).build_definition()
             });
@@ -2251,7 +2251,7 @@ pub mod app {
 
         #[test]
         fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
-            use semio_framework_core::{IntroductionDefinition, IntroductionStepDefinition};
+            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             let definition = minimal_app("good-escape-hatch-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce("ui.custom.thing")] }).build_definition();
             let introduction = definition.introduction.expect("introduction present");
             assert_eq!(introduction.steps.len(), 1);
@@ -2259,7 +2259,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
-            use semio_framework_core::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+            use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-interaction-utility-app")
                     .introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").interact(vec![IntroductionInteraction::utility("missing", "Activate")])] })
@@ -2270,7 +2270,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
-            use semio_framework_core::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+            use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-interaction-window-app")
                     .introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").interact(vec![IntroductionInteraction::orbit("missing", "Orbit")])] })
@@ -2281,7 +2281,7 @@ pub mod app {
 
         #[test]
         fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
-            use semio_framework_core::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+            use semio_framework::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             let definition = minimal_app("good-intro-app")
                 .operation("addLayer", LocalizedLabel::data("Add Layer"))
                 .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
@@ -2302,8 +2302,8 @@ pub mod app {
             assert_eq!(introduction.steps.len(), 5);
         }
 
-        fn minimal_tutorial(id: &str) -> semio_framework_core::TutorialDefinition {
-            use semio_framework_core::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
+        fn minimal_tutorial(id: &str) -> semio_framework::TutorialDefinition {
+            use semio_framework::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
             TutorialDefinition {
                 id: id.into(),
                 title: "Tutorial".into(),
@@ -2318,7 +2318,7 @@ pub mod app {
 
         #[test]
         fn declaring_tutorial_injects_start_tutorial_action() {
-            use semio_framework_core::{ActionKind, START_TUTORIAL_ACTION_ID};
+            use semio_framework::{ActionKind, START_TUTORIAL_ACTION_ID};
             let definition = minimal_app("tutorial-app").tutorial(minimal_tutorial("welcome-tour")).build_definition();
             let start_tutorial = definition.actions.iter().find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
             assert_eq!(start_tutorial.kind, ActionKind::View);
@@ -2327,7 +2327,7 @@ pub mod app {
 
         #[test]
         fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
-            use semio_framework_core::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
+            use semio_framework::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
             let definition = minimal_app("no-tutorial-app").build_definition();
             assert!(!definition.actions.iter().any(|action| action.id == START_TUTORIAL_ACTION_ID));
             assert!(definition.actions.iter().any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
@@ -2338,7 +2338,7 @@ pub mod app {
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("out-of-range-tour");
                 tutorial.duration_ms = 100;
-                tutorial.chapters.push(semio_framework_core::TutorialChapter { id: "late".into(), at: 999_999, title: "Late".into(), body: None });
+                tutorial.chapters.push(semio_framework::TutorialChapter { id: "late".into(), at: 999_999, title: "Late".into(), body: None });
                 minimal_app("bad-structural-tutorial-app").tutorial(tutorial).build_definition()
             });
             assert!(result.is_err());
@@ -2352,7 +2352,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_tutorial_event_referencing_undeclared_action() {
-            use semio_framework_core::{TutorialEvent, TutorialEventKind};
+            use semio_framework::{TutorialEvent, TutorialEventKind};
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("bad-event-tour");
                 tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "missingAction".into(), args: None } }];
@@ -2363,7 +2363,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_tutorial_ui_change_referencing_undeclared_utility() {
-            use semio_framework_core::{TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
+            use semio_framework::{TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("bad-ui-change-tour");
                 tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 10, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("missing".into()) }] } }];
@@ -2374,7 +2374,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_tutorial_gesture_targeting_malformed_element_id() {
-            use semio_framework_core::{IntroductionGesture, IntroductionPoint, TutorialGestureCue};
+            use semio_framework::{IntroductionGesture, IntroductionPoint, TutorialGestureCue};
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("bad-gesture-tour");
                 tutorial.tracks.gestures = vec![TutorialGestureCue { at: 10, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: "not-camel-case".into(), offset: None } }, cursor: None }];
@@ -2385,7 +2385,7 @@ pub mod app {
 
         #[test]
         fn build_definition_accepts_tutorial_with_declared_action_utility_and_gesture_targets() {
-            use semio_framework_core::{window_element_id, IntroductionGesture, IntroductionPoint, TutorialEvent, TutorialEventKind, TutorialGestureCue, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
+            use semio_framework::{window_element_id, IntroductionGesture, IntroductionPoint, TutorialEvent, TutorialEventKind, TutorialGestureCue, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
             let mut tutorial = minimal_tutorial("good-tour");
             tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "addLayer".into(), args: None } }];
             tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 20, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] } }];
@@ -2397,7 +2397,7 @@ pub mod app {
 
         #[test]
         fn declaring_dialog_appends_to_definition() {
-            use semio_framework_core::{ActionRef, DialogDefinition};
+            use semio_framework::{ActionRef, DialogDefinition};
             let definition = minimal_app("dialog-app").operation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))).build_definition();
             assert_eq!(definition.dialogs.len(), 1);
             assert_eq!(definition.dialogs[0].id, "addLayer");
@@ -2406,7 +2406,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_duplicate_dialog_ids() {
-            use semio_framework_core::{ActionRef, DialogDefinition};
+            use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-app")
                     .operation("addLayer", LocalizedLabel::data("Add Layer"))
@@ -2419,14 +2419,14 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_dialog_submit_action_referencing_undeclared_action() {
-            use semio_framework_core::{ActionRef, DialogDefinition};
+            use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| minimal_app("bad-dialog-submit-app").dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("missing"))).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
         fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
-            use semio_framework_core::{ActionRef, DialogDefinition};
+            use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-dialog-cancel-app").operation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).build_definition()
             });
@@ -2435,14 +2435,14 @@ pub mod app {
 
         #[test]
         fn dialog_submit_action_may_reference_an_injected_history_action() {
-            use semio_framework_core::{ActionRef, DialogDefinition};
+            use semio_framework::{ActionRef, DialogDefinition};
             let definition = minimal_app("dialog-injected-action-app").dialog(DialogDefinition::new("confirmUndo", "Undo?", ActionRef::new("undo"))).build_definition();
             assert_eq!(definition.dialogs[0].submit_action, ActionRef::new("undo"));
         }
 
         #[test]
         fn build_definition_rejects_dialog_duplicate_arg_ids() {
-            use semio_framework_core::{ActionArgDef, ActionRef, DialogDefinition};
+            use semio_framework::{ActionArgDef, ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-arg-app")
                     .operation("addLayer", LocalizedLabel::data("Add Layer"))
@@ -2454,7 +2454,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_dialog_select_arg_with_no_options() {
-            use semio_framework_core::{ActionArgControl, ActionArgDef, ActionRef, DialogDefinition};
+            use semio_framework::{ActionArgControl, ActionArgDef, ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-dialog-select-app")
                     .operation("addLayer", LocalizedLabel::data("Add Layer"))
@@ -2466,7 +2466,7 @@ pub mod app {
 
         #[test]
         fn build_definition_accepts_app_and_mode_scope_commands() {
-            use semio_framework_core::{CommandDefinition, CommandRef, CommandScope};
+            use semio_framework::{CommandDefinition, CommandRef, CommandScope};
             let definition = minimal_app("command-app")
                 .app_command("app.export", "Export", "document")
                 .command(CommandDefinition::new_catalog("mode.focus", "Focus", CommandScope::Mode, "view"))
@@ -2484,14 +2484,14 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_os_or_plugin_scope_command() {
-            use semio_framework_core::{CommandDefinition, CommandScope};
+            use semio_framework::{CommandDefinition, CommandScope};
             let result = std::panic::catch_unwind(|| minimal_app("os-scope-command-app").command(CommandDefinition::new_catalog("os.theme", "Theme", CommandScope::Os, "appearance")).build_definition());
             assert!(result.is_err(), "AppBuilder must reject Os/Plugin-scope commands — those are declared by the shell/Plugin, not an app");
         }
 
         #[test]
         fn build_definition_rejects_mode_command_ref_to_undeclared_or_wrong_scope_command() {
-            use semio_framework_core::CommandRef;
+            use semio_framework::CommandRef;
             let undeclared = std::panic::catch_unwind(|| minimal_app("undeclared-mode-command-app").mode_commands("edit", vec![CommandRef::new("nope")]).build_definition());
             assert!(undeclared.is_err());
 
@@ -2501,11 +2501,118 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_mode_scope_command_referenced_by_no_mode() {
-            use semio_framework_core::{CommandDefinition, CommandScope};
+            use semio_framework::{CommandDefinition, CommandScope};
             let result = std::panic::catch_unwind(|| minimal_app("orphan-mode-command-app").command(CommandDefinition::new_catalog("mode.focus", "Focus", CommandScope::Mode, "view")).build_definition());
             assert!(result.is_err());
         }
     }
+
+    //#region 📚️ExampleSource
+    /// 📚️ Value type exported by an example definition leaf (`📚️examples/<slug>/🦀️component.rs`):
+    /// stable id, localized label, icon, and document/payload accessors — converts into
+    /// [`ExampleDefinition`] for [`PluginManifest::examples`].
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct ExampleSource {
+        id: String,
+        label: LocalizedLabel,
+        icon_id: IconName,
+        document_json: String,
+    }
+
+    impl ExampleSource {
+        /// 🧱 Builds an example source from id, label, document payload, and icon.
+        pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+            Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), document_json: document_json.into() }
+        }
+
+        /// 🏷️ Stable example id (navbar picker / `setActiveExample`).
+        pub fn id(&self) -> &str {
+            &self.id
+        }
+
+        /// 🗣️ Localized label sourced from the definition leaf.
+        pub fn label(&self) -> &LocalizedLabel {
+            &self.label
+        }
+
+        /// 🖼️ Icon id sourced from the definition leaf.
+        pub fn icon_id(&self) -> IconName {
+            self.icon_id
+        }
+
+        /// 📄️ Document JSON payload registered on the manifest.
+        pub fn document_json(&self) -> &str {
+            &self.document_json
+        }
+
+        /// 📄️ Alias of [`Self::document_json`] for leaf call sites that speak in document terms.
+        pub fn document(&self) -> &str {
+            &self.document_json
+        }
+
+        /// 📒️ Alias of [`Self::document_json`] for leaf call sites that speak in payload terms.
+        pub fn payload(&self) -> &str {
+            &self.document_json
+        }
+
+        /// 🧬️ Converts into a manifest [`ExampleDefinition`] (`app_id` filled at plugin registration).
+        pub fn into_example_definition(self) -> ExampleDefinition {
+            ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, document_json: self.document_json, app_id: String::new() }
+        }
+    }
+
+    impl From<ExampleSource> for ExampleDefinition {
+        fn from(source: ExampleSource) -> Self {
+            source.into_example_definition()
+        }
+    }
+
+    impl From<&ExampleSource> for ExampleDefinition {
+        fn from(source: &ExampleSource) -> Self {
+            ExampleDefinition {
+                id: source.id.clone(),
+                label: source.label.clone(),
+                icon_id: source.icon_id,
+                document_json: source.document_json.clone(),
+                app_id: String::new(),
+            }
+        }
+    }
+
+    impl From<&ExampleSource> for ExampleSource {
+        fn from(source: &ExampleSource) -> Self {
+            source.clone()
+        }
+    }
+
+    #[cfg(test)]
+    mod example_source_tests {
+        use super::*;
+
+        #[test]
+        fn example_source_converts_into_example_definition_and_registers_on_app() {
+            let source = ExampleSource::new("nakagin", LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), "{\"kind\":\"demo\"}", "building");
+            assert_eq!(source.id(), "nakagin");
+            assert_eq!(source.document(), "{\"kind\":\"demo\"}");
+            assert_eq!(source.payload(), source.document_json());
+            let definition = ExampleDefinition::from(&source);
+            assert_eq!(definition.id, "nakagin");
+            assert_eq!(definition.document_json, "{\"kind\":\"demo\"}");
+            assert!(definition.app_id.is_empty());
+            let app = App::from_builder(App::builder("puzzle2d-play", LocalizedLabel::data("Puzzle")).document(["semio", "puzzle"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").window_kind("main", LocalizedLabel::data("Main"), "puzzle.main", SurfaceKind::Canvas2d, IconName::AppWindow)).example_source(&source);
+            assert_eq!(app.examples.len(), 1);
+            assert_eq!(app.examples[0].id, "nakagin");
+            assert_eq!(app.examples[0].icon_id, IconName::from("building"));
+        }
+
+        #[test]
+        fn example_delegates_to_example_source() {
+            let app = App::from_builder(App::builder("demo-play", LocalizedLabel::data("Demo")).document(["semio", "demo"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").window_kind("main", LocalizedLabel::data("Main"), "demo.main", SurfaceKind::Canvas2d, IconName::AppWindow)).example("default", LocalizedLabel::native("Default", "Standard"), "{}", "file");
+            assert_eq!(app.examples.len(), 1);
+            assert_eq!(app.examples[0].id, "default");
+        }
+    }
+    //#endregion 📚️ExampleSource
 
     pub struct App {
         pub definition: AppDefinition,
@@ -2524,10 +2631,17 @@ pub mod app {
             Self { definition: builder.build_definition(), examples: Vec::new() }
         }
 
-        pub fn example(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
-            let id = id.into();
-            self.examples.push(ExampleDefinition { id: id.clone(), label: label.into(), icon_id: icon_id.into(), document_json: document_json.into(), app_id: String::new() });
+        /// 📚️ Registers an example from a definition-leaf [`ExampleSource`] (canonical path).
+        pub fn example_source(mut self, source: impl Into<ExampleSource>) -> Self {
+            self.examples.push(ExampleDefinition::from(source.into()));
             self
+        }
+
+        /// 📚️ Registers an example by restating id/label/payload/icon.
+        /// Prefer [`Self::example_source`] once the definition leaf owns those fields; kept so
+        /// existing `create_*_app()` call sites keep compiling during the example-shape migration.
+        pub fn example(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+            self.example_source(ExampleSource::new(id, label, document_json, icon_id))
         }
 
         /// 🚧️ B1 stub: `WorkflowDefinition` + `PluginManifest.workflows` were deleted from framework-core
@@ -2867,12 +2981,12 @@ pub mod app {
         pub events: Vec<AppEvent>,
         /// 🐢️ Which rendered UI sections this action actually invalidates — `Full` (the default) preserves
         /// today's whole-shell-refresh behavior for every app that doesn't opt in to narrower scopes.
-        pub ui_scope: semio_framework_core::kernel::UiDirtyScope,
+        pub ui_scope: semio_framework::kernel::UiDirtyScope,
     }
 
     impl<Operation, ConfigOperation, DraftOperation> Default for Emit<Operation, ConfigOperation, DraftOperation> {
         fn default() -> Self {
-            Self { document_operations: Vec::new(), config_operations: Vec::new(), draft_operations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework_core::kernel::UiDirtyScope::default() }
+            Self { document_operations: Vec::new(), config_operations: Vec::new(), draft_operations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework::kernel::UiDirtyScope::default() }
         }
     }
 
@@ -4212,7 +4326,7 @@ pub mod app {
 
         /// @emoji 📇️ An empty `InvocationResult` carrying only host effects/events (view/shell actions,
         /// no-operation commands, and history notifications produce no `KernelOperation`s).
-        fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> InvocationResult {
+        fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
             let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
             InvocationResult { output: DslValue::Null, operations: Vec::new(), inverse_group: UndoGroup { invocation_id, operations: Vec::new(), inverse_operations: Vec::new() }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
         }
@@ -4223,7 +4337,7 @@ pub mod app {
         /// the WHOLE accumulated edit — without slicing to `tail_offset`, every dispatch would rebuild and
         /// serialize every `KernelOperation` since the gesture started (O(edit-size) per dispatch, O(edit-
         /// size²) over the whole gesture) purely to report operations the caller already knows about.
-        fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
+        fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
             let schema = A::DOCUMENT_SCHEMA.to_string();
             let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
             let document = DocumentHandle(meta.instance_id as u128);
@@ -4390,11 +4504,11 @@ pub mod app {
                         self.record_command(action, ActionKind::History, None, None, None, None);
                         // 🐢️ History actions (undo/redo/checkpoint/alternative) can touch any part of the
                         // document — always Full, never opt into a narrower scope.
-                        Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
+                        Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework::kernel::UiDirtyScope::Full))
                     }
                     // Benign no-operations (nothing to undo/redo, foreign tail) collapse to an empty result
                     // and are NOT logged — they never touched the store.
-                    Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::NothingToRedo) | Err(vcs::VcsError::ForeignEdit(_)) => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
+                    Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::NothingToRedo) | Err(vcs::VcsError::ForeignEdit(_)) => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None)),
                     Err(error) => Err(error.into_fault()),
                 }
             } else if action == REVERT_TO_COMMAND_ACTION_ID {
@@ -4427,9 +4541,9 @@ pub mod app {
                                 // 🧾️ One entry for the revert itself — the internal undos it performs are an
                                 // implementation detail, not separately logged commands.
                                 self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None);
-                                Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
+                                Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework::kernel::UiDirtyScope::Full))
                             }
-                            None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
+                            None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None)),
                         }
                     }
                     // 🧮️ B1: config edit-linked — the config-store twin of the document branch above.
@@ -4447,9 +4561,9 @@ pub mod app {
                                 }
                                 self.cache = None;
                                 self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None);
-                                Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
+                                Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework::kernel::UiDirtyScope::Full))
                             }
-                            None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
+                            None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None)),
                         }
                     }
                     // ⏪️ `Shell`-kind memory-only: the plugin has no access to shell-owned state (theme/dock/
@@ -4460,9 +4574,9 @@ pub mod app {
                         meta,
                         vec![HostEffect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args.as_ref().map(|value| to_dsl_value(value).unwrap_or(DslValue::Null)) }],
                         Vec::new(),
-                        semio_framework_core::kernel::UiDirtyScope::None,
+                        semio_framework::kernel::UiDirtyScope::None,
                     )),
-                    _ => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
+                    _ => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None)),
                 }
             } else if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
                 // 🎚️ Arg key is `"value"`, not `"filter"` — see `set_history_command_filter_action_definition`'s doc.
@@ -4480,7 +4594,7 @@ pub mod app {
                     meta,
                     Vec::new(),
                     Vec::new(),
-                    semio_framework_core::kernel::UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false },
+                    semio_framework::kernel::UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false },
                 ))
             } else if action == NOTE_SHELL_COMMAND_ACTION_ID {
                 // 🗒️ Interception happens BEFORE the app ever sees this action — records a shell effect
@@ -4499,7 +4613,7 @@ pub mod app {
                 let inverse =
                     args.and_then(|value| value.get("inverseCommandId")).and_then(Value::as_str).map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned() });
                 self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse);
-                Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
+                Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None))
             } else if CLIPBOARD_ACTION_IDS.contains(&action) {
                 self.refresh_cache()?;
                 let emit = {
@@ -4641,7 +4755,7 @@ pub mod app {
             self.cache = None;
             let config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
             self.record_command("configCommand", ActionKind::Shell, None, None, config_edit_id, None);
-            Ok(Self::empty_result("configCommand", meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::Full))
+            Ok(Self::empty_result("configCommand", meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::Full))
         }
 
         /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
@@ -4668,8 +4782,8 @@ pub mod app {
     /// (`FRAMEWORK_HISTORY_BODY_KEY`) — `Full` is already maximal and passes through unchanged, `None`
     /// becomes a `Partial` naming just the history body, and an existing `Partial` gains it alongside
     /// whatever the app already asked to refresh (idempotent — checks before pushing).
-    fn with_history_panel_scope(scope: semio_framework_core::kernel::UiDirtyScope) -> semio_framework_core::kernel::UiDirtyScope {
-        use semio_framework_core::kernel::UiDirtyScope;
+    fn with_history_panel_scope(scope: semio_framework::kernel::UiDirtyScope) -> semio_framework::kernel::UiDirtyScope {
+        use semio_framework::kernel::UiDirtyScope;
         match scope {
             UiDirtyScope::Full => UiDirtyScope::Full,
             UiDirtyScope::None => UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false },
@@ -5029,7 +5143,7 @@ pub mod plugin_runtime {
     use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginProgram};
     use crate::DocumentApp;
     use dsl::{from_dsl_value, to_dsl_value};
-    use semio_framework_core::{
+    use semio_framework::{
         kernel::{CapabilityRequirement, HostEffect, InvocationResult},
         Contribution, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, ViewModel,
     };
@@ -6231,8 +6345,8 @@ pub mod plugin_runtime {
         use store::EngineHandles;
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
         use protocol::{Operation, OperationDiff};
-        use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
-        use semio_framework_core::{ActionArgDef, ActionDefinition, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+        use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
+        use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
         use serde::{Deserialize, Serialize};
         use serde_json::json;
         use store::{Backbone, BackboneMessage, MemoryBackbone};
@@ -6624,7 +6738,7 @@ pub mod plugin_runtime {
 
             // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
             // instead of replaying anything locally, and does NOT append a new log entry on its own.
-            assert_eq!(result.requested_effects, vec![HostEffect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework_core::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
+            assert_eq!(result.requested_effects, vec![HostEffect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
             assert_eq!(app.test_history().commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
         }
 
@@ -6702,7 +6816,7 @@ pub mod plugin_runtime {
             let definition = synthetic_play_app().definition;
             for id in ["copy", "cut", "paste"] {
                 let action = definition.actions.iter().find(|a| a.id == id).unwrap_or_else(|| panic!("{id} must be auto-injected into every app's manifest"));
-                assert_eq!(action.kind, semio_framework_core::ActionKind::Clipboard);
+                assert_eq!(action.kind, semio_framework::ActionKind::Clipboard);
             }
         }
 
@@ -7099,7 +7213,7 @@ pub mod plugin_runtime {
             let mut app = contract_app_under_test();
             let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
-            use semio_framework_core::{catalog_action_icon_id, catalog_command_icon_id};
+            use semio_framework::{catalog_action_icon_id, catalog_command_icon_id};
 
             let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Operation).as_str().to_string();
             let increment_icon = catalog_command_icon_id("incrementViaCommand").as_str().to_string();
@@ -7294,7 +7408,7 @@ pub mod world3d_host {
     // #region world3d_host
     //! 🌐️ Shared world-3d scene payload builders for plugin apps.
 
-    use semio_framework_core::{mesh_from_kind, mesh_to_glb, mesh_to_obj, MeshData};
+    use semio_framework::{mesh_from_kind, mesh_to_glb, mesh_to_obj, MeshData};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::f64::consts::PI;
@@ -8067,7 +8181,7 @@ pub mod world3d_host {
         #[test]
         fn projection_measures_tree_matches_the_requested_taxonomy() {
             let p = WorldProjectionConfig::default();
-            let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework_core::optional_json_to_dsl(args) });
+            let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });
             let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
             assert_eq!(families.len(), 2);
             let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
@@ -8245,7 +8359,7 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryView, KeybindingSpec,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView, KeybindingSpec,
     MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NoDraft, NoDraftOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp, WindowKindSpec,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
@@ -8256,8 +8370,8 @@ pub use plugin_runtime::{
     install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack,
     ExtensionBundle, ExtensionManifest,
 };
-pub use semio_framework_core::*;
-pub use semio_framework_core::{MediaForm, MediaPortDirection, MediaPortSpec};
+pub use semio_framework::*;
+pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera,
     world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures,

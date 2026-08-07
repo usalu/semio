@@ -1,0 +1,209 @@
+
+===== 60-100 =====
+60|function areaAdmitsLegacyShape(state: AreaState): boolean {
+61|  return state === "legacy" || state === "mixed";
+62|}
+63|
+64|/** @emoji 🎛️ Taxonomy tree segment names, single-sourced from the vocabulary: anything deriving an
+65| * app-root path (the constitutional gate, example discovery, the window audit) shares one value. */
+66|const APPS_DIRNAME = TAXONOMY.appsDirName;
+67|/** @emoji 📚️ Artifact-scoped example data dir (`artifactChildDirs`, not owner root). */
+68|const EXAMPLES_DIRNAME = "📚️examples";
+69|if (!TAXONOMY.artifactChildDirs.includes(EXAMPLES_DIRNAME)) {
+70|  throw new Error(`📇️registry: "${EXAMPLES_DIRNAME}" must be listed in 🔣️taxonomy.json artifactChildDirs (${TAXONOMY.artifactChildDirs.join(", ")})`);
+71|}
+72|const EXAMPLE_COMPONENT_DIRS = TAXONOMY.exampleComponentDirs ?? [];
+73|const RUST_LANG = "🦀️rust";
+74|const RUST_MANIFEST_FILENAME = TAXONOMY.ecosystems[RUST_LANG].manifestFilename ?? "Cargo.toml";
+75|
+76|/** @emoji 🚫️ Build/vendor noise and dot-directories (e.g. `.claude/worktrees/…`, which used to leak
+77| * duplicate registry rows for every crate that also exists inside a worktree checkout). */
+78|const WALK_SKIP_DIRS = new Set(["node_modules", "target", "🤖️generated"]);
+79|
+80|/** @emoji 🧩️ Roles whose packages may carry a `[package.metadata.component]` wasm component and thus
+81| * belong in the plugin catalog: the plugin itself and the extensions it contributes. Every other role
+82| * (`framework`, `tool`, `s-module`, …) is filtered out by `tryParsePluginCargo` anyway — listing them
+83| * here keeps the intent explicit instead of implicit in a downstream parse failure. */
+84|const COMPONENT_ROLES: ReadonlySet<PackageRole> = new Set<PackageRole>(["plugin", "extension"]);
+85|
+86|/** @emoji 📦️ Every rust package in the repo that declares a component-bearing role, via the shared
+87| * `discoverPackages()` walk (two-level `📦️packages/🦀️rust/` and three-level `🎯️targets/<t>/` shapes
+88| * alike). Replaces the two hand-written "new contract" path regexes this script used to carry. */
+89|function discoverComponentPackages(repoRoot: string): DiscoveredPackage[] {
+90|  return discoverPackages(repoRoot, TAXONOMY).filter((pkg) => pkg.lang === RUST_LANG && COMPONENT_ROLES.has(pkg.role));
+91|}
+92|
+93|/** @emoji 🏚️ Absolute path of a legacy `<dir>/<forbidden segment>/🦀️rust/Cargo.toml` sandwich manifest
+94| * when one exists — the vocabulary-driven replacement for the `"⚡️implementations"` literals this
+95| * script used to splice into paths by hand (both spellings are covered, per
+96| * `taxonomy.forbiddenPathSegments`). */
+97|function legacyRustManifestIn(dir: string): string | undefined {
+98|  for (const segment of TAXONOMY.forbiddenPathSegments) {
+99|    const manifestPath = join(dir, segment, RUST_LANG, RUST_MANIFEST_FILENAME);
+100|    if (existsSync(manifestPath)) return manifestPath;
+
+===== 290-360 =====
+290|  }
+291|  return rows;
+292|}
+293|
+294|/**
+295| * @emoji 🖼️ Example ids for one playground row: the bundle crate lives at
+296| * `s/plugin/<p>/manifest/artifact/rs`, so the plugin root is always the first 3 path segments.
+297| * Tries the plugin root's own `example/` dir (single-app flat plugins), then — for multi-app
+298| * plugins where the playground `variant` diverges from the plugin id (`puzzle2d` - `puzzle` =
+299| * `2d`) — the constitutional `app/<suffix>/example` dir. Mirrors
+300| * `framework/ui/tui/rs`'s `discover_examples_for_playground` byte-for-byte.
+301| */
+302|function discoverExamplesForPlayground(repoRoot: string, cratePath: string, pluginId: string, variant: string): string[] {
+303|  const idsIn = (dir: string): string[] => {
+304|    if (!existsSync(dir)) return [];
+305|    const ids = readdirSync(dir)
+306|      .filter((name) => name.endsWith(".json"))
+307|      .map((name) => name.split(".")[0]);
+308|    return [...new Set(ids)].sort();
+309|  };
+310|  const segments = cratePath.split("/");
+311|  // 🏛️ Inside the plugin area the tech root is the plugin folder (area segments + 1), not `✏️s` itself.
+312|  const areaSegments = PLUGINS_AREA.split("/");
+313|  const inPluginArea = areaSegments.every((segment, index) => segments[index] === segment);
+314|  const techRoot = inPluginArea ? segments.slice(0, areaSegments.length + 1).join("/") : segments[0];
+315|  const collectJsonExampleIds = (dir: string): string[] => {
+316|    if (!existsSync(dir)) return [];
+317|    return idsIn(dir);
+318|  };
+319|  const artifactExampleIds: string[] = [];
+320|  const artifactsDir = join(repoRoot, techRoot, TAXONOMY.artifactsDirName);
+321|  if (existsSync(artifactsDir)) {
+322|    for (const artifact of listDirs(artifactsDir)) {
+323|      const examplesRoot = join(artifactsDir, artifact, EXAMPLES_DIRNAME);
+324|      for (const setName of listDirs(examplesRoot)) {
+325|        artifactExampleIds.push(...collectJsonExampleIds(join(examplesRoot, setName)));
+326|      }
+327|      artifactExampleIds.push(...collectJsonExampleIds(examplesRoot));
+328|    }
+329|  }
+330|  if (artifactExampleIds.length > 0) return [...new Set(artifactExampleIds)].sort();
+331|  const rootDir = join(repoRoot, techRoot, EXAMPLES_DIRNAME);
+332|  if (existsSync(rootDir)) return idsIn(rootDir);
+333|  if (variant.startsWith(pluginId) && variant.length > pluginId.length) {
+334|    const suffix = variant.slice(pluginId.length);
+335|    // 🎛️ Uses the shared `APPS_DIRNAME` constant (not an independently hardcoded literal) so this
+336|    // keeps resolving correctly once a plugin's crate path collapses to one crate per plugin — the
+337|    // apps-container segment name is single-sourced against the constitutional gate below.
+338|    const dir = join(repoRoot, techRoot, APPS_DIRNAME, suffix, EXAMPLES_DIRNAME);
+339|    if (existsSync(dir)) return idsIn(dir);
+340|  }
+341|  return [];
+342|}
+343|
+344|function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, cratePath: string): PlaygroundEntry[] {
+345|  const text = readFileSync(manifestPath, "utf8");
+346|  const blocks = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[[package.metadata.semio.playground]]");
+347|  const entries: PlaygroundEntry[] = [];
+348|  for (const block of blocks) {
+349|    const entry = parsePlaygroundBlock(block.join("\n"), pluginId, cratePath);
+350|    if (entry) entries.push(entry);
+351|  }
+352|  return entries;
+353|}
+354|
+355|//#region 🧹️PlaygroundDedupe
+356|/** @emoji 🧹️ In-flight migration dedupe (see `PLUGINS_AREA_STATE`): when a plugin's legacy bundle
+357| * crate and its new-contract taxonomy crate are BOTH on disk at once, they typically carry identical
+358| * `[[package.metadata.semio.playground]]` rows — same variant id, same aliases, same ports — which
+359| * would otherwise trip `validatePlaygroundRegistry`'s duplicate checks for the entire workspace on
+360| * every in-flight migration. Groups raw entries by variant id; a group where every entry shares one
+
+===== 930-1020 =====
+930|
+931|function listDirs(dir: string): string[] {
+932|  if (!existsSync(dir)) return [];
+933|  return readdirSync(dir).filter((name) => statSync(join(dir, name)).isDirectory());
+934|}
+935|
+936|/** @emoji 🚦️ Structural audit of one migrated plugin's taxonomy tree, entirely against
+937| * `🔣️taxonomy.json`'s vocabulary. Severity is decided by the caller from the plugin area's declared
+938| * maturity: warn while it is `legacy`/`mixed`, hard failure once it is `clean` (at which point it
+939| * fully replaces `validateConstitutionalCrates`). */
+940|function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
+941|  const findings: string[] = [];
+942|
+943|  const artifactsDir = join(pluginRoot, TAXONOMY.artifactsDirName);
+944|  for (const artifact of listDirs(artifactsDir)) {
+945|    for (const component of TAXONOMY_ARTIFACT_COMPONENTS) {
+946|      const facetDir = join(artifactsDir, artifact, component);
+947|      if (!existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
+948|        findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_LEAF_FILENAME}`);
+949|      }
+950|      const specName = TAXONOMY_ARTIFACT_SPEC_FILENAMES[component];
+951|      if (specName && !existsSync(join(facetDir, specName))) {
+952|        findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${specName}`);
+953|      }
+954|      if (!existsSync(join(facetDir, TAXONOMY_TS_LEAF_FILENAME))) {
+955|        findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_TS_LEAF_FILENAME}`);
+956|      }
+957|    }
+958|    const examplesRoot = join(artifactsDir, artifact, EXAMPLES_DIRNAME);
+959|    if (!existsSync(examplesRoot)) {
+960|      findings.push(`${pluginId}: artifact "${artifact}" is missing ${EXAMPLES_DIRNAME}/`);
+961|      continue;
+962|    }
+963|    const exampleSets = listDirs(examplesRoot);
+964|    if (exampleSets.length === 0) {
+965|      findings.push(`${pluginId}: artifact "${artifact}" ${EXAMPLES_DIRNAME} has no example set`);
+966|      continue;
+967|    }
+968|    for (const exampleSet of exampleSets) {
+969|      for (const kind of EXAMPLE_COMPONENT_DIRS) {
+970|        if (!existsSync(join(examplesRoot, exampleSet, kind))) {
+971|          findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${kind}/`);
+972|        }
+973|      }
+974|    }
+975|  }
+976|
+977|  if (existsSync(join(pluginRoot, EXAMPLES_DIRNAME))) {
+978|    findings.push(`${pluginId}: plugin-root ${EXAMPLES_DIRNAME}/ is forbidden — relocate under 🗿️artifacts/<artifact>/${EXAMPLES_DIRNAME}`);
+979|  }
+980|
+981|  const appsDir = join(pluginRoot, APPS_DIRNAME);
+982|  for (const app of listDirs(appsDir)) {
+983|    const engineExamples = join(appsDir, app, "⚙️engine", EXAMPLES_DIRNAME);
+984|    if (!existsSync(engineExamples)) {
+985|      findings.push(`${pluginId}: app "${app}" is missing ⚙️engine/${EXAMPLES_DIRNAME}/`);
+986|    }
+987|  }
+988|
+989|  // 🪟️ windows live under apps/<app>/modes/<mode>/windows/<w> and may only contain the fixed child set.
+990|  for (const app of listDirs(appsDir)) {
+991|    const modesDir = join(appsDir, app, TAXONOMY.modesDirName);
+992|    for (const mode of listDirs(modesDir)) {
+993|      const windowsDir = join(modesDir, mode, TAXONOMY.windowsDirName);
+994|      for (const w of listDirs(windowsDir)) {
+995|        for (const child of listDirs(join(windowsDir, w))) {
+996|          if (!TAXONOMY_WINDOW_CHILDREN.has(child)) {
+997|            findings.push(`${pluginId}: window "${app}/${mode}/${w}" has unexpected child "${child}" (expected one of ${[...TAXONOMY_WINDOW_CHILDREN].join(", ")})`);
+998|          }
+999|        }
+1000|      }
+1001|    }
+1002|  }
+1003|
+1004|  // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
+1005|  // taxonomy leaf file that isn't literally named `component.rs`.
+1006|  const componentFiles: string[] = [];
+1007|  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...EXAMPLE_COMPONENT_DIRS]);
+1008|  function walkPluginTree(dir: string) {
+1009|    for (const name of readdirSync(dir)) {
+1010|      if (name.startsWith(".") || name === "target" || name === "node_modules") continue;
+1011|      const path = join(dir, name);
+1012|      if (statSync(path).isDirectory()) {
+1013|        walkPluginTree(path);
+1014|        continue;
+1015|      }
+1016|      if (!name.endsWith(".rs")) continue;
+1017|      if (name === TAXONOMY_LEAF_FILENAME) {
+1018|        componentFiles.push(path);
+1019|      } else if (taxonomyLeafParents.has(dir.split("/").pop() ?? "")) {
+1020|        findings.push(`${pluginId}: taxonomy leaf file must be named ${TAXONOMY_LEAF_FILENAME}, found ${relative(pluginRoot, path)}`);

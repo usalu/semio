@@ -276,21 +276,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-fn register_block_exports() {
-    artifacts::block2d::engine::register();
-    artifacts::block3d::engine::register();
-    artifacts::block5d::engine::register();
-}
-
-semio_framework_plugin::semio_plugin! {
-    id: "block",
-    label: "Block",
-    version: "0.1.0",
-    setup: register_block_exports,
-    apps: [
-        apps::block2d::create_block2d_app => apps::block2d::Block2dPlayApp,
-        apps::block3d::create_block3d_app => apps::block3d::Block3dPlayApp,
-        apps::block5d::create_block5d_app => apps::block5d::Block5dPlayApp,
-    ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

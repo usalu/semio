@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@semio-tech/framework-os-core",
+  "name": "@semio-tech/framework-os",
   "version": "0.1.0",
   "description": "framework · os — composable operating system shell (CQRS, workflow, plugin registry)",
   "type": "module",
@@ -10,7 +10,7 @@
     "./backbone-worker": "./🟦️glue.backbone-worker.ts"
   },
   "dependencies": {
-    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-math-js": "workspace:*"
   },
   "devDependencies": {

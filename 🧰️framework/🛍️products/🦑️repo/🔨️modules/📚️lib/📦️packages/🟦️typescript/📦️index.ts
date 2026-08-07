@@ -4,7 +4,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { ephemeralBox } from "@semio-tech/framework-core";
+import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { chmodSync, existsSync, fstatSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { devNull, homedir } from "node:os";
@@ -1693,7 +1693,7 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
 /**
  * @emoji ⚙️ Force Vite's esbuild config loader (`--configLoader bundle`).
  * Node 24+ defaults Vite to `native` strip-only TypeScript, which rejects constructor parameter
- * properties used across monorepo configs pulled into `⚙️vite.config.ts` (e.g. via `@semio-tech/framework-core`).
+ * properties used across monorepo configs pulled into `⚙️vite.config.ts` (e.g. via `@semio-tech/framework`).
  * @see https://vite.dev/config/#config-loader
  */
 export function withViteConfigLoader(args: readonly string[]): string[] {

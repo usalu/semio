@@ -6,7 +6,7 @@ use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
 use crate::artifacts::flow::engine::{fixture_to_workflow, host_from_fixture};
 use crate::artifacts::flow::FlowFixture;
-use flow_core::{flow_backed_node_graph_extras, FlowEvalSession};
+use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

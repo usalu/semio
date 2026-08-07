@@ -17,7 +17,7 @@ use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, seed
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use semio_framework_core::{app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel};
+use semio_framework::{app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(not(target_arch = "wasm32"))]
@@ -88,7 +88,7 @@ pub struct SearchPaletteItem {
     /// 🗂️ Coarse command-source tag (os/plugin/app/mode) — `None` for the pre-existing panel/window/
     /// keybinding/action/studio entries, `Some(..)` for entries derived from `shell::ActionPanelAndUtilities`'s
     /// `ResolvedCommand` aggregation (see `command_search_items`).
-    pub category: Option<semio_framework_core::CommandScope>,
+    pub category: Option<semio_framework::CommandScope>,
 }
 
 #[derive(Clone, Debug)]
@@ -136,13 +136,13 @@ fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json
 
 /// 🗂️ `ui_wgpu::wgpu::ShellMenuAction.kind` wire string for an `ActionDefinition.kind` — host-side styling
 /// parity only, unused by `build_shell_context_menu_specs` itself.
-fn context_menu_action_kind_str(kind: semio_framework_core::ActionKind) -> String {
+fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
     match kind {
-        semio_framework_core::ActionKind::Operation => "operation",
-        semio_framework_core::ActionKind::View => "view",
-        semio_framework_core::ActionKind::History => "history",
-        semio_framework_core::ActionKind::Clipboard => "clipboard",
-        semio_framework_core::ActionKind::Shell => "shell",
+        semio_framework::ActionKind::Operation => "operation",
+        semio_framework::ActionKind::View => "view",
+        semio_framework::ActionKind::History => "history",
+        semio_framework::ActionKind::Clipboard => "clipboard",
+        semio_framework::ActionKind::Shell => "shell",
     }
     .to_string()
 }
@@ -945,7 +945,7 @@ impl ShellState {
     }
 
     fn synthetic_panel_tab(id: &str, label: &str, group: PanelGroup) -> PanelTabDefinition {
-        PanelTabDefinition { kind: semio_framework_core::PanelTabKind::App(id.into()), label: LocalizedLabel::data(label), group, body_key: Some(String::new()), children: Vec::new() }
+        PanelTabDefinition { kind: semio_framework::PanelTabKind::App(id.into()), label: LocalizedLabel::data(label), group, body_key: Some(String::new()), children: Vec::new() }
     }
 
     fn sync_dock(&mut self) {
@@ -1005,7 +1005,7 @@ impl ShellState {
         #[serde(rename_all = "camelCase")]
         struct ProgramContributionEntry<'a> {
             plugin_id: &'a str,
-            contribution: &'a semio_framework_core::Contribution,
+            contribution: &'a semio_framework::Contribution,
         }
         let entries: Vec<ProgramContributionEntry<'_>> = plugins.iter().flat_map(|program| program.manifest.contributions.iter().map(|contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), contribution })).collect();
         serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
@@ -1087,16 +1087,16 @@ impl ShellState {
         Ok(())
     }
 
-    fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework_core::kernel::HostEffect>) {
+    fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::HostEffect>) {
         for effect in effects {
             match effect {
-                semio_framework_core::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
+                semio_framework::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
                     self.apply_set_active_utility(&window_id, &utility_id);
                 }
-                semio_framework_core::kernel::HostEffect::Navigate { uri } => {
+                semio_framework::kernel::HostEffect::Navigate { uri } => {
                     self.push_uri(uri);
                 }
-                semio_framework_core::kernel::HostEffect::LoadDocument { pack, spr } => {
+                semio_framework::kernel::HostEffect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                             if let Err(error) = plugin.load_app_document_pack(session.instance_id, &pack, &spr) {
@@ -1105,10 +1105,10 @@ impl ShellState {
                         }
                     }
                 }
-                semio_framework_core::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
+                semio_framework::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
                     self.deferred_actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: dispatch_action_id, args });
                 }
-                semio_framework_core::kernel::HostEffect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
+                semio_framework::kernel::HostEffect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
                     for descriptor in request_media_frames(controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), optional_dsl_value_as_json(args)) {
                         self.deferred_actions.push(descriptor);
                     }
@@ -1585,7 +1585,7 @@ mod panel_anchor_model_tests {
 //#endregion ShellLifecycle
 
 //#region ShellActions
-fn patch_ops_from_action_result(result: &semio_framework_core::kernel::InvocationResult) -> Vec<String> {
+fn patch_ops_from_action_result(result: &semio_framework::kernel::InvocationResult) -> Vec<String> {
     result.operations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect()
 }
 
@@ -1688,7 +1688,7 @@ impl ShellState {
                     changed = true;
                 }
                 DocumentEvent::Presence { .. } => {
-                    // 👥️ The Rust `semio_framework_core::ViewModel` has no presence field yet (only the
+                    // 👥️ The Rust `semio_framework::ViewModel` has no presence field yet (only the
                     // TS shell threads `presencePeersJson`); presence roster display in the native
                     // wgpu shell is a documented follow-up once core `ViewModel` carries it.
                 }
@@ -1816,13 +1816,13 @@ impl ShellState {
         // 🎬️ Tutorial interception — fully short-circuits (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`'s own
         // interception further down): both `startTutorial`/`recordTutorial` are framework-injected View
         // actions with no plugin-side handler at all (see `framework/plugin/rs`'s auto-injection).
-        if action.action == semio_framework_core::START_TUTORIAL_ACTION_ID {
+        if action.action == semio_framework::START_TUTORIAL_ACTION_ID {
             if let Some(tutorial_id) = action.args.as_ref().and_then(|args| args.get("tutorialId")).and_then(|v| v.as_str()) {
                 self.tutorial_start(tutorial_id);
             }
             return Ok(());
         }
-        if action.action == semio_framework_core::RECORD_TUTORIAL_ACTION_ID {
+        if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {
             self.tutorial_start_recording();
             return Ok(());
         }
@@ -1896,7 +1896,7 @@ impl ShellState {
         // 🧰️ Intercept the framework `setActiveUtility` View action to update the host-owned active-utility
         // map before forwarding to the plugin (which reacts by clearing its live-preview scratch). The
         // authoritative state is the shell map + the `ViewModel.active_utility_id` it injects on render.
-        if action.action == semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID {
+        if action.action == semio_framework::SET_ACTIVE_UTILITY_ACTION_ID {
             if let Some(session) = self.session.clone() {
                 if action.controller_id == session.app.controller_id {
                     if let Some(utility_id) = action.args.as_ref().and_then(|args| args.get("utilityId")).and_then(|value| value.as_str()) {
@@ -1921,16 +1921,16 @@ impl ShellState {
         // too, exactly like a user click would.
         for effect in &result.requested_effects {
             match effect {
-                semio_framework_core::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
+                semio_framework::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
                     self.apply_set_active_utility(window_id, utility_id);
                 }
-                semio_framework_core::kernel::HostEffect::Navigate { uri } => {
+                semio_framework::kernel::HostEffect::Navigate { uri } => {
                     self.push_uri(uri.clone());
                     if let Err(error) = self.apply_shell_uri(uri).await {
                         eprintln!("[DEBUG] wgpu shell navigate effect failed: {error}");
                     }
                 }
-                semio_framework_core::kernel::HostEffect::LoadDocument { pack, spr } => {
+                semio_framework::kernel::HostEffect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                             if let Err(error) = plugin.load_app_document_pack(session.instance_id, pack, spr) {
@@ -1945,7 +1945,7 @@ impl ShellState {
                 // exists in this shell yet; the real wall-clock delay is honored by the React shell's own
                 // `setTimeout` handling of the same effect). The dispatched action reuses the originating
                 // `action.controller_id`, i.e. re-invokes the same plugin instance that emitted the effect.
-                semio_framework_core::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
+                semio_framework::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
                     self.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id.clone(), action: dispatch_action_id.clone(), args: args.clone() });
                 }
                 // 🎞️ D5: native counterpart of `request_file_open`, beside it below — builds one
@@ -1954,7 +1954,7 @@ impl ShellState {
                 // same `deferred_actions` mechanism `DispatchAction` above uses so `flush_deferred_actions`
                 // dispatches them through the normal `dispatch_action` path (including its own nested
                 // `requested_effects`) in order, one per tick's drain.
-                semio_framework_core::kernel::HostEffect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
+                semio_framework::kernel::HostEffect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
                     for descriptor in
                         request_media_frames(&action.controller_id, accept, frame_action, done_action, fallback_action, *sample_stride, *max_frames, *max_long_edge_px, *fps_hint, payload.as_deref(), optional_dsl_value_as_json(args.clone()))
                     {
@@ -2025,7 +2025,7 @@ impl ShellState {
                                         obj.insert("total".into(), serde_json::json!(total));
                                     }
                                 }
-                                let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) };
+                                let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) };
                                 if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                     if let Ok(action_json) = serde_json::to_string(&action) {
                                         if let Ok(import_result) = program.handle_action(session.instance_id, &action_json, &session.view_state).await {
@@ -2071,7 +2071,7 @@ impl ShellState {
                                 obj.insert("folderPath".into(), serde_json::json!(folder_path));
                             }
                             if let Some(session) = self.session.clone() {
-                                let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) };
+                                let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) };
                                 if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                     if let Ok(action_json) = serde_json::to_string(&action) {
                                         if let Ok(folder_result) = program.handle_action(session.instance_id, &action_json, &session.view_state).await {
@@ -2192,7 +2192,7 @@ impl ShellState {
         let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
         let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
         for effect in &result.requested_effects {
-            if let semio_framework_core::kernel::HostEffect::LoadDocument { pack, spr } = effect {
+            if let semio_framework::kernel::HostEffect::LoadDocument { pack, spr } = effect {
                 program.load_app_document_pack(session.instance_id, pack, spr)?;
             }
         }
@@ -2740,7 +2740,7 @@ impl ShellState {
                 let mode_id = id.trim_start_matches("playground.navbar.modes.");
                 if let Some(session) = self.session.as_mut() {
                     session.view_state.active_mode_id = Some(mode_id.to_string());
-                    if let Some(layout) = semio_framework_core::resolve_layout_for_mode(&session.app, mode_id) {
+                    if let Some(layout) = semio_framework::resolve_layout_for_mode(&session.app, mode_id) {
                         self.layout_override = Some(layout);
                         self.sync_dock();
                         self.active_window_id = self.dock.active_window_id.clone();
@@ -3278,7 +3278,7 @@ impl ShellState {
             if let Some(session) = &self.session {
                 let window_kind = session.app.window_kinds.iter().find(|kind| Some(&kind.id) == self.active_window_id.as_ref()).or_else(|| Some(session.app.window_kinds.first()));
                 let actions: Vec<ui_wgpu::wgpu::ShellMenuAction> = window_kind
-                    .map(|kind| semio_framework_core::resolve_window_actions(&session.app, kind))
+                    .map(|kind| semio_framework::resolve_window_actions(&session.app, kind))
                     .unwrap_or_default()
                     .into_iter()
                     .map(|action| ui_wgpu::wgpu::ShellMenuAction {
@@ -3473,7 +3473,7 @@ impl ShellState {
         // keybindings). Zero-arg actions dispatch directly; arg-carrying actions redirect to the hosting
         // window's Actions rail so they never fire with `args: None`.
         for action in &session.app.actions {
-            if !action.in_palette || action.kind == semio_framework_core::ActionKind::History || action.id == semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID {
+            if !action.in_palette || action.kind == semio_framework::ActionKind::History || action.id == semio_framework::SET_ACTIVE_UTILITY_ACTION_ID {
                 continue;
             }
             if action.args.is_empty() {
@@ -4172,7 +4172,7 @@ fn render_panel_tab_bar(
         chrome_text(panel_draw, atlas, input, theme, tab_label, icon_x + CHROME_ICON_TINY + theme.gap_standard, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, chrome_item_text(theme, active, hovered));
         let prefix = if side_left { "shell.panel.tab.left." } else { "shell.panel.tab.right." };
         input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("{prefix}{}", tab.id())), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
-        register_element_rect_fallback(semio_framework_core::panel_tab_element_id(tab.id()), rect);
+        register_element_rect_fallback(semio_framework::panel_tab_element_id(tab.id()), rect);
         tab_x += tw;
     }
     panel_draw.pop_scissor();
@@ -4541,13 +4541,13 @@ where
 
 //#region ActionPanelAndUtilities
 /// 🧰️ Resolves the utilities a window kind presents in the utility bar — the utility mirror of
-/// {@link semio_framework_core::resolve_window_actions}: explicit `window_kind.utilities` refs in declared
+/// {@link semio_framework::resolve_window_actions}: explicit `window_kind.utilities` refs in declared
 /// order, plus any app utility referenced by no window kind (an "orphan" appearing on every window — the
 /// scoping fallback that prevents blank utility bars mid-migration, Architecture Decision 8).
-pub(crate) fn resolve_window_utilities<'a>(app: &'a semio_framework_core::AppDefinition, window_kind: &semio_framework_core::WindowKindDefinition) -> Vec<&'a semio_framework_core::UtilityDefinition> {
+pub(crate) fn resolve_window_utilities<'a>(app: &'a semio_framework::AppDefinition, window_kind: &semio_framework::WindowKindDefinition) -> Vec<&'a semio_framework::UtilityDefinition> {
     use std::collections::HashSet;
     let referenced: HashSet<&str> = app.window_kinds.iter().flat_map(|window| window.utilities.iter().map(|utility_ref| utility_ref.as_str())).collect();
-    let mut resolved: Vec<&'a semio_framework_core::UtilityDefinition> = Vec::new();
+    let mut resolved: Vec<&'a semio_framework::UtilityDefinition> = Vec::new();
     let mut seen: HashSet<&str> = HashSet::new();
     for utility_ref in &window_kind.utilities {
         if let Some(utility) = app.utilities.iter().find(|utility| utility.id == utility_ref.as_str()) {
@@ -4566,8 +4566,8 @@ pub(crate) fn resolve_window_utilities<'a>(app: &'a semio_framework_core::AppDef
 
 /// 📇️ The first window kind whose resolved actions include `action_id` — the window the palette/keybinding
 /// redirect focuses to open an arg-carrying action's form (Architecture Decision 8, P3/P4).
-pub(crate) fn action_host_window_id(app: &semio_framework_core::AppDefinition, action_id: &str) -> Option<String> {
-    app.window_kinds.iter().find(|kind| semio_framework_core::resolve_window_actions(app, kind).iter().any(|action| action.id == action_id)).map(|kind| kind.id.clone())
+pub(crate) fn action_host_window_id(app: &semio_framework::AppDefinition, action_id: &str) -> Option<String> {
+    app.window_kinds.iter().find(|kind| semio_framework::resolve_window_actions(app, kind).iter().any(|action| action.id == action_id)).map(|kind| kind.id.clone())
 }
 
 /// 🔢️ Formats a number for a staged input/vec3 field — integers without a trailing `.0`.
@@ -4710,7 +4710,7 @@ impl ShellState {
     // #region utility-derivation
     /// 🧰️ The window kind whose utilities/actions the shell chrome currently scopes to (the focused window,
     /// else the view-state's active kind, else the app's first kind).
-    fn active_utility_bar_window_kind<'a>(&self, session: &'a ActiveSession) -> &'a semio_framework_core::WindowKindDefinition {
+    fn active_utility_bar_window_kind<'a>(&self, session: &'a ActiveSession) -> &'a semio_framework::WindowKindDefinition {
         let active_id = self.active_window_id.as_deref().or(session.view_state.active_window_kind_id.as_deref());
         active_id.and_then(|id| session.app.window_kinds.iter().find(|kind| kind.id == id)).unwrap_or_else(|| session.app.window_kinds.first())
     }
@@ -4774,7 +4774,7 @@ impl ShellState {
 
     /// 🚦️ Whether window-scoped actions stay enabled: `true` when no utility is active or the active utility
     /// declares `allows_actions_while_active` (P5 — replaces the old `UTILITY_ID_PREFIXES` whitelist).
-    pub(crate) fn actions_enabled_for_window(&self, app: &semio_framework_core::AppDefinition, window_kind_id: &str) -> bool {
+    pub(crate) fn actions_enabled_for_window(&self, app: &semio_framework::AppDefinition, window_kind_id: &str) -> bool {
         match self.active_utility_for_window(window_kind_id) {
             None => true,
             Some(utility_id) => app.utilities.iter().find(|utility| utility.id == utility_id).map(|utility| utility.allows_actions_while_active).unwrap_or(true),
@@ -4802,7 +4802,7 @@ impl ShellState {
     /// 📝️ Parses a focused staged-arg input's buffer per the arg's control kind and writes it into the
     /// staging map. Returns `true` when `control_id` belongs to a staged input (so the caller stops).
     fn commit_staged_input(&mut self, control_id: &str, buffer: &str) -> bool {
-        use semio_framework_core::ActionArgControl;
+        use semio_framework::ActionArgControl;
         let (is_vec3, rest) = if let Some(rest) = control_id.strip_prefix("shell.action.argvec3::") {
             (true, rest)
         } else if let Some(rest) = control_id.strip_prefix("shell.action.arginput::") {
@@ -4875,12 +4875,12 @@ impl ShellState {
 
     /// 🧮️ Validated effective args for execution: `None` when a required arg is still unset — the P2
     /// gate that keeps arg-carrying actions from firing partially (delegates to the core-side pure
-    /// {@link semio_framework_core::missing_required_args}).
-    pub(crate) fn resolved_execute_args(defs: &[semio_framework_core::ActionArgDef], staged: &serde_json::Map<String, serde_json::Value>) -> Option<serde_json::Map<String, serde_json::Value>> {
-        let staged_dsl = semio_framework_core::to_dsl_value(&serde_json::Value::Object(staged.clone())).ok()?;
-        let effective = semio_framework_core::effective_action_args(defs, &staged_dsl);
-        if semio_framework_core::missing_required_args(defs, &effective).is_empty() {
-            semio_framework_core::from_dsl_value::<serde_json::Value>(effective).ok().and_then(|value| value.as_object().cloned())
+    /// {@link semio_framework::missing_required_args}).
+    pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, serde_json::Value>) -> Option<serde_json::Map<String, serde_json::Value>> {
+        let staged_dsl = semio_framework::to_dsl_value(&serde_json::Value::Object(staged.clone())).ok()?;
+        let effective = semio_framework::effective_action_args(defs, &staged_dsl);
+        if semio_framework::missing_required_args(defs, &effective).is_empty() {
+            semio_framework::from_dsl_value::<serde_json::Value>(effective).ok().and_then(|value| value.as_object().cloned())
         } else {
             None
         }
@@ -4903,7 +4903,7 @@ impl ShellState {
         let Some(effective) = Self::resolved_execute_args(&action.args, &staged) else {
             return Ok(());
         };
-        let args = semio_framework_core::optional_json_to_dsl(if effective.is_empty() { None } else { Some(serde_json::Value::Object(effective)) });
+        let args = semio_framework::optional_json_to_dsl(if effective.is_empty() { None } else { Some(serde_json::Value::Object(effective)) });
         self.dispatch_action(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id.to_string(), args }).await
     }
     // #endregion
@@ -4912,7 +4912,7 @@ impl ShellState {
     /// 🔌️ The current session's program manifest (for its `commands: Vec<CommandDefinition>` — Plugin-scope
     /// commands apply whenever any of that plugin's apps is focused, mirroring `os-shell.tsx`'s
     /// `activePluginManifest`).
-    fn active_plugin_manifest(&self) -> Option<&semio_framework_core::PluginManifest> {
+    fn active_plugin_manifest(&self) -> Option<&semio_framework::PluginManifest> {
         let session = self.session.as_ref()?;
         self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| &entry.manifest)
     }
@@ -4926,8 +4926,8 @@ impl ShellState {
     /// none of the three has any persisted shell state yet (no introduction-playback step, no named
     /// `UiTheme` list, no desktop/tablet layout flag) — inventing that storage is out of this region's
     /// scope (`shell::ShellTypes` owns `ShellState`'s fields and is off-limits this wave).
-    pub(crate) fn build_os_commands(&self) -> Vec<semio_framework_core::CommandDefinition> {
-        use semio_framework_core::{ActionArgDef, ActionArgOption, CommandDefinition, CommandScope};
+    pub(crate) fn build_os_commands(&self) -> Vec<semio_framework::CommandDefinition> {
+        use semio_framework::{ActionArgDef, ActionArgOption, CommandDefinition, CommandScope};
         let terminology_options: Vec<ActionArgOption> =
             self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
         vec![
@@ -5000,10 +5000,10 @@ impl ShellState {
         for entry in self.resolved_commands() {
             let ResolvedCommand { definition, source } = entry;
             let category = match &source {
-                CommandSource::Os => semio_framework_core::CommandScope::Os,
-                CommandSource::Plugin => semio_framework_core::CommandScope::Plugin,
-                CommandSource::App => semio_framework_core::CommandScope::App,
-                CommandSource::Mode(_) => semio_framework_core::CommandScope::Mode,
+                CommandSource::Os => semio_framework::CommandScope::Os,
+                CommandSource::Plugin => semio_framework::CommandScope::Plugin,
+                CommandSource::App => semio_framework::CommandScope::App,
+                CommandSource::Mode(_) => semio_framework::CommandScope::Mode,
             };
             let group = command_category_label(&definition.category);
             if definition.args.is_empty() {
@@ -5022,7 +5022,7 @@ impl ShellState {
                 continue;
             }
             if let Some(arg) = definition.args.first() {
-                if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
+                if let semio_framework::ActionArgControl::Select { options } = &arg.control {
                     for option in options {
                         items.push(SearchPaletteItem {
                             id: format!("command.{}.{}", definition.id, option.value),
@@ -5121,7 +5121,7 @@ impl ShellState {
         if let Some(detail) = detail {
             args["detail"] = detail;
         }
-        ActionDescriptor { controller_id: controller_id.to_string(), action: "noteShellCommand".into(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
+        ActionDescriptor { controller_id: controller_id.to_string(), action: "noteShellCommand".into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
     }
 
     /// 🕒️ The `dispatch_action`-recursion delivery path (mechanism (a) — a `noteShellCommand`'s
@@ -5228,7 +5228,7 @@ impl ShellState {
     fn build_command_panel_row(&self, entry: &ResolvedCommand) -> UiNode {
         let definition = &entry.definition;
         if let Some(arg) = definition.args.first() {
-            if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
+            if let semio_framework::ActionArgControl::Select { options } = &arg.control {
                 let value = match definition.id.as_str() {
                     "os.setAppearance" => self.appearance_id.clone(),
                     "os.setDriver" => self.driver_id.clone(),
@@ -5283,14 +5283,14 @@ pub(crate) enum CommandSource {
 /// `ResolvedCommand`.
 #[derive(Clone, Debug)]
 pub(crate) struct ResolvedCommand {
-    pub definition: semio_framework_core::CommandDefinition,
+    pub definition: semio_framework::CommandDefinition,
     pub source: CommandSource,
 }
 
 /// 🎛️ Merges os-built-in, Plugin-scope, App-scope, and active-Mode-scope commands into one list — the
 /// wgpu mirror of `os-shell.tsx`'s `resolveCommands`. A `Mode`-scope command only resolves when
 /// `active_mode_id`'s `ModeDefinition.commands` references it, exactly like the React source.
-pub(crate) fn resolve_commands(os_commands: Vec<semio_framework_core::CommandDefinition>, plugin_manifest: Option<&semio_framework_core::PluginManifest>, app: &semio_framework_core::AppDefinition, active_mode_id: &str) -> Vec<ResolvedCommand> {
+pub(crate) fn resolve_commands(os_commands: Vec<semio_framework::CommandDefinition>, plugin_manifest: Option<&semio_framework::PluginManifest>, app: &semio_framework::AppDefinition, active_mode_id: &str) -> Vec<ResolvedCommand> {
     let mut resolved: Vec<ResolvedCommand> = os_commands.into_iter().map(|definition| ResolvedCommand { definition, source: CommandSource::Os }).collect();
     if let Some(manifest) = plugin_manifest {
         resolved.extend(manifest.commands.iter().cloned().map(|definition| ResolvedCommand { definition, source: CommandSource::Plugin }));
@@ -5298,10 +5298,10 @@ pub(crate) fn resolve_commands(os_commands: Vec<semio_framework_core::CommandDef
     let mode_command_ids: std::collections::HashSet<&str> = app.modes.iter().find(|mode| mode.id == active_mode_id).map(|mode| mode.commands.iter().map(|command_ref| command_ref.as_str()).collect()).unwrap_or_default();
     for definition in &app.commands {
         match definition.scope {
-            semio_framework_core::CommandScope::App => {
+            semio_framework::CommandScope::App => {
                 resolved.push(ResolvedCommand { definition: definition.clone(), source: CommandSource::App });
             }
-            semio_framework_core::CommandScope::Mode if mode_command_ids.contains(definition.id.as_str()) => {
+            semio_framework::CommandScope::Mode if mode_command_ids.contains(definition.id.as_str()) => {
                 resolved.push(ResolvedCommand { definition: definition.clone(), source: CommandSource::Mode(active_mode_id.to_string()) });
             }
             _ => {}
@@ -5384,9 +5384,9 @@ pub(crate) fn fuzzy_match_score(query: &str, target: &str) -> Option<i64> {
 #[cfg(test)]
 mod command_registry_tests {
     use super::*;
-    use semio_framework_core::{ActionArgControl, AppDefinition, CommandDefinition, CommandScope, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
+    use semio_framework::{ActionArgControl, AppDefinition, CommandDefinition, CommandScope, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
 
-    fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<semio_framework_core::CommandRef>) -> AppDefinition {
+    fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<semio_framework::CommandRef>) -> AppDefinition {
         AppDefinition {
             id: "test-app".into(),
             label: LocalizedLabel::data("Test App"),
@@ -5427,9 +5427,9 @@ mod command_registry_tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: semio_framework_core::ConfigSpec::empty(),
-            command_grammar: semio_framework_core::CommandGrammar::empty(),
-            io: semio_framework_core::AppIo::default(),
+            config: semio_framework::ConfigSpec::empty(),
+            command_grammar: semio_framework::CommandGrammar::empty(),
+            io: semio_framework::AppIo::default(),
         }
     }
 
@@ -5447,7 +5447,7 @@ mod command_registry_tests {
     #[test]
     fn build_os_commands_terminology_options_include_app_terminologies() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         let terminology_command = shell.build_os_commands().into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
         let ActionArgControl::Select { options } = &terminology_command.args[0].control else {
             panic!("expected a select control");
@@ -5462,7 +5462,7 @@ mod command_registry_tests {
         let app_command = CommandDefinition::new_catalog("app.export", LocalizedLabel::data("Export"), CommandScope::App, "app");
         let mode_command = CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus Mode"), CommandScope::Mode, "mode");
         let unreferenced_mode_command = CommandDefinition::new_catalog("mode.other", LocalizedLabel::data("Other Mode Command"), CommandScope::Mode, "mode");
-        let app = test_app(vec![app_command.clone(), mode_command.clone(), unreferenced_mode_command], vec![semio_framework_core::CommandRef::new("mode.focus")]);
+        let app = test_app(vec![app_command.clone(), mode_command.clone(), unreferenced_mode_command], vec![semio_framework::CommandRef::new("mode.focus")]);
         let plugin_manifest = PluginManifest {
             plugin_id: "plugin".into(),
             label: "Plugin".into(),
@@ -5497,7 +5497,7 @@ mod command_registry_tests {
     #[test]
     fn command_search_items_expands_select_options_and_tags_os_category() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         let items = shell.command_search_items();
         let appearance_dark = items.iter().find(|item| item.id == "command.os.setAppearance.dark").expect("expanded dark option present");
         assert_eq!(appearance_dark.label, "Set Appearance: Dark");
@@ -5514,7 +5514,7 @@ mod command_registry_tests {
     #[test]
     fn apply_os_command_reset_dock_clears_layout_override_locally() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         shell.layout_override = Some(shell.dock.to_window_layout());
         pollster::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
         assert!(shell.layout_override.is_none());
@@ -5523,7 +5523,7 @@ mod command_registry_tests {
     #[test]
     fn apply_os_command_set_locale_dispatches_through_framework_controller() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         pollster::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
         assert_eq!(shell.locale_id, "de");
     }
@@ -5554,7 +5554,7 @@ mod command_registry_tests {
     #[test]
     fn build_command_panel_ui_groups_rows_under_category_headers() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
             panic!("expected a stack root");
         };
@@ -5593,9 +5593,9 @@ mod command_registry_tests {
         assert_eq!(action.controller_id, "controller-1");
         assert_eq!(action.action, "noteShellCommand");
         let args = action.args.expect("noteShellCommand always carries args");
-        assert_eq!(args.get("commandId").and_then(semio_framework_core::DslValue::as_str), Some("os.setLocale"));
-        assert_eq!(args.get("label").and_then(semio_framework_core::DslValue::as_str), Some("Set Locale"));
-        assert_eq!(args.get("detail").and_then(|value| value.get("value")).and_then(semio_framework_core::DslValue::as_str), Some("de"));
+        assert_eq!(args.get("commandId").and_then(semio_framework::DslValue::as_str), Some("os.setLocale"));
+        assert_eq!(args.get("label").and_then(semio_framework::DslValue::as_str), Some("Set Locale"));
+        assert_eq!(args.get("detail").and_then(|value| value.get("value")).and_then(semio_framework::DslValue::as_str), Some("de"));
     }
 
     #[test]
@@ -5976,8 +5976,8 @@ const INTRODUCTION_INFO_BOX_GAP: f32 = 16.0;
 /// 🎓️ Where the info box sits relative to `anchor` — byte-for-byte port of `resolveIntroductionPlacement`
 /// (`ui/js/react/index.tsx`). `auto` picks the side with the most free viewport space; `center` (and any
 /// anchor-less step) centers the box.
-fn resolve_introduction_placement(placement: semio_framework_core::IntroductionPlacement, anchor: Option<Rect>, box_size: (f32, f32), viewport: (f32, f32)) -> (f32, f32) {
-    use semio_framework_core::IntroductionPlacement;
+fn resolve_introduction_placement(placement: semio_framework::IntroductionPlacement, anchor: Option<Rect>, box_size: (f32, f32), viewport: (f32, f32)) -> (f32, f32) {
+    use semio_framework::IntroductionPlacement;
     let (box_w, box_h) = box_size;
     let (vw, vh) = viewport;
     let centered = ((vw - box_w) / 2.0, (vh - box_h) / 2.0);
@@ -6078,8 +6078,8 @@ pub enum TutorialMode {
 /// rather than reimplementing easing.
 #[derive(Clone, Debug)]
 pub struct TutorialCameraConverge {
-    from: semio_framework_core::TutorialCameraState,
-    to: semio_framework_core::TutorialCameraState,
+    from: semio_framework::TutorialCameraState,
+    to: semio_framework::TutorialCameraState,
     started_wall_ms: f64,
 }
 
@@ -6088,7 +6088,7 @@ pub struct TutorialCameraConverge {
 /// recorder) the bookkeeping needed to sample cameras/UI only on meaningful change.
 #[derive(Clone)]
 pub struct TutorialRuntime {
-    pub definition: semio_framework_core::TutorialDefinition,
+    pub definition: semio_framework::TutorialDefinition,
     pub mode: TutorialMode,
     pub playhead_ms: f64,
     pub rate: f32,
@@ -6098,13 +6098,13 @@ pub struct TutorialRuntime {
     /// 📸️ The live document/UI as they stood the moment the tutorial sandboxed them — restored on exit
     /// (Design Decision 3). `None` for a recording, which is never sandboxed.
     pre_sandbox_document_dsl: Option<String>,
-    pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot,
+    pre_sandbox_ui: semio_framework::TutorialUiSnapshot,
     last_tick_wall_ms: f64,
     /// 🎥️ Active per-window convergence tweens (Deviated → Playing) — see `TutorialCameraConverge`.
     converge: HashMap<String, TutorialCameraConverge>,
     recorder_last_camera_wall_ms: HashMap<String, f64>,
-    recorder_last_camera_pose: HashMap<String, semio_framework_core::TutorialCameraState>,
-    recorder_last_ui: semio_framework_core::TutorialUiSnapshot,
+    recorder_last_camera_pose: HashMap<String, semio_framework::TutorialCameraState>,
+    recorder_last_ui: semio_framework::TutorialUiSnapshot,
     recorder_last_ui_sample_wall_ms: f64,
 }
 
@@ -6164,9 +6164,9 @@ fn tutorial_bar_height(theme: &Theme) -> f32 {
 /// `World3dScene.camera_json`'s own wire format (`infinite_world`'s `WorldCameraRecord.fov` — see that
 /// crate's `camera.fov.unwrap_or(45.0) as f32 * PI / 180.0` conversion the other way), not
 /// `OrbitController.fov_y`'s radians.
-fn orbit_to_tutorial_camera(orbit: &semio_s_3d::OrbitController) -> semio_framework_core::TutorialCameraState {
+fn orbit_to_tutorial_camera(orbit: &semio_s_3d::OrbitController) -> semio_framework::TutorialCameraState {
     let camera = orbit.to_camera();
-    semio_framework_core::TutorialCameraState::Orbit {
+    semio_framework::TutorialCameraState::Orbit {
         position: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
         target: [camera.target.x as f64, camera.target.y as f64, camera.target.z as f64],
         up: [camera.up.x as f64, camera.up.y as f64, camera.up.z as f64],
@@ -6176,9 +6176,9 @@ fn orbit_to_tutorial_camera(orbit: &semio_s_3d::OrbitController) -> semio_framew
 
 /// 🎥️ `TutorialCameraState` → `OrbitController`. `Canvas` (the 2D infinite-canvas camera kind) has no
 /// orbit-controller equivalent — `None` (see the ticket's own scope note on 2D camera tracks).
-fn tutorial_camera_to_orbit(state: &semio_framework_core::TutorialCameraState) -> Option<semio_s_3d::OrbitController> {
+fn tutorial_camera_to_orbit(state: &semio_framework::TutorialCameraState) -> Option<semio_s_3d::OrbitController> {
     match state {
-        semio_framework_core::TutorialCameraState::Orbit { position, target, up, fov } => Some(semio_s_3d::OrbitController::from_camera(&semio_s_3d::Camera3d {
+        semio_framework::TutorialCameraState::Orbit { position, target, up, fov } => Some(semio_s_3d::OrbitController::from_camera(&semio_s_3d::Camera3d {
             position: semio_s_3d::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
             target: semio_s_3d::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
             up: semio_s_3d::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
@@ -6186,15 +6186,15 @@ fn tutorial_camera_to_orbit(state: &semio_framework_core::TutorialCameraState) -
             near: 0.1,
             far: 1000.0,
         })),
-        semio_framework_core::TutorialCameraState::Canvas { .. } => None,
+        semio_framework::TutorialCameraState::Canvas { .. } => None,
     }
 }
 
-fn tutorial_capture_camera_pose(state: &ShellState, window_id: &str) -> Option<semio_framework_core::TutorialCameraState> {
+fn tutorial_capture_camera_pose(state: &ShellState, window_id: &str) -> Option<semio_framework::TutorialCameraState> {
     state.world3d_states.get(window_id).or_else(|| state.icon_render_states.get(window_id)).map(|world| orbit_to_tutorial_camera(&world.orbit))
 }
 
-fn tutorial_apply_camera_pose(state: &mut ShellState, window_id: &str, pose: &semio_framework_core::TutorialCameraState) {
+fn tutorial_apply_camera_pose(state: &mut ShellState, window_id: &str, pose: &semio_framework::TutorialCameraState) {
     let Some(orbit) = tutorial_camera_to_orbit(pose) else {
         return;
     };
@@ -6207,7 +6207,7 @@ fn tutorial_apply_camera_pose(state: &mut ShellState, window_id: &str, pose: &se
 }
 
 /// 🎥️ Unique window ids across both `base.cameras` and `tracks.camera`, in first-seen order.
-fn tutorial_camera_window_ids(def: &semio_framework_core::TutorialDefinition) -> Vec<String> {
+fn tutorial_camera_window_ids(def: &semio_framework::TutorialDefinition) -> Vec<String> {
     let mut ids: Vec<String> = Vec::new();
     for keyframe in def.base.cameras.iter().chain(def.tracks.camera.iter()) {
         if !ids.contains(&keyframe.window_id) {
@@ -6217,8 +6217,8 @@ fn tutorial_camera_window_ids(def: &semio_framework_core::TutorialDefinition) ->
     ids
 }
 
-fn tutorial_camera_pose_close(a: &semio_framework_core::TutorialCameraState, b: &semio_framework_core::TutorialCameraState, epsilon: f64) -> bool {
-    use semio_framework_core::TutorialCameraState::*;
+fn tutorial_camera_pose_close(a: &semio_framework::TutorialCameraState, b: &semio_framework::TutorialCameraState, epsilon: f64) -> bool {
+    use semio_framework::TutorialCameraState::*;
     match (a, b) {
         (Orbit { position: p0, target: t0, .. }, Orbit { position: p1, target: t1, .. }) => {
             let dist = |x: [f64; 3], y: [f64; 3]| ((x[0] - y[0]).powi(2) + (x[1] - y[1]).powi(2) + (x[2] - y[2]).powi(2)).sqrt();
@@ -6232,10 +6232,10 @@ fn tutorial_camera_pose_close(a: &semio_framework_core::TutorialCameraState, b: 
 /// 🎥️ Resolves the real-time convergence tween's pose at `elapsed_ms` since it started, by reusing
 /// `interpolate_tutorial_camera` over two synthetic keyframes at `0`/`TUTORIAL_CONVERGE_MS` — rather than
 /// reimplementing easing for this one caller.
-fn tutorial_converge_pose(tween: &TutorialCameraConverge, elapsed_ms: f64) -> semio_framework_core::TutorialCameraState {
-    let from_keyframe = semio_framework_core::TutorialCameraKeyframe { at: 0, window_id: String::new(), camera: tween.from.clone(), easing: semio_framework_core::TutorialEasing::Hold };
-    let to_keyframe = semio_framework_core::TutorialCameraKeyframe { at: semio_framework_core::TUTORIAL_CONVERGE_MS, window_id: String::new(), camera: tween.to.clone(), easing: semio_framework_core::TutorialEasing::EaseInOut };
-    semio_framework_core::interpolate_tutorial_camera(&from_keyframe, &to_keyframe, elapsed_ms)
+fn tutorial_converge_pose(tween: &TutorialCameraConverge, elapsed_ms: f64) -> semio_framework::TutorialCameraState {
+    let from_keyframe = semio_framework::TutorialCameraKeyframe { at: 0, window_id: String::new(), camera: tween.from.clone(), easing: semio_framework::TutorialEasing::Hold };
+    let to_keyframe = semio_framework::TutorialCameraKeyframe { at: semio_framework::TUTORIAL_CONVERGE_MS, window_id: String::new(), camera: tween.to.clone(), easing: semio_framework::TutorialEasing::EaseInOut };
+    semio_framework::interpolate_tutorial_camera(&from_keyframe, &to_keyframe, elapsed_ms)
 }
 //#endregion 🎥️CameraConversion
 
@@ -6243,7 +6243,7 @@ fn tutorial_converge_pose(tween: &TutorialCameraConverge, elapsed_ms: f64) -> se
 /// 🧮️ `ShellState` → `TutorialUiSnapshot` (Design Decision 4). Fields with no home in this shell's state
 /// today (`activeToolId` has one — `ViewModel.active_tool_id`; `expandedTreeIds` does not) are noted
 /// inline rather than inventing new cross-cutting state to fill them.
-fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework_core::TutorialUiSnapshot {
+fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework::TutorialUiSnapshot {
     let mut active_panel_tab_by_group: HashMap<String, String> = HashMap::new();
     if state.left_panel_open {
         if let Some(tab) = &state.active_left_tab {
@@ -6264,7 +6264,7 @@ fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework_core::Tut
         }
     }
     let command_panel_open = state.right_panel_open && state.active_right_kind == RightPanelKind::Settings && state.active_right_tab.as_deref() == Some(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID);
-    semio_framework_core::TutorialUiSnapshot {
+    semio_framework::TutorialUiSnapshot {
         active_mode_id: state.session.as_ref().and_then(|s| s.view_state.active_mode_id.clone()),
         focused_window_id: state.active_window_id.clone(),
         active_utility_by_window_id: state.active_utility_by_window.clone(),
@@ -6285,7 +6285,7 @@ fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework_core::Tut
 }
 
 /// 🧮️ `TutorialUiSnapshot` → `ShellState`, applied as a snap (single field writes — Design Decision 5).
-fn tutorial_apply_ui_snapshot(state: &mut ShellState, snapshot: &semio_framework_core::TutorialUiSnapshot) {
+fn tutorial_apply_ui_snapshot(state: &mut ShellState, snapshot: &semio_framework::TutorialUiSnapshot) {
     if let Some(session) = state.session.as_mut() {
         session.view_state.active_mode_id = snapshot.active_mode_id.clone();
         session.view_state.active_tool_id = snapshot.active_tool_id.clone();
@@ -6328,9 +6328,9 @@ fn tutorial_apply_ui_snapshot(state: &mut ShellState, snapshot: &semio_framework
 /// 🩹️ Applies one `TutorialUiChange` live — composed from `tutorial_capture_ui_snapshot` +
 /// `apply_tutorial_ui_change` (core) + `tutorial_apply_ui_snapshot` rather than duplicating the change's
 /// own per-field switch a second time.
-fn tutorial_apply_ui_change_to_shell(state: &mut ShellState, change: &semio_framework_core::TutorialUiChange) {
+fn tutorial_apply_ui_change_to_shell(state: &mut ShellState, change: &semio_framework::TutorialUiChange) {
     let mut snapshot = tutorial_capture_ui_snapshot(state);
-    semio_framework_core::apply_tutorial_ui_change(&mut snapshot, change);
+    semio_framework::apply_tutorial_ui_change(&mut snapshot, change);
     tutorial_apply_ui_snapshot(state, &snapshot);
 }
 
@@ -6345,8 +6345,8 @@ fn chrome_dialog_top_id() -> Option<String> {
 /// need a per-window world→screen projection resolver that doesn't exist as reusable cross-cutting infra
 /// here (each 3D/2D surface picks/projects ad hoc at its own interaction call sites) — scoped out rather
 /// than inventing new resolver plumbing.
-fn tutorial_resolve_gesture_point(state: &ShellState, point: &semio_framework_core::IntroductionPoint) -> Option<(f32, f32)> {
-    use semio_framework_core::IntroductionPoint as P;
+fn tutorial_resolve_gesture_point(state: &ShellState, point: &semio_framework::IntroductionPoint) -> Option<(f32, f32)> {
+    use semio_framework::IntroductionPoint as P;
     match point {
         P::Screen { x, y } => Some((*x as f32, *y as f32)),
         P::ScreenNormalized { x, y } => Some((*x as f32 * state.screen_w, *y as f32 * state.screen_h)),
@@ -6367,8 +6367,8 @@ fn tutorial_resolve_gesture_point(state: &ShellState, point: &semio_framework_co
     }
 }
 
-fn tutorial_gesture_endpoints(gesture: &semio_framework_core::IntroductionGesture) -> (semio_framework_core::IntroductionPoint, semio_framework_core::IntroductionPoint) {
-    use semio_framework_core::IntroductionGesture as G;
+fn tutorial_gesture_endpoints(gesture: &semio_framework::IntroductionGesture) -> (semio_framework::IntroductionPoint, semio_framework::IntroductionPoint) {
+    use semio_framework::IntroductionGesture as G;
     match gesture {
         G::LeftClick { at } | G::RightClick { at } | G::DoubleClick { at } => (at.clone(), at.clone()),
         G::Scroll { at, .. } => (at.clone(), at.clone()),
@@ -6446,8 +6446,8 @@ fn tutorial_save_recording(tutorial_id: &str, json: &str) {
 /// `Edit::forwards`/dispatches the named history action as-is; backward uses `Edit::backwards`/inverts
 /// the history action (undo↔redo) per `TutorialDocumentEventKind::Edit`'s own doc comment on exact
 /// bidirectional scrubbing.
-fn tutorial_pending_op_for_edit(entry: &semio_framework_core::TutorialDocumentEvent, forward: bool) -> TutorialPendingDocOp {
-    use semio_framework_core::TutorialDocumentEventKind as K;
+fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialDocumentEvent, forward: bool) -> TutorialPendingDocOp {
+    use semio_framework::TutorialDocumentEventKind as K;
     match &entry.kind {
         K::Edit { forwards, backwards, .. } => {
             let ops = if forward { forwards } else { backwards };
@@ -6528,7 +6528,7 @@ impl ShellState {
             converge: HashMap::new(),
             recorder_last_camera_wall_ms: HashMap::new(),
             recorder_last_camera_pose: HashMap::new(),
-            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui: semio_framework::TutorialUiSnapshot::default(),
             recorder_last_ui_sample_wall_ms: 0.0,
         });
     }
@@ -6543,17 +6543,17 @@ impl ShellState {
         let ui = tutorial_capture_ui_snapshot(self);
         let mut cameras = Vec::new();
         for (window_id, world) in &self.world3d_states {
-            cameras.push(semio_framework_core::TutorialCameraKeyframe { at: 0, window_id: window_id.clone(), camera: orbit_to_tutorial_camera(&world.orbit), easing: semio_framework_core::TutorialEasing::Hold });
+            cameras.push(semio_framework::TutorialCameraKeyframe { at: 0, window_id: window_id.clone(), camera: orbit_to_tutorial_camera(&world.orbit), easing: semio_framework::TutorialEasing::Hold });
         }
         let now = chrome_now_ms();
-        let definition = semio_framework_core::TutorialDefinition {
+        let definition = semio_framework::TutorialDefinition {
             id: format!("recording-{}", tutorial_recorded_at_iso().replace(['-', ':'], "")),
             title: LocalizedLabel::data("Recording"),
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_dsl: self.last_envelope_dsl.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
-            tracks: semio_framework_core::TutorialTracks::default(),
+            base: semio_framework::TutorialBase { document_dsl: self.last_envelope_dsl.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
+            tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
         self.tutorial = Some(TutorialRuntime {
@@ -6618,16 +6618,16 @@ impl ShellState {
             // start a real-time camera convergence tween per window (Design Decision 5/6).
             TutorialMode::Deviated => {
                 let target_ms = runtime.playhead_ms;
-                let ui_state = semio_framework_core::compose_tutorial_ui(&runtime.definition, target_ms);
+                let ui_state = semio_framework::compose_tutorial_ui(&runtime.definition, target_ms);
                 tutorial_apply_ui_snapshot(self, &ui_state);
-                let slice = semio_framework_core::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
+                let slice = semio_framework::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
                 for entry in &slice.document {
                     self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
                 }
                 let now = chrome_now_ms();
                 let mut converge = HashMap::new();
                 for window_id in tutorial_camera_window_ids(&runtime.definition) {
-                    if let Some(to) = semio_framework_core::tutorial_camera_at(&runtime.definition, &window_id, target_ms) {
+                    if let Some(to) = semio_framework::tutorial_camera_at(&runtime.definition, &window_id, target_ms) {
                         if let Some(from) = tutorial_capture_camera_pose(self, &window_id) {
                             converge.insert(window_id, TutorialCameraConverge { from, to, started_wall_ms: now });
                         }
@@ -6655,14 +6655,14 @@ impl ShellState {
             return;
         }
         let target_ms = target_ms.clamp(0.0, runtime.definition.duration_ms as f64);
-        let ui_state = semio_framework_core::compose_tutorial_ui(&runtime.definition, target_ms);
+        let ui_state = semio_framework::compose_tutorial_ui(&runtime.definition, target_ms);
         tutorial_apply_ui_snapshot(self, &ui_state);
-        let slice = semio_framework_core::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
+        let slice = semio_framework::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
         for entry in &slice.document {
             self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
         }
         for window_id in tutorial_camera_window_ids(&runtime.definition) {
-            if let Some(pose) = semio_framework_core::tutorial_camera_at(&runtime.definition, &window_id, target_ms) {
+            if let Some(pose) = semio_framework::tutorial_camera_at(&runtime.definition, &window_id, target_ms) {
                 tutorial_apply_camera_pose(self, &window_id, &pose);
             }
         }
@@ -6703,7 +6703,7 @@ impl ShellState {
                 to_ms = total_ms;
             }
             runtime.playhead_ms = to_ms;
-            let slice = semio_framework_core::tutorial_slice(&runtime.definition, from_ms, to_ms);
+            let slice = semio_framework::tutorial_slice(&runtime.definition, from_ms, to_ms);
             for change in &slice.ui_changes {
                 tutorial_apply_ui_change_to_shell(self, change);
             }
@@ -6721,9 +6721,9 @@ impl ShellState {
         let mut converged: Vec<String> = Vec::new();
         for (window_id, tween) in runtime.converge.iter() {
             let elapsed_ms = (now_wall_ms - tween.started_wall_ms).max(0.0);
-            let pose = tutorial_converge_pose(tween, elapsed_ms.min(semio_framework_core::TUTORIAL_CONVERGE_MS as f64));
+            let pose = tutorial_converge_pose(tween, elapsed_ms.min(semio_framework::TUTORIAL_CONVERGE_MS as f64));
             tutorial_apply_camera_pose(self, window_id, &pose);
-            if elapsed_ms >= semio_framework_core::TUTORIAL_CONVERGE_MS as f64 {
+            if elapsed_ms >= semio_framework::TUTORIAL_CONVERGE_MS as f64 {
                 converged.push(window_id.clone());
             }
         }
@@ -6735,7 +6735,7 @@ impl ShellState {
                 if runtime.converge.contains_key(&window_id) {
                     continue;
                 }
-                if let Some(pose) = semio_framework_core::tutorial_camera_at(&runtime.definition, &window_id, runtime.playhead_ms) {
+                if let Some(pose) = semio_framework::tutorial_camera_at(&runtime.definition, &window_id, runtime.playhead_ms) {
                     tutorial_apply_camera_pose(self, &window_id, &pose);
                 }
             }
@@ -6767,7 +6767,7 @@ impl ShellState {
                     return;
                 }
                 let at = runtime.playhead_ms.max(0.0) as u64;
-                runtime.definition.tracks.events.push(semio_framework_core::TutorialEvent { at, kind: semio_framework_core::TutorialEventKind::Action { action: action.action.clone(), args: action.args.clone() } });
+                runtime.definition.tracks.events.push(semio_framework::TutorialEvent { at, kind: semio_framework::TutorialEventKind::Action { action: action.action.clone(), args: action.args.clone() } });
             }
             TutorialMode::Paused | TutorialMode::Deviated => {}
         }
@@ -6800,7 +6800,7 @@ impl ShellState {
                 }
                 TutorialPendingDocOp::HistoryAction { action_id, args } => {
                     if let Some(session) = self.session.clone() {
-                        let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args: semio_framework_core::optional_json_to_dsl(args) };
+                        let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args: semio_framework::optional_json_to_dsl(args) };
                         if let Err(err) = self.dispatch_action(descriptor).await {
                             eprintln!("[DEBUG] tutorial history action failed: {err}");
                         }
@@ -6911,11 +6911,11 @@ fn tutorial_recorder_sample(state: &mut ShellState, runtime: &mut TutorialRuntim
             let last_sample_ms = runtime.recorder_last_camera_wall_ms.get(&window_id).copied().unwrap_or(f64::NEG_INFINITY);
             let changed = runtime.recorder_last_camera_pose.get(&window_id).map(|prev| !tutorial_camera_pose_close(prev, &pose, CAMERA_MOVE_EPSILON)).unwrap_or(true);
             if changed && now_wall_ms - last_sample_ms >= CAMERA_SAMPLE_MIN_INTERVAL_MS {
-                runtime.definition.tracks.camera.push(semio_framework_core::TutorialCameraKeyframe {
+                runtime.definition.tracks.camera.push(semio_framework::TutorialCameraKeyframe {
                     at: runtime.playhead_ms.max(0.0) as u64,
                     window_id: window_id.clone(),
                     camera: pose.clone(),
-                    easing: semio_framework_core::TutorialEasing::EaseInOut,
+                    easing: semio_framework::TutorialEasing::EaseInOut,
                 });
                 runtime.recorder_last_camera_wall_ms.insert(window_id.clone(), now_wall_ms);
                 runtime.recorder_last_camera_pose.insert(window_id, pose);
@@ -6925,7 +6925,7 @@ fn tutorial_recorder_sample(state: &mut ShellState, runtime: &mut TutorialRuntim
     if now_wall_ms - runtime.recorder_last_ui_sample_wall_ms >= UI_SAMPLE_INTERVAL_MS {
         let snapshot = tutorial_capture_ui_snapshot(state);
         if snapshot != runtime.recorder_last_ui {
-            runtime.definition.tracks.ui.push(semio_framework_core::TutorialUiKeyframe { at: runtime.playhead_ms.max(0.0) as u64, sample: semio_framework_core::TutorialUiSample::Snapshot { state: snapshot.clone() } });
+            runtime.definition.tracks.ui.push(semio_framework::TutorialUiKeyframe { at: runtime.playhead_ms.max(0.0) as u64, sample: semio_framework::TutorialUiSample::Snapshot { state: snapshot.clone() } });
             runtime.recorder_last_ui = snapshot;
         }
         runtime.recorder_last_ui_sample_wall_ms = now_wall_ms;
@@ -6983,14 +6983,14 @@ mod tutorial_tests {
 
     #[test]
     fn canvas_camera_state_has_no_orbit_equivalent() {
-        assert!(tutorial_camera_to_orbit(&semio_framework_core::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }).is_none());
+        assert!(tutorial_camera_to_orbit(&semio_framework::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }).is_none());
     }
 
     #[test]
     fn camera_pose_close_only_compares_matching_kinds() {
-        let orbit_a = semio_framework_core::TutorialCameraState::Orbit { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(45.0) };
-        let orbit_b = semio_framework_core::TutorialCameraState::Orbit { position: [0.0001, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(45.0) };
-        let canvas = semio_framework_core::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 };
+        let orbit_a = semio_framework::TutorialCameraState::Orbit { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(45.0) };
+        let orbit_b = semio_framework::TutorialCameraState::Orbit { position: [0.0001, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(45.0) };
+        let canvas = semio_framework::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 };
         assert!(tutorial_camera_pose_close(&orbit_a, &orbit_b, 0.01));
         assert!(!tutorial_camera_pose_close(&orbit_a, &canvas, 0.01));
     }
@@ -7031,7 +7031,7 @@ mod tutorial_tests {
         state.active_left_tab = Some("tab-x".into());
         state.right_panel_open = true;
         state.active_right_tab = Some("tab-y".into());
-        let empty_snapshot = semio_framework_core::TutorialUiSnapshot::default();
+        let empty_snapshot = semio_framework::TutorialUiSnapshot::default();
         tutorial_apply_ui_snapshot(&mut state, &empty_snapshot);
         assert!(!state.left_panel_open);
         assert!(!state.right_panel_open);
@@ -7040,7 +7040,7 @@ mod tutorial_tests {
     #[test]
     fn ui_change_applies_live_against_shell_state() {
         let mut state = shell();
-        let change = semio_framework_core::TutorialUiChange::ActiveUtility { window_id: "window-a".into(), utility_id: Some("select".into()) };
+        let change = semio_framework::TutorialUiChange::ActiveUtility { window_id: "window-a".into(), utility_id: Some("select".into()) };
         tutorial_apply_ui_change_to_shell(&mut state, &change);
         assert_eq!(state.active_utility_by_window.get("window-a").map(String::as_str), Some("select"));
     }
@@ -7052,24 +7052,24 @@ mod tutorial_tests {
         let mut state = shell();
         state.screen_w = 1000.0;
         state.screen_h = 500.0;
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Screen { x: 42.0, y: 7.0 }), Some((42.0, 7.0)));
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::ScreenNormalized { x: 0.5, y: 0.25 }), Some((500.0, 125.0)));
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::Screen { x: 42.0, y: 7.0 }), Some((42.0, 7.0)));
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::ScreenNormalized { x: 0.5, y: 0.25 }), Some((500.0, 125.0)));
     }
 
     #[test]
     fn gesture_point_resolves_window_local() {
         let mut state = shell();
         state.window_content_rects.insert("window-a".into(), Rect::new(100.0, 50.0, 400.0, 300.0));
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Window { id: "window-a".into(), x: 10.0, y: 20.0 }), Some((110.0, 70.0)));
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::WindowNormalized { id: "window-a".into(), x: 0.5, y: 0.5 }), Some((300.0, 200.0)));
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Window { id: "missing".into(), x: 0.0, y: 0.0 }), None);
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::Window { id: "window-a".into(), x: 10.0, y: 20.0 }), Some((110.0, 70.0)));
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::WindowNormalized { id: "window-a".into(), x: 0.5, y: 0.5 }), Some((300.0, 200.0)));
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::Window { id: "missing".into(), x: 0.0, y: 0.0 }), None);
     }
 
     #[test]
     fn gesture_point_scopes_out_scene_and_entity_kinds() {
         let state = shell();
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Scene { id: "w".into(), position: [0.0, 0.0, 0.0] }), None);
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::any_entity("w", "vortex")), None);
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::Scene { id: "w".into(), position: [0.0, 0.0, 0.0] }), None);
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::any_entity("w", "vortex")), None);
     }
     //#endregion GesturePointTests
 
@@ -7077,14 +7077,14 @@ mod tutorial_tests {
     #[test]
     fn seek_clamps_to_duration_and_updates_playhead() {
         let mut state = shell();
-        let definition = semio_framework_core::TutorialDefinition {
+        let definition = semio_framework::TutorialDefinition {
             id: "t1".into(),
             title: LocalizedLabel::data("Test"),
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
-            tracks: semio_framework_core::TutorialTracks::default(),
+            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
         state.tutorial = Some(TutorialRuntime {
@@ -7094,12 +7094,12 @@ mod tutorial_tests {
             rate: 1.0,
             applied_ms: 0.0,
             pre_sandbox_document_dsl: None,
-            pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            pre_sandbox_ui: semio_framework::TutorialUiSnapshot::default(),
             last_tick_wall_ms: 0.0,
             converge: HashMap::new(),
             recorder_last_camera_wall_ms: HashMap::new(),
             recorder_last_camera_pose: HashMap::new(),
-            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui: semio_framework::TutorialUiSnapshot::default(),
             recorder_last_ui_sample_wall_ms: 0.0,
         });
         state.tutorial_seek(5000.0);
@@ -7109,14 +7109,14 @@ mod tutorial_tests {
     #[test]
     fn note_real_dispatch_deviates_a_playing_tutorial() {
         let mut state = shell();
-        let definition = semio_framework_core::TutorialDefinition {
+        let definition = semio_framework::TutorialDefinition {
             id: "t1".into(),
             title: LocalizedLabel::data("Test"),
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
-            tracks: semio_framework_core::TutorialTracks::default(),
+            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
         state.tutorial = Some(TutorialRuntime {
@@ -7126,12 +7126,12 @@ mod tutorial_tests {
             rate: 1.0,
             applied_ms: 0.0,
             pre_sandbox_document_dsl: None,
-            pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            pre_sandbox_ui: semio_framework::TutorialUiSnapshot::default(),
             last_tick_wall_ms: 0.0,
             converge: HashMap::new(),
             recorder_last_camera_wall_ms: HashMap::new(),
             recorder_last_camera_pose: HashMap::new(),
-            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui: semio_framework::TutorialUiSnapshot::default(),
             recorder_last_ui_sample_wall_ms: 0.0,
         });
         state.tutorial_note_real_dispatch(&ActionDescriptor { controller_id: "app".into(), action: "someAction".into(), args: None });
@@ -7141,14 +7141,14 @@ mod tutorial_tests {
     #[test]
     fn recorder_records_annotational_events_but_skips_set_camera() {
         let mut state = shell();
-        let definition = semio_framework_core::TutorialDefinition {
+        let definition = semio_framework::TutorialDefinition {
             id: "rec".into(),
             title: LocalizedLabel::data("Recording"),
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
-            tracks: semio_framework_core::TutorialTracks::default(),
+            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
         state.tutorial = Some(TutorialRuntime {
@@ -7158,12 +7158,12 @@ mod tutorial_tests {
             rate: 1.0,
             applied_ms: 0.0,
             pre_sandbox_document_dsl: None,
-            pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            pre_sandbox_ui: semio_framework::TutorialUiSnapshot::default(),
             last_tick_wall_ms: 0.0,
             converge: HashMap::new(),
             recorder_last_camera_wall_ms: HashMap::new(),
             recorder_last_camera_pose: HashMap::new(),
-            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui: semio_framework::TutorialUiSnapshot::default(),
             recorder_last_ui_sample_wall_ms: 0.0,
         });
         state.tutorial_note_real_dispatch(&ActionDescriptor { controller_id: "app".into(), action: "setCamera".into(), args: None });
@@ -7269,14 +7269,14 @@ impl ShellState {
         match self.active_left_kind {
             LeftPanelKind::Display => vec![
                 PanelTabDefinition {
-                    kind: semio_framework_core::PanelTabKind::DisplayWindows,
+                    kind: semio_framework::PanelTabKind::DisplayWindows,
                     label: LocalizedLabel::data(shell_chrome_string("display.tab.windows", is_de)),
                     group: PanelGroup::Display,
                     body_key: Some(String::new()),
                     children: Vec::new(),
                 },
                 PanelTabDefinition {
-                    kind: semio_framework_core::PanelTabKind::DisplayLayout,
+                    kind: semio_framework::PanelTabKind::DisplayLayout,
                     label: LocalizedLabel::data(shell_chrome_string("display.tab.layout", is_de)),
                     group: PanelGroup::Display,
                     body_key: Some(String::new()),
@@ -7290,7 +7290,7 @@ impl ShellState {
                     tabs.insert(
                         0,
                         PanelTabDefinition {
-                            kind: semio_framework_core::PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()),
+                            kind: semio_framework::PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()),
                             label: LocalizedLabel::data(shell_panel_tab_label(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, "Document", is_de)),
                             group: PanelGroup::Workbench,
                             body_key: Some(String::new()),
@@ -7308,7 +7308,7 @@ impl ShellState {
             RightPanelKind::Settings => {
                 let is_de = self.locale_id == "de";
                 let mut tabs = vec![PanelTabDefinition {
-                    kind: semio_framework_core::PanelTabKind::SettingsGeneral,
+                    kind: semio_framework::PanelTabKind::SettingsGeneral,
                     label: LocalizedLabel::data(shell_chrome_string("settings.tab.general", is_de)),
                     group: PanelGroup::Settings,
                     body_key: Some(String::new()),
@@ -7318,7 +7318,7 @@ impl ShellState {
                 // index.tsx:9526-9528`): a locked theme drops the whole Theme tab, not just its editor.
                 if shell_pref_locks().theme_id.is_none() {
                     tabs.push(PanelTabDefinition {
-                        kind: semio_framework_core::PanelTabKind::SettingsTheme,
+                        kind: semio_framework::PanelTabKind::SettingsTheme,
                         label: LocalizedLabel::data(shell_chrome_string("settings.tab.theme", is_de)),
                         group: PanelGroup::Settings,
                         body_key: Some(String::new()),
@@ -7329,7 +7329,7 @@ impl ShellState {
                 // React's `bottom-middle`-anchored command palette dock, which this renderer's 2-column
                 // panel model has no equivalent surface for.
                 tabs.push(PanelTabDefinition {
-                    kind: semio_framework_core::PanelTabKind::App(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into()),
+                    kind: semio_framework::PanelTabKind::App(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into()),
                     label: LocalizedLabel::data(shell_chrome_string("settings.tab.commands", is_de)),
                     group: PanelGroup::Settings,
                     body_key: Some(String::new()),
@@ -7524,7 +7524,7 @@ impl ShellState {
             if session.app.modes.len() > 1 {
                 // 🚧️ `modes` is a `NonEmptyVec`, whose `iter()` yields an opaque non-double-ended
                 // iterator — collect before reversing for the right-to-left navbar order.
-                let modes: Vec<&semio_framework_core::ModeDefinition> = session.app.modes.iter().collect();
+                let modes: Vec<&semio_framework::ModeDefinition> = session.app.modes.iter().collect();
                 let mode_control_ids: Vec<String> = modes.iter().rev().map(|mode| format!("playground.navbar.modes.{}", mode.id)).collect();
                 let mode_items: Vec<ChromeGroupItem<'_>> = modes
                     .iter()
@@ -7631,7 +7631,7 @@ impl ShellState {
         panel_draw.push_solid([panel.x + panel.w - hair, panel.y, hair, panel.h], right);
         let tab_bar_h = render_panel_tab_bar(panel_draw, atlas, icons, input, theme, panel, tabs, active_tab_id, side_left, inner_stroke, hair);
         let content = Rect::new(panel.x + theme.gap_standard, panel.y + tab_bar_h, panel.w - theme.gap_standard * 2.0, panel.h - tab_bar_h - theme.gap_standard);
-        register_element_rect(semio_framework_core::panel_tab_element_id(active_tab_id), content);
+        register_element_rect(semio_framework::panel_tab_element_id(active_tab_id), content);
         let scroll_key = format!("panel.{}.{}", if side_left { "left" } else { "right" }, active_tab_id);
         let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
         panel_draw.push_scissor(content);
@@ -8002,10 +8002,10 @@ impl ShellState {
     /// `resolve_element_rect` (utility buttons/toggles; panel tabs via registration).
     /// `…firstDraggable` resolves to the first draggable tree-row hit inside the tab body when available.
     fn resolve_introduction_element_rects(&self, id: &str, theme: &Theme, width: f32, height: f32, hit_targets: &[HitTarget<ActionDescriptor>]) -> Vec<Rect> {
-        if id == semio_framework_core::UI_NAVBAR_ELEMENT_ID {
+        if id == semio_framework::UI_NAVBAR_ELEMENT_ID {
             return vec![Rect::new(0.0, 0.0, width, theme.navbar_height)];
         }
-        if id == semio_framework_core::UI_FOOTER_ELEMENT_ID {
+        if id == semio_framework::UI_FOOTER_ELEMENT_ID {
             return vec![Rect::new(0.0, height - theme.footer_height, width, theme.footer_height)];
         }
         // 🆔️ `…firstDraggable` only resolves at tour time: draggability is a property of the rendered tree
@@ -8013,7 +8013,7 @@ impl ShellState {
         // first draggable row inside the tab's real body → the body itself → the tab-bar chip fallback
         // (via the base `framework.panelTab.{tabId}` lookup `resolve_element_rect` already does).
         if let Some(tab_id) = id.strip_prefix("framework.panelTab.").and_then(|rest| rest.strip_suffix(".firstDraggable")) {
-            let base_id = semio_framework_core::panel_tab_element_id(tab_id);
+            let base_id = semio_framework::panel_tab_element_id(tab_id);
             let Some(base_rect) = resolve_element_rect(&base_id) else {
                 return Vec::new();
             };
@@ -8030,12 +8030,12 @@ impl ShellState {
         if let Some(segment) = id.strip_prefix("framework.window.") {
             let segment = segment.split('.').next().unwrap_or(segment);
             let kind_segments: std::collections::HashSet<String> =
-                self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework_core::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
+                self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
             let matches_window = |window_id: &str| {
-                semio_framework_core::element_id_segment(window_id) == segment
+                semio_framework::element_id_segment(window_id) == segment
                     || kind_segments
                         .iter()
-                        .any(|kind_id| window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework_core::element_id_segment(window_id).starts_with(&semio_framework_core::element_id_segment(kind_id)))
+                        .any(|kind_id| window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
             };
             let silhouette_rects: Vec<Rect> = self.window_silhouettes.iter().filter(|(window_id, _)| matches_window(window_id)).map(|(_, silhouette)| silhouette.bounds).collect();
             if !silhouette_rects.is_empty() {
@@ -8053,14 +8053,14 @@ impl ShellState {
         };
         let segment = segment.split('.').next().unwrap_or(segment);
         let kind_segments: std::collections::HashSet<String> =
-            self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework_core::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
+            self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
         self.window_silhouettes
             .iter()
             .filter(|(window_id, _)| {
-                semio_framework_core::element_id_segment(window_id) == segment
+                semio_framework::element_id_segment(window_id) == segment
                     || kind_segments
                         .iter()
-                        .any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework_core::element_id_segment(window_id).starts_with(&semio_framework_core::element_id_segment(kind_id)))
+                        .any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
             })
             .map(|(_, silhouette)| *silhouette)
             .collect()
@@ -8091,7 +8091,7 @@ impl ShellState {
     /// 🎓️ The currently active introduction step (if a tour is running and its index still resolves) —
     /// shared by every wgpu tour touchpoint beyond painting (reveal, advance-by-doing, keyboard) so they
     /// can never drift on what "the active step" means.
-    fn chrome_tour_active_step(&self) -> Option<semio_framework_core::IntroductionStepDefinition> {
+    fn chrome_tour_active_step(&self) -> Option<semio_framework::IntroductionStepDefinition> {
         let session = self.session.as_ref()?;
         let intro = session.app.introduction.as_ref()?;
         let step_index = CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index))?;
@@ -8142,12 +8142,12 @@ impl ShellState {
         };
         let ids: Vec<String> = step.introduce.iter().cloned().chain(step.show.iter().cloned()).collect();
         for id in ids {
-            if id == semio_framework_core::UI_NAVBAR_ELEMENT_ID || id == semio_framework_core::UI_FOOTER_ELEMENT_ID {
+            if id == semio_framework::UI_NAVBAR_ELEMENT_ID || id == semio_framework::UI_FOOTER_ELEMENT_ID {
                 continue;
             }
             if let Some(rest) = id.strip_prefix("framework.window.") {
                 if let Some((segment, _action_id)) = rest.split_once(".action.") {
-                    let window_id = session.app.window_kinds.iter().find(|kind| semio_framework_core::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone());
+                    let window_id = session.app.window_kinds.iter().find(|kind| semio_framework::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone());
                     if let Some(window_id) = window_id {
                         self.action_panel_folded.insert(window_id, false);
                     }
@@ -8174,21 +8174,21 @@ impl ShellState {
         let Some(step) = self.chrome_tour_active_step() else {
             return;
         };
-        self.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Action(action) if action.as_str() == action_id));
+        self.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Action(action) if action.as_str() == action_id));
     }
 
     fn chrome_tour_note_utility_performed(&self, utility_id: &str) {
         let Some(step) = self.chrome_tour_active_step() else {
             return;
         };
-        self.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Utility(utility) if utility.as_str() == utility_id));
+        self.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Utility(utility) if utility.as_str() == utility_id));
     }
 
     /// ✅️ Shared completion path for interaction-gated steps: finds the first not-yet-completed
     /// interaction matching `matches` (respecting `step.ordered` — only the next in-order interaction may
     /// complete), records it, and advances the step once every interaction is done. Mirrors the React
     /// shell's `completeIntroductionInteraction`.
-    fn chrome_tour_complete_interaction(&self, step: &semio_framework_core::IntroductionStepDefinition, matches: impl Fn(&semio_framework_core::IntroductionInteractionKind) -> bool) {
+    fn chrome_tour_complete_interaction(&self, step: &semio_framework::IntroductionStepDefinition, matches: impl Fn(&semio_framework::IntroductionInteractionKind) -> bool) {
         if step.interactions.is_empty() {
             return;
         }
@@ -8214,7 +8214,7 @@ impl ShellState {
         }
     }
 
-    fn chrome_tour_advance_current_step(&self, step: &semio_framework_core::IntroductionStepDefinition) {
+    fn chrome_tour_advance_current_step(&self, step: &semio_framework::IntroductionStepDefinition) {
         let Some(session) = self.session.as_ref() else {
             return;
         };
@@ -8488,11 +8488,11 @@ impl ShellState {
         activated
     }
 
-    fn measures_for_kind(&self, kind: &semio_framework_core::WindowKindDefinition) -> Vec<WindowMeasure> {
+    fn measures_for_kind(&self, kind: &semio_framework::WindowKindDefinition) -> Vec<WindowMeasure> {
         self.window_measures.get(&kind.id).filter(|measures| !measures.is_empty()).cloned().unwrap_or_else(|| kind.options.measures.clone())
     }
 
-    fn engagement_for_kind(&self, kind: &semio_framework_core::WindowKindDefinition) -> Option<WindowEngagement> {
+    fn engagement_for_kind(&self, kind: &semio_framework::WindowKindDefinition) -> Option<WindowEngagement> {
         self.window_engagements.get(&kind.id).cloned().or_else(|| kind.options.engagement.as_option().cloned()).or_else(|| if kind.surface_kind.is_viewport() { Some(ui_wgpu::wgpu::default_viewport_engagement()) } else { None })
     }
 
@@ -8506,7 +8506,7 @@ impl ShellState {
         theme: &Theme,
         content: &Rect,
         window_id: &str,
-        kind: &semio_framework_core::WindowKindDefinition,
+        kind: &semio_framework::WindowKindDefinition,
         gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> WindowMeasuresRailOutcome {
         let inset = theme.gap_standard;
@@ -8588,7 +8588,7 @@ impl ShellState {
         theme: &Theme,
         content: &Rect,
         window_id: &str,
-        kind: &semio_framework_core::WindowKindDefinition,
+        kind: &semio_framework::WindowKindDefinition,
         gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         let inset = theme.gap_standard;
@@ -8708,7 +8708,7 @@ impl ShellState {
         theme: &Theme,
         content: &Rect,
         window_id: &str,
-        kind: &semio_framework_core::WindowKindDefinition,
+        kind: &semio_framework::WindowKindDefinition,
         measures_reserve: f32,
         gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> Option<(Rect, String)> {
@@ -8922,10 +8922,10 @@ impl ShellState {
         theme: &Theme,
         content: &Rect,
         window_id: &str,
-        app: &semio_framework_core::AppDefinition,
-        kind: &semio_framework_core::WindowKindDefinition,
+        app: &semio_framework::AppDefinition,
+        kind: &semio_framework::WindowKindDefinition,
     ) -> Option<(Rect, String)> {
-        let actions: Vec<semio_framework_core::ActionDefinition> = semio_framework_core::resolve_window_actions(app, kind).into_iter().cloned().collect();
+        let actions: Vec<semio_framework::ActionDefinition> = semio_framework::resolve_window_actions(app, kind).into_iter().cloned().collect();
         if actions.is_empty() {
             return None;
         }
@@ -8940,7 +8940,7 @@ impl ShellState {
                 let chip_w = measure_chrome_group_item(atlas, theme, &item);
                 let chip = Rect::new(content.x + content.w - chip_w - inset, content.y + content.h - row_h - inset, chip_w, row_h);
                 render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
-                let segment = semio_framework_core::element_id_segment(window_id);
+                let segment = semio_framework::element_id_segment(window_id);
                 for action in &actions {
                     register_element_rect_fallback(format!("framework.window.{segment}.action.{}", action.id), chip);
                 }
@@ -8980,7 +8980,7 @@ impl ShellState {
                 };
                 let item = ChromeGroupItem { control_id: "", icon_id: icon, label: Some(action.label.resolve(self.active_terminology(), self.active_locale())), active: is_expanded, disabled: !enabled, kind: HitKind::Button };
                 render_chrome_group(chrome, atlas, icons, input, theme, row, &[item], false);
-                register_element_rect(format!("framework.window.{}.action.{}", semio_framework_core::element_id_segment(window_id), action.id), row);
+                register_element_rect(format!("framework.window.{}.action.{}", semio_framework::element_id_segment(window_id), action.id), row);
                 if enabled {
                     let control_id = if has_args { format!("shell.action.expand::{window_id}::{}", action.id) } else { format!("shell.action.exec::{window_id}::{}", action.id) };
                     input.register_hit(HitTarget { rect: row, event: None, control_id: Some(control_id), kind: HitKind::Button, drag_axis: None, drag_data: None });
@@ -8996,7 +8996,7 @@ impl ShellState {
     }
 
     /// 📝️ Total height of one action's staged arg form (per-arg fields + the Execute/Reset row).
-    fn staged_form_height(&self, theme: &Theme, action: &semio_framework_core::ActionDefinition) -> f32 {
+    fn staged_form_height(&self, theme: &Theme, action: &semio_framework::ActionDefinition) -> f32 {
         let mut h = theme.gap_standard;
         for arg in &action.args {
             h += self.staged_arg_height(theme, arg);
@@ -9004,15 +9004,15 @@ impl ShellState {
         h + theme.control_height + theme.gap_standard
     }
 
-    fn staged_arg_height(&self, theme: &Theme, arg: &semio_framework_core::ActionArgDef) -> f32 {
+    fn staged_arg_height(&self, theme: &Theme, arg: &semio_framework::ActionArgDef) -> f32 {
         match arg.control {
-            semio_framework_core::ActionArgControl::Toggle => theme.control_height + theme.gap_standard,
+            semio_framework::ActionArgControl::Toggle => theme.control_height + theme.gap_standard,
             _ => theme.control_height * 2.0 + theme.gap_standard,
         }
     }
 
     /// 📝️ The effective value of one arg (staged if present, else the declared default).
-    fn effective_arg_value(&self, window_id: &str, action_id: &str, arg: &semio_framework_core::ActionArgDef) -> Option<serde_json::Value> {
+    fn effective_arg_value(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef) -> Option<serde_json::Value> {
         self.staged_action_args.get(&Self::staged_key(window_id, action_id)).and_then(|map| map.get(&arg.id).cloned()).or_else(|| arg.default.as_ref().map(dsl_value_as_json))
     }
 
@@ -9032,7 +9032,7 @@ impl ShellState {
         theme: &Theme,
         bounds: Rect,
         window_id: &str,
-        action: &semio_framework_core::ActionDefinition,
+        action: &semio_framework::ActionDefinition,
         enabled: bool,
     ) -> f32 {
         let row_h = theme.control_height;
@@ -9072,10 +9072,10 @@ impl ShellState {
         bounds: Rect,
         window_id: &str,
         action_id: &str,
-        arg: &semio_framework_core::ActionArgDef,
+        arg: &semio_framework::ActionArgDef,
         enabled: bool,
     ) {
-        use semio_framework_core::ActionArgControl;
+        use semio_framework::ActionArgControl;
         let row_h = theme.control_height;
         let effective = self.effective_arg_value(window_id, action_id, arg);
         match &arg.control {
@@ -9136,7 +9136,7 @@ impl ShellState {
 
     /// 📝️ The current display string of a scalar arg — the live focus buffer if focused, else the
     /// effective staged/default value.
-    fn staged_arg_display_string(&self, window_id: &str, action_id: &str, arg: &semio_framework_core::ActionArgDef, input: &InputState<ActionDescriptor>, control_id: Option<&str>) -> String {
+    fn staged_arg_display_string(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, input: &InputState<ActionDescriptor>, control_id: Option<&str>) -> String {
         if let Some(control_id) = control_id {
             if input.focused_id.as_deref() == Some(control_id) {
                 return input.text_buffer.clone();
@@ -9162,7 +9162,7 @@ impl ShellState {
         bounds: Rect,
         window_id: &str,
         action_id: &str,
-        arg: &semio_framework_core::ActionArgDef,
+        arg: &semio_framework::ActionArgDef,
         display: &str,
         enabled: bool,
         focused_override: Option<bool>,
@@ -10371,18 +10371,18 @@ mod chrome_overlays_tour_tests {
         reset_chrome_overlay_state();
         let shell = ShellState::new(Vec::new(), String::new());
         chrome_start_introduction();
-        let step = semio_framework_core::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
-            .interact_ordered(vec![semio_framework_core::IntroductionInteraction::zoom("main", "Zoom"), semio_framework_core::IntroductionInteraction::pan("main", "Pan")]);
+        let step = semio_framework::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
+            .interact_ordered(vec![semio_framework::IntroductionInteraction::zoom("main", "Zoom"), semio_framework::IntroductionInteraction::pan("main", "Pan")]);
         let completed_indices = || CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.completed_interactions.clone())).unwrap_or_default();
         // Pan is index 1; out of order while zoom (index 0) hasn't completed — ignored.
-        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Pan(id) if id == "main"));
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Pan(id) if id == "main"));
         assert_eq!(completed_indices(), Vec::<usize>::new());
-        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Zoom(id) if id == "main"));
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Zoom(id) if id == "main"));
         assert_eq!(completed_indices(), vec![0]);
         // Repeating zoom after it's already completed is a no-operation.
-        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Zoom(id) if id == "main"));
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Zoom(id) if id == "main"));
         assert_eq!(completed_indices(), vec![0]);
-        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Pan(id) if id == "main"));
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Pan(id) if id == "main"));
         assert_eq!(completed_indices(), vec![0, 1]);
     }
     //#endregion Tour
@@ -10480,14 +10480,14 @@ mod chrome_overlays_tour_tests {
     //#region Placement
     #[test]
     fn placement_centers_when_no_anchor() {
-        let (x, y) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Auto, None, (320.0, 168.0), (800.0, 600.0));
+        let (x, y) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Auto, None, (320.0, 168.0), (800.0, 600.0));
         assert_eq!((x, y), ((800.0 - 320.0) / 2.0, (600.0 - 168.0) / 2.0));
     }
 
     #[test]
     fn placement_center_variant_ignores_the_anchor() {
         let anchor = Rect::new(10.0, 10.0, 50.0, 20.0);
-        let (x, y) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Center, Some(anchor), (320.0, 168.0), (800.0, 600.0));
+        let (x, y) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Center, Some(anchor), (320.0, 168.0), (800.0, 600.0));
         assert_eq!((x, y), ((800.0 - 320.0) / 2.0, (600.0 - 168.0) / 2.0));
     }
 
@@ -10496,7 +10496,7 @@ mod chrome_overlays_tour_tests {
         // Anchor near the top-left in a wide viewport: space_right (750) exceeds space_bottom (580),
         // space_top (0), and space_left (0), so "right" wins.
         let anchor = Rect::new(0.0, 0.0, 50.0, 20.0);
-        let (x, y) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Auto, Some(anchor), (100.0, 50.0), (800.0, 600.0));
+        let (x, y) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Auto, Some(anchor), (100.0, 50.0), (800.0, 600.0));
         assert_eq!(x, anchor.x + anchor.w + INTRODUCTION_INFO_BOX_GAP);
         assert!(y >= INTRODUCTION_INFO_BOX_GAP);
     }
@@ -10504,7 +10504,7 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn placement_explicit_side_is_honored_and_clamped_to_the_viewport() {
         let anchor = Rect::new(780.0, 10.0, 15.0, 15.0);
-        let (x, _) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Right, Some(anchor), (100.0, 50.0), (800.0, 600.0));
+        let (x, _) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Right, Some(anchor), (100.0, 50.0), (800.0, 600.0));
         assert!(x <= 800.0 - 100.0 - INTRODUCTION_INFO_BOX_GAP + 0.001);
     }
     //#endregion Placement
@@ -10722,7 +10722,7 @@ fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes:
         obj.insert("payload".into(), serde_json::Value::String(format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))));
         obj.insert("name".into(), serde_json::Value::String(name.to_string()));
     }
-    ActionDescriptor { controller_id: controller_id.to_string(), action: fallback_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: fallback_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
 /// 🧮️ Pure `ffmpeg` argument computation for D5 frame extraction (precedent: `animate/video/rs/lib.rs`'s
@@ -10835,7 +10835,7 @@ fn request_media_frames(
             obj.insert("index".into(), serde_json::json!(index));
             obj.insert("total".into(), serde_json::json!(total));
         }
-        actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: frame_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(frame_args)) });
+        actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: frame_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(frame_args)) });
     }
     let mut done_args = base_args;
     if let Some(obj) = done_args.as_object_mut() {
@@ -10843,7 +10843,7 @@ fn request_media_frames(
         obj.insert("frameCount".into(), serde_json::json!(total));
         obj.insert("sampledCount".into(), serde_json::json!(total));
     }
-    actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: done_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(done_args)) });
+    actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: done_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(done_args)) });
     let _ = std::fs::remove_dir_all(&scratch_dir);
     actions
 }
@@ -10925,9 +10925,9 @@ mod media_frames_tests {
         assert_eq!(descriptor.controller_id, "app.controller");
         assert_eq!(descriptor.action, "importVideoBytesPayload");
         let args = descriptor.args.unwrap();
-        assert_eq!(args.get("streamId").and_then(semio_framework_core::DslValue::as_str), Some("s1"));
-        assert_eq!(args.get("name").and_then(semio_framework_core::DslValue::as_str), Some("clip.mp4"));
-        assert!(args.get("payload").and_then(semio_framework_core::DslValue::as_str).is_some_and(|payload| payload.starts_with("data:application/octet-stream;base64,")));
+        assert_eq!(args.get("streamId").and_then(semio_framework::DslValue::as_str), Some("s1"));
+        assert_eq!(args.get("name").and_then(semio_framework::DslValue::as_str), Some("clip.mp4"));
+        assert!(args.get("payload").and_then(semio_framework::DslValue::as_str).is_some_and(|payload| payload.starts_with("data:application/octet-stream;base64,")));
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -10942,7 +10942,7 @@ mod media_frames_tests {
         let actions = request_media_frames("app.controller", "video/mp4", "importVideoFramePayload", "importVideoDone", "importVideoBytesPayload", 5, 200, 1600, 30.0, Some(&payload), Some(serde_json::json!({"streamId": "s1"})));
         assert_eq!(actions.len(), 1, "garbage payload never yields real frames: {actions:?}");
         assert_eq!(actions[0].action, "importVideoBytesPayload");
-        assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(semio_framework_core::DslValue::as_str), Some("s1"));
+        assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(semio_framework::DslValue::as_str), Some("s1"));
     }
 }
 //#endregion RequestMediaFrames

@@ -130,8 +130,8 @@
       "dependencies": {
         "@mdx-js/react": "^3.1.1",
         "@semio-tech/compose-react": "workspace:*",
-        "@semio-tech/framework-core": "workspace:*",
-        "@semio-tech/framework-os-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-os": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "fflate": "^0.8.2",
         "react": "^19.2.0",
@@ -346,7 +346,7 @@
       "name": "@semio-tech/animate-js",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
@@ -377,7 +377,7 @@
         "@semio-tech/cad-js-module-aec-building-energy": "workspace:*",
         "@semio-tech/cad-js-module-aec-building-structure": "workspace:*",
         "@semio-tech/cad-js-module-spatial-shape": "workspace:*",
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/s-3d-js": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
@@ -473,7 +473,7 @@
       },
     },
     "🧰️framework/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-core",
+      "name": "@semio-tech/framework",
       "version": "0.1.0",
     },
     "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust": {
@@ -518,7 +518,7 @@
         "@react-three/fiber": "^9.5.0",
         "@react-three/postprocessing": "^3.0.4",
         "@semio-tech/assets": "workspace:*",
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "@xstate/react": "^6.0.0",
         "@xyflow/react": "^12.10.0",
@@ -593,10 +593,10 @@
       "version": "0.1.0",
     },
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-os-core",
+      "name": "@semio-tech/framework-os",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/framework-math-js": "workspace:*",
       },
       "devDependencies": {
@@ -659,9 +659,9 @@
         "@react-three/fiber": "^9.5.0",
         "@semio-tech/assets": "workspace:*",
         "@semio-tech/flow-core": "workspace:*",
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/framework-editor-rs": "workspace:*",
-        "@semio-tech/framework-os-core": "workspace:*",
+        "@semio-tech/framework-os": "workspace:*",
         "@semio-tech/framework-surface-rs": "workspace:*",
         "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
@@ -687,7 +687,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/assets": "workspace:*",
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -702,8 +702,8 @@
       "name": "@semio-tech/framework-os-dev",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
-        "@semio-tech/framework-os-core": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-os": "workspace:*",
         "@semio-tech/framework-renderer-react": "workspace:*",
         "@semio-tech/framework-renderer-wgpu": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
@@ -1903,13 +1903,13 @@
 
     "@semio-tech/flow-module-brep": ["@semio-tech/flow-module-brep@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep"],
 
-    "@semio-tech/framework-core": ["@semio-tech/framework-core@workspace:🧰️framework/📦️packages/🟦️typescript"],
+    "@semio-tech/framework": ["@semio-tech/framework@workspace:🧰️framework/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-editor-rs": ["@semio-tech/framework-editor-rs@workspace:🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust"],
 
     "@semio-tech/framework-math-js": ["@semio-tech/framework-math-js@workspace:🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript"],
 
-    "@semio-tech/framework-os-core": ["@semio-tech/framework-os-core@workspace:🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"],
+    "@semio-tech/framework-os": ["@semio-tech/framework-os@workspace:🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-os-dev": ["@semio-tech/framework-os-dev@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"],
 

@@ -1,6 +1,6 @@
 //! 🧩️ CAD spatial-shape extension — contributes shape stat/property computers to `cad-play`.
 
-use semio_framework_core::Contribution;
+use semio_framework::Contribution;
 use semio_framework_plugin::ExtensionBundle;
 use serde::Serialize;
 

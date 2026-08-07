@@ -2,7 +2,7 @@
 
 use imperative_extension_sdk::ImperativeExtensionManifest;
 use neural_engine::{node_hash, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry};
-use semio_framework_core::{parse_contributions, Contribution, ProgramContributionEntry};
+use semio_framework::{parse_contributions, Contribution, ProgramContributionEntry};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 

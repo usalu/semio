@@ -11,7 +11,7 @@
 // #region 🔌️Adapters
 // Imports MUST include VS Code API, Node.js utilities, and compose validation.
 
-import { ephemeralBox, ephemeralMap } from "@semio-tech/framework-core";
+import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { exec, execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";

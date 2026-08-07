@@ -1133,6 +1133,45 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["⚙️engine", "📚️examples"]);
   });
 
+  test("describes the per-example assets/tests shape instead of plural facet dirs", () => {
+    const taxonomy = loadTaxonomy();
+    expect(taxonomy.exampleAssetsDirName).toBe("🖼️assets");
+    expect(taxonomy.exampleTestsDirName).toBe("🧪️tests");
+    expect(taxonomy.exampleSlugPattern).toBe("^.+\\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$");
+    expect(taxonomy.exampleAssetKindPrefixes).toEqual({
+      dsl: "🗣️",
+      op: "🔧️",
+      spr: "📡️",
+      pack: "🎒️",
+      diff: "🔺️",
+      cmd: "🎮️",
+    });
+    expect(taxonomy.exampleMediaKindPrefixes).toEqual({
+      image: "🖼️",
+      mesh: "🧊️",
+      document: "📄️",
+      video: "🎬️",
+    });
+    expect(taxonomy.exampleLeafFilenames).toEqual({
+      "🦀️rust": "🦀️component.rs",
+      "🟦️typescript": "🟦️component.ts",
+    });
+    expect(taxonomy.exampleTestLeafFilenames).toEqual({
+      "🦀️rust": "🦀️test.rs",
+      "🟦️typescript": "🟦️test.ts",
+    });
+    expect(taxonomy.forbiddenExampleSlugs).toEqual(["♻️reuse", "♻️default", "📕️default", "♻️semio"]);
+    expect(taxonomy.forbiddenExamplePluralDirs).toEqual(["🎒️packs", "🗣️dsls", "🔧️ops", "📡️sprs"]);
+    expect(taxonomy.appChildDirs).toContain("📚️examples");
+    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🎒️packs");
+    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🗣️dsls");
+    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🔧️ops");
+    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("📡️sprs");
+    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🖼️assets");
+    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🧪️tests");
+    expect("exampleComponentDirs" in taxonomy).toBe(false);
+  });
+
   test("forbids both the plural and singular implementations spellings", () => {
     expect(loadTaxonomy().forbiddenPathSegments).toEqual(["⚡️implementations", "⚡️implementation"]);
   });
@@ -1185,6 +1224,21 @@ describe("validateTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
     expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
+  });
+
+  test("rejects plural example component dirs in taxonomyLeafParentDirs", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = {
+      ...taxonomy,
+      taxonomyLeafParentDirs: [...taxonomy.taxonomyLeafParentDirs, "🎒️packs"],
+    };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("🎒️packs"))).toBe(true);
+  });
+
+  test("rejects missing example slug pattern", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, exampleSlugPattern: "" };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("exampleSlugPattern"))).toBe(true);
   });
 });
 

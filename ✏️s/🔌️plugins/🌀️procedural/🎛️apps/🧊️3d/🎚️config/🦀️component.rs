@@ -5,7 +5,7 @@
 //! the derived generation preview live here rather than under `🗿️artifacts/`, since none of it survives
 //! into the `.procedural3d` document.
 
-use flow_core::CameraJson;
+use flow::CameraJson;
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
 

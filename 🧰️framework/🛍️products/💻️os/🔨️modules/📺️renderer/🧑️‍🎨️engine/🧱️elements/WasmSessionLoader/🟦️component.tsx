@@ -33,7 +33,7 @@ const engineSessionModulePromises = new Map<string, Promise<EngineSessionWasmMod
 
 /** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: deliberately NOT wired through the framework core's
  * `createLeasePool` — this cache's `dispose` would be a no-op. A wasm-bindgen ES-module engine is a
- * module-scope singleton in its realm (`node_modules/@semio-tech/flow-core/flow_core.js`'s cached
+ * module-scope singleton in its realm (`node_modules/@semio-tech/flow-core/flow.js`'s cached
  * `wasm`/`wasmInstance`, `__wbg_init`/`initSync` both early-return once set); there is no deinit
  * export, and `WebAssembly.Memory` never shrinks. Once instantiated, an engine's compiled code and
  * memory high-water mark are pinned for the document's lifetime — that ceiling is real and cannot be

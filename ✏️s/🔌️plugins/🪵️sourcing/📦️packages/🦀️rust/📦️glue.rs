@@ -106,9 +106,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "sourcing", label: "Sourcing", version: "0.1.0",
-    setup: artifacts::curate::engine::register,
-    apps: [ apps::curate::create_sourcing_curate_app => apps::curate::SourcingCurateApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

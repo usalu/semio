@@ -15,7 +15,7 @@
       "@semio-tech/compose-react/*": ["../../react/logic/*"],
       "@semio-tech/compose-rs-wasm": ["../../rs/pkg/compose.d.ts"],
       "@semio-tech/compose-rs-wasm/*": ["../../rs/pkg/*"],
-      "@semio-tech/framework-core": ["../../../../../framework/core/index.ts"],
+      "@semio-tech/framework": ["../../../../../framework/core/index.ts"],
       "@semio-tech/framework-platform-core": ["../../../../../framework/product/platform/core/index.ts"],
       "@semio-tech/framework-platform-renderer-react": ["../../../../../framework/product/platform/renderer/react/index.tsx"],
       "@semio-tech/ui-react": ["../../../../../framework/ui/js/react/index.tsx"],

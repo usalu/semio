@@ -24,7 +24,7 @@ use crate::artifacts::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::artifacts::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
 use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dOperation, Puzzle2dPlayProjection};
 use crate::artifacts::puzzle2d::Puzzle2dProjection;
-use semio_framework_core::kernel::UiDirtyScope;
+use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
@@ -1165,7 +1165,7 @@ fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
 /// state, and this import path produces a bare document with no live app instance to receive it.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 #[allow(clippy::unnecessary_wraps, reason = "the fallible signature is fixed by `semio_framework_os::register_dwg_import_handler`; puzzle-2d simply has no failure mode.")]
-fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
+fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
     Ok(default_empty_fixture())
 }
 
@@ -1532,7 +1532,7 @@ mod tests {
     /// `"camera"` key at all, regardless of the drawing's extents.
     #[test]
     fn dwg_import_returns_empty_board_with_no_camera_field() {
-        let drawing = semio_framework_core::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_framework_core::DwgDrawing::default() };
+        let drawing = semio_framework::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_framework::DwgDrawing::default() };
         let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
         assert_eq!(fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
         assert!(fixture_nodes(&fixture).is_empty());

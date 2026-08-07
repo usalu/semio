@@ -10,7 +10,7 @@
     "./globals.css": "../../🎛️apps/🎬️present/📺️renderer/⚛️react/🎨️globals.css"
   },
   "dependencies": {
-    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

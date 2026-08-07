@@ -4,7 +4,7 @@ use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::apps::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use crate::artifacts::procedural2d::engine::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
 use crate::artifacts::procedural2d::Procedural2dDocument;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::Value;
 

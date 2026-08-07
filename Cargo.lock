@@ -6568,16 +6568,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-compiler"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "rustybuzz",
- "semio-framework-os-kernel",
-]
-
-[[package]]
-name = "semio-framework-core"
+name = "semio-framework"
 version = "0.1.0"
 dependencies = [
  "gltf",
@@ -6589,6 +6580,15 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
  "ts-rs",
+]
+
+[[package]]
+name = "semio-framework-compiler"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "rustybuzz",
+ "semio-framework-os-kernel",
 ]
 
 [[package]]
@@ -6636,7 +6636,7 @@ dependencies = [
  "pretty_assertions",
  "resvg",
  "rusqlite",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
@@ -6657,17 +6657,18 @@ name = "semio-framework-os-flow"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "semio-framework-core",
+ "semio-framework",
+ "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-s-2d",
  "semio-s-3d",
  "semio-s-plugin-flow-extension-brep",
- "semio-s-plugin-flow-extension-core",
  "semio-s-plugin-flow-extension-dictionary",
  "semio-s-plugin-flow-extension-list",
  "semio-s-plugin-flow-extension-logic",
  "semio-s-plugin-flow-extension-math",
+ "semio-s-plugin-flow-extension-primitive",
  "semio-s-plugin-flow-extension-text",
  "serde",
  "serde_json",
@@ -6682,8 +6683,8 @@ dependencies = [
  "fontdb",
  "image",
  "js-sys",
+ "semio-framework",
  "semio-framework-compiler",
- "semio-framework-core",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-ui",
@@ -6772,7 +6773,7 @@ dependencies = [
  "pollster",
  "resvg",
  "rfd",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-editor",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
@@ -6802,7 +6803,7 @@ name = "semio-framework-os-run"
 version = "0.1.0"
 dependencies = [
  "pretty_assertions",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-hash",
  "semio-framework-os",
  "semio-framework-os-kernel",
@@ -6818,7 +6819,7 @@ name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "serde",
@@ -6831,7 +6832,7 @@ dependencies = [
 name = "semio-framework-plugin-host"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "serde",
@@ -6949,7 +6950,7 @@ dependencies = [
  "geo",
  "pollster",
  "rayon",
- "semio-framework-core",
+ "semio-framework",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6966,7 +6967,7 @@ dependencies = [
  "futures",
  "pollster",
  "rayon",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "serde",
@@ -6978,7 +6979,7 @@ dependencies = [
 name = "semio-s-imperative"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-s-imperative-extension-sdk",
@@ -6990,7 +6991,7 @@ dependencies = [
 name = "semio-s-imperative-extension-sdk"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel-neural-engine",
  "serde",
  "serde_json",
@@ -7015,7 +7016,7 @@ dependencies = [
  "image",
  "kurbo 0.13.1",
  "pollster",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-hash",
  "semio-framework-math",
  "semio-framework-os",
@@ -7062,7 +7063,7 @@ name = "semio-s-plugin-cad"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-kernel",
@@ -7078,7 +7079,7 @@ dependencies = [
 name = "semio-s-plugin-cad-aec-building"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7089,7 +7090,7 @@ dependencies = [
 name = "semio-s-plugin-cad-aec-building-energy"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7100,7 +7101,7 @@ dependencies = [
 name = "semio-s-plugin-cad-aec-building-structure"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7111,7 +7112,7 @@ dependencies = [
 name = "semio-s-plugin-cad-spatial-shape"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7153,7 +7154,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "image",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7190,6 +7191,7 @@ name = "semio-s-plugin-energy"
 version = "0.1.0"
 dependencies = [
  "semio-framework-math",
+ "semio-framework-plugin",
  "serde",
 ]
 
@@ -7197,7 +7199,7 @@ dependencies = [
 name = "semio-s-plugin-fem"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7217,11 +7219,11 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
- "semio-s-plugin-flow-extension-core",
  "semio-s-plugin-flow-extension-dictionary",
  "semio-s-plugin-flow-extension-list",
  "semio-s-plugin-flow-extension-logic",
  "semio-s-plugin-flow-extension-math",
+ "semio-s-plugin-flow-extension-primitive",
  "semio-s-plugin-flow-extension-text",
  "serde",
  "serde_json",
@@ -7231,7 +7233,7 @@ dependencies = [
 name = "semio-s-plugin-flow-extension-bim"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7244,7 +7246,7 @@ name = "semio-s-plugin-flow-extension-brep"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7255,22 +7257,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-plugin-flow-extension-core"
-version = "0.1.0"
-dependencies = [
- "semio-framework-core",
- "semio-framework-os-flow",
- "semio-framework-os-kernel-neural-engine",
- "semio-framework-plugin",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-plugin-flow-extension-dictionary"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7282,7 +7272,7 @@ dependencies = [
 name = "semio-s-plugin-flow-extension-draw"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7295,7 +7285,7 @@ dependencies = [
 name = "semio-s-plugin-flow-extension-list"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7307,7 +7297,7 @@ dependencies = [
 name = "semio-s-plugin-flow-extension-logic"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7319,7 +7309,19 @@ dependencies = [
 name = "semio-s-plugin-flow-extension-math"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-primitive"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7331,7 +7333,7 @@ dependencies = [
 name = "semio-s-plugin-flow-extension-text"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7343,7 +7345,7 @@ dependencies = [
 name = "semio-s-plugin-forms"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
@@ -7354,7 +7356,7 @@ dependencies = [
 name = "semio-s-plugin-gis"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7368,7 +7370,7 @@ dependencies = [
 name = "semio-s-plugin-imperative"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7383,7 +7385,7 @@ dependencies = [
 name = "semio-s-plugin-imperative-control"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7392,10 +7394,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-plugin-imperative-core"
+name = "semio-s-plugin-imperative-effect"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7407,7 +7409,7 @@ dependencies = [
 name = "semio-s-plugin-imperative-logic"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7419,7 +7421,7 @@ dependencies = [
 name = "semio-s-plugin-imperative-math"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7431,7 +7433,7 @@ dependencies = [
 name = "semio-s-plugin-imperative-text"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7449,7 +7451,7 @@ dependencies = [
  "js-sys",
  "parley",
  "png 0.17.16",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7486,7 +7488,7 @@ dependencies = [
 name = "semio-s-plugin-mathematical"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7533,7 +7535,7 @@ dependencies = [
 name = "semio-s-plugin-playbook-procedural"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7545,7 +7547,7 @@ dependencies = [
 name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
@@ -7565,7 +7567,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "blake3",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7579,7 +7581,7 @@ dependencies = [
 name = "semio-s-plugin-process-concrete"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7590,7 +7592,7 @@ dependencies = [
 name = "semio-s-plugin-process-metal"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7601,7 +7603,7 @@ dependencies = [
 name = "semio-s-plugin-process-robotic"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7612,7 +7614,7 @@ dependencies = [
 name = "semio-s-plugin-process-wood"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7625,7 +7627,7 @@ version = "0.1.0"
 dependencies = [
  "nalgebra 0.33.3",
  "parry3d",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-infinite",
@@ -7642,7 +7644,7 @@ dependencies = [
 name = "semio-s-plugin-raster"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7670,7 +7672,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "png 0.17.16",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-kernel",
@@ -7684,7 +7686,7 @@ name = "semio-s-plugin-sequence"
 version = "0.1.0"
 dependencies = [
  "js-sys",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7703,7 +7705,7 @@ dependencies = [
 name = "semio-s-plugin-shooting"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7716,7 +7718,7 @@ dependencies = [
 name = "semio-s-plugin-sourcing"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
@@ -7728,7 +7730,7 @@ dependencies = [
 name = "semio-s-plugin-sourcing-beams"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
  "serde_json",
@@ -7739,7 +7741,7 @@ dependencies = [
 name = "semio-s-plugin-sourcing-slabs"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
  "serde_json",
@@ -7750,7 +7752,7 @@ dependencies = [
 name = "semio-s-plugin-sourcing-windows"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
  "serde_json",
@@ -7762,7 +7764,7 @@ name = "semio-s-plugin-space"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7776,7 +7778,7 @@ name = "semio-s-plugin-trinity"
 version = "0.1.0"
 dependencies = [
  "js-sys",
- "semio-framework-core",
+ "semio-framework",
  "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-infinite",

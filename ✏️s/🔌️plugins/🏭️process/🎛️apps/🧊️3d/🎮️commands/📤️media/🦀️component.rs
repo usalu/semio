@@ -3,7 +3,7 @@
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigOperation};
 use crate::artifacts::process3d::engine::{export_process3d_model, import_process3d_model};
 use crate::artifacts::process3d::{op::Process3dOperation, Process3dDocument};
-use semio_framework_core::kernel::HostEffect;
+use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

@@ -1,6 +1,6 @@
 //! 📦 STL/OBJ/GLB/DWG mesh import/export bridged to native B-Rep.
 //!
-//! Triangle soups interchange through `semio_framework_core` codecs where available; solids
+//! Triangle soups interchange through `semio_framework` codecs where available; solids
 //! tessellate via [`crate::brep::tessellate`] and import as one planar face per triangle
 //! (shell assembly until [`crate::brep::sew`] can weld shared edges).
 
@@ -14,7 +14,7 @@ use crate::brep::tessellate::tessellate_solid;
 use crate::brep::tolerance::Tol;
 use crate::brep::topo::Body;
 use crate::brep::vec::{Pnt3, Vec3};
-use semio_framework_core::{
+use semio_framework::{
     dwg_drawing_to_mesh, dwg_from_bytes, dwg_to_bytes, mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData,
     MeshExporter, MeshImporter,
 };
@@ -193,7 +193,7 @@ pub fn import_glb(data: &[u8]) -> Result<TriangleMesh, KernelError> {
 /// 📦 Encodes DWG mesh bytes from a [`TriangleMesh`].
 pub fn export_dwg(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
     let data = mesh_to_mesh_data(mesh);
-    let drawing = semio_framework_core::mesh_to_dwg_drawing(&data);
+    let drawing = semio_framework::mesh_to_dwg_drawing(&data);
     dwg_to_bytes(&drawing).map_err(KernelError::Operation)
 }
 

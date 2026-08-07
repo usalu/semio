@@ -5,7 +5,7 @@ use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOp
 use crate::artifacts::procedural3d::engine::widget_id_from_instance_id;
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{merge_world_selection_ids, ConfigView, DocumentView, Emit, Fault, SelectionSet};
 use serde::{Deserialize, Serialize};
 

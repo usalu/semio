@@ -104,9 +104,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "dag", label: "DAG", version: "0.1.0",
-    setup: artifacts::dag::engine::register,
-    apps: [ apps::dag::create_dag_app => apps::dag::DagPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

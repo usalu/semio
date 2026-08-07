@@ -19,4 +19,5 @@ path = "📦️glue.rs"
 
 [dependencies]
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
+semio-framework-plugin = { workspace = true }
 serde = { workspace = true }

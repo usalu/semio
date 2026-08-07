@@ -58,7 +58,7 @@ pub struct SvgSnippet {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum CompileError {
-    Syntax(dsl_core::TextError),
+    Syntax(os_dsl::TextError),
 }
 
 impl std::fmt::Display for CompileError {

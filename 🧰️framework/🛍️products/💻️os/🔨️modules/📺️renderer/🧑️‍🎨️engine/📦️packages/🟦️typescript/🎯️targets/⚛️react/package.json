@@ -18,8 +18,8 @@
   },
   "dependencies": {
     "@react-three/fiber": "^9.5.0",
-    "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/framework-editor-rs": "workspace:*",
     "@semio-tech/framework-surface-rs": "workspace:*",
     "@semio-tech/flow-core": "workspace:*",

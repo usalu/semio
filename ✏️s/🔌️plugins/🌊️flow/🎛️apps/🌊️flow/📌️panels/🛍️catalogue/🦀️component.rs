@@ -6,7 +6,7 @@ use crate::apps::flow::flow_action;
 use crate::apps::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
 use crate::artifacts::flow::engine::{flow_widget_descriptor, flow_widget_drag_json, host_from_fixture};
 use crate::artifacts::flow::FlowFixture;
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{
     tree_item_with_action, tree_item_with_action_draggable, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,

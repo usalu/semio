@@ -21,7 +21,7 @@ import {
   type PluginUiRefreshSectionResponse,
   SemioFaultError,
   acquirePluginModule,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/framework";
 import {
   AppChannelClient,
   type AppFrameValue,
@@ -32,7 +32,7 @@ import {
   encodePackValue,
   faultDisplayMessage,
   type SectionProbe,
-} from "@semio-tech/framework-os-core";
+} from "@semio-tech/framework-os";
 import { type PluginManifest, type ViewModel } from "../Shell/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -95,7 +95,7 @@ const SECTION_KIND_LABELS = 5;
 /** 🐢️ `PluginUiRefreshSectionRequest.hash`/`PluginUiRefreshSectionResponse.hash` are hex strings
  * (opaque to this file — never parsed by Rust, only echoed back on the next request); the wire
  * `SectionProbe.hash`/`AppFrame.UiSection.hash` are plain `number` u64s (the same JS-`number`
- * convention `readVarintU64`/`writeVarintU64` already use throughout `@semio-tech/framework-os-core`).
+ * convention `readVarintU64`/`writeVarintU64` already use throughout `@semio-tech/framework-os`).
  * These two converters are this adapter's own round-trip only — any consistent base works. */
 function hashHexToWire(hex: string | undefined): number | null {
   if (hex === undefined) return null;

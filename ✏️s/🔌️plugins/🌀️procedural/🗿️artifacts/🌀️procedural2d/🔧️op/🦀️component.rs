@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::procedural2d::diff::Procedural2dDiff;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dDocument};
-use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{invert_generation_operation, GenerationOperation};
 use protocol::Operation;
 use serde::{Deserialize, Serialize};

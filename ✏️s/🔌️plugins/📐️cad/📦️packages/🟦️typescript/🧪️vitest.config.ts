@@ -15,7 +15,7 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
-const DOMAIN_FILES = ["🔨️modules/🫀️core/🟦️component.ts", "🔨️modules/📺️renderer/🟦️component.tsx", "🔨️modules/📐️brepjs/🟦️component.ts", "🔨️modules/🔍️query/🟦️component.ts", "🔨️modules/🎰️stately/🟦️component.ts", "🔨️modules/🏃️runtime/🟦️component.ts"];
+const DOMAIN_FILES = ["🔨️modules/🟦️index.ts", "🔨️modules/📺️renderer/🟦️component.tsx", "🔨️modules/📐️brepjs/🟦️component.ts", "🔨️modules/🔍️query/🟦️component.ts", "🔨️modules/🎰️stately/🟦️component.ts", "🔨️modules/🏃️runtime/🟦️component.ts"];
 
 /** @emoji 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 6 folded domain files (former cad-js-{core,renderer,kernel-brepjs,query,machine-stately,runtime} configs merged; renderer alone needs jsdom, the rest run in `node`). */
 export default defineConfig({

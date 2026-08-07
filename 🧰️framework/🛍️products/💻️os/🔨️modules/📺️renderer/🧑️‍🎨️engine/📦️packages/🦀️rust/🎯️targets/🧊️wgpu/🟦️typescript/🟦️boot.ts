@@ -2,8 +2,8 @@
 /** @emoji 🧊️ Trunk boot glue — loads wasm programs and starts the wgpu renderer. */
 // #endregion 🧲️Header
 
-import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework-core";
-import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
+import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework";
+import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLAYGROUND_SESSION } from "../../../../../../../🧑️‍💻️dev/🤖️generated/🟦️session.ts";
 
 await new Promise<void>((resolve) => {

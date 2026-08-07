@@ -15,7 +15,7 @@ use crate::apps::procedural3d::terminology::procedural3d_labels;
 use crate::artifacts::procedural3d::engine::procedural3d_io;
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
-use flow_core::FlowEvalSession;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
 use store::EngineHandles;
 use serde_json::Value;
@@ -100,13 +100,13 @@ pub struct Procedural3dPlayApp;
 
 /// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
 /// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
-fn parse_flow_camera_json(args: &Value) -> flow_core::CameraJson {
+fn parse_flow_camera_json(args: &Value) -> flow::CameraJson {
     if let Some(camera) = args.get("camera") {
-        if let Ok(parsed) = serde_json::from_value::<flow_core::CameraJson>(camera.clone()) {
+        if let Ok(parsed) = serde_json::from_value::<flow::CameraJson>(camera.clone()) {
             return parsed;
         }
     }
-    flow_core::CameraJson { x: args.get("x").and_then(Value::as_f64).unwrap_or(0.0), y: args.get("y").and_then(Value::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(Value::as_f64).unwrap_or(1.0) }
+    flow::CameraJson { x: args.get("x").and_then(Value::as_f64).unwrap_or(0.0), y: args.get("y").and_then(Value::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(Value::as_f64).unwrap_or(1.0) }
 }
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
@@ -172,8 +172,8 @@ impl DocumentApp for Procedural3dPlayApp {
                 for (target_id, value) in &object {
                     let Some(number) = value.as_f64() else { continue };
                     let Some((index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
-                    if let flow_core::Widget::InputSlider { id, min, max, step, .. } = widget {
-                        operations.push(Procedural3dOperation::SetWidget { index, widget: flow_core::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
+                    if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
+                        operations.push(Procedural3dOperation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
                     }
                 }
                 Ok(Emit::operations(operations))
@@ -310,7 +310,7 @@ impl DocumentApp for Procedural3dPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
     fn pending_effects(doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
         let mut session = FlowEvalSession::default();
-        let host = flow_core::flow_host_with_session(&doc.projection.fixture, &session);
+        let host = flow::flow_host_with_session(&doc.projection.fixture, &session);
         if session.sync(&host) {
             vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
         } else {
@@ -609,7 +609,7 @@ mod tests {
             Procedural3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "generation-1".into() }),
             Procedural3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
             Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: dsl::DslValue::Number(5.0) }),
-            Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: flow_core::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
+            Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
             Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: vec!["a".into()] }),
             Procedural3dCommand::SelectNode(select_node::SelectNode { node_ids: vec!["a".into()] }),
             Procedural3dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["a".into()] }),

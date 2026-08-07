@@ -5,9 +5,25 @@ extern crate self as flow;
 extern crate self as flow_extension_wasm;
 extern crate self as flow_extension_sdk;
 
+//#region 🔖️KernelModuleAliases
+/// 🧬️ Components still use former kernel path names (`crate::os_store` / `os_dsl` / `os_spr`).
+pub use semio_framework_os_kernel::os_store;
+pub use semio_framework_os_kernel::os_dsl;
+pub use semio_framework_os_kernel::os_spr;
+pub use semio_framework_os_kernel::os_vcs;
+pub use semio_framework_os_kernel::os_pack;
+//#endregion 🔖️KernelModuleAliases
+
+//#region 🔖️InfiniteAlias
+/// ♾️ Flow components use `crate::infinite::{board,canvas}` paths.
+pub use semio_framework_os_infinite as infinite;
+//#endregion 🔖️InfiniteAlias
+
+//#region 🔖️DagCanvasNeural
 pub use crate::infinite::board::ports::directed::dag as dag;
 pub use crate::infinite::canvas as canvas;
 pub use neural_engine as neural;
+//#endregion 🔖️DagCanvasNeural
 
 #[path = "../../📄️document/🦀️component.rs"]
 pub mod document;

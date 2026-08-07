@@ -1,0 +1,188 @@
+[
+  {
+    "plugin": "🔱️trinity",
+    "status": "macro-migrated",
+    "id": "trinity",
+    "apps": 2
+  },
+  {
+    "plugin": "📸️remodel",
+    "status": "macro-migrated",
+    "id": "remodel",
+    "apps": 1
+  },
+  {
+    "plugin": "🖨️raster",
+    "status": "macro-migrated",
+    "id": "raster",
+    "apps": 1
+  },
+  {
+    "plugin": "🌊️flow",
+    "status": "macro-migrated",
+    "id": "flow",
+    "apps": 1
+  },
+  {
+    "plugin": "🏭️process",
+    "status": "macro-migrated",
+    "id": "process",
+    "apps": 1
+  },
+  {
+    "plugin": "📕️norm",
+    "status": "macro-migrated",
+    "id": "norm",
+    "apps": 15
+  },
+  {
+    "plugin": "📐️cad",
+    "status": "macro-migrated",
+    "id": "cad",
+    "apps": 1
+  },
+  {
+    "plugin": "🎪️demonstrator",
+    "status": "demonstrator-migrated"
+  },
+  {
+    "plugin": "🧱️block",
+    "status": "macro-migrated",
+    "id": "block",
+    "apps": 3
+  },
+  {
+    "plugin": "🕸️dag",
+    "status": "macro-migrated",
+    "id": "dag",
+    "apps": 1
+  },
+  {
+    "plugin": "💡️reasoning",
+    "status": "macro-migrated",
+    "id": "reasoning-mindmap",
+    "apps": 1
+  },
+  {
+    "plugin": "🎬️sequence",
+    "status": "macro-migrated",
+    "id": "sequence",
+    "apps": 1
+  },
+  {
+    "plugin": "✒️writer",
+    "status": "macro-migrated",
+    "id": "writer",
+    "apps": 1
+  },
+  {
+    "plugin": "🎞️animate",
+    "status": "macro-migrated",
+    "id": "animate",
+    "apps": 1
+  },
+  {
+    "plugin": "🪐️space",
+    "status": "space-migrated"
+  },
+  {
+    "plugin": "🌀️procedural",
+    "status": "macro-migrated",
+    "id": "procedural",
+    "apps": 2
+  },
+  {
+    "plugin": "🌿️vcs",
+    "status": "macro-migrated",
+    "id": "vcs",
+    "apps": 1
+  },
+  {
+    "plugin": "🌍️gis",
+    "status": "macro-migrated",
+    "id": "gis",
+    "apps": 2
+  },
+  {
+    "plugin": "📜️imperative",
+    "status": "macro-migrated",
+    "id": "imperative",
+    "apps": 1
+  },
+  {
+    "plugin": "🪵️sourcing",
+    "status": "macro-migrated",
+    "id": "sourcing",
+    "apps": 1
+  },
+  {
+    "plugin": "🗒️note",
+    "status": "macro-migrated",
+    "id": "note",
+    "apps": 1
+  },
+  {
+    "plugin": "📋️forms",
+    "status": "macro-migrated",
+    "id": "forms",
+    "apps": 1
+  },
+  {
+    "plugin": "🏛️architect",
+    "status": "macro-migrated",
+    "id": "architect",
+    "apps": 1
+  },
+  {
+    "plugin": "🎥️shooting",
+    "status": "macro-migrated",
+    "id": "shooting",
+    "apps": 1
+  },
+  {
+    "plugin": "➗️mathematical",
+    "status": "macro-migrated",
+    "id": "mathematical",
+    "apps": 1
+  },
+  {
+    "plugin": "📏️layout",
+    "status": "macro-migrated",
+    "id": "layout",
+    "apps": 1
+  },
+  {
+    "plugin": "🧩️puzzle",
+    "status": "macro-migrated",
+    "id": "puzzle",
+    "apps": 3
+  },
+  {
+    "plugin": "🏗️fem",
+    "status": "macro-migrated",
+    "id": "fem",
+    "apps": 2
+  },
+  {
+    "plugin": "🖍️draw",
+    "status": "macro-migrated",
+    "id": "draw",
+    "apps": 1
+  },
+  {
+    "plugin": "📖️playbook",
+    "status": "macro-migrated",
+    "id": "playbook-play",
+    "apps": 1
+  },
+  {
+    "plugin": "💠️lowpoly",
+    "status": "macro-migrated",
+    "id": "lowpoly",
+    "apps": 1
+  },
+  {
+    "plugin": "🔋️energy",
+    "status": "energy-migrated"
+  }
+]

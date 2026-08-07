@@ -61,7 +61,7 @@ import {
 // this barrel, never straight from "@semio-tech/ui-styling") can resolve these — a bare `import {...}
 // from "@semio-tech/ui-styling"` above does not itself make a name part of this module's public surface.
 export { resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, themeColorVar, tokenVar, uiSpacingPx };
-import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, effectiveActionArgs, missingRequiredArgs, SHELL_LOCALES, SHELL_TERMINOLOGIES, type ActionArgDef, type CanvasHoverFocus, type CanvasPickRequest, type CanvasPickTarget, type DialogDefinition, type DockSkeleton, type DockTabSkeleton, type IntroductionCursor, type IntroductionDefinition, type IntroductionDemonstration, type IntroductionGesture, type IntroductionKeyModifier, type IntroductionLogo, type IntroductionPlacement, type IntroductionPoint, type IntroductionStepDefinition, type ShellLocale, type ShellTerminology, type StoragePort, createBrowserStoragePort, createMemoryStoragePort, panelTabFirstDraggableElementId, panelTabElementId, windowElementId, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, TUTORIAL_CONVERGE_MS, type TutorialDefinition, type TutorialChapter, type TutorialUiSnapshot, type TutorialUiChange, type TutorialCameraKeyframe, type TutorialCameraState, type TutorialEasing, type TutorialEvent, type TutorialDocumentEvent, type TutorialGestureCue, type TutorialOverlayRect, type WindowLayout, ephemeralBox, ephemeralMap, ephemeralSet } from "@semio-tech/framework-core";
+import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, effectiveActionArgs, missingRequiredArgs, SHELL_LOCALES, SHELL_TERMINOLOGIES, type ActionArgDef, type CanvasHoverFocus, type CanvasPickRequest, type CanvasPickTarget, type DialogDefinition, type DockSkeleton, type DockTabSkeleton, type IntroductionCursor, type IntroductionDefinition, type IntroductionDemonstration, type IntroductionGesture, type IntroductionKeyModifier, type IntroductionLogo, type IntroductionPlacement, type IntroductionPoint, type IntroductionStepDefinition, type ShellLocale, type ShellTerminology, type StoragePort, createBrowserStoragePort, createMemoryStoragePort, panelTabFirstDraggableElementId, panelTabElementId, windowElementId, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, TUTORIAL_CONVERGE_MS, type TutorialDefinition, type TutorialChapter, type TutorialUiSnapshot, type TutorialUiChange, type TutorialCameraKeyframe, type TutorialCameraState, type TutorialEasing, type TutorialEvent, type TutorialDocumentEvent, type TutorialGestureCue, type TutorialOverlayRect, type WindowLayout, ephemeralBox, ephemeralMap, ephemeralSet } from "@semio-tech/framework";
 import * as dagre from "dagre";
 import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -846,9 +846,9 @@ export type CanvasPickMenuProps = {
   readonly title?: UiLabel;
 };
 
-export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework-core";
-export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "@semio-tech/framework-core";
-export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework-core";
+export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework";
+export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "@semio-tech/framework";
+export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework";
 
 /** @emoji 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
@@ -1838,7 +1838,7 @@ export { ChromeControlHint };
 // #region 🔑️Schema & Keys
 // Type/key-derivation machinery: locale codes, label shapes, the deep dot-path key type, and compile-time key-coverage checks.
 
-/** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework-core`'s
+/** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework`'s
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 // #region UiLabel
 import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️UiLabel/🟦️component.tsx";

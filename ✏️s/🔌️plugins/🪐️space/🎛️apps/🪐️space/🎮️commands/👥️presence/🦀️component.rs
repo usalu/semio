@@ -20,7 +20,7 @@ pub mod presence_heartbeat {
     /// declare `None` `ui_scope` so it never triggers a full-shell `refresh-ui` for the sending client.
     pub fn handle(payload: &PresenceHeartbeat, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
         let config_operations = vec![SpaceConfigOperation::SetClient { client_id: Some(payload.client_id.clone()), client_name: Some(payload.name.clone()) }];
-        Ok(Emit { config_operations, ui_scope: semio_framework_core::kernel::UiDirtyScope::None, ..Default::default() })
+        Ok(Emit { config_operations, ui_scope: semio_framework::kernel::UiDirtyScope::None, ..Default::default() })
     }
 }
 //#endregion 🔖️PresenceHeartbeat
@@ -41,7 +41,7 @@ mod tests {
         use crate::apps::space::testkit::studio_emit;
         use crate::apps::space::SpaceCommand;
         use crate::demo_space_projection;
-        use semio_framework_core::kernel::UiDirtyScope;
+        use semio_framework::kernel::UiDirtyScope;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let emit = studio_emit(&projection, &config, &SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() })).expect("handle");

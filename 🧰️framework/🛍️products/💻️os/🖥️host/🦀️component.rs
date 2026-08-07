@@ -11,7 +11,7 @@ pub mod host {
     use crate::instance::{create_os_id, OsInstanceState};
     use crate::registry::{os_app_registration, resolve_os_app_definition, PluginRegistry};
     use protocol::Operation;
-    use semio_framework_core::{AppDefinition, Contribution, PluginManifest, ViewModel};
+    use semio_framework::{AppDefinition, Contribution, PluginManifest, ViewModel};
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
@@ -959,7 +959,7 @@ pub mod host {
     mod tests {
         use super::*;
         use crate::workflow::{empty_workflow, placeholder_media_contract, validate_workflow, MediaContract, WorkflowEdge, WorkflowPosition};
-        use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
+        use semio_framework::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use store::{MemoryBackbone, MemoryBackbonePort};
         use ui_wgpu::wgpu::SurfaceKind;
@@ -977,9 +977,9 @@ pub mod host {
                     document: vec!["semio".into(), "draw".into()],
                     icon_id: None,
                     controller_id: "draw-play".into(),
-                    modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                    modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                     default_mode_id: "edit".into(),
-                    window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
+                    window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                         id: "composite".into(),
                         label: "Canvas".into(),
                         body_key: "composite".into(),
@@ -1009,9 +1009,9 @@ pub mod host {
                     media_inputs: Vec::new(),
                     media_outputs: Vec::new(),
                     artifact_kinds: Vec::new(),
-                    config: semio_framework_core::ConfigSpec::empty(),
-                    command_grammar: semio_framework_core::CommandGrammar::empty(),
-                    io: semio_framework_core::AppIo::default(),
+                    config: semio_framework::ConfigSpec::empty(),
+                    command_grammar: semio_framework::CommandGrammar::empty(),
+                    io: semio_framework::AppIo::default(),
                     tutorials: Vec::new(),
                 }],
                 capabilities: vec![],
@@ -1032,9 +1032,9 @@ pub mod host {
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
-                window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
+                window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
                     label: "Canvas".into(),
                     body_key: "composite".into(),
@@ -1064,9 +1064,9 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework_core::ConfigSpec::empty(),
-                command_grammar: semio_framework_core::CommandGrammar::empty(),
-                io: semio_framework_core::AppIo::default(),
+                config: semio_framework::ConfigSpec::empty(),
+                command_grammar: semio_framework::CommandGrammar::empty(),
+                io: semio_framework::AppIo::default(),
                 tutorials: Vec::new(),
             };
             let note_app = AppDefinition {
@@ -1075,9 +1075,9 @@ pub mod host {
                 document: vec!["semio".into(), "note".into()],
                 icon_id: None,
                 controller_id: "note-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
-                window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
+                window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
                     label: "Canvas".into(),
                     body_key: "composite".into(),
@@ -1107,9 +1107,9 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework_core::ConfigSpec::empty(),
-                command_grammar: semio_framework_core::CommandGrammar::empty(),
-                io: semio_framework_core::AppIo::default(),
+                config: semio_framework::ConfigSpec::empty(),
+                command_grammar: semio_framework::CommandGrammar::empty(),
+                io: semio_framework::AppIo::default(),
                 tutorials: Vec::new(),
             };
             host.load_plugin(LoadedProgram {
@@ -1141,9 +1141,9 @@ pub mod host {
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
-                window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
+                window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
                     label: "Canvas".into(),
                     body_key: "composite".into(),
@@ -1173,9 +1173,9 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework_core::ConfigSpec::empty(),
-                command_grammar: semio_framework_core::CommandGrammar::empty(),
-                io: semio_framework_core::AppIo::default(),
+                config: semio_framework::ConfigSpec::empty(),
+                command_grammar: semio_framework::CommandGrammar::empty(),
+                io: semio_framework::AppIo::default(),
                 tutorials: Vec::new(),
             };
             host.load_plugin(LoadedProgram {
@@ -1256,16 +1256,16 @@ pub mod host {
 
         /// 🧷️ Minimal `AppDefinition` for registry tests — every field but `io`/`document` is filler;
         /// `register_app_io` only reads `.id`/`.label`/`.io` (see `workflow::workflow_node_for_app`).
-        fn test_app_definition(id: &str, label: &str, document_schema: &str, ports: Vec<semio_framework_core::MediaPortSpec>) -> AppDefinition {
+        fn test_app_definition(id: &str, label: &str, document_schema: &str, ports: Vec<semio_framework::MediaPortSpec>) -> AppDefinition {
             AppDefinition {
                 id: id.into(),
                 label: label.into(),
                 document: vec!["semio".into(), id.into()],
                 icon_id: None,
                 controller_id: format!("{id}-play"),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
-                window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
+                window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: id.into(),
                     label: label.into(),
                     body_key: id.into(),
@@ -1295,12 +1295,12 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework_core::ConfigSpec::empty(),
-                command_grammar: semio_framework_core::CommandGrammar::empty(),
-                io: semio_framework_core::AppIo::from_document(
+                config: semio_framework::ConfigSpec::empty(),
+                command_grammar: semio_framework::CommandGrammar::empty(),
+                io: semio_framework::AppIo::from_document(
                     document_schema,
                     MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    semio_framework_core::ArtifactPresentation { id: id.into(), name: label.into(), dimension: "2d".into(), component_kind: id.into() },
+                    semio_framework::ArtifactPresentation { id: id.into(), name: label.into(), dimension: "2d".into(), component_kind: id.into() },
                 )
                 .with_ports(ports),
                 tutorials: Vec::new(),
@@ -1437,14 +1437,14 @@ pub mod host {
                 inputs: Vec::new(),
                 outputs: vec![workflow::WorkflowMediaPort {
                     id: "app-1:puzzle.out:out".into(),
-                    spec: semio_framework_core::MediaPortSpec {
+                    spec: semio_framework::MediaPortSpec {
                         id: "puzzle.out".into(),
                         label: "Out".into(),
-                        direction: semio_framework_core::MediaPortDirection::Out,
+                        direction: semio_framework::MediaPortDirection::Out,
                         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                         kind_id: Some("puzzle.2d.fixture".into()),
                         required: false,
-                        multiplicity: semio_framework_core::PortMultiplicity::One,
+                        multiplicity: semio_framework::PortMultiplicity::One,
                     },
                 }],
             };
@@ -1462,14 +1462,14 @@ pub mod host {
                 height: 92.0,
                 inputs: vec![workflow::WorkflowMediaPort {
                     id: "app-2:draw.in:in".into(),
-                    spec: semio_framework_core::MediaPortSpec {
+                    spec: semio_framework::MediaPortSpec {
                         id: "draw.in".into(),
                         label: "In".into(),
-                        direction: semio_framework_core::MediaPortDirection::In,
+                        direction: semio_framework::MediaPortDirection::In,
                         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                         kind_id: Some("puzzle.2d.fixture".into()),
                         required: false,
-                        multiplicity: semio_framework_core::PortMultiplicity::One,
+                        multiplicity: semio_framework::PortMultiplicity::One,
                     },
                 }],
                 outputs: Vec::new(),
@@ -1868,7 +1868,7 @@ pub mod host_runtime {
     }
 
     /// @emoji 👥️ Translates a `DocumentEvent::Presence` into the `ViewModel.presence_peers_json` contract
-    /// plugins already read (`semio_framework_core::PresencePeer` → JSON array) — the new (only) source
+    /// plugins already read (`semio_framework::PresencePeer` → JSON array) — the new (only) source
     /// of presence data; the deleted `presence:` backbone hack used to be it.
     pub fn presence_peers_json(event: &DocumentEvent) -> Option<String> {
         match event {
@@ -1899,7 +1899,7 @@ pub mod host_runtime {
 
         #[test]
         fn presence_peers_json_only_matches_presence_events() {
-            use semio_framework_core::PresencePeer;
+            use semio_framework::PresencePeer;
             let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), selection_json: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None }];
             let json = presence_peers_json(&DocumentEvent::Presence { peers: peers.clone() }).expect("json");
             assert!(json.contains("\"actor\":\"a\""));
@@ -1914,7 +1914,7 @@ pub mod instance {
     // #region instance
     //! 📦️ App instance schemas, parameters, and studio bindings.
 
-    use semio_framework_core::{ConfigFieldShape, ConfigSpec};
+    use semio_framework::{ConfigFieldShape, ConfigSpec};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
@@ -1951,7 +1951,7 @@ pub mod instance {
         pub app_id: String,
         pub controller_id: String,
         pub document_json: String,
-        pub view_state: semio_framework_core::ViewModel,
+        pub view_state: semio_framework::ViewModel,
         pub generation: u64,
     }
 
@@ -2303,7 +2303,7 @@ pub mod instance {
         let mut defaults = serde_json::Map::new();
         for field in &config_spec.fields {
             if let Some(default) = &field.default {
-                let json_default = semio_framework_core::from_dsl_value::<Value>(default.clone()).unwrap_or(Value::Null);
+                let json_default = semio_framework::from_dsl_value::<Value>(default.clone()).unwrap_or(Value::Null);
                 defaults.insert(field.key.clone(), json_default);
             }
         }
@@ -2440,20 +2440,20 @@ pub mod instance {
         fn sample_config_spec() -> ConfigSpec {
             ConfigSpec {
                 fields: vec![
-                    semio_framework_core::ConfigFieldSpec {
+                    semio_framework::ConfigFieldSpec {
                         key: "zoom".into(),
                         label: "Zoom".into(),
                         shape: ConfigFieldShape::Number { min: None, max: None, step: None },
                         default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")),
                     },
-                    semio_framework_core::ConfigFieldSpec {
+                    semio_framework::ConfigFieldSpec {
                         key: "mode".into(),
                         label: "Mode".into(),
                         shape: ConfigFieldShape::Select { options: vec!["A".into(), "B".into()] },
                         default: Some(dsl::to_dsl_value(&serde_json::json!("A")).expect("dsl value")),
                     },
-                    semio_framework_core::ConfigFieldSpec { key: "flag".into(), label: "Flag".into(), shape: ConfigFieldShape::Toggle, default: None },
-                    semio_framework_core::ConfigFieldSpec { key: "label".into(), label: "Label".into(), shape: ConfigFieldShape::Text, default: None },
+                    semio_framework::ConfigFieldSpec { key: "flag".into(), label: "Flag".into(), shape: ConfigFieldShape::Toggle, default: None },
+                    semio_framework::ConfigFieldSpec { key: "label".into(), label: "Label".into(), shape: ConfigFieldShape::Text, default: None },
                 ],
             }
         }
@@ -2514,7 +2514,7 @@ pub mod media_export_raster {
     // #region media_export_raster
     //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
-    use semio_framework_core::OsMediaFormat;
+    use semio_framework::OsMediaFormat;
     use std::sync::LazyLock;
 
     //#region 🔖️MediaExportRegistryStubs
@@ -2559,7 +2559,7 @@ pub mod media_export_raster {
     //#endregion 🔖️MediaExportRegistryStubs
     use base64::Engine;
     use png::{BitDepth, ColorType, Encoder};
-    use semio_framework_core::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
+    use semio_framework::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
     use serde_json::Value;
     use std::collections::HashMap;
     use std::sync::{Mutex, OnceLock};
@@ -2597,7 +2597,7 @@ pub mod media_export_raster {
         let layer = drawing.ensure_layer("0");
         let height = tree.size().height() as f64;
         collect_svg_children(tree.root().children(), &mut drawing, layer, height);
-        semio_framework_core::dwg_to_bytes(&drawing)
+        semio_framework::dwg_to_bytes(&drawing)
     }
 
     fn collect_svg_children(nodes: &[usvg::Node], drawing: &mut DwgDrawing, layer: usize, height: f64) {
@@ -2730,7 +2730,7 @@ pub mod media_export_raster {
     /// @emoji 📥️ Registers a DWG import handler for one 2D resource kind, rasterizing DWG geometry into flat SVG first.
     pub fn register_dwg_import_handler(artifact_kind: &'static str, from_dwg: fn(&DwgDrawing) -> Result<Value, String>) {
         register_os_media_import_handler(artifact_kind, OsMediaFormat::Dwg, move |bytes| {
-            let drawing = semio_framework_core::dwg_from_bytes(bytes)?;
+            let drawing = semio_framework::dwg_from_bytes(bytes)?;
             from_dwg(&drawing)
         });
     }
@@ -2761,8 +2761,8 @@ pub mod media_export_raster {
     /// @emoji 📥️ Registers a DWG import handler for one mesh resource kind.
     pub fn register_mesh_dwg_import_handler(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>) {
         register_os_media_import_handler(artifact_kind, OsMediaFormat::Dwg, move |bytes| {
-            let drawing = semio_framework_core::dwg_from_bytes(bytes)?;
-            let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
+            let drawing = semio_framework::dwg_from_bytes(bytes)?;
+            let mesh = semio_framework::dwg_drawing_to_mesh(&drawing);
             document_from_mesh(&mesh)
         });
     }
@@ -2771,8 +2771,8 @@ pub mod media_export_raster {
     pub fn register_mesh_dwg_export_handler(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>) {
         register_os_media_export_handler(artifact_kind, OsMediaFormat::Dwg, move |doc| {
             let mesh = mesh_from_document(doc)?;
-            let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
-            let bytes = semio_framework_core::dwg_to_bytes(&drawing)?;
+            let drawing = semio_framework::mesh_to_dwg_drawing(&mesh);
+            let bytes = semio_framework::dwg_to_bytes(&drawing)?;
             Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: OsMediaFormat::Dwg.mime_type().into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
         });
     }
@@ -2967,7 +2967,7 @@ pub use crate::workflow_kernel::{
     #[cfg(not(feature = "os-host-full"))]
     fn os_artifact_descriptor(_kind: &str) -> Option<OsArtifactDescriptor> { None }
     //#endregion 🔖️RegistryStubs
-    use semio_framework_core::{media_types_compatible, MediaCompat, MediaWireFormat};
+    use semio_framework::{media_types_compatible, MediaCompat, MediaWireFormat};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
@@ -3316,20 +3316,20 @@ pub use crate::workflow_kernel::{
     // was confirmed dead (zero callers) and deleted outright.
 
     //#region 🔖️MediaExport
-    /// 🗂️ Defined in `semio_framework_core` (below this crate in the dependency graph) so `MeshExporter`/`MeshImporter` there can name it too; re-exported here verbatim.
-    pub use semio_framework_core::OsMediaFormat;
+    /// 🗂️ Defined in `semio_framework` (below this crate in the dependency graph) so `MeshExporter`/`MeshImporter` there can name it too; re-exported here verbatim.
+    pub use semio_framework::OsMediaFormat;
 
     //#region 🔖️MediaCapability
     #[cfg(feature = "os-host-full")]
     use crate::registry::os_resource_media_capability;
     #[cfg(not(feature = "os-host-full"))]
-    fn os_resource_media_capability(_kind: &str) -> semio_framework_core::OsMediaCapability {
-        semio_framework_core::OsMediaCapability::MeshOnly
+    fn os_resource_media_capability(_kind: &str) -> semio_framework::OsMediaCapability {
+        semio_framework::OsMediaCapability::MeshOnly
     }
-    /// 🗂️ Defined in `semio_framework_core` alongside `OsMediaFormat`/`ArtifactKindSpec`; re-exported here
+    /// 🗂️ Defined in `semio_framework` alongside `OsMediaFormat`/`ArtifactKindSpec`; re-exported here
     /// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
     /// app's declared `ArtifactKindSpec.media_capability` instead of a hardcoded per-app match.
-    pub use semio_framework_core::OsMediaCapability;
+    pub use semio_framework::OsMediaCapability;
     //#endregion 🔖️MediaCapability
 
     #[derive(Clone, Debug, PartialEq)]
@@ -3482,7 +3482,7 @@ pub use crate::workflow_kernel::{
         fn svg_to_dwg_round_trip_produces_a_polyline() {
             let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="1" y="1" width="4" height="4"/></svg>"#;
             let bytes = crate::media_export_raster::svg_to_dwg_bytes(svg).expect("svg to dwg");
-            let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("dwg from bytes");
+            let drawing = semio_framework::dwg_from_bytes(&bytes).expect("dwg from bytes");
             assert!(!drawing.entities.is_empty());
         }
 
@@ -3492,7 +3492,7 @@ pub use crate::workflow_kernel::{
             crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
             let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_export_key("3d.__dwg_test", &OsMediaFormat::Dwg)).expect("dwg handler registered")(&serde_json::json!({})).expect("export dwg");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
-            let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("dwg from bytes");
+            let drawing = semio_framework::dwg_from_bytes(&bytes).expect("dwg from bytes");
             assert!(!drawing.entities.is_empty());
         }
 
@@ -3503,14 +3503,14 @@ pub use crate::workflow_kernel::{
             let result =
                 export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_export_key("3d.__mesh_exporter_test", &OsMediaFormat::Glb)).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
-            let mesh = semio_framework_core::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
+            let mesh = semio_framework::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
             assert!(mesh.vertex_count() > 0);
         }
 
         #[test]
         fn mesh_importer_registrar_round_trips_a_box_through_obj() {
             crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework_plugin::ObjImporter));
-            let obj_bytes = semio_framework_core::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
+            let obj_bytes = semio_framework::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
             let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let handler = handlers.get(&os_media_export_key("3d.__mesh_importer_test", &OsMediaFormat::Obj)).expect("obj handler registered");
             let document = handler(&obj_bytes).expect("import obj");
@@ -3534,16 +3534,16 @@ pub use crate::workflow_kernel::{
         /// `build_os_workflow_operator_infos`/VFS listing all read straight off the node now (no more
         /// separate `OsAppInstance` join), so a plain struct literal is enough.
         fn media_node(id: &str, x: f64, y: f64) -> WorkflowNode {
-            let port = |direction: semio_framework_core::MediaPortDirection| WorkflowMediaPort {
-                id: format!("{id}:{}", if direction == semio_framework_core::MediaPortDirection::In { "in" } else { "out" }),
-                spec: semio_framework_core::MediaPortSpec {
-                    id: if direction == semio_framework_core::MediaPortDirection::In { "in".into() } else { "out".into() },
+            let port = |direction: semio_framework::MediaPortDirection| WorkflowMediaPort {
+                id: format!("{id}:{}", if direction == semio_framework::MediaPortDirection::In { "in" } else { "out" }),
+                spec: semio_framework::MediaPortSpec {
+                    id: if direction == semio_framework::MediaPortDirection::In { "in".into() } else { "out".into() },
                     label: "Port".into(),
                     direction,
-                    media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
+                    media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
                     kind_id: Some("2d.drawing".into()),
                     required: false,
-                    multiplicity: semio_framework_core::PortMultiplicity::One,
+                    multiplicity: semio_framework::PortMultiplicity::One,
                 },
             };
             WorkflowNode {
@@ -3558,8 +3558,8 @@ pub use crate::workflow_kernel::{
                 y,
                 width: 160.0,
                 height: 72.0,
-                inputs: vec![port(semio_framework_core::MediaPortDirection::In)],
-                outputs: vec![port(semio_framework_core::MediaPortDirection::Out)],
+                inputs: vec![port(semio_framework::MediaPortDirection::In)],
+                outputs: vec![port(semio_framework::MediaPortDirection::Out)],
             }
         }
 
@@ -3846,8 +3846,8 @@ pub mod registry {
     //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
 
     use crate::instance::OsParameterFieldSpec;
-    use semio_framework_core::{AppDefinition, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, WindowKindDefinition};
-    use semio_framework_core::{Locale, Terminology};
+    use semio_framework::{AppDefinition, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, WindowKindDefinition};
+    use semio_framework::{Locale, Terminology};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
@@ -3865,7 +3865,7 @@ pub mod registry {
         pub component_kind: String,
         pub dimension: String,
         /// 🧬️ The `MediaType` this resource kind negotiates on the workflow — see
-        /// `semio_framework_core::media_types_compatible`.
+        /// `semio_framework::media_types_compatible`.
         pub media_type: MediaType,
         /// 🔌️ Structured-payload schema id, mirrored from `ArtifactKindSpec::schema` — see
         /// `crate::workflow::negotiate_media_contract`, which prefers a matching schema over a shared
@@ -4039,7 +4039,7 @@ pub mod registry {
     }
 
     // 🧷️ `resources_compatible` (`left == right` string equality) deleted — callers now compare real
-    // `MediaType`s via `semio_framework_core::media_types_compatible`, or go through
+    // `MediaType`s via `semio_framework::media_types_compatible`, or go through
     // `crate::workflow::negotiate_media_contract` for a full connect-time decision.
     //#endregion 🔖️ResourceDescriptors
 
@@ -4051,8 +4051,8 @@ pub mod registry {
         pub label: LocalizedLabel,
         pub document: Vec<String>,
         pub controller_id: String,
-        pub inputs: Vec<semio_framework_core::MediaPortSpec>,
-        pub outputs: Vec<semio_framework_core::MediaPortSpec>,
+        pub inputs: Vec<semio_framework::MediaPortSpec>,
+        pub outputs: Vec<semio_framework::MediaPortSpec>,
         pub source_format: String,
         pub component_kind: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -4083,7 +4083,7 @@ pub mod registry {
     /// registration time (`PluginHost::load_plugin`/`hot_swap_plugin`), beside `register_artifact_descriptors`.
     pub fn register_app_io(plugin_id: &str, app: &AppDefinition) {
         let ports = app.io.all_ports();
-        let (inputs, outputs): (Vec<_>, Vec<_>) = ports.into_iter().partition(|port| port.direction == semio_framework_core::MediaPortDirection::In);
+        let (inputs, outputs): (Vec<_>, Vec<_>) = ports.into_iter().partition(|port| port.direction == semio_framework::MediaPortDirection::In);
         let registration = OsAppRegistration {
             id: app.id.clone(),
             label: app.label.clone(),
@@ -4109,7 +4109,7 @@ pub mod registry {
     /// the document ports' `media_type` is read back off whichever of them is present (so
     /// `AppIo::all_ports()` re-derives byte-for-byte the same document ports `register_app_io` stored),
     /// every other port becomes a declared `AppIo.ports` entry.
-    fn app_io_for_registration(registration: &OsAppRegistration) -> semio_framework_core::AppIo {
+    fn app_io_for_registration(registration: &OsAppRegistration) -> semio_framework::AppIo {
         let document_media_type = registration
             .inputs
             .iter()
@@ -4118,10 +4118,10 @@ pub mod registry {
             .map(|port| port.media_type)
             .unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let declared_ports: Vec<_> = registration.inputs.iter().chain(registration.outputs.iter()).filter(|port| port.id != "document:in" && port.id != "document:out").cloned().collect();
-        semio_framework_core::AppIo::from_document(
+        semio_framework::AppIo::from_document(
             registration.source_format.clone(),
             document_media_type,
-            semio_framework_core::ArtifactPresentation {
+            semio_framework::ArtifactPresentation {
                 id: registration.id.clone(),
                 // 🚧️ No locale context reaches this reconstruction path — resolves native/English
                 // pending a documented follow-up (same gap as Menu::action_with_args in the plugin SDK).
@@ -4142,9 +4142,9 @@ pub mod registry {
     /// ports `register_app_io` stored — the mechanism `OsStore::add_workflow_node` mints nodes through.
     pub fn resolve_os_app_definition(plugin_id: &str, app_id: &str) -> Option<AppDefinition> {
         let registration = os_app_registration(plugin_id, app_id)?;
-        let modes = semio_framework_core::Modes::try_from(registration.modes.clone()).ok()?;
+        let modes = semio_framework::Modes::try_from(registration.modes.clone()).ok()?;
         let default_mode_id = registration.default_mode_id.clone().unwrap_or_else(|| modes.first().id.clone());
-        let window_kinds = semio_framework_core::WindowKinds::one(WindowKindDefinition {
+        let window_kinds = semio_framework::WindowKinds::one(WindowKindDefinition {
             id: registration.component_kind.clone(),
             label: registration.label.clone(),
             body_key: registration.component_kind.clone(),
@@ -4185,7 +4185,7 @@ pub mod registry {
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
             config: registration.config,
-            command_grammar: semio_framework_core::CommandGrammar::empty(),
+            command_grammar: semio_framework::CommandGrammar::empty(),
             io,
             tutorials: Vec::new(),
         })
@@ -4202,7 +4202,7 @@ pub mod registry {
         pub app_id: String,
         pub label: LocalizedLabel,
         pub icon_id: String,
-        pub ports: Vec<semio_framework_core::MediaPortSpec>,
+        pub ports: Vec<semio_framework::MediaPortSpec>,
     }
 
     /// @emoji 🎨️ Lists every registered app as a palette entry, sorted by `(plugin_id, app_id)` for a
@@ -4275,9 +4275,9 @@ pub mod registry {
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
-                window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
+                window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "draw".into(),
                     label: "Draw".into(),
                     body_key: "draw".into(),
@@ -4308,11 +4308,11 @@ pub mod registry {
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
                 config: ConfigSpec::empty(),
-                command_grammar: semio_framework_core::CommandGrammar::empty(),
-                io: semio_framework_core::AppIo::from_document(
+                command_grammar: semio_framework::CommandGrammar::empty(),
+                io: semio_framework::AppIo::from_document(
                     "draw.document",
                     MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    semio_framework_core::ArtifactPresentation { id: "draw".into(), name: "Draw".into(), dimension: "2d".into(), component_kind: "draw".into() },
+                    semio_framework::ArtifactPresentation { id: "draw".into(), name: "Draw".into(), dimension: "2d".into(), component_kind: "draw".into() },
                 ),
                 tutorials: Vec::new(),
             };
@@ -4355,7 +4355,7 @@ pub use registry::{
     list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, register_app_io, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition, try_os_artifact_descriptor,
     workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
 };
-pub use semio_framework_core::*;
+pub use semio_framework::*;
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use crate::space::*;

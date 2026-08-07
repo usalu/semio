@@ -2,7 +2,7 @@
 /** @emoji 🎨️ `@semio-tech/framework-renderer-react` — trusted React renderer for declarative Rust program UI trees. */
 // #endregion 🧱️Header
 
-export type { ActionDescriptor, UiComponentSceneNode, UiNode } from "@semio-tech/framework-core";
+export type { ActionDescriptor, UiComponentSceneNode, UiNode } from "@semio-tech/framework";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
@@ -495,7 +495,7 @@ import {
   pendingWindowUiNode,
   pendingPanelUiNode,
   windowMeasureChromeStatus,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/framework";
 import { createRoot } from "react-dom/client";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
 import {
@@ -530,7 +530,7 @@ import {
   type PersistenceBinding,
   decodeFaultFromWire,
   faultDisplayMessage,
-} from "@semio-tech/framework-os-core";
+} from "@semio-tech/framework-os";
 import {
   BufferAttribute,
   BufferGeometry,
@@ -633,7 +633,7 @@ export {
 //#endregion 🔖️UiInterpreter
 
 //#region 🔖️OsShell
-/** 🔁️ Re-exported so `node-graph-host.tsx`/`text-editor-host.tsx` can import action-name maps from this shell module rather than reaching into `@semio-tech/framework-core` directly. */
+/** 🔁️ Re-exported so `node-graph-host.tsx`/`text-editor-host.tsx` can import action-name maps from this shell module rather than reaching into `@semio-tech/framework` directly. */
 export { nodeGraphActions, textEditorActions };
 
 //#region 🔖️types

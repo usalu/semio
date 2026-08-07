@@ -46,8 +46,29 @@ pub mod artifacts {
             mod component;
             pub use component::*;
 
-            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs"]
-            pub mod animate_core;
+                        #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎞️animation/🦀️component.rs"]
+            pub mod animation;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎬️scene/🦀️component.rs"]
+            pub mod scene;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/📐️geometry/🦀️component.rs"]
+            pub mod geometry;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️camera/🦀️component.rs"]
+            pub mod camera;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🔤️text/🦀️component.rs"]
+            pub mod text;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/⏱️rate/🦀️component.rs"]
+            pub mod rate;
+            #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎛️config/🦀️component.rs"]
+            pub mod config;
+            pub mod animate {
+                pub use super::animation::*;
+                pub use super::scene::*;
+                pub use super::geometry::*;
+                pub use super::camera::*;
+                pub use super::text::*;
+                pub use super::rate::*;
+                pub use super::config::*;
+            }
             #[path = "../../🗿️artifacts/🎬️present/⚙️engine/🎥️video/🦀️component.rs"]
             pub mod animate_video;
         }
@@ -117,11 +138,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "animate",
-    label: "Animate",
-    version: "0.1.0",
-    setup: artifacts::present::engine::register,
-    apps: [ apps::present::create_animate_present_app => apps::present::AnimatePresentPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

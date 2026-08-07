@@ -1,5 +1,5 @@
 [package]
-name = "semio-framework-core"
+name = "semio-framework"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -7,7 +7,7 @@ description = "Render-independent framework kernel: Platform, ActionBus, declara
 
 [package.metadata.semio]
 role = "framework"
-id = "core"
+id = "framework"
 
 [lints]
 workspace = true

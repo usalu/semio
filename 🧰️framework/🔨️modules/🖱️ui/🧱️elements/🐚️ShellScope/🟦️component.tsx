@@ -9,7 +9,7 @@
 import * as React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
-import { type StoragePort, createBrowserStoragePort, ephemeralBox, ephemeralSet } from "@semio-tech/framework-core";
+import { type StoragePort, createBrowserStoragePort, ephemeralBox, ephemeralSet } from "@semio-tech/framework";
 import { type SelectionMergeMode, type UiLocale, createShellI18nInstance } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 

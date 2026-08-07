@@ -113,11 +113,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "draw",
-    label: "Draw",
-    version: "0.1.0",
-    setup: artifacts::draw::engine::register,
-    apps: [ apps::draw::create_draw_app => apps::draw::DrawPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

@@ -11,7 +11,7 @@ use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDE
 use crate::shell::{push_find_item, ContextMenuItem, ShellFindItem, ShellState};
 use base64::Engine;
 use infinite_world::{render_world_3d, World3dState};
-use semio_framework_core::IconName;
+use semio_framework::IconName;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -264,7 +264,7 @@ pub(crate) fn set_scene_last_pointer_pos(surface_id: &str, x: f32, y: f32) {
 }
 
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
 fn surface_args(scene: &UiComponentSceneNode) -> Value {
@@ -1101,7 +1101,7 @@ struct TableCellButtonPayload {
 /// 🔗️ Merges `patch` into `base`'s existing args (rather than replacing them), so a stepper/button cell keeps its row-identifying args (e.g. `objectId`) alongside the delta/click patch.
 fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor {
     let mut args = match &base.args {
-        Some(dsl) => match semio_framework_core::from_dsl_value::<Value>(dsl.clone()) {
+        Some(dsl) => match semio_framework::from_dsl_value::<Value>(dsl.clone()) {
             Ok(Value::Object(map)) => map.clone(),
             _ => serde_json::Map::new(),
         },
@@ -1110,7 +1110,7 @@ fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor 
     if let Value::Object(patch_map) = patch {
         args.extend(patch_map);
     }
-    ActionDescriptor { controller_id: base.controller_id.clone(), action: base.action.clone(), args: semio_framework_core::optional_json_to_dsl(Some(Value::Object(args))) }
+    ActionDescriptor { controller_id: base.controller_id.clone(), action: base.action.clone(), args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) }
 }
 
 /// 🧾️ Renders a table cell's interactive controls (stepper/buttons) directly, or returns the plain text to draw for text/number/legacy-string cells.
@@ -1295,8 +1295,8 @@ mod table_tests {
         let target = hit(&input, "s1.header.name");
         let action = target.event.as_ref().expect("sortTable action");
         assert_eq!(action.action, "sortTable");
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("columnId")).and_then(semio_framework_core::DslValue::as_str), Some("name"));
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework_core::DslValue::as_str), Some("asc"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("columnId")).and_then(semio_framework::DslValue::as_str), Some("name"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework::DslValue::as_str), Some("asc"));
     }
 
     #[test]
@@ -1307,7 +1307,7 @@ mod table_tests {
         let input = render(&node);
         let target = hit(&input, "s1.header.name");
         let action = target.event.as_ref().expect("sortTable action");
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework_core::DslValue::as_str), Some("desc"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework::DslValue::as_str), Some("desc"));
     }
 
     #[test]
@@ -1318,7 +1318,7 @@ mod table_tests {
         let input = render(&node);
         let target = hit(&input, "s1.header.name");
         let action = target.event.as_ref().expect("sortTable action");
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework_core::DslValue::as_str), Some("asc"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework::DslValue::as_str), Some("asc"));
     }
 
     #[test]
@@ -1330,7 +1330,7 @@ mod table_tests {
         let target = hit(&input, "s1.header.name");
         let action = target.event.as_ref().expect("sortTable action");
         // 🔀️ "name" isn't the currently-sorted column, so clicking it must start a fresh ascending sort, not toggle.
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework_core::DslValue::as_str), Some("asc"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework::DslValue::as_str), Some("asc"));
     }
 
     #[test]
@@ -1350,7 +1350,7 @@ mod table_tests {
         let target = hit(&input, "s1.row.r1");
         let action = target.event.as_ref().expect("selectRow action");
         assert_eq!(action.action, "selectRow");
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("row")).and_then(|row| row.get("id")).and_then(semio_framework_core::DslValue::as_str), Some("r1"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("row")).and_then(|row| row.get("id")).and_then(semio_framework::DslValue::as_str), Some("r1"));
     }
 }
 //#endregion TableTests
@@ -1670,7 +1670,7 @@ mod block_list_tests {
         let target = hit(&input, "s1.palette.text");
         let action = target.event.as_ref().expect("addBlock action");
         assert_eq!(action.action, "addBlock");
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("kind")).and_then(semio_framework_core::DslValue::as_str), Some("text"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("kind")).and_then(semio_framework::DslValue::as_str), Some("text"));
     }
 
     #[test]
@@ -1683,8 +1683,8 @@ mod block_list_tests {
         let down = hit(&input, "s1.step.a.moveDown");
         let action = down.event.as_ref().expect("moveStep action");
         assert_eq!(action.action, "moveStep");
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework_core::DslValue::as_str), Some("a"));
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("index")).and_then(semio_framework_core::DslValue::as_f64), Some(1.0));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("index")).and_then(semio_framework::DslValue::as_f64), Some(1.0));
     }
 
     #[test]
@@ -1705,7 +1705,7 @@ mod block_list_tests {
         let target = hit(&input, "s1.step.a.remove");
         let action = target.event.as_ref().expect("removeStep action");
         assert_eq!(action.action, "removeStep");
-        assert_eq!(action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework_core::DslValue::as_str), Some("a"));
+        assert_eq!(action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
     }
 
     #[test]
@@ -1719,18 +1719,18 @@ mod block_list_tests {
         let move_down = hit(&input, "s1.block.b1.moveDown");
         let move_action = move_down.event.as_ref().expect("moveBlock action");
         assert_eq!(move_action.action, "moveBlock");
-        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("blockId")).and_then(semio_framework_core::DslValue::as_str), Some("b1"));
-        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("fromStepId")).and_then(semio_framework_core::DslValue::as_str), Some("a"));
-        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("toStepId")).and_then(semio_framework_core::DslValue::as_str), Some("a"));
-        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("index")).and_then(semio_framework_core::DslValue::as_f64), Some(1.0));
+        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("blockId")).and_then(semio_framework::DslValue::as_str), Some("b1"));
+        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("fromStepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
+        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("toStepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
+        assert_eq!(move_action.args.as_ref().and_then(|args| args.get("index")).and_then(semio_framework::DslValue::as_f64), Some(1.0));
 
         assert!(hit(&input, "s1.block.b2.moveDown").event.is_none(), "the last block in a step must not move further down");
 
         let remove = hit(&input, "s1.block.b1.remove");
         let remove_action = remove.event.as_ref().expect("removeBlock action");
         assert_eq!(remove_action.action, "removeBlock");
-        assert_eq!(remove_action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework_core::DslValue::as_str), Some("a"));
-        assert_eq!(remove_action.args.as_ref().and_then(|args| args.get("blockId")).and_then(semio_framework_core::DslValue::as_str), Some("b1"));
+        assert_eq!(remove_action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
+        assert_eq!(remove_action.args.as_ref().and_then(|args| args.get("blockId")).and_then(semio_framework::DslValue::as_str), Some("b1"));
     }
 
     #[test]
@@ -3369,10 +3369,10 @@ mod canvas2d_tests {
         assert_eq!(action.controller_id, "controller-1");
         assert_eq!(action.action, "setCamera");
         let args = action.args.expect("setCamera always carries args");
-        assert_eq!(args.get("surfaceId").and_then(semio_framework_core::DslValue::as_str), Some("s-cam-1"));
-        assert_eq!(args.get("camera").and_then(|value| value.get("x")).and_then(semio_framework_core::DslValue::as_f64), Some(12.5));
-        assert_eq!(args.get("camera").and_then(|value| value.get("y")).and_then(semio_framework_core::DslValue::as_f64), Some(-3.0));
-        assert_eq!(args.get("camera").and_then(|value| value.get("zoom")).and_then(semio_framework_core::DslValue::as_f64), Some(2.0));
+        assert_eq!(args.get("surfaceId").and_then(semio_framework::DslValue::as_str), Some("s-cam-1"));
+        assert_eq!(args.get("camera").and_then(|value| value.get("x")).and_then(semio_framework::DslValue::as_f64), Some(12.5));
+        assert_eq!(args.get("camera").and_then(|value| value.get("y")).and_then(semio_framework::DslValue::as_f64), Some(-3.0));
+        assert_eq!(args.get("camera").and_then(|value| value.get("zoom")).and_then(semio_framework::DslValue::as_f64), Some(2.0));
     }
 
     /// 🕒️ A Canvas2d wheel tick mutates the viewport immediately but only SCHEDULES its `setCamera` —
@@ -3384,9 +3384,9 @@ mod canvas2d_tests {
         let actions = handle_scene_wheel(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 50.0, 50.0, -100.0, false);
         assert!(actions.is_empty(), "wheel-zoom never dispatches inline anymore");
         let immediate = sweep_expired_scene_camera_dispatches(crate::app_now_ms());
-        assert!(immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework_core::DslValue::as_str) != Some(surface_id)), "sweeping immediately (before the ~350ms settle window) must not yet report this surface");
+        assert!(immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)), "sweeping immediately (before the ~350ms settle window) must not yet report this surface");
         let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
-        let matched = due.iter().find(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework_core::DslValue::as_str) == Some(surface_id)).expect("this surface's setCamera fires once its deadline has passed");
+        let matched = due.iter().find(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id)).expect("this surface's setCamera fires once its deadline has passed");
         assert_eq!(matched.controller_id, "controller");
         assert_eq!(matched.action, "setCamera");
     }
@@ -3409,7 +3409,7 @@ mod canvas2d_tests {
         );
         let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
         assert_eq!(due.len(), 1);
-        assert_eq!(due[0].args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework_core::DslValue::as_str), Some(surface_id));
+        assert_eq!(due[0].args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str), Some(surface_id));
     }
 }
 //#endregion Canvas2dTests

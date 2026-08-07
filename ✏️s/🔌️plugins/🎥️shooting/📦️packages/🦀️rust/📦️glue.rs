@@ -154,9 +154,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-semio_framework_plugin::semio_plugin! {
-    id: "shooting", label: "Shooting", version: "0.1.0",
-    setup: artifacts::shooting::engine::register,
-    apps: [ apps::shooting::create_shooting_app => apps::shooting::ShootingPlayApp ],
-}
+#[path = "../../🔌️plugin/🦀️component.rs"]
+mod plugin;
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Plugin

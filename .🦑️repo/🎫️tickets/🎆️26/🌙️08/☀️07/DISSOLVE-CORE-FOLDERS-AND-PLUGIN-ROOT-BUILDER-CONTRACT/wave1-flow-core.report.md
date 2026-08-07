@@ -12,17 +12,25 @@ Dissolved `🌊️flow/🙀️core/` into concept siblings under `🌊️flow/`,
 - `🌊️flow/🖍️drawing/🦀️component.rs`
 - `🌊️flow/🌉️wasm/🦀️component.rs`
 - `🌊️flow/🌿️vcs/🦀️component.rs`
-- ticket `deferred-flow-core.json` (72 external files)
+- ticket `deferred-flow-core.json` (72 external files: `flow_core::` → `flow::`)
 - ticket `wave1-flow-core.report.md`
 
 ## Updated
-- `🌊️flow/📦️packages/🦀️rust/📦️glue.rs` — removed `pub mod core`; wired document/catalogue/registry/bridge/host/drawing/wasm_session/vcs/brep_geometry via `#[path]`; `extern crate self as flow`
-- `🌊️flow/📦️packages/🦀️rust/Cargo.toml` — description; dev-dep path `…/🟡️core` → `…/🔤️primitive` (parallel rename already landed)
-- `🖥️host` test helpers: `semio_s_plugin_flow_extension_core` → `semio_s_plugin_flow_extension_primitive`
+- `🌊️flow/📦️packages/🦀️rust/📦️glue.rs`
+  - removed `pub mod core`
+  - wired document / catalogue / registry / bridge / host / drawing / wasm_session / vcs / brep_geometry via `#[path]`
+  - `extern crate self as flow_core` → `extern crate self as flow`
+  - added `KernelModuleAliases` (`os_store` / `os_dsl` / `os_spr` / `os_vcs` / `os_pack`) matching `♾️infinite`
+  - added `InfiniteAlias` + crate-root `dag` / `canvas` / `neural` re-exports
+- `🌊️flow/📦️packages/🦀️rust/Cargo.toml`
+  - description
+  - dep `semio-framework-os-infinite`
+  - dev-dep path `…/🟡️core` → `…/🔤️primitive` (parallel rename already landed)
+- `🖥️host` tests: `semio_s_plugin_flow_extension_core` → `semio_s_plugin_flow_extension_primitive`
 
 ## Removed
-- `🌊️flow/🙀️core/` (including nested `pkg/` wasm artifact leftover)
-- `🌊️flow/📦️packages/🦀️rust/�📦️glue.rs` (corrupted duplicate)
+- `🌊️flow/🙀️core/` (including nested `pkg/`)
+- corrupted duplicate `🌊️flow/📦️packages/🦀️rust/�📦️glue.rs`
 
 ## Lifted
 - `🌊️flow/🙀️core/📐️brep-geometry/` → `🌊️flow/📐️brep-geometry/` (as-is)
@@ -30,7 +38,7 @@ Dissolved `🌊️flow/🙀️core/` into concept siblings under `🌊️flow/`,
 ## Modules
 | Folder | Rust mod | Former region lines |
 |--------|----------|---------------------|
-| 📄️document | document | Document/Widget 22–1038 |
+| 📄️document | document | Document 22–1038 |
 | 📚️catalogue | catalogue | Catalogue 1040–1337 |
 | 📔️registry | registry | ExtensionRegistry 1339–1575 |
 | 🌉️bridge | bridge | EvalBridge+ChannelEval 1577–1976 |
@@ -40,23 +48,19 @@ Dissolved `🌊️flow/🙀️core/` into concept siblings under `🌊️flow/`,
 | 🌿️vcs | vcs | DocumentVcs 4888–6009 |
 | 📐️brep-geometry | brep_geometry | lifted sibling |
 
-## Alias
-- `extern crate self as flow_core` → `extern crate self as flow`
-- Removed `pub mod core` / `pub use core::*`
-
 ## Naming
-- Used `🌿️vcs` (no collision under `🌊️flow/`; OS-level `✨️modules/🌿️vcs` is unrelated)
+- Used `🌿️vcs` (no collision under `🌊️flow/`)
 
 ## Deferred (Wave 2)
-- See `deferred-flow-core.json`: 72 files with `flow_core::` → `flow::`
-- Root `Cargo.toml` workspace alias `semio-framework-os-kernel-flow-core` (shared; not owned here)
-- Plugin `✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml` still points at deleted `🧩️extensions/🙀️core` (plugin agent / Wave 2)
+- `deferred-flow-core.json` — 72 files outside the flow tree still using `flow_core::`
+- Root `Cargo.toml` alias `semio-framework-os-kernel-flow-core` (shared)
+- Plugin `✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml` still points at deleted `🧩️extensions/🙀️core` (blocks workspace `cargo check`; owned by plugin agent / Wave 2)
 
 ## Verify
-- Structural: core gone, 8 concept modules + brep present, single glue file, no pub-name collisions across modules
-- `cargo check -p semio-framework-os-flow` blocked by workspace member plugin Cargo.toml still referencing `…/🧩️extensions/🙀️core` (outside this agent's ownership)
+- Structural: core gone; 8 concept modules + brep present; single glue file; balanced braces/regions; no pub-name collisions across modules
+- `cargo check -p semio-framework-os-flow` not runnable until plugin Cargo.toml path is fixed (outside ownership)
 
 ## Out of scope (untouched)
-- pack/db/spr/dsl cores
-- plugins (except deferred manifest)
+- pack / db / spr / dsl cores
+- plugins (except deferred manifest + local test crate rename for primitive)
 - framework `🧩core`

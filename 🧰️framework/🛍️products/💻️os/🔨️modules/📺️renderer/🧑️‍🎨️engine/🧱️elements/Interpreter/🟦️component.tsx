@@ -65,8 +65,8 @@ import {
   type UiTreeItemNode,
   type UiTreeNode,
   type UiTreeSectionNode,
-} from "@semio-tech/framework-core";
-import { decodeScenePackField } from "@semio-tech/framework-os-core";
+} from "@semio-tech/framework";
+import { decodeScenePackField } from "@semio-tech/framework-os";
 import { shellLabel } from "../ShellHelpers/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 import { ShellFaultBoundary } from "../Shell/🟦️component.tsx";

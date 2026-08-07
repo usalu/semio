@@ -6,13 +6,13 @@
 // fixed here as a forward-fix while relocating it, per this initiative's established "port the bug fix
 // along with the move" convention (see master ticket §12.3's `Ok(`-corruption precedent).
 import { defaultComputeWorkerCount, effectiveComputeWorkerCount, isCrossOriginIsolatedRuntime, readStoredComputeWorkerCount, UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, writeStoredComputeWorkerCount } from "@semio-tech/ui-react";
-import { type StoragePort, createBrowserStoragePort } from "@semio-tech/framework-core";
+import { type StoragePort, createBrowserStoragePort } from "@semio-tech/framework";
 
 export { defaultComputeWorkerCount, effectiveComputeWorkerCount, isCrossOriginIsolatedRuntime, readStoredComputeWorkerCount, UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, writeStoredComputeWorkerCount };
 
 export type FlowThreadPoolInit = (numThreads: number) => Promise<unknown>;
 
-/** Initialize the flow_core rayon thread pool when cross-origin isolated. */
+/** Initialize the flow rayon thread pool when cross-origin isolated. */
 export async function initFlowThreadPool(init: FlowThreadPoolInit, storage: StoragePort = createBrowserStoragePort(), requested?: number): Promise<number> {
   const workers = effectiveComputeWorkerCount(storage, requested ?? readStoredComputeWorkerCount(storage));
   try {

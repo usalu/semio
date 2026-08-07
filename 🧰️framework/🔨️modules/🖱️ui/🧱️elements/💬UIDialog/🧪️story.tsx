@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { ActionArgDef, DialogDefinition } from "@semio-tech/framework-core";
+import type { ActionArgDef, DialogDefinition } from "@semio-tech/framework";
 import { UIDialog } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
