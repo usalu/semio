@@ -883,11 +883,11 @@
 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/🖼️asset -> 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/🖼️asset
 🧰️framework/🛍️product/📓️print/⚡️implementation/🖋️latex -> 🧰️framework/🛍️product/📓️print/⚡️implementation/🖋️latex
 🧰️framework/🛍️product/📓️print/⚡️implementation -> 🧰️framework/🛍️product/📓️print/⚡️implementation
-🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️lib/⚡️implementation -> 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️lib/⚡️implementation
+🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️library/⚡️implementation -> 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️library/⚡️implementation
 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation -> 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation
 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🧬️schema/🐘️postgres/🛢️schema.sql -> 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🧬️schema/🐘️postgres/🛢️schema.sql
 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator -> 🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator
-🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation -> 🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation
+🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation -> 🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation
 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation -> 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation
 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶️sqlite/⚡️implementation/🟦️typescript/🛢️checkpoint.sql -> 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶️sqlite/⚡️implementation/🟦️typescript/🛢️checkpoint.sql
 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶️sqlite/⚡️implementation/🟦️typescript/🛢️schema.sql -> 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶️sqlite/⚡️implementation/🟦️typescript/🛢️schema.sql

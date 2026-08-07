@@ -15,14 +15,14 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::forms::FormSpec;
 
 /// 📄️ The building-component fixture, handcrafted in the `.forms` DSL.
-pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.building-component-forms.dsl.semio");
+pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📄️ The `default` (Contact) fixture — a minimal single-step form, in the `.forms` DSL.
-pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.dsl.semio");
+pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📄️ The `onboarding` fixture — a multi-step form exercising every built-in question kind and a
 /// conditional block, in the `.forms` DSL.
-pub const ONBOARDING_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.onboarding-forms.dsl.semio");
+pub const ONBOARDING_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.forms` DSL text into a `FormSpec`.
 pub fn parse_dsl(text: &str) -> Result<FormSpec, store::TextError> {

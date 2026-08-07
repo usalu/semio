@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/flow-core-build",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "../../pkg/flow_core.js",
+    "./pkg/flow_core.js": "../../pkg/flow_core.js"
+  }
+}

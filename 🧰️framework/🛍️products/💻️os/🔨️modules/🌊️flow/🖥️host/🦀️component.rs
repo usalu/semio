@@ -1,6 +1,6 @@
 //! 🖥️ Flow host: canvas editing, evaluation session, and host errors.
 
-use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas as canvas;
 use neural_engine as neural;
 
@@ -27,6 +27,7 @@ use crate::drawing::*;
 use crate::wasm_session::*;
 use crate::vcs::*;
 use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
+use crate::os_store::{create_document_envelope, DocumentCommand};
 
 
 // #region ⚠️ Errors
@@ -302,6 +303,11 @@ impl FlowHost {
     pub fn install_eval_baseline(&mut self, snapshot: Option<TreeSnapshot>, channels: Option<EvalChannels>) {
         self.previous_snapshot = snapshot;
         self.previous_channels = channels;
+        // Receiverless DocumentApp rebuilds a fresh FlowHost per call; restore outputs so
+        // blocked-port status and preview wiring see the last completed eval channels.
+        if let Some(channels) = self.previous_channels.as_ref() {
+            self.outputs = channels.outputs.clone();
+        }
     }
 
     /// 🧵️ Captures this host's eval baseline for persistence on a durable driver.
@@ -971,7 +977,7 @@ impl FlowHost {
     fn build_tree(&self) -> Tree {
         let fixture = self.build_dag_fixture_v1();
         let (nodes, edges) = dag_fixture_execution_rows(&fixture);
-        neural_dag::tree_from_dag(&nodes, &edges)
+        crate::neural_dag::tree_from_dag(&nodes, &edges)
     }
 
     /// 📝️ Renders the compiled DAG fixture as wire-literal text.
@@ -1072,7 +1078,7 @@ impl FlowHost {
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn sync_dag_ghost(&mut self) {
+    pub(crate) fn sync_dag_ghost(&mut self) {
         self.dag.set_ghost_node(self.ghost_node.clone());
     }
 
@@ -1853,6 +1859,11 @@ pub struct FlowEvalSession {
     status_json: String,
     tick_scheduled: bool,
     live_geometry_handles: std::collections::HashSet<String>,
+    /// 🧊 Tessellated preview meshes keyed by geometry handle — filled via extension `tessellate`
+    /// because runtime-installable brep owns the kernel that minted the handles.
+    preview_mesh_json_by_handle: std::collections::HashMap<String, String>,
+    /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`.
+    pending_tessellate_by_hash: std::collections::HashMap<u64, String>,
 }
 
 impl Default for FlowEvalSession {
@@ -1881,6 +1892,8 @@ impl FlowEvalSession {
             status_json: "{}".into(),
             tick_scheduled: false,
             live_geometry_handles: std::collections::HashSet::new(),
+            preview_mesh_json_by_handle: std::collections::HashMap::new(),
+            pending_tessellate_by_hash: std::collections::HashMap::new(),
         }
     }
 
@@ -1949,6 +1962,8 @@ impl FlowEvalSession {
         self.previous_channels = None;
         self.status_json = "{}".into();
         self.live_geometry_handles.clear();
+        self.preview_mesh_json_by_handle.clear();
+        self.pending_tessellate_by_hash.clear();
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
             map.remove(&self.session_id);
         }
@@ -1962,6 +1977,52 @@ impl FlowEvalSession {
     pub fn seed_node_cache(&self, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
         seed_flow_eval_node_cache(&self.neural_cache, node_hash, output_json)
     }
+
+    /// 🧊 Preview mesh JSON previously resolved through the owning geometry extension.
+    pub fn preview_mesh_json(&self, handle: &str) -> Option<&str> {
+        self.preview_mesh_json_by_handle.get(handle).map(String::as_str)
+    }
+
+    /// 🧹 Drops preview meshes/pending tessellates whose handles are no longer live.
+    pub fn retain_preview_meshes(&mut self, live_handles: &std::collections::HashSet<String>) {
+        self.preview_mesh_json_by_handle.retain(|handle, _| live_handles.contains(handle));
+        self.pending_tessellate_by_hash.retain(|_, handle| live_handles.contains(handle));
+    }
+
+    /// 📨 Notes an in-flight tessellate; returns true when the caller should emit `InvokeExtension`.
+    pub fn note_pending_tessellate(&mut self, node_hash: u64, handle: String) -> bool {
+        if self.preview_mesh_json_by_handle.contains_key(&handle) {
+            return false;
+        }
+        if self.pending_tessellate_by_hash.values().any(|pending| pending == &handle) {
+            return false;
+        }
+        self.pending_tessellate_by_hash.insert(node_hash, handle);
+        true
+    }
+
+    /// ✅ Stores a tessellate response under the handle recorded for `node_hash`.
+    pub fn resolve_preview_tessellate(&mut self, node_hash: u64, output_json: &str) -> bool {
+        let Some(handle) = self.pending_tessellate_by_hash.remove(&node_hash) else {
+            return false;
+        };
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(output_json) {
+            if value.get("error").is_some() {
+                return false;
+            }
+        }
+        self.preview_mesh_json_by_handle.insert(handle, output_json.to_string());
+        true
+    }
+}
+
+/// 🧬 Stable `nodeHash` for an extension tessellate request (mirrored through ShellHost).
+pub fn preview_tessellate_node_hash(handle: &str, tolerance_bits: u64) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    handle.hash(&mut hasher);
+    tolerance_bits.hash(&mut hasher);
+    hasher.finish()
 }
 
 /// 🏠 Builds a host wired to `session`'s shared cache and converged baseline.
@@ -1969,8 +2030,28 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
     let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), session.neural_cache());
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     session.install_baseline_into(&mut host);
+    if !session.eval_json().is_empty() {
+        host.last_eval_json = session.eval_json().to_string();
+    }
     host
 }
+
+//#region 🔖️ProcessSession
+/// 🧠 Process-local eval session — `DocumentApp::handle`/`render`/`pending_effects` are receiverless
+/// (B1), so the off-main-thread eval driver cannot live on the app ZST. One session per plugin wasm
+/// instance is correct for the playground/single-document hosts; multi-instance hosts must graduate
+/// this to an instance-keyed map when that lands.
+static PROCESS_FLOW_EVAL_SESSION: std::sync::Mutex<Option<FlowEvalSession>> = std::sync::Mutex::new(None);
+
+/// 🧠 Runs `body` with the process-local [`FlowEvalSession`], creating it on first use.
+pub fn with_process_flow_eval_session<R>(body: impl FnOnce(&mut FlowEvalSession) -> R) -> R {
+    let mut guard = PROCESS_FLOW_EVAL_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    if guard.is_none() {
+        *guard = Some(FlowEvalSession::new());
+    }
+    body(guard.as_mut().expect("session installed above"))
+}
+//#endregion 🔖️ProcessSession
 
 fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
     let eval: serde_json::Value = serde_json::from_str(&host.last_eval_json).unwrap_or(serde_json::json!({}));

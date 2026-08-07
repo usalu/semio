@@ -6,7 +6,7 @@ Ticket `26/08/06/PERIPHERY-PROJECT-JSON-AND-FINALIZATION` · inventory `2026-08-
 
 | Item | Status |
 |------|--------|
-| `.dependency-cruiser.cjs` taxonomy path → `📚️lib/🔣️taxonomy.json` | ✅ loads (`dependencyCruiserTaxonomyLoadOk: true`) |
+| `.dependency-cruiser.cjs` taxonomy path → `📚️library/🔣️taxonomy.json` | ✅ loads (`dependencyCruiserTaxonomyLoadOk: true`) |
 | Root `📜️script.ts` `REPO_CLIENT_GO` / `REPO_MCP_GO` → module roots (`⌨️cli`, `🔌️mcp`) | ✅ matches on-disk `go.mod` |
 | `.devcontainer/post-create.sh` MCP go build cwd → `…/🔌️mcp` | ✅ |
 | `.gitignore` `**/📦️packages/**/Cargo.lock` | ✅ |

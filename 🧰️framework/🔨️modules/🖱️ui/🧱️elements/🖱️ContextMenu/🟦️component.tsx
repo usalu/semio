@@ -11,7 +11,7 @@ import { createPortal } from "react-dom";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
-import { Icon, type IconSource } from "../🔣Icons/🟦️component.tsx";
+import { Icon, type IconSource } from "../🔣️Icons/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
 import { useFlow } from "../🧭️Flow/🟦️component.tsx";

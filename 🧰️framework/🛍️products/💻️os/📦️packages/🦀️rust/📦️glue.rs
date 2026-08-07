@@ -103,7 +103,7 @@ pub mod os_pack {
   #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs"]
   pub mod cli;
 
-  #[path = "../../🔨️modules/🎒️pack/🆔ids/🦀️component.rs"]
+  #[path = "../../🔨️modules/🎒️pack/🆔️ids/🦀️component.rs"]
   pub mod ids;
 
   #[path = "../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs"]
@@ -113,8 +113,12 @@ pub mod os_pack {
   pub mod source;
 
   pub use self::ids::*;
-  pub use self::codec::*;
   pub use self::source::*;
+  // 🎾️ Re-export codec primitives without PackSource/PackSink (those live in `source`).
+  pub use self::codec::{
+    ByteReader, ByteWriter, CompressionCodec, NoCompression, PackError, PackLimits, crc32c,
+    is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64,
+  };
 
   #[path = "../../🔨️modules/🎒️pack/📐️format/🦀️component.rs"]
   pub mod format;
@@ -156,7 +160,7 @@ pub mod os_spr {
   #[path = "../../🔨️modules/📡️spr/🎮️command/🦀️component.rs"]
   pub mod command;
 
-  #[path = "../../🔨️modules/📡️spr/🆔ids/🦀️component.rs"]
+  #[path = "../../🔨️modules/📡️spr/🆔️ids/🦀️component.rs"]
   pub mod ids;
 
   #[path = "../../🔨️modules/📡️spr/🔢️scalar/🦀️component.rs"]
@@ -168,13 +172,26 @@ pub mod os_spr {
   #[path = "../../🔨️modules/📡️spr/🔐️crypto/🦀️component.rs"]
   pub mod crypto;
 
-  #[path = "../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs"]
-  pub mod wire_codec;
+  #[path = "."]
+  pub mod wire {
+    #[path = "../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs"]
+    mod codec;
+    pub use codec::*;
+
+    #[path = "../../🔨️modules/📡️spr/📡️wire/🦀️component.rs"]
+    mod hub;
+    pub use hub::*;
+
+    // 🧬️ Historical protocol facade re-exported ids/crypto/dictionary through `wire::`.
+    pub use super::ids::*;
+    pub use super::crypto::*;
+    pub use super::dictionary::*;
+  }
 
   pub use self::ids::*;
   pub use self::dictionary::*;
   pub use self::crypto::*;
-  pub use self::wire_codec::*;
+  pub use self::wire::*;
 
   #[path = "../../🔨️modules/📡️spr/🔀️crdt/🦀️component.rs"]
   pub mod crdt;
@@ -194,9 +211,6 @@ pub mod os_spr {
 
   #[path = "../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs"]
   pub mod testkit;
-
-  #[path = "../../🔨️modules/📡️spr/📡️wire/🦀️component.rs"]
-  pub mod wire;
 
 }
 

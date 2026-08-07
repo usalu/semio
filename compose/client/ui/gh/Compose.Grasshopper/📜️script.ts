@@ -2,7 +2,7 @@
 /** 🧭️ Grasshopper project router: `bun ./📜️script.ts <build|test|publish|setup|generate value-list>`. */
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "@semio-tech/repo-lib";
 
 const yakWin8 = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 const yakWin7 = "C:\\Program Files\\Rhino 7\\System\\Yak.exe";

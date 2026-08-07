@@ -480,4 +480,68 @@ pub mod apps {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod puzzle2d {
+        #[path = "../../🗿️artifacts/◻2d/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
+        pub mod nakagin_capsule_tower;
+        #[cfg(test)]
+        #[path = "../../🗿️artifacts/◻2d/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
+        mod nakagin_capsule_tower_tests;
+        #[path = "../../🗿️artifacts/◻2d/📚️examples/🌲️concrete-forest/🦀️component.rs"]
+        pub mod concrete_forest;
+        #[cfg(test)]
+        #[path = "../../🗿️artifacts/◻2d/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
+        mod concrete_forest_tests;
+    }
+    #[path = "."]
+    pub mod puzzle3d {
+        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
+        pub mod nakagin_capsule_tower;
+        #[cfg(test)]
+        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
+        mod nakagin_capsule_tower_tests;
+        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🌲️concrete-forest/🦀️component.rs"]
+        pub mod concrete_forest;
+        #[cfg(test)]
+        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
+        mod concrete_forest_tests;
+    }
+    #[path = "."]
+    pub mod puzzle5d {
+        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
+        pub mod nakagin_capsule_tower;
+        #[cfg(test)]
+        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
+        mod nakagin_capsule_tower_tests;
+        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌲️concrete-forest/🦀️component.rs"]
+        pub mod concrete_forest;
+        #[cfg(test)]
+        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
+        mod concrete_forest_tests;
+    }
+    #[path = "."]
+    pub mod apps {
+        #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
+        pub mod demo_session_2d;
+        #[cfg(test)]
+        #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs"]
+        mod demo_session_2d_tests;
+        #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
+        pub mod demo_session_3d;
+        #[cfg(test)]
+        #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs"]
+        mod demo_session_3d_tests;
+        #[path = "../../🎛️apps/🖐️5d/📚️examples/🎬️demo-session/🦀️component.rs"]
+        pub mod demo_session_5d;
+        #[cfg(test)]
+        #[path = "../../🎛️apps/🖐️5d/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs"]
+        mod demo_session_5d_tests;
+    }
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

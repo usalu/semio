@@ -1,6 +1,6 @@
 ---
 technology: procedural
-path: 🔧procedural🎮play
+path: 🔧procedural🎮️play
 bundle:
  name: play
  emoji: 🎮

@@ -3,7 +3,7 @@ import {
   formatMetricRatio,
   formatUlocMetricsBody,
   formatMicroCommitMetricsLines,
-} from "../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
+} from "../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts";
 
 const checks = [
   ["422k", formatMetricLocCount(422377)],

@@ -1,0 +1,11 @@
+{
+  "dump": {
+    "meshesJson": "[]",
+    "instancesJson": "[]",
+    "statusJson": "{\"distance\":{\"status\":\"ok\"},\"extrude\":{\"status\":\"ok\"},\"face\":{\"status\":\"ok\"},\"height\":{\"status\":\"ok\"},\"rect\":{\"status\":\"ok\"},\"vector\":{\"status\":\"ok\"},\"width\":{\"status\":\"ok\"}}",
+    "worldHtml": "<div class=\"semio-world-3d-host relative h-full min-h-[24rem] w-full\" data-surface-id=\"procedural.play.preview\" data-orbit-view-gizmo=\"\" data-meshes-json=\"[]\" data-instances-json=\"[]\"><div class=\"h-full w-full\" style=\"width: 100%; height: 100%; touch-action: none; overscroll-behavior: contain;\"><div style=\"position: relative; width: 100%; height: 100%; overflow: hidden; pointer-events: auto;\"><div style=\"width: 100%; height: 100%;\"><canvas style=\"display: block; width: 300px; height: 3337.31px; "
+  },
+  "logs": [
+    "[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004"
+  ]
+}

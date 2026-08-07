@@ -1,0 +1,28 @@
+{
+  "snap": {
+    "statusJson": "{\"distance\":{\"status\":\"ok\"},\"extrude\":{\"status\":\"ok\"},\"face\":{\"status\":\"ok\"},\"height\":{\"status\":\"ok\"},\"rect\":{\"status\":\"ok\"},\"vector\":{\"status\":\"ok\"},\"width\":{\"status\":\"ok\"}}",
+    "worldStatus": "{\"debug\":{\"evalHead\":\"{\\\"distance\\\":{\\\"in\\\":{},\\\"out\\\":{\\\"number\\\":{\\\"$schema\\\":\\\"number\\\",\\\"value\\\":4.0}}},\\\"extrude\\\":{\\\"error\\\":\\\"unknown kind: brep.sweep.extrude\\\",\\\"in\\\":{\\\"face\\\":{\\\"error\\\":\\\"missing channel face\\\"},\\\"vector\\\":{\\\"error\\\":\\\"missing channel vector\\\"}},\\\"out\\\":{\\\"error\\\":\\\"unknown\",\"evalLen\":900,\"instancesLen\":2,\"meshesLen\":2},\"widgetErrors\":{\"extrude\":\"unknown kind: brep.sweep.extrude\",\"face\":\"unknown kind: brep.surf.planarFaceWire\",\"rect\":\"unknown kind: brep.curve.rectangle\",\"vector\":\"unknown kind: math.vector\"}}",
+    "meshes": "[]"
+  },
+  "relevant": [
+    "[warning] [DEBUG] plugin source \"extensions\" malformed event: event.plugins is not iterable",
+    "[log] [DEBUG] plugin worker + flow-extension-text (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-logic (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-draw (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-bim (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-list (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-math (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-brep (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-dictionary (10 live)",
+    "[log] [DEBUG] plugin worker + flow-extension-primitive (10 live)",
+    "[log] [DEBUG] plugin worker + procedural (10 live)",
+    "[log] [DEBUG] contributionsJson flowExtension count 0 total 0 apps []",
+    "[log] [DEBUG] contributionsJson flowExtension count 0 total 0 apps []",
+    "[log] [DEBUG] contributionsJson flowExtension count 0 total 0 apps []",
+    "[log] [DEBUG] contributionsJson flowExtension count 0 total 0 apps []",
+    "[log] [DEBUG] contributionsJson flowExtension count 0 total 0 apps []",
+    "[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004",
+    "[log] [DEBUG] contributionsJson flowExtension count 0 total 0 apps []"
+  ],
+  "logCount": 42
+}

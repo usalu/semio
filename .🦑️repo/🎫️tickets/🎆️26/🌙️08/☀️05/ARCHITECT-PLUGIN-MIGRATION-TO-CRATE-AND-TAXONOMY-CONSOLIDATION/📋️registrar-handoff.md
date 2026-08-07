@@ -30,7 +30,7 @@ TEMPLATE §13.4 — `workspace = true` + a renamed `package =` does not resolve.
 
 ## Cross-cutting edits already applied by this agent
 
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🧪️index.test.ts:1100` —
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🧪️index.test.ts:1100` —
   a stale `resolveCargoPackageName` fixture asserted the now-deleted spine-module path/package name.
   Repointed to `("semio-s-plugin-architect", "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust")`, matching
   the `semio-s-plugin-energy` row right below it. Same class of stale fixture 🔋️energy's migration hit.

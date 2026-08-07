@@ -5,9 +5,16 @@ import { describe, expect, it } from "vitest";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-describe("example 🏗️️nakagin-capsule-tower", () => {
+describe("example 🌲️concrete-forest", () => {
   it("ships a non-empty dsl asset", () => {
-    const text = readFileSync(join(here, "../🖼️assets/🗣️tower.dsl.semio"), "utf8");
-    expect(text.length).toBeGreaterThan(16);
+    const text = readFileSync(join(here, "../🖼️assets/🗣️forest.dsl.semio"), "utf8");
+    expect(text.length).toBeGreaterThan(64);
+    expect(text.startsWith("semio ")).toBe(true);
+  });
+
+  it("ships nonempty op/pack/spr assets", () => {
+    expect(readFileSync(join(here, "../🖼️assets/🔧️forest.op.semio"), "utf8").length).toBeGreaterThan(64);
+    expect(readFileSync(join(here, "../🖼️assets/🎒️forest.pack.semio")).byteLength).toBeGreaterThan(64);
+    expect(readFileSync(join(here, "../🖼️assets/📡️forest.spr.semio")).byteLength).toBeGreaterThan(64);
   });
 });

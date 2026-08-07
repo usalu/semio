@@ -9,7 +9,7 @@
 
 use crate::apps::procedural2d::commands::{eval, generation, graph, locale, selection, view, widget};
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOperation};
-use crate::apps::procedural2d::modes::edit::windows::{flow, preview as edit_preview};
+use crate::apps::procedural2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
 use crate::apps::procedural2d::modes::generate::windows::{form, generations, preview as generate_preview};
 use crate::apps::procedural2d::modes::{edit, generate};
 use crate::apps::procedural2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -17,7 +17,7 @@ use crate::apps::procedural2d::terminology::{procedural2d_labels, Procedural2dLa
 use crate::artifacts::procedural2d::engine::procedural2d_io;
 use crate::artifacts::procedural2d::op::Procedural2dOperation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
-use flow::FlowEvalSession;
+use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -183,31 +183,30 @@ impl DocumentApp for Procedural2dPlayApp {
     }
 
     fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation, Self::DraftOperation>, Fault> {
-        let mut session = FlowEvalSession::default();
-        command.dispatch(doc, cfg, &mut session)
+        with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
     fn pending_effects(doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
-        let mut session = FlowEvalSession::default();
-        let host = crate::artifacts::procedural2d::engine::host_from_fixture_with_session(&doc.projection.fixture, &session);
-        if session.sync(&host) {
-            vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
-        } else {
-            Vec::new()
-        }
+        with_process_flow_eval_session(|session| {
+            let host = crate::artifacts::procedural2d::engine::host_from_fixture_with_session(&doc.projection.fixture, session);
+            if session.sync(&host) {
+                vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+            } else {
+                Vec::new()
+            }
+        })
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = procedural2d_labels(config);
-        let session = FlowEvalSession::default();
-        match body_key {
-            flow::PROCEDURAL2D_PLAY_BODY_MAIN => flow::render(document, config, &session),
-            edit_preview::PROCEDURAL2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session),
+        with_process_flow_eval_session(|session| match body_key {
+            flow_window::PROCEDURAL2D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
+            edit_preview::PROCEDURAL2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session),
             generations::PROCEDURAL2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
             form::PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
             generate_preview::PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(config, labels),
@@ -215,7 +214,7 @@ impl DocumentApp for Procedural2dPlayApp {
             catalogue_panel::PROCEDURAL2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        })
     }
 
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
@@ -291,7 +290,7 @@ pub fn create_procedural2d_app() -> App {
             .mode_def(edit::definition())
             .mode_def(generate::definition())
             .default_mode_id(edit::PROCEDURAL2D_PLAY_MODE_EDIT)
-            .window_kind_def(flow::definition())
+            .window_kind_def(flow_window::definition())
             .window_kind_def(edit_preview::definition())
             .window_kind_def(generations::definition())
             .window_kind_def(form::definition())
@@ -480,7 +479,7 @@ mod tests {
     #[test]
     fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_procedural2d_app().definition).expect("app definition json");
-        for id in [flow::PROCEDURAL2D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL2D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL2D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW] {
+        for id in [flow_window::PROCEDURAL2D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL2D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL2D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
         for id in [edit::PROCEDURAL2D_PLAY_MODE_EDIT, generate::PROCEDURAL2D_PLAY_MODE_GENERATE] {

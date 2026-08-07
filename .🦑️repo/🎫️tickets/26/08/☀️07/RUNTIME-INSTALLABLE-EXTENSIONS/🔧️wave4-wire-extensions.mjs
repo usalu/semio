@@ -22,7 +22,7 @@ function walkExtensions(dir, out = []) {
 }
 
 function repoLibRel(fromRustDir) {
-  const rel = path.relative(fromRustDir, path.join(ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts"));
+  const rel = path.relative(fromRustDir, path.join(ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts"));
   return rel.split(path.sep).join("/");
 }
 

@@ -1,0 +1,463 @@
+{
+  "wired": 6,
+  "skipped": 60,
+  "unmatched": [
+    [
+      "🎛️apps/✒️writer/🦀️component.rs",
+      "jack"
+    ],
+    [
+      "🎛️apps/✒️writer/🦀️component.rs",
+      "dag.jack"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_HEX_COLUMN"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_RECT_EXTRUDE"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_SPHERE_TORUS"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_BOX_FILLET"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_BOX_SHELL"
+    ],
+    [
+      "🎛️apps/◻2d/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "reuse-terrain"
+    ],
+    [
+      "🎛️apps/◻2d/🦀️component.rs",
+      "reuse-map"
+    ],
+    [
+      "🎛️apps/🎥️shooting/🦀️component.rs",
+      "SHOOTING_EXAMPLE_DEFAULT_ID"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/◻2d/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/🏛️architect/🦀️component.rs",
+      "sample"
+    ],
+    [
+      "🎛️apps/🏛️architect/🦀️component.rs",
+      "empty"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "timber-beam-joinery"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "drilled-plate"
+    ],
+    [
+      "🎛️apps/💠️lowpoly/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/🔌️wires/🦀️component.rs",
+      "WIRES_PLAY_EXAMPLE_METABOLISM_ID"
+    ],
+    [
+      "🎛️apps/📋️forms/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📋️forms/🦀️component.rs",
+      "onboarding"
+    ],
+    [
+      "🎛️apps/📋️forms/🦀️component.rs",
+      "building-component"
+    ],
+    [
+      "🎛️apps/📏️layout/🦀️component.rs",
+      "sample"
+    ],
+    [
+      "🎛️apps/📐️cad/🦀️component.rs",
+      "CAD_EXAMPLE_FOREST_LEFT"
+    ],
+    [
+      "🎛️apps/📕️din4108/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📙️din18599/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📗️din16798/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1995/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1992/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1993/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1994/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📔️vdi3805/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📓️iso16757/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1991/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1996/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1998/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1999/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1997/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📘️en1990/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/📸️remodel/🦀️component.rs",
+      "default"
+    ],
+    [
+      "🎛️apps/🔌️jack/🦀️component.rs",
+      "nakagin"
+    ],
+    [
+      "🎛️apps/♻️rewrite/🦀️component.rs",
+      "label-core"
+    ],
+    [
+      "🎛️apps/🖍️draw/🦀️component.rs",
+      "semio"
+    ],
+    [
+      "🎛️apps/🖨️raster/🦀️component.rs",
+      "semio"
+    ],
+    [
+      "🎛️apps/🗒️note/🦀️component.rs",
+      "semio"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE"
+    ],
+    [
+      "🎛️apps/🧊️3d/🦀️component.rs",
+      "crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_FOREST_LEFT"
+    ],
+    [
+      "🎛️apps/🖐️5d/🦀️component.rs",
+      "crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_FOREST_LEFT"
+    ],
+    [
+      "🎛️apps/🖐️5d/🦀️component.rs",
+      "crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_CAPSULE"
+    ],
+    [
+      "🎛️apps/◻2d/🦀️component.rs",
+      "example::BLOCK2D_EXAMPLE_LEFT"
+    ],
+    [
+      "🎛️apps/◻2d/🦀️component.rs",
+      "example::BLOCK2D_EXAMPLE_RIGHT"
+    ],
+    [
+      "🎛️apps/🪐️space/🦀️component.rs",
+      "*id"
+    ],
+    [
+      "🎛️apps/🗂️curate/🦀️component.rs",
+      "demo-stock"
+    ],
+    [
+      "🎛️apps/🗂️curate/🦀️component.rs",
+      "empty-curation"
+    ]
+  ],
+  "plugins": {
+    "✒️writer": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "➗️mathematical": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🌀️procedural": {
+      "leaves": 10,
+      "ids": [
+        "demo",
+        "box-fillet-preview",
+        "box-shell-preview",
+        "face-sweep-extrude",
+        "rectangle-extrude-volume",
+        "rectangle-wire-preview",
+        "sphere-box-fuse",
+        "sphere-cut-with-torus",
+        "demo-session"
+      ]
+    },
+    "🌊️flow": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🌍️gis": {
+      "leaves": 4,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🌿️vcs": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🎞️animate": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🎥️shooting": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🎪️demonstrator": {
+      "leaves": 1,
+      "ids": [
+        "demo"
+      ]
+    },
+    "🎬️sequence": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🏗️fem": {
+      "leaves": 4,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🏛️architect": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🏭️process": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "💠️lowpoly": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "💡️reasoning": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "📋️forms": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "📏️layout": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "📐️cad": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "📕️norm": {
+      "leaves": 30,
+      "ids": [
+        "demo",
+        "high-consequence-office",
+        "retail-hydrocarbon-fire",
+        "liquid-retaining-fem-anchor",
+        "high-strength-connection",
+        "composite-bridge-girder",
+        "glulam-footbridge",
+        "loadbearing-wall",
+        "seismic-rc-frame",
+        "aluminium-roof-purlin",
+        "demo-session"
+      ]
+    },
+    "📖️playbook": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "📜️imperative": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "📸️remodel": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🔋️energy": {
+      "leaves": 1,
+      "ids": [
+        "demo"
+      ]
+    },
+    "🔱️trinity": {
+      "leaves": 0,
+      "ids": []
+    },
+    "🕸️dag": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🖍️draw": {
+      "leaves": 0,
+      "ids": []
+    },
+    "🖨️raster": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🗒️note": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🧱️block": {
+      "leaves": 9,
+      "ids": [
+        "hexagonal-cut-concrete-forest-left",
+        "hexagonal-cut-concrete-forest-right",
+        "nakagin-capsule",
+        "demo-session"
+      ]
+    },
+    "🪐️space": {
+      "leaves": 3,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    },
+    "🪵️sourcing": {
+      "leaves": 2,
+      "ids": [
+        "demo",
+        "demo-session"
+      ]
+    }
+  }
+}

@@ -4,7 +4,7 @@ use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::apps::procedural2d::terminology::Procedural2dLabels;
 use crate::apps::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use crate::artifacts::procedural2d::engine::generation_preview_layers;
-use playbook::render_generation_preview_text;
+use flow::playbook::render_generation_preview_text;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

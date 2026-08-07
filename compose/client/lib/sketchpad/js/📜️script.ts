@@ -2,8 +2,8 @@
 /** 🧭️ `@semio-tech/compose-sketchpad-js` router: `bun ./📜️script.ts dev|test|policy [args…]`. */
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import type { FileLinter } from "../../../../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, defineLint, dependencyBoundaryBreachesForFile, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runPolicyOnlyMain, runVitest, runViteBunxDevPlain } from "../../../../../repo/lib/js/index.ts";
+import type { FileLinter } from "@semio-tech/repo-lib";
+import { BundleScript, ScriptRouter, defineLint, dependencyBoundaryBreachesForFile, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runPolicyOnlyMain, runVitest, runViteBunxDevPlain } from "@semio-tech/repo-lib";
 
 export const policyFile = "index.ts";
 

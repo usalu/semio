@@ -118,11 +118,11 @@
       "options": {}
     },
     {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🟨️nx-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️nx-plugin.mjs",
       "options": {}
     },
     {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🟨️nx-emoji-project-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️nx-emoji-project-plugin.mjs",
       "options": {}
     }
   ]

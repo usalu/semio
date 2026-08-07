@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 📊️ `@semio-tech/compose-gql` router: `bun 📜️script.ts <build|dev|test>`. `compose-gql/rs` is a
  * regular root-workspace member (not a standalone Cargo workspace — that was a stale claim). */
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel, runCmd } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel, runCmd } from "@semio-tech/repo-lib";
 import { join } from "node:path";
 
 const crate = "compose-gql";

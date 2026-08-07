@@ -156,4 +156,15 @@ pub mod apps {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/🗒️note/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_note_demo;
+    #[path = "../../🎛️apps/🗒️note/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_note_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

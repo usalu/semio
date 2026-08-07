@@ -1041,9 +1041,9 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
 // #endregion 🔖️CanvasPickMenu
 
 // #region 🔖️Icon
-import { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
+import { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "../../../../🧱️elements/🔣️Icons/🟦️component.tsx";
 export { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps };
-export type { Icon } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
+export type { Icon } from "../../../../🧱️elements/🔣️Icons/🟦️component.tsx";
 
 
 
@@ -5856,7 +5856,7 @@ export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue,
 // #endregion 🎥️Tutorial
 
 // #region 🗨️Dialog
-import { UIDialog, type UIDialogProps } from "../../../../🧱️elements/💬UIDialog/🟦️component.tsx";
+import { UIDialog, type UIDialogProps } from "../../../../🧱️elements/💬️UIDialog/🟦️component.tsx";
 export { UIDialog, type UIDialogProps };
 // #endregion 🗨️Dialog
 
@@ -6010,17 +6010,17 @@ export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
 
 // #region 🫳️DragAffordance
-import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../../../🧱️elements/🧱DragHandle/🟦️component.tsx";
+import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../../../🧱️elements/🧱️DragHandle/🟦️component.tsx";
 export { DragHandle, HANDLE_HOVER_SCOPE_ATTR };
 // #endregion 🫳️DragAffordance
 
 
 /** @emoji 📑️ Shared panel/mobile panel tab bar variant. */
 /** @emoji 📑️ `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
-// #region 📑PanelTabBar
-import { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps } from "../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx";
+// #region 📑️PanelTabBar
+import { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps } from "../../../../🧱️elements/📑️PanelTabBar/🟦️component.tsx";
 export { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps };
-// #endregion 📑PanelTabBar
+// #endregion 📑️PanelTabBar
 
 export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
 
@@ -7527,7 +7527,7 @@ export function celebrateAllElements(durationMs = CELEBRATE_STAMP_DURATION_MS, r
 //#endregion 🧭️ElementState
 
 //#region 🆔️ElementId
-import { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias } from "../../../../🧱️elements/🆔ElementId/🟦️component.tsx";
+import { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias } from "../../../../🧱️elements/🆔️ElementId/🟦️component.tsx";
 export { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias };
 //#endregion 🆔️ElementId
 
@@ -7539,12 +7539,12 @@ export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
 // #endregion 🪆️Command
 
 // #region 🔎️ShellSearchDialog
-import { ShellSearchDialog, type ShellCommandResult, type ShellSearchDialogProps } from "../../../../🧱️elements/🔍ShellSearchDialog/🟦️component.tsx";
+import { ShellSearchDialog, type ShellCommandResult, type ShellSearchDialogProps } from "../../../../🧱️elements/🔍️ShellSearchDialog/🟦️component.tsx";
 export { ShellSearchDialog, type ShellCommandResult, type ShellSearchDialogProps };
 // #endregion 🔎️ShellSearchDialog
 
 // #region 🔎️ShellFindDialog
-import { ShellFindDialog, type ShellFindDialogProps } from "../../../../🧱️elements/🔎ShellFindDialog/🟦️component.tsx";
+import { ShellFindDialog, type ShellFindDialogProps } from "../../../../🧱️elements/🔎️ShellFindDialog/🟦️component.tsx";
 export { ShellFindDialog, type ShellFindDialogProps };
 // #endregion 🔎️ShellFindDialog
 
@@ -7556,12 +7556,12 @@ export { ShellFindDialog, type ShellFindDialogProps };
 // #endregion 🎛️CommandPanel
 
 // #region 🎮️Footer
-import { Footer, type FooterProps } from "../../../../🧱️elements/🔚Footer/🟦️component.tsx";
+import { Footer, type FooterProps } from "../../../../🧱️elements/🔚️Footer/🟦️component.tsx";
 export { Footer, type FooterProps };
 // #endregion 🎮️Footer
 
 // #region 🪨️Layout
-import { Layout, type LayoutProps } from "../../../../🧱️elements/📐Layout/🟦️component.tsx";
+import { Layout, type LayoutProps } from "../../../../🧱️elements/📐️Layout/🟦️component.tsx";
 export { Layout, type LayoutProps };
 // #endregion 🪨️Layout
 
@@ -7571,7 +7571,7 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 // #endregion 🌐️Popover
 
 // #region 🎙️Tooltip
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, EnhancedTooltipContent, DescriptionTooltipContent, type TooltipConfig, type DescriptionTooltipData } from "../../../../🧱️elements/💡Tooltip/🟦️component.tsx";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, EnhancedTooltipContent, DescriptionTooltipContent, type TooltipConfig, type DescriptionTooltipData } from "../../../../🧱️elements/💡️Tooltip/🟦️component.tsx";
 export type { TooltipConfig, DescriptionTooltipData };
 // #endregion 🎙️Tooltip
 
@@ -7681,12 +7681,12 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 // #endregion 📣️Aside
 
 // #region 📔️Avatar
-import { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar, type DraggableAvatarProps, type TableAvatarProps } from "../../../../🧱️elements/👤Avatar/🟦️component.tsx";
+import { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar, type DraggableAvatarProps, type TableAvatarProps } from "../../../../🧱️elements/👤️Avatar/🟦️component.tsx";
 export { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar, type DraggableAvatarProps, type TableAvatarProps };
 // #endregion 📔️Avatar
 
 // #region 🎬️Card
-import { Card, CardGrid, type CardProps, type CardGridProps } from "../../../../🧱️elements/🎴Card/🟦️component.tsx";
+import { Card, CardGrid, type CardProps, type CardGridProps } from "../../../../🧱️elements/🎴️Card/🟦️component.tsx";
 export { Card, CardGrid, type CardProps, type CardGridProps };
 // #endregion 🎬️Card
 
@@ -7931,18 +7931,18 @@ export { LoadingRow };
 export type { LoadingRowProps };
 // #endregion LoadingRow
 
-// #region 🦴Skeletons
-import { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind } from "../../../../🧱️elements/🦴Skeletons/🟦️component.tsx";
+// #region 🦴️Skeletons
+import { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind } from "../../../../🧱️elements/🦴️Skeletons/🟦️component.tsx";
 export { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind };
-// #endregion 🦴Skeletons
+// #endregion 🦴️Skeletons
 
 // #region 🔓️DiagramNode
-import { DiagramNode, PlaceholderDiagramNode, type DiagramNodeProps } from "../../../../🧱️elements/🔲DiagramNode/🟦️component.tsx";
+import { DiagramNode, PlaceholderDiagramNode, type DiagramNodeProps } from "../../../../🧱️elements/🔲️DiagramNode/🟦️component.tsx";
 export { DiagramNode, PlaceholderDiagramNode, type DiagramNodeProps };
 // #endregion 🔓️DiagramNode
 
 // #region 🔧️HoverCard
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../🧱️elements/🪟HoverCard/🟦️component.tsx";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../🧱️elements/🪟️HoverCard/🟦️component.tsx";
 export { HoverCard, HoverCardContent, HoverCardTrigger };
 // #endregion 🔧️HoverCard
 
@@ -7981,12 +7981,12 @@ export { Section };
 // #endregion 🖲️Section
 
 // #region 🪬️Steps
-import { Steps, type StepsProps } from "../../../../🧱️elements/🐾Steps/🟦️component.tsx";
+import { Steps, type StepsProps } from "../../../../🧱️elements/🐾️Steps/🟦️component.tsx";
 export { Steps, type StepsProps };
 // #endregion 🪬️Steps
 
 // #region 🏷️Field
-import { Field, type FieldProps } from "../../../../🧱️elements/📝Field/🟦️component.tsx";
+import { Field, type FieldProps } from "../../../../🧱️elements/📝️Field/🟦️component.tsx";
 export { Field, type FieldProps };
 // #endregion 🏷️Field
 
@@ -8005,12 +8005,12 @@ export { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
 // #endregion 🌩️ButtonGroup
 
 // #region 🌩️Button
-import { Button, ButtonCycle, type ButtonCycleProps, type ButtonProps } from "../../../../🧱️elements/🔘Button/🟦️component.tsx";
+import { Button, ButtonCycle, type ButtonCycleProps, type ButtonProps } from "../../../../🧱️elements/🔘️Button/🟦️component.tsx";
 export { Button, ButtonCycle, type ButtonCycleProps, type ButtonProps };
 // #endregion 🌩️Button
 
 // #region 📧️Combobox
-import { Combobox } from "../../../../🧱️elements/🔍Combobox/🟦️component.tsx";
+import { Combobox } from "../../../../🧱️elements/🔍️Combobox/🟦️component.tsx";
 export { Combobox };
 // #endregion 📧️Combobox
 
@@ -8030,12 +8030,12 @@ export { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesTo
 // #endregion 🏩️Slider
 
 // #region 🏬️Stepper
-import { Stepper } from "../../../../🧱️elements/🪜Stepper/🟦️component.tsx";
+import { Stepper } from "../../../../🧱️elements/🪜️Stepper/🟦️component.tsx";
 export { Stepper };
 // #endregion 🏬️Stepper
 
 // #region 🎏️Textarea
-import { Textarea } from "../../../../🧱️elements/📄Textarea/🟦️component.tsx";
+import { Textarea } from "../../../../🧱️elements/📄️Textarea/🟦️component.tsx";
 export { Textarea };
 // #endregion 🎏️Textarea
 
@@ -8051,13 +8051,13 @@ export { Toggle, ToggleGroup, ToggleGroupItem };
 // #endregion 🧩️ToggleGroup
 
 // #region 🎄️Orb
-import { Orb, type OrbProps } from "../../../../🧱️elements/🔮Orb/🟦️component.tsx";
+import { Orb, type OrbProps } from "../../../../🧱️elements/🔮️Orb/🟦️component.tsx";
 export { Orb };
 export type { OrbProps };
 // #endregion 🎄️Orb
 
 // #region 🧫️Ring
-import { Ring, type RingOrbData, type RingProps } from "../../../../🧱️elements/⭕Ring/🟦️component.tsx";
+import { Ring, type RingOrbData, type RingProps } from "../../../../🧱️elements/⭕️Ring/🟦️component.tsx";
 export { Ring };
 export type { RingOrbData, RingProps };
 // #endregion 🧫️Ring
@@ -8067,7 +8067,7 @@ export type { RingOrbData, RingProps };
 // #region 🗼️Aggregation Components
 
 // #region 🛒️Accordion
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../../../🧱️elements/🪗Accordion/🟦️component.tsx";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../../../🧱️elements/🪗️Accordion/🟦️component.tsx";
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
 // #endregion 🛒️Accordion
 
@@ -8077,7 +8077,7 @@ export { Collapsible, CollapsibleContent, CollapsibleTrigger };
 // #endregion 🖥️Collapsible
 
 // #region 🧸️Dialog
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "../../../../🧱️elements/💬Dialog/🟦️component.tsx";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "../../../../🧱️elements/💬️Dialog/🟦️component.tsx";
 export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger };
 // #endregion 🧸️Dialog
 
@@ -8111,7 +8111,7 @@ export {
 // #endregion 🪬️Resizable
 
 // #region 🎮️Scrollable
-import { Scrollable } from "../../../../🧱️elements/📜Scrollable/🟦️component.tsx";
+import { Scrollable } from "../../../../🧱️elements/📜️Scrollable/🟦️component.tsx";
 export { Scrollable };
 // #endregion 🎮️Scrollable
 
@@ -8290,7 +8290,7 @@ import {
   type NavbarExampleOption,
   type NavbarExampleSelectProps,
   NavbarExampleSelect,
-} from "../../../../🧱️elements/🔝Navbar/🟦️component.tsx";
+} from "../../../../🧱️elements/🔝️Navbar/🟦️component.tsx";
 export {
   Navbar,
   type NavbarItem,
@@ -8377,17 +8377,17 @@ export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarPr
 // #endregion 🪟️DesktopTitlebar
 
 // #region 🏷️Tabs
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../🧱️elements/📑Tabs/🟦️component.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../🧱️elements/📑️Tabs/🟦️component.tsx";
 export { Tabs, TabsContent, TabsList, TabsTrigger };
 // #endregion 🏷️Tabs
 
 // #region 🖼️IconSelector
-import { IconSelector, type IconSelectorProps } from "../../../../🧱️elements/🔣IconSelector/🟦️component.tsx";
+import { IconSelector, type IconSelectorProps } from "../../../../🧱️elements/🔣️IconSelector/🟦️component.tsx";
 export { IconSelector, type IconSelectorProps };
 // #endregion 🖼️IconSelector
 
 // #region 📜️Tree
-import { BasicChatPanel, CATALOGUE_DRAG_MIME, Catalogue, ControlTree, FileTree, HelperRow, PropertyValueColumnContext, SortableTreeItems, Tree, TreeAlignedRow, TreeCheckbox, TreeContent, TreeContext, TreeItem, TreeItemCollapsibleState, TreeItems, TreeRow, TreeRowAlignmentContext, TreeSection, TreeStateProvider, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, WindowPaneChromeToggle, buildControlTree, catalogueTreeDragController, createTreeHighlightStore, createTreeSelectionStore, defaultControlRenderer, deriveTreeDragRoles, detailPanelHeaderLineCenterPx, detailPanelIndentLen, detailPanelIndentPx, detailPanelPropertyControlClassName, detailPanelPropertyInlineGapPx, detailPanelPropertyRowClassName, detailPanelPropertyStackedToInlineHysteresisPx, getActiveCatalogueDragPayload, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, isTreeReorderDragEvent, markGhostTreeInteraction, mergeTreeRowContextMenu, mergeTreeSectionOrder, normalizeTreeSelectedIds, resolveHoverRow, resolveTreeDropPosition, shouldDispatchTreeRowPointerLeave, syncTreeSelectionPath, treeCompactSiblingGapPx, treeFoldChevronIcon, treeHeaderMainClassName, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeItemLabelStyle, treeItemSecondaryTextClassName, treeReorderDragController, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, uiSpacingLen, useTreeReorder, useTreeState, type CatalogueItem, type CatalogueProps, type ControlDef, type ControlTreeClassNames, type ControlTreeFolderSettings, type ControlTreeProps, type FileTreeNode, type TreeActionPlacement, type TreeCheckboxAction, type TreeCheckboxProps, type TreeDataActivationContext, type TreeDataItem, type TreeDataSection, type TreeDirection, type TreeDragAndDropController, type TreeDragRole, type TreeDropPosition, type TreeHeaderAction, type TreePointerPaletteDragController, type TreeReorderControllerOptions, type TreeReorderMove, type TreeSectionAction, type TreeSelectionMode, type UseTreeReorderResult, type WindowMeasureTreeGroupProps, type WindowMeasureTreeLeafProps, type WindowPaneChromeToggleProps } from "../../../../🧱️elements/🪵Tree/🟦️component.tsx";
+import { BasicChatPanel, CATALOGUE_DRAG_MIME, Catalogue, ControlTree, FileTree, HelperRow, PropertyValueColumnContext, SortableTreeItems, Tree, TreeAlignedRow, TreeCheckbox, TreeContent, TreeContext, TreeItem, TreeItemCollapsibleState, TreeItems, TreeRow, TreeRowAlignmentContext, TreeSection, TreeStateProvider, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, WindowPaneChromeToggle, buildControlTree, catalogueTreeDragController, createTreeHighlightStore, createTreeSelectionStore, defaultControlRenderer, deriveTreeDragRoles, detailPanelHeaderLineCenterPx, detailPanelIndentLen, detailPanelIndentPx, detailPanelPropertyControlClassName, detailPanelPropertyInlineGapPx, detailPanelPropertyRowClassName, detailPanelPropertyStackedToInlineHysteresisPx, getActiveCatalogueDragPayload, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, isTreeReorderDragEvent, markGhostTreeInteraction, mergeTreeRowContextMenu, mergeTreeSectionOrder, normalizeTreeSelectedIds, resolveHoverRow, resolveTreeDropPosition, shouldDispatchTreeRowPointerLeave, syncTreeSelectionPath, treeCompactSiblingGapPx, treeFoldChevronIcon, treeHeaderMainClassName, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeItemLabelStyle, treeItemSecondaryTextClassName, treeReorderDragController, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, uiSpacingLen, useTreeReorder, useTreeState, type CatalogueItem, type CatalogueProps, type ControlDef, type ControlTreeClassNames, type ControlTreeFolderSettings, type ControlTreeProps, type FileTreeNode, type TreeActionPlacement, type TreeCheckboxAction, type TreeCheckboxProps, type TreeDataActivationContext, type TreeDataItem, type TreeDataSection, type TreeDirection, type TreeDragAndDropController, type TreeDragRole, type TreeDropPosition, type TreeHeaderAction, type TreePointerPaletteDragController, type TreeReorderControllerOptions, type TreeReorderMove, type TreeSectionAction, type TreeSelectionMode, type UseTreeReorderResult, type WindowMeasureTreeGroupProps, type WindowMeasureTreeLeafProps, type WindowPaneChromeToggleProps } from "../../../../🧱️elements/🪵️Tree/🟦️component.tsx";
 export { BasicChatPanel, CATALOGUE_DRAG_MIME, Catalogue, ControlTree, FileTree, HelperRow, PropertyValueColumnContext, SortableTreeItems, Tree, TreeAlignedRow, TreeCheckbox, TreeContent, TreeContext, TreeItem, TreeItemCollapsibleState, TreeItems, TreeRow, TreeRowAlignmentContext, TreeSection, TreeStateProvider, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, WindowPaneChromeToggle, buildControlTree, catalogueTreeDragController, createTreeHighlightStore, createTreeSelectionStore, defaultControlRenderer, deriveTreeDragRoles, detailPanelHeaderLineCenterPx, detailPanelIndentLen, detailPanelIndentPx, detailPanelPropertyControlClassName, detailPanelPropertyInlineGapPx, detailPanelPropertyRowClassName, detailPanelPropertyStackedToInlineHysteresisPx, getActiveCatalogueDragPayload, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, isTreeReorderDragEvent, markGhostTreeInteraction, mergeTreeRowContextMenu, mergeTreeSectionOrder, normalizeTreeSelectedIds, resolveHoverRow, resolveTreeDropPosition, shouldDispatchTreeRowPointerLeave, syncTreeSelectionPath, treeCompactSiblingGapPx, treeFoldChevronIcon, treeHeaderMainClassName, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeItemLabelStyle, treeItemSecondaryTextClassName, treeReorderDragController, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, uiSpacingLen, useTreeReorder, useTreeState };
 export type { CatalogueItem, CatalogueProps, ControlDef, ControlTreeClassNames, ControlTreeFolderSettings, ControlTreeProps, FileTreeNode, TreeActionPlacement, TreeCheckboxAction, TreeCheckboxProps, TreeDataActivationContext, TreeDataItem, TreeDataSection, TreeDirection, TreeDragAndDropController, TreeDragRole, TreeDropPosition, TreeHeaderAction, TreePointerPaletteDragController, TreeReorderControllerOptions, TreeReorderMove, TreeSectionAction, TreeSelectionMode, UseTreeReorderResult, WindowMeasureTreeGroupProps, WindowMeasureTreeLeafProps, WindowPaneChromeToggleProps };
 // #endregion 📜️Tree
@@ -8397,13 +8397,13 @@ export type { CatalogueItem, CatalogueProps, ControlDef, ControlTreeClassNames, 
 // #region 🔷️Navigation Components
 
 // #region 💡️Breadcrumb
-import { Breadcrumb, BreadcrumbItem, type BreadcrumbItemData } from "../../../../🧱️elements/🍞Breadcrumb/🟦️component.tsx";
+import { Breadcrumb, BreadcrumbItem, type BreadcrumbItemData } from "../../../../🧱️elements/🍞️Breadcrumb/🟦️component.tsx";
 export { Breadcrumb, BreadcrumbItem };
 export type { BreadcrumbItemData };
 // #endregion 💡️Breadcrumb
 
 // #region 🪩️PageNavigation
-import { PageNavigation, type PageNavigationLink, type PageNavigationProps } from "../../../../🧱️elements/🧭PageNavigation/🟦️component.tsx";
+import { PageNavigation, type PageNavigationLink, type PageNavigationProps } from "../../../../🧱️elements/🧭️PageNavigation/🟦️component.tsx";
 export { PageNavigation };
 export type { PageNavigationLink, PageNavigationProps };
 // #endregion 🪩️PageNavigation
@@ -8768,7 +8768,7 @@ export const Pane: React.FC<PaneProps> = ({
 // #endregion 🪟️Pane
 
 // #region 💧️MobilePanel
-import { MobilePanel, type MobilePanelProps } from "../../../../🧱️elements/📱MobilePanel/🟦️component.tsx";
+import { MobilePanel, type MobilePanelProps } from "../../../../🧱️elements/📱️MobilePanel/🟦️component.tsx";
 export { MobilePanel };
 export type { MobilePanelProps };
 // #endregion 💧️MobilePanel
@@ -8777,11 +8777,11 @@ export type { MobilePanelProps };
 
 // #region 🩻️Ribbon Components
 
-import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem } from "../../../../🧱️elements/🎀Ribbon/🟦️component.tsx";
+import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem } from "../../../../🧱️elements/🎀️Ribbon/🟦️component.tsx";
 export { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem };
 
 // #region 🎀️Ribbon
-import { Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "../../../../🧱️elements/🎀Ribbon/🟦️component.tsx";
+import { Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "../../../../🧱️elements/🎀️Ribbon/🟦️component.tsx";
 export { Ribbon };
 export type { RibbonDirection, RibbonRow, RibbonProps };
 // #endregion 🎀️Ribbon
@@ -9681,12 +9681,12 @@ export { Engagement };
 // #region 🔍️Window Components
 
 // #region 🌊️Window
-import { Window, type WindowConfig } from "../../../../🧱️elements/🪟Window/🟦️component.tsx";
+import { Window, type WindowConfig } from "../../../../🧱️elements/🪟️Window/🟦️component.tsx";
 export { Window, type WindowConfig };
 // #endregion 🌊️Window
 
 // #region 🌈️Page
-import { Page, type PageFrontmatter, type PageProps } from "../../../../🧱️elements/📄Page/🟦️component.tsx";
+import { Page, type PageFrontmatter, type PageProps } from "../../../../🧱️elements/📄️Page/🟦️component.tsx";
 export { Page, type PageFrontmatter, type PageProps };
 // #endregion 🌈️Page
 
@@ -9698,7 +9698,7 @@ export { Page, type PageFrontmatter, type PageProps };
 // or TS2300 "Duplicate identifier" fires against the top-level import.
 export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance, Connection as RFConnection, Simulation, SimulationLinkDatum, SimulationNodeDatum };
-import { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton } from "../../../../🧱️elements/📊Diagram/🟦️component.tsx";
+import { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton } from "../../../../🧱️elements/📊️Diagram/🟦️component.tsx";
 export { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton };
 // #endregion 🧫️Diagram
 
@@ -9773,7 +9773,7 @@ import {
   type GumballVisualPalette,
   type GumballHandleVisualState,
   type UnifiedGumballProps,
-} from "../../../../🧱️elements/🎬Scene/🟦️component.tsx";
+} from "../../../../🧱️elements/🎬️Scene/🟦️component.tsx";
 export {
   sceneFrameControlRef,
   SCENE_GIZMO_LABELS,
@@ -9857,7 +9857,7 @@ import {
   Table,
   type TableSkeletonProps,
   TableSkeleton,
-} from "../../../../🧱️elements/📊Table/🟦️component.tsx";
+} from "../../../../🧱️elements/📊️Table/🟦️component.tsx";
 export {
   type SortDirection,
   type TableColumn,
@@ -9876,7 +9876,7 @@ import {
   type HistoryColumn,
   type HistoryTableProps,
   HistoryTable,
-} from "../../../../🧱️elements/📜HistoryTable/🟦️component.tsx";
+} from "../../../../🧱️elements/📜️HistoryTable/🟦️component.tsx";
 export {
   type HistoryColumnAuthor,
   type HistoryColumn,
@@ -9913,7 +9913,7 @@ import {
   type VirtualFileSystemNode,
   type VirtualFileSystemRow,
   type VirtualFileSystemProps,
-} from "../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx";
+} from "../../../../🧱️elements/📁️VirtualFileSystem/🟦️component.tsx";
 export {
   VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS,
   VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
@@ -10004,7 +10004,7 @@ import {
   type AppProps,
   type UiAppDescriptor,
   type UiProps,
-} from "../../../../🧱️elements/🎨Canvas/🟦️component.tsx";
+} from "../../../../🧱️elements/🎨️Canvas/🟦️component.tsx";
 export {
   Canvas,
   panelGhostSessionBridge,

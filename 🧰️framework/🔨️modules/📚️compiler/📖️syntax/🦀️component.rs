@@ -11,7 +11,7 @@
 //! Scope (Wave 1 of the compiler plan): parses/prints math snippets only. Layout, fonts, and SVG
 //! emission are later waves — this crate produces an AST, nothing renders yet.
 
-use os_dsl::{escape_text, lex as core_lex, unescape_text, Limits, TextError, TextSpan, TokenKind as CoreKind};
+use crate::os_dsl::{escape_text, lex as core_lex, unescape_text, Limits, TextError, TextSpan, TokenKind as CoreKind};
 
 //#region 🔖️Model
 /// @emoji 🌳️ One parsed math expression. Function/structure names (`frac`, `sqrt`, `mat`, `hat`, …)
@@ -734,11 +734,11 @@ mod tests {
     #[test]
     fn math_grammar_parses_under_dsl_grammar() {
         let source = include_str!("📖️math.grammar.semio");
-        let parsed = os_dsl::grammar::parse_grammar(source).expect("📖️math.grammar must parse under dsl_grammar's own parser");
+        let parsed = crate::os_dsl::grammar::parse_grammar(source).expect("📖️math.grammar must parse under dsl_grammar's own parser");
         assert_eq!(parsed.id, "math");
         assert_eq!(parsed.start, "formula");
-        let printed = os_dsl::grammar::print_grammar(&parsed);
-        let reparsed = os_dsl::grammar::parse_grammar(&printed).expect("canonical print of 📖️math.grammar must reparse");
+        let printed = crate::os_dsl::grammar::print_grammar(&parsed);
+        let reparsed = crate::os_dsl::grammar::parse_grammar(&printed).expect("canonical print of 📖️math.grammar must reparse");
         assert_eq!(reparsed, parsed);
     }
 }

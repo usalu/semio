@@ -1,2 +1,0 @@
-semio norm.din18599.dsl v1
-use-class=residential heated-area-m2=100m2 occupants=4 h-t=92.12124613902822 h-v=40.800000000000004 internal-gains-w-m2=3.5 solar-gains-kwh=84 system-losses-kwh=800 renewable-kwh=1500 annual-limit-kwh=7500 energy-carrier=natural_gas reference-q-p-kwh=10000 climate { theta-e-c=-14,-11.186533479473212,-3.4999999999999964,7.000000000000001,17.5,25.186533479473212,28,25.186533479473212,17.5,7.000000000000001,-3.4999999999999964,-11.186533479473212 g-h-w-m2=30,60,100,140,180,200,210,190,140,90,40,20 }

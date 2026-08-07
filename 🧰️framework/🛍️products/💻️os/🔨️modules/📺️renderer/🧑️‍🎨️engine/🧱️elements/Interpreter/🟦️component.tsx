@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, lazy, memo, Suspense, useCallback, useContext, useMemo, useState, type ComponentType, type LazyExoticComponent, type ReactElement, type ReactNode } from "react";
+import { createContext, memo, useCallback, useContext, useMemo, useState, type ComponentType, type ReactElement, type ReactNode } from "react";
 import {
   Button,
   ContextMenuController,
@@ -143,15 +143,6 @@ function interpLabel(key: UiTranslationKey): UiLabel {
  * (window-kind title resolution, manifest label resolution) — exported so those keep resolving. */
 export function wireLabel(value: string): UiLabel {
   return value as UiLabel;
-}
-
-function ComponentSceneFallback() {
-  const loadingSurfaceLabel = useLabel("ui.common.loadingSurface");
-  return (
-    <p className={cn("text-muted-foreground p-2 text-xs", loadingBorderClass)} role="status">
-      {loadingSurfaceLabel}
-    </p>
-  );
 }
 
 function renderComponentSceneHost(
@@ -897,7 +888,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
       // — best-effort only, via a parent stack/section/group's wrapper.
       return <DeclarativeTreePanel treeNode={node} onAction={context.onAction} />;
     case "componentScene":
-      // 🧭️ Dispatches through `<Suspense>` into one of 14 lazily-loaded host components (or
+      // 🧭️ Dispatches into one of 14 scene host components (or
       // `VirtualFileSystemHost`) — no DOM element of index.tsx's own to attach to — best-effort only, via a
       // parent stack/section/group's wrapper.
       return renderComponentSceneHost(node, context.onAction, context.requestContextMenu);

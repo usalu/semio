@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🔍️ Ticket-local probe: what `discoverPackages()` actually sees on disk today, grouped by role/lang,
  * next to what the pre-refactor registry regexes matched. Read-only. */
-import { discoverPackages, discoverPackageProblems, discoverOwners, getWorkspaceRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { discoverPackages, discoverPackageProblems, discoverOwners, getWorkspaceRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts";
 
 const root = getWorkspaceRoot();
 const packages = discoverPackages(root);

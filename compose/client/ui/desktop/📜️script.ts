@@ -2,7 +2,7 @@
 /** 🧭️ Desktop app router: `bun ./📜️script.ts test [level]` (integration test runner). */
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runTestBudgeted } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runTestBudgeted } from "@semio-tech/repo-lib";
 
 export async function runTests(
   options: {

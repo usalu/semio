@@ -14,13 +14,17 @@ workspace = true
 
 [lib]
 name = "semio_framework_os_flow"
+crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-os-infinite = { path = "../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-os-kernel-neural-engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
+ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 semio-s-3d = { path = "../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-s-2d = { path = "../../../../../../../✏️s/🔨️modules/◻2d/📦️packages/🦀️rust" }
 base64 = "0.22"
@@ -36,3 +40,10 @@ semio-s-plugin-flow-extension-text = { path = "../../../../../../../✏️s/🔌
 semio-s-plugin-flow-extension-logic = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-dictionary = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-list = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", default-features = false }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+js-sys = "0.3.83"
+serde-wasm-bindgen = "0.6.5"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }

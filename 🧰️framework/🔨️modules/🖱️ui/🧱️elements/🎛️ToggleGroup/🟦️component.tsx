@@ -20,7 +20,7 @@ import { surfaceClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { type Level, useLevel } from "../🌈️Surface/🟦️component.tsx";
 import { Label, useControlInlineText, useControlAccessibleLabel } from "../🏷️Label/🟦️component.tsx";
 import { chromeControlGroupClass, ControlHotkeyBadge, ChromeControlHint } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { renderControlIcon, ChevronDownIcon, type ControlIcon } from "../🔣Icons/🟦️component.tsx";
+import { renderControlIcon, ChevronDownIcon, type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧩️ToggleGroup

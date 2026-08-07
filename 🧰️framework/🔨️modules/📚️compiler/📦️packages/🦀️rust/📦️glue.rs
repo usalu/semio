@@ -2,6 +2,8 @@
 //!
 //! Each domain is a `🦀️component.rs` in the owner tree; this entry file is pure wiring.
 
+pub use dsl_core::os_dsl;
+
 #[path = "../../📖️syntax/🦀️component.rs"]
 pub mod syntax;
 

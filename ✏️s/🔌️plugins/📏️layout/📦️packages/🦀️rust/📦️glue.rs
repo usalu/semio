@@ -125,4 +125,15 @@ pub use apps::layout::wasm::LayoutSession;
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/📏️layout/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_layout_demo;
+    #[path = "../../🎛️apps/📏️layout/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_layout_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

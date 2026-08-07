@@ -1,4 +1,4 @@
-import { discoverPackages, discoverPackageProblems, discoverOwners, discoverBurndown, validateTaxonomy, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { discoverPackages, discoverPackageProblems, discoverOwners, discoverBurndown, validateTaxonomy, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts";
 const root = getWorkspaceRoot();
 console.log("=== validateTaxonomy ===", validateTaxonomy());
 const pkgs = discoverPackages(root);

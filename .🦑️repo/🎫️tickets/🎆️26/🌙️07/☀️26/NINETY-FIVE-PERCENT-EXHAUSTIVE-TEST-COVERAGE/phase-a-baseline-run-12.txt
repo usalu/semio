@@ -56503,7 +56503,7 @@ Warning: command "bun ./script.ts test exhaustive" exited with non-zero status c
                 "root": "repo/hooks"
               },
               {
-                "id": "🧰️repo📚️lib",
+                "id": "🧰️repo📚️library",
                 "name": "repo/lib",
                 "root": "repo/lib"
               },
@@ -57146,7 +57146,7 @@ FAIL
                 "root": "repo/hooks"
               },
               {
-                "id": "🧰️repo📚️lib",
+                "id": "🧰️repo📚️library",
                 "name": "repo/lib",
                 "root": "repo/lib"
               },

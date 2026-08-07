@@ -38,8 +38,8 @@ pub const PUZZLE5D_PLAY_CONTROLLER_ID: &str = "puzzle5d-play";
 pub const PUZZLE5D_PLAY_WINDOWS: [&str; 2] = [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID];
 pub const PUZZLE5D_SCHEMA: &str = "puzzle.5d";
 pub const PUZZLE5D_BOARD_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
-pub const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
-pub const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
+pub const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = crate::examples::puzzle5d::concrete_forest::ID;
+pub const PUZZLE5D_EXAMPLE_NAKAGIN: &str = crate::examples::puzzle5d::nakagin_capsule_tower::ID;
 
 pub const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
 /// 🧰️ Host-owned active utility (`Puzzle5dConfig::active_utility_by_window_id`) when the host hasn't set one yet — the first declared utility.
@@ -58,8 +58,8 @@ pub const PUZZLE5D_PROXIMITY_RADIUS: f64 = 0.75;
 /// `crate::artifacts::puzzle5d::Puzzle5dProjection` — see that artifact's `🔖️ValueBridge` region — so
 /// the DSL-text example fixtures are parsed once into the typed projection and re-serialized to the
 /// JSON string this module's `document_from_json`/`.example(...)` call sites expect.
-fn concrete_forest_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest") }
-pub(crate) fn nakagin_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
+fn concrete_forest_example_json() -> String { parse_example_dsl(crate::examples::puzzle5d::concrete_forest::DSL_TEXT, "concrete-forest") }
+pub(crate) fn nakagin_example_json() -> String { parse_example_dsl(crate::examples::puzzle5d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle5dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
@@ -1881,8 +1881,8 @@ pub fn create_puzzle5d_app() -> App {
             .utility(board2d::utilities::fill::definition(puzzle5d_localized(|l| l.fill)))
             .utility(world3d::utilities::world_relocate::definition()),
     )
-    .example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, puzzle5d_localized(|l| l.example_concrete_forest), CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
-    .example(PUZZLE5D_EXAMPLE_NAKAGIN, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), NAKAGIN_EXAMPLE_JSON.clone(), "building")
+    .example_source(&*crate::examples::puzzle5d::concrete_forest::SOURCE)
+    .example_source(&*crate::examples::puzzle5d::nakagin_capsule_tower::SOURCE)
     .workflow("puzzle5d", "Puzzle 5D", "model")
 }
 

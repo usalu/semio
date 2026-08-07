@@ -1,0 +1,346 @@
+{
+  "_comment": "🔣️ Single source of truth for taxonomy vocabulary + the repo-wide package discovery contract, consumed by 🟦️discovery.ts (TS side: registry script, root policy script) and — plain JSON, no TS-only constructs — by a future Rust build.rs codegen step in the plugin SDK testkit. Two independently hand-maintained copies of this vocabulary used to live in framework/os/plugin/registry script.ts (TAXONOMY_ARTIFACT_COMPONENTS/TAXONOMY_WINDOW_CHILDREN) and root script.ts (POLICY_ARTIFACT_COMPONENT_DIRS/POLICY_WINDOW_CHILD_DIRS/POLICY_TAXONOMY_LEAF_PARENT_DIRS); this file replaces them (M3/M4 of the mechanism wave switch those consumers over). See master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE and mechanism tickets 26/08/05/TAXONOMY-VOCABULARY-AND-PACKAGE-DISCOVERY-CONTRACT, 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE, 26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY.",
+  "_engineListComment": "⚙️ The ⚙️engine disagreement, resolved by keeping TWO explicitly separate lists that must never be merged: artifactComponentDirs is the COMPLETENESS set (every 🗿️artifacts/<a>/ must carry all of them as a leaf — what registry's validateTaxonomyTree checks); artifactChildDirs is the STRUCTURAL set (every dir that may appear as a child of an artifact — what root script's POLICY_ARTIFACT_COMPONENT_DIRS checks). ⚙️engine is structural-but-not-required, which is exactly why the two hand-maintained copies disagreed (5 vs 6 entries). artifactChildDirs is a superset of artifactComponentDirs; validateTaxonomy() in 🟦️discovery.ts enforces that invariant.",
+  "_treePurityComment": "🌳️ SHAPE V2 (26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST, user directive): inside an owner's domain tree only three things may exist — a per-language leaf file (taxonomyLeafFilenames / ecosystems.<lang>.leafFilename, always `<prefix>component.<ext>`), the packagesDirName folder, and plain <component> folders. entryLocation=\"packages\" means the entry file lives at <owner>/📦️packages/<lang>/<entry> (three-level shape: <owner>/📦️packages/<lang>/🎯️targets/<target>/<entry>) — 📦️packages holds ONLY packaging code (packagingFileNames/packagingFileSuffixes + the entry file), never data. rootDataDirNames/rootDataFileNames/rootDocFileNames are valid ONLY at the owner root. A sibling variant source file (old 🦀️config.rs / 🦀️terminology.rs / 🦀️wasm.rs / any 🦀️<topic>.rs beside a component.rs) is non-compliant under V2 and folds into its own <folder>/component.<ext> — same module content, only the #[path]/import wiring changes.",
+  "_areaStateComment": "🗺️ areas maps an area root to one of areaStates, replacing the registry script's LEGACY_LAYOUT_TOLERANT boolean with per-area granularity. It is a DECLARED value (an area graduates deliberately); per-owner/per-package maturity is DERIVED from disk instead — see migratedMarker and packageMaturityStates, never a hand-maintained package list. NOTE for 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE: root script.ts's policyTaxonomyBarrelShapeBreaches compares against the area value \"taxonomy\", which predates this enum — the equivalent state here is \"clean\"; validateTaxonomy() rejects any area value outside areaStates so the mismatch surfaces instead of silently making that rule vacuous.",
+  "schemaVersion": 2,
+  "roles": [
+    "plugin",
+    "framework",
+    "product",
+    "hub",
+    "s-module",
+    "extension",
+    "testkit",
+    "tool"
+  ],
+  "langs": [
+    "🦀️rust",
+    "🟦️typescript",
+    "🐹️go",
+    "🐍️python",
+    "🔷️dotnet"
+  ],
+  "ecosystems": {
+    "🦀️rust": {
+      "manifestFilename": "Cargo.toml",
+      "moduleRootFilename": null,
+      "marker": {
+        "in": "manifest",
+        "format": "toml",
+        "table": "package.metadata.semio",
+        "roleKey": "role",
+        "idKey": "id"
+      },
+      "entryFilenames": [
+        "📦️glue.rs",
+        "📦️bin.rs"
+      ],
+      "leafFilename": "🦀️component.rs",
+      "sourceExtension": ".rs"
+    },
+    "🟦️typescript": {
+      "manifestFilename": "package.json",
+      "moduleRootFilename": null,
+      "marker": {
+        "in": "manifest",
+        "format": "json",
+        "table": "semio",
+        "roleKey": "role",
+        "idKey": "id"
+      },
+      "entryFilenames": [
+        "🟦️glue.ts"
+      ],
+      "leafFilename": "🟦️component.ts",
+      "sourceExtension": ".ts"
+    },
+    "🐹️go": {
+      "manifestFilename": "📋️project.json",
+      "moduleRootFilename": "go.mod",
+      "marker": {
+        "in": "manifest",
+        "format": "json",
+        "table": "metadata.semio",
+        "roleKey": "role",
+        "idKey": "id"
+      },
+      "entryFilenames": [],
+      "leafFilename": "🐹️component.go",
+      "sourceExtension": ".go"
+    },
+    "🐍️python": {
+      "manifestFilename": "pyproject.toml",
+      "moduleRootFilename": null,
+      "marker": {
+        "in": "manifest",
+        "format": "toml",
+        "table": "tool.semio",
+        "roleKey": "role",
+        "idKey": "id"
+      },
+      "entryFilenames": [
+        "🐍️__init__.py"
+      ],
+      "leafFilename": "🐍️component.py",
+      "sourceExtension": ".py"
+    },
+    "🔷️dotnet": {
+      "manifestFilename": null,
+      "moduleRootFilename": null,
+      "marker": null,
+      "entryFilenames": [],
+      "leafFilename": "🔷️component.cs",
+      "sourceExtension": ".cs"
+    }
+  },
+  "targets": {
+    "🧊️wgpu": {
+      "lang": "🦀️rust",
+      "leafFilename": "🧊️component.rs",
+      "entryFilenames": [
+        "📦️glue.rs",
+        "📦️bin.rs"
+      ]
+    },
+    "⌨️tui": {
+      "lang": "🦀️rust",
+      "leafFilename": "⌨️component.rs",
+      "entryFilenames": [
+        "📦️glue.rs"
+      ]
+    },
+    "⚛️react": {
+      "lang": "🟦️typescript",
+      "leafFilename": "🟦️component.tsx",
+      "entryFilenames": [
+        "🟦️glue.ts"
+      ]
+    }
+  },
+  "rustEntryPathRules": {
+    "_comment": "🦀️ #[path] resolution is CUMULATIVE: every nested `pub mod X { … }` resolves its own #[path] against its immediately enclosing scope's ALREADY-RESOLVED dir, and `#[path = \".\"]` means \"keep the enclosing base\". Under entryLocation=\"packages\" the entry file sits entryDirFromOwner deep, so the owner tree is leafPathPrefix away. TWO conventions are valid and both appear in the repo today (confirmed by real compiles: 🏛️architect/📸️remodel/🖍️draw use leaf-prefixed, 🖨️raster uses once-reset) — a validator must model the base stack, not do a flat join.",
+    "entryDirFromOwner": "📦️packages/🦀️rust",
+    "resolution": "cumulative",
+    "groupingResetPath": ".",
+    "leafPathPrefix": "../../",
+    "conventions": [
+      {
+        "id": "leaf-prefixed",
+        "outerReset": null,
+        "groupingReset": ".",
+        "leafPrefix": "../../"
+      },
+      {
+        "id": "once-reset",
+        "outerReset": "../../.",
+        "groupingReset": ".",
+        "leafPrefix": ""
+      }
+    ]
+  },
+  "packagesDirName": "📦️packages",
+  "targetsDirName": "🎯️targets",
+  "elementsDirName": "🧱️elements",
+  "entryLocation": "packages",
+  "packagingFileNames": [
+    "Cargo.toml",
+    "package.json",
+    "pyproject.toml",
+    "go.mod",
+    "go.sum",
+    "uv.lock",
+    "tsconfig.json",
+    "Trunk.toml",
+    "LICENSE.md",
+    "📋️project.json",
+    "📜️script.ts",
+    "build.rs",
+    "📦️glue.rs",
+    "📦️bin.rs",
+    "🐍️__init__.py",
+    "🟦️vitest.setup.ts",
+    "🟦️glue.ts"
+  ],
+  "packagingFileSuffixes": [
+    ".config.ts",
+    ".config.js",
+    ".config.mjs",
+    ".config.json"
+  ],
+  "artifactsDirName": "🗿️artifacts",
+  "appsDirName": "🎛️apps",
+  "modesDirName": "🎭️modes",
+  "windowsDirName": "🪟️windows",
+  "artifactComponentDirs": [
+    "🔺️diff",
+    "🗣️dsl",
+    "🎒️pack",
+    "🔧️op",
+    "📡️spr"
+  ],
+  "artifactChildDirs": [
+    "🔺️diff",
+    "🗣️dsl",
+    "🎒️pack",
+    "🔧️op",
+    "📡️spr",
+    "⚙️engine",
+    "📚️examples"
+  ],
+  "exampleAssetsDirName": "🖼️assets",
+  "exampleTestsDirName": "🧪️tests",
+  "exampleSlugPattern": "^.+\\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$",
+  "exampleAssetKindPrefixes": {
+    "dsl": "🗣️",
+    "op": "🔧️",
+    "spr": "📡️",
+    "pack": "🎒️",
+    "diff": "🔺️",
+    "cmd": "🎮️"
+  },
+  "exampleMediaKindPrefixes": {
+    "image": "🖼️",
+    "mesh": "🧊️",
+    "document": "📄️",
+    "video": "🎬️"
+  },
+  "exampleLeafFilenames": {
+    "🦀️rust": "🦀️component.rs",
+    "🟦️typescript": "🟦️component.ts"
+  },
+  "exampleTestLeafFilenames": {
+    "🦀️rust": "🦀️test.rs",
+    "🟦️typescript": "🟦️test.ts"
+  },
+  "forbiddenExampleSlugs": [
+    "♻️reuse",
+    "♻️default",
+    "📕️default",
+    "♻️semio"
+  ],
+  "forbiddenExamplePluralDirs": [
+    "🎒️packs",
+    "🗣️dsls",
+    "🔧️ops",
+    "📡️sprs"
+  ],
+  "appChildDirs": [
+    "⚙️engine",
+    "🎭️modes",
+    "🎮️commands",
+    "📌️panels",
+    "🎚️config",
+    "🗣️terminology",
+    "🌉️wasm",
+    "🧮️config",
+    "📚️examples"
+  ],
+  "semioDataLeafPrefix": "🧬️component.",
+  "semioFileExtension": "semio",
+  "artifactSpecFilenames": {
+    "🗣️dsl": "📖️component.grammar.semio",
+    "🔧️op": "📖️component.grammar.semio",
+    "🔺️diff": "📖️component.grammar.semio",
+    "🎒️pack": "📡️component.protocol.semio",
+    "📡️spr": "📡️component.protocol.semio"
+  },
+  "windowChildDirs": [
+    "🍱️panes",
+    "🪀️widgets",
+    "🪛️utilities",
+    "🎬️actions",
+    "🎚️options"
+  ],
+  "taxonomyLeafParentDirs": [
+    "🔺️diff",
+    "🗣️dsl",
+    "🎒️pack",
+    "🔧️op",
+    "📡️spr",
+    "🍱️panes",
+    "🪀️widgets",
+    "🪛️utilities",
+    "🎬️actions",
+    "🎚️options",
+    "🎮️commands",
+    "🛠️tools",
+    "📌️panels"
+  ],
+  "taxonomyLeafFilenames": {
+    "🦀️rust": "🦀️component.rs",
+    "🟦️typescript": "🟦️component.ts",
+    "🐹️go": "🐹️component.go",
+    "🐍️python": "🐍️component.py",
+    "🔷️dotnet": "🔷️component.cs",
+    "⚛️react": "🟦️component.tsx",
+    "🧊️wgpu": "🧊️component.rs",
+    "⌨️tui": "⌨️component.rs"
+  },
+  "entryFilenames": {
+    "🦀️rust": "📦️glue.rs",
+    "🟦️typescript": "🟦️glue.ts"
+  },
+  "storyLeafFilename": "🧪️story.tsx",
+  "libWiringLineBudget": 150,
+  "forbiddenPathSegments": [
+    "⚡️implementations",
+    "⚡️implementation"
+  ],
+  "pluginDirName": "🔌️plugin",
+  "pluginChildDirs": [
+    "🛂️manifest",
+    "🎟️capabilities",
+    "🔧️setup",
+    "🎛️apps"
+  ],
+  "bannedNameStems": [
+    "core",
+    "common",
+    "util",
+    "utils",
+    "helper",
+    "helpers",
+    "misc",
+    "shared",
+    "base",
+    "lib",
+    "impl"
+  ],
+  "requireEmojiPrefixWithVs16": true,
+  "rootDataDirNames": [
+    "🧫️fixtures",
+    "🤖️generated",
+    "🧫️examples",
+    "🖼️assets",
+    "📇️registry"
+  ],
+  "rootDataFileNames": [
+    "🛂️manifest.json"
+  ],
+  "rootDocFileNames": [
+    "AGENTS.md",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "areaStates": [
+    "legacy",
+    "mixed",
+    "clean",
+    "exempt"
+  ],
+  "packageMaturityStates": [
+    "clean",
+    "mixed"
+  ],
+  "migratedMarker": "packages-dir-exists",
+  "areas": {
+    "✏️s/🔌️plugins": "clean",
+    "✏️s/🔨️modules": "legacy",
+    "🧰️framework": "legacy",
+    "🌎️hub": "legacy",
+    "♻️mit-bestand": "legacy",
+    "compose": "exempt",
+    "🧰️framework/🛍️products/🦑️repo": "clean"
+  }
+}

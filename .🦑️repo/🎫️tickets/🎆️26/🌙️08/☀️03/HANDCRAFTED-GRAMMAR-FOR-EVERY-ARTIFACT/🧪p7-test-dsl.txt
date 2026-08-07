@@ -68,10 +68,10 @@ Failed tasks:
 1376 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
                                      ^
 error: bun nx run-many -t test -p @semio-tech/dsl-core-rs @semio-tech/dsl-schema-rs @semio-tech/dsl-derive-rs @semio-tech/dsl-rs @semio-tech/dsl-fixture-sweep-rs exited with status 1
-      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:1376:31)
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1376:31)
       at run (/Users/ueli/Documents/semio/📜️script.ts:844:7)
-      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:815:71)
-      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:850:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:815:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:850:16)
       at /Users/ueli/Documents/semio/📜️script.ts:4678:11
 
 Bun v1.3.14 (macOS arm64)

@@ -4758,10 +4758,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   return (
     <div
       ref={hostRef}
-      className="semio-world-3d-host relative h-full min-h-[24rem] w-full"
+      className="semio-world-3d-host relative h-full min-h-0 w-full overflow-hidden"
       data-surface-id={node.surfaceId}
       data-orbit-view-gizmo=""
       data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
+      data-meshes-json={scene.meshesJson ?? undefined}
+      data-instances-json={scene.instancesJson ?? undefined}
+      data-status-json={scene.statusJson ?? undefined}
       onContextMenu={(event) => {
         if (event.altKey || !requestContextMenu) return;
         const target = resolveWorldContextMenuTarget(interaction, selection);

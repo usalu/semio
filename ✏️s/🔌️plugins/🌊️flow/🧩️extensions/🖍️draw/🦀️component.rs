@@ -1,6 +1,6 @@
 //! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`semio_s_2d::DrawingStore`].
 
-use semio_s_2d::{block_on, DrawingError, DrawingHandle, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
+use semio_s_2d::{block_on, DrawingError, DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use flow_extension_sdk::with_drawing_kernel as with_kernel;
 

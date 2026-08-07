@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/compose-vscode` test router: `bun ./📜️script.ts test [level]`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain } from "@semio-tech/repo-lib";
 
 /** ⏱️No test suite exists yet for this extension (no unit tests, no `vscode-test` harness wired) — this only surfaces the active level so the leveled scheme has a real hook to grow into. */
 class TestScript extends BundleScript {

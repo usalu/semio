@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ GraphQL schema bundle router: `bun ./📜️script.ts build`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCmd } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCmd } from "@semio-tech/repo-lib";
 
 class BuildScript extends BundleScript {
   run(): void {

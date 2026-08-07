@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use crate::os_dsl::span::TextSpan;
+pub use crate::os_dsl::span::TextSpan;
 
 //#region 🔖️Errors
 /// @emoji 🚧️ Span-carrying parse/print failure — the one error type every DSL surface returns.

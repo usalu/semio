@@ -1,2 +1,8 @@
 semio puzzle.puzzle3d.op v1
-edit reuse started="0" actor=example
+artifact-mark=puzzle.3d-op
+# nakagin-capsule-tower: seed placement then capsule merge
+add-vertex x=0.0 y=0.0 z=0.0
+add-vertex x=4.05 y=4.68 z=3.0
+set-face index=0 loop=[0 1 2 3]
+transform-mesh axis=z angle=0.0
+merge-solid target=seed-left source=seed-right

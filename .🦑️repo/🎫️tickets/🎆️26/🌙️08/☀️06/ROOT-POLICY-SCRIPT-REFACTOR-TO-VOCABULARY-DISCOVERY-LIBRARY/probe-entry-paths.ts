@@ -2,7 +2,7 @@
 // resolved crate-root file can be checked to actually exist on disk (ticket 26/08/06/ROOT-POLICY-…).
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
-import { discoverPackages, loadTaxonomy } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟦️discovery.ts";
+import { discoverPackages, loadTaxonomy } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟦️discovery.ts";
 
 const repoRoot = process.cwd();
 const taxonomy = loadTaxonomy();

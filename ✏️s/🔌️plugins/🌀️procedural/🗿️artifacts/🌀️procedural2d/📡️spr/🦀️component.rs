@@ -13,7 +13,7 @@ use crate::artifacts::procedural2d::dsl::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
 };
 use crate::artifacts::procedural2d::op::Procedural2dOperation;
-use playbook::GenerationOperation;
+use flow::playbook::GenerationOperation;
 use protocol::OpBinary;
 
 //#region 🔖️OpTextMirror
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_generation() {
-        let generation = playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         test_support::assert_op_line_round_trip(&Procedural2dOperation::Generation(GenerationOperation::Add { generation }));
     }
     //#endregion 🔖️OpTextTests

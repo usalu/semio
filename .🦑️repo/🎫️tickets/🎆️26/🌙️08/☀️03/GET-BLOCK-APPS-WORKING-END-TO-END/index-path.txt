@@ -1,1 +1,1 @@
-🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts
+🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts

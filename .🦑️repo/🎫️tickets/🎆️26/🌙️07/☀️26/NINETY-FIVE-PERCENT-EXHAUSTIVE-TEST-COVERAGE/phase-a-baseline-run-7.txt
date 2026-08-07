@@ -83872,7 +83872,7 @@ Warning: command "bun ./script.ts test exhaustive repo-mcp kiro" exited with non
                 "root": "repo/hooks"
               },
               {
-                "id": "🧰️repo📚️lib",
+                "id": "🧰️repo📚️library",
                 "name": "repo/lib",
                 "root": "repo/lib"
               },
@@ -84515,7 +84515,7 @@ FAIL
                 "root": "repo/hooks"
               },
               {
-                "id": "🧰️repo📚️lib",
+                "id": "🧰️repo📚️library",
                 "name": "repo/lib",
                 "root": "repo/lib"
               },

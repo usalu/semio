@@ -1,0 +1,23 @@
+{
+  "name": "semio-framework-os-flow-core",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+  "projectType": "library",
+  "tags": ["type:rust", "scope:os", "flow", "wasm"],
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts wasm",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

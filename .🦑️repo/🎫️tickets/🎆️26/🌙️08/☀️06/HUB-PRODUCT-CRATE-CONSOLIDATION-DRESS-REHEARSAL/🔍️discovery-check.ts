@@ -7,7 +7,7 @@
  * is silently skipped rather than flagged — but a manifest WITH a marker is still fully resolved and
  * cataloged regardless of area maturity).
  */
-import { discoverPackages } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟦️discovery.ts";
+import { discoverPackages } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟦️discovery.ts";
 
 const repoRoot = "/Users/ueli/Documents/semio";
 const packages = discoverPackages(repoRoot);

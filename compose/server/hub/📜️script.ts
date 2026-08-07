@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `compose-hub` router: `bun ./📜️script.ts <setup|build|test [level]>`. `compose-hub/rs` is a standalone Cargo workspace, kept out of the repo-root workspace. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runCargoTestBudgeted, resolveTestLevel } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runCargoTestBudgeted, resolveTestLevel } from "@semio-tech/repo-lib";
 
 class SetupScript extends BundleScript {
   run(): void {

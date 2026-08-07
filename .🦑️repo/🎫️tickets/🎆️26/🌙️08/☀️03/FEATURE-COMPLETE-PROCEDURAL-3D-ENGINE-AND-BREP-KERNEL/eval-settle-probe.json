@@ -1,0 +1,41 @@
+{
+  "samples": [
+    {
+      "t": 1786118677031,
+      "status": {
+        "distance": {
+          "status": "ok"
+        },
+        "extrude": {
+          "status": "ok"
+        },
+        "face": {
+          "status": "ok"
+        },
+        "height": {
+          "status": "ok"
+        },
+        "rect": {
+          "status": "ok"
+        },
+        "vector": {
+          "status": "ok"
+        },
+        "width": {
+          "status": "ok"
+        }
+      },
+      "meshCount": 1,
+      "instanceCount": 1,
+      "allOk": true,
+      "evalKeys": [],
+      "handleSample": [],
+      "meshesJson": "[{\"data\":{\"colors\":[],\"indices\":[3,0,1,1,2,3,7,4,5,5,6,7,11,8,9,9,10,11,15,12,13,13,14,15,19,16,17,17,18,19,23,20,21,21,22,23],\"normals\":[-0.0,-0.0,-1.0,-0.0,-0.0,-1.0,-0.0,-0.0,-1.0,-0.0,-0.0,-1.0,0.",
+      "instancesJson": "[{\"hovered\":false,\"id\":\"extrude\",\"label\":\"extrude\",\"meshId\":\"eval-extrude\",\"position\":[0.0,0.0,0.0],\"rotation\":[0.0,0.0,0.0,1.0],\"scale\":[1.0,1.0,1.0],\"selected\":false}]",
+      "worldStatusJson": "{\"evalHead\":\"{\\\"distance\\\":{\\\"in\\\":{},\\\"out\\\":{\\\"number\\\":{\\\"$schema\\\":\\\"number\\\",\\\"value\\\":4.0}}},\\\"extrude\\\":{\\\"in\\\":{\\\"face\\\":{\\\"$schema\\\":\\\"geometry\\\",\\\"handle\\\":\\\"c4162e91647a66e4ee623d79e8626517e61134864d0ca5b8682a6874ecb3e34e\\\",\\\"kind\\\":\\\"face\\\"},\\\"vector\\\":{\\\"$schema\\\":\\\"vector\\\",\\\"x\",\"evalLen\":1279,\"instancesLen\":169,\"meshesLen\":779}"
+    }
+  ],
+  "logs": [
+    "[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004"
+  ]
+}

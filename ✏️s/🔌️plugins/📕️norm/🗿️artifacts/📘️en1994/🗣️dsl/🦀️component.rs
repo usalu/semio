@@ -15,7 +15,7 @@ use crate::artifacts::en1994::Document;
 /// shear-connector fatigue detail, distinct from `Document::default()`'s DE-annex/R60/trapezoidal-deck/
 /// stud-welded values so the grammar's non-default branches (annex, fire rating, deck type, fatigue
 /// detail) are exercised too.
-pub const EN1994_COMPOSITE_BRIDGE_GIRDER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️composite-bridge-girder/🗣️dsls/📕️composite-bridge-girder/🧬️component.norm.en1994.dsl.semio");
+pub const EN1994_COMPOSITE_BRIDGE_GIRDER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️composite-bridge-girder/🖼️assets/🗣️composite-bridge-girder.dsl.semio");
 
 /// 📖️ Parses `.en1994` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

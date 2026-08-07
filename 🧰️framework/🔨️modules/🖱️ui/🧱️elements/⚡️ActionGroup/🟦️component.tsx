@@ -25,7 +25,7 @@ import { useTransaction } from "../🐹️ElementProps/🟦️component.tsx";
 import { useLevel, type Level } from "../🌈️Surface/🟦️component.tsx";
 import { useControlAccessibleLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
 import { chromeControlGroupShellClass, loadingBorderElementClass, waitingBorderElementClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣Icons/🟦️component.tsx";
+import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌩️ActionGroup

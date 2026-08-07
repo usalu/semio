@@ -48,7 +48,7 @@ Rust package's `**/*.rs` namedInput.
 ```ts
 #!/usr/bin/env bun
 /** 🌊️ `@semio-tech/<p>-js` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "<N ups>/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "<N ups>/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {

@@ -16,7 +16,7 @@ const PLUGINS = fs
  * and the registry/root-policy scripts can never drift on which spellings are banned. Plain JSON require —
  * no TS toolchain needed from this plain `.cjs` config. */
 const TAXONOMY = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json"), "utf8"),
+  fs.readFileSync(path.join(__dirname, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"),
 );
 
 function crossTechnologyRules() {
@@ -83,8 +83,8 @@ function noCorePathRule() {
   const stems = (TAXONOMY.bannedNameStems || ["core"]).map((segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
   return {
     name: "no-core-path",
-    severity: "warn",
-    comment: "Clean mechanism: no dependency may resolve through a banned name stem folder (core/shared/util/…) — WARN until Wave 4 flips to error after cores dissolve",
+    severity: "error",
+    comment: "Clean mechanism: no dependency may resolve through a banned name stem folder (core/shared/util/…) — ERROR after Wave 4 core dissolve",
     from: {
       path: "^(✏️s/|🧰️framework/|🌎️hub/|♻️mit-bestand/)",
     },
@@ -109,7 +109,7 @@ function noCorePathRule() {
  * module-to-module), ✏️s/🔨️modules (s-module-to-s-module), 🌎️hub/🔨️modules, and ♻️mit-bestand
  * (item-to-item), none of which any existing rule reaches).
  * `📜️script.ts` itself is exempt (`pathNot` below): every such bootstrap script across the repo already
- * relative-imports repo-lib (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/…`) across family boundaries —
+ * relative-imports repo-lib (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/…`) across family boundaries —
  * the SAME sanctioned pattern `no-escaping-relative-imports` above already carves out ("do not fix it into
  * a specifier-depth rule, that would break every script.ts in the repo") — flagging it here would just be
  * ~30 files of noise on an already-litigated non-issue, not a new real finding. */

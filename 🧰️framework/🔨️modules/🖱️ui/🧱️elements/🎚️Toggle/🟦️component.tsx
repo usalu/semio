@@ -17,7 +17,7 @@ import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
 import { chromeControlItemClass, chromeControlItemOnClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { type ControlIcon } from "../🔣Icons/🟦️component.tsx";
+import { type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗡️Toggle

@@ -3,7 +3,7 @@ go 1.25
 use (
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator
 	./compose/client/lib/go
 )

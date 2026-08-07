@@ -1,0 +1,11 @@
+{
+  "selects": [],
+  "fixtureish": [
+    {
+      "id": "playground.navbar.fixture.trigger",
+      "tag": "BUTTON",
+      "className": "text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-cen",
+      "text": "Hexagonal Mushroom Column"
+    }
+  ]
+}

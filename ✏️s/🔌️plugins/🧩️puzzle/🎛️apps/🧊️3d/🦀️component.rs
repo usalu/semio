@@ -40,8 +40,8 @@ use std::sync::Mutex;
 pub const PUZZLE3D_PLAY_APP_ID: &str = "puzzle3d-play";
 pub const PUZZLE3D_PLAY_CONTROLLER_ID: &str = "puzzle3d-play";
 pub const PUZZLE3D_FIXTURE_SCHEMA: &str = "puzzle.3d.fixture";
-pub const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
-pub const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
+pub const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = crate::examples::puzzle3d::concrete_forest::ID;
+pub const PUZZLE3D_EXAMPLE_NAKAGIN: &str = crate::examples::puzzle3d::nakagin_capsule_tower::ID;
 pub const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
 /// 🧰️ Host-owned active utility when none has been pressed yet — none. The transform gumball must be
 /// pressed explicitly; an unset/cleared utility must not fall back to `transform` or the gumball
@@ -68,8 +68,8 @@ pub type Puzzle3dMeshBuffers = (Vec<f32>, Vec<u32>);
 /// local structural-twin mirror of `crate::artifacts::puzzle3d::Puzzle3dProjection`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
-fn concrete_forest_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest") }
-fn nakagin_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
+fn concrete_forest_example_json() -> String { parse_example_dsl(crate::examples::puzzle3d::concrete_forest::DSL_TEXT, "concrete-forest") }
+fn nakagin_example_json() -> String { parse_example_dsl(crate::examples::puzzle3d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle3dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
@@ -2516,8 +2516,8 @@ pub fn create_puzzle3d_app() -> App {
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             ),
     )
-    .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, puzzle3d_localized(|l| l.example_concrete_forest), CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
-    .example(PUZZLE3D_EXAMPLE_NAKAGIN, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower"), NAKAGIN_EXAMPLE_JSON.clone(), "building")
+    .example_source(&*crate::examples::puzzle3d::concrete_forest::SOURCE)
+    .example_source(&*crate::examples::puzzle3d::nakagin_capsule_tower::SOURCE)
     .workflow("puzzle3d", "Puzzle 3D", "model")
 }
 

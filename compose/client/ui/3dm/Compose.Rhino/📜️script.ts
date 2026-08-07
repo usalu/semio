@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ Compose.Rhino build/test router: `bun ./📜️script.ts build|test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "@semio-tech/repo-lib";
 
 class BuildScript extends BundleScript {
   run(): void {

@@ -142,8 +142,8 @@
 ../../../../🧱️elements/🫀️core/🏷️Label/🟦️component.tsx(346,9): error TS2304: Cannot find name 'TreeAlignedRow'.
 ../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx(13,40): error TS2459: Module '"../../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' declares 'StoragePort' locally, but it is not exported.
 ../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx(13,68): error TS2459: Module '"../../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' declares 'createBrowserStoragePort' locally, but it is not exported.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
 ../../../../../../🤖️generated/🟦️manifest.ts(129,9): error TS2304: Cannot find name 'ConfigSpec'.
 ../../../../../../🤖️generated/🟦️manifest.ts(134,17): error TS2304: Cannot find name 'CommandGrammar'.
 ../../../../../../🤖️generated/🟦️manifest.ts(140,5): error TS2304: Cannot find name 'AppIo'.

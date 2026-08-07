@@ -2,7 +2,7 @@
 /** 🧪️ Ticket-local before/after harness: renders the plugin+playground catalog with the pre-refactor
  * baseline copy of the registry script and with the live (refactored) one, and diffs both JSON views.
  * Never writes into `🤖️generated/` — verification only. */
-import { getWorkspaceRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { getWorkspaceRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts";
 import * as baseline from "./📜️baseline-script.ts";
 import * as current from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts";
 

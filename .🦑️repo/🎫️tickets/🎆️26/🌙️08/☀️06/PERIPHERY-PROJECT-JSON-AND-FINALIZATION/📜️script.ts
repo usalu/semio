@@ -151,9 +151,9 @@ function inventory() {
 
   const taxonomyOld = join(
     REPO_ROOT,
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🔣️taxonomy.json",
   );
-  const taxonomyNew = join(REPO_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json");
+  const taxonomyNew = join(REPO_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
 
   const snapshot = {
     generatedAt: new Date().toISOString(),
@@ -183,7 +183,7 @@ function inventory() {
       taxonomyJsonOldPathExists: existsSync(taxonomyOld),
       taxonomyJsonNewPathExists: existsSync(taxonomyNew),
       rootScriptRepoLibImportExists: existsSync(
-        join(REPO_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts"),
+        join(REPO_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts"),
       ),
       dependencyCruiserTaxonomyLoadOk: (() => {
         try {

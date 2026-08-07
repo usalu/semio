@@ -8,7 +8,7 @@ const withFlag = process.env.SEMIO_OS_STATE_AUTHORITY === "1";
 try {
   // Import the module — policy is the only export we need; call helpers via a small eval of the same file internals by re-running defineLint with flag.
   const mod = await import(join(root, "📜️script.ts"));
-  const TechnologyLinter = (await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts"))).TechnologyLinter;
+  const TechnologyLinter = (await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts"))).TechnologyLinter;
   const linter = new TechnologyLinter("probe", root);
   console.log(`[DEBUG] invoking policy (SEMIO_OS_STATE_AUTHORITY=${process.env.SEMIO_OS_STATE_AUTHORITY ?? ""})`);
   const breaches = await mod.policy(linter);

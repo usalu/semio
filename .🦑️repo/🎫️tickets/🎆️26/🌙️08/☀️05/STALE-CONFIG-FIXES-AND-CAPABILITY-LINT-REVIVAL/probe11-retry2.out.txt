@@ -275,8 +275,8 @@ Most common reasons include:
       3|   await page.goto("/");
       4|   await page.waitForLoadState("networkidle");
 
-Error: Cannot find package 'bun:test' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🧪️index.test.ts
- ❯ 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/ð§ªï¸index.test.ts:1:1
+Error: Cannot find package 'bun:test' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🧪️index.test.ts
+ ❯ 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/ð§ªï¸index.test.ts:1:1
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }

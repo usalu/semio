@@ -254,7 +254,7 @@ pub fn create_animate_present_app() -> App {
             .config(AnimatePresentPlayApp::config_spec())
             .io(crate::artifacts::present::engine::present_io()),
     )
-    .example("demo", LocalizedLabel::native("Demo", "Demo"), store::DocumentDsl::print_dsl(&default_present_deck()), "cylinder")
+    .example_source(crate::examples::art_present_demo::source())
     .workflow("animate", "Animate", "deck")
 }
 //#endregion 🔖️Manifest

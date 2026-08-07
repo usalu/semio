@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ Compose.NET build router: `bun ./📜️script.ts build`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "@semio-tech/repo-lib";
 
 class BuildScript extends BundleScript {
   run(): void {

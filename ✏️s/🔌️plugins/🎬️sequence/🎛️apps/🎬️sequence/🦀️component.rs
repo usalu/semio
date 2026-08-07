@@ -256,7 +256,7 @@ pub fn create_sequence_app() -> App {
             .config(SequencePlayApp::config_spec())
             .io(crate::artifacts::sequence::engine::sequence_io()),
     )
-    .example("demo", LocalizedLabel::native("Demo", "Demo"), crate::artifacts::sequence::engine::sequence_example_json(), "cylinder")
+    .example_source(crate::examples::art_sequence_demo::source())
     .workflow("sequence", "Sequence", "graph")
 }
 //#endregion 🔖️Manifest

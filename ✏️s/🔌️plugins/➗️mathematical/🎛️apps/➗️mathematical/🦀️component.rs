@@ -160,7 +160,7 @@ pub fn create_mathematical_app() -> App {
             // is this port information's single source of truth, reused here rather than duplicated.
             .io(crate::artifacts::mathematical::engine::mathematical_io()),
     )
-    .example("demo", LocalizedLabel::native("Demo", "Demo"), <MathProjection as store::DocumentDsl>::print_dsl(&MathProjection::default()), "cylinder")
+    .example_source(crate::examples::art_mathematical_demo::source())
     .workflow("mathematical", "Mathematical", "graph")
 }
 //#endregion 🔖️Manifest

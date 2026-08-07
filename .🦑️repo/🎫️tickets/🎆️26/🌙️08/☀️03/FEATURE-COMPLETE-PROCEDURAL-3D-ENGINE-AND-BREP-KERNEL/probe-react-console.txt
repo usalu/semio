@@ -1,0 +1,971 @@
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [DEBUG] plugin source "extensions" malformed event: event.plugins is not iterable
+[debug] [vite] connecting...
+[debug] [vite] connecting...
+[debug] [vite] connecting...
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[debug] [vite] connecting...
+[debug] [vite] connecting...
+[debug] [vite] connecting...
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[debug] [vite] connected.
+[debug] [vite] connected.
+[debug] [vite] connected.
+[debug] [vite] connected.
+[debug] [vite] connected.
+[debug] [vite] connected.
+[log] [DEBUG] plugin worker + flow-extension-text (9 live)
+[log] [DEBUG] plugin worker + flow-extension-logic (9 live)
+[log] [DEBUG] plugin worker + flow-extension-bim (9 live)
+[log] [DEBUG] plugin worker + flow-extension-list (9 live)
+[log] [DEBUG] plugin worker + flow-extension-primitive (9 live)
+[log] [DEBUG] plugin worker + flow-extension-brep (9 live)
+[log] [DEBUG] plugin worker + flow-extension-math (9 live)
+[log] [DEBUG] plugin worker + flow-extension-dictionary (9 live)
+[log] [DEBUG] plugin worker + procedural (9 live)
+[warning] [DEBUG] setAppRegistrations push skipped action 'setAppRegistrations' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)
+[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[log] [DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name
+[log] [DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name
+[warning] [.WebGL-0x124157b4400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x124157b4400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x124157b4400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] Texture size ([Extent3D width:300, height:17352, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:17352, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:17352, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:45540, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:45540, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:45540, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:119316, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:119316, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:119316, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:312456, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:312456, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:312456, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:818100, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:818100, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:818100, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:2141892, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:2141892, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:2141892, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:2141892, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:7749564, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:7749564, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] [Invalid BindGroup (unlabeled)] is invalid due to a previous error.
+ - While encoding [ComputePassEncoder (unlabeled)].SetBindGroup(0, [Invalid BindGroup (unlabeled)], 0, ...).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:7749564, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:21106848, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:21106848, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] Dispatch workgroup count Y (82449) exceeds max compute workgroups per dimension (65535).
+ - While encoding [ComputePassEncoder (unlabeled)].DispatchWorkgroups(2, 82449, 1).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:21106848, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] Texture size ([Extent3D width:300, height:33554432, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+ - While validating [TextureDescriptor].
+ - While calling [Device].CreateTexture([TextureDescriptor]).
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] Texture size ([Extent3D width:300, height:33554432, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] Dispatch workgroup count Y (131072) exceeds max compute workgroups per dimension (65535).
+ - While encoding [ComputePassEncoder (unlabeled)].DispatchWorkgroups(2, 131072, 1).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:33554432, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[warning] [.WebGL-0x124157b4400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[5] against { binding: 5, visibility: ShaderStage::Compute, storageTexture: {format: TextureFormat::RGBA8Unorm, viewDimension: TextureViewDimension::e2D, access: StorageTextureAccess::WriteOnly} }.
+ - While validating [BindGroupDescriptor] against [BindGroupLayout (unlabeled)]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor]).
+
+[warning] Dispatch workgroup count Y (131072) exceeds max compute workgroups per dimension (65535).
+ - While encoding [ComputePassEncoder (unlabeled)].DispatchWorkgroups(2, 131072, 1).
+ - While finishing [CommandEncoder "render_to_texture"].
+
+[warning] [Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "render_to_texture" from CommandEncoder "render_to_texture"]])
+
+[warning] Texture size ([Extent3D width:300, height:33554432, depthOrArrayLayers:1]) exceeded maximum texture size ([Extent3D width:8192, height:8192, depthOrArrayLayers:256]).
+    at ValidateTextureSize (../../third_party/dawn/src/dawn/native/Texture.cpp:355)
+
+[warning] Could not create the swapchain texture.
+    at APIInjectError (../../third_party/dawn/src/dawn/native/Device.cpp:1937)
+
+[warning] [Invalid Texture] is invalid due to a previous error.
+ - While calling [Invalid Texture].CreateView([TextureViewDescriptor]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating entries[0] against { binding: 0, visibility: ShaderStage::Fragment, texture: {sampleType: TextureSampleType::UnfilterableFloat, viewDimension: TextureViewDimension::e2D, multisampled: 0} }.
+ - While validating [BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""] against [BindGroupLayout "wgpu::util::TextureBlitter::bind_group_layout"]
+ - While calling [Device].CreateBindGroup([BindGroupDescriptor ""wgpu::util::TextureBlitter::bind_group""]).
+
+[warning] [Invalid TextureView] is invalid due to a previous error.
+ - While validating colorAttachments[0].
+ - While encoding [CommandEncoder "infinite_canvas_surface_blit"].BeginRenderPass([RenderPassDescriptor ""wgpu::util::TextureBlitter::pass""]).
+ - While finishing [CommandEncoder "infinite_canvas_surface_blit"].
+
+[warning] [Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"] is invalid due to a previous error.
+ - While calling [Queue].Submit([[Invalid CommandBuffer "infinite_canvas_surface_blit" from CommandEncoder "infinite_canvas_surface_blit"]])
+
+[example-error] Sphere Cut With Torus: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-level="base" data-state="closed" aria-expanded="false" aria-autocomplete="none" data-slot="select-trigger" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap border-element outline-none transit…>…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is not stable
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is not stable
+    - retrying click action
+      - waiting 100ms
+    4 × waiting for element to be visible, enabled and stable
+      - element is not stable
+    - retrying click action
+      - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <span data-slot="inline-label" class="text-xs whitespace-nowrap">Fullscreen</span> from <div class="p-single flex gap-single items-center min-w-0 h-full">…</div> subtree intercepts pointer events
+  2 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is not stable
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - performing click action
+
+[example-error] Box Fillet Preview: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-state="open" data-level="base" aria-expanded="true" aria-autocomplete="none" data-slot="select-trigger" aria-controls="radix-_r_c_" data-radix-popper-side="top" data-radix-popper-align="start" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-trans…>…</button>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  - retrying click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  8 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+
+[example-error] Box Shell Preview: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-state="open" data-level="base" aria-expanded="true" aria-autocomplete="none" data-slot="select-trigger" aria-controls="radix-_r_c_" data-radix-popper-side="top" data-radix-popper-align="start" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-trans…>…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  9 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+[example-error] Face Sweep Extrude: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-state="open" data-level="base" aria-expanded="true" aria-autocomplete="none" data-slot="select-trigger" aria-controls="radix-_r_c_" data-radix-popper-side="top" data-radix-popper-align="start" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-trans…>…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  9 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+[example-error] Hexagonal Mushroom Column: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-state="open" data-level="base" aria-expanded="true" aria-autocomplete="none" data-slot="select-trigger" aria-controls="radix-_r_c_" data-radix-popper-side="top" data-radix-popper-align="start" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-trans…>…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  9 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+[example-error] Rectangle Extrude Volume: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-state="open" data-level="base" aria-expanded="true" aria-autocomplete="none" data-slot="select-trigger" aria-controls="radix-_r_c_" data-radix-popper-side="top" data-radix-popper-align="start" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-trans…>…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  9 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+[example-error] Rectangle Wire Preview: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-state="open" data-level="base" aria-expanded="true" aria-autocomplete="none" data-slot="select-trigger" aria-controls="radix-_r_c_" data-radix-popper-side="top" data-radix-popper-align="start" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-trans…>…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  9 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+[example-error] Sphere Box Fuse: TimeoutError: click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-testid="playground.navbar.fixture"], [data-slot="navbar"] [data-testid*="fixture"], [data-slot="navbar"] button').filter({ hasText: /example|beispiel|column|mushroom/i }).first()
+    - locator resolved to <button dir="ltr" type="button" data-size="sm" role="combobox" data-state="open" data-level="base" aria-expanded="true" aria-autocomplete="none" data-slot="select-trigger" aria-controls="radix-_r_c_" data-radix-popper-side="top" data-radix-popper-align="start" data-detail-panel-control="fill" id="playground.navbar.fixture.trigger" class="text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-center justify-between gap-single border bg-trans…>…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  8 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is outside of the viewport
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <html lang="en" data-ui-theme="semio" data-semio-styled="ready" data-semio-os-ready="procedural3d">…</html> intercepts pointer events
+  - retrying click action
+    - waiting 500ms

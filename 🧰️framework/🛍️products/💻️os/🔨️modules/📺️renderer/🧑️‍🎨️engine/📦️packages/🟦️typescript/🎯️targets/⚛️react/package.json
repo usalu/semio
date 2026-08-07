@@ -22,7 +22,6 @@
     "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/framework-editor-rs": "workspace:*",
     "@semio-tech/framework-surface-rs": "workspace:*",
-    "@semio-tech/flow-core": "workspace:*",
     "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",
     "@semio-tech/assets": "workspace:*",

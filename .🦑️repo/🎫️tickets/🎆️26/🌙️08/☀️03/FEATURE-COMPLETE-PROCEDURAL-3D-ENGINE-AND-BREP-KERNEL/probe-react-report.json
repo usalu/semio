@@ -1,0 +1,15 @@
+{
+  "renderer": "react",
+  "baseUrl": "http://127.0.0.1:6018/?plugin=procedural3d",
+  "bootProbe": {
+    "meshCount": 0,
+    "instanceCount": 0,
+    "graphNodeCount": 7
+  },
+  "actionFailedSetActiveExample": false,
+  "perExample": {},
+  "distinctExampleSignatures": 0,
+  "graphPresent": true,
+  "ok": false,
+  "consoleLineCount": 171
+}

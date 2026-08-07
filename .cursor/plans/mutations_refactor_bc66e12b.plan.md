@@ -38,7 +38,7 @@ to# Operations to Mutations: Per-Mutation Artifact Decomposition and Mandatory E
 - Store in [🏪️store/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs): `DocumentStore::dispatch`, `DocumentCommand<Operation>`, `replay_operations` (sole `Operation::backwards` call site, line ~2578).
 - App transition surface is `DocumentApp::handle -> Emit<Operation, ConfigOperation, DraftOperation>` in [🔌️plugin/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs) (~3319), consumed by `dispatch_emit` (~4299).
 - `trait Engine` in [⚙️engine/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs) is a content-addressed byte-in/byte-out compute cache, **not** a per-artifact state machine. Per-artifact `⚙️engine` folders are headless compute helpers (e.g. `LowpolyDocument`).
-- Taxonomy is the single source of truth: [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json) (`artifactComponentDirs`, `artifactChildDirs`, `artifactSpecFilenames`, `taxonomyLeafParentDirs`), mirrored by `validateTaxonomyTree` (registry), `assert_taxonomy_components` (Rust, ~1588), and the `PolicyRuleTaxonomy` region of [📜️script.ts](📜️script.ts) (~3889-4438).
+- Taxonomy is the single source of truth: [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json) (`artifactComponentDirs`, `artifactChildDirs`, `artifactSpecFilenames`, `taxonomyLeafParentDirs`), mirrored by `validateTaxonomyTree` (registry), `assert_taxonomy_components` (Rust, ~1588), and the `PolicyRuleTaxonomy` region of [📜️script.ts](📜️script.ts) (~3889-4438).
 - Scale: 52 artifacts, 52 `🔧️op` grammars (all `grammar <x>.op` + `start operation`), ~450 operation variants, 38 protocol schemas ending `.operation`, 91 `*.op.semio` examples, 52 TS facades.
 
 ## Target shape
@@ -126,8 +126,8 @@ Untouched (different concepts, different technologies): GraphQL `OperationDefini
 
 ## Mechanism changes
 
-- [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json): add `🧬️mutations` and `⚙️engine` to `artifactComponentDirs`; add `mutationChildDirs: ["🦠️mutation","🔺️diff","↩️inverse"]`; add all three plus `🧬️mutations` to `taxonomyLeafParentDirs`.
-- [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts): extend `Taxonomy` interface and `validateTaxonomy`.
+- [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json): add `🧬️mutations` and `⚙️engine` to `artifactComponentDirs`; add `mutationChildDirs: ["🦠️mutation","🔺️diff","↩️inverse"]`; add all three plus `🧬️mutations` to `taxonomyLeafParentDirs`.
+- [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts): extend `Taxonomy` interface and `validateTaxonomy`.
 - Registry `validateTaxonomyTree` in [📇️registry/📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts): add `CONSTITUTIONAL_SLOTS` entry, walk `🧬️mutations/<mutation>/<kind>` requiring both leaves.
 - Rust twin `assert_taxonomy_components` (~1588 of [🔌️plugin/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs)).
 - [📜️script.ts](📜️script.ts) policy: rename `POLICY_PROTOCOL_MIGRATION_NAMES`, `POLICY_DSL_*`, `POLICY_DIFF_COMPLETENESS_ALLOWLIST`, `PolicyRuleCommandEnvelopeCompleteness`, `PolicyRuleDiffCompleteness`, `POLICY_HANDCRAFTED_FACETS`; **replace** the 52-entry `POLICY_TS_FACADE_ALLOWLIST` with a structural rule (an allowlist cannot scale to ~2700 leaves). Add new scanners: per-mutation triad completeness, `impl Mutation<P>` presence per mutation, `ArtifactEngine` presence per artifact, specific-emoji uniqueness within an artifact, grammar `start mutation` conformance, dispatch-enum-covers-all-mutation-dirs.

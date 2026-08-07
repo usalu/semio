@@ -6657,10 +6657,14 @@ name = "semio-framework-os-flow"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "js-sys",
  "semio-framework",
+ "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-ui",
+ "semio-framework-ui-styling",
  "semio-s-2d",
  "semio-s-3d",
  "semio-s-plugin-flow-extension-brep",
@@ -6671,8 +6675,12 @@ dependencies = [
  "semio-s-plugin-flow-extension-primitive",
  "semio-s-plugin-flow-extension-text",
  "serde",
+ "serde-wasm-bindgen",
  "serde_json",
  "thiserror 2.0.18",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -7556,6 +7564,13 @@ dependencies = [
  "semio-framework-ui",
  "semio-framework-ui-styling",
  "semio-s-3d",
+ "semio-s-plugin-flow-extension-brep",
+ "semio-s-plugin-flow-extension-dictionary",
+ "semio-s-plugin-flow-extension-list",
+ "semio-s-plugin-flow-extension-logic",
+ "semio-s-plugin-flow-extension-math",
+ "semio-s-plugin-flow-extension-primitive",
+ "semio-s-plugin-flow-extension-text",
  "serde",
  "serde_json",
  "wasm-bindgen",

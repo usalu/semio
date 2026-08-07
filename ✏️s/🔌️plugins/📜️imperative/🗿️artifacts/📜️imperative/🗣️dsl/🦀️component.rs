@@ -234,7 +234,7 @@ impl store::DocumentDsl for ImperativeDocument {
 
 //#region 🔖️Api
 /// 📄️ The default `imperative` document, handcrafted in the `.imperative` DSL.
-pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.imperative.imperative.dsl.semio");
+pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.imperative` DSL text into an `ImperativeDocument`.
 pub fn parse_dsl(text: &str) -> Result<ImperativeDocument, store::TextError> {

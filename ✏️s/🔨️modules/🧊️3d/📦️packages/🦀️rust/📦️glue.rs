@@ -41,13 +41,13 @@ pub mod brep {
     pub mod euler;
     #[path = "../../📐️brep/✅️validate/🦀️component.rs"]
     pub mod validate;
-    #[path = "../../📐️brep/🌳bvh/🦀️component.rs"]
+    #[path = "../../📐️brep/🌳️bvh/🦀️component.rs"]
     pub mod bvh;
-    #[path = "../../📐️brep/🧱primitives/🦀️component.rs"]
+    #[path = "../../📐️brep/🧱️primitives/🦀️component.rs"]
     pub mod primitives;
-    #[path = "../../📐️brep/📏measure/🦀️component.rs"]
+    #[path = "../../📐️brep/📏️measure/🦀️component.rs"]
     pub mod measure;
-    #[path = "../../📐️brep/🧩tessellate/🦀️component.rs"]
+    #[path = "../../📐️brep/🧩️tessellate/🦀️component.rs"]
     pub mod tessellate;
     #[path = "../../📐️brep/✂️int-cc/🦀️component.rs"]
     pub mod int_cc;
@@ -59,11 +59,11 @@ pub mod brep {
     pub mod classify;
     #[path = "../../📐️brep/🖋️imprint/🦀️component.rs"]
     pub mod imprint;
-    #[path = "../../📐️brep/🔀boolean/🦀️component.rs"]
+    #[path = "../../📐️brep/🔀️boolean/🦀️component.rs"]
     pub mod boolean;
-    #[path = "../../📐️brep/🧵sew/🦀️component.rs"]
+    #[path = "../../📐️brep/🧵️sew/🦀️component.rs"]
     pub mod sew;
-    #[path = "../../📐️brep/🩹heal/🦀️component.rs"]
+    #[path = "../../📐️brep/🩹️heal/🦀️component.rs"]
     pub mod heal;
     #[path = "../../📐️brep/➡️sweep/🦀️component.rs"]
     pub mod sweep;
@@ -71,9 +71,9 @@ pub mod brep {
     pub mod offset;
     #[path = "../../📐️brep/🎨️blend/🦀️component.rs"]
     pub mod blend;
-    #[path = "../../📐️brep/📄step/🦀️component.rs"]
+    #[path = "../../📐️brep/📄️step/🦀️component.rs"]
     pub mod step;
-    #[path = "../../📐️brep/📦mesh-io/🦀️component.rs"]
+    #[path = "../../📐️brep/📦️mesh-io/🦀️component.rs"]
     pub mod mesh_io;
     #[path = "../../📐️brep/⚙️engine/🦀️component.rs"]
     pub mod engine;

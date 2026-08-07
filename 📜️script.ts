@@ -48,7 +48,7 @@ import {
   type PackageRole,
   type LcovFileRecord,
   type TestLevel,
-} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { createHash } from "node:crypto";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -680,7 +680,7 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] framework-core ts-rs binding freshness…");
+    console.log("[verify] framework ts-rs binding freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] ui locale/terminology axes freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -711,6 +711,21 @@ export class VerifyScript extends Script {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
         throw new Error(`[verify] ${handcraftedBreaches.length} handcrafted-grammar P3/M4 policy breach(es)`);
+      }
+    }
+    console.log("[verify] dissolve-core / plugin-root policies…");
+    {
+      const dissolveBreaches = [
+        ...policyBannedNameStemBreaches(this.root),
+        ...policyEmojiPrefixBreaches(this.root),
+        ...policyPluginRootShapeBreaches(this.root),
+        ...policyPluginBuilderBreaches(this.root, policyDiscoverCrateDirs(this.root)),
+      ].filter((b) => b.priority === "high");
+      if (dissolveBreaches.length > 0) {
+        for (const b of dissolveBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${dissolveBreaches.length} dissolve-core / plugin-root policy breach(es)`);
       }
     }
     console.log("[verify] dsl fixture laws…");
@@ -1371,14 +1386,20 @@ export class ExamplesScript extends Script {
           return id === pluginFilter || id === ascii || crate.ownerRel.endsWith(`/${pluginFilter}`) || policyStripEmoji(crate.ownerRel).includes(ascii);
         })
       : crateDirs;
+    const ownerAllow = new Set(filtered.map((crate) => crate.ownerRel));
+    const inScope = (scope: string): boolean => {
+      if (!pluginFilter) return true;
+      const ascii = policyStripEmoji(pluginFilter);
+      if (scope.includes(pluginFilter) || policyStripEmoji(scope).includes(ascii)) return true;
+      for (const owner of ownerAllow) {
+        if (scope.startsWith(`${owner}/`) || scope === owner) return true;
+      }
+      return false;
+    };
     const breaches = [
       ...policySemioArtifactExamplesBreaches(this.root, filtered),
-      ...policyDeadExampleLeafBreaches(this.root, filtered),
-      ...policyEmptyExampleBreaches(this.root).filter((breach) => {
-        if (!pluginFilter) return true;
-        const ascii = policyStripEmoji(pluginFilter);
-        return breach.scope.includes(pluginFilter) || policyStripEmoji(breach.scope).includes(ascii);
-      }),
+      ...policyDeadExampleLeafBreaches(this.root, filtered).filter((breach) => inScope(breach.scope)),
+      ...policyEmptyExampleBreaches(this.root).filter((breach) => inScope(breach.scope)),
     ];
     if (breaches.length === 0) {
       console.log(`[examples.verify] ok${pluginFilter ? ` (${pluginFilter})` : ""}`);
@@ -1678,7 +1699,7 @@ export class Neo4jCypherExport {
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
- * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🟨️nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
+ * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.
@@ -3786,7 +3807,7 @@ function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleNoPackFiles
 
 //#region 🔧️PolicyRuleNoRawSpawn
-const POLICY_RAW_SPAWN_EXEMPT = new Set(["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts"]);
+const POLICY_RAW_SPAWN_EXEMPT = new Set(["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts"]);
 const POLICY_RAW_SPAWN_RE = /\b(spawnSync|execSync|execFileSync|Bun\.spawn|spawn)\s*\(/g;
 
 /** 🔎️Strips TS/JS comments and string literals so policy regexes only see executable code. */
@@ -4205,6 +4226,11 @@ function policyValidateExampleUnit(
   return breaches;
 }
 
+/**
+ * 📏️ Semio example layout: ≥1 emoji-slug under each artifact and each app `📚️examples/`
+ * (not under `⚙️engine`); slug matches pattern; definition leaf + 🖼️assets/ + 🧪️tests/; no plural
+ * dirs; no plugin-root `📚️examples`.
+ */
 function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const examplesDir = "📚️examples";
@@ -4494,7 +4520,7 @@ function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
           summary: `"${childRel}" uses banned name stem "${stem}" — use a domain concept folder instead`,
           kind: "taxonomy/banned-name-stem",
           scope: childRel,
-          priority: "medium",
+          priority: "high",
           reason: "Clean mechanism: bannedNameStems forbids vague grab-bag folders (core/shared/util/…).",
           solution: `Rename "${entry.name}" to a domain-specific concept folder and update #[path]/imports.`,
         });
@@ -4530,7 +4556,7 @@ function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
     if (cp <= 0x7f) return false;
     // Allow ASCII-only tooling dirs
     if (name.startsWith(".")) return false;
-    // Require VS16 when the stem after emoji is latin (e.g. 🧩core, 🔌Ports)
+    // Require VS16 when the stem after emoji is latin (e.g. 🧩core, 🔌️Ports)
     const rest = name.slice(first.length);
     if (/^[A-Za-z]/.test(rest) && !name.includes(POLICY_VS16)) return true;
     return false;
@@ -4546,9 +4572,9 @@ function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
           summary: `"${childRel}" is missing U+FE0F variation selector on its emoji prefix`,
           kind: "taxonomy/emoji-prefix",
           scope: childRel,
-          priority: "medium",
+          priority: "high",
           reason: "taxonomy.requireEmojiPrefixWithVs16: emoji-prefixed taxonomy dirs must include U+FE0F.",
-          solution: `Rename so the emoji prefix includes ${POLICY_VS16} (e.g. 🧩${POLICY_VS16}core → dissolve; 🔌Ports → 🔌${POLICY_VS16}Ports).`,
+          solution: `Rename so the emoji prefix includes ${POLICY_VS16} (e.g. 🧩${POLICY_VS16}core → dissolve; 🔌️Ports → 🔌${POLICY_VS16}Ports).`,
         });
       }
       walk(childRel);
@@ -4579,7 +4605,7 @@ function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
         summary: `"${ownerRel}" is missing required ${pluginDir}/ root contract folder`,
         kind: "taxonomy/plugin-root-shape",
         scope: ownerRel,
-        priority: "medium",
+        priority: "high",
         reason: "Every plugin must expose general plugin code under 🔌️plugin/ via Plugin::builder.",
         solution: `Create ${contractRel}/🦀️component.rs plus ${children.map((c) => c + "/🦀️component.rs").join(", ")}.`,
       });
@@ -4591,7 +4617,7 @@ function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
         summary: `"${contractRel}" is missing 🦀️component.rs`,
         kind: "taxonomy/plugin-root-shape",
         scope: ownerRel,
-        priority: "medium",
+        priority: "high",
         reason: "🔌️plugin/ must have a leaf component that returns Plugin via Plugin::builder.",
         solution: `Add ${contractRel}/🦀️component.rs exporting pub fn plugin() -> Plugin.`,
       });
@@ -4604,7 +4630,7 @@ function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
           summary: `"${contractRel}" is missing ${child}/🦀️component.rs`,
           kind: "taxonomy/plugin-root-shape",
           scope: ownerRel,
-          priority: "medium",
+          priority: "high",
           reason: "🔌️plugin/ required children: manifest, capabilities, setup, apps.",
           solution: `Add ${contractRel}/${child}/🦀️component.rs.`,
         });
@@ -4633,7 +4659,7 @@ function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCr
         summary: `"${crate.libRelPath}" still uses semio_plugin! — migrate to Plugin::builder in 🔌️plugin/`,
         kind: "taxonomy/plugin-builder",
         scope: crate.pluginId || crate.ownerRel,
-        priority: "medium",
+        priority: "high",
         reason: "semio_plugin! is retired; plugin identity lives under 🔌️plugin/ via typestate PluginBuilder.",
         solution: "Move registration into 🔌️plugin/🦀️component.rs using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin).",
       });
@@ -4644,7 +4670,7 @@ function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCr
         summary: `"${crate.libRelPath}" still references PluginBundle — use Plugin::builder / Plugin::new`,
         kind: "taxonomy/plugin-builder",
         scope: crate.pluginId || crate.ownerRel,
-        priority: "medium",
+        priority: "high",
         reason: "PluginBundle was renamed to Plugin; registration goes through Plugin::builder.",
         solution: "Replace PluginBundle with Plugin::builder(...).",
       });
@@ -5102,18 +5128,70 @@ function policyCollectGluePathTargets(glueAbs: string): Set<string> {
   return declared;
 }
 
+/**
+ * ☠️ Any `.rs` under `📚️examples` must be reachable via `#[path]` from a `📦️glue.rs` — dead definition
+ * or test shims are forbidden.
+ */
+function policyCollectGluePathTargets(glueAbs: string): Set<string> {
+  const declared = new Set<string>();
+  if (!existsSync(glueAbs)) return declared;
+  const libDir = dirname(glueAbs);
+  const libText = readFileSync(glueAbs, "utf8");
+  const baseStack: string[] = [libDir];
+  let pendingPath: string | null = null;
+  for (const rawLine of libText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    const pathMatch = line.match(/#\[path\s*=\s*"([^"]+)"\]/);
+    if (pathMatch) {
+      pendingPath = pathMatch[1] ?? null;
+      continue;
+    }
+    const modMatch = line.match(/^(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)/);
+    if (modMatch) {
+      const modName = modMatch[1]!;
+      const base = baseStack[baseStack.length - 1] ?? libDir;
+      let resolved: string;
+      if (pendingPath === null) {
+        resolved = join(base, modName);
+      } else if (pendingPath === ".") {
+        resolved = base;
+      } else {
+        resolved = join(base, pendingPath);
+      }
+      pendingPath = null;
+      const asFile = resolved.endsWith(".rs") ? resolved : `${resolved}.rs`;
+      const asModFile = join(resolved, "mod.rs");
+      if (existsSync(asFile)) declared.add(resolve(asFile));
+      else if (existsSync(asModFile)) declared.add(resolve(asModFile));
+      else declared.add(resolve(asFile));
+      if (line.includes("{")) baseStack.push(resolved.endsWith(".rs") ? dirname(resolved) : resolved);
+      continue;
+    }
+    pendingPath = null;
+    const opens = (line.match(/\{/g) ?? []).length;
+    const closes = (line.match(/\}/g) ?? []).length;
+    for (let i = 0; i < opens; i++) baseStack.push(baseStack[baseStack.length - 1] ?? libDir);
+    for (let i = 0; i < closes; i++) {
+      if (baseStack.length > 1) baseStack.pop();
+    }
+  }
+  return declared;
+}
+
 function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const reachable = new Set<string>();
+  const owners = [...new Set(crates.filter((crate) => crate.shape === "taxonomy").map((crate) => crate.ownerRel).filter(Boolean))];
+  const glueRoots = owners.length > 0 ? owners : ["✏️s/🔌️plugins"];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
     for (const target of policyCollectGluePathTargets(join(repoRoot, crate.libRelPath))) reachable.add(target);
   }
-  for (const glueRel of policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (_p, name) => name === "📦️glue.rs")) {
+  for (const glueRel of policyWalkRelFiles(repoRoot, glueRoots, (_p, name) => name === "📦️glue.rs")) {
     for (const target of policyCollectGluePathTargets(join(repoRoot, glueRel))) reachable.add(target);
   }
   const fw = readdirSync(repoRoot).find((name) => name.endsWith("framework"));
-  const exampleRoots = fw ? ["✏️s/🔌️plugins", fw] : ["✏️s/🔌️plugins"];
+  const exampleRoots = owners.length > 0 ? owners : fw ? ["✏️s/🔌️plugins", fw] : ["✏️s/🔌️plugins"];
   const exampleRs = policyWalkRelFiles(repoRoot, exampleRoots, (relPath, name) => {
     if (!name.endsWith(".rs")) return false;
     return relPath.replaceAll("\\", "/").includes("/📚️examples/");
@@ -5142,7 +5220,6 @@ function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
     ...policyDeclaredUseBreaches(repoRoot),
     ...policySpecWiringBreaches(repoRoot),
     ...policyEmptyExampleBreaches(repoRoot),
-    ...policyDeadExampleLeafBreaches(repoRoot),
     ...policyGenericCodecDeriveBreaches(repoRoot),
   ];
 }
@@ -5154,7 +5231,7 @@ function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
  * taxonomy rules (`PolicyRuleTaxonomy` region) over EVERY discovered Shape V2 rust package repo-wide.
  * Discovery is the shared package catalog (`policyDiscoverCrateDirs` → `discoverPackages`), so the
  * plugins/framework/hub split is expressed by each package's declared `role`, not by a path literal:
- * the Wave 4 rules encode plugin-app conventions (`App::builder`, `semio_plugin!`, the SDK testkit) and
+ * the Wave 4 rules encode plugin-app conventions (`App::builder`, `Plugin::builder`, the SDK testkit) and
  * stay `role = "plugin"`, while the structural taxonomy rules apply to every owner that has adopted the
  * shape. The framework SDK crate is excluded by role, exactly as the old plugins-only path scoping did.
  */

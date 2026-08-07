@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ Algorithms bundle router: `bun ./📜️script.ts dev [args…]` / `bun ./📜️script.ts test [args…]`. */
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCmd, runVitest } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCmd, runVitest } from "@semio-tech/repo-lib";
 
 /** This bundle has no local `.storybook` config — its stories live in the root Storybook's `compose/algorithm` scope, so `dev` delegates there instead of running a broken standalone instance. */
 class DevScript extends BundleScript {

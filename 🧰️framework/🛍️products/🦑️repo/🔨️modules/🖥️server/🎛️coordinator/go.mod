@@ -19,4 +19,4 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
-replace github.com/usalu/semio/repo/go => ../../📚️lib
+replace github.com/usalu/semio/repo/go => ../../📚️library

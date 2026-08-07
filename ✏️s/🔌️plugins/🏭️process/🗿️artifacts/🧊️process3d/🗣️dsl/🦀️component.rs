@@ -11,10 +11,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::process3d::Process3dDocument;
 
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::DocumentDsl`).
-pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.process.process3d.timber-beam-joinery-process3d.dsl.semio");
+pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 🗄️ The drilled-plate example fixture, handcrafted in this artifact's DSL (`store::DocumentDsl`).
-pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.process.process3d.drilled-plate-process3d.dsl.semio");
+pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.process3d` DSL text into a `Process3dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Process3dDocument, store::TextError> {

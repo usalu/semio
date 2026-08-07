@@ -2,7 +2,7 @@
 
 use crate::apps::procedural3d::config::Procedural3dConfig;
 use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
-use crate::artifacts::procedural3d::engine::{preview_camera_json, preview_payload_from_eval, preview_scene_status_json, preview_selection_json, preview_status_json};
+use crate::artifacts::procedural3d::engine::{preview_camera_json, preview_payload_from_eval_with_session, preview_scene_status_json, preview_selection_json, preview_status_json};
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene, world3d_sun_measures, ActionDescriptor, LocalizedLabel, MeasureSelectItem, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -60,13 +60,34 @@ pub fn preview_window_measures(config: &Procedural3dConfig, procedural_action: i
 //#region 🔖️Render
 pub fn render(document: &Procedural3dDocument, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> UiNode {
     let eval_json = session.eval_json().to_string();
-    let (meshes_json, instances_json) = preview_payload_from_eval(&eval_json, &document.fixture, config);
+    let (meshes_json, instances_json) = preview_payload_from_eval_with_session(&eval_json, &document.fixture, config, Some(session));
     let preview_status = preview_status_json(&eval_json, &document.fixture);
     let sun = config.sun();
+    let status_json = {
+        let base = preview_scene_status_json(session, preview_status);
+        let debug_value = serde_json::json!({
+            "evalLen": eval_json.len(),
+            "meshesLen": meshes_json.len(),
+            "instancesLen": instances_json.len(),
+            "evalHead": eval_json.chars().take(240).collect::<String>(),
+        });
+        Some(match base {
+            Some(existing) => match serde_json::from_str::<serde_json::Value>(&existing) {
+                Ok(mut value) => {
+                    if let Some(obj) = value.as_object_mut() {
+                        obj.insert("debug".into(), debug_value);
+                    }
+                    value.to_string()
+                }
+                _ => debug_value.to_string(),
+            },
+            None => debug_value.to_string(),
+        })
+    };
     build_world_3d_scene(
         PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
         PROCEDURAL_3D_PLAY_APP_ID,
-        ui_wgpu::wgpu::World3dScene { status_json: preview_scene_status_json(session, preview_status), ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, preview_selection_json(config, active_utility), &sun) },
+        ui_wgpu::wgpu::World3dScene { status_json, ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, preview_selection_json(config, active_utility), &sun) },
     )
 }
 //#endregion 🔖️Render

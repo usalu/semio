@@ -279,4 +279,29 @@ pub mod apps {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
+    pub mod art_2d_hexagonal_cut_concrete_forest_left;
+    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-right/🦀️component.rs"]
+    pub mod art_2d_hexagonal_cut_concrete_forest_right;
+    #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
+    pub mod art_5d_hexagonal_cut_concrete_forest_left;
+    #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
+    pub mod art_5d_nakagin_capsule;
+    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
+    pub mod art_3d_hexagonal_cut_concrete_forest_left;
+    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
+    pub mod art_3d_nakagin_capsule;
+    #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_2d_demo_session;
+    #[path = "../../🎛️apps/🖐️5d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_5d_demo_session;
+    #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_3d_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

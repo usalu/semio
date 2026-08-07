@@ -51,8 +51,8 @@ $ bun ./📜️script.ts nx run @semio-tech/ui-react:typecheck
 ../../../🎨️styling/⚡️implementation/🟦️typescript/📦️index.ts(229,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
 ../../../🖼️asset/⚡️implementation/🟦️typescript/🟦️icon_resolver.ts(6,15): error TS2305: Module '"../../../../\uD83E\uDDEE\uFE0Fmath/\uD83D\uDD78\uFE0Fgraph/\uD83D\uDDE3\uFE0Fdsl/\uD83E\uDEC0\uFE0Fcore/\u26A1\uFE0Fimplementation/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex.ts"' has no exported member 'UiThemeIcons'.
 ../../../../🖼️asset/⚡️implementation/🟦️typescript/🟦️icon_resolver.ts(6,15): error TS2305: Module '"../../../\uD83E\uDDEE\uFE0Fmath/\uD83D\uDD78\uFE0Fgraph/\uD83D\uDDE3\uFE0Fdsl/\uD83E\uDEC0\uFE0Fcore/\u26A1\uFE0Fimplementation/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex.ts"' has no exported member 'UiThemeIcons'.
-../../../../../🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts(1411,81): error TS2339: Property 'toString' does not exist on type 'never'.
-../../../../../🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts(1412,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts(1411,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts(1412,81): error TS2339: Property 'toString' does not exist on type 'never'.
 Warning: command "bun ./📜️script.ts typecheck" exited with non-zero status code
 
 
@@ -72,10 +72,10 @@ Hint: run the command with --verbose for more details.
 1366 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
                                      ^
 error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/ui-react:typecheck exited with status 1
-      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
       at run (/Users/ueli/Documents/semio/📜️script.ts:563:5)
-      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
-      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
       at /Users/ueli/Documents/semio/📜️script.ts:2903:11
 
 Bun v1.3.14 (macOS arm64)

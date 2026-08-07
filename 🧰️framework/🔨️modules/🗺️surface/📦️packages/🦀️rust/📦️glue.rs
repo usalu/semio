@@ -5,6 +5,7 @@
 extern crate semio_framework_os_kernel as store;
 extern crate infinite_canvas as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
+pub use dsl_core::os_dsl;
 #[path = "../../🎨️paint/🦀️component.rs"]
 pub mod paint;
 

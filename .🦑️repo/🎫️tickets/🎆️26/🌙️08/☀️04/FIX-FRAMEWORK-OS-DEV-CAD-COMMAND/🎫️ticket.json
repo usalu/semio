@@ -8,7 +8,7 @@
   "summary": "Updated resolveWorkspaceBin to support scoped packages and resolve workspace/local node_modules/.bin executables directly in runBunx, spawnBunx, and runCmdInternal. Added runNodeBinStatus to execute jco under Node.js runtime (which implements process.binding('tcp_wrap')). Updated runWasmPackWebBuild to invoke local/system wasm-pack directly rather than via bun x. Updated devToolingEnv to default RUSTC_WRAPPER to empty string when sccache IPC sockets are unavailable. Verified successful compilation and jco transpilation of cad component.",
   "files": {
     "updated": [
-      "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts",
+      "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts",
       "🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts"
     ]
   }

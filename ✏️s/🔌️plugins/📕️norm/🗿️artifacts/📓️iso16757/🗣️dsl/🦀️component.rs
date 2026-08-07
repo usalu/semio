@@ -14,7 +14,7 @@ use crate::artifacts::iso16757::Document;
 /// worked example (control valve product group/class/series/product/variant, ISO 16757-4 dictionary
 /// subject/property/controlled list, a box-primitive geometry with an inlet port, a selection
 /// request, and a scripted part-number rule), mirroring `Document::reference_fixture()`.
-pub const ISO16757_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️default/🗣️dsls/📕️default/🧬️component.norm.iso16757.dsl.semio");
+pub const ISO16757_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.iso16757` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

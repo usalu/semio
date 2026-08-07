@@ -398,8 +398,8 @@ package discovery problems:
   - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).
   - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
   - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
-  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
-  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).
 plugin registry catalog is fresh (58 plugin crates, 58 playgrounds, 16 framework packages); .vscode/launch.json is fresh.
 
 
@@ -486,11 +486,11 @@ Hint: run the command with --verbose for more details.
 1376 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
                                      ^
 error: bun nx run @semio-tech/framework-os-dev:plugin lint exited with status 1
-      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:1376:31)
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1376:31)
       at runGate (/Users/ueli/Documents/semio/📜️script.ts:681:5)
       at run (/Users/ueli/Documents/semio/📜️script.ts:664:16)
-      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:815:71)
-      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:850:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:815:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:850:16)
       at /Users/ueli/Documents/semio/📜️script.ts:4678:11
 
 Bun v1.3.14 (macOS arm64)

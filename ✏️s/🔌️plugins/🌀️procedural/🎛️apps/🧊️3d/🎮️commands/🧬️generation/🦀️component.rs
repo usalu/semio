@@ -6,14 +6,14 @@ use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::FlowEvalSession;
-use playbook::{apply_generation_operation, generation_operations, select_generation, selected_generation};
+use flow::playbook::{apply_generation_operation, generation_operations, select_generation, selected_generation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 //#region 🔖️Shared
 /// 🧬️ Emits generation operations for the generate-mode document-mutating commands — reuses
-/// `playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
+/// `flow::playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
 /// value built from the typed command fields.
 fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural3dDocument, cfg: &Procedural3dConfig) -> Emit<Procedural3dOperation, Procedural3dConfigOperation> {
     let spec = flow_fixture_to_form_spec(&projection.fixture);

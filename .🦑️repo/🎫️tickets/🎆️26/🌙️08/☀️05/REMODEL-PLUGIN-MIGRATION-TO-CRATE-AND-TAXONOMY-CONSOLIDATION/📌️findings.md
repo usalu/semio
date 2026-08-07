@@ -32,7 +32,7 @@ sweep the V1 version had no concept of); it reports `taxonomy tree clean: 📸�
 TEMPLATE.md §1's copy-paste snippet uses
 
 ```ts
-from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts"
+from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts"
 ```
 
 but from `✏️s/🔌️plugins/<p>/📦️packages/🦀️rust/` the repo root is **five** levels up

@@ -5,6 +5,15 @@ extern crate self as flow;
 extern crate self as flow_extension_wasm;
 extern crate self as flow_extension_sdk;
 
+//#region 🔖️KernelCrateAliases
+/// 🧬️ Derive macros (`DslRecord`/`DslDocument`/`DslOps`) resolve `dsl`/`store`/`pack`/`spr` as crate roots.
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as pack;
+extern crate semio_framework_os_kernel as spr;
+extern crate semio_framework_os_kernel as protocol;
+//#endregion 🔖️KernelCrateAliases
+
 //#region 🔖️KernelModuleAliases
 /// 🧬️ Components still use former kernel path names (`crate::os_store` / `os_dsl` / `os_spr`).
 pub use semio_framework_os_kernel::os_store;
@@ -20,10 +29,22 @@ pub use semio_framework_os_infinite as infinite;
 //#endregion 🔖️InfiniteAlias
 
 //#region 🔖️DagCanvasNeural
-pub use crate::infinite::board::ports::directed::dag as dag;
+pub use crate::infinite::board::ports::directed_dag as dag;
 pub use crate::infinite::canvas as canvas;
 pub use neural_engine as neural;
 //#endregion 🔖️DagCanvasNeural
+
+//#region 🔖️NeuralDag
+/// 🌳️ DAG→neural tree adapter (`neural_dag::tree_from_dag`) — parent of the engine package.
+#[path = "../../../🧠️neural/🦀️component.rs"]
+pub mod neural_dag;
+//#endregion 🔖️NeuralDag
+
+//#region 🔖️Playbook
+/// 📖️ Playbook domain types used by the forms bridge (`playbook::PlaybookSpec`, …).
+#[path = "../../../📖️playbook/🦀️component.rs"]
+pub mod playbook;
+//#endregion 🔖️Playbook
 
 #[path = "../../📄️document/🦀️component.rs"]
 pub mod document;

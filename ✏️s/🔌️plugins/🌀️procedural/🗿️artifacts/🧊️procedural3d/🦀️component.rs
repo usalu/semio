@@ -1,7 +1,7 @@
 //! 📐️ Procedural3d artifact — the document entity the 🧊️3d app edits (constitutional: general).
 
 use flow::{FlowFixture, Widget};
-use playbook::GenerationPlayState;
+use flow::playbook::GenerationPlayState;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
 use serde::{Deserialize, Serialize};
 

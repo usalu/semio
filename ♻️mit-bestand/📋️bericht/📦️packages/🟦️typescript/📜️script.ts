@@ -2,7 +2,7 @@
 /** 🏚️ `@semio-tech/mit-bestand-bericht` router: `bun ./📜️script.ts build|watch|latex`. */
 import { existsSync, statSync, watch } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { buildPrintDocument, fetchPrintFonts } from "../../../../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts";
 
 const packageRoot = import.meta.dir;

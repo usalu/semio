@@ -189,7 +189,7 @@ pub fn create_imperative_app() -> App {
             // source of truth, reused here rather than duplicated.
             .io(imperative_io()),
     )
-    .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&default_document()).expect("default_document is a static, hand-built value with no non-finite floats or non-UTF8 keys"), "cylinder")
+    .example_source(crate::examples::art_imperative_demo::source())
     .workflow("imperative", "Imperative", "graph")
 }
 //#endregion 🔖️Manifest

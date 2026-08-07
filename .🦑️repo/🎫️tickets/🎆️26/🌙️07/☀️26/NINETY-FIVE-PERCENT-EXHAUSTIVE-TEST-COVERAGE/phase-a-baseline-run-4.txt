@@ -105796,7 +105796,7 @@ test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fin
                 "root": "repo/hooks"
               },
               {
-                "id": "🧰️repo📚️lib",
+                "id": "🧰️repo📚️library",
                 "name": "repo/lib",
                 "root": "repo/lib"
               },
@@ -106439,7 +106439,7 @@ FAIL
                 "root": "repo/hooks"
               },
               {
-                "id": "🧰️repo📚️lib",
+                "id": "🧰️repo📚️library",
                 "name": "repo/lib",
                 "root": "repo/lib"
               },

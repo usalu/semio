@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runProbe, tryRun, TEST_LEVELS } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runProbe, tryRun, TEST_LEVELS } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { oklabMix } from "../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts";
 
 const printRoot = import.meta.dir;

@@ -2,7 +2,7 @@
 /**
  * 📜️ `@semio-tech/plugin-registry` — single-source plugin/playground/framework catalog codegen from
  * workspace packages. Discovery is the shared repo-wide contract (`🔣️taxonomy.json` +
- * `discoverPackages()` in `🦑️repo/📚️lib`), not path regexes local to this script; the plugin area's
+ * `discoverPackages()` in `🦑️repo/📚️library`), not path regexes local to this script; the plugin area's
  * declared `AreaState` decides how much pre-Shape-V2 layout is still tolerated.
  *
  * `generate` writes `🤖️generated/*` plus `.vscode/launch.json` (both derived from the same playground
@@ -12,8 +12,8 @@
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
-import { areaOf, BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { areaOf, BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
@@ -36,7 +36,7 @@ export type PluginRegistryEntry = {
 };
 
 //#region 🏛️DiscoveryContract
-/** @emoji 🔣️ The one shared taxonomy vocabulary (`🦑️repo/📚️lib`'s `🔣️taxonomy.json`), read once. Every
+/** @emoji 🔣️ The one shared taxonomy vocabulary (`🦑️repo/📚️library`'s `🔣️taxonomy.json`), read once. Every
  * directory-name, manifest-filename, role and area literal this script used to hardcode as a path regex
  * now comes from here, so registry discovery can never drift from the root policy script's or the SDK
  * testkit's view of the same contract — see mechanism ticket
@@ -72,8 +72,15 @@ if (!TAXONOMY.artifactChildDirs.includes(EXAMPLES_DIRNAME)) {
 const EXAMPLE_ASSETS_DIRNAME = TAXONOMY.exampleAssetsDirName ?? "🖼️assets";
 const EXAMPLE_TESTS_DIRNAME = TAXONOMY.exampleTestsDirName ?? "🧪️tests";
 const EXAMPLE_RUST_LEAF = TAXONOMY.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs";
+const EXAMPLE_TS_LEAF = TAXONOMY.exampleLeafFilenames?.["🟦️typescript"] ?? "🟦️component.ts";
+const EXAMPLE_SLUG_RE = new RegExp(TAXONOMY.exampleSlugPattern ?? "^.+\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$", "u");
 const FORBIDDEN_EXAMPLE_PLURAL_DIRS = TAXONOMY.forbiddenExamplePluralDirs ?? [];
 const FORBIDDEN_EXAMPLE_SLUGS = new Set(TAXONOMY.forbiddenExampleSlugs ?? []);
+
+/** @emoji ✅️ True when `name` is an emoji+VS16+kebab example slug (and not a forbidden placeholder). */
+function isExampleSlugName(name: string): boolean {
+  return EXAMPLE_SLUG_RE.test(name) && !FORBIDDEN_EXAMPLE_SLUGS.has(name);
+}
 
 const RUST_LANG = "🦀️rust";
 const RUST_MANIFEST_FILENAME = TAXONOMY.ecosystems[RUST_LANG].manifestFilename ?? "Cargo.toml";
@@ -297,12 +304,9 @@ function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
 }
 
 /**
- * @emoji 🖼️ Example ids for one playground row: the bundle crate lives at
- * `s/plugin/<p>/manifest/artifact/rs`, so the plugin root is always the first 3 path segments.
- * Tries the plugin root's own `example/` dir (single-app flat plugins), then — for multi-app
- * plugins where the playground `variant` diverges from the plugin id (`puzzle2d` - `puzzle` =
- * `2d`) — the constitutional `app/<suffix>/example` dir. Mirrors
- * `framework/ui/tui/rs`'s `discover_examples_for_playground` byte-for-byte.
+ * @emoji 🖼️ Example ids for one playground row: emoji-slug dirs under
+ * `🗿️artifacts/<a>/📚️examples/` and `🎛️apps/<app>/📚️examples/` that carry a definition leaf.
+ * Falls back to the variant-suffix app dir when artifact/app scans are empty.
  */
 function discoverExamplesForPlayground(repoRoot: string, cratePath: string, pluginId: string, variant: string): string[] {
   const segments = cratePath.split("/");
@@ -312,7 +316,7 @@ function discoverExamplesForPlayground(repoRoot: string, cratePath: string, plug
   const slugIds = (examplesRoot: string): string[] => {
     if (!existsSync(examplesRoot)) return [];
     return listDirs(examplesRoot)
-      .filter((name) => !FORBIDDEN_EXAMPLE_SLUGS.has(name))
+      .filter((name) => isExampleSlugName(name) && existsSync(join(examplesRoot, name, EXAMPLE_RUST_LEAF)))
       .sort();
   };
   const ids: string[] = [];
@@ -962,8 +966,8 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       continue;
     }
     for (const exampleSet of exampleSets) {
-      if (FORBIDDEN_EXAMPLE_SLUGS.has(exampleSet)) {
-        findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is a forbidden placeholder slug`);
+      if (!isExampleSlugName(exampleSet)) {
+        findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is not a valid emoji+VS16+kebab slug`);
       }
       for (const plural of FORBIDDEN_EXAMPLE_PLURAL_DIRS) {
         if (existsSync(join(examplesRoot, exampleSet, plural))) {
@@ -972,6 +976,9 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       }
       if (!existsSync(join(examplesRoot, exampleSet, EXAMPLE_RUST_LEAF))) {
         findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${EXAMPLE_RUST_LEAF}`);
+      }
+      if (!existsSync(join(examplesRoot, exampleSet, EXAMPLE_TS_LEAF))) {
+        findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${EXAMPLE_TS_LEAF}`);
       }
       if (!existsSync(join(examplesRoot, exampleSet, EXAMPLE_ASSETS_DIRNAME))) {
         findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${EXAMPLE_ASSETS_DIRNAME}/`);
@@ -1002,8 +1009,19 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       findings.push(`${pluginId}: app "${app}" ${EXAMPLES_DIRNAME} has no example slug`);
     }
     for (const exampleSet of appSets) {
+      if (!isExampleSlugName(exampleSet)) {
+        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is not a valid emoji+VS16+kebab slug`);
+      }
+      for (const plural of FORBIDDEN_EXAMPLE_PLURAL_DIRS) {
+        if (existsSync(join(appExamples, exampleSet, plural))) {
+          findings.push(`${pluginId}: app "${app}" example "${exampleSet}" still has plural ${plural}/`);
+        }
+      }
       if (!existsSync(join(appExamples, exampleSet, EXAMPLE_RUST_LEAF))) {
         findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_RUST_LEAF}`);
+      }
+      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_TS_LEAF))) {
+        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_TS_LEAF}`);
       }
       if (!existsSync(join(appExamples, exampleSet, EXAMPLE_ASSETS_DIRNAME))) {
         findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_ASSETS_DIRNAME}/`);
@@ -1032,7 +1050,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
-  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_TESTS_DIRNAME]);
+  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;
@@ -1042,10 +1060,18 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
         continue;
       }
       if (!name.endsWith(".rs")) continue;
-      if (name === TAXONOMY_LEAF_FILENAME) {
+      if (name === TAXONOMY_LEAF_FILENAME || name === EXAMPLE_RUST_LEAF) {
         componentFiles.push(path);
-      } else if (taxonomyLeafParents.has(dir.split("/").pop() ?? "")) {
-        findings.push(`${pluginId}: taxonomy leaf file must be named ${TAXONOMY_LEAF_FILENAME}, found ${relative(pluginRoot, path)}`);
+      } else {
+        const parts = dir.replaceAll("\\", "/").split("/");
+        const parent = parts[parts.length - 1] ?? "";
+        const isExampleSlugParent = parts.length >= 2 && parts[parts.length - 2] === EXAMPLES_DIRNAME;
+        if (taxonomyLeafParents.has(parent) || isExampleSlugParent) {
+          const expected = isExampleSlugParent ? EXAMPLE_RUST_LEAF : TAXONOMY_LEAF_FILENAME;
+          if (name !== expected) {
+            findings.push(`${pluginId}: taxonomy leaf file must be named ${expected}, found ${relative(pluginRoot, path)}`);
+          }
+        }
       }
     }
   }

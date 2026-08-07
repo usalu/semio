@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/compose-go` router: `bun ./📜️script.ts test [level]`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, goLevelTestArgs, goCoverageArgs } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, goLevelTestArgs, goCoverageArgs } from "@semio-tech/repo-lib";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {

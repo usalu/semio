@@ -5,6 +5,7 @@
 extern crate semio_framework_os_kernel as dsl_core;
 extern crate semio_framework_os_kernel as dsl_schema;
 extern crate semio_framework_os_kernel as dsl;
+pub use dsl_core::os_dsl;
 #[path = "../../➕️algebra/🦀️component.rs"]
 pub mod algebra;
 
@@ -79,7 +80,7 @@ pub mod graph {
 
     #[path = "."]
     pub mod normal {
-        #[path = "../../🕸️graph/➕️normal/↔undirected/🦀️component.rs"]
+        #[path = "../../🕸️graph/➕️normal/↔️undirected/🦀️component.rs"]
         pub mod undirected;
 
         #[path = "../../🕸️graph/➕️normal/➡️directed/🦀️component.rs"]
@@ -88,7 +89,7 @@ pub mod graph {
 
     #[path = "."]
     pub mod ports {
-        #[path = "../../🕸️graph/🔌️ports/↔undirected/🦀️component.rs"]
+        #[path = "../../🕸️graph/🔌️ports/↔️undirected/🦀️component.rs"]
         pub mod undirected;
 
         #[path = "."]

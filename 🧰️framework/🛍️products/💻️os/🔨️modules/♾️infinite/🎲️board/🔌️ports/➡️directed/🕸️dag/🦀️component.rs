@@ -3,7 +3,7 @@
 use std::cell::Cell;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-use crate::os_dsl::DslValue;
+use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
@@ -230,7 +230,7 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
 }
 
 /// 🔌️ Visual shape of a port handle cap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, crate::os_dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum PortShape {
     #[default]
@@ -239,7 +239,7 @@ pub enum PortShape {
 }
 
 /// 📐️ Edge routing style between port handles.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, crate::os_dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum EdgeRouteStyle {
     #[default]
@@ -248,7 +248,7 @@ pub enum EdgeRouteStyle {
 }
 
 /// 🪝️ Named horizontal port on a DAG node edge.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
@@ -345,7 +345,7 @@ impl IoPortSpec {
 }
 
 /// 🖼️ Screen media payload for output nodes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DagMedia {
     pub kind: DagMediaKind,
@@ -353,7 +353,7 @@ pub struct DagMedia {
 }
 
 /// 🎬️ Screen media kind discriminator.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, crate::os_dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum DagMediaKind {
     Image,
@@ -372,7 +372,7 @@ const DAG_PREVIEW_MAX_IMAGE: f64 = 200.0;
 const DAG_PREVIEW_MIN_SIZE: f64 = 20.0;
 
 /// 👁️ Typed preview payload rendered inside a preview node.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, crate::os_dsl::DslEnum)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(rename_all = "camelCase", tag = "variant")]
 pub enum DagPreviewContent {
     #[default]
@@ -1881,7 +1881,7 @@ pub struct DagCamera {
 }
 
 /// 🔗️ Edge between port handles.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DagFixtureEdge {
     pub id: String,
@@ -1897,7 +1897,7 @@ impl Default for DagFixture {
     fn default() -> Self {
         // 📜️ the demo board is handcrafted `.dag` DSL text (see `//#region 🔖️Dsl`), not JSON — it is
         // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
-        let document = <DagDocument as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio")).expect("bundled example/🕸️demo.dag is valid DagDocument DSL text");
+        let document = <DagDocument as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).expect("bundled dag demo DSL is valid DagDocument text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -7373,7 +7373,7 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
 }
 
 /// 🩹️ Sparse patch of a {@link DagFixtureEdge}'s endpoints.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DagEdgePatch {
     pub source: Option<String>,
@@ -7526,7 +7526,7 @@ pub type DagStore = DocumentStore<DagDocument, DagOperation>;
 // 🧬️ `.dag` document DSL via the `crate::os_dsl::` derive engine (see `🔖️DslMirror` below) — every persisted
 // type (`DagDocument`/`DagNodeSpec`/`DagNodeKind`/`DagFixtureEdge`/`IoPortSpec`/`DagMedia`/
 // `DagPreviewContent`/`PortShape`/`EdgeRouteStyle`/`DagMediaKind`/patches) either derives a
-// `crate::os_dsl::Dsl*` macro directly or, where the real Rust field shape can't satisfy the derive engine
+// `dsl::Dsl*` macro directly or, where the real Rust field shape can't satisfy the derive engine
 // (a bare tagged-enum field where the engine requires `Box<T>`), converts through a small local
 // mirror type at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary. This replaces the old
 // hand-rolled `math::graph::dsl` wire-literal-based printer/parser that used to live in this
@@ -7544,7 +7544,7 @@ pub type DagStore = DocumentStore<DagDocument, DagOperation>;
 // mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagDocumentDsl`/`DagOperationDsl` are
 // LOCAL structural twins that box only where the derive requires it; the real domain types keep their
 // original unboxed shape and never leave this crate — conversion happens right at this boundary.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum DagNodeKindDsl {
     Computation {
         #[dsl(table)]
@@ -7647,7 +7647,7 @@ fn dag_node_kind_from_dsl(kind: DagNodeKindDsl) -> DagNodeKind {
 
 /// 🧬️ Mirror of {@link DagNodeSpec} — every field identical except `kind`, boxed only here (see the
 /// region's opening doc comment).
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct DagNodeSpecDsl {
     id: String,
     name: String,
@@ -7697,7 +7697,7 @@ fn dag_node_spec_from_dsl(mirror: DagNodeSpecDsl) -> DagNodeSpec {
 
 /// 🧬️ Mirror of {@link DagNodePatch} — `kind` unwraps to `Option<DagNodeKindDsl>` directly (no `Box`
 /// needed: `#[dsl(statements)] Option<T>` is already the `OptionStatements` shape, not `RequiredStatements`).
-#[derive(Clone, Debug, Default, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
 struct DagNodePatchDsl {
     name: Option<String>,
     x: Option<f64>,
@@ -7717,8 +7717,8 @@ fn dag_node_patch_from_dsl(mirror: DagNodePatchDsl) -> DagNodePatch {
 }
 
 /// 🧬️ Mirror of {@link DagDocument} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
-/// `DagNodeSpec` itself can't implement `crate::os_dsl::DslField` (its `kind` field isn't boxed).
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslDocument)]
+/// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
 #[dsl(extension = "dag")]
 #[dsl(layout = "lines")]
 struct DagDocumentDsl {
@@ -7734,6 +7734,66 @@ fn dag_document_to_dsl(document: &DagDocument) -> DagDocumentDsl {
 
 fn dag_document_from_dsl(mirror: DagDocumentDsl) -> DagDocument {
     DagDocument { schema: mirror.schema, nodes: mirror.nodes.into_iter().map(dag_node_spec_from_dsl).collect(), edges: mirror.edges }
+}
+
+
+/// 📜️ Handcrafted DocumentDsl (P6): derive no longer emits DocumentDsl/DocumentPack.
+impl crate::os_store::DocumentDsl for DagDocumentDsl {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6).
+impl crate::os_store::DocumentPack for DagDocumentDsl {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
 }
 
 impl crate::os_store::DocumentDsl for DagDocument {
@@ -7769,8 +7829,8 @@ impl crate::os_store::DocumentPack for DagDocument {
 /// 🧬️ Mirror of {@link DagOperation} — see `🔖️DslMirror`'s doc comment for why `DagNodeSpec`/
 /// `DagNodePatch` need their own Dsl twins here too. `DagFixtureEdge`/`DagEdgePatch` are used
 /// directly (no twin needed): neither has a boxed-tagged-enum field, so both already implement
-/// `crate::os_dsl::DslField` from their own direct `#[derive(crate::os_dsl::DslRecord)]` above.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslOps)]
+/// `dsl::DslField` from their own direct `#[derive(dsl::DslRecord)]` above.
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum DagOperationDsl {
     NodesAdd {
         index: usize,
@@ -7851,18 +7911,53 @@ fn dag_operation_from_dsl(mirror: DagOperationDsl) -> DagOperation {
     }
 }
 
-impl OpText for DagOperation {
+
+/// 🎙️ Handcrafted OpText (P6): derive no longer emits OpText/OpBinary.
+impl crate::os_spr::OpText for DagOperationDsl {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
-        Ok(dag_operation_from_dsl(<DagOperationDsl as OpText>::parse_op(line)?))
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
+                )?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+impl crate::os_spr::OpBinary for DagOperationDsl {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+
+impl crate::os_spr::OpText for DagOperation {
+    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
+        Ok(dag_operation_from_dsl(<DagOperationDsl as crate::os_spr::OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        <DagOperationDsl as OpText>::print_op(&dag_operation_to_dsl(self))
+        <DagOperationDsl as crate::os_spr::OpText>::print_op(&dag_operation_to_dsl(self))
     }
 }
 
 /// ⚡️ Binary mirror of the `OpText` bridge above — `DagOperationDsl` already derives `OpBinary`
-/// via `#[derive(crate::os_dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
 impl crate::os_spr::OpBinary for DagOperation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         dag_operation_to_dsl(self).encode_op()

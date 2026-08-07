@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 📄️ The canonical DAG fixture, handcrafted in the `.dag` DSL — the same file the DAG kernel's own
 /// tests parse.
 pub const DAG_EXAMPLE_TEXT: &str =
-    include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio");
+    include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.dag` DSL text into a `DagDocument`.
 pub fn parse_dsl(text: &str) -> Result<DagDocument, store::TextError> {

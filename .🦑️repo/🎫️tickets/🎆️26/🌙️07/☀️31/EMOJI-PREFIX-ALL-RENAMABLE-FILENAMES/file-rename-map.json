@@ -132,8 +132,8 @@
     "new": "🧰️framework/🛍️product/🦑️repo/📋️activation.log"
   },
   {
-    "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️lib/⚡️implementation/🟦️typescript/worker.ts",
-    "new": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️lib/⚡️implementation/🟦️typescript/🟦️worker.ts"
+    "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️library/⚡️implementation/🟦️typescript/worker.ts",
+    "new": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️library/⚡️implementation/🟦️typescript/🟦️worker.ts"
   },
   {
     "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript/Dockerfile",
@@ -160,12 +160,12 @@
     "new": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🧬️schema/🐘️postgres/🛢️schema.sql"
   },
   {
-    "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/index.test.ts",
-    "new": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🧪️index.test.ts"
+    "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/index.test.ts",
+    "new": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/🧪️index.test.ts"
   },
   {
-    "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/nx-plugin.mjs",
-    "new": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🟨️nx-plugin.mjs"
+    "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/nx-plugin.mjs",
+    "new": "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/🟨️nx-plugin.mjs"
   },
   {
     "old": "🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/🔗️graphql/schema.graphql",

@@ -1,10 +1,24 @@
-//! 📚️ App demo-session example.
+//! 📚️ App demo-session example for puzzle 2d.
 
-use semio_framework_os_kernel::plugin::ExampleSource;
-use semio_framework::LocalizedLabel;
+use std::sync::LazyLock;
 
+use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+
+/// 🏷️ Stable example id.
 pub const ID: &str = "demo-session";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo Session", "Demo-Sitzung") }
+
+/// 🗣️ Localized picker label.
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("Demo Session", "Demo-Sitzung")
+}
+
+/// 🖼️ Icon id.
 pub const ICON: &str = "play";
+
+/// 🎮️ Command-script fixture text.
 pub const CMD_TEXT: &str = include_str!("🖼️assets/🎮️demo.cmd.semio");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), CMD_TEXT, ICON) }
+
+/// 📚️ Canonical example source for `App::example_source`.
+pub static SOURCE: LazyLock<ExampleSource> = LazyLock::new(|| {
+    ExampleSource::new(ID, label(), CMD_TEXT, ICON)
+});

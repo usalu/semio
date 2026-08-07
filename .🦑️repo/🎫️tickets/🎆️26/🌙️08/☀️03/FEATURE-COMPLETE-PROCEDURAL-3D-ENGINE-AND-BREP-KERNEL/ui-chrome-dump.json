@@ -1,0 +1,243 @@
+{
+  "texts": [
+    {
+      "tag": "BUTTON",
+      "text": "Document",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Catalogue",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Inspection",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Fullscreen",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element justify-center gap-single text-xs font-medium bg-transparent cursor"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Hexagonal Mushroom Column",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Edit",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "justify-center gap-single text-xs font-medium cursor-selectable disabled:pointer"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Generate",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element justify-center gap-single text-xs font-medium bg-transparent cursor"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Focus",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "flex h-medium w-auto items-center justify-center border-0 bg-transparent transit"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Close",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "flex h-medium w-auto items-center justify-center border-0 bg-transparent transit"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Window Options",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Actions",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Utilities",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Focus",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "flex h-medium w-auto items-center justify-center border-0 bg-transparent transit"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Close",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "flex h-medium w-auto items-center justify-center border-0 bg-transparent transit"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Projection",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Window Options",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Actions",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Utilities",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Display",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Sync",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Settings",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Keybindings",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Theme",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Plugins",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Extensions",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "History",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Command",
+      "exampleId": null,
+      "action": null,
+      "utility": null,
+      "className": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-se"
+    }
+  ],
+  "attrs": [
+    "id=playground.navbar.fixture.trigger",
+    "data-slot=navbar-example-icon",
+    "style=height: 100%; width: 100%; overflow: hidden; display: flex; flex-flow: row; touch-action: pan-y;",
+    "style=max-height: 100%; max-width: 100%; flex-grow: 1; overflow: auto; touch-action: pan-y;",
+    "data-slot=action-group",
+    "class=group/action-group flex items-center border divide-x overflow-hidden w-fit shrink-0 !border-normal divide-normal ui-glass h-small",
+    "data-fixture-json={\"schema\":\"flow.fixture\",\"camera\":{\"x\":120.0,\"y\":-60.0,\"zoom\":2.2},\"widgets\":[{\"kind\":\"inputSlider\",\"id\":\"width\",\"value\":2.0,\"min\":0.5,\"max\":6.0,\"step\":0.1},{\"kind\":\"inputSlider\",\"id\":\"height\",\"value\":1.5,\"min\":0.5,\"max\":6.0,\"step\":0.1},{\"kind\":\"inputSlider\",\"id\":\"distance\",\"value\":4.0,\"min\":0.5,\"max\":10.0,\"step\":0.1},{\"kind\":\"neuron\",\"id\":\"rect\",\"neuronKind\":\"brep.curve.rectangle\",\"params\":{},\"input_ports\":[\"width\",\"height\"],\"output_ports\":[],\"preview\":false},{\"kind\":\"neuron\",\"id\":\"face\",\"neuronKind\":\"brep.surf.planarFaceWire\",\"params\":{},\"input_ports\":[\"wire\"],\"output_ports\":[],\"preview\":false},{\"kind\":\"neuron\",\"id\":\"vector\",\"neuronKind\":\"math.vector\",\"params\":{},\"input_ports\":[\"x\",\"y\",\"z\"],\"output_ports\":[],\"preview\":false},{\"kind\":\"neuron\",\"id\":\"extrude\",\"neuronKind\":\"brep.sweep.extrude\",\"params\":{},\"input_ports\":[\"face\",\"vector\"],\"output_ports\":[],\"preview\":true}],\"synapses\":[{\"id\":\"e1\",\"from\":\"width\",\"to\":\"rect\",\"fromPort\":\"number\",\"toPort\":\"width\"},{\"id\":\"e2\",\"from\":\"height\",\"to\":\"rect\",\"fromPort\":\"number\",\"toPort\":\"height\"},{\"id\":\"e3\",\"from\":\"rect\",\"to\":\"face\",\"fromPort\":\"wire\",\"toPort\":\"wire\"},{\"id\":\"e4\",\"from\":\"face\",\"to\":\"extrude\",\"fromPort\":\"face\",\"toPort\":\"face\"},{\"id\":\"e5\",\"from\":\"distance\",\"to\":\"vector\",\"fromPort\":\"number\",\"toPort\":\"z\"},{\"id\":\"e6\",\"from\":\"vector\",\"to\":\"extrude\",\"fromPort\":\"vector\",\"toPort\":\"vector\"}],\"layout\":{\"extrude\":{\"x\":340.0,\"y\":-60.0},\"face\":{\"x\":200.0,\"y\":-60.0},\"height\":{\"x\":60.0,\"y\":-100.0},\"rect\":{\"x\":60.0,\"y\":-60.0},\"width\":{\"x\":60.0,\"y\":-120.0}}}",
+    "title=Actions",
+    "data-slot=utility-bar-overlay",
+    "data-slot=utility-bar",
+    "id=framework.window.proceduralMain.utilityBar.unfold",
+    "style=flex: 0 0 auto; width: var(--spacing-single); touch-action: none;",
+    "style=max-height: 100%; max-width: 100%; flex-grow: 1; overflow: auto; touch-action: pan-y;",
+    "data-slot=action-group",
+    "class=group/action-group flex items-center border divide-x overflow-hidden w-fit shrink-0 !border-normal divide-normal ui-glass h-small",
+    "style=width: 100%; height: 100%; touch-action: none; overscroll-behavior: contain;",
+    "style=display: block; width: 300px; height: 3201.5px; touch-action: none;",
+    "title=Actions",
+    "data-slot=utility-bar-overlay",
+    "data-slot=utility-bar",
+    "id=framework.window.proceduralPreview.utilityBar.unfold"
+  ]
+}

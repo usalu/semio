@@ -48,7 +48,7 @@ mod tests {
         // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
         // round trip spuriously unequal.
         values.insert("count".into(), serde_json::json!(3.5));
-        projection.generation.generations.push(playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
+        projection.generation.generations.push(flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
         projection.generation.selected_generation_id = Some("generation-1".into());
         projection.generation.preview_text = Some("42".into());
         test_support::assert_dsl_pack_equivalence(&projection);

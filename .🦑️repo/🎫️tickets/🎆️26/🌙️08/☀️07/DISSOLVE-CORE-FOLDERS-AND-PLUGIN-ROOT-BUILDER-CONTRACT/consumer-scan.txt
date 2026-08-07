@@ -134,10 +134,10 @@ Cargo.toml
 🧰️framework/🛍️products/💻️os/🟦️component.ts
 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json
 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/webhooks/github/route.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️lib/📦️packages/🟦️typescript/📦️index.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📦️packages/🟦️typescript/📦️index.ts
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts
 🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts
 🧰️framework/📦️packages/🦀️rust/📋️project.json
 🧰️framework/📦️packages/🦀️rust/📜️script.ts
@@ -283,10 +283,10 @@ eslint.config.mjs
 🧰️framework/🛍️products/💻️os/🦀️component.rs
 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json
 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/webhooks/github/route.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️lib/📦️packages/🟦️typescript/📦️index.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📦️packages/🟦️typescript/📦️index.ts
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts
 🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts
 🧰️framework/📦️packages/🦀️rust/Cargo.toml
 🧰️framework/📦️packages/🦀️rust/📋️project.json

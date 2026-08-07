@@ -2,7 +2,7 @@
 /** 📜️ `@semio-tech/plugin-registry` — single-source plugin registry codegen from workspace crates. */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts";
 
 //#region 🔖️PluginRegistryEntry
 export type PluginHostMetadata = {

@@ -6,7 +6,7 @@ use crate::artifacts::procedural3d::engine::{default_projection, example_project
 use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dOperation};
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow::{CameraJson, FlowEvalSession};
-use playbook::GenerationOperation;
+use flow::playbook::GenerationOperation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

@@ -52,7 +52,7 @@ Decision: dev uses plain `[profile.dev]` (opt-level 0), no wasm-opt anywhere. `o
 
 ## 1. Central build-mode resolution
 
-In [repo lib index.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts), add a region beside `runWasmPackWebBuild`:
+In [repo lib index.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts), add a region beside `runWasmPackWebBuild`:
 
 ```ts
 export type SemioBuildMode = "dev" | "ship";

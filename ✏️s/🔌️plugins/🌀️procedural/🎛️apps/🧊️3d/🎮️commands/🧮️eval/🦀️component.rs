@@ -15,7 +15,7 @@ pub mod flow_eval_tick {
     #[dsl(keyword = "flow-eval-tick")]
     pub struct FlowEvalTick {}
 
-    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
+    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
         let fixture = &doc.projection.fixture;
         let mut host = flow_host_with_session(fixture, session);
         let more = session.tick(&mut host);
@@ -33,6 +33,14 @@ pub mod flow_eval_tick {
                 request_json,
                 response_action: "flowEvalResolve".into(),
             });
+        } else if !more {
+            let eval_json = session.eval_json().to_string();
+            effects.extend(crate::artifacts::procedural3d::engine::preview_tessellate_effects(
+                session,
+                &eval_json,
+                fixture,
+                cfg.projection,
+            ));
         }
         Ok(Emit { effects, ..Default::default() })
     }
@@ -56,6 +64,24 @@ pub mod flow_eval_resolve {
     }
 }
 //#endregion 🔖️FlowEvalResolve
+
+//#region 🔖️FlowTessellateResolve
+pub mod flow_tessellate_resolve {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "flow-tessellate-resolve")]
+    pub struct FlowTessellateResolve {
+        pub node_hash: u64,
+        pub output_json: String,
+    }
+
+    pub fn handle(payload: &FlowTessellateResolve, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
+        let _ = session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
+        Ok(Emit::default())
+    }
+}
+//#endregion 🔖️FlowTessellateResolve
 
 //#region 🧪️Tests
 #[cfg(test)]

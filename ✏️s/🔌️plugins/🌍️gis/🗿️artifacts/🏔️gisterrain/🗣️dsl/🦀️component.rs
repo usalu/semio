@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::gisterrain::Gis3dTerrainDocument;
 
 /// 🏔️ The bundled "reuse terrain" example document, handcrafted in the `.gisterrain` DSL.
-pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.gis.gisterrain.dsl.semio");
+pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.gisterrain` DSL text into a `Gis3dTerrainDocument`.
 pub fn parse_dsl(text: &str) -> Result<Gis3dTerrainDocument, store::TextError> {

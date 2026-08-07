@@ -85,7 +85,7 @@ so anything it does NOT cover (multi-app, multi-artifact, a `🫀️core` cross-
 ```ts
 #!/usr/bin/env bun
 /** 🌊️ `@semio-tech/<p>-plugin` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(_segments: string[]): void {

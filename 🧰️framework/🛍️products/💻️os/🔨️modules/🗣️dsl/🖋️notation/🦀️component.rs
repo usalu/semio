@@ -28,7 +28,7 @@ pub struct EdgeNode {
 
 /// @emoji 🔗️ The optional id/kind label carried by a bracketed edge arrow — `[e1:Connection]`,
 /// `[e1]`, `[:Connection]`. Reuses Jack's existing `-[r:Kind]->` relationship-pattern bracket
-/// notation (`🧮math/🕸graph/🗣dsl`) rather than inventing a second bracket-free spelling, so the
+/// notation (`🧮️math/🕸️graph/🗣️dsl`) rather than inventing a second bracket-free spelling, so the
 /// two labeled-arrow grammars already in the repo agree with each other.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EdgeLabel {

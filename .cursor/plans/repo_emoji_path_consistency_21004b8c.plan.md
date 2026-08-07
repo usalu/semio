@@ -91,7 +91,7 @@ Update `[main_test.go](🧰️framework/🛍️products/🦑️repo/🔨️modul
 
 `repo/` no longer exists; go.work already points at the emoji tree. Update:
 
-- `[defaultCliBin` / shell resolver](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts) → output under `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client` (win: `client.exe`)
+- `[defaultCliBin` / shell resolver](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts) → output under `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client` (win: `client.exe`)
 - Client `[📜️script.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🟦️typescript/📜️script.ts)` `build`/`dev`/`test` packages → `./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go` and `.../⌨️cli/⚡️implementations/🐹️go`
 - `[.mcp.json](.mcp.json)`, `[.vscode/mcp.json](.vscode/mcp.json)`, and matching `[.vscode/launch.json](.vscode/launch.json)` repo-client entries
 

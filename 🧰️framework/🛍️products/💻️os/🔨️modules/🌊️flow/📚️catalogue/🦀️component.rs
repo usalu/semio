@@ -1,6 +1,6 @@
 //! 📚️ Flow operator catalogue and node-graph extras.
 
-use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas as canvas;
 use neural_engine as neural;
 

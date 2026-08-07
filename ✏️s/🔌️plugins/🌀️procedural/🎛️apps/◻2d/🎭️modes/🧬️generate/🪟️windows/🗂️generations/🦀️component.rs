@@ -1,7 +1,7 @@
 //! 🗂️ Procedural2d play app — the generations list window (generate mode).
 
 use crate::apps::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
-use playbook::{render_generations_tree, GenerationPlayState};
+use flow::playbook::{render_generations_tree, GenerationPlayState};
 use semio_framework_plugin::{Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

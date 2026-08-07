@@ -362,5 +362,20 @@ fn register_trinity_exports() {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/♻️rewrite/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_rewrite_demo;
+    #[path = "../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_jack_demo;
+    #[path = "../../🎛️apps/♻️rewrite/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_rewrite_demo_session;
+    #[path = "../../🎛️apps/🔌️jack/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_jack_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin
 //#endregion 🔖️Bundle

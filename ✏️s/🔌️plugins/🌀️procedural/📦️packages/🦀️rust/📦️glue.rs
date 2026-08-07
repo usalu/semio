@@ -1,5 +1,3 @@
-extern crate flow;
-// geometry side APIs: use flow::{tessellate_geometry, ...}
 //! 🌀️ Procedural plugin — 2D and 3D flow apps bundled as one hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that is
@@ -236,4 +234,31 @@ pub mod apps {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/🌀️procedural2d/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_procedural2d_demo;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️box-fillet-preview/🦀️component.rs"]
+    pub mod art_procedural3d_box_fillet_preview;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️box-shell-preview/🦀️component.rs"]
+    pub mod art_procedural3d_box_shell_preview;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️face-sweep-extrude/🦀️component.rs"]
+    pub mod art_procedural3d_face_sweep_extrude;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️rectangle-extrude-volume/🦀️component.rs"]
+    pub mod art_procedural3d_rectangle_extrude_volume;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️rectangle-wire-preview/🦀️component.rs"]
+    pub mod art_procedural3d_rectangle_wire_preview;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️sphere-box-fuse/🦀️component.rs"]
+    pub mod art_procedural3d_sphere_box_fuse;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️sphere-cut-with-torus/🦀️component.rs"]
+    pub mod art_procedural3d_sphere_cut_with_torus;
+    #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_2d_demo_session;
+    #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_3d_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

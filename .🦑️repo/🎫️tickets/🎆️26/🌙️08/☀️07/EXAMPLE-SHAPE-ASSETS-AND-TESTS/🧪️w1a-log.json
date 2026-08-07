@@ -1,12 +1,32 @@
 {
-  "wave": "w1a",
+  "wave": "1a",
+  "ticket": "EXAMPLE-SHAPE-ASSETS-AND-TESTS",
   "status": "done",
-  "changed": [
-    "taxonomy.json",
-    "discovery/component.ts",
-    "index.test.ts",
-    "script.ts (policy+ExamplesScript)",
-    "registry/script.ts"
+  "files_changed": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "/Users/ueli/Documents/semio/📜️script.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts"
   ],
-  "notes": "Policy/registry enforce new shape; old trees will breach until W2/W3 migrate."
+  "summary": {
+    "taxonomy": "Deleted exampleComponentDirs/plural leaf parents; added exampleAssetsDirName, exampleTestsDirName, exampleSlugPattern, exampleAssetKindPrefixes, exampleMediaKindPrefixes, exampleLeafFilenames, exampleTestLeafFilenames, forbidden lists; added 📚️examples to appChildDirs; kept in artifactChildDirs.",
+    "policy": "Rewrote policySemioArtifactExamplesBreaches for emoji-slug units under artifacts and apps (not engine); rewrote policyEmptyExampleBreaches for all assets under 🖼️assets; added policyDeadExampleLeafBreaches; example slug dirs are leaf parents in policyComponentFileBreaches; added examples list|verify command group.",
+    "registry": "discoverExamplesForPlayground reads emoji-slug dirs with definition leaves; validateTaxonomyTree enforces slug/assets/tests/definition leaves and forbids plugin-root and engine examples.",
+    "discovery": "validateTaxonomy checks new example fields and forbids plural dirs / assets/tests in taxonomyLeafParentDirs.",
+    "tests": "index.test.ts locks new taxonomy shape; bun test loadTaxonomy|validateTaxonomy: 12 pass."
+  },
+  "verification": {
+    "bun_test_taxonomy": "12 pass",
+    "examples_list": "ok",
+    "examples_verify_puzzle": "fails as expected on pre-migration trees (missing ts/test leaves, dead leaves) — mechanisms correct",
+    "registry_import": "ok",
+    "examples_verify_puzzle_exit": "non-zero (breaches expected pre-W2)",
+    "examples_verify_puzzle_breach_count": 18
+  },
+  "remaining_issues": [
+    "Policy/examples verify will fail repo-wide until W2/W3 migrate plugin example trees to the new shape.",
+    "launch.json / package.json / project.json examples registration owned by W5.",
+    "Some existing writer examples use double VS16 (🎬️️) which may fail the slug pattern depending on normalization."
+  ]
 }

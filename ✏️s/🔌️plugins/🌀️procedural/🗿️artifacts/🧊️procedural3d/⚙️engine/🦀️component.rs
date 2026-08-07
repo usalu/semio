@@ -10,7 +10,7 @@ use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
 use flow::{flow_host_with_session, FlowEvalSession, FlowFixture, FlowHost, Widget};
 use flow::tessellate_geometry; // crate-root re-export via flow alias
-use playbook::{selected_generation, GenerationPlayState};
+use flow::playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
 use store::DocumentDsl;
 
@@ -259,7 +259,10 @@ pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
 }
 
 pub fn is_brep_geometry_handle(handle: &str) -> bool {
-    handle.starts_with("solid-")
+    if handle.is_empty() {
+        return false;
+    }
+    if handle.starts_with("solid-")
         || handle.starts_with("shell-")
         || handle.starts_with("face-")
         || handle.starts_with("wire-")
@@ -268,6 +271,11 @@ pub fn is_brep_geometry_handle(handle: &str) -> bool {
         || handle.starts_with("compound-")
         || handle.starts_with("curve-")
         || handle.starts_with("surface-")
+    {
+        return true;
+    }
+    // Blake3 hex digests minted by `BrepKernel::mint` (no kind prefix).
+    handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
 pub fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
@@ -353,7 +361,72 @@ pub fn preview_status_json(eval_json: &str, fixture: &FlowFixture) -> Option<Str
 
 /// 🧵️ Pure per-render tessellation: bounded-cost, safe to call fresh on every render call instead of
 /// behind an outer memoization layer.
+fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<semio_framework_plugin::MeshData> {
+    if let Some(session) = session {
+        if let Some(json) = session.preview_mesh_json(handle) {
+            if let Ok(data) = serde_json::from_str::<semio_framework_plugin::MeshData>(json) {
+                return Some(data);
+            }
+        }
+    }
+    tessellate_geometry(handle, tolerance).ok()
+}
+
+/// 🧊 Geometry handles on preview widgets that still need an extension tessellate.
+pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &FlowFixture, session: &FlowEvalSession) -> Vec<String> {
+    if eval_json.is_empty() {
+        return Vec::new();
+    }
+    let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
+    let mut handles = Vec::new();
+    for widget in &fixture.widgets {
+        let preview = matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. });
+        if !preview {
+            continue;
+        }
+        let id = widget_id(widget).to_string();
+        for handle in geometry_handles_for_widget(&eval, &id) {
+            if session.preview_mesh_json(&handle).is_none() {
+                handles.push(handle);
+            }
+        }
+    }
+    handles
+}
+
+/// 📨 Host effects that tessellate preview handles inside the owning brep extension kernel.
+pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &FlowFixture, cfg: &Procedural3dConfig) -> Vec<semio_framework_plugin::HostEffect> {
+    let tolerance = preview_tolerance(&cfg.lod_mode);
+    let tolerance_bits = tolerance.to_bits();
+    let mut live = std::collections::HashSet::new();
+    let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
+    for widget in &fixture.widgets {
+        let id = widget_id(widget).to_string();
+        for handle in geometry_handles_for_widget(&eval, &id) {
+            live.insert(handle);
+        }
+    }
+    session.retain_preview_meshes(&live);
+    let mut effects = Vec::new();
+    for handle in pending_preview_tessellate_handles(eval_json, fixture, session) {
+        let node_hash = flow::preview_tessellate_node_hash(&handle, tolerance_bits);
+        if session.note_pending_tessellate(node_hash, handle.clone()) {
+            effects.push(semio_framework_plugin::HostEffect::InvokeExtension {
+                extension_id: "brep".into(),
+                capability: "tessellate".into(),
+                request_json: json!({ "handle": handle, "tolerance": tolerance, "nodeHash": node_hash }).to_string(),
+                response_action: "flowTessellateResolve".into(),
+            });
+        }
+    }
+    effects
+}
+
 pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
+    preview_payload_from_eval_with_session(eval_json, fixture, cfg, None)
+}
+
+pub fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &FlowFixture, cfg: &Procedural3dConfig, session: Option<&FlowEvalSession>) -> (String, String) {
     if eval_json.is_empty() {
         return ("[]".into(), "[]".into());
     }
@@ -383,7 +456,7 @@ pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, cfg: &P
             let mesh_id = if handles.len() == 1 { format!("eval-{id}") } else { format!("eval-{id}#{index}") };
             let instance_id = if handles.len() == 1 { id.clone() } else { format!("{id}#{index}") };
             if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-                if let Ok(data) = tessellate_geometry(handle, tolerance) {
+                if let Some(data) = mesh_data_for_preview_handle(handle, tolerance, session) {
                     let data = apply_show_mode_mesh(data, show_mode);
                     if mesh_has_preview_geometry(&data) {
                         meshes.push(json!({ "id": mesh_id, "data": data }));
@@ -580,7 +653,23 @@ mod tests {
         test_support::lock()
     }
 
+    fn ensure_linked_flow_extensions() {
+        use std::sync::Once;
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
+            flow::register_linked_flow_extension_installer("brep", semio_s_plugin_flow_extension_brep::register);
+            flow::register_linked_flow_extension_installer("math", semio_s_plugin_flow_extension_math::register);
+            flow::register_linked_flow_extension_installer("primitive", semio_s_plugin_flow_extension_primitive::register);
+            flow::register_linked_flow_extension_installer("logic", semio_s_plugin_flow_extension_logic::register);
+            flow::register_linked_flow_extension_installer("dictionary", semio_s_plugin_flow_extension_dictionary::register);
+            flow::register_linked_flow_extension_installer("list", semio_s_plugin_flow_extension_list::register);
+            flow::register_linked_flow_extension_installer("text", semio_s_plugin_flow_extension_text::register);
+            flow::sync_host_flow_extension_contributions("[]");
+        });
+    }
+
     fn preview_payload_from_evaluated_fixture(fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
+        ensure_linked_flow_extensions();
         let mut host = FlowHost::from_fixture(fixture.clone());
         host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
         let eval_json = host.evaluate().unwrap_or_default();
@@ -680,6 +769,30 @@ mod tests {
         assert!(data.indices.is_empty(), "wire preview has no shaded triangles");
         assert!(data.edge_positions.len() >= 6, "curve preview should include edge polylines");
         assert!(!instances_json.is_empty());
+    }
+
+    #[test]
+    fn all_bundled_examples_emit_preview_meshes() {
+        let _serial = test_serial();
+        let config = Procedural3dConfig::default();
+        let cases = [
+            ("hexagonal-mushroom-column", PROCEDURAL_EXAMPLE_HEX_COLUMN),
+            ("rectangle-extrude-volume", PROCEDURAL_EXAMPLE_RECT_EXTRUDE),
+            ("sphere-cut-with-torus", PROCEDURAL_EXAMPLE_SPHERE_TORUS),
+            ("box-fillet-preview", PROCEDURAL_EXAMPLE_BOX_FILLET),
+            ("sphere-box-fuse", PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE),
+            ("face-sweep-extrude", PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE),
+            ("rectangle-wire-preview", PROCEDURAL_EXAMPLE_RECTANGLE_WIRE),
+            ("box-shell-preview", PROCEDURAL_EXAMPLE_BOX_SHELL),
+        ];
+        for (label, example_id) in cases {
+            let projection = example_projection(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
+            let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
+            assert_ne!(meshes_json, "[]", "{label}: meshes empty; eval may have failed");
+            assert_ne!(instances_json, "[]", "{label}: instances empty");
+            let meshes: Vec<Value> = serde_json::from_str(&meshes_json).unwrap_or_else(|err| panic!("{label}: meshes json: {err}"));
+            assert!(!meshes.is_empty(), "{label}: no mesh entries");
+        }
     }
 
     #[test]

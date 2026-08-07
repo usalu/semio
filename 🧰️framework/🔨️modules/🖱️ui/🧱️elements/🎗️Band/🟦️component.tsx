@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Scrollable } from "../../🧱️elements/📜Scrollable/🟦️component.tsx";
+import { Scrollable } from "../../🧱️elements/📜️Scrollable/🟦️component.tsx";
 import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { borderNormalClass } from "../🏷️ClassNames/🟦️component.tsx";
 

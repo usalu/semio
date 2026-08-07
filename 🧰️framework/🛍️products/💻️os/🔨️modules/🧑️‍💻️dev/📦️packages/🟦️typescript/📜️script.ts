@@ -34,7 +34,7 @@ import {
   cargoProfileDir,
   semioBuildMode,
   semioShipEnv,
-} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
@@ -55,6 +55,14 @@ const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️
 const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🤖️generated/🟦️session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
+
+/** @emoji 🎯 Ensures the wasip2 rustc target is installed for plugin component builds. */
+function ensureWasmTarget(): void {
+  const probe = runProbe("rustup", ["target", "list", "--installed"]);
+  if (!probe.stdout.includes(PLUGIN_WASM_TARGET)) {
+    runCmd("rustup", ["target", "add", PLUGIN_WASM_TARGET]);
+  }
+}
 
 /** @emoji 🪶️ Cargo profile for wasip2 plugin components — `dev` in agent loops, `wasm-release` when `SEMIO_BUILD_MODE=ship`. */
 function pluginWasmProfile(): string {
@@ -667,11 +675,55 @@ function ensurePreview2ShimVendor(): void {
   ensurePreview2ShimVendorAt(preview2ShimVendorDir(), repoRoot);
 }
 
+/** @emoji 🫙 Ensures `_vendor/guestslim-typst-fonts.bin` exists for plugin workers' typst text path. */
+function ensureGuestSlimTypstFontsAsset(): void {
+  const out = join(pluginOutRoot, "_vendor/guestslim-typst-fonts.bin");
+  if (existsSync(out) && statSync(out).size > 0) return;
+  mkdirSync(dirname(out), { recursive: true });
+  const status = runCmdStatus(
+    "cargo",
+    ["run", "-p", "semio-framework-os-infinite", "--bin", "dump-guestslim-typst-fonts", "--features", "render", "--", out],
+    { cwd: repoRoot, budgetMs: buildBudgetMs() },
+  );
+  if (status !== 0 || !existsSync(out)) {
+    throw new Error(`guestslim typst fonts asset missing and dump-guestslim-typst-fonts failed (expected ${out})`);
+  }
+}
+
+/** @emoji 🔚️ Rewrites bare `@bytecodealliance/preview2-shim/*` imports in already-staged plugin JS. */
+function rewriteExistingPluginShimImports(): void {
+  if (!existsSync(pluginOutRoot)) return;
+  const vendor = preview2ShimVendorDir();
+  for (const entry of readdirSync(pluginOutRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith("_")) continue;
+    const pluginDir = join(pluginOutRoot, entry.name);
+    for (const file of readdirSync(pluginDir)) {
+      if (!file.endsWith(".js")) continue;
+      rewritePreview2ShimImports(join(pluginDir, file), vendor);
+    }
+  }
+}
+
 async function readPackageName(cratePath: string): Promise<string> {
   const content = await Bun.file(join(repoRoot, cratePath, "Cargo.toml")).text();
   const match = content.match(/^name = "([^"]+)"/m);
   if (!match) throw new Error(`missing package name in ${cratePath}/Cargo.toml`);
   return match[1]!;
+}
+
+
+/** @emoji 🧹 Drops renamed/orphaned bridge artifacts in a plugin out dir before rewriting current outputs. */
+function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: string): void {
+  if (!existsSync(outDir)) return;
+  const keepFiles = new Set(["🟨️host-shim.js", "🟨️plugin-worker.js"]);
+  const currentBridgeFile = `${jsBase}.js`;
+  for (const entry of readdirSync(outDir, { withFileTypes: true })) {
+    if (entry.isDirectory()) continue;
+    if (keepFiles.has(entry.name)) continue;
+    if (entry.name === currentBridgeFile) continue;
+    if (entry.name.startsWith(`${componentBase}.`)) continue;
+    rmSync(join(outDir, entry.name), { force: true });
+  }
 }
 
 async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
@@ -1093,9 +1145,9 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (process.env.FORCE_ENGINE_BUILD !== "1") {
     const surfacePkgJs = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg/framework_surface.js");
     const editorPkgJs = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js");
-    const flowPkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow.js");
-    if (existsSync(surfacePkgJs) && existsSync(editorPkgJs) && existsSync(flowPkgJs)) {
-      console.log("[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)");
+    const flowPkgWasm = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm");
+    if (existsSync(surfacePkgJs) && existsSync(editorPkgJs) && existsSync(flowPkgWasm)) {
+      console.log("[DEBUG] reusing existing engine wasm pkg/ (set FORCE_ENGINE_BUILD=1 to rebuild)");
       return;
     }
   }
@@ -1110,8 +1162,8 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (runCmdStatus("bun", [boardScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-board-2d wasm build failed");
   // React renderer always `import("@semio-tech/flow-core")` for `createFlowSession`, so the
   // pkg must exist even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
-  const flowCorePkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow.js");
-  if (!existsSync(flowCorePkgJs)) {
+  const flowCorePkgWasm = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm");
+  if (!existsSync(flowCorePkgWasm)) {
     const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts");
     if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("flow-core wasm build failed");
   }

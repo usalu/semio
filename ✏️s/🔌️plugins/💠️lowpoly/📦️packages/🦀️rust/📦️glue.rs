@@ -169,4 +169,15 @@ pub mod apps {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/💠️lowpoly/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_lowpoly_demo;
+    #[path = "../../🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_lowpoly_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

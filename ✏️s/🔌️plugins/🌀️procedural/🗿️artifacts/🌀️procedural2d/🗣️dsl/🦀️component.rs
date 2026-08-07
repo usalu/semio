@@ -20,13 +20,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
-use playbook::{FormGeneration, GenerationPlayState};
+use flow::playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
 /// 📦️ The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.procedural2d`
 /// DSL text — shared by the manifest's `.example(...)` registration, the `default_projection` fallback,
 /// and every test fixture.
-pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.procedural.procedural2d.dsl.semio");
+pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 //#region 🔖️DslMirror
 /// 🔒️ `ValueDsl` mirrors `flow::neural::Value`/`Atom` field-for-field rather than routing through
@@ -247,7 +247,7 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
     })
 }
 
-/// 🧬️ Local twin of `playbook::FormGeneration`.
+/// 🧬️ Local twin of `flow::playbook::FormGeneration`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct FormGenerationDsl {
     id: String,

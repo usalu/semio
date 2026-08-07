@@ -1,0 +1,137 @@
+{
+  "layout0": {
+    "graph": {
+      "w": 300,
+      "h": 175408
+    },
+    "world": {
+      "w": 300,
+      "h": 189358
+    },
+    "navbar": {
+      "w": 322,
+      "h": 84366
+    },
+    "bodyScroll": 284271
+  },
+  "results": [
+    {
+      "ex": {
+        "id": "hexagonal-mushroom-column",
+        "label": "Hexagonal Mushroom Column"
+      },
+      "how": "already",
+      "snap": {
+        "allOk": true,
+        "meshCount": 1,
+        "blocked": [],
+        "trigger": "Hexagonal Mushroom Column"
+      },
+      "lay": {
+        "graph": {
+          "w": 300,
+          "h": 241631
+        },
+        "world": {
+          "w": 300,
+          "h": 261555
+        },
+        "navbar": {
+          "w": 322,
+          "h": 110958
+        },
+        "bodyScroll": 339543
+      }
+    },
+    {
+      "ex": {
+        "id": "face-sweep-extrude",
+        "label": "Face Sweep"
+      },
+      "how": "missing",
+      "snap": {
+        "allOk": true,
+        "meshCount": 1,
+        "blocked": [],
+        "trigger": "Hexagonal Mushroom Column"
+      },
+      "lay": {
+        "graph": {
+          "w": 300,
+          "h": 299161
+        },
+        "world": {
+          "w": 300,
+          "h": 324325
+        },
+        "navbar": {
+          "w": 322,
+          "h": 134059
+        },
+        "bodyScroll": 387560
+      }
+    },
+    {
+      "ex": {
+        "id": "rectangle-wire-preview",
+        "label": "Rectangle Wire"
+      },
+      "how": "clicked",
+      "snap": {
+        "allOk": false,
+        "meshCount": 0,
+        "blocked": [
+          "extrude",
+          "face"
+        ],
+        "trigger": "Rectangle Wire Preview"
+      },
+      "lay": {
+        "graph": {
+          "w": 300,
+          "h": 1376836
+        },
+        "world": {
+          "w": 300,
+          "h": 1502235
+        },
+        "navbar": {
+          "w": 319,
+          "h": 566764
+        },
+        "bodyScroll": 1502283
+      }
+    },
+    {
+      "ex": {
+        "id": "rectangle-extrude-volume",
+        "label": "Rectangle Extrude"
+      },
+      "how": "already",
+      "snap": {
+        "allOk": false,
+        "meshCount": 0,
+        "blocked": [
+          "extrude",
+          "face"
+        ],
+        "trigger": "Rectangle Wire Preview"
+      },
+      "lay": {
+        "graph": {
+          "w": 300,
+          "h": 2185943
+        },
+        "world": {
+          "w": 300,
+          "h": 2386839
+        },
+        "navbar": {
+          "w": 319,
+          "h": 891668
+        },
+        "bodyScroll": 2386887
+      }
+    }
+  ]
+}

@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::gismap::GisMapDocument;
 
 /// 🗺️ The bundled "reuse map" example document, handcrafted in the `.gismap` DSL.
-pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.gis.gismap.dsl.semio");
+pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapDocument`.
 pub fn parse_dsl(text: &str) -> Result<GisMapDocument, store::TextError> {

@@ -211,3 +211,16 @@ fn register_s_exports() {
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Manifest
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/🏠️home/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_home_demo;
+    #[path = "../../🎛️apps/🏠️home/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_home_demo_session;
+    #[path = "../../🎛️apps/🪐️space/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_space_demo_session;
+}
+//#endregion 📚️Examples
+

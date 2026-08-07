@@ -1,5 +1,6 @@
 //! 🔐 Crypto trait seam for signed protocol frames.
 
+use crate::os_spr::wire::ProtocolError;
 //#region 🔖️Crypto
 // Trait-only — no algorithm ships in protocol_core (repo rule: external libs behind an
 // interface). protocol_format provides a Blake3Hasher impl of RecordHasher (it already owns the

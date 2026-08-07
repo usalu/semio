@@ -4,16 +4,16 @@
 🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🔷️file_invalid.cs:3:// 💻️compose/asset/repo/some/folder/🔷️file_invalid.cs
 🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🐍️file.py:3:# 💻️compose/asset/repo/some/folder/🐍️file.py
 🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🔷️file.cs:4:// 💻️compose/asset/repo/some/folder/🔷️file.cs
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:151:    expect(isAdapterBoundaryFile("compose/client/lib/js/index.ts", "//#region 🌐️RsWasmTransport\nexport async function x() {}")).toBe(true);
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:152:    expect(isAdapterBoundaryFile("compose/client/lib/js/kit-store.🟦️worker.ts", "export async function x() {}")).toBe(true);
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:153:    expect(isAdapterBoundaryFile("compose/client/bin/assistant/mcp-app.tsx", "// #region 🔌️Adapters\nimport x from 'react'")).toBe(true);
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:164:    const file = "compose/client/lib/js/boundary-probe.ts";
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:396:    expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:665:    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🦑️repo/**", "--glob", "!**/🧪️index.test.ts"], {
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:751:    const prefixSets = [[], ["compose/fixture"]];
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:752:    expect(pathMatchesBundleIndex("compose/fixture/a.json", 0, prefixSets, bundles)).toBe(false);
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:753:    expect(pathMatchesBundleIndex("compose/fixture/a.json", 1, prefixSets, bundles)).toBe(true);
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:460:const INTERNAL_PREFIXES = ["@compose/", "@ui/", "@cad/", "@puzzle/", "@framework/", "@repo/", "@coda/"];
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:151:    expect(isAdapterBoundaryFile("compose/client/lib/js/index.ts", "//#region 🌐️RsWasmTransport\nexport async function x() {}")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:152:    expect(isAdapterBoundaryFile("compose/client/lib/js/kit-store.🟦️worker.ts", "export async function x() {}")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:153:    expect(isAdapterBoundaryFile("compose/client/bin/assistant/mcp-app.tsx", "// #region 🔌️Adapters\nimport x from 'react'")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:164:    const file = "compose/client/lib/js/boundary-probe.ts";
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:396:    expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:665:    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🦑️repo/**", "--glob", "!**/🧪️index.test.ts"], {
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:751:    const prefixSets = [[], ["compose/fixture"]];
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:752:    expect(pathMatchesBundleIndex("compose/fixture/a.json", 0, prefixSets, bundles)).toBe(false);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:753:    expect(pathMatchesBundleIndex("compose/fixture/a.json", 1, prefixSets, bundles)).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:460:const INTERNAL_PREFIXES = ["@compose/", "@ui/", "@cad/", "@puzzle/", "@framework/", "@repo/", "@coda/"];
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🐹️component.go:20594:	if strings.HasPrefix(name, "@compose/") || strings.HasPrefix(name, "@ui/") || strings.HasPrefix(name, "@cad/") ||
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:14:// import { deserializeKit, Problem, validateKit } from "@semio-tech/compose-js/compose";
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:2319:  if (cleanScope.startsWith("@compose/breachs/")) {

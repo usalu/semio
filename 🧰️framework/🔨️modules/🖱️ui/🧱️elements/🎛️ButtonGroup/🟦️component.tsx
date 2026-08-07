@@ -15,7 +15,7 @@ import { borderElementClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { useLevel, type Level } from "../🌈️Surface/🟦️component.tsx";
 import { Label, useControlInlineText, useControlAccessibleLabel } from "../🏷️Label/🟦️component.tsx";
 import { chromeControlItemClass, chromeControlGroupClass, ControlHotkeyBadge } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { type ControlIcon, renderControlIcon } from "../🔣Icons/🟦️component.tsx";
+import { type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌩️ButtonGroup

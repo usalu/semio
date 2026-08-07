@@ -12,9 +12,9 @@ use crate::artifacts::block5d::Block5dDefinition;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block5d` DSL —
 /// the `PartKind` slice of `s/plugin/puzzle/app/5d/example/🧩️concrete-forest.puzzle5d`.
-pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/hexagonal-cut-concrete-forest-left/🗣️dsls/♻️reuse/🧬️component.block.block5d.dsl.semio");
+pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block5d` DSL.
-pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/nakagin-capsule/🗣️dsls/♻️reuse/🧬️component.block.block5d.dsl.semio");
+pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
 
 /// 📖️ Parses `.block5d` DSL text into a `Block5dDefinition`.
 pub fn parse_dsl(text: &str) -> Result<Block5dDefinition, store::TextError> {

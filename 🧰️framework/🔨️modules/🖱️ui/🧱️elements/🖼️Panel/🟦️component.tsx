@@ -12,10 +12,10 @@ import { panelTabFirstDraggableElementId } from "@semio-tech/framework";
 // reactHostPort.useRef/.useMemo at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
-import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🪵Tree/🟦️component.tsx";
+import { Scrollable } from "../📜️Scrollable/🟦️component.tsx";
+import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🪵️Tree/🟦️component.tsx";
 import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { useFirstDraggableElementAlias } from "../🆔ElementId/🟦️component.tsx";
+import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️component.tsx";
 import { borderNormalClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { dropZoneReadyFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { FlowProvider, useFlow } from "../🧭️Flow/🟦️component.tsx";
@@ -23,9 +23,9 @@ import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surfa
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
 import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { PanelTabBar, type PanelTabNode, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection } from "../📑PanelTabBar/🟦️component.tsx";
-import { CloseIcon, Icon } from "../🔣Icons/🟦️component.tsx";
-import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
+import { PanelTabBar, type PanelTabNode, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection } from "../📑️PanelTabBar/🟦️component.tsx";
+import { CloseIcon, Icon } from "../🔣️Icons/🟦️component.tsx";
+import { DragHandle } from "../🧱️DragHandle/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧭️Panel

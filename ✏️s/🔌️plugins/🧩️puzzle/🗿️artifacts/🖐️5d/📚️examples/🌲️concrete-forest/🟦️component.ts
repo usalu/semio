@@ -1,5 +1,8 @@
-/** 📚️ Example `🏗️️nakagin-capsule-tower` for artifact 🖐️5d. */
-export const id = "nakagin-capsule-tower";
-export const label = { en: "Nakagin Capsule Tower", de: "Nakagin-Kapselturm" } as const;
-export const icon = "building";
-export const dslPath = new URL("./🖼️assets/🗣️tower.dsl.semio", import.meta.url);
+/** 📚️ Example `🌲️concrete-forest`. */
+export const id = "concrete-forest";
+export const label = { en: "Concrete Forest", de: "Betonwald" } as const;
+export const icon = "list-tree";
+export const dslPath = new URL("./🖼️assets/🗣️forest.dsl.semio", import.meta.url);
+export const opPath = new URL("./🖼️assets/🔧️forest.op.semio", import.meta.url);
+export const packPath = new URL("./🖼️assets/🎒️forest.pack.semio", import.meta.url);
+export const sprPath = new URL("./🖼️assets/📡️forest.spr.semio", import.meta.url);

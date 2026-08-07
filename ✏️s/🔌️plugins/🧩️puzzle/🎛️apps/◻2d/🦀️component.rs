@@ -41,8 +41,8 @@ pub const PUZZLE2D_PLAY_APP_ID: &str = "puzzle2d-play";
 pub const PUZZLE2D_PLAY_CONTROLLER_ID: &str = "puzzle2d-play";
 pub const PUZZLE2D_PLAY_SURFACE_ID: &str = "puzzle2d.play.composite";
 pub const PUZZLE2D_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
-pub const PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID: &str = "concrete-forest";
-pub const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = "nakagin-capsule-tower";
+pub const PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID: &str = crate::examples::puzzle2d::concrete_forest::ID;
+pub const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = crate::examples::puzzle2d::nakagin_capsule_tower::ID;
 
 /// 🪟️ The three canvas pane KIND ids — a different id space from the window body keys (see
 /// `🎮️commands/🎲️board`'s `PUZZLE2D_WINDOW_BODY_KEYS`): these key utilities, engagements and measures.
@@ -69,8 +69,8 @@ fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
     serde_json::to_string(&value).unwrap_or_else(|error| panic!("re-serialize {label} example fixture: {error}"))
 }
 
-fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(puzzle2d_dsl::PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest") }
-fn nakagin_example_json() -> String { parse_example_dsl_without_camera(puzzle2d_dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
+fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::concrete_forest::DSL_TEXT, "concrete-forest") }
+fn nakagin_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
 //#endregion 🔖️Constants
 
 //#region 🔖️Scene
@@ -1149,8 +1149,8 @@ pub fn create_puzzle2d_app() -> App {
             .tool(fill::definition(puzzle2d_localized(|l| l.fill)))
             .default_layout(edit::layout()),
     )
-    .example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, puzzle2d_localized(|l| l.example_concrete_forest), serde_json::to_string(&example_fixture(concrete_forest_example_json().as_str())).unwrap(), "list-tree")
-    .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower"), serde_json::to_string(&example_fixture(nakagin_example_json().as_str())).unwrap(), "building")
+    .example_source(&*crate::examples::puzzle2d::concrete_forest::SOURCE)
+    .example_source(&*crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE)
     .workflow("puzzle2d", "Puzzle 2D", "layout")
 }
 

@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 📦️ The `fem3d-play` "default" example, embedded at compile time as handcrafted `.fem3d` DSL text —
 /// shared by the manifest's `.example(...)` registration, the `setActiveExample` handler, and every
 /// test fixture.
-pub const FEM3D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.fem.fem3d.dsl.semio");
+pub const FEM3D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.fem3d` DSL text into a `Fem3dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Fem3dDocument, store::TextError> {

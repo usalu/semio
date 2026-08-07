@@ -1,0 +1,20 @@
+{
+  "layout": {
+    "graph": {
+      "w": 300,
+      "h": 118134
+    },
+    "world": {
+      "w": 300,
+      "h": 127004
+    },
+    "navbar": {
+      "w": 322,
+      "h": 61264
+    }
+  },
+  "allOk": true,
+  "meshCount": 1,
+  "blocked": [],
+  "trigger": "Hexagonal Mushroom Column"
+}

@@ -111,7 +111,7 @@ hardcoded lib.rs refs: 167
 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs
 🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/Cargo.toml
 🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/📦️index.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json
 .cursor/plans/consistent-loading-skeletons_8a7213df.plan.md
 .cursor/plans/configured_node_apps_30251998.plan.md
 .cursor/plans/total_json_purge_2726ede5.plan.md

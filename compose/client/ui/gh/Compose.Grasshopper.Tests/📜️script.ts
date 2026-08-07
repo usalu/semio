@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ Compose.Grasshopper.Tests test router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runTestBudgeted } from "@semio-tech/repo-lib";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

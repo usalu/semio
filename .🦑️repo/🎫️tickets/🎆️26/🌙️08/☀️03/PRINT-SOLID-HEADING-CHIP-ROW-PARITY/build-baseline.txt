@@ -10,13 +10,13 @@ error: halted on potentially-recoverable error as specified
 1366 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
                                      ^
 error: /Users/ueli/Documents/semio/.🦑️repo/⚡️cache/tectonic/0.16.9/tectonic --keep-logs --keep-intermediates --synctex --reruns 2 -Z search-path=/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🖋️latex -Z search-path=/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📄️template/📋️report -Z search-path=/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist --outdir /Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist 🖋️report.tex exited with status 1
-      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
       at compilePrintDocument (/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts:561:3)
       at compilePrintDocumentWithPanels (/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts:354:3)
       at compileLightAndDark (/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts:578:9)
       at compileTemplate (/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts:592:9)
       at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts:668:62)
-      at async run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:814:19)
-      at async runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:844:16)
+      at async run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:814:19)
+      at async runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:844:16)
 
 Bun v1.3.14 (macOS arm64)

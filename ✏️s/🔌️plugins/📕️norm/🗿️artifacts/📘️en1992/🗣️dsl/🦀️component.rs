@@ -8,7 +8,7 @@ use crate::artifacts::en1992::Document;
 /// concrete, under the EN annex — distinct from `Document::default()`'s DE-annex/TC1/R60/uncracked
 /// values so the grammar's non-default branches (annex, fire rating, tightness class, `use_fem`,
 /// `anchor_cracked`) are exercised too.
-pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️liquid-retaining-fem-anchor/🗣️dsls/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.dsl.semio");
+pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🗣️liquid-retaining-fem-anchor.dsl.semio");
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

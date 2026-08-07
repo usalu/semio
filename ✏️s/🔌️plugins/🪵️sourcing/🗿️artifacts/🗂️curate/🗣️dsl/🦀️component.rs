@@ -11,10 +11,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::curate::CurateDocument;
 
 /// 📄️ The demo-stock example, handcrafted in the `.curate` DSL.
-pub const DEMO_STOCK_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sourcing.curate.demo-stock-curate.dsl.semio");
+pub const DEMO_STOCK_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📄️ The empty-curation example, handcrafted in the `.curate` DSL.
-pub const EMPTY_CURATION_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sourcing.curate.empty-curation-curate.dsl.semio");
+pub const EMPTY_CURATION_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.curate` DSL text into a `CurateDocument`.
 pub fn parse_dsl(text: &str) -> Result<CurateDocument, store::TextError> {

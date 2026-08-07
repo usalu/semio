@@ -19,7 +19,7 @@ use crate::artifacts::playbook::PlaybookSpec;
 /// parametric-facade Blockly-like form covering every [`PLAYBOOK_BUILTIN_KINDS`](crate::artifacts::playbook::PLAYBOOK_BUILTIN_KINDS)
 /// block kind plus a module-contributed extension kind and the full `PlaybookExpr` condition grammar
 /// (`Const`/`Var`/`Eq`/`And`/`Or`/`Truthy`).
-pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.playbook.playbook.dsl.semio");
+pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.playbook` DSL text into a `PlaybookSpec`.
 pub fn parse_dsl(text: &str) -> Result<PlaybookSpec, store::TextError> {

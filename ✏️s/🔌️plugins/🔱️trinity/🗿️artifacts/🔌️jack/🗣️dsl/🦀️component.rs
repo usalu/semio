@@ -241,7 +241,7 @@ impl store::DocumentPack for GraphFixture {
 //#endregion 🔖️Pack
 
 /// 📄️ The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
-pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.dsl.semio");
+pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.trinity` DSL text into a `GraphFixture`.
 pub fn parse_dsl(text: &str) -> Result<GraphFixture, TextError> {
@@ -281,7 +281,7 @@ mod tests {
         let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
         store::test_support::assert_dsl_round_trip(&nakagin);
         store::test_support::assert_dsl_pack_equivalence(&nakagin);
-        let branch = parse_dsl(include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.branch-chain-trinity.dsl.semio")).unwrap();
+        let branch = parse_dsl(include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).unwrap();
         store::test_support::assert_dsl_round_trip(&branch);
         store::test_support::assert_dsl_pack_equivalence(&branch);
     }

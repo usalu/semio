@@ -55,32 +55,32 @@ Easy integration-path cleanups already applied: `.env.example` blob root, vscode
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.test.ts:1971` — `    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism.kit.diff.compose.json"), false);`
 
 ### repo-lib index.ts (INTERNAL_PREFIXES / commit msg examples) (1)
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:4248` — `    return "commit: bundle scope needs an area name after emojis (e.g. 🏘️compose✍️sketchpad, 🥅️framework, 🖱️ui⚛️react)";`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:4248` — `    return "commit: bundle scope needs an area name after emojis (e.g. 🏘️compose✍️sketchpad, 🥅️framework, 🖱️ui⚛️react)";`
 
 ### repo-lib index.test.ts (example tech paths) (23)
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:151` — `    expect(isAdapterBoundaryFile("compose/client/lib/js/index.ts", "//#region 🌐️RsWasmTransport\nexport async function x() {}")).toBe(true);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:152` — `    expect(isAdapterBoundaryFile("compose/client/lib/js/kit-store.🟦️worker.ts", "export async function x() {}")).toBe(true);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:153` — `    expect(isAdapterBoundaryFile("compose/client/bin/assistant/mcp-app.tsx", "// #region 🔌️Adapters\nimport x from 'react'")).toBe(true);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:164` — `    const file = "compose/client/lib/js/boundary-probe.ts";`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:396` — `    expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:665` — `    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🦑️repo/**", "--glob", "!**/🧪️index.test.ts"], {`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:698` — `    const bundles = parseCommitBundleBody("🏘️compose✍️sketchpad\n🎆️26🌙️06☀️04\n🗺️Map work\n🎆️26🌙️06☀️03\n🧪️Playground\n\n🖱️ui⚛️react\n🎆️26🌙️06☀️02\n🖥️Shell");`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:700` — `    expect(bundles[0]?.label).toBe("🏘️compose✍️sketchpad");`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:707` — `    expect(() => parseCommitBundleBody("compose/foo|🏘️compose\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:708` — `    expect(() => parseCommitBundleBody("🏘️compose🔀️📊️uloc\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:714` — `    expect(normalizeBundleScopeLabel("🏘️compose🔀️📊️uloc➕️1")).toBe("🏘️compose");`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:748` — `      { label: "🏘️compose✍️sketchpad", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["✍️x"] }] },`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:749` — `      { label: "🏘️compose🗃️fixtures", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["🗃️y"] }] },`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:751` — `    const prefixSets = [[], ["compose/fixture"]];`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:752` — `    expect(pathMatchesBundleIndex("compose/fixture/a.json", 0, prefixSets, bundles)).toBe(false);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:753` — `    expect(pathMatchesBundleIndex("compose/fixture/a.json", 1, prefixSets, bundles)).toBe(true);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:765` — `    expect(commitBundleBodyError("🏘️compose\n🎆️26🌙️06☀️04📊️uloc➕️1\n🗺️Work")).toMatch(/per-day/);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:912` — `      writeFileSync(join(root, "compose/a.ts"), "a\n", "utf8");`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:918` — `      writeFileSync(join(root, "compose/a.ts"), '${"a\n".repeat(11)}', "utf8");`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:924` — `      const bundles = [mk("🏘️compose"), mk("🖱️ui"), mk("🥅️framework")];`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:925` — `      const paths = [["compose/a.ts"], ["ui/b.ts"], ["framework/c.ts"]];`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:927` — `      expect(sorted.bundles.map((b) => b.label)).toEqual(["🖱️ui", "🏘️compose", "🥅️framework"]);`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:966` — `    const commitMessage = "🐙️ueli🎆️26🌙️06☀️04🔀️\n\n🏘️compose✍️sketchpad📊️uloc\n🎆️26🌙️06☀️04\n🗺️Work\n\n📊️uloc➕️1🟰️1\n\nSigned-off-by: U <u@e.com>\n";`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:151` — `    expect(isAdapterBoundaryFile("compose/client/lib/js/index.ts", "//#region 🌐️RsWasmTransport\nexport async function x() {}")).toBe(true);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:152` — `    expect(isAdapterBoundaryFile("compose/client/lib/js/kit-store.🟦️worker.ts", "export async function x() {}")).toBe(true);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:153` — `    expect(isAdapterBoundaryFile("compose/client/bin/assistant/mcp-app.tsx", "// #region 🔌️Adapters\nimport x from 'react'")).toBe(true);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:164` — `    const file = "compose/client/lib/js/boundary-probe.ts";`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:396` — `    expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:665` — `    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🦑️repo/**", "--glob", "!**/🧪️index.test.ts"], {`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:698` — `    const bundles = parseCommitBundleBody("🏘️compose✍️sketchpad\n🎆️26🌙️06☀️04\n🗺️Map work\n🎆️26🌙️06☀️03\n🧪️Playground\n\n🖱️ui⚛️react\n🎆️26🌙️06☀️02\n🖥️Shell");`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:700` — `    expect(bundles[0]?.label).toBe("🏘️compose✍️sketchpad");`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:707` — `    expect(() => parseCommitBundleBody("compose/foo|🏘️compose\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:708` — `    expect(() => parseCommitBundleBody("🏘️compose🔀️📊️uloc\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:714` — `    expect(normalizeBundleScopeLabel("🏘️compose🔀️📊️uloc➕️1")).toBe("🏘️compose");`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:748` — `      { label: "🏘️compose✍️sketchpad", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["✍️x"] }] },`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:749` — `      { label: "🏘️compose🗃️fixtures", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["🗃️y"] }] },`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:751` — `    const prefixSets = [[], ["compose/fixture"]];`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:752` — `    expect(pathMatchesBundleIndex("compose/fixture/a.json", 0, prefixSets, bundles)).toBe(false);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:753` — `    expect(pathMatchesBundleIndex("compose/fixture/a.json", 1, prefixSets, bundles)).toBe(true);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:765` — `    expect(commitBundleBodyError("🏘️compose\n🎆️26🌙️06☀️04📊️uloc➕️1\n🗺️Work")).toMatch(/per-day/);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:912` — `      writeFileSync(join(root, "compose/a.ts"), "a\n", "utf8");`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:918` — `      writeFileSync(join(root, "compose/a.ts"), '${"a\n".repeat(11)}', "utf8");`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:924` — `      const bundles = [mk("🏘️compose"), mk("🖱️ui"), mk("🥅️framework")];`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:925` — `      const paths = [["compose/a.ts"], ["ui/b.ts"], ["framework/c.ts"]];`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:927` — `      expect(sorted.bundles.map((b) => b.label)).toEqual(["🖱️ui", "🏘️compose", "🥅️framework"]);`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:966` — `    const commitMessage = "🐙️ueli🎆️26🌙️06☀️04🔀️\n\n🏘️compose✍️sketchpad📊️uloc\n🎆️26🌙️06☀️04\n🗺️Work\n\n📊️uloc➕️1🟰️1\n\nSigned-off-by: U <u@e.com>\n";`
 
 ## Go CLI deferred (151 hits)
 

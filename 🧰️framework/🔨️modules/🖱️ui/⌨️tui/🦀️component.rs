@@ -1330,19 +1330,19 @@ pub mod layout {
 // #region 🔖️Widget
 #[path = "../../../../🧱️elements/☑️Select/⌨️component.rs"]
 mod select;
-#[path = "../../../../🧱️elements/📃List/⌨️component.rs"]
+#[path = "../../../../🧱️elements/📃️List/⌨️component.rs"]
 mod list;
-#[path = "../../../../🧱️elements/📑Tabs/⌨️component.rs"]
+#[path = "../../../../🧱️elements/📑️Tabs/⌨️component.rs"]
 mod tabs;
 #[path = "../../../../🧱️elements/✏️Input/⌨️component.rs"]
 mod input;
-#[path = "../../../../🧱️elements/🪵Log/⌨️component.rs"]
+#[path = "../../../../🧱️elements/🪵️Log/⌨️component.rs"]
 mod log;
-#[path = "../../../../🧱️elements/📊Table/⌨️component.rs"]
+#[path = "../../../../🧱️elements/📊️Table/⌨️component.rs"]
 mod table;
 #[path = "../../../../🧱️elements/🏷️Label/⌨️component.rs"]
 mod label;
-#[path = "../../../../🧱️elements/➖Divider/⌨️component.rs"]
+#[path = "../../../../🧱️elements/➖️Divider/⌨️component.rs"]
 mod divider;
 #[path = "../../../../🧱️elements/🏷️Chip/⌨️component.rs"]
 mod chip;
@@ -1605,11 +1605,11 @@ pub mod widget {
 // #endregion 🔖️Widget
 
 // #region 🔖️Chrome
-#[path = "../../../../🧱️elements/🔝Navbar/⌨️component.rs"]
+#[path = "../../../../🧱️elements/🔝️Navbar/⌨️component.rs"]
 mod navbar;
-#[path = "../../../../🧱️elements/🔚Footer/⌨️component.rs"]
+#[path = "../../../../🧱️elements/🔚️Footer/⌨️component.rs"]
 mod footer;
-#[path = "../../../../🧱️elements/🪟Window/⌨️component.rs"]
+#[path = "../../../../🧱️elements/🪟️Window/⌨️component.rs"]
 mod window;
 
 pub mod chrome {

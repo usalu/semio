@@ -120,8 +120,8 @@
           Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type '{ readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 9 more ... | { ...; }'.
             Property 'kind' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type '{ readonly kind: "themed"; readonly key: "base" | "base_blob" | "capital" | "capsule_J" | "capsule_L" | "capsule_backslash" | "capsule_p" | "capsule_q" | "capsule_s" | "capsule_slash" | ... 18 more ... | "tambour_single-storey"; }'.
 ../../../../🧱️elements/🪵Tree/🟦️component.tsx(766,54): error TS2339: Property 'escape' does not exist on type 'Readonly<{ Translate: { toString(transform: Transform | null): string | undefined; }; Scale: { toString(transform: Transform | null): string | undefined; }; Transform: { ...; }; Transition: { ...; }; }>'.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
 ../../../../../../🤖️generated/🟦️manifest.ts(129,9): error TS2304: Cannot find name 'ConfigSpec'.
 ../../../../../../🤖️generated/🟦️manifest.ts(134,17): error TS2304: Cannot find name 'CommandGrammar'.
 ../../../../../../🤖️generated/🟦️manifest.ts(140,5): error TS2304: Cannot find name 'AppIo'.

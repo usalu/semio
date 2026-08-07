@@ -1,0 +1,174 @@
+{
+  "results": [
+    {
+      "exampleId": "hexagonal-mushroom-column",
+      "how": "already:Hexagonal Mushroom Column",
+      "snap": {
+        "allOk": true,
+        "meshCount": 1,
+        "keys": [
+          "column-preview",
+          "extrude",
+          "extrusion-axis",
+          "height",
+          "profile",
+          "radius",
+          "sides"
+        ],
+        "blocked": [],
+        "errors": [],
+        "trigger": "Hexagonal Mushroom Column",
+        "graphH": 185124
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/hexagonal-mushroom-column.png"
+    },
+    {
+      "exampleId": "rectangle-extrude-volume",
+      "how": "clicked:Rectangle Extrude Volume -> Rectangle Extrude Volume",
+      "snap": {
+        "allOk": true,
+        "meshCount": 1,
+        "keys": [
+          "distance",
+          "extrude",
+          "height",
+          "rect",
+          "vector",
+          "volume",
+          "width"
+        ],
+        "blocked": [],
+        "errors": [],
+        "trigger": "Rectangle Extrude Volume",
+        "graphH": 236517
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/rectangle-extrude-volume.png"
+    },
+    {
+      "exampleId": "sphere-cut-with-torus",
+      "how": "clicked:Sphere Cut With Torus -> Sphere Cut With Torus",
+      "snap": {
+        "allOk": false,
+        "meshCount": 0,
+        "keys": [
+          "brep_bool_cut_5",
+          "brep_measure_volume_2",
+          "brep_prim3d_sphere_3",
+          "brep_prim3d_torus_4",
+          "preview_3",
+          "slider_2"
+        ],
+        "blocked": [],
+        "errors": [
+          "brep_bool_cut_5",
+          "brep_measure_volume_2"
+        ],
+        "trigger": "Sphere Cut With Torus",
+        "graphH": 1597037
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/sphere-cut-with-torus.png"
+    },
+    {
+      "exampleId": "box-fillet-preview",
+      "how": "clicked:Box Fillet Preview -> Box Fillet Preview",
+      "snap": {
+        "allOk": true,
+        "meshCount": 1,
+        "keys": [
+          "box",
+          "fillet",
+          "preview",
+          "radius",
+          "size"
+        ],
+        "blocked": [],
+        "errors": [],
+        "trigger": "Box Fillet Preview",
+        "graphH": 1649977
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/box-fillet-preview.png"
+    },
+    {
+      "exampleId": "sphere-box-fuse",
+      "how": "clicked:Sphere Box Fuse -> Sphere Box Fuse",
+      "snap": {
+        "allOk": true,
+        "meshCount": 1,
+        "keys": [
+          "box",
+          "fuse",
+          "preview",
+          "radius",
+          "size",
+          "sphere"
+        ],
+        "blocked": [],
+        "errors": [],
+        "trigger": "Sphere Box Fuse",
+        "graphH": 1686294
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/sphere-box-fuse.png"
+    },
+    {
+      "exampleId": "face-sweep-extrude",
+      "how": "clicked:Face Sweep Extrude -> Face Sweep Extrude",
+      "snap": {
+        "allOk": true,
+        "meshCount": 1,
+        "keys": [
+          "distance",
+          "extrude",
+          "face",
+          "height",
+          "rect",
+          "vector",
+          "width"
+        ],
+        "blocked": [],
+        "errors": [],
+        "trigger": "Face Sweep Extrude",
+        "graphH": 1735398
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/face-sweep-extrude.png"
+    },
+    {
+      "exampleId": "rectangle-wire-preview",
+      "how": "clicked:Rectangle Wire Preview -> Rectangle Wire Preview",
+      "snap": {
+        "allOk": true,
+        "meshCount": 0,
+        "keys": [
+          "height",
+          "rect",
+          "width"
+        ],
+        "blocked": [],
+        "errors": [],
+        "trigger": "Rectangle Wire Preview",
+        "graphH": 2860974
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/rectangle-wire-preview.png"
+    },
+    {
+      "exampleId": "box-shell-preview",
+      "how": "clicked:Box Shell Preview -> Box Shell Preview",
+      "snap": {
+        "allOk": false,
+        "meshCount": 0,
+        "keys": [
+          "box",
+          "shell",
+          "size",
+          "thickness"
+        ],
+        "blocked": [],
+        "errors": [
+          "shell"
+        ],
+        "trigger": "Box Shell Preview",
+        "graphH": 4086863
+      },
+      "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/box-shell-preview.png"
+    }
+  ]
+}

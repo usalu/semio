@@ -30,7 +30,7 @@ pub mod db_storage_sqlite;
 #[path = "../../🗄️storage/🌐️neo4j/🦀️component.rs"]
 pub mod db_storage_neo4j;
 
-#[path = "../../🆔ids/🦀️component.rs"]
+#[path = "../../🆔️ids/🦀️component.rs"]
 pub mod db_ids;
 
 #[path = "../../💾️durability/🦀️component.rs"]

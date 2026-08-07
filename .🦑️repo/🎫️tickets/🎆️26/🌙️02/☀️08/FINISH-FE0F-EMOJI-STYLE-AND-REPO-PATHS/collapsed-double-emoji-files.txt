@@ -65,9 +65,9 @@ compose/client/lib/sketchpad/js/page/tutorial/hello-compose/representation-brick
 .venv/lib/python3.14/site-packages/numpy/_core/tests/test_stringdtype.py
 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts
 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📄️template/📋️report/📋️report.log
-🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🧪️index.test.ts
-🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/README.md
-🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts
+🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/🧪️index.test.ts
+🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/README.md
+🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️library/⚡️implementation/🟦️typescript/📦️index.ts
 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🧩️vscode/⚡️implementation/🟦️typescript/🟦️extension.test.ts
 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🧩️vscode/⚡️implementation/🟦️typescript/📜️script.ts
 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/⌨️cli/⚡️implementation/🐹️go/main.go

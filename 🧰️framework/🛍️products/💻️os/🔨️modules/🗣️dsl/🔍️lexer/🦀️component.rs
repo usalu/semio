@@ -2,6 +2,7 @@
 
 use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
 use crate::os_dsl::token::*;
+use crate::os_dsl::trust::Sanitized;
 
 //#region 🔖️Lexer
 fn is_ident_start(c: char) -> bool {

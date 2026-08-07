@@ -180,4 +180,13 @@ pub use zone_hvac::*;
 //#region 🔖️Plugin
 #[path = "../../🔌️plugin/🦀️component.rs"]
 pub mod plugin;
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/🔋️model/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_model_demo;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

@@ -1093,9 +1093,10 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
 
   return (
     <div
-      className="semio-node-graph-host relative h-full min-h-[24rem] w-full"
+      className="semio-node-graph-host relative h-full min-h-0 w-full overflow-hidden"
       data-surface-id={node.surfaceId}
       data-status-json={scene.statusJson ?? undefined}
+      data-fixture-json={scene.fixtureJson ?? undefined}
       tabIndex={editable ? 0 : undefined}
       onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}
     >

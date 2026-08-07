@@ -136,4 +136,15 @@ pub use apps::writer::wasm::*;
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/✒️writer/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_writer_demo;
+    #[path = "../../🎛️apps/✒️writer/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_writer_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

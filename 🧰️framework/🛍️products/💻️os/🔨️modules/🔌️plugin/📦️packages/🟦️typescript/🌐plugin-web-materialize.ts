@@ -2,7 +2,7 @@
 /** @emoji 🌐 Shared jco transpile + plugin web glue (dev runner + extension store). */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { buildBudgetMs, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+import { buildBudgetMs, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️host-shim.js";
 export const PLUGIN_WORKER_FILE = "🟨️plugin-worker.js";

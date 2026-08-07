@@ -60,7 +60,7 @@ pub mod board {
     #[path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs"]
     pub mod directed_dag;
 
-    #[path = "../../🎲️board/🔌️ports/↔undirected/🦀️component.rs"]
+    #[path = "../../🎲️board/🔌️ports/↔️undirected/🦀️component.rs"]
     pub mod undirected;
   }
 
@@ -69,7 +69,7 @@ pub mod board {
     #[path = "../../🎲️board/➕️normal/➡️directed/🦀️component.rs"]
     pub mod directed;
 
-    #[path = "../../🎲️board/➕️normal/↔undirected/🦀️component.rs"]
+    #[path = "../../🎲️board/➕️normal/↔️undirected/🦀️component.rs"]
     pub mod undirected;
   }
 }

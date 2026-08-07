@@ -1,7 +1,7 @@
 # P6/P7 verification evidence (2026-08-06)
 
 ## TypeScript
-- `bun test` in `🦑️repo/📚️lib` (taxonomy/discovery): **129 pass**, 9 fail (unrelated pre-existing: dependency-boundary, ui.css, micro-commit, playground ports, command budgets, resolveCargoPackageName).
+- `bun test` in `🦑️repo/📚️library` (taxonomy/discovery): **129 pass**, 9 fail (unrelated pre-existing: dependency-boundary, ui.css, micro-commit, playground ports, command budgets, resolveCargoPackageName).
 
 ## Rust
 - Host `cargo test` / `cargo check` for proc-macro and test binaries requires a working platform linker on this macOS host (`cc` exit 69 / Xcode SDK path). **No Xcode in dev workflow** — use Linux devcontainer/CI for full `cargo test` linkage.

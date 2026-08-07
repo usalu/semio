@@ -538,6 +538,6 @@ package.json
 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio
 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio
 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts
-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🗂️workspaces/🟦️component.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️component.ts

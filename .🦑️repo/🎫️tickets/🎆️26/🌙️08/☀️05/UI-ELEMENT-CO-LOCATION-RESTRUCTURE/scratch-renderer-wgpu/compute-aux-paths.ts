@@ -9,7 +9,7 @@ const aux: [string, string][] = [
   ["build.rs icons_dir", "../../../../../../../../🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🔣️icons"],
   ["project.json $schema", "../../../../../../../../../node_modules/nx/schemas/project-schema.json"],
   ["package.json $schema", "../../../../node_modules/nx/schemas/project-schema.json"],
-  ["script.ts repo-lib index.ts", "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts"],
+  ["script.ts repo-lib index.ts", "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts"],
   ["script.ts vite-elements-assets.ts", "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts"],
   ["script.ts playgrounds.ts (type)", "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts"],
   ["script.ts registry script.ts", "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts"],

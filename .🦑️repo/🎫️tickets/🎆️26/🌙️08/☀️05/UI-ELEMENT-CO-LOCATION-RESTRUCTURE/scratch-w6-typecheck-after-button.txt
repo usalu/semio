@@ -164,5 +164,5 @@
 ../../../../🧱️elements/VirtualFileSystem/🟦️component.tsx(540,6): error TS2786: 'Table' cannot be used as a JSX component.
   Its type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>' is not a valid JSX element type.
 ../../../../🧱️elements/VirtualFileSystem/🟦️component.tsx(544,18): error TS7006: Parameter 'row' implicitly has an 'any' type.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.

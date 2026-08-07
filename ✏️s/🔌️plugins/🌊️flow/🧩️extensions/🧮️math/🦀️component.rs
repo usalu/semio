@@ -361,15 +361,8 @@ fn random_unit(seed: u64) -> f64 {
 }
 
 fn entropy_seed() -> u64 {
-    #[cfg(target_arch = "wasm32")]
-    {
-        (js_sys::Math::random() * u64::MAX as f64) as u64
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        use std::time::{SystemTime, UNIX_EPOCH};
-        SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_nanos() as u64).unwrap_or(0)
-    }
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_nanos() as u64).unwrap_or(0xC0FF_EE00_D15E_A5E)
 }
 
 fn next_random_unit(explicit_seed: Option<u64>) -> f64 {

@@ -226,4 +226,19 @@ pub mod apps {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_2d_demo;
+    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_3d_demo;
+    #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_2d_demo_session;
+    #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_3d_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

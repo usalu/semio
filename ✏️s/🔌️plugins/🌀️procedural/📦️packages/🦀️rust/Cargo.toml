@@ -44,6 +44,13 @@ ui_styling = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-s-plugin-flow-extension-brep = { path = "../../../🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-math = { path = "../../../🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-primitive = { path = "../../../🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-logic = { path = "../../../🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-dictionary = { path = "../../../🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-list = { path = "../../../🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-text = { path = "../../../🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust", default-features = false }
 serde.workspace = true
 serde_json.workspace = true
 

@@ -1,7 +1,7 @@
 //! 📏️ Procedural2d artifact — the document entity the ◻2d app edits (constitutional: general).
 
 use flow::{FlowFixture, Widget};
-use playbook::GenerationPlayState;
+use flow::playbook::GenerationPlayState;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 

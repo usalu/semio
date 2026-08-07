@@ -1,6 +1,6 @@
 //! 🌉️ Flow eval bridge and channel-eval helpers.
 
-use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas as canvas;
 use neural_engine as neural;
 
@@ -45,12 +45,12 @@ pub(crate) fn parse_bridge_dictionary_json(result_json: &str) -> Result<Dictiona
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) struct EvalBridge {
-    cb: js_sys::Function,
+    pub(crate) cb: js_sys::Function,
 }
 
 #[cfg(target_arch = "wasm32")]
 impl EvalBridge {
-    fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    pub(crate) fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
         use wasm_bindgen::JsValue;
         let input_json = serde_json::to_string(input).map_err(|e| EvalError::InvalidInput(e.to_string()))?;
         let result = self.cb.call2(&JsValue::NULL, &JsValue::from_str(kind_id), &JsValue::from_str(&input_json)).map_err(|_| EvalError::InvalidInput("bridge call failed".into()))?;
@@ -65,12 +65,12 @@ pub(crate) type EvalBridgeFn = dyn Fn(&str, &Dictionary) -> Result<Dictionary, E
 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) struct EvalBridge {
-    cb: Box<EvalBridgeFn>,
+    pub(crate) cb: Box<EvalBridgeFn>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl EvalBridge {
-    fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    pub(crate) fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
         (self.cb)(kind_id, input)
     }
 }
@@ -358,7 +358,14 @@ pub(crate) fn build_channel_eval_json(fixture: &FlowFixture, channels: &EvalChan
 }
 
 fn is_brep_geometry_handle(handle: &str) -> bool {
-    ["vertex-", "edge-", "wire-", "face-", "shell-", "solid-", "compound-", "curve-", "surface-"].iter().any(|prefix| handle.starts_with(prefix))
+    if handle.is_empty() {
+        return false;
+    }
+    if ["vertex-", "edge-", "wire-", "face-", "shell-", "solid-", "compound-", "curve-", "surface-"].iter().any(|prefix| handle.starts_with(prefix)) {
+        return true;
+    }
+    // Blake3 hex digests minted by `BrepKernel::mint` (no kind prefix).
+    handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
 fn collect_geometry_handles_from_value(value: &NeuralValue, handles: &mut Vec<String>) {

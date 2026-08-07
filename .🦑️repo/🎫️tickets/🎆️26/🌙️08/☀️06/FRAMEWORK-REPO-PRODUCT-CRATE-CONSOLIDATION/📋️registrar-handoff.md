@@ -23,7 +23,7 @@ Exclusive migration completed under `🧰️framework/🛍️products/🦑️rep
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/⚡️implementations/🟦️typescript",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🟦️typescript",
 ```
 
@@ -32,11 +32,11 @@ Exclusive migration completed under `🧰️framework/🛍️products/🦑️rep
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
 ```
 
-Alternatively run (after merge): `bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📜️script.ts workspaces --write`
+Alternatively run (after merge): `bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts workspaces --write`
 
 ## 3. Root `go.work` — `use` block
 
@@ -45,11 +45,11 @@ Alternatively run (after merge): `bun 🧰️framework/🛍️products/🦑️re
 ```diff
 -	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go
 -	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go
--	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go
+-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go
 -	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go
 +	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli
 +	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp
-+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib
++	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library
 +	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator
 ```
 
@@ -61,12 +61,12 @@ Within `🦑️repo/**`, all `⚡️implementations/<lang>` paths now read `📦
 
 **Old substring:**
 ```
-🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript
+🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript
 ```
 
 **New substring:**
 ```
-🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript
+🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript
 ```
 
 High-impact files (non-exhaustive — grep the old substring repo-wide):
@@ -84,12 +84,12 @@ High-impact files (non-exhaustive — grep the old substring repo-wide):
 ## 6. Post-registrar verification
 
 ```bash
-bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📜️script.ts test quick
-GOWORK=on go test ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/...
+bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts test quick
+GOWORK=on go test ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/...
 cargo check -p semio-framework-repo-cli
 bun ./📜️script.ts verify gate   # orchestrator
 ```
 
 ## 7. Taxonomy
 
-`🔣️taxonomy.json` moved to `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json`; `areas["🧰️framework/🛍️products/🦑️repo"]` set to `"clean"`.
+`🔣️taxonomy.json` moved to `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json`; `areas["🧰️framework/🛍️products/🦑️repo"]` set to `"clean"`.

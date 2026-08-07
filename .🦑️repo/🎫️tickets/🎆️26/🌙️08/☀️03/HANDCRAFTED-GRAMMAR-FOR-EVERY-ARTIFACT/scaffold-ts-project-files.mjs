@@ -7,7 +7,7 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../../../../.
 const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
 const libIndexAbs = join(
   repoRoot,
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts",
 );
 const facetDirs = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"];
 const tsLeaf = "🟦️component.ts";

@@ -1,0 +1,13 @@
+{
+  "title": "Get All Apps Working End to End",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Fix all broken apps and get the full monorepo working end to end: fix workspace dependency issues, build all apps, run all tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2536"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪8581e72bc80b467e97ed261d19af93ba"
+  ]
+}

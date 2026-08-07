@@ -77,7 +77,7 @@ OUTSIDE `projectRoot` once TS-only domains keep their own dir per Rule A, so nx 
 stale results.
 
 `📜️script.ts` — same `BundleScript`/`ScriptRouter`/`runBundleScriptMain` router shape as every other
-package's script.ts. Import the shared lib from **`../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts`**
+package's script.ts. Import the shared lib from **`../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts`**
 — 5 levels up from a plugin's `📦️packages/🟦️typescript/📜️script.ts` (verify this fresh for your
 plugin's actual path depth; don't copy flow's literal dot-count blindly — a plugin whose packages dir
 sits one level deeper needs one more `../`, same rule as the Rust `📜️script.ts`'s already-fixed

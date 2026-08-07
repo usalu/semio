@@ -4,7 +4,7 @@
  * select exactly the same set. Read-only. */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { getWorkspaceRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { getWorkspaceRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts";
 
 const root = getWorkspaceRoot();
 const hits: string[] = [];

@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: w2-pilot
     content: "W2 (Grok, serial gate): migrate 🧩️puzzle end to end with real handcrafted examples, glue wiring, tests and vitest config; go green on its nx test + policy; write 📐️pattern.md as the canonical template"
-    status: in_progress
+    status: completed
   - id: w3-s1-norm
     content: "W3 S1 (Grok): 📕️norm - 14 artifacts, 14 apps, 1082-line glue.rs"
-    status: pending
+    status: in_progress
   - id: w3-s2-cad
     content: "W3 S2 (Grok): 🌀️procedural, 📐️cad + 4 extensions"
     status: pending
@@ -128,7 +128,7 @@ flowchart LR
 
 ## Mechanism changes
 
-**Taxonomy** — [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json):
+**Taxonomy** — [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json):
 
 - Delete `exampleComponentDirs` (lines 191-196) and its four entries from `taxonomyLeafParentDirs` (223-241).
 - Add `exampleAssetsDirName: "🖼️assets"`, `exampleTestsDirName: "🧪️tests"`, `exampleSlugPattern`, `exampleAssetKindPrefixes`, `exampleMediaKindPrefixes`, `exampleLeafFilenames`, `exampleTestLeafFilenames`.
@@ -144,7 +144,7 @@ flowchart LR
 
 **Registry** — [📇️registry/📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts): rewrite `validateTaxonomyTree` (940-1024) for the new shape and `discoverExamplesForPlayground` (302-342) to read emoji-slug dirs and the definition leaf instead of legacy `*.json` basenames.
 
-**Discovery + locks** — `validateTaxonomy` in [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts) (144-188) and the assertions in [🧪️index.test.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts) (1117-1133, 1175-1187).
+**Discovery + locks** — `validateTaxonomy` in [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts) (144-188) and the assertions in [🧪️index.test.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts) (1117-1133, 1175-1187).
 
 **Fixture sweep** — [🧪️fixture-sweep/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs), 722 lines: rewrite `example_dirs` walk, `repo_wide_semio_example_kind_coverage` (306-336), and all 38 hardcoded pilot `include_`* paths.
 

@@ -10,16 +10,16 @@ todos:
     status: completed
   - id: flow-crate
     content: "Fix semio-framework-os-flow: correct #[path] depths in glue.rs, add infinite/math/neural_engine deps and extern crate aliases; audit sibling Shape-V2 glues for the same off-by-one"
-    status: in_progress
+    status: completed
   - id: flow-wasm
     content: Create the flow core wasm-bindgen package at 🌊️flow/🫀️core/📦️packages/🦀️rust (cdylib, wasm32 deps, 📜️script.ts with runWasmPackWebBuild), delete the no-op stub, emit real pkg/, register in project.json/package.json/launch.json
-    status: pending
+    status: completed
   - id: escape-hatches
     content: Require flow_core_bg.wasm in buildEngineWasm's freshness check, repoint dangling flow-core imports in ◻2d and the os-dev skip list, rebuild the demonstrator's stale staged plugin modules
-    status: pending
+    status: completed
   - id: verify-runtime
     content: Verify flow and preview render on :6018 and the demonstrator :6029 using the existing procedural-3d-runtime-probe and hex-column-status probes; capture screenshots for all eight examples
-    status: pending
+    status: in_progress
   - id: kernel-wave-a
     content: "BREP wave A: implement revolve/loft/sweep-along-path/pipe/helical, CDT tessellation for faces with holes, true B-rep transforms replacing the convex-hull proxy"
     status: pending

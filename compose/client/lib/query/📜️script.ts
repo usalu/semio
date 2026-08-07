@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🏛️ `@semio-tech/compose-query` — `bun 📜️script.ts <build|test|wasm>`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runWasmPackWebBuild } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runWasmPackWebBuild } from "@semio-tech/repo-lib";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {

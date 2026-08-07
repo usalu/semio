@@ -75,6 +75,9 @@ pub use component::component_export_anchor;
 #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
 pub fn component_export_anchor() {}
 
+#[path = "🏗️builder/🦀️component.rs"]
+mod builder;
+
 pub mod app {
     // #region app
     //! 🧩️ Declarative app builder and plugin trait.
@@ -1515,11 +1518,11 @@ pub mod app {
         /// bundle crate) sits next to an `app/` directory whose apps (either a single flattened
         /// `app/{slot}` when the plugin has exactly one app, or `app/<name>/{slot}` per app for multi-app
         /// plugins) each carry all seven constitutional-crate slots (`rs`, `engine`, `dsl`, `op`, `pack`,
-        /// `protocol`, `ui`). Invoked automatically by `semio_plugin!`'s generated sanity test — see
+        /// `protocol`, `ui`). Invoked automatically by `Plugin::builder` plugin-root sanity checks — see
         /// `.🦑️repo/🎫️tickets/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`.
         /// The bundle crate itself lives at `s/plugin/<p>/rs` — both `../app` and `../../app` are tried
         /// since a manual `#[path]`-included bundle could shift the depth by one. A no-op outside
-        /// `s/plugin/` (e.g. `semio_plugin!`'s own in-crate macro tests, which have no real app tree) — the
+        /// `s/plugin/` (e.g. the plugin SDK's own in-crate builder tests, which have no real app tree) — the
         /// gate only applies to real migrated plugins, not synthetic test fixtures exercising the macro.
         pub fn assert_constitutional_crates(manifest_dir: &str) {
             const SLOTS: [(&str, &str); 6] = [("engine", "⚙️engine"), ("dsl", "🗣️dsl"), ("op", "🔧️op"), ("pack", "🎒️pack"), ("protocol", "📡️protocol"), ("ui", "🖱️ui")];
@@ -2729,6 +2732,39 @@ pub mod app {
             vec![NoConfigOperation::Noop]
         }
     }
+
+    impl ::protocol::OpText for NoConfigOperation {
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            let variants = <Self as ::dsl::DslVariants>::variants();
+            for (keyword, spec_fn) in &variants {
+                let probe = format!("{keyword} ");
+                if line == keyword.as_str() || line.starts_with(&probe) {
+                    let record = ::dsl::parse(
+                        line,
+                        &spec_fn(),
+                        &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                    )?;
+                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                }
+            }
+            Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        }
+        fn print_op(&self) -> String {
+            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as ::dsl::DslVariants>::variants();
+            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+            ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+        }
+    }
+
+    impl ::protocol::OpBinary for NoConfigOperation {
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::encode_op(self)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::decode_op(bytes)
+        }
+    }
     //#endregion 🔖️NoConfig
 
     //#region 🔖️NoDraft
@@ -3182,6 +3218,39 @@ pub mod app {
                 }
             }
         }
+
+        impl ::protocol::OpText for $Name {
+            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                for (keyword, spec_fn) in &variants {
+                    let probe = format!("{keyword} ");
+                    if line == keyword.as_str() || line.starts_with(&probe) {
+                        let record = ::dsl::parse(
+                            line,
+                            &spec_fn(),
+                            &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                    }
+                }
+                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+            }
+            fn print_op(&self) -> String {
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+            }
+        }
+
+        impl ::protocol::OpBinary for $Name {
+            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::encode_op(self)
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::decode_op(bytes)
+            }
+        }
     };
 
     ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
@@ -3207,6 +3276,39 @@ pub mod app {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
+            }
+        }
+
+        impl ::protocol::OpText for $Name {
+            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                for (keyword, spec_fn) in &variants {
+                    let probe = format!("{keyword} ");
+                    if line == keyword.as_str() || line.starts_with(&probe) {
+                        let record = ::dsl::parse(
+                            line,
+                            &spec_fn(),
+                            &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                    }
+                }
+                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+            }
+            fn print_op(&self) -> String {
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+            }
+        }
+
+        impl ::protocol::OpBinary for $Name {
+            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::encode_op(self)
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::decode_op(bytes)
             }
         }
     };
@@ -3235,6 +3337,39 @@ pub mod app {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
+            }
+        }
+
+        impl ::protocol::OpText for $Name {
+            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                for (keyword, spec_fn) in &variants {
+                    let probe = format!("{keyword} ");
+                    if line == keyword.as_str() || line.starts_with(&probe) {
+                        let record = ::dsl::parse(
+                            line,
+                            &spec_fn(),
+                            &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                    }
+                }
+                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+            }
+            fn print_op(&self) -> String {
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+            }
+        }
+
+        impl ::protocol::OpBinary for $Name {
+            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::encode_op(self)
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::decode_op(bytes)
             }
         }
     };
@@ -5130,9 +5265,7 @@ pub mod app {
         }
     }
 
-    #[path = "🏗️builder/🦀️component.rs"]
-    mod builder;
-    pub use builder::{NeedsLabel, NeedsVersion, PluginBuilder, Ready};
+    pub use super::builder::{NeedsLabel, NeedsVersion, PluginBuilder, Ready};
     // #endregion app
 }
 
@@ -5271,7 +5404,7 @@ pub mod plugin_runtime {
 
     /// 🔗️ Weak default so intermediate `cdylib` links (e.g. `semio-framework-os` pulled into a
     /// wasip2 plugin build via feature unification of `component-guest`) succeed; the embedding
-    /// plugin's `plugin_exports!` / `semio_plugin!` provides the strong installer override.
+    /// plugin's `plugin_exports!` provides the strong installer override.
     #[cfg(feature = "component-guest")]
     #[unsafe(no_mangle)]
     #[linkage = "weak"]
@@ -6279,60 +6412,12 @@ pub mod plugin_runtime {
     //#endregion 🧩️Extension
 
 
-    /// 🧵️ Collapses a plugin crate's hand-written `bundle()` fn + `plugin_exports!` call into one
-    /// declarative block: `semio_framework_plugin::semio_plugin! { id: "note", label: "Note", version:
-    /// "0.1.0", setup: register_note_exports, apps: [ create_note_app => NoteApp ] }`. Each `apps` entry
-    /// pairs an `App`-returning factory function with the [`DocumentApp`](crate::DocumentApp) type
-    /// instantiated for it — that type must implement `Default` (multi-app crates list one entry per
-    /// app, e.g. puzzle's `d2::create_puzzle2d_app => d2::Puzzle2dApp, d3::create_puzzle3d_app =>
-    /// d3::Puzzle3dApp`). Each app is wrapped in a [`VcsDocumentApp`](crate::VcsDocumentApp) so it
-    /// satisfies the object-safe runtime [`PluginApp`](crate::PluginApp) contract with a persistent operation
-    /// store. Expands to the equivalent `bundle()` fn plus a `plugin_exports!(bundle)` call, and a
-    /// `#[cfg(test)]` regression check asserting every declared app id actually lands in the built
-    /// `Plugin`'s manifest.
-    #[macro_export]
-    macro_rules! semio_plugin {
-    (
-        id: $id:literal,
-        label: $label:literal,
-        version: $version:literal,
-        setup: $setup:path,
-        apps: [ $( $app_fn:path => $app_ty:path ),+ $(,)? ] $(,)?
-    ) => {
-        fn __semio_plugin_bundle() -> $crate::Plugin {
-            ($setup)();
-            $crate::Plugin::builder($id).label($label).version($version)
-                $( .register_document_app::<$app_ty>(($app_fn)()) )+
-        }
-
-        $crate::plugin_exports!(__semio_plugin_bundle);
-
-        #[cfg(test)]
-        #[test]
-        fn __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest() {
-            let manifest = __semio_plugin_bundle().manifest;
-            $(
-                let expected_id = ($app_fn)().definition.id;
-                assert!(
-                    manifest.apps.iter().any(|app| app.id == expected_id),
-                    "semio_plugin({}): app `{}` (from `{}`) missing from bundle manifest",
-                    $id,
-                    expected_id,
-                    stringify!($app_fn),
-                );
-            )+
-        }
-
-        #[cfg(test)]
-        #[test]
-        fn __semio_plugin_sanity_constitutional_crates_present() {
-            $crate::testkit::assert_constitutional_crates(env!("CARGO_MANIFEST_DIR"));
-        }
-    };
-}
+    /// 🏗️ Plugin registration lives under each owner's `🔌️plugin/🦀️component.rs` via
+    /// [`Plugin::builder`](crate::Plugin::builder) + [`plugin_exports!`](crate::plugin_exports).
+    /// The retired `semio_plugin!` macro is gone — typestate on the builder makes missing identity fields a compile error.
 
     #[cfg(test)]
-    mod semio_plugin_macro_tests {
+    mod plugin_builder_contract_tests {
         //! 🧪️ The plugin contract's own unit test: a `TestApp` implementing the pure `DocumentApp`
         //! surface (B1), wrapped in `VcsDocumentApp`, exercising typed operations with true inverses, config
         //! operations that emit no document operations, history interception, and remote-operation ingest
@@ -6649,14 +6734,17 @@ pub mod plugin_runtime {
 
         fn synthetic_setup() {}
 
-        crate::semio_plugin! {
-            id: "synthetic", label: "Synthetic", version: "0.0.1",
-            setup: synthetic_setup,
-            apps: [ synthetic_play_app => TestApp ],
+        fn __semio_plugin_bundle() -> crate::Plugin {
+            synthetic_setup();
+            crate::Plugin::builder("synthetic")
+                .label("Synthetic")
+                .version("0.0.1")
+                .register_document_app::<TestApp>(synthetic_play_app())
+                .build()
         }
 
         #[test]
-        fn semio_plugin_macro_builds_bundle_from_declarative_spec() {
+        fn plugin_builder_builds_bundle_from_fluent_spec() {
             let bundle = __semio_plugin_bundle();
             assert_eq!(bundle.manifest.plugin_id, "synthetic");
             assert_eq!(bundle.manifest.label, "Synthetic");
@@ -6665,7 +6753,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn semio_plugin_macro_wires_app_factory_for_create_app() {
+        fn plugin_builder_wires_app_factory_for_create_app() {
             let bundle = __semio_plugin_bundle();
             let app = bundle.create_app("synthetic-play").expect("registered app");
             assert_eq!(app.app_id(), "synthetic-play");

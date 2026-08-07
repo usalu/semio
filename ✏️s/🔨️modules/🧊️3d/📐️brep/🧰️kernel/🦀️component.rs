@@ -29,7 +29,8 @@ use crate::brep::measure::{
 };
 use crate::brep::mesh_io::{
     export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body,
-    import_glb_to_body, import_obj_to_body, import_stl_to_body, StlFormat,
+    import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data,
+    triangle_mesh_from_transfer, StlFormat,
 };
 use crate::brep::offset::{draft_angle, offset_face, offset_solid, shell_solid, thicken_face};
 use crate::brep::primitives::{
@@ -41,7 +42,6 @@ use crate::brep::sew::sew_faces;
 use crate::brep::step::{read_step, write_step};
 use crate::brep::surface::Surface;
 use crate::brep::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
-use crate::brep::tessellate::tessellate_solid;
 use crate::brep::tolerance::Tol;
 use crate::brep::topo::Body;
 use crate::brep::validate::validate_body;
@@ -102,6 +102,13 @@ fn map_err(e: KernelError) -> BrepError {
 }
 fn map_step(e: crate::brep::error::StepError) -> BrepError {
     BrepError::Operation(e.to_string())
+}
+
+/// 📦 Converts a tessellation [`MeshTransfer`] into framework-core [`semio_framework::MeshData`].
+pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> semio_framework::MeshData {
+    let mut data = mesh_to_mesh_data(&triangle_mesh_from_transfer(transfer));
+    data.edge_positions = transfer.edges.clone();
+    data
 }
 
 // #endregion 🧮Convert
@@ -753,8 +760,12 @@ impl Brep {
         Ok(out)
     }
     pub fn tessellate_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<MeshTransfer, BrepError> {
-        let solid = self.solid_id(shape)?;
-        tessellate_solid(&self.body, solid, deflection).map_err(map_err)
+        match self.entity(shape)? {
+            Entity::Solid(id) => crate::brep::tessellate::tessellate_solid(&self.body, *id, deflection).map_err(map_err),
+            Entity::Face(id) => crate::brep::tessellate::tessellate_face(&self.body, *id, deflection).map_err(map_err),
+            Entity::Wire(wire) => crate::brep::tessellate::tessellate_wire(&self.body, wire, deflection).map_err(map_err),
+            other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
+        }
     }
     pub fn dispose_sync(&mut self, shape: &GeometryHandle) -> usize {
         usize::from(self.live.remove(shape.as_str()).is_some())

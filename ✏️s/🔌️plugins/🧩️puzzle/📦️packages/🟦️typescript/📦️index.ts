@@ -14,3 +14,15 @@ export * as 2d_dsl from "../../🗿️artifacts/◻2d/🗣️dsl/🟦️componen
 export * as 2d_pack from "../../🗿️artifacts/◻2d/🎒️pack/🟦️component.ts";
 export * as 2d_op from "../../🗿️artifacts/◻2d/🔧️op/🟦️component.ts";
 export * as 2d_spr from "../../🗿️artifacts/◻2d/📡️spr/🟦️component.ts";
+
+/** 📚️ Example definition leaves */
+export * as examples_2d_concrete_forest from "../../🗿️artifacts/◻2d/📚️examples/🌲️concrete-forest/🟦️component.ts";
+export * as examples_2d_nakagin from "../../🗿️artifacts/◻2d/📚️examples/🏗️nakagin-capsule-tower/🟦️component.ts";
+export * as examples_3d_concrete_forest from "../../🗿️artifacts/🧊️3d/📚️examples/🌲️concrete-forest/🟦️component.ts";
+export * as examples_3d_nakagin from "../../🗿️artifacts/🧊️3d/📚️examples/🏗️nakagin-capsule-tower/🟦️component.ts";
+export * as examples_5d_concrete_forest from "../../🗿️artifacts/🖐️5d/📚️examples/🌲️concrete-forest/🟦️component.ts";
+export * as examples_5d_nakagin from "../../🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🟦️component.ts";
+export * as examples_app_2d_demo_session from "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🟦️component.ts";
+export * as examples_app_3d_demo_session from "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🟦️component.ts";
+export * as examples_app_5d_demo_session from "../../🎛️apps/🖐️5d/📚️examples/🎬️demo-session/🟦️component.ts";
+

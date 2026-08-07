@@ -17,7 +17,7 @@ use crate::artifacts::flow::FlowFixture;
 
 /// 📄️ The canonical flow fixture, handcrafted in the `.flow` DSL — the same file the flow kernel's own
 /// tests parse.
-pub const FLOW_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.flow.flow.dsl.semio");
+pub const FLOW_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.flow` DSL text into a `FlowFixture`.
 pub fn parse_dsl(text: &str) -> Result<FlowFixture, store::TextError> {

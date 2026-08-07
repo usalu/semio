@@ -31,7 +31,7 @@ todos:
     status: completed
   - id: wave4-enforcement
     content: "Wave 4 (serial): flip the new policies to high priority, wire them into VerifyScript.runGate, set areas[\"✏️s/🔌️plugins\"] to clean, regenerate registry artifacts and launch.json, and drive verify gate, policy and test-quick to green"
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
@@ -45,7 +45,7 @@ Verified by byte-level `find` + `xxd`, not by search:
 - 14 are named `🫀️core` (`f09fab80 efb88f core`), one is `🎬️core` (animate), one is `🧩core` — **missing the U+FE0F variation selector**, so it is also an emoji-prefix bug. `🔌Ports` under the UI elements core has the same defect.
 - **None of the Rust cores are crates.** They are `#[path]`-included modules pulled in from `📦️packages/🦀️rust/📦️glue.rs`. Two exceptions own a real crate: `semio-s-plugin-flow-extension-core` and `semio-s-plugin-imperative-core`.
 - **No plugin has any root-level plugin code.** Identity, manifest, capabilities and app registration all live at the tail of `📦️packages/🦀️rust/📦️glue.rs` behind `semio_plugin!` (29 plugins), a manual `PluginBundle` + `plugin_exports!` (space, demonstrator), or nothing at all (energy).
-- Enforcement today: the `//#region 🔖️Policy` block in [📜️script.ts](📜️script.ts) (lines 1569-4675, 41 `policy*Breaches` functions), [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json), [.dependency-cruiser.cjs](.dependency-cruiser.cjs), `validateTaxonomyTree` in the plugin registry script, and Rust `assert_taxonomy_components`. The repo documents these as "three validators in lockstep" — all three must change together.
+- Enforcement today: the `//#region 🔖️Policy` block in [📜️script.ts](📜️script.ts) (lines 1569-4675, 41 `policy*Breaches` functions), [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json), [.dependency-cruiser.cjs](.dependency-cruiser.cjs), `validateTaxonomyTree` in the plugin registry script, and Rust `assert_taxonomy_components`. The repo documents these as "three validators in lockstep" — all three must change together.
 - Repo MCP is **unavailable** (no `repo` namespace). Precedent in this repo is to create the ticket folder by hand plus an `mcp-unavailable.txt`, as several 26/08/07 tickets already do.
 
 # 2. Target vocabulary: per-core dissolution
@@ -125,13 +125,13 @@ Plugin::builder(ID)
 
 Extend, do not add parallel systems.
 
-**[🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json)**
+**[🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json)**
 
 - `pluginDirName: "🔌️plugin"`, `pluginChildDirs: ["🛂️manifest","🎟️capabilities","🔧️setup","🎛️apps"]`
 - `bannedNameStems: ["core","common","util","utils","helper","helpers","misc","shared","base","lib","impl"]` — emoji-stripped stem match
 - explicit emoji-prefix + U+FE0F requirement for taxonomy directories
 - final step: flip `areas["✏️s/🔌️plugins"]` from `"mixed"` to `"clean"`
-- extend `validateTaxonomy` in [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts) (lines 144-188)
+- extend `validateTaxonomy` in [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts) (lines 144-188)
 
 **Root [📜️script.ts](📜️script.ts) Policy region** — new rules modelled on the existing `policySprNamingBreaches` (4210-4256), each registered in `export const policy` (4624-4673):
 

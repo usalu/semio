@@ -41,7 +41,7 @@ pub enum GraphDslError {
     /// used by both the wire-literal delegate (`dsl_schema::parse_wire_text`) and Jack's
     /// `dsl_core`-backed lexer.
     #[error("{0}")]
-    Lex(#[from] os_dsl::TextError),
+    Lex(#[from] crate::os_dsl::TextError),
 }
 // #endregion ⚠️ Errors
 
@@ -838,58 +838,58 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
     if segment.is_empty() {
         return Ok(());
     }
-    let raw = os_dsl::lex(segment, &os_dsl::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
+    let raw = crate::os_dsl::lex(segment, &crate::os_dsl::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
     for token in raw {
-        if token.kind.is_trivia() || token.kind == os_dsl::TokenKind::Eof {
+        if token.kind.is_trivia() || token.kind == crate::os_dsl::TokenKind::Eof {
             continue;
         }
         let start = base_offset + token.byte_range.0 as usize;
         let end = base_offset + token.byte_range.1 as usize;
         let text = token.text.as_str().to_string();
         match token.kind {
-            os_dsl::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
+            crate::os_dsl::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
             // A lone `_` is `dsl_core`'s placeholder sigil; Jack has no placeholder concept of its
             // own, so it round-trips as an ordinary one-character identifier.
-            os_dsl::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
-            os_dsl::TokenKind::Int | os_dsl::TokenKind::Float => {
+            crate::os_dsl::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
+            crate::os_dsl::TokenKind::Int | crate::os_dsl::TokenKind::Float => {
                 let n: f64 = text.parse().map_err(GraphDslError::NumberFormat)?;
                 push_spanned(out, Token::Number(n), start, end);
             }
-            os_dsl::TokenKind::LParen => push_spanned(out, Token::LParen, start, end),
-            os_dsl::TokenKind::RParen => push_spanned(out, Token::RParen, start, end),
-            os_dsl::TokenKind::LBracket => push_spanned(out, Token::LBracket, start, end),
-            os_dsl::TokenKind::RBracket => push_spanned(out, Token::RBracket, start, end),
-            os_dsl::TokenKind::Colon => push_spanned(out, Token::Colon, start, end),
-            os_dsl::TokenKind::Comma => push_spanned(out, Token::Comma, start, end),
-            os_dsl::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
-            os_dsl::TokenKind::At => push_spanned(out, Token::At, start, end),
-            os_dsl::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
-            os_dsl::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
-            os_dsl::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
+            crate::os_dsl::TokenKind::LParen => push_spanned(out, Token::LParen, start, end),
+            crate::os_dsl::TokenKind::RParen => push_spanned(out, Token::RParen, start, end),
+            crate::os_dsl::TokenKind::LBracket => push_spanned(out, Token::LBracket, start, end),
+            crate::os_dsl::TokenKind::RBracket => push_spanned(out, Token::RBracket, start, end),
+            crate::os_dsl::TokenKind::Colon => push_spanned(out, Token::Colon, start, end),
+            crate::os_dsl::TokenKind::Comma => push_spanned(out, Token::Comma, start, end),
+            crate::os_dsl::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
+            crate::os_dsl::TokenKind::At => push_spanned(out, Token::At, start, end),
+            crate::os_dsl::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
+            crate::os_dsl::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
+            crate::os_dsl::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
             // Double-quoted text delegated straight through `dsl_core` — unreachable in practice
             // since `lex_spanned` pre-scans and consumes every quote itself before ever
             // delegating a segment, kept only for defensive completeness.
-            os_dsl::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
+            crate::os_dsl::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
             // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
             // character" treatment as an outright `os_dsl::TokenKind::Error` below.
-            os_dsl::TokenKind::EdgeArrow
-            | os_dsl::TokenKind::LBrace
-            | os_dsl::TokenKind::RBrace
-            | os_dsl::TokenKind::Caret
-            | os_dsl::TokenKind::DotDot
-            | os_dsl::TokenKind::Plus
-            | os_dsl::TokenKind::Minus
-            | os_dsl::TokenKind::Star
-            | os_dsl::TokenKind::Slash
-            | os_dsl::TokenKind::Fence
-            | os_dsl::TokenKind::Error => {
+            crate::os_dsl::TokenKind::EdgeArrow
+            | crate::os_dsl::TokenKind::LBrace
+            | crate::os_dsl::TokenKind::RBrace
+            | crate::os_dsl::TokenKind::Caret
+            | crate::os_dsl::TokenKind::DotDot
+            | crate::os_dsl::TokenKind::Plus
+            | crate::os_dsl::TokenKind::Minus
+            | crate::os_dsl::TokenKind::Star
+            | crate::os_dsl::TokenKind::Slash
+            | crate::os_dsl::TokenKind::Fence
+            | crate::os_dsl::TokenKind::Error => {
                 if forgiving {
                     push_spanned(out, Token::Ident(text), start, end);
                 } else {
                     return Err(GraphDslError::UnexpectedChar(text.chars().next().unwrap_or('?')));
                 }
             }
-            os_dsl::TokenKind::Whitespace | os_dsl::TokenKind::Newline | os_dsl::TokenKind::Comment | os_dsl::TokenKind::Eof => {
+            crate::os_dsl::TokenKind::Whitespace | crate::os_dsl::TokenKind::Newline | crate::os_dsl::TokenKind::Comment | crate::os_dsl::TokenKind::Eof => {
                 unreachable!("trivia/Eof filtered above")
             }
         }
@@ -940,7 +940,7 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphD
                 return Err(GraphDslError::UnterminatedString);
             }
             i += 1;
-            let text = os_dsl::unescape_text(&raw, forgiving).unwrap_or(raw);
+            let text = crate::os_dsl::unescape_text(&raw, forgiving).unwrap_or(raw);
             push_spanned(&mut tokens, Token::StringLit(text), start, i);
             seg_start = i;
             continue;
@@ -1420,7 +1420,7 @@ fn format_token(tok: &Token) -> String {
         }
         // 🩹️ unified syntax law: strings always PRINT double-quoted with `dsl_core`'s canonical
         // escape, regardless of which quote style the source used.
-        Token::StringLit(s) => format!("\"{}\"", os_dsl::escape_text(s)),
+        Token::StringLit(s) => format!("\"{}\"", crate::os_dsl::escape_text(s)),
         Token::LParen => "(".into(),
         Token::RParen => ")".into(),
         Token::LBracket => "[".into(),

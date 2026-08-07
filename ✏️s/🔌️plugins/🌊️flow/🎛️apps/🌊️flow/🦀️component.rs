@@ -17,7 +17,7 @@ use crate::apps::flow::modes::{edit, generate};
 use crate::apps::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture, FLOW_DOCUMENT_SCHEMA};
-use flow::{FlowEvalSession, Widget};
+use flow::{with_process_flow_eval_session, FlowEvalSession, Widget};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
@@ -231,34 +231,31 @@ impl DocumentApp for FlowPlayApp {
     }
 
     fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowOperation, FlowConfigOperation, Self::DraftOperation>, Fault> {
-        let mut session = FlowEvalSession::default();
-        command.dispatch(doc, cfg, &mut session)
+        with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
     fn pending_effects(doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
-        let mut session = FlowEvalSession::default();
-        eval::evaluate_result(doc.projection, cfg.projection, &mut session).effects
+        with_process_flow_eval_session(|session| eval::evaluate_result(doc.projection, cfg.projection, session).effects)
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
         let fixture = doc.projection;
         let config = cfg.projection;
         let labels = flow_play_labels(config);
-        let session = FlowEvalSession::default();
-        match body_key {
-            FLOW_PLAY_BODY_MAIN => main::render(fixture, config, &session),
-            FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, config, &session),
+        with_process_flow_eval_session(|session| match body_key {
+            FLOW_PLAY_BODY_MAIN => main::render(fixture, config, session),
+            FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, config, session),
             FLOW_PLAY_BODY_GENERATIONS => generations::render(config, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
             FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, config),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(config),
             FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, &config.selected_node_ids, labels),
-            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, config, &session, labels),
+            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, config, session, labels),
             FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(fixture, &config.selected_node_ids, labels),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        })
     }
 
     fn window_measures(_doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -354,7 +351,7 @@ pub fn create_flow_app() -> App {
             // consistent with the sibling apps' convention.
             .config(FlowPlayApp::config_spec()),
     )
-    .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "cylinder")
+    .example_source(crate::examples::art_flow_demo::source())
     .workflow("flow", "Flow", "graph")
 }
 //#endregion 🔖️Manifest

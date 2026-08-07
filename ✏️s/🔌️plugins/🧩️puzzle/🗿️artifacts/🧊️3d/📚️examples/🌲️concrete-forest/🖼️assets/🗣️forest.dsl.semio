@@ -1,0 +1,54 @@
+semio puzzle.puzzle3d.dsl v1
+schema=puzzle.3d.fixture domain=architecture
+meta {
+  kind-catalogs=
+  objects [id:TEXT label:TEXT name:TEXT mesh-url:TEXT vortices:LIST] {
+    "Hexagonal Cut Concrete Forest Left" "Hexagonal Cut Concrete Forest Left" "Hexagonal Cut Concrete Forest Left" "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb" [ vortex-kind=b-l position=@4.05001,4.676537,3 direction=^0,1,0 radius=0.36 vortex-kind=b-l-m position=@6.75001,4.676537,3 direction=^0,1,0 radius=0.36 vortex-kind=b-l position=@9.45001,4.676537,3 direction=^0,1,0 radius=0.36 vortex-kind=b-s-m position=@6.75001,0,3 direction=^0,-1,0 radius=0.36 vortex-kind=b-s position=@4.05001,0,3 direction=^0,-1,0 radius=0.36 vortex-kind=b-s-m position=@1.35001,0,3 direction=^0,-1,0 radius=0.36 vortex-kind=b-s position=@9.45001,2.338269,3 direction=^0.866025,-0.5,0 radius=0.36 vortex-kind=c-b position=@2.70001,2.338269,0 direction=^0,0,-1 radius=0.36 vortex-kind=c-t position=@2.70001,2.338269,3 direction=^0,0,1 radius=0.36 vortex-kind=c-b position=@8.10001,2.338269,0 direction=^0,0,-1 radius=0.36 vortex-kind=c-t position=@8.10001,2.338269,3 direction=^0,0,1 radius=0.36 ]
+    "Hexagonal Cut Concrete Forest Right" "Hexagonal Cut Concrete Forest Right" "Hexagonal Cut Concrete Forest Right" "/mesh/🧊️hexagonal-cut-concrete-forest-right.glb" [ vortex-kind=b-l position=@4.05001,4.676537,3 direction=^0,1,0 radius=0.36 vortex-kind=b-l-m position=@6.75001,4.676537,3 direction=^0,1,0 radius=0.36 vortex-kind=b-l position=@9.45001,4.676537,3 direction=^0,1,0 radius=0.36 vortex-kind=b-s-m position=@6.75001,0,3 direction=^0,-1,0 radius=0.36 vortex-kind=b-s-m position=@4.05001,0,3 direction=^0,-1,0 radius=0.36 vortex-kind=b-s position=@1.35001,0,3 direction=^0,-1,0 radius=0.36 vortex-kind=b-s-m position=@9.45001,2.338269,3 direction=^0.866025,-0.5,0 radius=0.36 vortex-kind=c-b position=@2.70001,2.338269,0 direction=^0,0,-1 radius=0.36 vortex-kind=c-t position=@2.70001,2.338269,3 direction=^0,0,1 radius=0.36 vortex-kind=c-b position=@8.10001,2.338269,0 direction=^0,0,-1 radius=0.36 vortex-kind=c-t position=@8.10001,2.338269,3 direction=^0,0,1 radius=0.36 ]
+  }
+  vortices [id:TEXT label:TEXT name:TEXT color:TEXT default-cable-kind:REF] {
+    b-l b-l b-l "hsl(206 52% 48%)" cable.link
+    b-l-m b-l-m b-l-m "hsl(290 52% 48%)" cable.link
+    b-s b-s b-s "hsl(55 52% 48%)" cable.link
+    b-s-m b-s-m b-s-m "hsl(124 52% 48%)" cable.link
+    c-b c-b c-b "hsl(37 52% 48%)" cable.link
+    c-t c-t c-t "hsl(169 52% 48%)" cable.link
+  }
+  cables [id:TEXT label:TEXT name:TEXT default-attraction-kind:REF] {
+    cable.link Link Link puzzle3d.attraction.link
+  }
+  attractions [id:TEXT label:TEXT name:TEXT] {
+    puzzle3d.attraction.link Link Link
+  }
+  kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] {
+    b-l b-l true false vortex
+    b-l b-l-m true false vortex
+    b-l b-s true false vortex
+    b-l b-s-m true false vortex
+    b-l-m b-l true false vortex
+    b-l-m b-l-m true false vortex
+    b-l-m b-s true false vortex
+    b-l-m b-s-m true false vortex
+    b-s b-l true false vortex
+    b-s b-l-m true false vortex
+    b-s b-s true false vortex
+    b-s b-s-m true false vortex
+    b-s-m b-l true false vortex
+    b-s-m b-l-m true false vortex
+    b-s-m b-s true false vortex
+    b-s-m b-s-m true false vortex
+    c-b c-t true false vortex
+  }
+}
+objects [id:TEXT label:TEXT object-kind:REF origin:CRD orientation:TUPLE scale:LIST mesh-url:TEXT vortices:LIST hidden:BOOL locked:BOOL] {
+  seed-left-001 "Hexagonal Cut Concrete Forest Left" "Hexagonal Cut Concrete Forest Left" @0,0,0 0,0,0,1 _ "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb" [ id="seed-left-001:v0" vortex-kind=b-l label=b-l position=@4.05001,4.676537,3 direction=^0,1,0 radius=0.36 hidden=false locked=false id="seed-left-001:v1" vortex-kind=b-l-m label=b-l-m position=@6.75001,4.676537,3 direction=^0,1,0 radius=0.36 hidden=false locked=false id="seed-left-001:v2" vortex-kind=b-l label=b-l position=@9.45001,4.676537,3 direction=^0,1,0 radius=0.36 hidden=false locked=false id="seed-left-001:v3" vortex-kind=b-s-m label=b-s-m position=@6.75001,0,3 direction=^0,-1,0 radius=0.36 hidden=false locked=false id="seed-left-001:v4" vortex-kind=b-s label=b-s position=@4.05001,0,3 direction=^0,-1,0 radius=0.36 hidden=false locked=false id="seed-left-001:v5" vortex-kind=b-s-m label=b-s-m position=@1.35001,0,3 direction=^0,-1,0 radius=0.36 hidden=false locked=false id="seed-left-001:v6" vortex-kind=b-s label=b-s position=@9.45001,2.338269,3 direction=^0.866025,-0.5,0 radius=0.36 hidden=false locked=false id="seed-left-001:v7" vortex-kind=c-b label=c-b position=@2.70001,2.338269,0 direction=^0,0,-1 radius=0.36 hidden=false locked=false id="seed-left-001:v8" vortex-kind=c-t label=c-t position=@2.70001,2.338269,3 direction=^0,0,1 radius=0.36 hidden=false locked=false id="seed-left-001:v9" vortex-kind=c-b label=c-b position=@8.10001,2.338269,0 direction=^0,0,-1 radius=0.36 hidden=false locked=false id="seed-left-001:v10" vortex-kind=c-t label=c-t position=@8.10001,2.338269,3 direction=^0,0,1 radius=0.36 hidden=false locked=false ] false false
+}
+attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] {
+}
+target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] {
+}
+references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] {
+  ref-masterarbeit {url="/infinite-fixture/🖼️abbau-aufbau-masterarbeit-grundriss.jpg" media-kind=image} @7,0,0.01 50m true false
+  ref-rathaus-ahlen {url="/infinite-fixture/🖼️rathaus-ahlen-grundriss.png" media-kind=image} @7,0,0.01 50m true true
+}
+

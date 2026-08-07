@@ -74,12 +74,12 @@ framework/ui/styling: no hardcoded px sizing violations
       code[0m[2m:[0m [32m"ENOENT"[0m
 
 [0m      [2mat [0m[0m[1m[3mspawnSync[0m[2m ([0m[0m[36mnode:child_process[0m[2m:[0m[33m226[0m[2m:[33m22[0m[2m)[0m
-[0m      [2mat [0m[0m[1m[3mrunCmdInternal[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1351[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCmdInternal[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1351[0m[2m:[33m18[0m[2m)[0m
 [0m      [2mat [0m[0m[1m[3mrunTypegenExportTest[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m37[0m[2m:[33m18[0m[2m)[0m
 [0m      [2mat [0m[0m[1m[3mbuildManifest[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m78[0m[2m:[33m3[0m[2m)[0m
 [0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m101[0m[2m:[33m22[0m[2m)[0m
-[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m814[0m[2m:[33m71[0m[2m)[0m
-[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m844[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m814[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m844[0m[2m:[33m16[0m[2m)[0m
 [0m
 [2mBun v1.3.14 (macOS arm64)[0m
 Warning: command "bun ./📜️script.ts check" exited with non-zero status code
@@ -101,11 +101,11 @@ Hint: run the command with --verbose for more details.
 1375 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
                                      ^
 error: bun nx run @semio-tech/framework-core-rs:check exited with status 1
-      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts:1375:31)
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts:1375:31)
       at runGate (/Users/ueli/Documents/semio/📜️script.ts:663:5)
       at run (/Users/ueli/Documents/semio/📜️script.ts:643:16)
-      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts:814:71)
-      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts:849:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts:849:16)
       at /Users/ueli/Documents/semio/📜️script.ts:3062:11
 
 Bun v1.3.14 (macOS arm64)

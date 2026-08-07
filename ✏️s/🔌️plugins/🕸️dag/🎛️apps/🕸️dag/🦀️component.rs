@@ -222,7 +222,7 @@ pub fn create_dag_app() -> App {
             // channel surface consistent with `shooting_ui::create_shooting_app`'s convention.
             .config(DagPlayApp::config_spec()),
     )
-    .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&default_dag_document()).expect("default DAG document has no non-string map keys or non-finite floats, so JSON serialization is infallible"), "cylinder")
+    .example_source(crate::examples::art_dag_demo::source())
     .workflow("dag", "DAG", "graph")
 }
 //#endregion 🔖️Manifest

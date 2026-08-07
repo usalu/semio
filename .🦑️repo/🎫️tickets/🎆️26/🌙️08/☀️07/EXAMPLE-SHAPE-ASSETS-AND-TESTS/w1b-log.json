@@ -1,47 +1,84 @@
 {
-  "wave": "w1b",
-  "ticket": "26/08/07/EXAMPLE-SHAPE-ASSETS-AND-TESTS",
+  "wave": "1b",
+  "ticket": "2026/08/07/EXAMPLE-SHAPE-ASSETS-AND-TESTS",
+  "title": "Example Source Runtime Type And Fixture-Sweep Rewrite",
   "status": "done",
-  "api_summary": {
+  "completedAt": "2026-08-07T13:56:52Z",
+  "api": {
     "ExampleSource": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
       "fields": [
         "id",
-        "label: LocalizedLabel (en-de via LocalizedLabel::native)",
-        "icon_id: IconName",
-        "document_json (aliases: document/payload)"
+        "label (LocalizedLabel)",
+        "icon_id (IconName)",
+        "document_json"
+      ],
+      "accessors": [
+        "id()",
+        "label()",
+        "icon_id()",
+        "document_json()",
+        "document()",
+        "payload()"
       ],
       "constructors": [
         "ExampleSource::new(id, label, document_json, icon_id)"
       ],
       "conversions": [
-        "Into/From ExampleDefinition",
-        "From<&ExampleSource>"
+        "From<ExampleSource> for ExampleDefinition",
+        "From<&ExampleSource> for ExampleDefinition",
+        "From<&ExampleSource> for ExampleSource",
+        "into_example_definition()"
       ],
-      "App_methods": {
-        "example_source": "canonical — pushes ExampleDefinition into App.examples → PluginManifest.examples at Plugin::register",
-        "example": "thin wrapper calling example_source(ExampleSource::new(...)) for mid-migration call sites"
-      },
-      "reexport": "pub use app::ExampleSource from plugin module root"
+      "reexport": "semio_framework_plugin::ExampleSource"
+    },
+    "App::example_source": {
+      "signature": "pub fn example_source(self, source: impl Into<ExampleSource>) -> Self",
+      "role": "canonical registration path — definition leaves feed App without restating labels"
+    },
+    "App::example": {
+      "kept": true,
+      "reason": "Thin wrapper over example_source so existing create_*_app() call sites keep compiling during W2–W3 migration; prefer example_source once leaves own id/label/icon/payload."
     }
   },
-  "fixture_sweep": {
-    "layout": "📚️examples/<emoji-slug>/🖼️assets/<kindEmoji><name>.{dsl,op,spr,pack,cmd}.semio",
-    "discovery": "walk-based collect_example_semio_files / pilot_resolve::find_example_semio (assets-first, legacy fallback)",
-    "coverage": "repo_wide_semio_example_kind_coverage soft-skips missing 🖼️assets mid-migration; hard-fails empty 🖼️assets/",
-    "pilots": "grammar/protocol/cross/production M5 pilots load fixtures via FS walk; grammar/protocol facet specs remain include_str!",
-    "feature": "dsl-fixture-sweep-full still gates the repo-wide DocumentDsl law sweep"
+  "fixtureSweep": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs",
+    "layout": "📚️examples/<emoji-slug>/🖼️assets/*.<kind>.semio",
+    "changes": [
+      "Walk prefers 🖼️assets/ per example slug; soft-falls back to recursive slug walk when assets absent (legacy plural dirs).",
+      "repo_wide_dsl_fixture_law_sweep collects .semio via collect_example_semio_files (assets-first).",
+      "repo_wide_semio_example_kind_coverage no longer requires 🗣️dsls/🎒️packs/🔧️ops/📡️sprs; requires 🖼️assets/ with ≥1 .semio when present; soft-skips (DEBUG log) slugs still on legacy layout mid-migration; empty 🖼️assets/ is a hard gap.",
+      "Added example_asset_discovery module for M5 pilots: FS find/read by suffix (.dsl.semio/.pack.semio/.spr.semio), assets-first + legacy fallback, prefers largest match so handcrafted fixtures win over preamble stubs.",
+      "M5 grammar/protocol/cross/coverage pilots no longer hardcode include_str!/include_bytes! under 📚️examples; facet grammar/protocol include_str! paths unchanged.",
+      "Feature dsl-fixture-sweep-full still gates the full AppTypes sweep module."
+    ]
   },
-  "compile_note": "cargo test --lib --features dsl-fixture-sweep-full for semio-framework-os-kernel currently fails due to pre-existing unrelated os_spr::wire / PackSink ambiguity errors; no errors referenced fixture-sweep or ExampleSource.",
-  "files_changed": [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs"
+  "filesChanged": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "action": "updated",
+      "summary": "Added ExampleSource value type, App::example_source, kept App::example as wrapper, unit tests, reexport"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs",
+      "action": "updated",
+      "summary": "Rewrote walks/coverage for 🖼️assets layout; FS discovery for M5 pilots"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs",
+      "action": "updated",
+      "summary": "Incidental: removed one extra closing brace that blocked os-kernel compile while verifying W1b",
+      "ownership": "out-of-shard; compile unblocker only"
+    }
   ],
-  "files_not_touched": [
-    "taxonomy.json",
-    "📜️script.ts",
-    "registry",
-    "discovery",
-    "index.test.ts",
-    "plugin 📚️examples trees"
+  "verification": {
+    "cargo_test_example_source": "blocked — semio-framework-os-kernel has unrelated unresolved os_spr::wire imports / PackSink ambiguity from concurrent workspace edits",
+    "discovery_simulation": "passed — size-preferring FS walk resolves lowpoly/dag/cad/en1992/note/fem2d dsl+pack pilots on current on-disk legacy layout",
+    "brace_balance_owned_files": "fixture-sweep depth 0"
+  },
+  "notes": [
+    ".example kept as incremental migration wrapper; example_source is canonical.",
+    "Repo MCP (repo://goals / ticket_*) was not reachable in this session; work proceeded against the existing EXAMPLE-SHAPE ticket folder.",
+    "Did not touch taxonomy.json, root script.ts, registry, discovery, index.test.ts, or plugin 📚️examples trees."
   ]
 }

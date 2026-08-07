@@ -135,8 +135,8 @@
 ../../../../🧱️elements/🪵Tree/🟦️component.tsx(15,31): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
 ../../../../🧱️elements/🪵Tree/🟦️component.tsx(763,54): error TS2339: Property 'escape' does not exist on type 'Readonly<{ Translate: { toString(transform: Transform | null): string | undefined; }; Scale: { toString(transform: Transform | null): string | undefined; }; Transform: { ...; }; Transition: { ...; }; }>'.
 ../../../../🧱️elements/🫀️core/🆔ElementId/🟦️component.tsx(8,31): error TS2307: Cannot find module '../Ports/🟦️component.tsx' or its corresponding type declarations.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
-../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
 ../../../../../../🤖️generated/🟦️manifest.ts(129,9): error TS2304: Cannot find name 'ConfigSpec'.
 ../../../../../../🤖️generated/🟦️manifest.ts(134,17): error TS2304: Cannot find name 'CommandGrammar'.
 ../../../../../../🤖️generated/🟦️manifest.ts(140,5): error TS2304: Cannot find name 'AppIo'.

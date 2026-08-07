@@ -1,2 +1,2 @@
 import { readFileSync, writeFileSync } from "fs";
-const path = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🗂️workspaces/
+const path = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/

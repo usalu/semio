@@ -338,10 +338,6 @@
         "vitest": "^4.0.17",
       },
     },
-    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/pkg": {
-      "name": "@semio-tech/flow-module-bim",
-      "version": "0.1.0",
-    },
     "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript": {
       "name": "@semio-tech/animate-js",
       "version": "0.1.0",
@@ -464,9 +460,6 @@
     "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript": {
       "name": "@semio-tech/s-3d-js",
       "version": "0.1.0",
-      "dependencies": {
-        "@semio-tech/flow-module-brep": "workspace:*",
-      },
       "devDependencies": {
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
@@ -644,21 +637,12 @@
         "vite": "^7.3.1",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep": {
-      "name": "@semio-tech/flow-module-brep",
-      "version": "0.1.0",
-    },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg": {
-      "name": "@semio-tech/flow-core",
-      "version": "0.1.0",
-    },
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react": {
       "name": "@semio-tech/framework-renderer-react",
       "version": "0.1.0",
       "dependencies": {
         "@react-three/fiber": "^9.5.0",
         "@semio-tech/assets": "workspace:*",
-        "@semio-tech/flow-core": "workspace:*",
         "@semio-tech/framework": "workspace:*",
         "@semio-tech/framework-editor-rs": "workspace:*",
         "@semio-tech/framework-os": "workspace:*",
@@ -692,6 +676,14 @@
       "devDependencies": {
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
+      },
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store": {
+      "name": "@semio-tech/plugin-extension-store",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-os": "workspace:*",
+        "fflate": "^0.8.2",
       },
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry": {
@@ -759,7 +751,7 @@
       "name": "@semio-tech/repo-sqlite",
       "version": "1.0.0",
     },
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript": {
       "name": "@semio-tech/repo-lib",
       "version": "1.0.0",
       "devDependencies": {
@@ -1895,13 +1887,7 @@
 
     "@semio-tech/compose-vscode": ["@semio-tech/compose-vscode@workspace:compose/client/ui/vscode"],
 
-    "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg"],
-
     "@semio-tech/flow-js": ["@semio-tech/flow-js@workspace:✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript"],
-
-    "@semio-tech/flow-module-bim": ["@semio-tech/flow-module-bim@workspace:✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/pkg"],
-
-    "@semio-tech/flow-module-brep": ["@semio-tech/flow-module-brep@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep"],
 
     "@semio-tech/framework": ["@semio-tech/framework@workspace:🧰️framework/📦️packages/🟦️typescript"],
 
@@ -1931,6 +1917,8 @@
 
     "@semio-tech/mit-bestand-praesentation-projektetage": ["@semio-tech/mit-bestand-praesentation-projektetage@workspace:♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript"],
 
+    "@semio-tech/plugin-extension-store": ["@semio-tech/plugin-extension-store@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store"],
+
     "@semio-tech/plugin-registry": ["@semio-tech/plugin-registry@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry"],
 
     "@semio-tech/print": ["@semio-tech/print@workspace:🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"],
@@ -1939,7 +1927,7 @@
 
     "@semio-tech/repo-coordinator": ["@semio-tech/repo-coordinator@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"],
 
-    "@semio-tech/repo-lib": ["@semio-tech/repo-lib@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript"],
+    "@semio-tech/repo-lib": ["@semio-tech/repo-lib@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"],
 
     "@semio-tech/repo-sqlite": ["@semio-tech/repo-sqlite@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript"],
 

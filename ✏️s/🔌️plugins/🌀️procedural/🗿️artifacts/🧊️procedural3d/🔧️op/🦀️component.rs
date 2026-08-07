@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
 use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
-use playbook::{invert_generation_operation, GenerationOperation};
+use flow::playbook::{invert_generation_operation, GenerationOperation};
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn generation_op_round_trips() {
         let before = empty_procedural3d_projection();
-        let generation = playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural3dOperation::Generation(GenerationOperation::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
     }

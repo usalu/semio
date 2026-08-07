@@ -9616,64 +9616,64 @@
   {
     "plugin": "@repo/emoji-project-json",
     "name": "@semio-tech/repo-lib",
-    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
     "project": {
       "name": "@semio-tech/repo-lib",
       "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
-      "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+      "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
       "projectType": "library",
       "targets": {
         "lint": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
             "command": "bun ./📜️script.ts lint"
           }
         },
         "test": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
             "command": "bun ./📜️script.ts test"
           }
         },
         "test-quick": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
             "command": "bun ./📜️script.ts test quick"
           }
         },
         "test-long": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
             "command": "bun ./📜️script.ts test long"
           }
         },
         "test-exhaustive": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
             "command": "bun ./📜️script.ts test exhaustive"
           }
         },
         "workspaces-check": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
             "command": "bun ./📜️script.ts workspaces --check"
           }
         },
         "workspaces-write": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript",
             "command": "bun ./📜️script.ts workspaces --write"
           }
         }
       },
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript"
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript"
     }
   },
   {
@@ -11048,19 +11048,19 @@
   {
     "plugin": "@repo/policy-scripts-file",
     "name": "breach-_framework_products_repo_modules_lib_script_ts",
-    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib",
+    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
     "project": {
       "name": "breach-_framework_products_repo_modules_lib_script_ts",
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
       "targets": {
         "lint": {
           "executor": "nx:run-commands",
           "options": {
             "cwd": "/Users/ueli/Documents/semio",
-            "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📜️script.ts\" policy"
+            "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📜️script.ts\" policy"
           },
           "inputs": [
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📜️script.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📜️script.ts"
           ],
           "outputs": [
             "{workspaceRoot}/.🦑️repo/⚡️cache/breaches"
@@ -11592,7 +11592,7 @@
   {
     "plugin": "@repo/emoji-project-json",
     "name": "repo-go-lib",
-    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go",
+    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go",
     "project": {
       "name": "repo-go-lib",
       "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
@@ -11601,33 +11601,33 @@
         "test": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go",
             "command": "bun ./📜️script.ts test"
           }
         },
         "test-quick": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go",
             "command": "bun ./📜️script.ts test quick"
           }
         },
         "test-long": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go",
             "command": "bun ./📜️script.ts test long"
           }
         },
         "test-exhaustive": {
           "executor": "nx:run-commands",
           "options": {
-            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go",
             "command": "bun ./📜️script.ts test exhaustive"
           }
         }
       },
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go"
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go"
     }
   },
   {

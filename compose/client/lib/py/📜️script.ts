@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/compose-py` router: `bun ./📜️script.ts <build|test>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd, resolveTestLevel, runTestBudgeted, pytestLevelArgs, pytestCoverageArgs } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd, resolveTestLevel, runTestBudgeted, pytestLevelArgs, pytestCoverageArgs } from "@semio-tech/repo-lib";
 
 class BuildScript extends BundleScript {
   run(): void {

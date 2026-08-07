@@ -586,8 +586,8 @@ Package/crate names preserved throughout. Each got a `[package.metadata.semio] r
 - `bun install`: blocked repo-wide by **unrelated** stale workspace entries from the concurrently in-flight `🎞️animate`/`🧩️puzzle` plugin migrations (dangling `workspace:*` deps pointing at directories those migrations haven't finished cleaning up). I attempted a cleanup, it surfaced a *worse* error once bun got further into resolution, so I reverted it — not this ticket's bug to fix. Worked around it for my own package by hand-repairing just the `node_modules/@semio-tech/ui-react` symlink.
 
 ## Files touched
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🔣️taxonomy.json`
-- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟦️discovery.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🔣️taxonomy.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟦️discovery.ts`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts`
 - `.🦑️repo/🎯️goals/AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/🎯️goal.json`
 - `📜️script.ts` (root)

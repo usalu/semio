@@ -1029,4 +1029,71 @@ pub mod apps {
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/📓️iso16757/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_iso16757_demo;
+    #[path = "../../🗿️artifacts/📔️vdi3805/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_vdi3805_demo;
+    #[path = "../../🗿️artifacts/📕️din4108/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_din4108_demo;
+    #[path = "../../🗿️artifacts/📗️din16798/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_din16798_demo;
+    #[path = "../../🗿️artifacts/📘️en1990/📚️examples/📕️high-consequence-office/🦀️component.rs"]
+    pub mod art_en1990_high_consequence_office;
+    #[path = "../../🗿️artifacts/📘️en1991/📚️examples/📕️retail-hydrocarbon-fire/🦀️component.rs"]
+    pub mod art_en1991_retail_hydrocarbon_fire;
+    #[path = "../../🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🦀️component.rs"]
+    pub mod art_en1992_liquid_retaining_fem_anchor;
+    #[path = "../../🗿️artifacts/📘️en1993/📚️examples/📕️high-strength-connection/🦀️component.rs"]
+    pub mod art_en1993_high_strength_connection;
+    #[path = "../../🗿️artifacts/📘️en1994/📚️examples/📕️composite-bridge-girder/🦀️component.rs"]
+    pub mod art_en1994_composite_bridge_girder;
+    #[path = "../../🗿️artifacts/📘️en1995/📚️examples/📕️glulam-footbridge/🦀️component.rs"]
+    pub mod art_en1995_glulam_footbridge;
+    #[path = "../../🗿️artifacts/📘️en1996/📚️examples/📕️loadbearing-wall/🦀️component.rs"]
+    pub mod art_en1996_loadbearing_wall;
+    #[path = "../../🗿️artifacts/📘️en1997/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_en1997_demo;
+    #[path = "../../🗿️artifacts/📘️en1998/📚️examples/📕️seismic-rc-frame/🦀️component.rs"]
+    pub mod art_en1998_seismic_rc_frame;
+    #[path = "../../🗿️artifacts/📘️en1999/📚️examples/📕️aluminium-roof-purlin/🦀️component.rs"]
+    pub mod art_en1999_aluminium_roof_purlin;
+    #[path = "../../🗿️artifacts/📙️din18599/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_din18599_demo;
+    #[path = "../../🎛️apps/📓️iso16757/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_iso16757_demo_session;
+    #[path = "../../🎛️apps/📔️vdi3805/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_vdi3805_demo_session;
+    #[path = "../../🎛️apps/📕️din4108/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_din4108_demo_session;
+    #[path = "../../🎛️apps/📗️din16798/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_din16798_demo_session;
+    #[path = "../../🎛️apps/📘️en1990/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1990_demo_session;
+    #[path = "../../🎛️apps/📘️en1991/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1991_demo_session;
+    #[path = "../../🎛️apps/📘️en1992/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1992_demo_session;
+    #[path = "../../🎛️apps/📘️en1993/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1993_demo_session;
+    #[path = "../../🎛️apps/📘️en1994/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1994_demo_session;
+    #[path = "../../🎛️apps/📘️en1995/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1995_demo_session;
+    #[path = "../../🎛️apps/📘️en1996/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1996_demo_session;
+    #[path = "../../🎛️apps/📘️en1997/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1997_demo_session;
+    #[path = "../../🎛️apps/📘️en1998/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1998_demo_session;
+    #[path = "../../🎛️apps/📘️en1999/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_en1999_demo_session;
+    #[path = "../../🎛️apps/📙️din18599/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_din18599_demo_session;
+}
+//#endregion 📚️Examples
+
 //#endregion 🔖️Plugin

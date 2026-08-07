@@ -1,2 +1,12 @@
 semio puzzle.5d.cmd v1
+# Demo session: load concrete-forest then orbit the overview
 action=demo
+exampleId=concrete-forest
+steps=[
+  setActiveExample exampleId=concrete-forest
+  setCamera x=230.7 y=93.5 zoom=2
+  selectAll
+  fitView
+]
+actor=example
+started="0"

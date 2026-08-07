@@ -104,11 +104,11 @@ flowchart TB
 
 ### M1. Taxonomy vocabulary (unblocks everything)
 
-[🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🔣️taxonomy.json) currently permits only a language leaf file inside a facet dir (`_treePurityComment`, Shape V2). Adding `.semio` files and a TS leaf requires:
+[🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🔣️taxonomy.json) currently permits only a language leaf file inside a facet dir (`_treePurityComment`, Shape V2). Adding `.semio` files and a TS leaf requires:
 
 - New key `artifactSpecFilenames` mapping each facet to its spec filename and dialect: `🗣️dsl`/`🔧️op`/`🔺️diff` → `📖️component.grammar.semio`; `🎒️pack`/`📡️spr` → `📡️component.protocol.semio`.
 - Fix `ecosystems.🟦️typescript.leafFilename` from `🟦️component.tsx` to `🟦️component.ts`; keep `.tsx` only on `targets.⚛️react`. This is already the de-facto convention (12 of 13 existing TS leaves in `✏️s/🔌️plugins` are `.ts`) and today's value is a latent inconsistency.
-- Extend `validateTaxonomy` / `validateTaxonomyTree` in [🟦️discovery.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟦️discovery.ts) and [registry 📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts) so a facet is complete only with all three files.
+- Extend `validateTaxonomy` / `validateTaxonomyTree` in [🟦️discovery.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟦️discovery.ts) and [registry 📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts) so a facet is complete only with all three files.
 - Extend `policyTaxonomyDirsBreaches` in [📜️script.ts](📜️script.ts) to accept the new filenames.
 
 ### M2. `.semio` spec language, grammar dialect

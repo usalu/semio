@@ -1,5 +1,0 @@
-semio writer.writer.dsl v1
-schema=writer.document id=dag-jack language-id=jack uri="writer://dag-jack" text=```jack
-MATCH (n:computation) RETURN n.name, n.kind
-MATCH (n:slider) RETURN n.name
-```

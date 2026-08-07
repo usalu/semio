@@ -20,7 +20,7 @@ Regenerate: `bun ./📜️script.ts inventory` from this ticket folder.
 
 ## Periphery applied (verify locally)
 
-- [x] `.dependency-cruiser.cjs` loads taxonomy from `📚️lib/🔣️taxonomy.json` (`node -e "require(./.dependency-cruiser.cjs)"`)
+- [x] `.dependency-cruiser.cjs` loads taxonomy from `📚️library/🔣️taxonomy.json` (`node -e "require(./.dependency-cruiser.cjs)"`)
 - [x] `REPO_CLIENT_GO` / `REPO_MCP_GO` point at `⌨️cli` / `🔌️mcp` module roots
 - [x] `.devcontainer/post-create.sh` builds `./…/🔌️mcp`
 - [x] `.gitignore` ignores `**/📦️packages/**/Cargo.lock`

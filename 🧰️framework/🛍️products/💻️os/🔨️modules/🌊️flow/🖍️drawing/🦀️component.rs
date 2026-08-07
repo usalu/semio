@@ -1,6 +1,6 @@
 //! 🖍️ Flow 2D drawing kernel JSON bridge.
 
-use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas as canvas;
 use neural_engine as neural;
 
@@ -32,7 +32,7 @@ use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_jso
 // #region 🖍️DrawingKernel
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::wasm_bindgen;
-use semio_s_2d::{block_on as drawing_block_on, DrawingHandle, DrawingStore};
+use semio_s_2d::{block_on as drawing_block_on, DrawingHandle, DrawingKernel, DrawingStore};
 
 static DRAWING_KERNEL: LazyLock<Mutex<DrawingStore>> = LazyLock::new(|| Mutex::new(DrawingStore::new()));
 

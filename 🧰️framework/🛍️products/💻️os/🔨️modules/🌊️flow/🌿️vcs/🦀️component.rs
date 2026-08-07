@@ -1,6 +1,6 @@
 //! 🌿️ Flow document VCS: operations, DSL, store, and forms bridge.
 
-use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas as canvas;
 use neural_engine as neural;
 
@@ -584,6 +584,64 @@ fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> Result<FlowFixture, S
         layout: fixture.layout,
     })
 }
+/// 📜️ Handcrafted DocumentDsl (P6): derive no longer emits DocumentDsl/DocumentPack.
+impl crate::os_store::DocumentDsl for FlowFixtureDsl {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = crate::os_dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6).
+impl crate::os_store::DocumentPack for FlowFixtureDsl {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
 
 impl crate::os_store::DocumentDsl for FlowFixture {
     const EXTENSION: &'static str = "flow";
@@ -695,18 +753,51 @@ fn flow_operation_from_dsl(operation: FlowOperationDsl) -> Result<FlowOperation,
             FlowOperation::Widgets(CollectionOperation::Add { index: index, item })
         }
         FlowOperationDsl::WidgetsRemove { id } => FlowOperation::Widgets(CollectionOperation::Remove { id }),
-        FlowOperationDsl::WidgetsMove { id, to_index } => FlowOperation::Widgets(CollectionOperation::Move { id, to: to_index }),
+        FlowOperationDsl::WidgetsMove { id, to_index } => FlowOperation::Widgets(CollectionOperation::Move { id, to_index }),
         FlowOperationDsl::WidgetsPatch { id, patch } => FlowOperation::Widgets(CollectionOperation::Patch { id, patch: widget_dsl_to_widget(patch)? }),
         FlowOperationDsl::SynapsesAdd { index, item } => {
             let item = synapse_from_dsl(item)?;
             FlowOperation::Synapses(CollectionOperation::Add { index: index, item })
         }
         FlowOperationDsl::SynapsesRemove { id } => FlowOperation::Synapses(CollectionOperation::Remove { id }),
-        FlowOperationDsl::SynapsesMove { id, to_index } => FlowOperation::Synapses(CollectionOperation::Move { id, to: to_index }),
+        FlowOperationDsl::SynapsesMove { id, to_index } => FlowOperation::Synapses(CollectionOperation::Move { id, to_index }),
         FlowOperationDsl::SynapsesPatch { id, patch } => FlowOperation::Synapses(CollectionOperation::Patch { id, patch: synapse_from_dsl(patch)? }),
         FlowOperationDsl::SetLayout { entries } => FlowOperation::SetLayout { entries },
         FlowOperationDsl::SetFixture { fixture } => FlowOperation::SetFixture { fixture: flow_fixture_dsl_to_fixture(fixture)? },
     })
+}
+/// 🎙️ Handcrafted OpText (P6): derive no longer emits OpText/OpBinary.
+impl crate::os_spr::OpText for FlowOperationDsl {
+    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+impl crate::os_spr::OpBinary for FlowOperationDsl {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        crate::os_dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        crate::os_dsl::variants_binary::decode_op(bytes)
+    }
 }
 
 impl crate::os_spr::OpText for FlowOperation {
@@ -745,6 +836,7 @@ pub fn empty_flow_projection() -> FlowFixture {
 mod flow_vcs_wasm {
     use super::*;
     use std::cell::RefCell;
+    use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
     pub struct FlowDocumentVcs {
@@ -767,12 +859,12 @@ mod flow_vcs_wasm {
 
         #[wasm_bindgen(js_name = dispatchText)]
         pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
         pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -785,7 +877,7 @@ mod flow_vcs_wasm {
 // #region 🔖️FormsBridge
 pub mod forms_bridge {
     use super::{FlowFixture, Widget};
-    use playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
+    use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
     fn humanize_widget_label(id: &str) -> String {
         let mut words = Vec::new();

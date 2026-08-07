@@ -2,7 +2,7 @@
 /** 🧭️ Engine package router: `bun ./📜️script.ts <build|test|dev mcp> [segments…]`. */
 import { existsSync, readFileSync, rmSync, copyFileSync, cpSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, runBunx, runBundleScriptMain, runCmd, runTestBudgeted, resolveTestLevel, pytestLevelArgs, pytestCoverageArgs, spawnDaemon } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBunx, runBundleScriptMain, runCmd, runTestBudgeted, resolveTestLevel, pytestLevelArgs, pytestCoverageArgs, spawnDaemon } from "@semio-tech/repo-lib";
 
 class DevMcpScript extends BundleScript {
   run(): void {

@@ -1,6 +1,6 @@
 //! 📔️ Flow extension registry and contribution install surface.
 
-use crate::infinite::board::ports::directed::dag as dag;
+use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas as canvas;
 use neural_engine as neural;
 
@@ -68,6 +68,22 @@ pub(crate) static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryStat
     generation: 0,
 }));
 
+/// 🔗 Host-linked extension installers — real `OperatorImpl`s compiled into the consuming plugin
+/// (procedural/flow). Preferred over `ContributedExtensionStub` until extension-world WIT invoke is wired.
+type LinkedFlowExtensionInstall = fn(&mut neural::Registry);
+
+static LINKED_FLOW_EXTENSION_INSTALLERS: LazyLock<Mutex<BTreeMap<String, LinkedFlowExtensionInstall>>> =
+    LazyLock::new(|| Mutex::new(BTreeMap::new()));
+
+/// 🔗 Registers an in-process installer for `extension_id` (e.g. `"brep"`, `"math"`).
+pub fn register_linked_flow_extension_installer(extension_id: impl Into<String>, install: LinkedFlowExtensionInstall) {
+    LINKED_FLOW_EXTENSION_INSTALLERS
+        .lock()
+        .expect("linked flow extension installers")
+        .insert(extension_id.into(), install);
+}
+
+
 /// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
 pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
     // Light/draw/brep operator packs are runtime-installable packaged extensions.
@@ -111,6 +127,10 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
 fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowExtension>) -> neural::Registry {
     let mut registry = neural::Registry::new();
     install_builtin_flow_extensions(&mut registry);
+    let linked = LINKED_FLOW_EXTENSION_INSTALLERS.lock().expect("linked flow extension installers").clone();
+    for install in linked.values() {
+        install(&mut registry);
+    }
     for entry in contributed.values() {
         register_contributed_manifest(&mut registry, &entry.plugin_id, &entry.manifest_json);
     }

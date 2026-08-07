@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** architect TypeScript package */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 class TestScript extends BundleScript {
   run(): void { console.log("[DEBUG] architect ts ok"); }
 }

@@ -47,3 +47,12 @@ pub mod panes {
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion 🔖️Manifest
+
+//#region 📚️Examples
+#[path = "."]
+pub mod examples {
+    #[path = "../../🗿️artifacts/🎪️playground/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_playground_demo;
+}
+//#endregion 📚️Examples
+

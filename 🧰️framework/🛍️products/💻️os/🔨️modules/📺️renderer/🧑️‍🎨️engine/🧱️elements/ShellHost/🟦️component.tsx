@@ -1704,6 +1704,11 @@ function FrameworkOsShellInner({
           .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
           .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
       );
+      {
+        const parsed = JSON.parse(contributionsJson) as Array<{ pluginId: string; contribution?: { kind?: string; extensionId?: string; appId?: string } }>;
+        const flowExt = parsed.filter((entry) => entry.contribution?.kind === "flowExtension");
+        console.log("[DEBUG] contributionsJson flowExtension count", flowExt.length, "total", parsed.length, "apps", flowExt.map((e) => `${e.pluginId}->${e.contribution?.appId}/${e.contribution?.extensionId}`));
+      }
       // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — mirrors
       // `contributionsJson` above exactly (same opt-in hint-push shape below), because the space app is
       // its own wasm component: `semio_framework_os::APP_REGISTRATIONS` (populated at native/test

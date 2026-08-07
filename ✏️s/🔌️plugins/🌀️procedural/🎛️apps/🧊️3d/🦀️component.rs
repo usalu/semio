@@ -7,7 +7,7 @@
 
 use crate::apps::procedural3d::commands::{eval, example, generation, graph, gumball, locale, selection, sun, view, widget};
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation};
-use crate::apps::procedural3d::modes::edit::windows::{flow, preview as edit_preview};
+use crate::apps::procedural3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
 use crate::apps::procedural3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use crate::apps::procedural3d::modes::{edit, generate};
 use crate::apps::procedural3d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -15,7 +15,7 @@ use crate::apps::procedural3d::terminology::procedural3d_labels;
 use crate::artifacts::procedural3d::engine::procedural3d_io;
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
-use flow::FlowEvalSession;
+use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
 use store::EngineHandles;
 use serde_json::Value;
@@ -76,11 +76,12 @@ semio_framework_plugin::app_commands! {
         "setContributions" as "contributions" => set_contributions::SetContributions,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
+        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
-use eval::{flow_eval_resolve, flow_eval_tick};
+use eval::{flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve};
 use example::set_active_example;
 use generation::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use graph::{graph_pointer_down, move_media_node, node_graph_edit, node_graph_hover, node_graph_select, node_graph_viewport, reorganize};
@@ -295,6 +296,10 @@ impl DocumentApp for Procedural3dPlayApp {
                 node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
             })),
+            "flowTessellateResolve" => Ok(Procedural3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve {
+                node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
+            })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -303,19 +308,19 @@ impl DocumentApp for Procedural3dPlayApp {
     }
 
     fn handle(command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation, Self::DraftOperation>, Fault> {
-        let mut session = FlowEvalSession::default();
-        command.dispatch(doc, cfg, &mut session)
+        with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
     fn pending_effects(doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
-        let mut session = FlowEvalSession::default();
-        let host = flow::flow_host_with_session(&doc.projection.fixture, &session);
-        if session.sync(&host) {
-            vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
-        } else {
-            Vec::new()
-        }
+        with_process_flow_eval_session(|session| {
+            let host = flow::flow_host_with_session(&doc.projection.fixture, session);
+            if session.sync(&host) {
+                vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+            } else {
+                Vec::new()
+            }
+        })
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>) -> UiNode {
@@ -323,10 +328,9 @@ impl DocumentApp for Procedural3dPlayApp {
         let config = cfg.projection;
         let labels = procedural3d_labels(config);
         let active_utility = config.active_utility_id.as_str();
-        let session = FlowEvalSession::default();
-        match body_key {
-            flow::PROCEDURAL_3D_PLAY_BODY_MAIN => flow::render(document, config, &session),
-            edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility),
+        with_process_flow_eval_session(|session| match body_key {
+            flow_window::PROCEDURAL_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
+            edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session, active_utility),
             generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::default()),
             form::PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
             generate_preview::PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, config, labels, active_utility),
@@ -334,14 +338,14 @@ impl DocumentApp for Procedural3dPlayApp {
             catalogue_panel::PROCEDURAL_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &config.selected_node_ids, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        })
     }
 
     fn window_measures(_doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let measures = edit_preview::preview_window_measures(config, procedural3d_action);
         HashMap::from([
-            (flow::PROCEDURAL_3D_PLAY_WINDOW_MAIN.to_string(), flow::window_measures(&config.lod_mode, procedural3d_action)),
+            (flow_window::PROCEDURAL_3D_PLAY_WINDOW_MAIN.to_string(), flow_window::window_measures(&config.lod_mode, procedural3d_action)),
             (edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), measures.clone()),
             (generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), measures),
         ])
@@ -381,7 +385,7 @@ pub fn create_procedural3d_app() -> App {
             .mode_def(generate::definition())
             .default_mode_id(edit::PROCEDURAL_3D_PLAY_MODE_EDIT)
             .mode_layout(generate::PROCEDURAL_3D_PLAY_MODE_GENERATE, generate::PROCEDURAL_3D_PLAY_LAYOUT_GENERATE)
-            .window_kind_def(flow::definition())
+            .window_kind_def(flow_window::definition())
             .window_kind_def(edit_preview::definition())
             .window_kind_def(generations::definition())
             .window_kind_def(form::definition())
@@ -647,7 +651,7 @@ mod tests {
     fn the_manifest_stitches_every_taxonomy_node() {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let json = serde_json::to_string(&create_procedural3d_app().definition).expect("app definition json");
-        for id in [flow::PROCEDURAL_3D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW] {
+        for id in [flow_window::PROCEDURAL_3D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
         for id in [edit::PROCEDURAL_3D_PLAY_MODE_EDIT, generate::PROCEDURAL_3D_PLAY_MODE_GENERATE] {

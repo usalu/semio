@@ -29,7 +29,7 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
     "compose/client/bin/engine",
     "compose/client/bin/gql",
@@ -61,6 +61,7 @@
     "🧰️framework/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg"
   ],
   "engines": {
     "bun": ">=1.2.0"
@@ -169,7 +170,8 @@
     "purge": "bun ./📜️script.ts purge",
     "query:build": "bun nx run @semio-tech/compose-query:build",
     "query:test": "bun nx run @semio-tech/compose-query:test",
-    "query:wasm": "bun ./📜️script.ts query wasm"
+    "query:wasm": "bun ./📜️script.ts query wasm",
+    "wasm:flow-core": "nx run semio-framework-os-flow-core:wasm"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

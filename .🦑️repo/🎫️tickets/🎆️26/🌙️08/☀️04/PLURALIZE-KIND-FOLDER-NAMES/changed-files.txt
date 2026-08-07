@@ -6482,15 +6482,15 @@ D  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/📜�
 D  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go/go.mod
 D  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🧩️vscode/⚡️implementation/🟦️typescript/📋️project.json
 D  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🧩️vscode/⚡️implementation/🟦️typescript/📜️script.ts
-D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🐹️go/📋️project.json
-D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🐹️go/📜️script.ts
-D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📋️project.json
-D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📜️script.ts
-D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts
+D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🐹️go/📋️project.json
+D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🐹️go/📜️script.ts
+D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📋️project.json
+D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📜️script.ts
+D  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts
 D  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🐹️go/go.mod
 D  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript/📋️project.json
 D  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript/📜️script.ts
-D  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️lib/⚡️implementation/🟦️typescript/🟦️worker.ts
+D  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️library/⚡️implementation/🟦️typescript/🟦️worker.ts
 D  🧰️framework/🛍️product/🦑️repo/🪝️hook/post-commit
 D  🧰️framework/🛍️product/🦑️repo/🪝️hook/prepare-commit-msg
 D  🧰️framework/🛍️product/🦑️repo/🪝️hooks/post-checkout
@@ -7070,23 +7070,23 @@ R  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶�
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶️sqlite/⚡️implementation/🟦️typescript/package.json -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/⚡️implementations/🟦️typescript/package.json
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶️sqlite/⚡️implementation/🟦️typescript/🛢️checkpoint.sql -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/⚡️implementations/🟦️typescript/🛢️checkpoint.sql
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🪶️sqlite/⚡️implementation/🟦️typescript/🛢️schema.sql -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/⚡️implementations/🟦️typescript/🛢️schema.sql
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/LICENSE.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/LICENSE.md
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🐹️go/AGENTS.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go/AGENTS.md
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🐹️go/README.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go/README.md
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🐹️go/go.mod -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go/go.mod
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🐹️go/main.go -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go/main.go
-A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go/📋️project.json
-A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go/📜️script.ts
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/README.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/README.md
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/package.json -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/package.json
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/tsconfig.json -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/tsconfig.json
-A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📋️project.json
-A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📜️script.ts
-A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🟨️nx-emoji-project-plugin.mjs -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟨️nx-emoji-project-plugin.mjs
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🟨️nx-plugin.mjs -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟨️nx-plugin.mjs
-RM 🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🧪️index.test.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🧪️index.test.ts
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/📜️script.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📜️script.ts
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/LICENSE.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/LICENSE.md
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🐹️go/AGENTS.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go/AGENTS.md
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🐹️go/README.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go/README.md
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🐹️go/go.mod -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go/go.mod
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🐹️go/main.go -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go/main.go
+A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go/📋️project.json
+A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🐹️go/📜️script.ts
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/README.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/README.md
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/package.json -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/package.json
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/tsconfig.json -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/tsconfig.json
+A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📋️project.json
+A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📜️script.ts
+A  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/📦️index.ts
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/🟨️nx-emoji-project-plugin.mjs -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟨️nx-emoji-project-plugin.mjs
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/🟨️nx-plugin.mjs -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟨️nx-plugin.mjs
+RM 🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/🧪️index.test.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🧪️index.test.ts
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/📜️script.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📜️script.ts
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🔩️native/🥾️bootstrap/⌨️script.ps1 -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/⌨️script.ps1
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🔩️native/🥾️bootstrap/⌨️script.sh -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/⌨️script.sh
 A  🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/go.mod
@@ -7117,8 +7117,8 @@ R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛�
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript/🟦️typescript/tsconfig.json -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🟦️typescript/🟦️typescript/tsconfig.json
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript/🟦️typescript/🟦️next.config.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🟦️typescript/🟦️typescript/🟦️next.config.ts
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript/🟦️typescript/🧪️vitest.config.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🟦️typescript/🟦️typescript/🧪️vitest.config.ts
-R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts
-A  🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️lib/⚡️implementations/🟦️typescript/🟦️worker.ts
+R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/📚️library/⚡️implementation/🟦️typescript/📦️index.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/⚡️implementations/🟦️typescript/📦️index.ts
+A  🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/⚡️implementations/🟦️typescript/🟦️worker.ts
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🧬️schema/🐘️postgres/AGENTS.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🧬️schema/🐘️postgres/AGENTS.md
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🧬️schema/🐘️postgres/README.md -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🧬️schema/🐘️postgres/README.md
 R  🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🧬️schema/🐘️postgres/🛢️schema.sql -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🧬️schema/🐘️postgres/🛢️schema.sql

@@ -43,8 +43,8 @@
 TOTAL 201
 
 === KEY FILES ===
-taxonomy.json [ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🔣️taxonomy.json" ]
-discovery.ts [ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟦️discovery.ts" ]
+taxonomy.json [ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🔣️taxonomy.json" ]
+discovery.ts [ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟦️discovery.ts" ]
 TEMPLATE.md []
 TEMPLATE-GO.md []
 TEMPLATE-TS.md []

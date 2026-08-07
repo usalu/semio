@@ -60,10 +60,10 @@ Hint: run the command with --verbose for more details.
 1366 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
                                      ^
 error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-core:test-quick exited with status 1
-      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
       at run (/Users/ueli/Documents/semio/📜️script.ts:575:5)
-      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
-      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️library/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
       at /Users/ueli/Documents/semio/📜️script.ts:2915:11
 
 Bun v1.3.14 (macOS arm64)

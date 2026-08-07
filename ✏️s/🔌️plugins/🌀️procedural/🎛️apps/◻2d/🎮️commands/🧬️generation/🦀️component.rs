@@ -11,7 +11,7 @@ use crate::artifacts::procedural2d::op::Procedural2dOperation;
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::FlowEvalSession;
-use playbook::{apply_generation_operation, generation_operations, select_generation};
+use flow::playbook::{apply_generation_operation, generation_operations, select_generation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};

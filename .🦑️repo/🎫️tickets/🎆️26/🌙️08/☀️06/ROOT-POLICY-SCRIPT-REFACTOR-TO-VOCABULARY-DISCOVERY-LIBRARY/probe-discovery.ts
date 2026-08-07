@@ -1,6 +1,6 @@
 // 🔎️ Scratch probe (ticket 26/08/06/ROOT-POLICY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY):
 // prints what M1's discoverPackages/discoverOwners see today, to size the root-policy refactor.
-import { discoverPackages, discoverOwners, discoverPackageProblems, loadTaxonomy } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟦️discovery.ts";
+import { discoverPackages, discoverOwners, discoverPackageProblems, loadTaxonomy } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟦️discovery.ts";
 
 const root = process.cwd();
 const tax = loadTaxonomy();

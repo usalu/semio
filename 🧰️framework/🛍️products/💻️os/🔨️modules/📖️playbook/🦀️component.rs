@@ -586,7 +586,7 @@ pub mod generation_forms {
     pub fn initial_generation_values(spec: &PlaybookSpec) -> Map<String, Value> {
         let mut values = Map::new();
         for question in flatten_playbook_blocks(spec) {
-            values.insert(question.id.clone(), crate::dsl_value_to_json(default_value_for_block(question)));
+            values.insert(question.id.clone(), super::dsl_value_to_json(default_value_for_block(question)));
         }
         values
     }
@@ -864,7 +864,7 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
         if !is_block_visible(question, values) {
             return None;
         }
-        let value = values.get(&question.id).cloned().unwrap_or_else(|| crate::dsl_value_to_json(default_value_for_block(question)));
+        let value = values.get(&question.id).cloned().unwrap_or_else(|| super::dsl_value_to_json(default_value_for_block(question)));
         let field_id = format!("generate.form.{}", question.id);
         let on_change = || {
             generation_action(
@@ -1029,7 +1029,7 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
     #[cfg(test)]
     mod generation_forms_tests {
         use super::*;
-        use crate::{PlaybookBlock, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
+        use super::{PlaybookBlock, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
         fn sample_spec() -> PlaybookSpec {
             PlaybookSpec {
@@ -1202,7 +1202,7 @@ pub mod builder_kit {
     #[cfg(test)]
     mod builder_kit_tests {
         use super::*;
-        use crate::empty_playbook_projection;
+        use super::empty_playbook_projection;
 
         fn sample_config() -> PlaybookBuilderConfig {
             PlaybookBuilderConfig { action_namespace: "playbook-play", controller_id: "playbook-play", labels: PLAYBOOK_BUILDER_LABELS_EN }
@@ -1229,7 +1229,7 @@ pub mod builder_kit {
 //#endregion 🔖️BuilderKit
 
 //#region 🔖️WasmBridge
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "playbook-document-wasm"))]
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
