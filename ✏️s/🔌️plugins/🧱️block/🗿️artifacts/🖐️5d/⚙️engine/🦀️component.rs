@@ -155,7 +155,7 @@ pub fn block5d_io() -> semio_framework_plugin::AppIo {
 mod tests {
     use super::*;
     use crate::artifacts::block5d::Block5dGripTemplate;
-    use crate::core::BlockKindIdentity;
+    use crate::BlockKindIdentity;
 
     #[test]
     fn empty_definition_matches_default() {

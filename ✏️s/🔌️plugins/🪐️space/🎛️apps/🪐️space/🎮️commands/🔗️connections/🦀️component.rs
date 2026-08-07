@@ -50,7 +50,7 @@ mod tests {
     use super::*;
     use crate::apps::space::testkit::{apply_operations, studio_emit};
     use crate::apps::space::SpaceCommand;
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
     use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, OsMediaFormat};
 
     #[test]

@@ -1,0 +1,28 @@
+[
+  {
+    "kind": "DocumentCodec",
+    "typeName": "DocumentPackFiles"
+  },
+  {
+    "kind": "OpCodec",
+    "typeName": "does",
+    "forced": true
+  },
+  {
+    "kind": "OpCodec",
+    "typeName": "SpaceHost"
+  },
+  {
+    "kind": "DocumentCodec",
+    "typeName": "SpaceHost"
+  },
+  {
+    "kind": "DocumentCodec",
+    "typeName": "DemoDiff",
+    "forced": true
+  },
+  {
+    "kind": "DocumentCodec",
+    "typeName": "TimestampedOperation"
+  }
+]

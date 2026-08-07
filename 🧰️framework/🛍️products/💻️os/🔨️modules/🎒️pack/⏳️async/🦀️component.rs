@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use crate::os_pack::core::{ByteRange, PackError};
+use crate::os_pack::{ByteRange, PackError};
 
 /// 📥️ A random-access read source reachable only through `async`, e.g. a network range-fetcher
 /// (see `pack_http`) or a browser `fetch`/worker bridge. Deliberately runtime-neutral: nothing

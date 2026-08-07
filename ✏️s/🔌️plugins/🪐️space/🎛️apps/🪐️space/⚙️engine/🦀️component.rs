@@ -217,7 +217,7 @@ pub fn os_parameter_types_compatible_shim(parameter: &WorkflowParameter, target:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
     use serde_json::json;
 
     #[test]

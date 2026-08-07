@@ -12,22 +12,22 @@ import * as ResizablePrimitive from "react-resizable-panels";
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
-// 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+// 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { CanvasSkeleton } from "../🦴Skeletons/🟦️component.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../☑️Select/🟦️component.tsx";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup, type ResizableJoinCornerResizeHandler, type ResizableJoinCornerSpec, type ResizableJoinEdgeSide } from "../↕️Resizable/🟦️component.tsx";
 import { Navbar, type NavbarItem } from "../🔝Navbar/🟦️component.tsx";
 import { Window, type WindowConfig } from "../🪟Window/🟦️component.tsx";
 import { type TreeDragAndDropController } from "../🪵Tree/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-import { interactiveHoverClass, interactiveActiveFillClass, glassClass, surfaceClass, shellFloorFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
+import { interactiveHoverClass, interactiveActiveFillClass, glassClass, surfaceClass, shellFloorFillClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { modeDockTabClassName } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
-import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { modeDockTabClassName } from "../🏷️ClassNames/🟦️component.tsx";
+import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🏷️Label/🟦️component.tsx";
+import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🐚️ShellScope/🟦️component.tsx";
+import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 import { createEvenWindowLayout, focusActiveSearchInput, modeDockChromeGridPlacement, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChromeSilhouetteBorder, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, windowBodyFrameActiveClass, windowBodyFrameClass, windowCapFrameActiveClass, windowCapFrameClass, windowControlsCapActiveClass, windowControlsCapActiveSplitClass, windowControlsCapClass, windowGapFrameActiveClass, windowGapFrameClass, type ModeDockChromeGrid, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type UiStatus, type PanelGhostValue } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { CloseIcon, Maximize2Icon, Minimize2Icon, Icon, type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";

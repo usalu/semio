@@ -4,7 +4,7 @@ pub mod add_representation {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
     use crate::artifacts::block3d::op::Block3dOperation;
     use crate::artifacts::block3d::Block3dDefinition;
-    use crate::core::BlockRepresentation;
+    use crate::BlockRepresentation;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 

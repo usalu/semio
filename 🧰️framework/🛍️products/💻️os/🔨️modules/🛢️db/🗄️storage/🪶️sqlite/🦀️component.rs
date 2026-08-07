@@ -37,7 +37,7 @@
 //#region 🔖️SqliteStorage
 #[cfg(not(target_arch = "wasm32"))]
 mod sqlite_storage {
-    use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+    use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
     use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
     //#region 🔖️Limits
     /// @emoji 🛡️ Ceiling on any single blob this crate reads into memory in one call — validated
-    /// via `db_core::check_len` BEFORE the read buffer is allocated. Mirrors
+    /// via `check_len` BEFORE the read buffer is allocated. Mirrors
     /// `db_storage::MemoryStorage`/`FsStorage`'s own `MAX_READ_BYTES` choice (same number, kept
     /// in lock-step deliberately: a caller swapping backends should hit the same ceiling on
     /// every backend).

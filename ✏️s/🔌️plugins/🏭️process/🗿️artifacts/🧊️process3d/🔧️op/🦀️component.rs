@@ -130,7 +130,7 @@ fn process_step_patch_from_dsl(patch: ProcessStepPatchDsl) -> ProcessStepPatch {
 /// keyworded variants — mirroring `imperative_core::ImperativeOperationDsl`'s identical fix for the
 /// same foreign-`CollectionOperation` problem — and converts at the `store::OpText` boundary only;
 /// `Process3dOperation` itself, and every consumer matching on it, is completely untouched.
-#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum Process3dOperationDsl {
     StepsAdd {
         index: usize,
@@ -183,9 +183,8 @@ enum Process3dOperationDsl {
         document: Process3dDocument,
     },
 }
-
-//#region 🔖️OpCodec
-/// 🎞️ Handcrafted OpText (P6).
+//#region 🔖️HandcraftedOpCodecs
+/// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Process3dOperationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
@@ -210,50 +209,17 @@ impl protocol::OpText for Process3dOperationDsl {
     }
 }
 
-/// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for Process3dOperationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        dsl::variants_binary::decode_op(bytes)
     }
 }
-//#endregion 🔖️OpCodec
+//#endregion 🔖️HandcraftedOpCodecs
+
+
 
 
 fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperationDsl {
@@ -299,7 +265,7 @@ impl OpText for Process3dOperation {
 }
 
 /// ⚡️ Binary mirror of the `OpText` bridge above — `Process3dOperationDsl` already derives
-/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+/// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for Process3dOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         process3d_operation_to_dsl(self).encode_op()

@@ -8,14 +8,14 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "../⌨️Command/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
-import { useIdLabel, useLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️component.tsx";
 import { CheckIcon } from "../🔣Icons/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🎛️ButtonGroup/🟦️component.tsx";
 // #endregion 🔌️Adapters

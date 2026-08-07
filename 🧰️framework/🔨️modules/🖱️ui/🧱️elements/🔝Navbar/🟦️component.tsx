@@ -8,12 +8,12 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../🧱️elements/☑️Select/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-import { shellFloorPaints, shellFloorFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useSurface, SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
-import { Label, useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
+import { shellFloorPaints, shellFloorFillClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useSurface, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
+import { Label, useLabel } from "../🏷️Label/🟦️component.tsx";
 import { NavbarTrailingFullscreenSlot, type IconName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Icon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

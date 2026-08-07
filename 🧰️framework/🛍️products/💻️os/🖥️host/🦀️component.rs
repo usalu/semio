@@ -4373,10 +4373,10 @@ pub use crate::workflow_kernel::{
     WorkflowPosition, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 
-//#region 🔖️PluginBundleInstallerShim
+//#region 🔖️PluginInstallerShim
 // 🛡️ Fallback installer stub inlined after the external shim path went missing during crate consolidation.
 mod plugin_bundle_installer_shim_inline {
     #[allow(dead_code)]
     pub fn install_noop() {}
 }
-//#endregion 🔖️PluginBundleInstallerShim
+//#endregion 🔖️PluginInstallerShim

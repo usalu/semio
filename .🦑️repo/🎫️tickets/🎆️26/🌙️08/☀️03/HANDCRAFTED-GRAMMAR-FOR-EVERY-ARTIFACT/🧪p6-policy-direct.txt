@@ -1,0 +1,45 @@
+type object true [
+  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"
+]
+total 521 handcrafted 4
+{
+  "handcrafted-grammar/empty-example": 4,
+}
+[
+  {
+    id: "empty-example-🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio",
+    summary: "\"🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio\" is an empty/envelope-only pack/spr example (32 bytes ≤ 64)",
+    kind: "handcrafted-grammar/empty-example",
+    scope: "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio",
+    priority: "high",
+    reason: "Example pack/spr fixtures must include a real payload, not just the SEM envelope.",
+    solution: "Seed a non-empty example at 🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio, then remove it from POLICY_EMPTY_EXAMPLE_EXEMPTIONS.",
+  },
+  {
+    id: "empty-example-🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio",
+    summary: "\"🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio\" is an empty/envelope-only pack/spr example (31 bytes ≤ 64)",
+    kind: "handcrafted-grammar/empty-example",
+    scope: "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio",
+    priority: "high",
+    reason: "Example pack/spr fixtures must include a real payload, not just the SEM envelope.",
+    solution: "Seed a non-empty example at 🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio, then remove it from POLICY_EMPTY_EXAMPLE_EXEMPTIONS.",
+  },
+  {
+    id: "empty-example-🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio",
+    summary: "\"🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio\" is an empty/envelope-only pack/spr example (33 bytes ≤ 64)",
+    kind: "handcrafted-grammar/empty-example",
+    scope: "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio",
+    priority: "high",
+    reason: "Example pack/spr fixtures must include a real payload, not just the SEM envelope.",
+    solution: "Seed a non-empty example at 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio, then remove it from POLICY_EMPTY_EXAMPLE_EXEMPTIONS.",
+  },
+  {
+    id: "empty-example-🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio",
+    summary: "\"🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio\" is an empty/envelope-only pack/spr example (32 bytes ≤ 64)",
+    kind: "handcrafted-grammar/empty-example",
+    scope: "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio",
+    priority: "high",
+    reason: "Example pack/spr fixtures must include a real payload, not just the SEM envelope.",
+    solution: "Seed a non-empty example at 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio, then remove it from POLICY_EMPTY_EXAMPLE_EXEMPTIONS.",
+  }
+]

@@ -11,7 +11,7 @@ extern crate infinite_canvas as infinite_board_port_directed_dag;
 //! 🕳️ Deviation from the usual per-app-plugin shape: `s` is the OS host plugin bundling BOTH the
 //! `🏠️home` launcher and `🪐️space` studio apps, so it does NOT use the `semio_plugin!` macro (that
 //! macro assumes one document schema and one app-registration path per plugin) — it keeps the manual
-//! `PluginBundle` builder + `plugin_exports!` invocation the pre-migration bundle crate already used.
+//! `Plugin` builder + `plugin_exports!` invocation the pre-migration bundle crate already used.
 //! `🪐️space`'s own app owns no document type at all (wraps the kernel-owned `WorkflowDocument`), so
 //! there is only ONE `🗿️artifacts` node in this crate (`🏠️home`) — see `apps::space::🦀️component.rs`'s
 //! module doc for the full rationale.
@@ -28,14 +28,9 @@ extern crate semio_framework_os_kernel as vcs;
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 
-//#region 🫀️Core
-#[path = "."]
-pub mod core {
-    #[path = "../../🫀️core/🦀️component.rs"]
-    mod component;
-    pub use component::*;
-}
-//#endregion 🫀️Core
+#[path = "../../🦀️component.rs"]
+mod space_shared;
+pub use space_shared::*;
 
 //#region 🗿️Artifacts
 #[path = "."]
@@ -211,9 +206,9 @@ fn register_s_exports() {
 //#endregion 🔖️DocumentCodecs
 
 //#region 🔖️Manifest
-fn bundle() -> semio_framework_plugin::PluginBundle {
+fn bundle() -> semio_framework_plugin::Plugin {
     register_s_exports();
-    semio_framework_plugin::PluginBundle::new("s", "S Studio", "0.1.0")
+    semio_framework_plugin::Plugin::new("s", "S Studio", "0.1.0")
         .local_backbone_storage()
         .register_document_app::<apps::home::HomeApp>(apps::home::create_home_app())
         .register_document_app::<apps::space::SpaceApp>(apps::space::create_space_app())

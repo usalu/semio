@@ -3,7 +3,7 @@
 //!
 //! `protocol::OpText`/`protocol::OpBinary` for [`ShootingOperation`] can't be derived directly on the
 //! enum (`Assets`/`Shots`/`SavedCameras` each wrap a foreign generic `protocol::CollectionOperation<..>`
-//! — orphan rule, and not the tagged-enum shape `#[derive(dsl::DslOps)]` needs anyway), so this file also
+//! — orphan rule, and not the tagged-enum shape `#[derive(dsl::DslEnum)]` needs anyway), so this file also
 //! owns the private `ShootingOperationDsl` mirror that flattens each `CollectionOperation` variant into
 //! its own DSL-facing operation variant — the `imperative::ImperativeOperationDsl` idiom. `📡️spr`'s
 //! `encode_op`/`decode_op` are thin forwards onto the `OpBinary` impl defined here.
@@ -194,7 +194,7 @@ enum ShootingSavedCameraNode {
 
 /// 📄️ Op-local mirror of `ShootingFixture` for `SetFixture`'s `#[dsl(block)]` payload — reuses the
 /// derive-generated shape, independent of the artifact's own fixture DSL mirror.
-#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(extension = "shooting")]
 #[dsl(layout = "lines")]
 struct ShootingFixtureDsl {
@@ -210,14 +210,11 @@ struct ShootingFixtureDsl {
     #[dsl(table)]
     saved_cameras: Vec<ShootingSavedCamera>,
 }
-
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for ShootingFixtureDsl {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
+    const EXTENSION: &'static str = "shooting";
+    fn envelope_id() -> &'static str { "shooting" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -236,13 +233,11 @@ impl store::DocumentDsl for ShootingFixtureDsl {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
-        )
-        .expect("valid envelope_id");
+        ).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::DocumentPack for ShootingFixtureDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
@@ -250,12 +245,12 @@ impl store::DocumentPack for ShootingFixtureDsl {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
@@ -266,11 +261,11 @@ impl store::DocumentPack for ShootingFixtureDsl {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+
 
 
 fn shooting_fixture_to_dsl(fixture: &ShootingFixture) -> ShootingFixtureDsl {
@@ -299,11 +294,11 @@ fn shooting_fixture_from_dsl(dsl_fixture: ShootingFixtureDsl) -> ShootingFixture
 
 /// ⚡️ Local mirror of `ShootingOperation` — the real enum's `Assets`/`Shots`/`SavedCameras` variants
 /// each wrap a single `protocol::CollectionOperation<..>` field, a foreign generic type (orphan rule:
-/// can't `impl dsl::DslField` for it here) that also isn't the tagged-enum shape `#[derive(dsl::DslOps)]`
+/// can't `impl dsl::DslField` for it here) that also isn't the tagged-enum shape `#[derive(dsl::DslEnum)]`
 /// needs anyway — so each `CollectionOperation` variant (`Add`/`Remove`/`Move`/`Patch`) is flattened
 /// into its own DSL-facing operation variant instead, exactly the `imperative::ImperativeOperationDsl`
 /// idiom.
-#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 #[allow(clippy::large_enum_variant, reason = "mirror-only enum used solely at the print_op/parse_op boundary, never stored or passed around")]
 enum ShootingOperationDsl {
     AssetsAdd {
@@ -407,9 +402,8 @@ enum ShootingOperationDsl {
         fixture: ShootingFixtureDsl,
     },
 }
-
-//#region 🔖️OpCodec
-/// 🎞️ Handcrafted OpText (P6).
+//#region 🔖️HandcraftedOpCodecs
+/// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for ShootingOperationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
@@ -434,50 +428,17 @@ impl protocol::OpText for ShootingOperationDsl {
     }
 }
 
-/// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for ShootingOperationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        dsl::variants_binary::decode_op(bytes)
     }
 }
-//#endregion 🔖️OpCodec
+//#endregion 🔖️HandcraftedOpCodecs
+
+
 
 
 //#region 🔖️OpCodec
@@ -628,7 +589,7 @@ impl protocol::OpText for ShootingOperation {
 }
 
 /// 🎞️ Binary mirror of the `OpText` bridge above — `ShootingOperationDsl` already derives `OpBinary`
-/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+/// via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for ShootingOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         shooting_operation_to_dsl(self).encode_op()

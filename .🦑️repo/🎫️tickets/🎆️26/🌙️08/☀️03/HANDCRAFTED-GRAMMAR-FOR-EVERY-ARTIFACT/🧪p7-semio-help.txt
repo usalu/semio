@@ -1,0 +1,18 @@
+error: package(s) `semio-framework-os-kernel-semio` not found in workspace `/Users/ueli/Documents/semio`
+1371 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1372 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1373 |  */
+1374 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1375 |   const status = runCmdInternal(cmd, args, opts);
+1376 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: cargo run -p semio-framework-os-kernel-semio --bin semio -- verify --help exited with status 101
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:1376:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:1318:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:815:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:850:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:4678:11
+
+Bun v1.3.14 (macOS arm64)
+unknown command "help"
+usage: bun ./📜️script.ts <os|semio|nx|setup|start|dev|generate|lint|verify|format|test|build|cpp|publish|purge|query|micro-commit|commit> [args…]

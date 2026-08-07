@@ -1,7 +1,7 @@
 //! ⚙️ ISO 16757 app — headless compute (constitutional: engine).
 
 use crate::artifacts::iso16757::{CatalogueValue, Document};
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity, QuantityKind};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity, QuantityKind};
 use std::collections::{HashMap, HashSet};
 
 // #region Part1
@@ -623,12 +623,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
 /// the headless `NormHost` session every norm app drives.
 pub struct Iso16757Family;
 
-impl crate::core::NormFamily for Iso16757Family {
+impl crate::document::NormFamily for Iso16757Family {
     type Document = Document;
     type Operation = crate::artifacts::iso16757::op::Operation;
 
-    fn family_id() -> crate::core::NormFamilyId {
-        crate::core::NormFamilyId::Iso16757
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::Iso16757
     }
 
     fn evaluate(document: &Document) -> CheckReport {
@@ -636,13 +636,13 @@ impl crate::core::NormFamily for Iso16757Family {
     }
 }
 
-pub type Host = crate::core::NormHost<Iso16757Family>;
+pub type Host = crate::document::NormHost<Iso16757Family>;
 // #endregion 🔖️Session
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::CheckStatus;
+    use crate::document::CheckStatus;
     use part_5::ScriptRuntime;
     use std::collections::BTreeMap;
 
@@ -1142,7 +1142,7 @@ mod tests {
         let doc = Document::default();
         let host = Host::from_document(doc);
         assert!(!host.report().checks.is_empty());
-        assert_eq!(<Iso16757Family as crate::core::NormFamily>::family_id(), crate::core::NormFamilyId::Iso16757);
+        assert_eq!(<Iso16757Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Iso16757);
     }
 }
 

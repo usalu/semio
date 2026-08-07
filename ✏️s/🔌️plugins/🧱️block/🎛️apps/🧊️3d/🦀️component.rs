@@ -22,7 +22,7 @@ use crate::apps::block3d::panels::{document as document_panel, inspection as ins
 use crate::apps::block3d::terminology::block3d_labels;
 use crate::artifacts::block3d::op::Block3dOperation;
 use crate::artifacts::block3d::{artifact_kind, Block3dDefinition, BLOCK_3D_SCHEMA};
-use crate::core::BlockCamera3d;
+use crate::BlockCamera3d;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     UiNode, UtilityDefinition,

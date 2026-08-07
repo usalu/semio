@@ -1340,7 +1340,7 @@ mod input;
 mod log;
 #[path = "../../../../🧱️elements/📊Table/⌨️component.rs"]
 mod table;
-#[path = "../../../../🧱️elements/🫀️core/🏷️Label/⌨️component.rs"]
+#[path = "../../../../🧱️elements/🏷️Label/⌨️component.rs"]
 mod label;
 #[path = "../../../../🧱️elements/➖Divider/⌨️component.rs"]
 mod divider;

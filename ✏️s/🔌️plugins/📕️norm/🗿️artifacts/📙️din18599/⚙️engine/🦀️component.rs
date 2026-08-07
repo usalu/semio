@@ -4,7 +4,7 @@ use crate::artifacts::din16798::engine::part_3::residential_ventilation_rate;
 use crate::artifacts::din18599::{BalancingInputs, Document, MonthlyClimate, UseClass};
 use crate::artifacts::din4108::engine::part_2::{total_resistance, u_value_from_resistance, Layer};
 use crate::artifacts::din4108::engine::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Shared
@@ -202,8 +202,8 @@ pub mod part_1 {
         let q_p = aggregate_primary_energy_kwh(&final_energy_breakdown(inputs));
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-1", "§6", "6.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, q_p),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.reference_q_p_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, q_p),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.reference_q_p_kwh),
             "primary energy aggregation Q_p vs. reference building target",
             AnnexChoice::De,
         ))
@@ -224,8 +224,8 @@ pub mod part_2 {
         let value = transmission_losses_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-2", "§8", "8.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
             "transmission losses Q_T",
             AnnexChoice::De,
         ))
@@ -246,8 +246,8 @@ pub mod part_3 {
         let value = ventilation_losses_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-3", "§7", "7.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
             "ventilation losses Q_V",
             AnnexChoice::De,
         ))
@@ -268,8 +268,8 @@ pub mod part_4 {
         let value = internal_gains_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-4", "§6", "6.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh * 2.0),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh * 2.0),
             "internal gains Q_I",
             AnnexChoice::De,
         ))
@@ -290,8 +290,8 @@ pub mod part_5 {
         let value = solar_gains_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-5", "§6", "6.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh * 2.0),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh * 2.0),
             "solar gains Q_S",
             AnnexChoice::De,
         ))
@@ -310,7 +310,7 @@ pub mod part_6 {
 
     pub fn check(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
         let value = system_losses_kwh(inputs);
-        Ok(CheckResult::from_utilization(ClauseId::new("DIN V 18599-6", "§8", "8.1"), Quantity::new(crate::core::QuantityKind::Energy, value), Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh), "system losses", AnnexChoice::De))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN V 18599-6", "§8", "8.1"), Quantity::new(crate::document::QuantityKind::Energy, value), Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh), "system losses", AnnexChoice::De))
     }
 }
 // #endregion 🔖️Part6
@@ -328,8 +328,8 @@ pub mod part_7 {
         let value = net_heating_demand_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-7", "§9", "9.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
             "net heating demand Q_H",
             AnnexChoice::De,
         ))
@@ -354,8 +354,8 @@ pub mod part_8 {
         let value = cooling_demand_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-8", "§10", "10.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
             "cooling demand Q_C",
             AnnexChoice::De,
         ))
@@ -376,8 +376,8 @@ pub mod part_9 {
         let value = dhw_demand_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-9", "§11", "11.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
             "DHW demand Q_W",
             AnnexChoice::De,
         ))
@@ -398,8 +398,8 @@ pub mod part_10 {
         let value = primary_energy_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-10", "§12", "12.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
             "primary energy Q_P",
             AnnexChoice::De,
         ))
@@ -420,8 +420,8 @@ pub mod part_11 {
         let value = automation_factor(inputs);
         Ok(CheckResult::from_minimum(
             ClauseId::new("DIN V 18599-11", "§7", "7.1"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, value),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, 0.85),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, value),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, 0.85),
             "building automation factor",
             AnnexChoice::De,
         ))
@@ -443,8 +443,8 @@ pub mod part_12 {
         let value = tabular_primary_energy_kwh(inputs);
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN V 18599-12", "§4", "4.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, value),
-            Quantity::new(crate::core::QuantityKind::Energy, inputs.annual_limit_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
             "tabular method reference",
             AnnexChoice::De,
         ))
@@ -479,7 +479,7 @@ pub fn check_primary_energy(inputs: &BalancingInputs) -> Result<CheckResult, Nor
 pub fn evaluate(document: &Document) -> CheckReport {
     balance_annual(document).unwrap_or_else(|err| {
         let mut report = CheckReport::default();
-        report.push(CheckResult::from_utilization(ClauseId::new("DIN V 18599", "input", "1"), Quantity::new(crate::core::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::core::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
+        report.push(CheckResult::from_utilization(ClauseId::new("DIN V 18599", "input", "1"), Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
         report
     })
 }
@@ -488,7 +488,7 @@ pub struct DinV18599Family;
 
 impl NormFamily for DinV18599Family {
     type Document = Document;
-    type Operation = crate::core::SetDocumentOperation<Document>;
+    type Operation = crate::document::SetDocumentOperation<Document>;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinV18599

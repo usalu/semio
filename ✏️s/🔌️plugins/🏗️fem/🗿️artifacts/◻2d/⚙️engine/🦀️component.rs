@@ -5,14 +5,14 @@
 
 use crate::artifacts::fem2d::engine::meshing::{area_load_nodal_loads, build_nodes_and_elements, self_weight_nodal_loads, GRAVITY_G};
 use crate::artifacts::fem2d::{Fem2dDocument, FemLoad};
-use crate::core::{MemberUdl, NodalLoad, Support};
+use crate::model::{MemberUdl, NodalLoad, Support};
 use std::collections::HashMap;
 
 // #region 🔖️Register
 /// 🗂️ Registers `Fem2dDocument`'s pack↔dsl codec under `FEM_2D_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse fem2d documents without
 /// depending on its concrete `Projection`/`Operation` types. Reached from the plugin root's
-/// `semio_plugin!{ setup: … }` via `crate::core::register_all_engines`.
+/// `semio_plugin!{ setup: … }` via `crate::model::register_all_engines`.
 pub fn register() {
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem2d::Fem2dPlayApp>(crate::artifacts::fem2d::FEM_2D_SCHEMA);
@@ -84,7 +84,7 @@ pub fn empty_fem2d_projection() -> Fem2dDocument {
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document port pair
 /// (`fem.2d` × 2D-Vector) plus `geometry:in` (importing an externally authored 2D outline as a new
 /// `FemRegion` — see `crate::apps::fem2d::import_media`) and `results:out` (every load case/combination's
-/// solved `crate::core::StaticResult`, pinned to the `computation.fem2d` artifact kind declared in
+/// solved `crate::model::StaticResult`, pinned to the `computation.fem2d` artifact kind declared in
 /// `crate::artifacts::fem2d::computation_artifact_kind` — see `crate::apps::fem2d::export_media`).
 pub fn fem2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
@@ -111,7 +111,7 @@ pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
     }
 }
 
-/// 🔌️ `results:out` — every load case/combination's solved `crate::core::StaticResult`, pinned to the
+/// 🔌️ `results:out` — every load case/combination's solved `crate::model::StaticResult`, pinned to the
 /// `computation.fem2d` artifact kind.
 pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
@@ -145,14 +145,14 @@ pub enum Fem2dError {
     #[error("mode index out of range: {0}")]
     ModeIndexOutOfRange(usize),
     #[error(transparent)]
-    Fem(#[from] crate::core::FemError),
+    Fem(#[from] crate::model::FemError),
 }
 // #endregion 🔖️Errors
 
 // #region 🔖️Solve
-/// 🌉️ Resolves a `Fem2dDocument` plus a named load case into a `crate::core::Model`, erroring
+/// 🌉️ Resolves a `Fem2dDocument` plus a named load case into a `crate::model::Model`, erroring
 /// descriptively on any dangling material/section/node/region reference.
-pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<crate::core::Model, Fem2dError> {
+pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<crate::model::Model, Fem2dError> {
     let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
 
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
@@ -176,26 +176,26 @@ pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<crate::core::Mo
         nodal_loads.extend(self_weight_nodal_loads(doc, &regions));
     }
 
-    Ok(crate::core::Model { nodes, elements, supports, nodal_loads, member_loads })
+    Ok(crate::model::Model { nodes, elements, supports, nodal_loads, member_loads })
 }
 
 /// 🌉️ Frozen public entry point: solves a `Fem2dDocument`'s named load case for linear-static
 /// equilibrium. Signature is a contract consumed directly by the plugin host; do not rename or
 /// change it.
-pub fn fem2d_solve(doc: &Fem2dDocument, case_id: &str) -> Result<crate::core::StaticResult, String> {
+pub fn fem2d_solve(doc: &Fem2dDocument, case_id: &str) -> Result<crate::model::StaticResult, String> {
     let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
-    crate::core::solve_linear_static(&model).map_err(|e| e.to_string())
+    crate::model::solve_linear_static(&model).map_err(|e| e.to_string())
 }
 
 /// 🌉️ Richer entry point: resolves EVERY `doc.load_cases`/`doc.combinations` entry at once (regions
 /// meshed via the same `build_nodes_and_elements` resolution as `build_model`) and solves them all
-/// together via `crate::core::analyses::solve_multi_case` — self-weight honored per-case through
+/// together via `crate::analyses::solve_multi_case` — self-weight honored per-case through
 /// `doc.materials`' `rho` (see `self_weight_nodal_loads`'s doc for the `Tri3Cst` caveat), gravity
 /// fixed at `[0.0, -9.81, 0.0]`. Returns results keyed by case id ∪ combination id.
-pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, crate::core::StaticResult>, Fem2dError> {
+pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, crate::model::StaticResult>, Fem2dError> {
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
-    let model = crate::core::analyses::AnalysisModel { nodes, elements, supports };
+    let model = crate::analyses::AnalysisModel { nodes, elements, supports };
 
     let mut cases = Vec::with_capacity(doc.load_cases.len());
     for load_case in &doc.load_cases {
@@ -213,12 +213,12 @@ pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, crate::cor
                 }
             }
         }
-        cases.push(crate::core::analyses::LoadCase { id: load_case.id.clone(), nodal_loads, member_loads, self_weight: load_case.self_weight });
+        cases.push(crate::analyses::LoadCase { id: load_case.id.clone(), nodal_loads, member_loads, self_weight: load_case.self_weight });
     }
 
-    let combinations: Vec<crate::core::analyses::Combination> = doc.combinations.iter().map(|c| crate::core::analyses::Combination { id: c.id.clone(), terms: c.terms.iter().map(|t| (t.case_id.clone(), t.factor)).collect() }).collect();
+    let combinations: Vec<crate::analyses::Combination> = doc.combinations.iter().map(|c| crate::analyses::Combination { id: c.id.clone(), terms: c.terms.iter().map(|t| (t.case_id.clone(), t.factor)).collect() }).collect();
 
-    crate::core::analyses::solve_multi_case(&model, &cases, &combinations, [0.0, -GRAVITY_G, 0.0]).map_err(Fem2dError::from)
+    crate::analyses::solve_multi_case(&model, &cases, &combinations, [0.0, -GRAVITY_G, 0.0]).map_err(Fem2dError::from)
 }
 // #endregion 🔖️Solve
 
@@ -227,7 +227,7 @@ pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, crate::cor
 mod tests {
     use super::*;
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
-    use crate::core::{Dof, ElementResult};
+    use crate::model::{Dof, ElementResult};
 
     // #region 🔖️Io
     /// 🔌️ Wave-1's `required: true` unwired-input enforcement (`validate_edge_kinds`) lives in the run

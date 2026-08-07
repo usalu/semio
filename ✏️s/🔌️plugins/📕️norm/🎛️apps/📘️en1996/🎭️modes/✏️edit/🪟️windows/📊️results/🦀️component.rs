@@ -1,7 +1,7 @@
 //! 📊️ EN 1996 play app — the results window: every computed compliance check, one line each.
 
 use crate::artifacts::en1996::engine::En1996Family;
-use crate::core::NormHost;
+use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -12,13 +12,13 @@ pub const BODY_RESULTS: &str = "norm.en1996.play.results";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::en1996::create_en1996_app`.
 pub fn definition() -> WindowKindDefinition {
-    crate::core::app::window_definition(WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), BODY_RESULTS, "bar-chart-3")
+    crate::app_surface::window_definition(WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), BODY_RESULTS, "bar-chart-3")
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(host: &NormHost<En1996Family>) -> UiNode {
-    crate::core::app::render_report(host.report())
+    crate::app_surface::render_report(host.report())
 }
 //#endregion 🔖️Render
 

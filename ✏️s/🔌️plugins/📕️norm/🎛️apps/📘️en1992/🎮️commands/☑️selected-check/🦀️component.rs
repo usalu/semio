@@ -6,7 +6,7 @@
 
 use crate::artifacts::en1992::op::Operation;
 use crate::artifacts::en1992::Document;
-use crate::core::{NormConfig, NormConfigOperation};
+use crate::config::{NormConfig, NormConfigOperation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -14,14 +14,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "selected-check")]
 pub struct SetSelectedCheckIndex {
-    /// 👁️ `None` means "the first check" — the same fallback `crate::core::app::render_inspection` applies.
+    /// 👁️ `None` means "the first check" — the same fallback `crate::app_surface::render_inspection` applies.
     pub index: Option<u32>,
 }
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
 pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
-    crate::core::app::commit_selected_check_index(payload.index)
+    crate::app_surface::commit_selected_check_index(payload.index)
 }
 //#endregion 🔖️Handler
 

@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { Icon, type IconSource } from "../🔣Icons/🟦️component.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters

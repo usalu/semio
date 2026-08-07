@@ -8,10 +8,10 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
-import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { glassClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌐️Popover

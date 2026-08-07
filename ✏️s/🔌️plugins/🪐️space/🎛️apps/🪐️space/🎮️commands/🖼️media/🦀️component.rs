@@ -22,7 +22,7 @@ pub mod export_media {
         let projection = doc.projection;
         match projection.graph.nodes.iter().find(|row| row.id == payload.node_id) {
             Some(node) => {
-                crate::core::ensure_space_fixtures_registered();
+                crate::ensure_space_fixtures_registered();
                 let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
                 let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &workflow_parameter_bindings_to_os(&projection.parameter_bindings), &workflow_parameters_to_os(&projection.parameters));
                 let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
@@ -101,7 +101,7 @@ mod tests {
     use super::*;
     use crate::apps::space::testkit::{apply_config, studio_emit};
     use crate::apps::space::SpaceCommand;
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {

@@ -2,7 +2,10 @@
   "name": "@semio-tech/cad-extension-aec-building-structure-rust",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -18,6 +21,14 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts package",
         "forwardAllArgs": true
       }
     }

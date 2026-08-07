@@ -1,0 +1,166 @@
+{
+  "files": 80,
+  "removedRegions": 81,
+  "sample": [
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:TrinityGraphOperationDsl",
+        "OpBinary:TrinityGraphOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:GraphFixtureDsl",
+        "DocumentPack:GraphFixtureDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:RewriteRuleOperation",
+        "OpBinary:RewriteRuleOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:RewriteRuleModel",
+        "DocumentPack:RewriteRuleModel"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:RemodelOperation",
+        "OpBinary:RemodelOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:RemodelProjection",
+        "DocumentPack:RemodelProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:RasterOperation",
+        "OpBinary:RasterOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:RasterProjection",
+        "DocumentPack:RasterProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Process3dOperationDsl",
+        "OpBinary:Process3dOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Process3dDocument",
+        "DocumentPack:Process3dDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:BalancingInputs",
+        "DocumentPack:BalancingInputs"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    }
+  ]
+}

@@ -7,10 +7,10 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { type NavbarItem } from "../🔝Navbar/🟦️component.tsx";
-import { shellFloorPaints, shellFloorFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useSurface, SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { shellFloorPaints, shellFloorFillClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useSurface, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎮️Footer

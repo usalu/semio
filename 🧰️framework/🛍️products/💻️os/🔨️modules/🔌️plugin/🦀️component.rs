@@ -1618,6 +1618,18 @@ pub mod app {
 
             assert!(!plugin_root.join(EXAMPLES).is_dir(), "taxonomy gate: plugin-root {EXAMPLES} is forbidden at {}", plugin_root.display());
 
+            let plugin_contract = plugin_root.join("🔌️plugin");
+            if plugin_contract.is_dir() {
+                assert!(plugin_contract.join(LEAF).is_file(), "taxonomy gate: 🔌️plugin missing {LEAF} at {}", plugin_contract.display());
+                for child in ["🛂️manifest", "🎟️capabilities", "🔧️setup", "🎛️apps"] {
+                    assert!(
+                        plugin_contract.join(child).join(LEAF).is_file(),
+                        "taxonomy gate: 🔌️plugin missing {child}/{LEAF} at {}",
+                        plugin_contract.display()
+                    );
+                }
+            }
+
             let apps = subdirectories(app_root);
             assert!(!apps.is_empty(), "taxonomy gate: {} declares no apps", app_root.display());
             for app in &apps {
@@ -2474,7 +2486,7 @@ pub mod app {
         fn build_definition_rejects_os_or_plugin_scope_command() {
             use semio_framework_core::{CommandDefinition, CommandScope};
             let result = std::panic::catch_unwind(|| minimal_app("os-scope-command-app").command(CommandDefinition::new_catalog("os.theme", "Theme", CommandScope::Os, "appearance")).build_definition());
-            assert!(result.is_err(), "AppBuilder must reject Os/Plugin-scope commands — those are declared by the shell/PluginBundle, not an app");
+            assert!(result.is_err(), "AppBuilder must reject Os/Plugin-scope commands — those are declared by the shell/Plugin, not an app");
         }
 
         #[test]
@@ -4928,17 +4940,17 @@ pub mod app {
     }
     //#endregion 🔖️DocumentContract
 
-    pub trait Plugin: Send {
+    pub trait PluginProgram: Send {
         fn manifest(&self) -> PluginManifest;
         fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>>;
     }
 
-    pub struct PluginBundle {
+    pub struct Plugin {
         pub manifest: PluginManifest,
         apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
     }
 
-    impl PluginBundle {
+    impl Plugin {
         pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
                 manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new() },
@@ -4970,10 +4982,8 @@ pub mod app {
             self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
         }
 
-        /// @emoji 🔒️ Private: every app must be state-backed by a `DocumentStore`, so the only
-        /// public entry point is {@link register_document_app}, which wraps `factory` in a
-        /// `VcsDocumentApp` before calling this.
-        fn register_app(mut self, app: App, factory: impl Fn() -> Box<dyn PluginApp> + Send + 'static) -> Self {
+        /// 🧬️ Registers an already-wrapped app factory (used by `PluginBuilder` and `register_document_app`).
+        pub fn register_app_factory(mut self, app: App, factory: impl Fn() -> Box<dyn PluginApp> + Send + 'static) -> Self {
             let app_id = app.definition.id.clone();
             self.manifest.apps.push(app.definition);
             for mut example in app.examples {
@@ -4988,7 +4998,7 @@ pub mod app {
         /// Wraps each instance in {@link VcsDocumentApp}. Stateful app structs are unrepresentable.
         pub fn register_document_app<A: DocumentApp>(self, app: App) -> Self {
             let registry = AppActionRegistry::from_definition(&app.definition);
-            self.register_app(app, move || Box::new(VcsDocumentApp::with_registry(A::default(), registry.clone())))
+            self.register_app_factory(app, move || Box::new(VcsDocumentApp::with_registry(A::default(), registry.clone())))
         }
 
         pub fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
@@ -4996,15 +5006,19 @@ pub mod app {
         }
     }
 
-    impl Plugin for PluginBundle {
+    impl PluginProgram for Plugin {
         fn manifest(&self) -> PluginManifest {
             self.manifest.clone()
         }
 
         fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
-            PluginBundle::create_app(self, app_id)
+            Plugin::create_app(self, app_id)
         }
     }
+
+    #[path = "🏗️builder/🦀️component.rs"]
+    mod builder;
+    pub use builder::{NeedsLabel, NeedsVersion, PluginBuilder, Ready};
     // #endregion app
 }
 
@@ -5012,7 +5026,7 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
-    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginBundle};
+    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginProgram};
     use crate::DocumentApp;
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework_core::{
@@ -5028,7 +5042,7 @@ pub mod plugin_runtime {
     use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef, UiNode};
 
     thread_local! {
-        static PLUGIN: RefCell<Option<PluginBundle>> = const { RefCell::new(None) };
+        static PLUGIN: RefCell<Option<Plugin>> = const { RefCell::new(None) };
         // 🔓️ `UnsafeCell` (not `RefCell`): a wasm trap skips `RefMut::drop` and permanently poisons
         // `RefCell`'s borrow flag. Exclusive access is enforced by `InstanceGuard` + the host's
         // serialized plugin bridge instead.
@@ -5126,7 +5140,7 @@ pub mod plugin_runtime {
 
     static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
 
-    pub fn install_plugin_bundle(bundle: PluginBundle) {
+    pub fn install_plugin_bundle(bundle: Plugin) {
         PLUGIN.with(|slot| {
             *slot.borrow_mut() = Some(bundle);
         });
@@ -6161,7 +6175,7 @@ pub mod plugin_runtime {
     /// satisfies the object-safe runtime [`PluginApp`](crate::PluginApp) contract with a persistent operation
     /// store. Expands to the equivalent `bundle()` fn plus a `plugin_exports!(bundle)` call, and a
     /// `#[cfg(test)]` regression check asserting every declared app id actually lands in the built
-    /// `PluginBundle`'s manifest.
+    /// `Plugin`'s manifest.
     #[macro_export]
     macro_rules! semio_plugin {
     (
@@ -6171,9 +6185,9 @@ pub mod plugin_runtime {
         setup: $setup:path,
         apps: [ $( $app_fn:path => $app_ty:path ),+ $(,)? ] $(,)?
     ) => {
-        fn __semio_plugin_bundle() -> $crate::PluginBundle {
+        fn __semio_plugin_bundle() -> $crate::Plugin {
             ($setup)();
-            $crate::PluginBundle::new($id, $label, $version)
+            $crate::Plugin::builder($id).label($label).version($version)
                 $( .register_document_app::<$app_ty>(($app_fn)()) )+
         }
 
@@ -8232,7 +8246,7 @@ pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
     node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryView, KeybindingSpec,
-    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NoDraft, NoDraftOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBundle, VcsDocumentApp, WindowKindSpec,
+    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NoDraft, NoDraftOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp, WindowKindSpec,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};

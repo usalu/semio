@@ -9,7 +9,7 @@
 //! `🗺️mesh-preview`.
 
 use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
-use crate::core::{analyses, Dof};
+use crate::model::{analyses, Dof};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -22,7 +22,7 @@ use crate::artifacts::fem3d::engine::{mesh_preview, meshing};
 /// 🗂️ Registers `Fem3dDocument`'s pack↔dsl codec under `FEM_3D_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse fem3d documents without
 /// depending on its concrete `Projection`/`Operation` types. Reached from the plugin root's
-/// `semio_plugin!{ setup: … }` via `crate::core::register_all_engines`.
+/// `semio_plugin!{ setup: … }` via `crate::model::register_all_engines`.
 pub fn register() {
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem3d::Fem3dPlayApp>(crate::artifacts::fem3d::FEM_3D_SCHEMA);
@@ -110,7 +110,7 @@ pub enum Fem3dError {
     #[error("mode index out of range: {0}")]
     ModeIndexOutOfRange(usize),
     #[error(transparent)]
-    Fem(#[from] crate::core::FemError),
+    Fem(#[from] crate::model::FemError),
 }
 // #endregion 🔖️Errors
 
@@ -118,7 +118,7 @@ pub enum Fem3dError {
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document port pair
 /// (`fem.3d` × 3D-Any) plus `geometry:in` (importing an externally authored extruded-footprint outline
 /// as a new `FemSolid` — see `crate::apps::fem3d::Fem3dPlayApp::import_media`) and `results:out` (every
-/// load case/combination's solved `crate::core::StaticResult`, pinned to the `computation.fem3d`
+/// load case/combination's solved `crate::model::StaticResult`, pinned to the `computation.fem3d`
 /// artifact kind declared in `crate::artifacts::fem3d::computation_artifact_kind` — see
 /// `crate::apps::fem3d::Fem3dPlayApp::export_media`).
 pub fn fem3d_io() -> semio_framework_plugin::AppIo {
@@ -146,7 +146,7 @@ pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
     }
 }
 
-/// 🔌️ `results:out` — every load case/combination's solved `crate::core::StaticResult`, pinned to the
+/// 🔌️ `results:out` — every load case/combination's solved `crate::model::StaticResult`, pinned to the
 /// `computation.fem3d` artifact kind.
 pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
@@ -162,28 +162,28 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 // #endregion 🔖️Io
 
 // #region 🔖️Bridge
-/// 🌉️ Resolves a `Fem3dDocument` load case into a `crate::core::Model`: nodes, `Bar3`/`Frame3`/`Tet4`
+/// 🌉️ Resolves a `Fem3dDocument` load case into a `crate::model::Model`: nodes, `Bar3`/`Frame3`/`Tet4`
 /// elements (materials/sections looked up by id), supports, and the named load case's translated loads.
-pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<crate::core::Model, Fem3dError> {
+pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<crate::model::Model, Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     let (nodal_loads, member_loads) = meshing::translate_loads(&case.loads, &solids)?;
-    Ok(crate::core::Model { nodes, elements, supports, nodal_loads, member_loads })
+    Ok(crate::model::Model { nodes, elements, supports, nodal_loads, member_loads })
 }
 
-/// 🚀️ Frozen entry point: builds the model for `case_id` and runs `crate::core::solve_linear_static`.
+/// 🚀️ Frozen entry point: builds the model for `case_id` and runs `crate::model::solve_linear_static`.
 /// Consumed directly by `fem-plugin`; do not rename or change this signature.
-pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<crate::core::StaticResult, String> {
+pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<crate::model::StaticResult, String> {
     let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
-    crate::core::solve_linear_static(&model).map_err(|e| e.to_string())
+    crate::model::solve_linear_static(&model).map_err(|e| e.to_string())
 }
 
 /// 🌉️ Builds an `AnalysisModel` plus one `analyses::LoadCase` per `doc.load_cases` entry and one
 /// `analyses::Combination` per `doc.combinations` entry, solving them ALL at once via
-/// `crate::core::analyses::solve_multi_case` (self-weight honored via `doc.materials`' `rho`, gravity
+/// `crate::analyses::solve_multi_case` (self-weight honored via `doc.materials`' `rho`, gravity
 /// fixed at `[0.0, 0.0, -9.81]` — this crate is Z-up, per `FemNode`'s `{x,y,z}` fields and the existing
 /// cantilever test's `Dof::Tz` tip load). Returns results keyed by case id ∪ combination id.
-pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, crate::core::StaticResult>, Fem3dError> {
+pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, crate::model::StaticResult>, Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     let mut cases = Vec::with_capacity(doc.load_cases.len());
@@ -309,12 +309,12 @@ fn fem3d_structural_instances(doc: &Fem3dDocument, displacements: Option<&HashMa
 
 /// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry (flat per-face normals, one
 /// duplicated vertex triple per triangle) plus its one identity-transform instance — `nodal_stress`,
-/// when present, colors each vertex by `crate::core::shared::von_mises_color` (min/max taken across ALL
+/// when present, colors each vertex by `crate::app_surface::von_mises_color` (min/max taken across ALL
 /// solids' averaged values), driving the react renderer's vertex-color contour (see
 /// `PaintTexturedMesh`). `displacements` deforms vertex positions the same way
 /// `fem3d_structural_instances` deforms node/member instances.
 fn fem3d_solid_mesh_entries(doc: &Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
-    use crate::core::shared::{hex_to_rgb01, von_mises_color};
+    use crate::app_surface::{hex_to_rgb01, von_mises_color};
 
     let mut meshes = Vec::new();
     let mut instances = Vec::new();
@@ -397,7 +397,7 @@ mod tests {
     use super::*;
     use crate::artifacts::fem3d::engine::modal_buckling;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
-    use crate::core::ElementResult;
+    use crate::model::ElementResult;
     use std::collections::BTreeMap;
 
     // #region 🔖️Io

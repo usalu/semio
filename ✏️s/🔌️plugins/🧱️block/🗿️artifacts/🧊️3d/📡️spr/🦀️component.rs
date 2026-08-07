@@ -27,7 +27,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block3dOperation, protocol::ProtocolErr
 mod tests {
     use super::*;
     use crate::artifacts::block3d::{Block3dDefinition, BLOCK_3D_SCHEMA};
-    use crate::core::BlockKindIdentity;
+    use crate::BlockKindIdentity;
     use store::{create_document_envelope, DocumentCommand};
 
     #[test]

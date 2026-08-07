@@ -13,13 +13,13 @@ import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 // 🧱️core: sceneHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // sceneHostPort.drei.Line at module top level, which requires a non-circular import (see
-// 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
-import { sceneHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+// 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
+import { sceneHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { ActionDropdown } from "../⚡️ActionGroup/🟦️component.tsx";
-import { surfaceClass, loadingBorderClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { surfaceClass, loadingBorderClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { HostThreeCanvas, uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors, type ActionDropdownOption, CameraIcon, type Point, type Vector, type Plane, type Camera } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { GripVerticalIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

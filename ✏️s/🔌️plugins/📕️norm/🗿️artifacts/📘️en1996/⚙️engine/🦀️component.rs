@@ -6,7 +6,7 @@
 //! those entity enums, re-importing the types from `crate::artifacts::en1996::part_2`.
 
 use crate::artifacts::en1996::{Document, MasonryClass};
-use crate::core::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, Quantity};
 use serde::{Deserialize, Serialize};
 
 pub mod na_de {
@@ -14,7 +14,7 @@ pub mod na_de {
 
     /// 🇩️🇪️ Partial factor γ_M per DIN EN 1996-1-1/NA (flat, independent of masonry class).
     pub fn gamma_m() -> f64 {
-        super::AnnexParams { annex: crate::core::AnnexChoice::De, masonry_class: crate::artifacts::en1996::MasonryClass::default(), accidental: false }.gamma_m()
+        super::AnnexParams { annex: crate::document::AnnexChoice::De, masonry_class: crate::artifacts::en1996::MasonryClass::default(), accidental: false }.gamma_m()
     }
 }
 
@@ -85,7 +85,7 @@ pub mod part_1_1 {
     }
 
     pub fn check_flexure(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2", "6.2"), Quantity::new(crate::core::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(crate::core::QuantityKind::Moment, m_rd * 1_000_000.0), "masonry flexure ULS", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2", "6.2"), Quantity::new(crate::document::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(crate::document::QuantityKind::Moment, m_rd * 1_000_000.0), "masonry flexure ULS", annex)
     }
 
     pub fn check_compression(sigma_ed_mpa: f64, f_d_mpa: f64, annex: AnnexChoice) -> CheckResult {
@@ -282,12 +282,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
 /// headless `NormHost` session every norm app drives.
 pub struct En1996Family;
 
-impl crate::core::NormFamily for En1996Family {
+impl crate::document::NormFamily for En1996Family {
     type Document = Document;
     type Operation = crate::artifacts::en1996::op::Operation;
 
-    fn family_id() -> crate::core::NormFamilyId {
-        crate::core::NormFamilyId::En1996
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::En1996
     }
 
     fn evaluate(document: &Document) -> CheckReport {
@@ -295,7 +295,7 @@ impl crate::core::NormFamily for En1996Family {
     }
 }
 
-pub type Host = crate::core::NormHost<En1996Family>;
+pub type Host = crate::document::NormHost<En1996Family>;
 // #endregion 🔖️Session
 
 //#region 🧪️Tests

@@ -12,7 +12,7 @@
 //! grammar is a `Shape::Wire` successor still pending migration, `Shape::Expr` has no such pending
 //! migration to avoid colliding with: reusing it directly is exactly right.
 
-use crate::os_dsl::core::{lex, Limits, TextError, TextSpan, TokenKind};
+use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 use crate::os_dsl::schema::{parse_expr_text, print_expr, ExprOp, ExprValue};
 use std::collections::HashMap;
 
@@ -86,7 +86,7 @@ pub struct Trace {
     pub value: f64,
 }
 
-fn find_arrow_after(tokens: &[crate::os_dsl::core::SpannedToken], after: usize) -> Option<usize> {
+fn find_arrow_after(tokens: &[crate::os_dsl::SpannedToken], after: usize) -> Option<usize> {
     tokens.iter().position(|t| t.kind == TokenKind::Arrow).filter(|&i| i > after)
 }
 
@@ -121,7 +121,7 @@ pub fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
 /// @emoji 🖨️ Canonical printer — prints `value` exactly as stored (does NOT recompute; that's
 /// `canonicalize_trace`'s job, matching this engine's `parse`/`print`/`canonicalize` split).
 pub fn print_trace(trace: &Trace) -> String {
-    format!("{} = {} -> {}", trace.name, print_expr(&trace.expr), crate::os_dsl::core::format_f64(trace.value))
+    format!("{} = {} -> {}", trace.name, print_expr(&trace.expr), crate::os_dsl::format_f64(trace.value))
 }
 
 /// @emoji ♻️ The self-verifying step: parses `text`, RE-EVALUATES its expression against `env`

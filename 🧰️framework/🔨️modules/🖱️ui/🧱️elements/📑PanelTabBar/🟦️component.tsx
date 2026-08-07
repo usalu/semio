@@ -9,16 +9,16 @@
 import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
 import { type DockSkeleton, type DockTabSkeleton } from "@semio-tech/framework-core";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Icon, type ControlIcon, renderControlIcon } from "../🔣Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
 import { Ribbon, type RibbonRow } from "../🎀Ribbon/🟦️component.tsx";
-import { type FlowBlock, FlowProvider, useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
-import { useLabel, useControlInlineText } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { useLevel, useSurfaceActive } from "../🫀️core/🌈️Surface/🟦️component.tsx";
-import { interactiveActiveFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { type FlowBlock, FlowProvider, useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { useLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
+import { useLevel, useSurfaceActive } from "../🌈️Surface/🟦️component.tsx";
+import { interactiveActiveFillClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { type Anchor, flowFromAnchor, ChromeControlHint, useNativeDragArm, usePanelDockContext, useUiDriverDragSurface, panelTabIconSlotClass, panelTabLabelClass, chromeControlTabItemClass, panelTabButtonClass, panelTabBarClass, panelTabButtonDividerClass, panelWindowInactiveTabClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, modeDockTabClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockTabLabelClassName, dropZoneReadyClass, panelAnchorTabBarClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelAnchorTabButtonClass, PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelTreeUnitDragActive, type PanelDockContextValue, type UiStatus, type TreePanelSource, ANCHORS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 

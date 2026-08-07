@@ -7,9 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { TableAvatar } from "../👤Avatar/🟦️component.tsx";
-import { type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗄️HistoryTable

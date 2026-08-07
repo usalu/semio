@@ -8,10 +8,10 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Orb } from "../../🧱️elements/🔮Orb/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { type ElementProps, useTransaction } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
-import { Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { type ElementProps, useTransaction } from "../🐹️ElementProps/🟦️component.tsx";
+import { Label } from "../🏷️Label/🟦️component.tsx";
 import { usePanelGhost } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { createDOMEventBinding } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters

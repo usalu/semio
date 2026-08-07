@@ -20,7 +20,7 @@
 //! addressing (dedup/identity across snapshots) is the separate, deliberately blake3-based
 //! `ContentAddressed`/`PageStore` mechanism in the `📇️Pages` region below.
 
-use db_core::DbError;
+use DbError;
 use std::rc::Rc;
 
 //#region 🔖️Pages
@@ -71,8 +71,8 @@ impl CanonicalEncode for () {
 
 /// @emoji 🔑️ Hashes `bytes` with blake3, the family's hashing algorithm throughout (matches
 /// `pack`/`protocol`'s `ContentHash`).
-fn hash_bytes(bytes: &[u8]) -> pack_core::ContentHash {
-    pack_core::ContentHash(*blake3::hash(bytes).as_bytes())
+fn hash_bytes(bytes: &[u8]) -> pack::ContentHash {
+    pack::ContentHash(*blake3::hash(bytes).as_bytes())
 }
 
 /// @emoji 📦️ An immutable, content-addressed byte page: its `hash` is the blake3 digest of
@@ -80,7 +80,7 @@ fn hash_bytes(bytes: &[u8]) -> pack_core::ContentHash {
 /// unit written into `KIND_CHUNK` segments.
 #[derive(Clone)]
 pub struct Page {
-    pub hash: pack_core::ContentHash,
+    pub hash: pack::ContentHash,
     pub bytes: Rc<[u8]>,
 }
 
@@ -96,7 +96,7 @@ impl Page {
 /// mechanism `db_snapshot`'s incremental generations build on.
 #[derive(Default)]
 pub struct PageStore {
-    pages: std::collections::HashMap<pack_core::ContentHash, Rc<[u8]>>,
+    pages: std::collections::HashMap<pack::ContentHash, Rc<[u8]>>,
 }
 
 impl PageStore {
@@ -106,13 +106,13 @@ impl PageStore {
 
     /// @emoji ➕️ Interns `bytes`, returning its content hash. A byte-identical page already
     /// present is reused (no duplicate allocation, no duplicate `PageStore` entry).
-    pub fn intern(&mut self, bytes: Vec<u8>) -> pack_core::ContentHash {
+    pub fn intern(&mut self, bytes: Vec<u8>) -> pack::ContentHash {
         let hash = hash_bytes(&bytes);
         self.pages.entry(hash).or_insert_with(|| Rc::from(bytes));
         hash
     }
 
-    pub fn get(&self, hash: &pack_core::ContentHash) -> Option<Rc<[u8]>> {
+    pub fn get(&self, hash: &pack::ContentHash) -> Option<Rc<[u8]>> {
         self.pages.get(hash).cloned()
     }
 
@@ -398,7 +398,7 @@ impl<K: Clone + Eq + std::hash::Hash, V: Clone> PMap<K, V> {
 impl<K: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, V: Clone + CanonicalEncode> PMap<K, V> {
     /// @emoji 🔑️ Content hash over `(key, value)` pairs in sorted-by-key order — sorted so the
     /// hash is independent of insertion order/HAMT bucket layout, only of logical content.
-    pub fn content_hash(&self) -> pack_core::ContentHash {
+    pub fn content_hash(&self) -> pack::ContentHash {
         let mut entries: Vec<(&K, &V)> = self.iter().collect();
         entries.sort_by(|a, b| a.0.cmp(b.0));
         let mut buf = Vec::new();
@@ -545,7 +545,7 @@ impl<T: Clone> PVec<T> {
 
 impl<T: Clone + CanonicalEncode> PVec<T> {
     /// @emoji 🔑️ Content hash over elements in index order (order-sensitive, unlike `PMap`'s).
-    pub fn content_hash(&self) -> pack_core::ContentHash {
+    pub fn content_hash(&self) -> pack::ContentHash {
         let mut buf = Vec::new();
         for item in self.iter() {
             item.encode_canonical(&mut buf);
@@ -679,7 +679,7 @@ impl PText {
     }
 
     /// @emoji 🔑️ Content hash of the rope's flattened UTF-8 bytes.
-    pub fn content_hash(&self) -> pack_core::ContentHash {
+    pub fn content_hash(&self) -> pack::ContentHash {
         hash_bytes(self.to_string().as_bytes())
     }
 }
@@ -906,7 +906,7 @@ impl<K: Clone + Ord, V: Clone> PTree<K, V> {
 impl<K: Clone + Ord + CanonicalEncode, V: Clone + CanonicalEncode> PTree<K, V> {
     /// @emoji 🔑️ Content hash over `(key, value)` pairs in ascending key order (already the
     /// tree's natural iteration order).
-    pub fn content_hash(&self) -> pack_core::ContentHash {
+    pub fn content_hash(&self) -> pack::ContentHash {
         let mut buf = Vec::new();
         for (k, v) in self.iter() {
             k.encode_canonical(&mut buf);
@@ -1042,7 +1042,7 @@ impl<N: Clone + Eq + std::hash::Hash, ND: Clone, ED: Clone> PGraph<N, ND, ED> {
 impl<N: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, ND: Clone + CanonicalEncode, ED: Clone + CanonicalEncode> PGraph<N, ND, ED> {
     /// @emoji 🔑️ Content hash over the node set (sorted, via `PMap::content_hash`) followed by
     /// the edge set sorted by `(from, to)`.
-    pub fn content_hash(&self) -> pack_core::ContentHash {
+    pub fn content_hash(&self) -> pack::ContentHash {
         let mut buf = Vec::new();
         buf.extend_from_slice(&self.nodes.content_hash().0);
         let mut edges: Vec<(N, N, ED)> = Vec::new();

@@ -17,7 +17,7 @@ mod native {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Mutex;
 
-    use crate::os_pack::core::{ChunkId, PackError, PackLimits, PackSink, PackSource};
+    use crate::os_pack::{ChunkId, PackError, PackLimits, PackSink, PackSource};
     use crate::os_pack::format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
 
     /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `PackError::Io` variant — the only
@@ -184,7 +184,7 @@ mod native {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::os_pack::core::{ByteRange, CodecId, KIND_DOCUMENT, KIND_SCHEMA};
+        use crate::os_pack::{ByteRange, CodecId, KIND_DOCUMENT, KIND_SCHEMA};
         use crate::os_pack::format::VerificationLevel;
 
         /// @emoji 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
@@ -293,7 +293,7 @@ mod native {
         /// used here only to compute a valid `doc_span.len` for a hand-built `Manifest`.
         fn uncompressed_segment_wire_len(payload_len: usize) -> u64 {
             let mut len_bytes = Vec::new();
-            crate::os_pack::core::write_varint_u64(&mut len_bytes, payload_len as u64);
+            crate::os_pack::write_varint_u64(&mut len_bytes, payload_len as u64);
             (1 + 1 + len_bytes.len() + payload_len + 4) as u64
         }
 

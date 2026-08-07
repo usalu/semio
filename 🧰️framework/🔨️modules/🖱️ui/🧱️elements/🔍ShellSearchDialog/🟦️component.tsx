@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandShortcut } from "../⌨️Command/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { renderControlIcon, type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

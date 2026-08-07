@@ -10,20 +10,20 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
-// 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
+// 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 // 🧱️core: cn imported directly from 🫀️core/ClassNames, NOT via the barrel — this component calls
 // cn(...) at module top level (inside a top-level cva(cn(...)) call), which requires a non-circular
-// import (see 🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx's header comment for why the barrel import
+// import (see 🧱️elements/🏷️ClassNames/🟦️component.tsx's header comment for why the barrel import
 // caused a real bug).
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
-import { interactiveHoverClass, interactiveActiveFillClass, menuListItemClassName, formControlFocusBorderClass, borderNormalClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { chromeControlItemBaseClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useTransaction } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
-import { useLevel, type Level } from "../🫀️core/🌈️Surface/🟦️component.tsx";
-import { useControlAccessibleLabel, useControlInlineText } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { interactiveHoverClass, interactiveActiveFillClass, menuListItemClassName, formControlFocusBorderClass, borderNormalClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { chromeControlItemBaseClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useTransaction } from "../🐹️ElementProps/🟦️component.tsx";
+import { useLevel, type Level } from "../🌈️Surface/🟦️component.tsx";
+import { useControlAccessibleLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
 import { chromeControlGroupShellClass, loadingBorderElementClass, waitingBorderElementClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

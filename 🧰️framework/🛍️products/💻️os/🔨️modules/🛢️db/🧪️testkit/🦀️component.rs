@@ -30,7 +30,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
-use db_core::DbError;
+use DbError;
 use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 
 //#region 🔖️Prng
@@ -316,11 +316,11 @@ impl FaultStorage {
 }
 
 impl WalStorage for FaultStorage {
-    fn create_segment(&self, document: &db_core::DocumentId, index: u64) -> Result<(), DbError> {
+    fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
         self.inner.wal().create_segment(document, index)
     }
 
-    fn append(&self, document: &db_core::DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
         let call = self.append_calls.fetch_add(1, Ordering::SeqCst) + 1;
         let script = self.script();
         if script.fail_nth_write == Some(call) {
@@ -335,7 +335,7 @@ impl WalStorage for FaultStorage {
         self.inner.wal().append(document, index, bytes)
     }
 
-    fn sync(&self, document: &db_core::DocumentId, index: u64, class: db_core::DurabilityClass) -> Result<(), DbError> {
+    fn sync(&self, document: &DocumentId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
         if self.script().fsync_lies {
             return Ok(());
         }
@@ -343,49 +343,49 @@ impl WalStorage for FaultStorage {
         self.inner.wal().sync(document, index, class)
     }
 
-    fn seal(&self, document: &db_core::DocumentId, index: u64) -> Result<(), DbError> {
+    fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
         self.inner.wal().seal(document, index)
     }
 
-    fn read(&self, document: &db_core::DocumentId, index: u64, range: pack::ByteRange) -> Result<Vec<u8>, DbError> {
+    fn read(&self, document: &DocumentId, index: u64, range: pack::ByteRange) -> Result<Vec<u8>, DbError> {
         self.inner.wal().read(document, index, range)
     }
 
-    fn segment_len(&self, document: &db_core::DocumentId, index: u64) -> Result<u64, DbError> {
+    fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
         self.inner.wal().segment_len(document, index)
     }
 
-    fn list_segments(&self, document: &db_core::DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
         self.inner.wal().list_segments(document)
     }
 
-    fn truncate_tail(&self, document: &db_core::DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
+    fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
         self.inner.wal().truncate_tail(document, index, new_len)
     }
 
-    fn delete_segment(&self, document: &db_core::DocumentId, index: u64) -> Result<(), DbError> {
+    fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
         self.inner.wal().delete_segment(document, index)
     }
 }
 
 impl SnapshotStorage for FaultStorage {
-    fn write_generation(&self, document: &db_core::DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
         self.inner.snapshot().write_generation(document, generation, bytes)
     }
 
-    fn read_generation(&self, document: &db_core::DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
+    fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
         self.inner.snapshot().read_generation(document, generation)
     }
 
-    fn latest_generation(&self, document: &db_core::DocumentId) -> Result<Option<u64>, DbError> {
+    fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
         self.inner.snapshot().latest_generation(document)
     }
 
-    fn list_generations(&self, document: &db_core::DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
         self.inner.snapshot().list_generations(document)
     }
 
-    fn delete_generation(&self, document: &db_core::DocumentId, generation: u64) -> Result<(), DbError> {
+    fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
         self.inner.snapshot().delete_generation(document, generation)
     }
 }
@@ -413,14 +413,14 @@ impl PayloadStorage for FaultStorage {
 }
 
 impl CatalogStorage for FaultStorage {
-    fn read_root(&self) -> Result<Option<(Vec<u8>, db_core::EpochFence)>, DbError> {
+    fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
         self.inner.catalog().read_root()
     }
 
-    fn cas_root(&self, expected: db_core::EpochFence, new_bytes: &[u8]) -> Result<db_core::EpochFence, DbError> {
+    fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
         let call = self.cas_calls.fetch_add(1, Ordering::SeqCst) + 1;
         if self.script().cas_conflict_nth == Some(call) {
-            let current = self.inner.catalog().read_root()?.map_or(db_core::EpochFence::INITIAL, |(_, fence)| fence);
+            let current = self.inner.catalog().read_root()?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
             return Err(DbError::Fenced { expected: current.epoch, actual: expected.epoch });
         }
         self.inner.catalog().cas_root(expected, new_bytes)
@@ -428,33 +428,33 @@ impl CatalogStorage for FaultStorage {
 }
 
 impl IndexStorage for FaultStorage {
-    fn write_run(&self, document: &db_core::DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
         self.inner.index().write_run(document, run_id, bytes)
     }
 
-    fn read_run(&self, document: &db_core::DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
         self.inner.index().read_run(document, run_id)
     }
 
-    fn list_runs(&self, document: &db_core::DocumentId) -> Result<Vec<u64>, DbError> {
+    fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
         self.inner.index().list_runs(document)
     }
 
-    fn delete_run(&self, document: &db_core::DocumentId, run_id: u64) -> Result<(), DbError> {
+    fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
         self.inner.index().delete_run(document, run_id)
     }
 }
 
 impl LeaseStorage for FaultStorage {
-    fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<db_core::EpochFence, DbError> {
+    fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         self.inner.lease().acquire(resource, holder, ttl_ms, now_ms)
     }
 
-    fn renew(&self, resource: &str, holder: &str, fence: db_core::EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+    fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         self.inner.lease().renew(resource, holder, fence, ttl_ms, now_ms)
     }
 
-    fn release(&self, resource: &str, holder: &str, fence: db_core::EpochFence) -> Result<(), DbError> {
+    fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         self.inner.lease().release(resource, holder, fence)
     }
 
@@ -577,7 +577,7 @@ fn run_workload_against(document: &protocol::DocumentId, ops: &[protocol::Operat
     let mut engine = db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
     for (i, envelope) in ops.iter().enumerate() {
         let batch = db_document::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
-        engine.submit(batch, db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).expect("testkit: baseline submit must not fault");
+        engine.submit(batch, db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("testkit: baseline submit must not fault");
     }
 }
 
@@ -591,7 +591,7 @@ fn run_workload_until_fault(document: &protocol::DocumentId, ops: &[protocol::Op
     };
     for (i, envelope) in ops.iter().enumerate() {
         let batch = db_document::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
-        if engine.submit(batch, db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).is_err() {
+        if engine.submit(batch, db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).is_err() {
             return;
         }
     }
@@ -634,10 +634,10 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
 
     let root = temp_dir("replay");
     let frontier_first_run = {
-        let database = db_engine::Database::open_at(&root, db_core::Profile::Test).expect("testkit: open_at for replay law");
+        let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
         let handle = database.create_document(db_engine::DocumentSpec::new(document.clone())).expect("testkit: create_document for replay law");
         for envelope in &ops {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
         }
         let frontier = handle.frontier().expect("frontier");
         drop(handle);
@@ -646,7 +646,7 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
     };
 
     let frontier_after_reopen = {
-        let database = db_engine::Database::open_at(&root, db_core::Profile::Test).expect("testkit: reopen for replay law");
+        let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
         let handle = database.document(&document).expect("testkit: document must survive reopen");
         handle.frontier().expect("frontier after reopen")
     };
@@ -657,10 +657,10 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
 
     let root_independent = temp_dir("replay-independent");
     let frontier_independent = {
-        let database = db_engine::Database::open_at(&root_independent, db_core::Profile::Test).expect("testkit: open independent replica");
+        let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
         let handle = database.create_document(db_engine::DocumentSpec::new(document)).expect("testkit: create independent replica document");
         for envelope in &ops_regenerated {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
         }
         handle.frontier().expect("frontier")
     };
@@ -680,7 +680,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
     {
         let mut engine = db_document::DocumentEngine::create(document.clone(), storage_snapshotting.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create engine a");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).expect("submit a");
+            engine.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit a");
             if i + 1 == before_snapshot {
                 engine.snapshot_now((i + 1) as u64).expect("snapshot_now");
             }
@@ -693,7 +693,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
     {
         let mut engine = db_document::DocumentEngine::create(document.clone(), storage_full_replay.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create engine b");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).expect("submit b");
+            engine.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit b");
         }
     }
     let (materialized_full_replay, report_b) = db_document::DocumentEngine::open(document, &storage_full_replay, db_document::DocumentEngineConfig::default(), 0).expect("open engine b");
@@ -741,7 +741,7 @@ impl db_projection::ProjectionClass for CountingProjection {
 /// pure, storage-independent `rebuild_in_memory` pass over the same event sequence. Drives real
 /// `db_projection::ProjectionEngine` against a real `db_storage::MemoryStorage`'s `IndexStorage`.
 pub fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: usize) {
-    let document_core = db_core::DocumentId(format!("testkit-proj-{seed:x}"));
+    let document_core = DocumentId(format!("testkit-proj-{seed:x}"));
     let document = protocol::DocumentId(document_core.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(1));
 
@@ -815,35 +815,35 @@ pub fn assert_inverse_undo_roundtrip(seed: u64) {
 /// missing-command transfer over real `db_document::DocumentEngine` replicas.
 pub fn assert_sync_convergence(seed: u64, op_count: usize) {
     let document = protocol::DocumentId(format!("testkit-sync-{seed:x}"));
-    let document_core = db_core::DocumentId(document.0.clone());
+    let document_core = DocumentId(document.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(2));
 
     let server_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
     let mut server = db_document::DocumentEngine::create(document.clone(), server_storage.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create server");
     for (i, envelope) in ops.iter().enumerate() {
-        server.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).expect("server submit");
+        server.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("server submit");
     }
     let server_frontier = server.frontier();
     let sync_state = db_sync::replay_sync_state(server_storage.wal(), document_core.clone()).expect("replay_sync_state");
 
     let replica1_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
     let mut replica1 = db_document::DocumentEngine::create(document.clone(), replica1_storage, db_document::DocumentEngineConfig::default(), 0).expect("create replica1");
-    let missing1 = db_sync::missing_commands(&sync_state, &db_core::Frontier::genesis(document_core.clone())).expect("missing_commands one-shot");
+    let missing1 = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core.clone())).expect("missing_commands one-shot");
     for (i, envelope) in missing1.into_iter().enumerate() {
-        replica1.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).expect("replica1 submit");
+        replica1.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica1 submit");
     }
 
     let replica2_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
     let mut replica2 = db_document::DocumentEngine::create(document, replica2_storage, db_document::DocumentEngineConfig::default(), 0).expect("create replica2");
     let half = ops.len() / 2;
-    let missing2_first = db_sync::missing_commands(&sync_state, &db_core::Frontier::genesis(document_core)).expect("missing_commands first half");
+    let missing2_first = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core)).expect("missing_commands first half");
     for (i, envelope) in missing2_first.into_iter().take(half).enumerate() {
-        replica2.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).expect("replica2 submit (first half)");
+        replica2.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica2 submit (first half)");
     }
     let replica2_resume_frontier = replica2.frontier();
     let missing2_rest = db_sync::missing_commands(&sync_state, &replica2_resume_frontier).expect("missing_commands resumed");
     for (i, envelope) in missing2_rest.into_iter().enumerate() {
-        replica2.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, (half + i) as u64).expect("replica2 submit (rest)");
+        replica2.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, (half + i) as u64).expect("replica2 submit (rest)");
     }
 
     assert_eq!(server_frontier, replica1.frontier(), "a one-shot replica must converge to the server's exact frontier");
@@ -852,11 +852,11 @@ pub fn assert_sync_convergence(seed: u64, op_count: usize) {
 
 /// @emoji 🚧️ The fencing law: once a writer's `cas_root` succeeds, a second writer presenting the
 /// now-superseded epoch must be fenced (`DbError::Fenced`), and the root must remain exactly what
-/// the winning writer left it as — the split-brain gate `db_core::EpochFence`/`CatalogStorage`
+/// the winning writer left it as — the split-brain gate `EpochFence`/`CatalogStorage`
 /// exist for. Generic over any real `&dyn CatalogStorage` backend (exercised against both
 /// `MemoryStorage` and `FsStorage` in this crate's own tests).
 pub fn assert_fencing_excludes_stale_writer(storage: &dyn CatalogStorage) {
-    let stale_epoch = storage.read_root().expect("read_root").map_or(db_core::EpochFence::INITIAL, |(_, fence)| fence);
+    let stale_epoch = storage.read_root().expect("read_root").map_or(EpochFence::INITIAL, |(_, fence)| fence);
     let winner_epoch = storage.cas_root(stale_epoch, b"writer-a").expect("the first writer presenting the current epoch must win");
     assert_ne!(winner_epoch, stale_epoch, "a successful cas_root must advance the epoch");
 
@@ -875,13 +875,13 @@ pub fn assert_fencing_excludes_stale_writer(storage: &dyn CatalogStorage) {
 pub fn assert_preview_never_durable(seed: u64) {
     let document = protocol::DocumentId(format!("testkit-preview-{seed:x}"));
     let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-    let core_document = db_core::DocumentId(document.0.clone());
+    let core_document = DocumentId(document.0.clone());
     let mut engine = db_document::DocumentEngine::create(document.clone(), storage.clone(), db_document::DocumentEngineConfig::default(), 0).expect("create engine");
 
     let path = CommandGen::new(seed).random_path();
     let committed_value = serde_json::json!("committed");
     let envelope = schema_erased_envelope(&document, "op-committed", "actor-1", &path, committed_value.clone(), serde_json::Value::Null);
-    engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, 1).expect("submit committed");
+    engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, 1).expect("submit committed");
 
     let segments_before = storage.wal().list_segments(&core_document).expect("list_segments");
     let lengths_before: Vec<u64> = segments_before.iter().map(|&index| storage.wal().segment_len(&core_document, index).expect("segment_len")).collect();
@@ -1016,7 +1016,7 @@ mod tests {
                 let engine = engine.clone();
                 runtime.schedule(envelope.operation_id.0.clone(), move |clock| {
                     let now = clock.now_ms() + i as u64;
-                    engine.borrow_mut().submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, now).expect("submit");
+                    engine.borrow_mut().submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, now).expect("submit");
                 });
             }
             runtime.run(4);
@@ -1032,7 +1032,7 @@ mod tests {
     fn fault_storage_passes_through_untouched_when_no_fault_is_scripted() {
         let inner = Arc::new(db_storage::MemoryStorage::new());
         let faulted = FaultStorage::new(inner);
-        let document = db_core::DocumentId("doc-1".to_string());
+        let document = DocumentId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
         assert_eq!(faulted.append(&document, 0, b"hello").unwrap(), 5);
         assert_eq!(faulted.read(&document, 0, pack::ByteRange { offset: 0, len: 5 }).unwrap(), b"hello");
@@ -1043,7 +1043,7 @@ mod tests {
     fn fault_storage_fail_nth_write_fails_exactly_once_at_the_scripted_call() {
         let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
         faulted.set_script(FaultScript { fail_nth_write: Some(2), ..FaultScript::default() });
-        let document = db_core::DocumentId("doc-1".to_string());
+        let document = DocumentId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
         assert!(faulted.append(&document, 0, b"first").is_ok(), "call #1 must succeed");
         assert!(faulted.append(&document, 0, b"second").is_err(), "call #2 must be the injected failure");
@@ -1054,7 +1054,7 @@ mod tests {
     fn fault_storage_torn_write_forwards_only_the_kept_prefix() {
         let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
         faulted.set_script(FaultScript { torn_write_at: Some((1, 3)), ..FaultScript::default() });
-        let document = db_core::DocumentId("doc-1".to_string());
+        let document = DocumentId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
         let new_len = faulted.append(&document, 0, b"hello world").unwrap();
         assert_eq!(new_len, 3, "a torn write must report only the bytes that actually landed");
@@ -1064,13 +1064,13 @@ mod tests {
     #[test]
     fn fault_storage_fsync_lies_never_delegates_to_the_inner_backend() {
         let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
-        let document = db_core::DocumentId("doc-1".to_string());
+        let document = DocumentId("doc-1".to_string());
         faulted.create_segment(&document, 0).unwrap();
-        assert!(faulted.sync(&document, 0, db_core::DurabilityClass::Fsync).is_ok());
+        assert!(faulted.sync(&document, 0, DurabilityClass::Fsync).is_ok());
         assert_eq!(faulted.sync_delegated_calls(), 1, "an unfaulted sync must delegate");
 
         faulted.set_script(FaultScript { fsync_lies: true, ..FaultScript::default() });
-        assert!(faulted.sync(&document, 0, db_core::DurabilityClass::Fsync).is_ok(), "a lying fsync must still report success");
+        assert!(faulted.sync(&document, 0, DurabilityClass::Fsync).is_ok(), "a lying fsync must still report success");
         assert_eq!(faulted.sync_delegated_calls(), 1, "a lying fsync must never actually delegate");
     }
 
@@ -1078,7 +1078,7 @@ mod tests {
     fn fault_storage_cas_conflict_injection_rejects_without_touching_the_inner_root() {
         let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
         faulted.set_script(FaultScript { cas_conflict_nth: Some(1), ..FaultScript::default() });
-        let result = faulted.cas_root(db_core::EpochFence::INITIAL, b"attempt");
+        let result = faulted.cas_root(EpochFence::INITIAL, b"attempt");
         assert!(matches!(result, Err(DbError::Fenced { .. })), "the scripted call must be rejected as fenced");
         assert!(faulted.read_root().unwrap().is_none(), "the injected conflict must never have reached the inner backend's root");
     }
@@ -1103,7 +1103,7 @@ mod tests {
         {
             let mut engine = db_document::DocumentEngine::create(document.clone(), storage.clone(), db_document::DocumentEngineConfig::default(), 0).unwrap();
             let envelope = schema_erased_envelope(&document, "op-1", "actor-1", "x", serde_json::json!(1), serde_json::Value::Null);
-            let _ = engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, 1);
+            let _ = engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, 1);
         }
         let (recovered, report) = db_document::DocumentEngine::open(document, &storage, db_document::DocumentEngineConfig::default(), 2).expect("recovery must not error");
         assert_eq!(report.torn_tail_bytes, 1, "recovery must report exactly the torn bytes it discarded");
@@ -1171,7 +1171,7 @@ mod tests {
 
         fn decode_wal_bytes(bytes: &[u8]) -> Result<(), String> {
             let storage = db_storage::MemoryStorage::new();
-            let document = db_core::DocumentId("fuzz-doc".to_string());
+            let document = DocumentId("fuzz-doc".to_string());
             storage.create_segment(&document, 0).map_err(|err| err.to_string())?;
             storage.append(&document, 0, bytes).map_err(|err| err.to_string())?;
             let storage: Arc<dyn DbStorage> = Arc::new(storage);
@@ -1186,10 +1186,10 @@ mod tests {
                 let mut engine = db_document::DocumentEngine::create(document.clone(), storage.clone(), db_document::DocumentEngineConfig::default(), 0).unwrap();
                 for i in 0..2 {
                     let envelope = schema_erased_envelope(&document, &format!("op-{i}"), "actor-1", &format!("x{i}"), serde_json::json!(i), serde_json::Value::Null);
-                    engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).unwrap();
+                    engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).unwrap();
                 }
             }
-            let core_document = db_core::DocumentId(document.0);
+            let core_document = DocumentId(document.0);
             let len = storage.wal().segment_len(&core_document, 0).unwrap();
             let bytes = storage.wal().read(&core_document, 0, pack::ByteRange { offset: 0, len }).unwrap();
 

@@ -14,8 +14,8 @@
 //! regardless of `kind`, giving callers `RecordFrame::kind` and `flags & FRAME_FLAG_CRITICAL` to
 //! implement that policy themselves.
 
-use crate::os_pack::core::{CompressionCodec, PackError, PackSink, PackSource};
-use crate::os_spr::core::{frame_flags, ProtocolError, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
+use crate::os_pack::{CompressionCodec, PackError, PackSink, PackSource};
+use crate::os_spr::wire::{frame_flags, ProtocolError, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
 
 //#region 🔖️Header
 /// @emoji 🧲️ The 8-byte magic every `.spr` file begins with — distinct from pack's `.spk` magic
@@ -28,12 +28,12 @@ pub const FORMAT_VERSION_MAJOR: u16 = 1;
 /// @emoji 🔢️ The container format minor version this crate writes.
 pub const FORMAT_VERSION_MINOR: u16 = 0;
 
-/// @emoji 🎭️ The union of `crate::os_spr::core::REQUIRED_*` bits this crate understands; any bit outside
+/// @emoji 🎭️ The union of `crate::os_spr::REQUIRED_*` bits this crate understands; any bit outside
 /// this mask makes a header (and therefore the whole file) unreadable.
-const REQUIRED_KNOWN_MASK: u32 = crate::os_spr::core::REQUIRED_HASH_CHAIN | crate::os_spr::core::REQUIRED_SIGNED | crate::os_spr::core::REQUIRED_ENCRYPTED;
+const REQUIRED_KNOWN_MASK: u32 = crate::os_spr::REQUIRED_HASH_CHAIN | crate::os_spr::REQUIRED_SIGNED | crate::os_spr::REQUIRED_ENCRYPTED;
 
 /// @emoji ✍️ Serializes the 32-byte header: magic, version, flags, `header_crc32` over bytes
-/// `0..20` (CRC-32C, `crate::os_pack::core::crc32c`), 8 reserved zero bytes.
+/// `0..20` (CRC-32C, `crate::os_pack::crc32c`), 8 reserved zero bytes.
 fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HEADER_SIZE] {
     let mut buf = [0u8; HEADER_SIZE];
     buf[0..8].copy_from_slice(&MAGIC);
@@ -41,14 +41,14 @@ fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HEADER_S
     buf[10..12].copy_from_slice(&FORMAT_VERSION_MINOR.to_le_bytes());
     buf[12..16].copy_from_slice(&required_flags.to_le_bytes());
     buf[16..20].copy_from_slice(&optional_flags.to_le_bytes());
-    let crc = crate::os_pack::core::crc32c(&buf[0..20]);
+    let crc = crate::os_pack::crc32c(&buf[0..20]);
     buf[20..24].copy_from_slice(&crc.to_le_bytes());
     buf
 }
 
 /// @emoji 📖️ Validates a source's 32-byte header in place: magic, self-CRC, `required_flags`
 /// restricted to `REQUIRED_KNOWN_MASK` (0..=2), `version_major == 1`. Every failure mode reuses a
-/// `crate::os_pack::core::PackError` variant wrapped in `ProtocolError::Pack` — all are directly constructible
+/// `crate::os_pack::PackError` variant wrapped in `ProtocolError::Pack` — all are directly constructible
 /// (no protocol_core amendment needed, unlike the contract's fallback-deviation clause anticipated).
 fn validate_header<S: PackSource>(source: &S) -> Result<(), ProtocolError> {
     let total_len = source.len();
@@ -64,7 +64,7 @@ fn validate_header<S: PackSource>(source: &S) -> Result<(), ProtocolError> {
     let version_minor = u16::from_le_bytes([buf[10], buf[11]]);
     let required_flags = u32::from_le_bytes(buf[12..16].try_into().unwrap());
     let stored_crc = u32::from_le_bytes(buf[20..24].try_into().unwrap());
-    let computed_crc = crate::os_pack::core::crc32c(&buf[0..20]);
+    let computed_crc = crate::os_pack::crc32c(&buf[0..20]);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "header", offset: 20 }));
     }
@@ -107,12 +107,12 @@ pub fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolError> {
 /// @emoji 🔢️ The wire width, in bytes, of `value` encoded as an unsigned LEB128 varint.
 fn varint_width(value: u64) -> u64 {
     let mut buf = Vec::with_capacity(10);
-    crate::os_pack::core::write_varint_u64(&mut buf, value);
+    crate::os_pack::write_varint_u64(&mut buf, value);
     buf.len() as u64
 }
 
-/// @emoji 🚨️ Builds a `crate::os_spr::core::ProtocolError::Malformed` for this crate's own structural
-/// checks (distinct from `crate::os_pack::core::PackError`-wrapped errors, which cover pack-primitive-level
+/// @emoji 🚨️ Builds a `crate::os_spr::ProtocolError::Malformed` for this crate's own structural
+/// checks (distinct from `crate::os_pack::PackError`-wrapped errors, which cover pack-primitive-level
 /// failures like truncation/varint overflow).
 fn malformed(what: &'static str, offset: u64, detail: impl Into<String>) -> ProtocolError {
     ProtocolError::Malformed { what, offset, detail: detail.into() }
@@ -125,7 +125,7 @@ fn malformed(what: &'static str, offset: u64, detail: impl Into<String>) -> Prot
 ///
 /// 🎯️ Design choice: builds one contiguous buffer and issues a single `PackSink::write_all` at the
 /// call site, mirroring `crate::os_pack::format::encode_segment`'s proven pattern (the contract's own cited
-/// living example) — `crate::os_pack::core::crc32c` only accepts one contiguous slice, and this crate has no
+/// living example) — `crate::os_pack::crc32c` only accepts one contiguous slice, and this crate has no
 /// incremental CRC-32C primitive to stream a crc across a caller-owned payload slice without a
 /// buffer of its own. The scratch buffer is still reused call-to-call, avoiding the reallocation
 /// pack_format's segment encoder pays every time.
@@ -133,15 +133,15 @@ fn encode_frame_into(scratch: &mut Vec<u8>, kind: u8, flags: u8, raw_len: Option
     scratch.clear();
     let raw_len_width = raw_len.map_or(0, varint_width);
     let body_len = 2 + raw_len_width + stored_payload.len() as u64;
-    crate::os_pack::core::write_varint_u64(scratch, body_len);
+    crate::os_pack::write_varint_u64(scratch, body_len);
     let body_start = scratch.len();
     scratch.push(kind);
     scratch.push(flags);
     if let Some(rl) = raw_len {
-        crate::os_pack::core::write_varint_u64(scratch, rl);
+        crate::os_pack::write_varint_u64(scratch, rl);
     }
     scratch.extend_from_slice(stored_payload);
-    let crc = crate::os_pack::core::crc32c(&scratch[body_start..]);
+    let crc = crate::os_pack::crc32c(&scratch[body_start..]);
     scratch.extend_from_slice(&crc.to_le_bytes());
     let back_len_u64 = scratch.len() as u64 + 4;
     let back_len: u32 = back_len_u64.try_into().map_err(|_| ProtocolError::LimitExceeded("frame exceeds u32 back_len (4 GiB cap)"))?;
@@ -162,8 +162,8 @@ pub struct RecordFrame<'a> {
 
 impl<'a> RecordFrame<'a> {
     /// @emoji 📤️ The on-disk payload bytes: identical to the caller's original data iff
-    /// `!compressed`; otherwise the caller must decompress via a `crate::os_pack::core::CompressionCodec`
-    /// keyed by `crate::os_spr::core::frame_codec_id(self.flags)`, targeting `self.raw_len` bytes.
+    /// `!compressed`; otherwise the caller must decompress via a `crate::os_pack::CompressionCodec`
+    /// keyed by `crate::os_spr::frame_codec_id(self.flags)`, targeting `self.raw_len` bytes.
     pub fn payload(&self) -> &'a [u8] {
         self.stored
     }
@@ -183,7 +183,7 @@ impl<'a> RecordFrame<'a> {
 /// `(frame, next_pos)` so callers (both cursors below) can advance without recomputing `frame_len`.
 fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<'_>, usize), ProtocolError> {
     let mut cursor = pos;
-    let body_len = crate::os_pack::core::read_varint_u64(bytes, &mut cursor)?;
+    let body_len = crate::os_pack::read_varint_u64(bytes, &mut cursor)?;
     if body_len < 2 {
         return Err(malformed("frame body_len", pos as u64, "body_len smaller than kind+flags (2 bytes)"));
     }
@@ -200,7 +200,7 @@ fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<'_>, u
     let mut payload_start = 2usize;
     let raw_len = if compressed {
         let mut p = payload_start;
-        let v = crate::os_pack::core::read_varint_u64(body, &mut p)?;
+        let v = crate::os_pack::read_varint_u64(body, &mut p)?;
         payload_start = p;
         Some(v)
     } else {
@@ -208,7 +208,7 @@ fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<'_>, u
     };
     let stored = &body[payload_start..];
     let stored_crc = u32::from_le_bytes(bytes[body_end..body_end + 4].try_into().unwrap());
-    let computed_crc = crate::os_pack::core::crc32c(body);
+    let computed_crc = crate::os_pack::crc32c(body);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "frame", offset: body_end as u64 }));
     }
@@ -330,7 +330,7 @@ fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_len: u
 /// length (already implied by `COMMIT_FRAME_LEN`, but checked directly since callers may hand this
 /// any `stored` slice, e.g. during `recover`'s source-backed reads). Public per the `CommitPayload`
 /// doc comment above — the sole intended entry point for decoding a `RecordFrame`'s `stored` bytes
-/// once a caller has confirmed `kind == crate::os_spr::core::REC_COMMIT` via `FrameCursor`/`ReverseFrameCursor`.
+/// once a caller has confirmed `kind == crate::os_spr::REC_COMMIT` via `FrameCursor`/`ReverseFrameCursor`.
 pub fn parse_commit_payload(payload: &[u8]) -> Result<CommitPayload, ProtocolError> {
     if payload.len() != COMMIT_PAYLOAD_LEN {
         return Err(malformed("commit payload", 0, format!("expected {COMMIT_PAYLOAD_LEN} bytes, got {}", payload.len())));
@@ -358,7 +358,7 @@ pub struct WriteOptions {
 type PreparedPayload<'a> = (bool, Option<u64>, std::borrow::Cow<'a, [u8]>);
 
 /// @emoji 🗜️ Resolves `codec` for one `write_record` call.
-fn prepare_payload(codec: crate::os_pack::core::CodecId, payload: &[u8]) -> Result<PreparedPayload<'_>, ProtocolError> {
+fn prepare_payload(codec: crate::os_pack::CodecId, payload: &[u8]) -> Result<PreparedPayload<'_>, ProtocolError> {
     match codec.0 {
         0 => Ok((false, None, std::borrow::Cow::Borrowed(payload))),
         1 => {
@@ -414,7 +414,7 @@ impl<S: PackSink> SprWriter<S> {
     /// offset. Folds the frame's `blake3` digest into the pending commit-chain accumulator — the
     /// digest covers the WHOLE on-disk frame (length-prefix through `back_len`), matching the
     /// contract's `digest_i = blake3(full frame bytes of record i)`.
-    pub fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: crate::os_pack::core::CodecId) -> Result<u64, ProtocolError> {
+    pub fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: crate::os_pack::CodecId) -> Result<u64, ProtocolError> {
         let start_offset = self.sink.position();
         let (compressed, raw_len, stored) = prepare_payload(codec, payload)?;
         let flags = frame_flags(compressed, critical, codec.0);
@@ -443,7 +443,7 @@ impl<S: PackSink> SprWriter<S> {
         let prev_commit_offset = self.last_commit_offset.unwrap_or(0);
         let payload = write_commit_payload(commit_seq, prev_commit_offset, self.pending_records_len, self.pending_record_count, &chain_hash);
         let flags = frame_flags(false, true, 0);
-        encode_frame_into(&mut self.scratch, crate::os_spr::core::REC_COMMIT, flags, None, &payload)?;
+        encode_frame_into(&mut self.scratch, crate::os_spr::REC_COMMIT, flags, None, &payload)?;
         self.sink.write_all(&self.scratch)?;
 
         self.running_chain_hash = chain_hash;
@@ -514,7 +514,7 @@ fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_len: u64
         }
     }
     let mut pos = 0usize;
-    let value = crate::os_pack::core::read_varint_u64(&tmp, &mut pos)?;
+    let value = crate::os_pack::read_varint_u64(&tmp, &mut pos)?;
     Ok((value, i))
 }
 
@@ -549,7 +549,7 @@ fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &Protoc
     let mut payload_start = 2usize;
     let raw_len = if compressed {
         let mut p = payload_start;
-        let v = crate::os_pack::core::read_varint_u64(&body, &mut p)?;
+        let v = crate::os_pack::read_varint_u64(&body, &mut p)?;
         payload_start = p;
         Some(v)
     } else {
@@ -558,7 +558,7 @@ fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &Protoc
     let mut trailer = [0u8; 8];
     source.read_exact_at(body_end, &mut trailer)?;
     let stored_crc = u32::from_le_bytes(trailer[0..4].try_into().unwrap());
-    let computed_crc = crate::os_pack::core::crc32c(&body);
+    let computed_crc = crate::os_pack::crc32c(&body);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "frame", offset: body_end }));
     }
@@ -583,7 +583,7 @@ fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &ProtocolLim
     }
     let tail_offset = total_len - COMMIT_FRAME_LEN;
     let (kind, flags, _raw_len, payload, frame_len) = read_frame_via_source(source, tail_offset, limits).ok()?;
-    if kind != crate::os_spr::core::REC_COMMIT || frame_len != COMMIT_FRAME_LEN || flags & FRAME_FLAG_CRITICAL == 0 {
+    if kind != crate::os_spr::REC_COMMIT || frame_len != COMMIT_FRAME_LEN || flags & FRAME_FLAG_CRITICAL == 0 {
         return None;
     }
     let mut current = parse_commit_payload(&payload).ok()?;
@@ -605,7 +605,7 @@ fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &ProtocolLim
             return None;
         }
         let (prev_kind, prev_flags, _prev_raw_len, prev_payload, _prev_frame_len) = read_frame_via_source(source, prev_offset, limits).ok()?;
-        if prev_kind != crate::os_spr::core::REC_COMMIT || prev_flags & FRAME_FLAG_CRITICAL == 0 {
+        if prev_kind != crate::os_spr::REC_COMMIT || prev_flags & FRAME_FLAG_CRITICAL == 0 {
             return None;
         }
         let prev_commit = parse_commit_payload(&prev_payload).ok()?;
@@ -660,7 +660,7 @@ pub fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: Recover
                 }
                 pos += frame_len;
                 last_valid_end = pos;
-                if kind == crate::os_spr::core::REC_COMMIT {
+                if kind == crate::os_spr::REC_COMMIT {
                     if let Ok(commit) = parse_commit_payload(&payload) {
                         last_commit_seq = commit.commit_seq;
                         last_commit_offset = frame_start;
@@ -702,7 +702,7 @@ mod tests {
     //#region 🔖️Header
     #[test]
     fn header_round_trips_via_begin_and_validate() {
-        let options = WriteOptions { required_flags: crate::os_spr::core::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::core::OPTIONAL_CANONICAL };
+        let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
         let writer = SprWriter::begin(Vec::new(), &options).unwrap();
         let bytes = writer.into_sink();
         assert_eq!(bytes.len(), HEADER_SIZE);
@@ -733,9 +733,9 @@ mod tests {
 
     #[test]
     fn read_header_exposes_decoded_fields_to_downstream_crates() {
-        let bytes = build_header_bytes(crate::os_spr::core::REQUIRED_HASH_CHAIN, crate::os_spr::core::OPTIONAL_CANONICAL).to_vec();
+        let bytes = build_header_bytes(crate::os_spr::REQUIRED_HASH_CHAIN, crate::os_spr::OPTIONAL_CANONICAL).to_vec();
         let header = read_header(&bytes).unwrap();
-        assert_eq!(header, Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags: crate::os_spr::core::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::core::OPTIONAL_CANONICAL });
+        assert_eq!(header, Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL });
     }
 
     #[test]
@@ -750,8 +750,8 @@ mod tests {
     fn build_small_file() -> Vec<u8> {
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
-        writer.write_record(crate::os_spr::core::REC_DOC, true, b"doc-payload", crate::os_pack::core::CodecId(0)).unwrap();
-        writer.write_record(crate::os_spr::core::REC_EDIT, true, b"edit-payload", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, b"doc-payload", crate::os_pack::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_EDIT, true, b"edit-payload", crate::os_pack::CodecId(0)).unwrap();
         writer.commit().unwrap();
         writer.into_sink()
     }
@@ -761,17 +761,17 @@ mod tests {
         let bytes = build_small_file();
         let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64);
         let doc = cursor.next_frame().unwrap().unwrap();
-        assert_eq!(doc.kind, crate::os_spr::core::REC_DOC);
+        assert_eq!(doc.kind, crate::os_spr::REC_DOC);
         assert_eq!(doc.payload(), b"doc-payload");
         assert_eq!(doc.flags & FRAME_FLAG_CRITICAL, FRAME_FLAG_CRITICAL);
         assert_eq!(doc.offset, HEADER_SIZE as u64);
 
         let edit = cursor.next_frame().unwrap().unwrap();
-        assert_eq!(edit.kind, crate::os_spr::core::REC_EDIT);
+        assert_eq!(edit.kind, crate::os_spr::REC_EDIT);
         assert_eq!(edit.payload(), b"edit-payload");
 
         let commit = cursor.next_frame().unwrap().unwrap();
-        assert_eq!(commit.kind, crate::os_spr::core::REC_COMMIT);
+        assert_eq!(commit.kind, crate::os_spr::REC_COMMIT);
         assert_eq!(commit.stored.len(), 64);
 
         assert!(cursor.next_frame().unwrap().is_none());
@@ -855,8 +855,8 @@ mod tests {
         // (see the module doc). This proves the cursor never special-cases `kind`.
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
-        writer.write_record(0x50, false, b"extension-payload", crate::os_pack::core::CodecId(0)).unwrap();
-        writer.write_record(crate::os_spr::core::REC_DOC, true, b"doc-payload", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(0x50, false, b"extension-payload", crate::os_pack::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, b"doc-payload", crate::os_pack::CodecId(0)).unwrap();
         let bytes = writer.into_sink();
 
         let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64);
@@ -866,7 +866,7 @@ mod tests {
         assert_eq!(ext.payload(), b"extension-payload");
 
         let doc = cursor.next_frame().unwrap().unwrap();
-        assert_eq!(doc.kind, crate::os_spr::core::REC_DOC);
+        assert_eq!(doc.kind, crate::os_spr::REC_DOC);
         assert!(cursor.next_frame().unwrap().is_none());
     }
 
@@ -876,7 +876,7 @@ mod tests {
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
         let payload = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-        writer.write_record(crate::os_spr::core::REC_DOC, true, payload, crate::os_pack::core::CodecId(1)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, payload, crate::os_pack::CodecId(1)).unwrap();
         let bytes = writer.into_sink();
 
         let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64);
@@ -903,7 +903,7 @@ mod tests {
         let mut concat = chain_0.to_vec();
         let mut commit_frame: Option<RecordFrame<'_>> = None;
         while let Some(frame) = cursor.next_frame().unwrap() {
-            if frame.kind == crate::os_spr::core::REC_COMMIT {
+            if frame.kind == crate::os_spr::REC_COMMIT {
                 commit_frame = Some(frame);
                 break;
             }
@@ -923,9 +923,9 @@ mod tests {
     fn commit_chain_links_prev_commit_offset_across_multiple_commits() {
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
-        writer.write_record(crate::os_spr::core::REC_DOC, true, b"a", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, b"a", crate::os_pack::CodecId(0)).unwrap();
         let commit_1_offset = writer.commit().unwrap();
-        writer.write_record(crate::os_spr::core::REC_EDIT, true, b"b", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_EDIT, true, b"b", crate::os_pack::CodecId(0)).unwrap();
         let commit_2_offset = writer.commit().unwrap();
         let bytes = writer.into_sink();
 
@@ -943,7 +943,7 @@ mod tests {
         // pull `last_commit_seq`/`chain_hash` out of a `REC_COMMIT` frame found via `FrameCursor`.
         let bytes = build_small_file();
         let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64);
-        let commit_frame = std::iter::from_fn(|| cursor.next_frame().transpose()).map(Result::unwrap).find(|frame| frame.kind == crate::os_spr::core::REC_COMMIT).unwrap();
+        let commit_frame = std::iter::from_fn(|| cursor.next_frame().transpose()).map(Result::unwrap).find(|frame| frame.kind == crate::os_spr::REC_COMMIT).unwrap();
         let payload: CommitPayload = parse_commit_payload(commit_frame.payload()).unwrap();
         assert_eq!(payload.commit_seq, 1);
         assert_eq!(payload.record_count, 2);
@@ -966,7 +966,7 @@ mod tests {
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
         for i in 0..5u8 {
-            writer.write_record(crate::os_spr::core::REC_EDIT, true, &[i], crate::os_pack::core::CodecId(0)).unwrap();
+            writer.write_record(crate::os_spr::REC_EDIT, true, &[i], crate::os_pack::CodecId(0)).unwrap();
             writer.commit().unwrap();
         }
         let bytes = writer.into_sink();
@@ -981,9 +981,9 @@ mod tests {
     fn recover_forward_scan_truncates_to_last_commit_on_torn_tail() {
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
-        writer.write_record(crate::os_spr::core::REC_DOC, true, b"a", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, b"a", crate::os_pack::CodecId(0)).unwrap();
         let commit_end = writer.commit().unwrap() + COMMIT_FRAME_LEN;
-        writer.write_record(crate::os_spr::core::REC_EDIT, true, b"uncommitted", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_EDIT, true, b"uncommitted", crate::os_pack::CodecId(0)).unwrap();
         let mut bytes = writer.into_sink();
         bytes.truncate(bytes.len() - 3); // tear the tail mid-record, after the commit
 
@@ -997,9 +997,9 @@ mod tests {
     fn recover_last_valid_record_mode_trusts_past_the_last_commit() {
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
-        writer.write_record(crate::os_spr::core::REC_DOC, true, b"a", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, b"a", crate::os_pack::CodecId(0)).unwrap();
         writer.commit().unwrap();
-        writer.write_record(crate::os_spr::core::REC_EDIT, true, b"uncommitted-but-well-formed", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_EDIT, true, b"uncommitted-but-well-formed", crate::os_pack::CodecId(0)).unwrap();
         let bytes = writer.into_sink();
 
         let last_commit_report = recover(&bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).unwrap();
@@ -1029,10 +1029,10 @@ mod tests {
         let options = WriteOptions::default();
         let mut writer = SprWriter::begin(Vec::new(), &options).unwrap();
         for i in 0..4u8 {
-            writer.write_record(crate::os_spr::core::REC_EDIT, true, &[i; 5], crate::os_pack::core::CodecId(0)).unwrap();
+            writer.write_record(crate::os_spr::REC_EDIT, true, &[i; 5], crate::os_pack::CodecId(0)).unwrap();
         }
         writer.commit().unwrap();
-        writer.write_record(crate::os_spr::core::REC_EDIT, true, b"tail-record-after-commit", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_EDIT, true, b"tail-record-after-commit", crate::os_pack::CodecId(0)).unwrap();
         let bytes = writer.into_sink();
 
         for len in 0..=bytes.len() {
@@ -1069,7 +1069,7 @@ mod tests {
     fn position_tracks_sink_length_across_writes() {
         let mut writer = SprWriter::begin(Vec::new(), &WriteOptions::default()).unwrap();
         assert_eq!(writer.position(), HEADER_SIZE as u64);
-        writer.write_record(crate::os_spr::core::REC_DOC, true, b"x", crate::os_pack::core::CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, b"x", crate::os_pack::CodecId(0)).unwrap();
         assert_eq!(writer.position(), writer.into_sink().len() as u64);
     }
     //#endregion 🔖️Writer

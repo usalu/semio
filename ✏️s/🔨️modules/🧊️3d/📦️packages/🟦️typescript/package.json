@@ -8,9 +8,6 @@
   "exports": {
     ".": "./📦️index.ts"
   },
-  "dependencies": {
-    "@semio-tech/flow-module-brep": "workspace:*"
-  },
   "scripts": {
     "test": "bun nx run @semio-tech/s-3d-js:test"
   },

@@ -94,7 +94,7 @@ function walk(absDir: string, repoRoot: string, pkgCandidates: PkgDirCandidate[]
  *    and its `pkg/` declare `@semio-tech/framework-editor-rs`) — listing the nested copy too would be a
  *    duplicate-name workspace. It is only included when its name genuinely differs from the outer
  *    wrapper's (or the outer dir has no wrapper at all — e.g. 🌊️flow's dynamically-loaded
- *    `flow-module-bim`, whose `pkg/` is its only manifest and has no `workspace:*` dependent at all,
+ *    `flow-extension-bim`, whose `pkg/` is its only manifest and has no `workspace:*` dependent at all,
  *    since it is loaded by path at runtime, not imported by name — deliberately NOT gated on real
  *    `workspace:*` usage for exactly that reason, confirmed by a real `bun install` requiring any listed
  *    workspace dir to exist on disk, never on being depended upon).

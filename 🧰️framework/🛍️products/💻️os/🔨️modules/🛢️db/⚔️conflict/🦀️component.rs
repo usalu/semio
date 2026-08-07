@@ -122,9 +122,9 @@ const DEFAULT_BLOOM_HASHES: usize = 4;
 impl PathBloom {
     /// @emoji 🏗️ Validates `num_bits`/`num_hashes` before allocating the backing `Vec` (mirrors
     /// `pack_core`'s "validate before allocating" invariant, applied to this crate's own inputs).
-    pub fn new(num_bits: usize, num_hashes: usize) -> Result<PathBloom, db_core::DbError> {
+    pub fn new(num_bits: usize, num_hashes: usize) -> Result<PathBloom, DbError> {
         if num_bits == 0 || num_hashes == 0 {
-            return Err(db_core::DbError::InvalidArgument("PathBloom requires num_bits > 0 and num_hashes > 0".to_string()));
+            return Err(DbError::InvalidArgument("PathBloom requires num_bits > 0 and num_hashes > 0".to_string()));
         }
         let words = num_bits.div_ceil(64);
         Ok(PathBloom { bits: vec![0u64; words], num_bits, num_hashes })

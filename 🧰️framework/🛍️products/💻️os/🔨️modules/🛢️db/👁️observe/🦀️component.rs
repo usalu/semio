@@ -1,13 +1,13 @@
 //! 🗄️ `db_observe` — the `db` family's observability seam: JSON-lines structured/audit event
-//! sinks implementing `db_core::Emit`, cardinality-controlled metric registries (counter/gauge/
+//! sinks implementing `Emit`, cardinality-controlled metric registries (counter/gauge/
 //! histogram), a bounded span registry, a component health registry, and a runtime determinism
 //! verifier (cross-checks independently-produced state-hash streams for the same document, e.g.
 //! a live execution against a replay). Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
-//! 🎯️ Design choice: every `db_*` crate below `db_document` takes `&dyn db_core::Emit` /
-//! `Arc<dyn db_core::Emit>` rather than depending on this crate directly (see `db_core`'s `Emit`
+//! 🎯️ Design choice: every `db_*` crate below `db_document` takes `&dyn Emit` /
+//! `Arc<dyn Emit>` rather than depending on this crate directly (see `db_core`'s `Emit`
 //! doc) — this crate supplies the real sinks that implement that trait, plus the standalone
 //! registries (`MetricRegistry`, `SpanRegistry`, `HealthRegistry`, `DeterminismVerifier`) a
 //! deployment wires up independently of the `Emit` event stream. Depends on `pack_core` (in
@@ -24,7 +24,7 @@ use std::sync::Mutex;
 // callers hold a `dyn Emit` object or call through `db_core`'s own trait path) — gate the import
 // accordingly rather than leaving an always-unused warning on non-test builds.
 #[cfg(test)]
-use db_core::Emit as _;
+use Emit as _;
 
 //#region 🔖️Util
 /// @emoji 🔓️ Locks `mutex`, recovering the inner value even if a prior holder panicked while
@@ -54,16 +54,16 @@ fn escape_json_str(raw: &str, out: &mut String) {
     }
 }
 
-fn write_json_field_value(field: &db_core::EmitField, out: &mut String) {
+fn write_json_field_value(field: &EmitField, out: &mut String) {
     use std::fmt::Write;
     match field {
-        db_core::EmitField::U64(v) => {
+        EmitField::U64(v) => {
             let _ = write!(out, "{v}");
         }
-        db_core::EmitField::I64(v) => {
+        EmitField::I64(v) => {
             let _ = write!(out, "{v}");
         }
-        db_core::EmitField::F64(v) => {
+        EmitField::F64(v) => {
             if v.is_finite() {
                 let _ = write!(out, "{v}");
             } else {
@@ -71,8 +71,8 @@ fn write_json_field_value(field: &db_core::EmitField, out: &mut String) {
                 out.push_str("null");
             }
         }
-        db_core::EmitField::Bool(v) => out.push_str(if *v { "true" } else { "false" }),
-        db_core::EmitField::Text(v) => {
+        EmitField::Bool(v) => out.push_str(if *v { "true" } else { "false" }),
+        EmitField::Text(v) => {
             out.push('"');
             escape_json_str(v, out);
             out.push('"');
@@ -84,7 +84,7 @@ fn write_json_field_value(field: &db_core::EmitField, out: &mut String) {
 /// `StructuredSink` and `AuditSink` write, and what `db_cli`'s log tooling can `jq` over without
 /// a schema. Hand-rolled rather than pulling `serde_json`: keeps this crate's dependency surface
 /// at `db_core` + `pack_core`, matching the family's dependency-light convention.
-pub fn encode_emit_event_json(event: &db_core::EmitEvent) -> String {
+pub fn encode_emit_event_json(event: &EmitEvent) -> String {
     let mut out = String::with_capacity(64 + event.fields.len() * 16);
     out.push('{');
     out.push_str("\"name\":\"");
@@ -113,11 +113,11 @@ pub fn encode_emit_event_json(event: &db_core::EmitEvent) -> String {
 //#region 🔖️Sink
 /// @emoji 🚰️ Where a sink's JSON-lines actually land — implementable over memory (`MemorySink`,
 /// tests/introspection), a file/pipe/`Vec<u8>` (`WriterSink`), or anything else ordered and
-/// append-only. Mirrors `pack_core::PackSink`'s spirit but returns `db_core::DbError` (the
+/// append-only. Mirrors `pack::PackSink`'s spirit but returns `DbError` (the
 /// family's error type) instead of `PackError`, and writes pre-delimited lines rather than raw
 /// byte ranges.
 pub trait EventSink: Send + Sync {
-    fn write_line(&self, line: &str) -> Result<(), db_core::DbError>;
+    fn write_line(&self, line: &str) -> Result<(), DbError>;
 }
 
 /// @emoji 🧠️ An in-memory `EventSink` — the default for tests and for introspecting what a sink
@@ -139,7 +139,7 @@ impl MemorySink {
 }
 
 impl EventSink for MemorySink {
-    fn write_line(&self, line: &str) -> Result<(), db_core::DbError> {
+    fn write_line(&self, line: &str) -> Result<(), DbError> {
         lock(&self.lines).push(line.to_string());
         Ok(())
     }
@@ -161,17 +161,17 @@ impl<W: std::io::Write + Send> WriterSink<W> {
 }
 
 impl<W: std::io::Write + Send> EventSink for WriterSink<W> {
-    fn write_line(&self, line: &str) -> Result<(), db_core::DbError> {
+    fn write_line(&self, line: &str) -> Result<(), DbError> {
         let mut writer = lock(&self.writer);
-        writer.write_all(line.as_bytes()).map_err(|e| db_core::DbError::Io(e.to_string()))?;
-        writer.write_all(b"\n").map_err(|e| db_core::DbError::Io(e.to_string()))?;
-        writer.flush().map_err(|e| db_core::DbError::Io(e.to_string()))
+        writer.write_all(line.as_bytes()).map_err(|e| DbError::Io(e.to_string()))?;
+        writer.write_all(b"\n").map_err(|e| DbError::Io(e.to_string()))?;
+        writer.flush().map_err(|e| DbError::Io(e.to_string()))
     }
 }
 //#endregion 🔖️Sink
 
 //#region 🔖️Structured
-/// @emoji 📡️ A `db_core::Emit` implementation that JSON-lines-encodes every event into an
+/// @emoji 📡️ A `Emit` implementation that JSON-lines-encodes every event into an
 /// `EventSink`. The family's default observability sink: wiring one of these into a `Database`
 /// deployment is the only thing needed to get structured logs — no `db_observe` dependency leaks
 /// into `db_core..db_cluster`.
@@ -193,8 +193,8 @@ impl<S: EventSink> StructuredSink<S> {
     }
 }
 
-impl<S: EventSink> db_core::Emit for StructuredSink<S> {
-    fn emit(&self, event: db_core::EmitEvent) {
+impl<S: EventSink> Emit for StructuredSink<S> {
+    fn emit(&self, event: EmitEvent) {
         let line = encode_emit_event_json(&event);
         if self.sink.write_line(&line).is_err() {
             self.failed_writes.fetch_add(1, Ordering::Relaxed);
@@ -216,7 +216,7 @@ fn fold_checksum(prev_checksum: u32, line: &str) -> u32 {
     let mut buf = Vec::with_capacity(4 + line.len());
     buf.extend_from_slice(&prev_checksum.to_le_bytes());
     buf.extend_from_slice(line.as_bytes());
-    pack_core::crc32c(&buf)
+    pack::crc32c(&buf)
 }
 
 struct AuditChainState {
@@ -224,11 +224,11 @@ struct AuditChainState {
     links: VecDeque<AuditLink>,
 }
 
-/// @emoji 🕵️ A `db_core::Emit` implementation for the audit trail: same JSON-lines wire shape as
+/// @emoji 🕵️ A `Emit` implementation for the audit trail: same JSON-lines wire shape as
 /// `StructuredSink`, but every record is folded into a CRC-32C hash chain
-/// (`pack_core::crc32c(prev_checksum || line)`) so `verify_chain` can detect a single tampered,
+/// (`pack::crc32c(prev_checksum || line)`) so `verify_chain` can detect a single tampered,
 /// reordered, or dropped line anywhere in the retained window. Deliberately CRC-32C, not a
-/// `pack_core::ContentHash` (blake3): that type is for content-addressing across the family (WAL
+/// `pack::ContentHash` (blake3): that type is for content-addressing across the family (WAL
 /// payloads, snapshot pages, `DeterminismVerifier`'s digests below); this chain is a local
 /// integrity check over an append-only log this sink owns end to end, and CRC-32C is what the
 /// family already uses for that flavor of check (SPR frame checksums) — blake3 here would buy no
@@ -267,16 +267,16 @@ impl<S: EventSink> AuditSink<S> {
     /// for skipping any lines older than the window, e.g. via a companion compaction checkpoint;
     /// out of scope for this sink) and compares it link by link. `Ok(())` iff every retained link
     /// still matches; otherwise `DbError::Corrupt` naming the first divergent seq.
-    pub fn verify_chain(&self, lines: &[String]) -> Result<(), db_core::DbError> {
+    pub fn verify_chain(&self, lines: &[String]) -> Result<(), DbError> {
         let state = lock(&self.state);
         if lines.len() != state.links.len() {
-            return Err(db_core::DbError::Corrupt(format!("audit chain length mismatch: expected {} retained lines, got {}", state.links.len(), lines.len())));
+            return Err(DbError::Corrupt(format!("audit chain length mismatch: expected {} retained lines, got {}", state.links.len(), lines.len())));
         }
         let mut prev_checksum = state.base_checksum;
         for (line, expected) in lines.iter().zip(state.links.iter()) {
             let checksum = fold_checksum(prev_checksum, line);
             if checksum != expected.checksum {
-                return Err(db_core::DbError::Corrupt(format!("audit chain diverges at seq {}", expected.seq)));
+                return Err(DbError::Corrupt(format!("audit chain diverges at seq {}", expected.seq)));
             }
             prev_checksum = checksum;
         }
@@ -284,8 +284,8 @@ impl<S: EventSink> AuditSink<S> {
     }
 }
 
-impl<S: EventSink> db_core::Emit for AuditSink<S> {
-    fn emit(&self, event: db_core::EmitEvent) {
+impl<S: EventSink> Emit for AuditSink<S> {
+    fn emit(&self, event: EmitEvent) {
         let line = encode_emit_event_json(&event);
         if self.sink.write_line(&line).is_err() {
             self.failed_writes.fetch_add(1, Ordering::Relaxed);
@@ -432,15 +432,15 @@ impl MetricRegistry {
     /// observation. Later calls for the same series reuse the bounds fixed at creation — a
     /// mismatched `bounds.len()` is a caller bug (`DbError::InvalidArgument`), not silently
     /// ignored.
-    pub fn observe_histogram(&self, name: &'static str, labels: Labels, bounds: &[f64], value: f64) -> Result<(), db_core::DbError> {
+    pub fn observe_histogram(&self, name: &'static str, labels: Labels, bounds: &[f64], value: f64) -> Result<(), DbError> {
         if bounds.is_empty() {
-            return Err(db_core::DbError::InvalidArgument("histogram bounds must not be empty".to_string()));
+            return Err(DbError::InvalidArgument("histogram bounds must not be empty".to_string()));
         }
         let labels = self.cardinality.admit(name, labels);
         let mut histograms = lock(&self.histograms);
         let state = histograms.entry((name, labels)).or_insert_with(|| HistogramState { bounds: bounds.to_vec(), bucket_counts: vec![0; bounds.len() + 1], sum: 0.0, count: 0 });
         if state.bounds.len() != bounds.len() {
-            return Err(db_core::DbError::InvalidArgument(format!("histogram {name} bounds length changed: {} vs {}", state.bounds.len(), bounds.len())));
+            return Err(DbError::InvalidArgument(format!("histogram {name} bounds length changed: {} vs {}", state.bounds.len(), bounds.len())));
         }
         let bucket = state.bounds.iter().position(|&b| value <= b).unwrap_or(state.bounds.len());
         state.bucket_counts[bucket] += 1;
@@ -484,7 +484,7 @@ pub struct CompletedSpan {
     pub id: SpanId,
     pub name: &'static str,
     pub parent: Option<SpanId>,
-    pub document: Option<db_core::DocumentId>,
+    pub document: Option<DocumentId>,
     pub start_ms: u64,
     pub end_ms: u64,
     pub duration_ms: u64,
@@ -493,7 +493,7 @@ pub struct CompletedSpan {
 struct ActiveSpan {
     name: &'static str,
     parent: Option<SpanId>,
-    document: Option<db_core::DocumentId>,
+    document: Option<DocumentId>,
     start_ms: u64,
 }
 
@@ -520,7 +520,7 @@ impl<C: Clock> SpanRegistry<C> {
     }
 
     /// @emoji ▶️ Starts a new span, returning its id (pass to `end`).
-    pub fn start(&self, name: &'static str, parent: Option<SpanId>, document: Option<db_core::DocumentId>) -> SpanId {
+    pub fn start(&self, name: &'static str, parent: Option<SpanId>, document: Option<DocumentId>) -> SpanId {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let start_ms = self.clock.now_ms();
         lock(&self.active).insert(id, ActiveSpan { name, parent, document, start_ms });
@@ -616,7 +616,7 @@ impl HealthRegistry {
 #[derive(Clone, Debug)]
 pub struct DivergenceReport {
     pub seq: u64,
-    pub digests: Vec<(String, pack_core::ContentHash)>,
+    pub digests: Vec<(String, pack::ContentHash)>,
 }
 
 /// @emoji 🧬️ Runtime cross-check that two (or more) independently-produced state-hash streams
@@ -626,7 +626,7 @@ pub struct DivergenceReport {
 /// this one may not depend on; this is the always-on runtime version.
 pub struct DeterminismVerifier {
     expected_labels: Vec<String>,
-    pending: Mutex<HashMap<u64, HashMap<String, pack_core::ContentHash>>>,
+    pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
     max_pending: usize,
 }
 
@@ -643,10 +643,10 @@ impl DeterminismVerifier {
     /// agree — either way `seq` is pruned afterward, so a completed sequence never grows the
     /// pending set. Errs with `LimitExceeded` if `seq` is new and the pending window is already
     /// full (protects against an expected label that never reports).
-    pub fn record(&self, seq: u64, label: &str, digest: pack_core::ContentHash) -> Result<Option<DivergenceReport>, db_core::DbError> {
+    pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
         let mut pending = lock(&self.pending);
         if !pending.contains_key(&seq) && pending.len() >= self.max_pending {
-            return Err(db_core::DbError::LimitExceeded("determinism verifier pending-sequence window exceeded"));
+            return Err(DbError::LimitExceeded("determinism verifier pending-sequence window exceeded"));
         }
         let entry = pending.entry(seq).or_default();
         entry.insert(label.to_string(), digest);
@@ -655,7 +655,7 @@ impl DeterminismVerifier {
             return Ok(None);
         }
 
-        let mut digests: Vec<(String, pack_core::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+        let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
         let all_match = digests.windows(2).all(|w| w[0].1 == w[1].1);
         pending.remove(&seq);
 
@@ -681,7 +681,7 @@ impl DeterminismVerifier {
 /// `UnwiredOtelExporter` for the honest not-yet-implemented default.
 #[cfg(feature = "otel")]
 pub trait OtelSpanExporter: Send + Sync {
-    fn export(&self, span: &CompletedSpan) -> Result<(), db_core::DbError>;
+    fn export(&self, span: &CompletedSpan) -> Result<(), DbError>;
 }
 
 /// @emoji 🚫️ An `OtelSpanExporter` that reports `DbError::Unimplemented` rather than silently
@@ -693,8 +693,8 @@ pub struct UnwiredOtelExporter;
 
 #[cfg(feature = "otel")]
 impl OtelSpanExporter for UnwiredOtelExporter {
-    fn export(&self, _span: &CompletedSpan) -> Result<(), db_core::DbError> {
-        Err(db_core::DbError::Unimplemented("otel export requires an OTLP exporter crate not yet a workspace dependency"))
+    fn export(&self, _span: &CompletedSpan) -> Result<(), DbError> {
+        Err(DbError::Unimplemented("otel export requires an OTLP exporter crate not yet a workspace dependency"))
     }
 }
 //#endregion 🔖️Otel
@@ -704,18 +704,18 @@ impl OtelSpanExporter for UnwiredOtelExporter {
 mod tests {
     use super::*;
 
-    fn hash(byte: u8) -> pack_core::ContentHash {
-        pack_core::ContentHash([byte; 32])
+    fn hash(byte: u8) -> pack::ContentHash {
+        pack::ContentHash([byte; 32])
     }
 
     //#region 🔖️Json
     #[test]
     fn encode_emit_event_json_escapes_and_shapes_fields() {
-        let event = db_core::EmitEvent::new("wal.append")
-            .with_document(db_core::DocumentId::from("doc\"1"))
-            .field("bytes", db_core::EmitField::U64(42))
-            .field("ok", db_core::EmitField::Bool(true))
-            .field("note", db_core::EmitField::Text("line\nbreak".to_string()));
+        let event = EmitEvent::new("wal.append")
+            .with_document(DocumentId::from("doc\"1"))
+            .field("bytes", EmitField::U64(42))
+            .field("ok", EmitField::Bool(true))
+            .field("note", EmitField::Text("line\nbreak".to_string()));
 
         let json = encode_emit_event_json(&event);
         assert!(json.starts_with("{\"name\":\"wal.append\""));
@@ -728,7 +728,7 @@ mod tests {
 
     #[test]
     fn encode_emit_event_json_never_emits_nan_or_infinity_literals() {
-        let event = db_core::EmitEvent::new("x").field("v", db_core::EmitField::F64(f64::NAN));
+        let event = EmitEvent::new("x").field("v", EmitField::F64(f64::NAN));
         let json = encode_emit_event_json(&event);
         assert!(json.contains("\"v\":null"));
         assert!(!json.contains("NaN"));
@@ -747,8 +747,8 @@ mod tests {
 
     struct FailingSink;
     impl EventSink for FailingSink {
-        fn write_line(&self, _line: &str) -> Result<(), db_core::DbError> {
-            Err(db_core::DbError::Io("disk full".to_string()))
+        fn write_line(&self, _line: &str) -> Result<(), DbError> {
+            Err(DbError::Io("disk full".to_string()))
         }
     }
     //#endregion 🔖️Sink
@@ -758,7 +758,7 @@ mod tests {
     fn structured_sink_writes_one_json_line_per_event() {
         let memory = MemorySink::new();
         let structured = StructuredSink::new(memory);
-        structured.emit(db_core::EmitEvent::new("doc.commit").field("seq", db_core::EmitField::U64(7)));
+        structured.emit(EmitEvent::new("doc.commit").field("seq", EmitField::U64(7)));
         let lines = structured.sink.lines();
         assert_eq!(lines.len(), 1);
         assert!(lines[0].contains("\"name\":\"doc.commit\""));
@@ -768,8 +768,8 @@ mod tests {
     #[test]
     fn structured_sink_counts_failed_writes_instead_of_dropping_silently_or_panicking() {
         let structured = StructuredSink::new(FailingSink);
-        structured.emit(db_core::EmitEvent::new("x"));
-        structured.emit(db_core::EmitEvent::new("y"));
+        structured.emit(EmitEvent::new("x"));
+        structured.emit(EmitEvent::new("y"));
         assert_eq!(structured.failed_writes(), 2);
     }
     //#endregion 🔖️Structured
@@ -780,7 +780,7 @@ mod tests {
         let memory = MemorySink::new();
         let audit = AuditSink::new(memory, 100);
         for i in 0..5u64 {
-            audit.emit(db_core::EmitEvent::new("audit.write").field("seq", db_core::EmitField::U64(i)));
+            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i)));
         }
         let lines = audit.sink.lines();
         assert_eq!(lines.len(), 5);
@@ -793,13 +793,13 @@ mod tests {
         let memory = MemorySink::new();
         let audit = AuditSink::new(memory, 100);
         for i in 0..5u64 {
-            audit.emit(db_core::EmitEvent::new("audit.write").field("seq", db_core::EmitField::U64(i)));
+            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i)));
         }
         let mut lines = audit.sink.lines();
         lines[2] = lines[2].replace("\"seq\":2", "\"seq\":999");
         let err = audit.verify_chain(&lines).unwrap_err();
         match err {
-            db_core::DbError::Corrupt(message) => assert!(message.contains("seq 2")),
+            DbError::Corrupt(message) => assert!(message.contains("seq 2")),
             other => panic!("expected Corrupt, got {other:?}"),
         }
     }
@@ -809,7 +809,7 @@ mod tests {
         let memory = MemorySink::new();
         let audit = AuditSink::new(memory, 2);
         for i in 0..5u64 {
-            audit.emit(db_core::EmitEvent::new("audit.write").field("seq", db_core::EmitField::U64(i)));
+            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i)));
         }
         let all_lines = audit.sink.lines();
         assert_eq!(all_lines.len(), 5);
@@ -824,7 +824,7 @@ mod tests {
     #[test]
     fn audit_sink_does_not_chain_a_failed_write() {
         let audit = AuditSink::new(FailingSink, 10);
-        audit.emit(db_core::EmitEvent::new("x"));
+        audit.emit(EmitEvent::new("x"));
         assert_eq!(audit.failed_writes(), 1);
         assert!(audit.chain().is_empty());
     }
@@ -889,7 +889,7 @@ mod tests {
         let metrics = MetricRegistry::new(16);
         metrics.observe_histogram("h", Labels::none(), &[1.0, 2.0], 1.0).unwrap();
         let err = metrics.observe_histogram("h", Labels::none(), &[1.0], 1.0).unwrap_err();
-        assert!(matches!(err, db_core::DbError::InvalidArgument(_)));
+        assert!(matches!(err, DbError::InvalidArgument(_)));
     }
     //#endregion 🔖️Metrics
 
@@ -977,7 +977,7 @@ mod tests {
         verifier.record(0, "primary", hash(1)).unwrap();
         verifier.record(1, "primary", hash(1)).unwrap();
         let err = verifier.record(2, "primary", hash(1)).unwrap_err();
-        assert!(matches!(err, db_core::DbError::LimitExceeded(_)));
+        assert!(matches!(err, DbError::LimitExceeded(_)));
     }
     //#endregion 🔖️Determinism
 
@@ -987,7 +987,7 @@ mod tests {
     fn unwired_otel_exporter_reports_unimplemented_rather_than_panicking() {
         let span = CompletedSpan { id: SpanId(0), name: "s", parent: None, document: None, start_ms: 0, end_ms: 1, duration_ms: 1 };
         let err = UnwiredOtelExporter.export(&span).unwrap_err();
-        assert!(matches!(err, db_core::DbError::Unimplemented(_)));
+        assert!(matches!(err, DbError::Unimplemented(_)));
     }
     //#endregion 🔖️Otel
 }

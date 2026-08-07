@@ -1,0 +1,25 @@
+=== FEM ===
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/➗️formulation -> ✏️s/🔌️plugins/🏗️fem/➗️formulation
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/🕸️mesh -> ✏️s/🔌️plugins/🏗️fem/🕸️mesh
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/🔢️sparse -> ✏️s/🔌️plugins/🏗️fem/🔢️sparse
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/📏️elements2d -> ✏️s/🔌️plugins/🏗️fem/📏️elements2d
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/🧊️elements3d -> ✏️s/🔌️plugins/🏗️fem/🧊️elements3d
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/🧮️analyses -> ✏️s/🔌️plugins/🏗️fem/🧮️analyses
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/🤝️shared -> ✏️s/🔌️plugins/🏗️fem/🖥️app-surface
+mv ✏️s/🔌️plugins/🏗️fem/🫀️core/🦀️component.rs -> ✏️s/🔌️plugins/🏗️fem/🏗️model/🦀️component.rs
+rm ✏️s/🔌️plugins/🏗️fem/🫀️core
+=== NORM ===
+mv ✏️s/🔌️plugins/📕️norm/🫀️core/🎚️config -> ✏️s/🔌️plugins/📕️norm/🎚️config
+mv ✏️s/🔌️plugins/📕️norm/🫀️core/🖥️app-surface -> ✏️s/🔌️plugins/📕️norm/🖥️app-surface
+mv ✏️s/🔌️plugins/📕️norm/🫀️core/🦀️component.rs -> ✏️s/🔌️plugins/📕️norm/📄️document/🦀️component.rs
+rm ✏️s/🔌️plugins/📕️norm/🫀️core
+=== BLOCK ===
+rm ✏️s/🔌️plugins/🧱️block/🫀️core
+=== SPACE ===
+rm ✏️s/🔌️plugins/🪐️space/🫀️core
+=== FLOW EXT ===
+mv ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🫀️core -> ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive
+=== IMPERATIVE EXT ===
+mv ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect
+=== TRINITY ===
+rm ✏️s/🔌️plugins/🔱️trinity/🫀️core

@@ -1,6 +1,6 @@
 //! 🗣️ Architect program artifact — the textual document surface (constitutional: dsl).
 //!
-//! `Program`'s `store::DocumentDsl` impl is `#[derive(dsl::DslDocument)]`-generated on the document
+//! `Program`'s `store::DocumentDsl` impl is `#[derive(dsl::DslRecord)]`-generated on the document
 //! type itself (see `🦀️component.rs`); this node owns the named entry points every consumer calls and
 //! the bundled `.architect` example the derive is validated against.
 

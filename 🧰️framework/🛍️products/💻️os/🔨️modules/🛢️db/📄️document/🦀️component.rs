@@ -15,7 +15,7 @@
 //! `CommandReceipt.conflicts: Vec<db_conflict::ConflictRecord>` (the real type), and
 //! `DocumentAuthority::run_query_blocking(query, consistency)` (two arguments, `db_query::
 //! Consistency`-aware). This revision matches that shape exactly: `security`/`emit` are real
-//! `DocumentEngineConfig` fields, `version_graph` is required (`db_core::NullVersionGraph` is the
+//! `DocumentEngineConfig` fields, `version_graph` is required (`NullVersionGraph` is the
 //! "no vcs" default rather than `Option::None`), `submit`'s conflict step is a genuine
 //! `db_conflict::ConflictDetector` fed by retained recent-commit `TouchedSet` history (not a local
 //! last-writer stand-in), and `query`/`RunQuery`/`run_query_blocking` take a `db_query::
@@ -44,23 +44,23 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 
-use db_core::DbError;
+use DbError;
 use protocol::OperationDiff as _;
 
 use dsl::DslValue;
 
 //#region 🔖️Ids
-/// @emoji 🌉️ `protocol::DocumentId` → `db_core::DocumentId`, the lossless single-`String` bridge
-/// `db_core`'s module doc promises (see `db_core::DocumentId`'s own doc for the rationale: this
+/// @emoji 🌉️ `protocol::DocumentId` → `DocumentId`, the lossless single-`String` bridge
+/// `db_core`'s module doc promises (see `DocumentId`'s own doc for the rationale: this
 /// crate is the first one in the family that depends on both `db_core` and `protocol` and so is
 /// where the bridge is actually exercised).
-fn to_core_document_id(id: &protocol::DocumentId) -> db_core::DocumentId {
-    db_core::DocumentId(id.0.clone())
+fn to_core_document_id(id: &protocol::DocumentId) -> DocumentId {
+    DocumentId(id.0.clone())
 }
 
-/// @emoji 🌉️ `protocol::ActorId` → `db_core::ActorId`, same bridge as `to_core_document_id`.
-fn to_core_actor_id(id: &protocol::ActorId) -> db_core::ActorId {
-    db_core::ActorId(id.0.clone())
+/// @emoji 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
+fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
+    ActorId(id.0.clone())
 }
 
 // 🔒️ Used as a bare fn-pointer error mapper (`.map_err(json_err)`) throughout this file —
@@ -98,16 +98,16 @@ impl CommandBatch {
     }
 }
 
-/// @emoji 🎚️ Per-submit durability override — see `db_core::DurabilityClass`'s doc for the
+/// @emoji 🎚️ Per-submit durability override — see `DurabilityClass`'s doc for the
 /// strength ordering `DocumentWal::submit` honors.
 #[derive(Clone, Copy, Debug)]
 pub struct SubmitOptions {
-    pub durability: db_core::DurabilityClass,
+    pub durability: DurabilityClass,
 }
 
 impl Default for SubmitOptions {
     fn default() -> Self {
-        SubmitOptions { durability: db_core::DurabilityClass::Memory }
+        SubmitOptions { durability: DurabilityClass::Memory }
     }
 }
 //#endregion 🔖️Command
@@ -253,14 +253,14 @@ fn command_touch(envelope: &protocol::OperationEnvelope, touched: &db_state::Tou
 /// @emoji 🧾️ What `DocumentEngine::submit` returns: the committed batch's identity, the document's
 /// new `Frontier`, the durability actually requested, any detected conflicts, and the post-commit
 /// state's content hash. Mirrors the `db` facade's frozen `CommandReceipt` shape, except `frontier`
-/// is `db_core::Frontier` (this crate's own internal currency) rather than the facade's
+/// is `Frontier` (this crate's own internal currency) rather than the facade's
 /// `protocol::DocumentId`-keyed twin — the facade converts via `to_core_document_id`'s inverse at
 /// its own boundary (see module doc's bridge note).
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandReceipt {
     pub command_id: protocol::OperationId,
-    pub frontier: db_core::Frontier,
-    pub durability: db_core::DurabilityClass,
+    pub frontier: Frontier,
+    pub durability: DurabilityClass,
     pub conflicts: Vec<ConflictRecord>,
     pub state_hash: Option<pack::ContentHash>,
 }
@@ -280,7 +280,7 @@ pub struct OutboxEntry {
 /// `LiveQuery` (see `🔖️Query`, new this revision) is the push-shaped sibling of this same signal.
 #[derive(Clone, Debug)]
 pub struct CommitNotification {
-    pub frontier: db_core::Frontier,
+    pub frontier: Frontier,
     pub operation_ids: Vec<protocol::OperationId>,
     pub touched: db_state::TouchedSet,
 }
@@ -368,7 +368,7 @@ impl AuthzHook for AllowAll {
 /// `..Default::default()` spread, so a new required field here would be a breaking change to a
 /// sibling crate this session does not own.
 pub struct DocumentEngineConfig {
-    pub limits: db_core::DbLimits,
+    pub limits: DbLimits,
     /// @emoji 🛂️ Deprecated-in-spirit extension seam, kept defined (see module doc): `submit` now
     /// authorizes through `security` instead. A caller with an existing `AuthzHook` impl can still
     /// call it manually; `DocumentEngine` itself no longer does.
@@ -379,11 +379,11 @@ pub struct DocumentEngineConfig {
     /// tenant) — `SubmitOptions` stays durability-only (see its doc) so this crate's dedupe/authz
     /// story does not require a caller to separately authenticate every submit call.
     pub security: db_security::SecurityGate,
-    /// @emoji 🌿️ The `vcs` seam (see `db_core::VersionGraph`'s doc) — `db_core::NullVersionGraph`
+    /// @emoji 🌿️ The `vcs` seam (see `VersionGraph`'s doc) — `NullVersionGraph`
     /// (the default) answers every call `Unimplemented` rather than requiring an `Option` layer;
     /// only `db_engine` behind the `vcs` feature wires a real implementation in.
-    pub version_graph: Arc<dyn db_core::VersionGraph>,
-    pub emit: Arc<dyn db_core::Emit>,
+    pub version_graph: Arc<dyn VersionGraph>,
+    pub emit: Arc<dyn Emit>,
     pub preview_ttl_ms: u64,
     /// @emoji 🧬️ Projection factory: `submit`'s project step registers a fresh
     /// `db_projection::ProjectionEngine` from this on every call it needs one (see `🔖️Engine`'s doc
@@ -396,15 +396,15 @@ pub struct DocumentEngineConfig {
 
 impl Default for DocumentEngineConfig {
     fn default() -> Self {
-        let limits = db_core::DbLimits::default();
+        let limits = DbLimits::default();
         let policy = db_security::RoleBasedPolicy::new().with_grant(db_security::Grant::allow("member", &["**"], &[db_security::Action::Read, db_security::Action::Write]));
         DocumentEngineConfig {
             preview_ttl_ms: limits.max_preview_ttl_ms,
             limits,
             authz: Arc::new(AllowAll),
-            security: db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 4_096), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(db_core::NullEmit)),
-            version_graph: Arc::new(db_core::NullVersionGraph),
-            emit: Arc::new(db_core::NullEmit),
+            security: db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 4_096), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(NullEmit)),
+            version_graph: Arc::new(NullVersionGraph),
+            emit: Arc::new(NullEmit),
             projections: Arc::new(Vec::new),
         }
     }
@@ -417,7 +417,7 @@ impl Default for DocumentEngineConfig {
 /// `db_state::PMap`, which is `Rc`-based) — usable directly, single-threaded, wherever a mailbox
 /// isn't needed (e.g. this crate's own tests).
 pub struct DocumentEngine {
-    document: db_core::DocumentId,
+    document: DocumentId,
     protocol_document: protocol::DocumentId,
     storage: Arc<dyn db_storage::DbStorage>,
     wal: db_wal::DocumentWal,
@@ -426,7 +426,7 @@ pub struct DocumentEngine {
     applied: HashMap<String, protocol::OperationEnvelope>,
     applied_receipts: HashMap<String, CommandReceipt>,
     actor_seq: HashMap<String, u64>,
-    frontier: db_core::Frontier,
+    frontier: Frontier,
     outbox: Vec<OutboxEntry>,
     commit_log: Vec<CommitNotification>,
     previews: db_preview::PreviewStore,
@@ -521,7 +521,7 @@ impl DocumentEngine {
         Ok((engine, report))
     }
 
-    fn assemble(protocol_document: protocol::DocumentId, core_id: db_core::DocumentId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal::DocumentWal, vcs_head: Option<String>, config: DocumentEngineConfig) -> DocumentEngine {
+    fn assemble(protocol_document: protocol::DocumentId, core_id: DocumentId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal::DocumentWal, vcs_head: Option<String>, config: DocumentEngineConfig) -> DocumentEngine {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         DocumentEngine {
             document: core_id.clone(),
@@ -533,7 +533,7 @@ impl DocumentEngine {
             applied: HashMap::new(),
             applied_receipts: HashMap::new(),
             actor_seq: HashMap::new(),
-            frontier: db_core::Frontier::genesis(core_id.clone()),
+            frontier: Frontier::genesis(core_id.clone()),
             outbox: Vec::new(),
             commit_log: Vec::new(),
             previews: db_preview::PreviewStore::new(core_id, preview_budgets),
@@ -560,7 +560,7 @@ impl DocumentEngine {
             }
         }
         let entries = diff_entries(&envelope.diff)?;
-        db_core::check_len(entries.len() as u64, self.config.limits.max_batch_commands as u64, "db_document::diff_entries")?;
+        check_len(entries.len() as u64, self.config.limits.max_batch_commands as u64, "db_document::diff_entries")?;
         let (new_state, touched, conflicts) = self.state.apply_entries(&envelope.operation_id, &envelope.dependencies, &entries)?;
         self.state = new_state;
         self.applied.insert(envelope.operation_id.0.clone(), envelope.clone());
@@ -580,7 +580,7 @@ impl DocumentEngine {
     #[allow(clippy::needless_pass_by_value)]
     pub fn submit(&mut self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
         // admit
-        db_core::check_len(batch.envelopes.len() as u64, self.config.limits.max_batch_commands as u64, "db_document::batch_commands")?;
+        check_len(batch.envelopes.len() as u64, self.config.limits.max_batch_commands as u64, "db_document::batch_commands")?;
         for envelope in &batch.envelopes {
             if envelope.document_id != self.protocol_document {
                 return Err(DbError::InvalidArgument(format!("envelope targets document {:?} but this actor owns {:?}", envelope.document_id, self.protocol_document)));
@@ -617,7 +617,7 @@ impl DocumentEngine {
             // agree with it byte-for-byte.
             let mut envelope_bytes = Vec::new();
             protocol::encode_envelope(envelope, &mut envelope_bytes);
-            db_core::check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_document::envelope_bytes")?;
+            check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_document::envelope_bytes")?;
 
             // base-resolve/deps + validate + conflict + execute
             let (touched, conflicts, applied_now) = self.apply_one(envelope, &batch_ids)?;
@@ -660,7 +660,7 @@ impl DocumentEngine {
 
         // publish: compute + WAL-append the new frontier in the same transaction as its commands
         let new_frontier =
-            db_core::Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().0, epoch: self.frontier.epoch };
+            Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().0, epoch: self.frontier.epoch };
         records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
 
         // WAL append + durability (DocumentWal::submit wraps `records` in its own TxBegin/TxCommit)
@@ -697,11 +697,11 @@ impl DocumentEngine {
         self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _)| envelope.operation_id.clone()).collect(), touched: touched_all });
 
         // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
-        // vcs feature supplies `db_core::NullVersionGraph`, whose `Unimplemented` is tolerated here)
+        // vcs feature supplies `NullVersionGraph`, whose `Unimplemented` is tolerated here)
         for (envelope, _) in &newly_applied {
             match self.config.version_graph.record_change(
                 &self.document,
-                db_core::ChangeRecord { parent: None, content_hash: self.state.content_hash(), author: to_core_actor_id(&envelope.actor), message: format!("operation {}", envelope.operation_id.0), timestamp_ms: now_ms },
+                ChangeRecord { parent: None, content_hash: self.state.content_hash(), author: to_core_actor_id(&envelope.actor), message: format!("operation {}", envelope.operation_id.0), timestamp_ms: now_ms },
             ) {
                 Ok(_) | Err(DbError::Unimplemented(_)) => {}
                 Err(other) => return Err(other),
@@ -742,7 +742,7 @@ impl DocumentEngine {
         self.state.get(path)
     }
 
-    pub fn frontier(&self) -> db_core::Frontier {
+    pub fn frontier(&self) -> Frontier {
         self.frontier.clone()
     }
 
@@ -865,7 +865,7 @@ impl DocumentEngine {
         };
         self.previews.publish(db_preview::PublishPreviewRequest {
             document: self.document.clone(),
-            actor: db_core::ActorId("preview".to_string()),
+            actor: ActorId("preview".to_string()),
             key: format!("preview-{now_ms}"),
             base: self.frontier.clone(),
             envelope,
@@ -966,16 +966,16 @@ type StatePageEntries = Vec<(String, Option<Vec<u8>>)>;
 fn decode_state_page(bytes: &[u8]) -> Result<StatePageEntries, DbError> {
     let mut reader = pack::ByteReader::new(bytes);
     let count = reader.read_varint_u64()?;
-    db_core::check_len(count, MAX_STATE_PAGE_ENTRIES, "db_document::snapshot_page_entries")?;
+    check_len(count, MAX_STATE_PAGE_ENTRIES, "db_document::snapshot_page_entries")?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
         let path_len = reader.read_varint_u64()?;
-        db_core::check_len(path_len, MAX_STATE_PAGE_PATH_BYTES, "db_document::snapshot_page_path")?;
+        check_len(path_len, MAX_STATE_PAGE_PATH_BYTES, "db_document::snapshot_page_path")?;
         let path_bytes = reader.read_bytes(path_len as usize)?.to_vec();
         let path = String::from_utf8(path_bytes).map_err(|_| DbError::Corrupt("snapshot page path is not valid utf-8".to_string()))?;
         let value = if reader.read_u8()? == 1 {
             let len = reader.read_varint_u64()?;
-            db_core::check_len(len, MAX_STATE_PAGE_VALUE_BYTES, "db_document::snapshot_page_value")?;
+            check_len(len, MAX_STATE_PAGE_VALUE_BYTES, "db_document::snapshot_page_value")?;
             Some(reader.read_bytes(len as usize)?.to_vec())
         } else {
             None
@@ -1011,7 +1011,7 @@ pub enum DocumentMessage {
         reply: db_actor::ReplySender<Option<Vec<u8>>>,
     },
     Frontier {
-        reply: db_actor::ReplySender<db_core::Frontier>,
+        reply: db_actor::ReplySender<Frontier>,
     },
     /// @emoji 🔎️ Additive this revision — `db_engine`'s current `DocumentHandle::query` goes
     /// through `Query { path, .. }` above and never constructs this variant, so adding it is safe.
@@ -1053,7 +1053,7 @@ impl DocumentAuthority {
     /// @emoji 🚀️ Spawns the actor thread, builds the engine there via `build`, and blocks until
     /// that construction succeeds or fails — a caller never holds a `DocumentAuthority` whose
     /// engine failed to open.
-    pub fn spawn(build: impl FnOnce() -> Result<DocumentEngine, DbError> + Send + 'static, capacities: db_core::MailboxCapacities) -> Result<DocumentAuthority, DbError> {
+    pub fn spawn(build: impl FnOnce() -> Result<DocumentEngine, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<DocumentAuthority, DbError> {
         let (address, receiver) = db_actor::mailbox::<DocumentMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
         let handle = std::thread::Builder::new()
@@ -1088,28 +1088,28 @@ impl DocumentAuthority {
     }
 
     pub fn submit_blocking(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
-        self.address.ask_blocking(db_core::Priority::Command, |reply| DocumentMessage::Submit { batch, options, now_ms, reply })?
+        self.address.ask_blocking(Priority::Command, |reply| DocumentMessage::Submit { batch, options, now_ms, reply })?
     }
 
     pub fn query_blocking(&self, path: &str) -> Result<Option<Vec<u8>>, DbError> {
         let path = path.to_string();
-        self.address.ask_blocking(db_core::Priority::Query, |reply| DocumentMessage::Query { path, reply })
+        self.address.ask_blocking(Priority::Query, |reply| DocumentMessage::Query { path, reply })
     }
 
-    pub fn frontier_blocking(&self) -> Result<db_core::Frontier, DbError> {
-        self.address.ask_blocking(db_core::Priority::Query, |reply| DocumentMessage::Frontier { reply })
+    pub fn frontier_blocking(&self) -> Result<Frontier, DbError> {
+        self.address.ask_blocking(Priority::Query, |reply| DocumentMessage::Frontier { reply })
     }
 
     pub fn run_query_blocking(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
-        self.address.ask_blocking(db_core::Priority::Query, |reply| DocumentMessage::RunQuery { query, consistency, reply })?
+        self.address.ask_blocking(Priority::Query, |reply| DocumentMessage::RunQuery { query, consistency, reply })?
     }
 
     pub fn snapshot_now_blocking(&self, now_ms: u64) -> Result<u64, DbError> {
-        self.address.ask_blocking(db_core::Priority::Command, |reply| DocumentMessage::SnapshotNow { now_ms, reply })?
+        self.address.ask_blocking(Priority::Command, |reply| DocumentMessage::SnapshotNow { now_ms, reply })?
     }
 
     pub fn drain_outbox_blocking(&self) -> Result<Vec<OutboxEntry>, DbError> {
-        self.address.ask_blocking(db_core::Priority::Query, |reply| DocumentMessage::DrainOutbox { reply })
+        self.address.ask_blocking(Priority::Query, |reply| DocumentMessage::DrainOutbox { reply })
     }
 
     /// @emoji 🚪️ Closes the mailbox and joins the actor thread — graceful shutdown.
@@ -1219,7 +1219,7 @@ mod tests {
         let mut engine = DocumentEngine::create(document_id(), storage, DocumentEngineConfig::default(), 0).unwrap();
 
         let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))])]).unwrap();
-        let receipt = engine.submit(batch, SubmitOptions { durability: db_core::DurabilityClass::Fsync }, 1).unwrap();
+        let receipt = engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync }, 1).unwrap();
 
         assert_eq!(receipt.command_id, protocol::OperationId("op-1".to_string()));
         assert_eq!(receipt.frontier.head_seq, 1);
@@ -1239,9 +1239,9 @@ mod tests {
         {
             let mut engine = DocumentEngine::create(document_id(), storage.clone(), DocumentEngineConfig::default(), 0).unwrap();
             let batch1 = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))])]).unwrap();
-            engine.submit(batch1, SubmitOptions { durability: db_core::DurabilityClass::Fsync }, 1).unwrap();
+            engine.submit(batch1, SubmitOptions { durability: DurabilityClass::Fsync }, 1).unwrap();
             let batch2 = CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("count", serde_json::json!(2))])]).unwrap();
-            engine.submit(batch2, SubmitOptions { durability: db_core::DurabilityClass::Fsync }, 2).unwrap();
+            engine.submit(batch2, SubmitOptions { durability: DurabilityClass::Fsync }, 2).unwrap();
         }
 
         let (reopened, report) = DocumentEngine::open(document_id(), &storage, DocumentEngineConfig::default(), 3).unwrap();
@@ -1264,14 +1264,14 @@ mod tests {
                 let key = format!("path-{i}");
                 let value = format!("value-{i}");
                 let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))])]).unwrap();
-                engine.submit(batch, SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i).unwrap();
+                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync }, i).unwrap();
             }
             engine.snapshot_now(10).unwrap();
             for i in 3..6 {
                 let key = format!("path-{i}");
                 let value = format!("value-{i}");
                 let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))])]).unwrap();
-                engine.submit(batch, SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i).unwrap();
+                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync }, i).unwrap();
             }
         }
 
@@ -1430,7 +1430,7 @@ mod tests {
     fn security_gate_rejects_a_principal_denied_by_its_policy() {
         // An empty `RoleBasedPolicy` (no grants at all) denies every action, per its own doc — a
         // default-deny policy, matching `db_engine`'s own equivalent test of the same gate.
-        let security = db_security::SecurityGate::new(db_security::RoleBasedPolicy::new(), db_security::ReplayGuard::new(60_000, 1_024), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(db_core::NullEmit));
+        let security = db_security::SecurityGate::new(db_security::RoleBasedPolicy::new(), db_security::ReplayGuard::new(60_000, 1_024), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(NullEmit));
         let storage = storage();
         let config = DocumentEngineConfig { security, ..DocumentEngineConfig::default() };
         let mut engine = DocumentEngine::create(document_id(), storage, config, 0).unwrap();
@@ -1486,7 +1486,7 @@ mod tests {
     fn document_authority_submits_and_queries_over_the_mailbox_from_a_dedicated_thread() {
         let storage = storage();
         let document = document_id();
-        let authority = DocumentAuthority::spawn(move || DocumentEngine::create(document, storage, DocumentEngineConfig::default(), 0), db_core::MailboxCapacities::uniform(16)).unwrap();
+        let authority = DocumentAuthority::spawn(move || DocumentEngine::create(document, storage, DocumentEngineConfig::default(), 0), MailboxCapacities::uniform(16)).unwrap();
 
         let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hi"))])]).unwrap();
         let receipt = authority.submit_blocking(batch, SubmitOptions::default(), 0).unwrap();
@@ -1506,7 +1506,7 @@ mod tests {
 
     #[test]
     fn document_authority_spawn_propagates_a_build_failure_synchronously() {
-        let result = DocumentAuthority::spawn(|| Err(DbError::InvalidArgument("boom".to_string())), db_core::MailboxCapacities::uniform(4));
+        let result = DocumentAuthority::spawn(|| Err(DbError::InvalidArgument("boom".to_string())), MailboxCapacities::uniform(4));
         assert!(matches!(result, Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️Actor

@@ -7,14 +7,14 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
-import { type UiLabel, uiDataLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { CollapsedFieldDisplay } from "../✏️Input/🟦️component.tsx";
-import { borderElementClass, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
-import { useIdLabel, useLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { borderElementClass, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../🏷️ClassNames/🟦️component.tsx";
+import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎏️Textarea

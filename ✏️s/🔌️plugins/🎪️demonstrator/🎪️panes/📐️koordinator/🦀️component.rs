@@ -4,7 +4,7 @@
 //!
 //! See <https://github.com/usalu/semio/issues/2510> for the bundle rationale.
 
-use semio_framework_plugin::{GlbExporter, GlbImporter, PluginBundle};
+use semio_framework_plugin::{GlbExporter, GlbImporter, Plugin};
 
 use cad::apps::cad::{create_cad_app, CadPlayApp};
 use cad::artifacts::cad::engine::{cad_document_from_dwg, cad_document_from_mesh, cad_mesh_from_document};
@@ -30,6 +30,6 @@ pub fn register_exports() {
 }
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
-pub fn register_app(bundle: PluginBundle) -> PluginBundle {
+pub fn register_app(bundle: Plugin) -> Plugin {
     bundle.register_document_app::<CadPlayApp>(create_cad_app())
 }

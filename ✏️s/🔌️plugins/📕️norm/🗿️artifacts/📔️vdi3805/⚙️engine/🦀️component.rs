@@ -1,6 +1,6 @@
 //! ⚙️ VDI 3805 app — headless compute (constitutional: engine).
 
-use crate::core::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
 use std::collections::BTreeMap;
 use crate::artifacts::vdi3805::*;
 
@@ -578,12 +578,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
 /// the headless `NormHost` session every norm app drives.
 pub struct Vdi3805Family;
 
-impl crate::core::NormFamily for Vdi3805Family {
+impl crate::document::NormFamily for Vdi3805Family {
     type Document = Document;
     type Operation = op::Operation;
 
-    fn family_id() -> crate::core::NormFamilyId {
-        crate::core::NormFamilyId::Vdi3805
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::Vdi3805
     }
 
     fn evaluate(document: &Document) -> CheckReport {
@@ -591,7 +591,7 @@ impl crate::core::NormFamily for Vdi3805Family {
     }
 }
 
-pub type Host = crate::core::NormHost<Vdi3805Family>;
+pub type Host = crate::document::NormHost<Vdi3805Family>;
 // #endregion 🔖️Session
 
 #[cfg(test)]
@@ -774,8 +774,8 @@ mod tests {
     /// `evaluate`, so it belongs beside the compute it binds.
     #[test]
     fn norm_family_id() {
-        assert_eq!(<Vdi3805Family as crate::core::NormFamily>::family_id(), crate::core::NormFamilyId::Vdi3805);
-        assert_eq!(crate::core::NormFamilyId::Vdi3805.label(), "VDI 3805");
+        assert_eq!(<Vdi3805Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Vdi3805);
+        assert_eq!(crate::document::NormFamilyId::Vdi3805.label(), "VDI 3805");
     }
 
     #[test]

@@ -4,21 +4,21 @@
 //! pre-consolidation bundle used: the OS mesh/solid/dwg registries are process-global, so a pane's
 //! handlers must be in place before the host can resolve a document it hands back.
 
-use semio_framework_plugin::PluginBundle;
+use semio_framework_plugin::Plugin;
 
 const PLUGIN_ID: &str = "demonstrator";
 const PLUGIN_LABEL: &str = "Entwerfen mit Bestand";
 const PLUGIN_VERSION: &str = "0.1.0";
 
 /// 🎁️ The whole plugin surface — every pane's host exports registered, then every pane's app added.
-pub fn bundle() -> PluginBundle {
+pub fn bundle() -> Plugin {
     crate::panes::generator::register_exports();
     crate::panes::koordinator::register_exports();
     crate::panes::aggregator::register_exports();
     crate::panes::aussuchen::register_exports();
     crate::panes::bearbeiten::register_exports();
     crate::panes::verfolgen::register_exports();
-    let bundle = PluginBundle::new(PLUGIN_ID, PLUGIN_LABEL, PLUGIN_VERSION);
+    let bundle = Plugin::new(PLUGIN_ID, PLUGIN_LABEL, PLUGIN_VERSION);
     let bundle = crate::panes::generator::register_app(bundle);
     let bundle = crate::panes::koordinator::register_app(bundle);
     let bundle = crate::panes::aggregator::register_app(bundle);

@@ -1,7 +1,9 @@
 //! 🧬️ `dsl_derive` — compiles `#[dsl(...)]`-annotated struct/enum declarations into
-//! `dsl::DslField`/`dsl::DslVariants`
-//! bindings nested usage composes through), so a technology declares its grammar instead of
-//! hand-writing a parser/printer. Analyze → IR → emit, per the repo's `fsm_macros` convention.
+//! `dsl::DslField`/`dsl::DslVariants` bindings (nested usage composes through), so a technology
+//! declares its grammar instead of hand-writing a parser/printer. Analyze → IR → emit.
+//!
+//! P6: `DslDocument`/`DslOps` no longer emit `DocumentDsl`/`DocumentPack`/`OpText`/`OpBinary` —
+//! those traits are handcrafted per artifact. `DslRecord` stays for field helpers only.
 
 use proc_macro::TokenStream;
 use quote::quote;

@@ -24,7 +24,7 @@ const HEADER_SIZE: u64 = 32;
 /// (same rationale as `HEADER_SIZE` — not re-exported by the facade).
 const MAGIC: [u8; 8] = [0x89, b'S', b'P', b'R', 0x0D, 0x0A, 0x1A, 0x0A];
 
-// Record-kind byte table, mirrored from `crate::os_spr::core::REC_*` (frozen contract values, `##
+// Record-kind byte table, mirrored from `crate::os_spr::REC_*` (frozen contract values, `##
 // protocol_core`, `//#region 🔖️RecordKinds`) for the same not-a-direct-dependency reason as
 // `HEADER_SIZE` above — this crate only ever reads `RecordFrame::kind` bytes surfaced by the
 // facade's re-exported `FrameCursor`, it never needs the full `protocol_core` crate.

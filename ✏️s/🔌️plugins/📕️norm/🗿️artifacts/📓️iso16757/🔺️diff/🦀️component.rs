@@ -1,7 +1,7 @@
 //! 🔺️ ISO 16757 artifact — the operation diff and its `OperationDiff` law.
 //!
 //! 📌️ Every norm artifact's sole mutation is a whole-document replace, so its diff is
-//! `crate::core::DocumentDiff<Document>` — the one generic diff `crate::core::SetDocumentOperation<D>`
+//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentOperation<D>`
 //! names as its `Operation::Diff`, with the `OperationDiff` impl (apply = "take the replacement,
 //! otherwise keep the projection"; absorb = "the later replacement wins") living beside it in
 //! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
@@ -19,7 +19,7 @@ use crate::artifacts::iso16757::Document;
 
 //#region 🔖️Types
 /// 🔺️ This artifact's concrete operation diff.
-pub type Diff = crate::core::DocumentDiff<Document>;
+pub type Diff = crate::document::DocumentDiff<Document>;
 //#endregion 🔖️Types
 
 //#region 🧪️Tests

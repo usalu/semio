@@ -9,11 +9,11 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { borderElementClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useLevel, type Level } from "../🫀️core/🌈️Surface/🟦️component.tsx";
-import { Label, useControlInlineText, useControlAccessibleLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { borderElementClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useLevel, type Level } from "../🌈️Surface/🟦️component.tsx";
+import { Label, useControlInlineText, useControlAccessibleLabel } from "../🏷️Label/🟦️component.tsx";
 import { chromeControlItemClass, chromeControlGroupClass, ControlHotkeyBadge } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { type ControlIcon, renderControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

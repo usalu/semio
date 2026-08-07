@@ -5,7 +5,7 @@
 //! two consumers are these two sibling windows, both at app level.
 
 use crate::artifacts::fem2d::{element_id, Fem2dDocument, FemCamera, FemElement};
-use crate::core::Dof;
+use crate::model::Dof;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, UiNode};
 use serde_json::json;
 use std::collections::HashMap;

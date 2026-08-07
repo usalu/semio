@@ -40,7 +40,7 @@
 //! to `db_compact`'s "online compaction with manifest CAS + fencing" — `retain_from` here is the
 //! safe, mechanical pruning primitive that caller is expected to call after fencing itself.
 
-use db_core::{check_len, DbError, DocumentId, EpochFence};
+use {check_len, DbError, DocumentId, EpochFence};
 use db_state::Page;
 use db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
 
@@ -83,9 +83,9 @@ pub struct SnapshotDescriptor {
 }
 
 impl SnapshotDescriptor {
-    /// @emoji 🧭️ Reconstructs the `db_core::Frontier` this generation was taken at.
-    pub fn frontier(&self) -> db_core::Frontier {
-        db_core::Frontier { document: self.document.clone(), head_seq: self.head_seq, commit_seq: self.commit_seq, chain_hash: self.chain_hash, epoch: self.epoch }
+    /// @emoji 🧭️ Reconstructs the `Frontier` this generation was taken at.
+    pub fn frontier(&self) -> Frontier {
+        Frontier { document: self.document.clone(), head_seq: self.head_seq, commit_seq: self.commit_seq, chain_hash: self.chain_hash, epoch: self.epoch }
     }
 
     /// @emoji ✍️ Serializes this descriptor to the exact bytes written into the `KIND_SNAPSHOT`

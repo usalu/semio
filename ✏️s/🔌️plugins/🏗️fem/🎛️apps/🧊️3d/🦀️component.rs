@@ -14,7 +14,7 @@ use crate::apps::fem3d::modes::edit;
 use crate::apps::fem3d::modes::edit::windows::{model as window_model, results as window_results};
 use crate::artifacts::fem3d::op::Fem3dOperation;
 use crate::artifacts::fem3d::Fem3dDocument;
-use crate::core::{Dof, ElementResult};
+use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     create_default_layout, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UiNode,
 };
@@ -74,8 +74,8 @@ use selection::remove_selection;
 //#endregion 🔖️Commands
 
 //#region 🔖️Fem3dResultsJson
-/// 🎨️ Manual `crate::core::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
-/// — `crate::core::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (the `🫀️core` kernel is
+/// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
+/// — `crate::model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (the `🫀️core` kernel is
 /// a cross-artifact shared crate, out of scope to touch here), so this hand-rolls the same shape
 /// `serde_json::to_string` would have produced, using `Dof`'s existing `{:?}` formatting. Single
 /// consumer (`export_media`), so this lives here rather than in the artifact's `⚙️engine`.
@@ -106,7 +106,7 @@ fn fem3d_element_result_json(result: &ElementResult) -> Value {
     }
 }
 
-fn fem3d_static_result_json(result: &crate::core::StaticResult) -> Value {
+fn fem3d_static_result_json(result: &crate::model::StaticResult) -> Value {
     json!({
         "displacements": result.displacements.iter().map(|d| json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
         "reactions": result.reactions.iter().map(|r| json!({ "nodeId": r.node_id, "dof": fem3d_dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
@@ -115,7 +115,7 @@ fn fem3d_static_result_json(result: &crate::core::StaticResult) -> Value {
     })
 }
 
-fn fem3d_results_map_json(results: &HashMap<String, crate::core::StaticResult>) -> Value {
+fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Value {
     Value::Object(results.iter().map(|(id, result)| (id.clone(), fem3d_static_result_json(result))).collect())
 }
 //#endregion 🔖️Fem3dResultsJson
@@ -210,7 +210,7 @@ impl DocumentApp for Fem3dPlayApp {
                 let height = value.get("height").and_then(Value::as_f64).unwrap_or(1.0);
                 let layers = value.get("layers").and_then(Value::as_u64).map(|v| v as usize).unwrap_or(1);
                 let material_id = doc.projection.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
-                let id = crate::core::shared::next_id(doc.projection.solids.iter().map(|s| s.id.clone()), "sol");
+                let id = crate::app_surface::next_id(doc.projection.solids.iter().map(|s| s.id.clone()), "sol");
                 let index = doc.projection.solids.len();
                 let solid = crate::artifacts::fem3d::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
                 Ok(Emit::operations(vec![Fem3dOperation::SetSolid { index, solid }]))
@@ -326,7 +326,7 @@ pub fn create_fem3d_app() -> App {
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard"))]).default_value("default"),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
-            .action_args("setResultDisplay", crate::core::shared::result_display_action_args())
+            .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
             // 🎯️ Typed channel surface — `config_spec()`/`fem3d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
             .config(Fem3dPlayApp::config_spec())

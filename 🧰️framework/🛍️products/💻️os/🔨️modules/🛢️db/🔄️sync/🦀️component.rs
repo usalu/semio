@@ -15,7 +15,7 @@
 //! vs. placeholder), not a shortcut: every WAL record this crate touches is decoded and verified
 //! the same way `db_wal`'s own recovery path does.
 //!
-//! 🎯️ Design choice (`ResumeToken` receive path): `db_core::ResumeToken` exposes `encode(&Frontier)
+//! 🎯️ Design choice (`ResumeToken` receive path): `ResumeToken` exposes `encode(&Frontier)
 //! -> ResumeToken` and `ResumeToken::decode(&self) -> Frontier`, but no public constructor from an
 //! arbitrary wire string (its inner field is private to `db_core`) — so this crate cannot
 //! reconstruct a `ResumeToken` from `protocol::ClientFrame::Hello.resume_token: Option<String>` to
@@ -24,7 +24,7 @@
 //! Option<protocol::RuntimeFrontierSummary>` — a separate, always-decodable field on the very same
 //! frame — as the authoritative source of "where is the replica" on the receive path. The
 //! `resume_token` this crate ISSUES (`issue_resume_token`, on the send path, `Welcome.resume_token`)
-//! is fully real: `db_core::ResumeToken::encode` is public and exercised end to end.
+//! is fully real: `ResumeToken::encode` is public and exercised end to end.
 
 //#region 🔖️Codec
 /// @emoji ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
@@ -43,13 +43,13 @@ pub fn encode_command_envelope(envelope: &protocol::OperationEnvelope) -> Vec<u8
 }
 
 /// @emoji 📖️ Inverse of `encode_command_envelope`. Validates the byte length against
-/// `db_core::DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
+/// `DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
 /// `pack_core`'s stated invariant), then maps a decode failure to `DbError::Corrupt` rather than
 /// leaking `protocol::ProtocolError`.
-pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::OperationEnvelope, db_core::DbError> {
-    db_core::check_len(bytes.len() as u64, db_core::DbLimits::default().max_command_bytes, "wal_command_envelope")?;
+pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::OperationEnvelope, DbError> {
+    check_len(bytes.len() as u64, DbLimits::default().max_command_bytes, "wal_command_envelope")?;
     let mut pos = 0usize;
-    let envelope = protocol::decode_envelope(bytes, &mut pos).map_err(|error| db_core::DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
+    let envelope = protocol::decode_envelope(bytes, &mut pos).map_err(|error| DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
     Ok(envelope)
 }
 //#endregion 🔖️Codec
@@ -69,7 +69,7 @@ pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::OperationEnvelo
 /// to this specific document's shard, which this crate's inputs don't carry.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocumentSyncState {
-    pub frontier: db_core::Frontier,
+    pub frontier: Frontier,
     pub commands: Vec<protocol::OperationEnvelope>,
     /// @emoji 🚧️ The lowest `head_seq` this crate can still serve via tail (missing-command)
     /// transfer — the `head_seq` of the most recent `WAL_SNAPSHOT_PUB` record replayed, or `0` if
@@ -80,7 +80,7 @@ pub struct DocumentSyncState {
 
 /// @emoji 🔁️ Replays `document`'s entire currently-retained WAL via `db_wal::replay_document` and
 /// derives its `DocumentSyncState` — see the struct's doc for exactly how each field is derived.
-pub fn replay_sync_state(storage: &dyn db_storage::WalStorage, document: db_core::DocumentId) -> Result<DocumentSyncState, db_core::DbError> {
+pub fn replay_sync_state(storage: &dyn db_storage::WalStorage, document: DocumentId) -> Result<DocumentSyncState, DbError> {
     let records = db_wal::replay_document(storage, &document)?;
     let mut commands = Vec::new();
     let mut command_digests: Vec<[u8; 32]> = Vec::new();
@@ -101,13 +101,13 @@ pub fn replay_sync_state(storage: &dyn db_storage::WalStorage, document: db_core
     }
     let head_seq = commands.len() as u64;
     let chain_hash = fold_content_chain(&command_digests);
-    let frontier = db_core::Frontier { document, head_seq, commit_seq, chain_hash, epoch: 0 };
+    let frontier = Frontier { document, head_seq, commit_seq, chain_hash, epoch: 0 };
     Ok(DocumentSyncState { frontier, commands, floor_head_seq })
 }
 
 /// @emoji 🔐️ Folds per-command digests into one combined digest — see `DocumentSyncState`'s doc
 /// for the derivation this implements. `[0u8; 32]` for an empty document, matching
-/// `db_core::Frontier::genesis`'s all-zero `chain_hash`.
+/// `Frontier::genesis`'s all-zero `chain_hash`.
 fn fold_content_chain(digests: &[[u8; 32]]) -> [u8; 32] {
     if digests.is_empty() {
         return [0u8; 32];
@@ -121,30 +121,30 @@ fn fold_content_chain(digests: &[[u8; 32]]) -> [u8; 32] {
 //#endregion 🔖️ReplicaState
 
 //#region 🔖️Frontier
-/// @emoji ➖️ `db_core::FrontierDelta::between`, re-exposed under this crate's own name for
+/// @emoji ➖️ `FrontierDelta::between`, re-exposed under this crate's own name for
 /// discoverability — frontier-delta computation is this crate's stated responsibility, so
 /// `db_sync::frontier_delta` is the expected first stop even though the primitive itself lives in
 /// `db_core`.
-pub fn frontier_delta(from: &db_core::Frontier, to: &db_core::Frontier) -> Result<db_core::FrontierDelta, db_core::DbError> {
-    db_core::FrontierDelta::between(from, to)
+pub fn frontier_delta(from: &Frontier, to: &Frontier) -> Result<FrontierDelta, DbError> {
+    FrontierDelta::between(from, to)
 }
 
-/// @emoji 🌉️ `db_core::Frontier` -> `protocol::RuntimeFrontierSummary` (the wire-frame shape
+/// @emoji 🌉️ `Frontier` -> `protocol::RuntimeFrontierSummary` (the wire-frame shape
 /// `ServerFrame::{Welcome, Commands, Ack}.*frontier` fields carry). `head_edit_id` has no
-/// `db_core::Frontier` counterpart (see `DocumentSyncState`'s doc); callers pass whatever they
+/// `Frontier` counterpart (see `DocumentSyncState`'s doc); callers pass whatever they
 /// consider the frontier's tip identity (`state_frontier_summary` below supplies the natural
 /// choice: the last replayed command's `operation_id`).
-pub fn to_frontier_summary(frontier: &db_core::Frontier, head_edit_id: String) -> protocol::RuntimeFrontierSummary {
+pub fn to_frontier_summary(frontier: &Frontier, head_edit_id: String) -> protocol::RuntimeFrontierSummary {
     protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId(frontier.document.0.clone()), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
-/// @emoji 🌉️ Inverse bridge direction: `protocol::RuntimeFrontierSummary` -> `db_core::Frontier`,
+/// @emoji 🌉️ Inverse bridge direction: `protocol::RuntimeFrontierSummary` -> `Frontier`,
 /// the primitive `handle_hello`/`handle_frontier_advertise` use to turn a replica's advertised
 /// wire frontier into something `missing_commands`/`decide_bootstrap` can compare against a
 /// `DocumentSyncState`. `epoch` is always `0` (see `DocumentSyncState`'s doc: `RuntimeFrontierSummary`
 /// carries no cluster-fencing epoch at all).
-pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> db_core::Frontier {
-    db_core::Frontier { document: db_core::DocumentId(summary.document_id.0.clone()), head_seq: summary.head_edit_ordinal, commit_seq: summary.last_commit_seq, chain_hash: summary.chain_hash, epoch: 0 }
+pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> Frontier {
+    Frontier { document: DocumentId(summary.document_id.0.clone()), head_seq: summary.head_edit_ordinal, commit_seq: summary.last_commit_seq, chain_hash: summary.chain_hash, epoch: 0 }
 }
 
 /// @emoji 🌉️ `state`'s own frontier as a `RuntimeFrontierSummary`, with `head_edit_id` filled from
@@ -169,15 +169,15 @@ pub fn state_frontier_summary(state: &DocumentSyncState) -> protocol::RuntimeFro
 /// cannot find them. This function is this crate's `WAL_COMMAND`-shaped analog, built the same
 /// way (a linear ordinal-indexed slice) but over `DocumentSyncState::commands`, which is already
 /// the fully-decoded, ordinal-indexed sequence `replay_sync_state` produced.
-pub fn missing_commands(state: &DocumentSyncState, replica: &db_core::Frontier) -> Result<Vec<protocol::OperationEnvelope>, db_core::DbError> {
+pub fn missing_commands(state: &DocumentSyncState, replica: &Frontier) -> Result<Vec<protocol::OperationEnvelope>, DbError> {
     if replica.document != state.frontier.document {
-        return Err(db_core::DbError::InvalidArgument(format!("frontier document mismatch: replica {} vs server {}", replica.document, state.frontier.document)));
+        return Err(DbError::InvalidArgument(format!("frontier document mismatch: replica {} vs server {}", replica.document, state.frontier.document)));
     }
     if replica.head_seq > state.frontier.head_seq {
-        return Err(db_core::DbError::InvalidArgument(format!("replica frontier is ahead of the server: replica head_seq {} > server head_seq {}", replica.head_seq, state.frontier.head_seq)));
+        return Err(DbError::InvalidArgument(format!("replica frontier is ahead of the server: replica head_seq {} > server head_seq {}", replica.head_seq, state.frontier.head_seq)));
     }
     if replica.head_seq < state.floor_head_seq {
-        return Err(db_core::DbError::Unavailable(format!("replica head_seq {} is behind the retained WAL floor {}; snapshot bootstrap is required", replica.head_seq, state.floor_head_seq)));
+        return Err(DbError::Unavailable(format!("replica head_seq {} is behind the retained WAL floor {}; snapshot bootstrap is required", replica.head_seq, state.floor_head_seq)));
     }
     Ok(state.commands[replica.head_seq as usize..].to_vec())
 }
@@ -211,7 +211,7 @@ pub enum BootstrapPlan {
 /// @emoji 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
 /// prior frontier at all) against `state`, consulting `snapshots` only when the replica's
 /// `head_seq` has fallen behind `state.floor_head_seq`.
-pub fn decide_bootstrap(state: &DocumentSyncState, snapshots: &dyn db_storage::SnapshotStorage, replica: Option<&db_core::Frontier>) -> Result<BootstrapPlan, db_core::DbError> {
+pub fn decide_bootstrap(state: &DocumentSyncState, snapshots: &dyn db_storage::SnapshotStorage, replica: Option<&Frontier>) -> Result<BootstrapPlan, DbError> {
     let replica_head_seq = replica.map_or(0, |frontier| frontier.head_seq);
     if replica_head_seq >= state.floor_head_seq {
         let missing = match replica {
@@ -222,7 +222,7 @@ pub fn decide_bootstrap(state: &DocumentSyncState, snapshots: &dyn db_storage::S
     }
     let generation = snapshots
         .latest_generation(&state.frontier.document)?
-        .ok_or_else(|| db_core::DbError::Unavailable(format!("replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available", state.floor_head_seq)))?;
+        .ok_or_else(|| DbError::Unavailable(format!("replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available", state.floor_head_seq)))?;
     let bytes = snapshots.read_generation(&state.frontier.document, generation)?;
     let pack_hash = *blake3::hash(&bytes).as_bytes();
     Ok(BootstrapPlan::Snapshot { generation, bytes, pack_hash })
@@ -233,8 +233,8 @@ pub fn decide_bootstrap(state: &DocumentSyncState, snapshots: &dyn db_storage::S
 /// @emoji 🎫️ Issues a fresh resume token for `frontier` — the send-path half of resume tokens (see
 /// module doc for why the receive path uses `Hello.frontier` instead). `Welcome.resume_token` is
 /// always populated from this.
-pub fn issue_resume_token(frontier: &db_core::Frontier) -> Result<String, db_core::DbError> {
-    Ok(db_core::ResumeToken::encode(frontier)?.as_str().to_string())
+pub fn issue_resume_token(frontier: &Frontier) -> Result<String, DbError> {
+    Ok(ResumeToken::encode(frontier)?.as_str().to_string())
 }
 //#endregion 🔖️ResumeToken
 
@@ -274,9 +274,9 @@ fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &DocumentSyncState, origin:
 /// @emoji 🏗️ Builds the full `WelcomeResponse` for `plan` against `state`. `snapshot_chunk_bytes`
 /// must be non-zero (validated before `lower_bootstrap_plan` could otherwise divide the snapshot
 /// into a runaway number of zero-progress chunks).
-pub fn build_welcome(state: &DocumentSyncState, plan: &BootstrapPlan, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<WelcomeResponse, db_core::DbError> {
+pub fn build_welcome(state: &DocumentSyncState, plan: &BootstrapPlan, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<WelcomeResponse, DbError> {
     if snapshot_chunk_bytes == 0 {
-        return Err(db_core::DbError::InvalidArgument("snapshot_chunk_bytes must be non-zero".to_string()));
+        return Err(DbError::InvalidArgument("snapshot_chunk_bytes must be non-zero".to_string()));
     }
     let resume_token = issue_resume_token(&state.frontier)?;
     let (bootstrap, follow_up) = lower_bootstrap_plan(plan, state, origin, snapshot_chunk_bytes);
@@ -291,12 +291,12 @@ pub fn build_welcome(state: &DocumentSyncState, plan: &BootstrapPlan, session_id
 /// `WelcomeResponse`.
 pub fn handle_hello(
     storage: &dyn db_storage::DbStorage,
-    document: db_core::DocumentId,
+    document: DocumentId,
     hello_frontier: Option<&protocol::RuntimeFrontierSummary>,
     session_id: String,
     origin: &protocol::ActorId,
     snapshot_chunk_bytes: usize,
-) -> Result<WelcomeResponse, db_core::DbError> {
+) -> Result<WelcomeResponse, DbError> {
     let state = replay_sync_state(storage.wal(), document)?;
     let replica = hello_frontier.map(from_frontier_summary);
     let plan = decide_bootstrap(&state, storage.snapshot(), replica.as_ref())?;
@@ -306,7 +306,7 @@ pub fn handle_hello(
 /// @emoji 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
 /// (e.g. after a period of being caught up passively via broadcast, to confirm its position) and
 /// the semio_hub replies with whatever commands it's still missing, or `None` if it's already current.
-pub fn handle_frontier_advertise(storage: &dyn db_storage::WalStorage, document: db_core::DocumentId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, db_core::DbError> {
+pub fn handle_frontier_advertise(storage: &dyn db_storage::WalStorage, document: DocumentId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, DbError> {
     let state = replay_sync_state(storage, document)?;
     let replica = from_frontier_summary(advertised);
     let missing = missing_commands(&state, &replica)?;
@@ -318,7 +318,7 @@ pub fn handle_frontier_advertise(storage: &dyn db_storage::WalStorage, document:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use db_core::DocumentId;
+    use DocumentId;
     use db_storage::MemoryStorage;
     use db_wal::{DocumentWal, GroupCommitPolicy, WalRecord};
 
@@ -342,14 +342,14 @@ mod tests {
         for i in 0..count {
             let envelope = sample_envelope(&format!("op-{i}"), i);
             let bytes = encode_command_envelope(&envelope);
-            wal.submit(storage, &[WalRecord::Command(bytes)], db_core::DurabilityClass::Fsync, i).unwrap();
+            wal.submit(storage, &[WalRecord::Command(bytes)], DurabilityClass::Fsync, i).unwrap();
         }
     }
 
     /// @emoji 🧸️ Reopens `document`'s WAL and appends one `SnapshotPub` marker covering `frontier`.
-    fn publish_snapshot_marker(storage: &MemoryStorage, document: &DocumentId, generation: u64, frontier: db_core::Frontier) {
+    fn publish_snapshot_marker(storage: &MemoryStorage, document: &DocumentId, generation: u64, frontier: Frontier) {
         let (mut wal, _report) = DocumentWal::open(storage, document.clone(), GroupCommitPolicy::default(), 1000).unwrap();
-        wal.submit(storage, &[WalRecord::SnapshotPub { generation, frontier }], db_core::DurabilityClass::Fsync, 1000).unwrap();
+        wal.submit(storage, &[WalRecord::SnapshotPub { generation, frontier }], DurabilityClass::Fsync, 1000).unwrap();
     }
     //#endregion 🧸️Fixtures
 
@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     fn decode_command_envelope_rejects_malformed_bytes_without_panicking() {
-        assert!(matches!(decode_command_envelope(b"not json"), Err(db_core::DbError::Corrupt(_))));
+        assert!(matches!(decode_command_envelope(b"not json"), Err(DbError::Corrupt(_))));
     }
     //#endregion 🔖️Codec
 
@@ -400,7 +400,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 5);
-        let floor_frontier = db_core::Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [1u8; 32], epoch: 0 };
+        let floor_frontier = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [1u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 1, floor_frontier);
 
         let state = replay_sync_state(&storage, document).unwrap();
@@ -413,8 +413,8 @@ mod tests {
     #[test]
     fn frontier_delta_reports_the_command_gap_and_rejects_backwards() {
         let document: DocumentId = "doc-1".into();
-        let from = db_core::Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [0u8; 32], epoch: 0 };
-        let to = db_core::Frontier { document, head_seq: 5, commit_seq: 5, chain_hash: [9u8; 32], epoch: 0 };
+        let from = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [0u8; 32], epoch: 0 };
+        let to = Frontier { document, head_seq: 5, commit_seq: 5, chain_hash: [9u8; 32], epoch: 0 };
 
         let delta = frontier_delta(&from, &to).unwrap();
         assert_eq!(delta.commands, 3);
@@ -451,7 +451,7 @@ mod tests {
         seed_wal(&storage, &document, 4);
         let state = replay_sync_state(&storage, document.clone()).unwrap();
 
-        let replica_frontier = db_core::Frontier::genesis(document);
+        let replica_frontier = Frontier::genesis(document);
         let missing = missing_commands(&state, &replica_frontier).unwrap();
         assert_eq!(missing, state.commands, "a genesis replica is missing every command");
 
@@ -473,7 +473,7 @@ mod tests {
             let (mut wal, _report) = DocumentWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100).unwrap();
             for i in 3..6u64 {
                 let envelope = sample_envelope(&format!("op-{i}"), i);
-                wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope))], db_core::DurabilityClass::Fsync, i).unwrap();
+                wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope))], DurabilityClass::Fsync, i).unwrap();
             }
         }
 
@@ -491,11 +491,11 @@ mod tests {
         seed_wal(&storage, &document, 2);
         let state = replay_sync_state(&storage, document).unwrap();
 
-        let other_document = db_core::Frontier::genesis("doc-2".into());
-        assert!(matches!(missing_commands(&state, &other_document), Err(db_core::DbError::InvalidArgument(_))));
+        let other_document = Frontier::genesis("doc-2".into());
+        assert!(matches!(missing_commands(&state, &other_document), Err(DbError::InvalidArgument(_))));
 
-        let ahead = db_core::Frontier { head_seq: 99, ..state.frontier.clone() };
-        assert!(matches!(missing_commands(&state, &ahead), Err(db_core::DbError::InvalidArgument(_))));
+        let ahead = Frontier { head_seq: 99, ..state.frontier.clone() };
+        assert!(matches!(missing_commands(&state, &ahead), Err(DbError::InvalidArgument(_))));
     }
 
     #[test]
@@ -503,12 +503,12 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 5);
-        let floor_frontier = db_core::Frontier { document: document.clone(), head_seq: 3, commit_seq: 3, chain_hash: [2u8; 32], epoch: 0 };
+        let floor_frontier = Frontier { document: document.clone(), head_seq: 3, commit_seq: 3, chain_hash: [2u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 1, floor_frontier);
         let state = replay_sync_state(&storage, document.clone()).unwrap();
 
-        let too_far_behind = db_core::Frontier { document, head_seq: 1, commit_seq: 1, chain_hash: [0u8; 32], epoch: 0 };
-        assert!(matches!(missing_commands(&state, &too_far_behind), Err(db_core::DbError::Unavailable(_))));
+        let too_far_behind = Frontier { document, head_seq: 1, commit_seq: 1, chain_hash: [0u8; 32], epoch: 0 };
+        assert!(matches!(missing_commands(&state, &too_far_behind), Err(DbError::Unavailable(_))));
     }
     //#endregion 🔖️MissingCommands
 
@@ -540,12 +540,12 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 5);
-        let floor_frontier = db_core::Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
+        let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 7, floor_frontier);
         db_storage::SnapshotStorage::write_generation(&storage, &document, 7, b"snapshot-bytes").unwrap();
         let state = replay_sync_state(&storage, document.clone()).unwrap();
 
-        let stale_replica = db_core::Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
+        let stale_replica = Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
         let plan = decide_bootstrap(&state, &storage, Some(&stale_replica)).unwrap();
         match plan {
             BootstrapPlan::Snapshot { generation, bytes, pack_hash } => {
@@ -562,12 +562,12 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 5);
-        let floor_frontier = db_core::Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
+        let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 7, floor_frontier);
         let state = replay_sync_state(&storage, document.clone()).unwrap();
 
-        let stale_replica = db_core::Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
-        assert!(matches!(decide_bootstrap(&state, &storage, Some(&stale_replica)), Err(db_core::DbError::Unavailable(_))));
+        let stale_replica = Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
+        assert!(matches!(decide_bootstrap(&state, &storage, Some(&stale_replica)), Err(DbError::Unavailable(_))));
     }
     //#endregion 🔖️Bootstrap
 
@@ -575,7 +575,7 @@ mod tests {
     #[test]
     fn issue_resume_token_produces_the_documented_v1_wire_format() {
         let document: DocumentId = "doc-1".into();
-        let frontier = db_core::Frontier { document, head_seq: 4, commit_seq: 4, chain_hash: [5u8; 32], epoch: 0 };
+        let frontier = Frontier { document, head_seq: 4, commit_seq: 4, chain_hash: [5u8; 32], epoch: 0 };
         let token = issue_resume_token(&frontier).unwrap();
         assert!(token.starts_with("v1|doc-1|4|4|0|"));
     }
@@ -623,7 +623,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 4);
-        let floor_frontier = db_core::Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
+        let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 9, floor_frontier);
         let big_snapshot = vec![7u8; 10];
         db_storage::SnapshotStorage::write_generation(&storage, &document, 9, &big_snapshot).unwrap();
@@ -645,7 +645,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 1);
-        assert!(matches!(handle_hello(&storage, document, None, "s".to_string(), &protocol::ActorId("semio_hub".to_string()), 0), Err(db_core::DbError::InvalidArgument(_))));
+        assert!(matches!(handle_hello(&storage, document, None, "s".to_string(), &protocol::ActorId("semio_hub".to_string()), 0), Err(DbError::InvalidArgument(_))));
     }
 
     #[test]
@@ -659,7 +659,7 @@ mod tests {
         {
             let (mut wal, _report) = DocumentWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100).unwrap();
             let envelope = sample_envelope("op-2", 2);
-            wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope))], db_core::DurabilityClass::Fsync, 100).unwrap();
+            wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope))], DurabilityClass::Fsync, 100).unwrap();
         }
 
         let frame = handle_frontier_advertise(&storage, document.clone(), &replica_summary, protocol::ActorId("semio_hub".to_string())).unwrap();

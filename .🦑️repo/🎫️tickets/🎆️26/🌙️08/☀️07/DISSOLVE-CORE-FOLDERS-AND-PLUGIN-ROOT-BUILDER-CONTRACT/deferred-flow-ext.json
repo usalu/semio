@@ -1,0 +1,18 @@
+{
+  "workspaceMembers": [
+    {
+      "oldPath": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🫀️core/📦️packages/🦀️rust",
+      "newPath": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust",
+      "oldPackageName": "semio-s-plugin-flow-extension-core",
+      "newPackageName": "semio-s-plugin-flow-extension-primitive"
+    }
+  ],
+  "pathReferences": [
+    "Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml"
+  ],
+  "projectJsonUpdated": [
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/📋️project.json"
+  ]
+}

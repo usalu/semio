@@ -1,0 +1,22 @@
+{
+  "lifted": [
+    "🆔ElementId",
+    "🌈️Surface",
+    "🎛️Chrome",
+    "🏷️ClassNames",
+    "🏷️Label",
+    "🏷️UiLabel",
+    "🐚️ShellScope",
+    "🐹️ElementProps",
+    "📚️I18n",
+    "🚗️UiDriver",
+    "🧭️Flow",
+    "🔌️Ports"
+  ],
+  "removedCore": true,
+  "portsRenamed": {
+    "from": "🔌Ports",
+    "to": "🔌️Ports"
+  },
+  "patchedFiles": 67
+}

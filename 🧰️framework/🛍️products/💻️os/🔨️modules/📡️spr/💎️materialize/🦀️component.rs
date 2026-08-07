@@ -10,8 +10,8 @@
 //! this crate as op payloads are — it stores/hashes/frames them, never decodes them; only
 //! `decode_base`'s caller knows how to turn embedded bytes into `P`.
 
-use crate::os_pack::core::{ByteReader, ByteWriter};
-use crate::os_spr::core::{DictReader, ProtocolError, ProtocolLimits, RecordHasher};
+use crate::os_pack::{ByteReader, ByteWriter};
+use crate::os_spr::wire::{DictReader, ProtocolError, ProtocolLimits, RecordHasher};
 use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, VerificationLevel, HEADER_SIZE};
 use std::collections::HashMap;
 
@@ -264,7 +264,7 @@ fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> bool {
 fn read_projection_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, ProtocolError> {
     let mut cursor = FrameCursor::new(trusted, offset);
     let frame = cursor.next_frame()?.ok_or_else(|| malformed("projection frame", "missing frame at indexed offset"))?;
-    if frame.kind != crate::os_spr::core::REC_PROJECTION {
+    if frame.kind != crate::os_spr::REC_PROJECTION {
         return Err(malformed("projection frame", "kind mismatch at indexed offset"));
     }
     let (header, body_span) = parse_projection(frame.payload())?;
@@ -280,7 +280,7 @@ fn locate_index(trusted: &[u8]) -> Option<crate::os_spr::history::IndexReader<'_
     let record_stream = &trusted[HEADER_SIZE..];
     let mut cursor = ReverseFrameCursor::at_end(record_stream);
     while let Ok(Some(frame)) = cursor.prev_frame() {
-        if frame.kind == crate::os_spr::core::REC_INDEX {
+        if frame.kind == crate::os_spr::REC_INDEX {
             if let Ok(reader) = crate::os_spr::history::IndexReader::open(frame.payload()) {
                 return Some(reader);
             }
@@ -320,7 +320,7 @@ fn find_projection_by_scan<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) -
     let record_stream = &trusted[HEADER_SIZE..];
     let mut cursor = ReverseFrameCursor::at_end(record_stream);
     while let Ok(Some(frame)) = cursor.prev_frame() {
-        if frame.kind != crate::os_spr::core::REC_PROJECTION {
+        if frame.kind != crate::os_spr::REC_PROJECTION {
             continue;
         }
         match parse_projection(frame.payload()) {
@@ -450,8 +450,8 @@ fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(DictRead
             break;
         }
         match frame.kind {
-            crate::os_spr::core::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
-            crate::os_spr::core::REC_EDIT => {
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
+            crate::os_spr::REC_EDIT => {
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
                 let edit = crate::os_spr::history::decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
@@ -495,8 +495,8 @@ where
     while let Some(frame) = cursor.next_frame().map_err(E::from)? {
         bytes_read += frame.frame_len();
         match frame.kind {
-            crate::os_spr::core::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload()).map_err(E::from)?,
-            crate::os_spr::core::REC_EDIT => {
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload()).map_err(E::from)?,
+            crate::os_spr::REC_EDIT => {
                 if let Some(target) = plan.target_edit_ordinal {
                     if edit_ordinal > target {
                         break;
@@ -525,8 +525,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_pack::core::CodecId;
-    use crate::os_spr::core::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};
+    use crate::os_pack::CodecId;
+    use crate::os_spr::wire::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};
     use crate::os_spr::format::{SprWriter, WriteOptions};
     use crate::os_spr::history::{HistoryChange, HistoryCheckpoint, HistoryEdit, HistoryLog, OpPayload};
 
@@ -584,7 +584,7 @@ mod tests {
         }
     }
 
-    fn flush_dict_delta<S: crate::os_pack::core::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {
+    fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {
         let len = dict.len();
         if len > *base {
             let entries = dict.entries_since(*base);
@@ -596,7 +596,7 @@ mod tests {
                 payload.write_varint_u64(entry.len() as u64);
                 payload.write_bytes(entry.as_bytes());
             }
-            writer.write_record(crate::os_spr::core::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).unwrap();
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).unwrap();
             *base = len;
         }
     }
@@ -612,7 +612,7 @@ mod tests {
 
         let doc_payload = crate::os_spr::history::encode_doc("doc-1", "schema-1", &mut dict);
         flush_dict_delta(&mut writer, &dict, &mut dict_base);
-        writer.write_record(crate::os_spr::core::REC_DOC, true, &doc_payload, CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).unwrap();
 
         for (i, edit) in [sample_edit("edit-0", "op-0"), sample_edit("edit-1", "op-1")].iter().enumerate() {
             let _ = i;
@@ -622,7 +622,7 @@ mod tests {
         }
 
         let projection = sample_record(None, 1, ProjectionBodyKind::EmbeddedPack, Some(projection_body.to_vec()));
-        writer.write_record(crate::os_spr::core::REC_PROJECTION, false, &encode_projection(&projection), CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_projection(&projection), CodecId(0)).unwrap();
 
         for edit in [sample_edit("edit-2", "op-2"), sample_edit("edit-3", "op-3")] {
             let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).unwrap();
@@ -728,12 +728,12 @@ mod tests {
 
         let doc_payload = crate::os_spr::history::encode_doc("doc-3", "schema-3", &mut dict);
         flush_dict_delta(&mut writer, &dict, &mut dict_base);
-        writer.write_record(crate::os_spr::core::REC_DOC, true, &doc_payload, CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).unwrap();
 
         // A projection whose stored body_hash does not match its body — must be treated as corrupt.
         let mut bad_record = sample_record(None, 0, ProjectionBodyKind::EmbeddedPack, Some(vec![1, 2, 3]));
         bad_record.body_hash = [0xFFu8; 32];
-        writer.write_record(crate::os_spr::core::REC_PROJECTION, false, &encode_projection(&bad_record), CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_projection(&bad_record), CodecId(0)).unwrap();
 
         let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).unwrap();
         flush_dict_delta(&mut writer, &dict, &mut dict_base);

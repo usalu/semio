@@ -158,7 +158,7 @@ pub fn block3d_io() -> semio_framework_plugin::AppIo {
 mod tests {
     use super::*;
     use crate::artifacts::block3d::{Block3dVortexTemplate, BLOCK_3D_SCHEMA};
-    use crate::core::{BlockKindIdentity, BlockRepresentation};
+    use crate::{BlockKindIdentity, BlockRepresentation};
 
     #[test]
     fn empty_definition_matches_default() {

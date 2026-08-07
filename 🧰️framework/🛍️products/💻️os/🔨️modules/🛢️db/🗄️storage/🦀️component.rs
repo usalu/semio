@@ -20,13 +20,13 @@
 //! convention — it compiles to an effectively-empty module on a `wasm32-unknown-unknown` target
 //! check. `MemoryStorage` has no such gate and is always available.
 
-use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
 use pack::{ByteRange, ContentHash};
 
 //#region 🔖️Limits
 /// @emoji 🛡️ Ceiling on any single blob this crate reads into memory in one call (one WAL read
 /// range, one snapshot generation, one payload, one index run, one lease record) — validated via
-/// `db_core::check_len` BEFORE the read buffer is allocated, mirroring `pack_core`'s stated
+/// `check_len` BEFORE the read buffer is allocated, mirroring `pack_core`'s stated
 /// invariant. This crate's own choice (the contract doesn't fix a number): generous enough for a
 /// snapshot generation or a large payload, small enough to refuse an obviously-corrupt on-disk
 /// length before trying to allocate it.
@@ -35,7 +35,7 @@ const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
 
 //#region 🔖️Capabilities
 /// @emoji 🎚️ What a concrete `DbStorage` backend actually supports — negotiated once at
-/// `Database::open` and folded into `db_core::DbCapabilities` alongside enabled Cargo features.
+/// `Database::open` and folded into `DbCapabilities` alongside enabled Cargo features.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct StorageCapabilities {
     /// @emoji 💾️ True iff data written through this backend survives a process restart.
@@ -65,7 +65,7 @@ pub trait WalStorage: Send + Sync {
     fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError>;
 
     /// @emoji 🔒️ Forces everything appended to segment `index` so far to the durability level
-    /// implied by `class` — a no-op for `Memory`/`Os` (per `db_core::DurabilityClass`'s own
+    /// implied by `class` — a no-op for `Memory`/`Os` (per `DurabilityClass`'s own
     /// doc: `Os` only promises "handed to the OS", not `fsync`ed), a real flush-to-disk for
     /// `Fsync`/`Quorum` (replication itself is `db_cluster`'s concern, not this trait's).
     fn sync(&self, document: &DocumentId, index: u64, class: DurabilityClass) -> Result<(), DbError>;
@@ -152,7 +152,7 @@ pub trait PayloadStorage: Send + Sync {
 //#region 🔖️CatalogStorage
 /// @emoji 🗂️ The single catalog root blob (the family's document directory: names, ids,
 /// metadata — opaque to this crate) with compare-and-swap-by-epoch writes: the split-brain gate
-/// per `db_core::EpochFence`'s doc. Exactly one root exists per `DbStorage` instance.
+/// per `EpochFence`'s doc. Exactly one root exists per `DbStorage` instance.
 pub trait CatalogStorage: Send + Sync {
     /// @emoji 📖️ The current root bytes and the `EpochFence` they were written under, or `None`
     /// if `cas_root` has never succeeded yet (a fresh, empty `DbStorage`).
@@ -558,7 +558,7 @@ impl DbStorage for MemoryStorage {
 mod fs_storage {
     use super::{ByteRange, ContentHash, DbError, DbStorage, DocumentId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
     use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
-    use db_core::check_len;
+    use check_len;
     use std::io::{Read, Seek, SeekFrom, Write};
     use std::path::{Path, PathBuf};
     use std::sync::Mutex;

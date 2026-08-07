@@ -5,7 +5,7 @@
 //!
 //! 🎯️ Design choice (scope): this wave implements the mechanism every other cluster feature is
 //! built on top of — a consistent-hash shard map, lease-backed ownership with real epoch failover
-//! (built directly on `db_storage::LeaseStorage`/`db_core::EpochFence`, which already own the
+//! (built directly on `db_storage::LeaseStorage`/`EpochFence`, which already own the
 //! fencing primitive), tail-command follower replication (built on `db_sync`'s existing
 //! `DocumentSyncState`/`BootstrapPlan` machinery), quorum-durability ack tracking, and read/preview
 //! routing. `ReplicationOutcome::SnapshotTransferred` is a deliberate extension seam: this crate
@@ -109,7 +109,7 @@ impl ShardMap {
 
     /// @emoji 🎯️ The node owning `document`: the first ring position at or after `document`'s hash,
     /// wrapping to the ring's lowest position past the maximum key. `None` iff the ring is empty.
-    pub fn owner(&self, document: &db_core::DocumentId) -> Option<NodeId> {
+    pub fn owner(&self, document: &DocumentId) -> Option<NodeId> {
         if self.ring.is_empty() {
             return None;
         }
@@ -128,31 +128,31 @@ impl ShardMap {
 pub struct ShardOwnership {
     pub shard: String,
     pub holder: NodeId,
-    pub fence: db_core::EpochFence,
+    pub fence: EpochFence,
 }
 
 impl ShardOwnership {
     /// @emoji 🤝️ Claims (or idempotently reaffirms) ownership of `shard` for `holder` — thin
     /// wrapper over `LeaseStorage::acquire` that also remembers the resulting fence locally.
-    pub fn acquire(storage: &dyn db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, db_core::DbError> {
+    pub fn acquire(storage: &dyn db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
         let fence = storage.acquire(shard, &holder.0, ttl_ms, now_ms)?;
         Ok(ShardOwnership { shard: shard.to_string(), holder, fence })
     }
 
     /// @emoji ♻️ Extends this ownership's TTL without changing its epoch. Errors `Fenced` if
     /// another node has since won the shard (see `LeaseStorage::renew`'s doc).
-    pub fn renew(&self, storage: &dyn db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), db_core::DbError> {
+    pub fn renew(&self, storage: &dyn db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&self.shard, &self.holder.0, self.fence, ttl_ms, now_ms)
     }
 
     /// @emoji 🕊️ Voluntarily releases this ownership (e.g. graceful shutdown / planned handoff).
-    pub fn release(&self, storage: &dyn db_storage::LeaseStorage) -> Result<(), db_core::DbError> {
+    pub fn release(&self, storage: &dyn db_storage::LeaseStorage) -> Result<(), DbError> {
         storage.release(&self.shard, &self.holder.0, self.fence)
     }
 
     /// @emoji ✅️ Validates a write presented under `presented` against this ownership's fence — the
     /// primitive every shard-scoped write path calls before mutating storage.
-    pub fn validate(&self, presented: db_core::EpochFence) -> Result<(), db_core::DbError> {
+    pub fn validate(&self, presented: EpochFence) -> Result<(), DbError> {
         self.fence.check(presented)
     }
 }
@@ -161,12 +161,12 @@ impl ShardOwnership {
 /// cluster-flavored projection, feeding failover detection and `reconcile_shard_owner`.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum OwnershipStatus {
-    Held { holder: NodeId, fence: db_core::EpochFence, expires_at_ms: u64 },
+    Held { holder: NodeId, fence: EpochFence, expires_at_ms: u64 },
     Vacant,
 }
 
 /// @emoji 👀️ Reads `shard`'s current ownership from `storage` as of `now_ms`.
-pub fn ownership_status(storage: &dyn db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, db_core::DbError> {
+pub fn ownership_status(storage: &dyn db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
     Ok(match storage.current(shard, now_ms)? {
         Some(info) => OwnershipStatus::Held { holder: NodeId(info.holder), fence: info.fence, expires_at_ms: info.expires_at_ms },
         None => OwnershipStatus::Vacant,
@@ -180,10 +180,10 @@ pub fn ownership_status(storage: &dyn db_storage::LeaseStorage, shard: &str, now
 #[derive(Clone, Debug, PartialEq)]
 pub enum ReplicationOutcome {
     /// @emoji ✅️ The follower was already caught up; nothing was replicated.
-    UpToDate { frontier: db_core::Frontier },
+    UpToDate { frontier: Frontier },
     /// @emoji 🚚️ `count` commands were appended to the follower's own WAL, advancing it to
     /// `frontier`.
-    TailApplied { frontier: db_core::Frontier, count: usize },
+    TailApplied { frontier: Frontier, count: usize },
     /// @emoji 📸️ The follower fell behind the leader's retained WAL floor; `generation`'s raw
     /// snapshot bytes were copied verbatim to the follower's `SnapshotStorage`. See the module
     /// doc's "extension seam" note: this does NOT advance the follower's WAL-derived frontier —
@@ -197,7 +197,7 @@ pub enum ReplicationOutcome {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: db_core::DocumentId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, db_core::DbError> {
+pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: DocumentId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
     let follower_state = db_sync::replay_sync_state(follower.wal(), document.clone())?;
     let leader_state = db_sync::replay_sync_state(leader.wal(), document.clone())?;
     if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
@@ -211,7 +211,7 @@ pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_
             let (mut wal, _report) = db_wal::DocumentWal::open(follower.wal(), document.clone(), policy, now_ms)?;
             for envelope in &envelopes {
                 let bytes = db_sync::encode_command_envelope(envelope);
-                wal.submit(follower.wal(), &[db_wal::WalRecord::Command(bytes)], db_core::DurabilityClass::Fsync, now_ms)?;
+                wal.submit(follower.wal(), &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, now_ms)?;
             }
             let frontier = db_sync::replay_sync_state(follower.wal(), document)?.frontier;
             Ok(ReplicationOutcome::TailApplied { frontier, count })
@@ -227,7 +227,7 @@ pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_
 //#region 🔖️Quorum
 /// @emoji 🤝️ Tracks which nodes have acknowledged durability for one write (conceptually, one
 /// `(document, frontier)` pair) — the cluster-side satisfaction check for
-/// `db_core::DurabilityClass::Quorum(n)`. Ack-idempotent: acking the same node twice never
+/// `DurabilityClass::Quorum(n)`. Ack-idempotent: acking the same node twice never
 /// double-counts.
 #[derive(Clone, Debug)]
 pub struct QuorumTracker {
@@ -265,9 +265,9 @@ impl QuorumTracker {
 /// `Memory`/`Os`/`Fsync` are single-node durability concerns (satisfied the moment the local write
 /// completes, before any cluster-level tracking is even consulted); only `Quorum(n)` needs a
 /// cluster-wide ack count, which this fn gates on.
-pub fn durability_satisfied(class: db_core::DurabilityClass, replica_ack_count: usize) -> bool {
+pub fn durability_satisfied(class: DurabilityClass, replica_ack_count: usize) -> bool {
     match class {
-        db_core::DurabilityClass::Quorum(n) => replica_ack_count >= n as usize,
+        DurabilityClass::Quorum(n) => replica_ack_count >= n as usize,
         _ => true,
     }
 }
@@ -284,7 +284,7 @@ pub enum ReadIntent {
     Canonical,
     /// @emoji 🏔️ Any replica whose frontier dominates `at_least` (`Frontier::dominates`) may serve
     /// it — the routing-level form of a `Consistency::AtLeast` query.
-    BoundedStaleness { at_least: db_core::Frontier },
+    BoundedStaleness { at_least: Frontier },
     /// @emoji 🌫️ Any replica at all, preferring the freshest — read-scaling with no consistency
     /// requirement.
     AnyReplica,
@@ -298,17 +298,17 @@ pub enum ReadIntent {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ReplicaStatus {
     pub node: NodeId,
-    pub frontier: db_core::Frontier,
+    pub frontier: Frontier,
     pub is_leader: bool,
 }
 
 /// @emoji 🧭️ Picks a target node for `intent` among `replicas`. Errors `Unavailable` if no
 /// candidate satisfies `intent` (no leader present for `Canonical`/`Preview`, no replica meets
 /// `BoundedStaleness`'s floor, or an empty replica set).
-pub fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<NodeId, db_core::DbError> {
+pub fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<NodeId, DbError> {
     match intent {
         ReadIntent::Canonical | ReadIntent::Preview => {
-            replicas.iter().find(|status| status.is_leader).map(|status| status.node.clone()).ok_or_else(|| db_core::DbError::Unavailable("no leader available to serve a canonical/preview read".to_string()))
+            replicas.iter().find(|status| status.is_leader).map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no leader available to serve a canonical/preview read".to_string()))
         }
         ReadIntent::BoundedStaleness { at_least } => {
             // 🎯️ A document-mismatched frontier can never dominate `at_least` — treated as
@@ -320,9 +320,9 @@ pub fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<Nod
             // staleness); fall back to the leader only if no follower qualifies. Secondary sort by
             // node id for a deterministic pick among equally-eligible followers.
             candidates.sort_by(|a, b| a.is_leader.cmp(&b.is_leader).then_with(|| a.node.cmp(&b.node)));
-            candidates.first().map(|status| status.node.clone()).ok_or_else(|| db_core::DbError::Unavailable("no replica meets the requested staleness bound".to_string()))
+            candidates.first().map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no replica meets the requested staleness bound".to_string()))
         }
-        ReadIntent::AnyReplica => replicas.iter().max_by_key(|status| status.frontier.head_seq).map(|status| status.node.clone()).ok_or_else(|| db_core::DbError::Unavailable("no replica available".to_string())),
+        ReadIntent::AnyReplica => replicas.iter().max_by_key(|status| status.frontier.head_seq).map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no replica available".to_string())),
     }
 }
 //#endregion 🔖️ReadRouting
@@ -340,7 +340,7 @@ pub enum SplitBrainOutcome {
 }
 
 /// @emoji ⚖️ Compares `local`'s claimed epoch against `remote`'s.
-pub fn resolve_split_brain(local: db_core::EpochFence, remote: db_core::EpochFence) -> SplitBrainOutcome {
+pub fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> SplitBrainOutcome {
     match local.epoch.cmp(&remote.epoch) {
         std::cmp::Ordering::Greater => SplitBrainOutcome::LocalWins,
         std::cmp::Ordering::Less => SplitBrainOutcome::RemoteWins,
@@ -353,7 +353,7 @@ pub fn resolve_split_brain(local: db_core::EpochFence, remote: db_core::EpochFen
 /// `storage`'s actual current state, since another node may have already won a failover while it
 /// was partitioned. A still-matching holder+fence is confirmed as `LocalWins` (not a `Tie` — it's
 /// not actually contested); anything else is decided by `resolve_split_brain` on the two fences.
-pub fn reconcile_shard_owner(storage: &dyn db_storage::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, db_core::DbError> {
+pub fn reconcile_shard_owner(storage: &dyn db_storage::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, DbError> {
     match ownership_status(storage, shard, now_ms)? {
         OwnershipStatus::Vacant => Ok(SplitBrainOutcome::LocalWins),
         OwnershipStatus::Held { holder, fence, .. } if holder == claimed.holder && fence == claimed.fence => Ok(SplitBrainOutcome::LocalWins),
@@ -370,27 +370,27 @@ pub fn reconcile_shard_owner(storage: &dyn db_storage::LeaseStorage, shard: &str
 pub enum ClusterEvent {
     /// @emoji 🚨️ This node's `ShardOwnership` was fenced out by a newer epoch — must stop serving
     /// writes for the shard immediately.
-    OwnershipLost { shard: String, fence: db_core::EpochFence },
+    OwnershipLost { shard: String, fence: EpochFence },
     /// @emoji ✅️ A follower finished catching up to a given frontier.
-    ReplicationCaughtUp { document: db_core::DocumentId, frontier: db_core::Frontier },
+    ReplicationCaughtUp { document: DocumentId, frontier: Frontier },
     /// @emoji 🤝️ A quorum-durability threshold was just reached for a frontier.
-    QuorumReached { document: db_core::DocumentId, frontier: db_core::Frontier, acked: usize },
+    QuorumReached { document: DocumentId, frontier: Frontier, acked: usize },
 }
 
 impl ClusterEvent {
     /// @emoji 🚦️ The mailbox lane this event is admitted under — see the type's own doc for why
     /// ownership loss preempts everything else.
-    pub fn priority(&self) -> db_core::Priority {
+    pub fn priority(&self) -> Priority {
         match self {
-            ClusterEvent::OwnershipLost { .. } => db_core::Priority::System,
-            ClusterEvent::ReplicationCaughtUp { .. } => db_core::Priority::Recovery,
-            ClusterEvent::QuorumReached { .. } => db_core::Priority::Live,
+            ClusterEvent::OwnershipLost { .. } => Priority::System,
+            ClusterEvent::ReplicationCaughtUp { .. } => Priority::Recovery,
+            ClusterEvent::QuorumReached { .. } => Priority::Live,
         }
     }
 }
 
 /// @emoji 📬️ A fresh `db_actor` mailbox for `ClusterEvent`s, sized per `capacities`.
-pub fn cluster_mailbox(capacities: db_core::MailboxCapacities) -> (db_actor::Address<ClusterEvent>, db_actor::Receiver<ClusterEvent>) {
+pub fn cluster_mailbox(capacities: MailboxCapacities) -> (db_actor::Address<ClusterEvent>, db_actor::Receiver<ClusterEvent>) {
     db_actor::mailbox(capacities)
 }
 //#endregion 🔖️Coordinator
@@ -407,7 +407,7 @@ mod tests {
         map.add_node(&NodeId::from("node-a"));
         map.add_node(&NodeId::from("node-b"));
         map.add_node(&NodeId::from("node-c"));
-        let doc: db_core::DocumentId = "doc-42".into();
+        let doc: DocumentId = "doc-42".into();
         assert_eq!(map.owner(&doc), map.owner(&doc));
         assert!(map.owner(&doc).is_some());
     }
@@ -426,7 +426,7 @@ mod tests {
         map.add_node(&b);
         map.add_node(&c);
 
-        let docs: Vec<db_core::DocumentId> = (0..200).map(|i| db_core::DocumentId(format!("doc-{i}"))).collect();
+        let docs: Vec<DocumentId> = (0..200).map(|i| DocumentId(format!("doc-{i}"))).collect();
         let before: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
 
         map.remove_node(&b);
@@ -449,7 +449,7 @@ mod tests {
         map.add_node(&NodeId::from("node-b"));
         map.add_node(&NodeId::from("node-c"));
 
-        let docs: Vec<db_core::DocumentId> = (0..1000).map(|i| db_core::DocumentId(format!("doc-{i}"))).collect();
+        let docs: Vec<DocumentId> = (0..1000).map(|i| DocumentId(format!("doc-{i}"))).collect();
         let before: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
 
         map.add_node(&NodeId::from("node-d"));
@@ -466,12 +466,12 @@ mod tests {
     fn shard_ownership_acquire_renew_and_validate_round_trip() {
         let storage = db_storage::MemoryStorage::new();
         let owner = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0).unwrap();
-        assert_eq!(owner.fence, db_core::EpochFence::INITIAL);
-        assert!(owner.validate(db_core::EpochFence::INITIAL).is_ok());
-        assert!(owner.validate(db_core::EpochFence::INITIAL.next()).is_err());
+        assert_eq!(owner.fence, EpochFence::INITIAL);
+        assert!(owner.validate(EpochFence::INITIAL).is_ok());
+        assert!(owner.validate(EpochFence::INITIAL.next()).is_err());
 
         owner.renew(&storage, 1_000, 500).unwrap();
-        assert_eq!(ownership_status(&storage, "shard-0", 500).unwrap(), OwnershipStatus::Held { holder: NodeId::from("node-a"), fence: db_core::EpochFence::INITIAL, expires_at_ms: 1_500 });
+        assert_eq!(ownership_status(&storage, "shard-0", 500).unwrap(), OwnershipStatus::Held { holder: NodeId::from("node-a"), fence: EpochFence::INITIAL, expires_at_ms: 1_500 });
     }
 
     #[test]
@@ -488,17 +488,17 @@ mod tests {
         assert_eq!(ownership_status(&storage, "shard-0", 0).unwrap(), OwnershipStatus::Vacant);
 
         let reacquired = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-b"), 1_000, 0).unwrap();
-        assert_eq!(reacquired.fence, db_core::EpochFence::INITIAL);
+        assert_eq!(reacquired.fence, EpochFence::INITIAL);
     }
 
     #[test]
     fn failover_via_lease_expiry_bumps_the_epoch_and_hands_off_to_the_new_leader() {
         let storage = db_storage::MemoryStorage::new();
         let stale = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 100, 0).unwrap();
-        assert_eq!(stale.fence, db_core::EpochFence::INITIAL);
+        assert_eq!(stale.fence, EpochFence::INITIAL);
 
         let fresh = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-b"), 100, 200).unwrap();
-        assert_eq!(fresh.fence, db_core::EpochFence::INITIAL.next());
+        assert_eq!(fresh.fence, EpochFence::INITIAL.next());
         assert_eq!(reconcile_shard_owner(&storage, "shard-0", &stale, 200).unwrap(), SplitBrainOutcome::RemoteWins);
     }
     //#endregion 🔖️Ownership
@@ -516,12 +516,12 @@ mod tests {
         }
     }
 
-    fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &db_core::DocumentId, count: u64) {
+    fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &DocumentId, count: u64) {
         let mut wal = db_wal::DocumentWal::create(storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
         for i in 0..count {
             let envelope = sample_envelope(&format!("op-{i}"), i);
             let bytes = db_sync::encode_command_envelope(&envelope);
-            wal.submit(storage, &[db_wal::WalRecord::Command(bytes)], db_core::DurabilityClass::Fsync, i).unwrap();
+            wal.submit(storage, &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, i).unwrap();
         }
     }
 
@@ -529,7 +529,7 @@ mod tests {
     fn replicate_document_applies_missing_tail_commands_to_a_fresh_follower() {
         let leader = db_storage::MemoryStorage::new();
         let follower = db_storage::MemoryStorage::new();
-        let document: db_core::DocumentId = "doc-1".into();
+        let document: DocumentId = "doc-1".into();
         seed_leader_wal(&leader, &document, 4);
 
         let outcome = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
@@ -551,7 +551,7 @@ mod tests {
     fn replicate_document_reports_up_to_date_once_a_follower_catches_up() {
         let leader = db_storage::MemoryStorage::new();
         let follower = db_storage::MemoryStorage::new();
-        let document: db_core::DocumentId = "doc-1".into();
+        let document: DocumentId = "doc-1".into();
         seed_leader_wal(&leader, &document, 2);
 
         let first = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
@@ -565,13 +565,13 @@ mod tests {
     fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor() {
         let leader = db_storage::MemoryStorage::new();
         let follower = db_storage::MemoryStorage::new();
-        let document: db_core::DocumentId = "doc-1".into();
+        let document: DocumentId = "doc-1".into();
         seed_leader_wal(&leader, &document, 5);
 
-        let floor_frontier = db_core::Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
+        let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         {
             let (mut wal, _report) = db_wal::DocumentWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000).unwrap();
-            wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], db_core::DurabilityClass::Fsync, 1_000).unwrap();
+            wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000).unwrap();
         }
         db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes").unwrap();
 
@@ -603,17 +603,17 @@ mod tests {
 
     #[test]
     fn durability_satisfied_only_gates_the_quorum_class_on_ack_count() {
-        assert!(durability_satisfied(db_core::DurabilityClass::Memory, 0));
-        assert!(durability_satisfied(db_core::DurabilityClass::Os, 0));
-        assert!(durability_satisfied(db_core::DurabilityClass::Fsync, 0));
-        assert!(!durability_satisfied(db_core::DurabilityClass::Quorum(3), 2));
-        assert!(durability_satisfied(db_core::DurabilityClass::Quorum(3), 3));
+        assert!(durability_satisfied(DurabilityClass::Memory, 0));
+        assert!(durability_satisfied(DurabilityClass::Os, 0));
+        assert!(durability_satisfied(DurabilityClass::Fsync, 0));
+        assert!(!durability_satisfied(DurabilityClass::Quorum(3), 2));
+        assert!(durability_satisfied(DurabilityClass::Quorum(3), 3));
     }
     //#endregion 🔖️Quorum
 
     //#region 🔖️ReadRouting
     fn replica(node: &str, head_seq: u64, is_leader: bool) -> ReplicaStatus {
-        ReplicaStatus { node: NodeId::from(node), frontier: db_core::Frontier { document: "doc-1".into(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 }, is_leader }
+        ReplicaStatus { node: NodeId::from(node), frontier: Frontier { document: "doc-1".into(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 }, is_leader }
     }
 
     #[test]
@@ -630,7 +630,7 @@ mod tests {
 
     #[test]
     fn route_read_bounded_staleness_prefers_a_qualifying_follower_over_the_leader() {
-        let at_least = db_core::Frontier { document: "doc-1".into(), head_seq: 5, commit_seq: 5, chain_hash: [0u8; 32], epoch: 0 };
+        let at_least = Frontier { document: "doc-1".into(), head_seq: 5, commit_seq: 5, chain_hash: [0u8; 32], epoch: 0 };
         let qualifying = vec![replica("leader", 10, true), replica("follower-1", 8, false)];
         assert_eq!(route_read(&ReadIntent::BoundedStaleness { at_least: at_least.clone() }, &qualifying).unwrap(), NodeId::from("follower-1"));
 
@@ -640,7 +640,7 @@ mod tests {
 
     #[test]
     fn route_read_bounded_staleness_errors_when_nothing_qualifies() {
-        let at_least = db_core::Frontier { document: "doc-1".into(), head_seq: 5, commit_seq: 5, chain_hash: [0u8; 32], epoch: 0 };
+        let at_least = Frontier { document: "doc-1".into(), head_seq: 5, commit_seq: 5, chain_hash: [0u8; 32], epoch: 0 };
         assert!(route_read(&ReadIntent::BoundedStaleness { at_least }, &[replica("follower-1", 1, false)]).is_err());
     }
 
@@ -659,7 +659,7 @@ mod tests {
     //#region 🔖️SplitBrain
     #[test]
     fn resolve_split_brain_prefers_the_higher_epoch() {
-        let low = db_core::EpochFence::INITIAL;
+        let low = EpochFence::INITIAL;
         let high = low.next();
         assert_eq!(resolve_split_brain(high, low), SplitBrainOutcome::LocalWins);
         assert_eq!(resolve_split_brain(low, high), SplitBrainOutcome::RemoteWins);
@@ -676,7 +676,7 @@ mod tests {
     #[test]
     fn reconcile_shard_owner_reports_vacant_shard_as_uncontested_local_win() {
         let storage = db_storage::MemoryStorage::new();
-        let owner = ShardOwnership { shard: "shard-0".to_string(), holder: NodeId::from("node-a"), fence: db_core::EpochFence::INITIAL };
+        let owner = ShardOwnership { shard: "shard-0".to_string(), holder: NodeId::from("node-a"), fence: EpochFence::INITIAL };
         assert_eq!(reconcile_shard_owner(&storage, "shard-0", &owner, 0).unwrap(), SplitBrainOutcome::LocalWins);
     }
     //#endregion 🔖️SplitBrain
@@ -684,10 +684,10 @@ mod tests {
     //#region 🔖️Coordinator
     #[test]
     fn cluster_mailbox_drains_higher_priority_events_before_lower_ones() {
-        let (address, receiver) = cluster_mailbox(db_core::MailboxCapacities::uniform(8));
-        let live = ClusterEvent::QuorumReached { document: "doc-1".into(), frontier: db_core::Frontier::genesis("doc-1".into()), acked: 2 };
-        let recovery = ClusterEvent::ReplicationCaughtUp { document: "doc-1".into(), frontier: db_core::Frontier::genesis("doc-1".into()) };
-        let system = ClusterEvent::OwnershipLost { shard: "shard-0".to_string(), fence: db_core::EpochFence::INITIAL };
+        let (address, receiver) = cluster_mailbox(MailboxCapacities::uniform(8));
+        let live = ClusterEvent::QuorumReached { document: "doc-1".into(), frontier: Frontier::genesis("doc-1".into()), acked: 2 };
+        let recovery = ClusterEvent::ReplicationCaughtUp { document: "doc-1".into(), frontier: Frontier::genesis("doc-1".into()) };
+        let system = ClusterEvent::OwnershipLost { shard: "shard-0".to_string(), fence: EpochFence::INITIAL };
 
         address.try_send(live.priority(), live.clone()).unwrap();
         address.try_send(recovery.priority(), recovery.clone()).unwrap();

@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { strToU8, unzipSync, zipSync } from "fflate";
-import { decodePackValue } from "@semio-tech/framework-os-core";
+import { decodePackValue, encodePackValue } from "@semio-tech/framework-os-core";
 import {
   PLUGIN_HOST_SHIM_FILE,
   PLUGIN_WORKER_FILE,
@@ -132,7 +132,7 @@ export function wrapExtensionPackageEnvelope(zipBytes: Uint8Array): Uint8Array {
 function buildExtensionZipPayload(manifest: ExtensionPackageManifestRecord, componentWasm: Uint8Array, assets: ReadonlyMap<string, Uint8Array>): Uint8Array {
   if (componentWasm.length === 0) throw new Error("extension component.wasm is empty");
   if (manifest.packageFormat !== EXTENSION_PACKAGE_FORMAT) throw new Error(`invalid extension package format ${manifest.packageFormat}`);
-  const manifestBytes = strToU8(`${JSON.stringify(manifest)}\n`);
+  const manifestBytes = encodePackValue(manifest);
   const files: Record<string, Uint8Array> = {
     [EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI]: manifestBytes,
     [EXTENSION_COMPONENT_FILE]: componentWasm,
@@ -167,7 +167,12 @@ function zipEntryBytes(files: Record<string, Uint8Array>, predicate: (name: stri
 }
 
 function decodeExtensionManifest(manifestBytes: Uint8Array): ExtensionManifestRecord {
-  const decoded = decodePackValue(manifestBytes);
+  let decoded: unknown;
+  try {
+    decoded = decodePackValue(manifestBytes);
+  } catch {
+    decoded = JSON.parse(new TextDecoder().decode(manifestBytes));
+  }
   if (!decoded || typeof decoded !== "object") throw new Error("extension manifest is not a pack object");
   const row = decoded as Record<string, unknown>;
   const extensionId = row.extensionId;
@@ -280,6 +285,7 @@ function writeWatchMarker(installRoot: string, event: ExtensionSourceEvent): voi
 }
 
 /** @emoji 🏪 Creates an extension store rooted at `installRoot`, using `materializer` for browser or native layouts. */
+
 export function createExtensionStore(options: {
   readonly installRoot: string;
   readonly repoRoot: string;

@@ -87,6 +87,16 @@
     "native-build": {
       "inputs": ["cargo", "^cargo"],
       "cache": true
+    },
+    "package": {
+      "dependsOn": [],
+      "inputs": ["cargo", "^cargo"],
+      "cache": true
+    },
+    "extension-package": {
+      "dependsOn": [],
+      "inputs": ["cargo", "^cargo"],
+      "cache": true
     }
   },
   "pluginsConfig": {

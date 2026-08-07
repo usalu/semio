@@ -42,24 +42,24 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use db_core::DbError;
+use DbError;
 
 //#region 🔖️Reexports
-pub use db_core::{DbCapabilities, DbConfig, DurabilityClass, Profile};
+pub use {DbCapabilities, DbConfig, DurabilityClass, Profile};
 pub use db_storage::DbStorage;
 //#endregion 🔖️Reexports
 
 //#region 🔖️Ids
-/// @emoji 🌉️ `protocol::DocumentId` → `db_core::DocumentId`, the lossless single-`String` bridge
+/// @emoji 🌉️ `protocol::DocumentId` → `DocumentId`, the lossless single-`String` bridge
 /// `db_core`'s module doc promises — see `db_document`'s identical helper for the rationale (this
 /// crate is the other place in the family that depends on both `db_core` and `protocol`).
-fn to_core_document_id(id: &protocol::DocumentId) -> db_core::DocumentId {
-    db_core::DocumentId(id.0.clone())
+fn to_core_document_id(id: &protocol::DocumentId) -> DocumentId {
+    DocumentId(id.0.clone())
 }
 
-/// @emoji 🌉️ `protocol::ActorId` → `db_core::ActorId`, same bridge as `to_core_document_id`.
-fn to_core_actor_id(id: &protocol::ActorId) -> db_core::ActorId {
-    db_core::ActorId(id.0.clone())
+/// @emoji 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
+fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
+    ActorId(id.0.clone())
 }
 
 fn now_ms() -> u64 {
@@ -68,8 +68,8 @@ fn now_ms() -> u64 {
 //#endregion 🔖️Ids
 
 //#region 🔖️Frontier
-/// @emoji 🧭️ The facade-level frontier: identical shape to `db_core::Frontier` except keyed by
-/// `protocol::DocumentId` (not `db_core::DocumentId`) — the frozen contract's exact
+/// @emoji 🧭️ The facade-level frontier: identical shape to `Frontier` except keyed by
+/// `protocol::DocumentId` (not `DocumentId`) — the frozen contract's exact
 /// `Frontier{document, head_seq, commit_seq, chain_hash, epoch}` shape.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Frontier {
@@ -82,8 +82,8 @@ pub struct Frontier {
 
 impl Frontier {
     /// @emoji 🏔️ True iff `self` has observed everything `other` has — mirrors
-    /// `db_core::Frontier::dominates`, re-derived here since this type's `document` field has a
-    /// different type than `db_core::Frontier`'s.
+    /// `Frontier::dominates`, re-derived here since this type's `document` field has a
+    /// different type than `Frontier`'s.
     pub fn dominates(&self, other: &Frontier) -> Result<bool, DbError> {
         if self.document != other.document {
             return Err(DbError::InvalidArgument(format!("frontier document mismatch: {} vs {}", self.document.0, other.document.0)));
@@ -92,7 +92,7 @@ impl Frontier {
     }
 }
 
-fn to_engine_frontier(core: &db_core::Frontier, document: protocol::DocumentId) -> Frontier {
+fn to_engine_frontier(core: &Frontier, document: protocol::DocumentId) -> Frontier {
     Frontier { document, head_seq: core.head_seq, commit_seq: core.commit_seq, chain_hash: core.chain_hash, epoch: core.epoch }
 }
 //#endregion 🔖️Frontier
@@ -105,7 +105,7 @@ pub struct CommandReceipt {
     pub frontier: Frontier,
     pub durability: DurabilityClass,
     pub conflicts: Vec<db_document::ConflictRecord>,
-    pub state_hash: Option<pack_core::ContentHash>,
+    pub state_hash: Option<pack::ContentHash>,
 }
 
 fn to_engine_receipt(receipt: db_document::CommandReceipt, document: protocol::DocumentId) -> CommandReceipt {
@@ -165,7 +165,7 @@ pub struct HistoryView {
 /// groups `WAL_COMMAND` records by the `WAL_FRONTIER` record that closes their transaction, exactly
 /// mirroring `db_document::DocumentEngine::submit`'s own commit shape (one frontier record per
 /// committed batch, preceded by that batch's command records).
-fn replay_history(storage: &dyn DbStorage, core_document: &db_core::DocumentId, protocol_document: &protocol::DocumentId) -> Result<HistoryView, DbError> {
+fn replay_history(storage: &dyn DbStorage, core_document: &DocumentId, protocol_document: &protocol::DocumentId) -> Result<HistoryView, DbError> {
     let records = db_wal::replay_document(storage.wal(), core_document)?;
     let mut entries = Vec::new();
     let mut pending_operation_ids: Vec<protocol::OperationId> = Vec::new();
@@ -255,18 +255,18 @@ impl db_document::AuthzHook for SecurityAuthzHook {
 //#endregion 🔖️Security
 
 //#region 🔖️VersionGraph
-/// @emoji 🌿️ The real `vcs`-backed `db_core::VersionGraph` — the ONLY place in the whole `db`
+/// @emoji 🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db`
 /// family allowed to depend on `vcs` (hard dependency rule; gated behind this crate's default-on
 /// `vcs` Cargo feature).
 #[cfg(feature = "vcs")]
 pub mod vcs_integration {
-    use db_core::DbError;
+    use DbError;
     use std::collections::HashMap;
     use std::sync::Mutex;
 
     //#region 🔖️SchemaErasedTypes
-    /// @emoji #⃣ The `VersionGraph` seam (`db_core::ChangeRecord`/`CheckpointRequest`) is already
-    /// schema-erased — it carries a `pack_core::ContentHash`, never document semantics — so this
+    /// @emoji #⃣ The `VersionGraph` seam (`ChangeRecord`/`CheckpointRequest`) is already
+    /// schema-erased — it carries a `pack::ContentHash`, never document semantics — so this
     /// crate drives the real `store::DocumentStore<P, Operation>` with the smallest concrete `P`/
     /// `Operation` pair that can faithfully round-trip exactly that: a projection that IS the
     /// latest recorded hash, and an operation that overwrites it (its `backwards` recovering the
@@ -429,13 +429,13 @@ pub mod vcs_integration {
             let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
             out.push(presence);
             if let Some(author) = &self.author {
-                pack_core::write_varint_u64(&mut out, author.0.len() as u64);
+                pack::write_varint_u64(&mut out, author.0.len() as u64);
                 out.extend_from_slice(author.0.as_bytes());
             }
             if let Some(ts) = &self.timestamp {
-                pack_core::write_varint_u64(&mut out, ts.actor);
-                pack_core::write_varint_u64(&mut out, ts.physical_ms);
-                pack_core::write_varint_u64(&mut out, ts.logical);
+                pack::write_varint_u64(&mut out, ts.actor);
+                pack::write_varint_u64(&mut out, ts.physical_ms);
+                pack::write_varint_u64(&mut out, ts.logical);
             }
             Ok(out)
         }
@@ -448,7 +448,7 @@ pub mod vcs_integration {
             let presence = bytes[32];
             let mut pos = 33usize;
             let author = if presence & 0b01 != 0 {
-                let len = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+                let len = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
                 let end = pos + len;
                 let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
                 pos = end;
@@ -457,9 +457,9 @@ pub mod vcs_integration {
                 None
             };
             let timestamp = if presence & 0b10 != 0 {
-                let actor = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let physical_ms = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let logical = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let actor = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let physical_ms = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let logical = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
                 Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical })
             } else {
                 None
@@ -481,7 +481,7 @@ pub mod vcs_integration {
     }
 
     /// @emoji 🌿️ One real `store::DocumentStore` per document, driven by real `Apply`/
-    /// `CommitCheckpoint` dispatches — `db_core::VersionGraph`'s real implementation.
+    /// `CommitCheckpoint` dispatches — `VersionGraph`'s real implementation.
     pub struct VcsVersionGraph {
         stores: Mutex<HashMap<String, HashStore>>,
     }
@@ -497,7 +497,7 @@ pub mod vcs_integration {
             VcsVersionGraph::default()
         }
 
-        fn with_store<R>(&self, document: &db_core::DocumentId, f: impl FnOnce(&mut HashStore) -> Result<R, DbError>) -> Result<R, DbError> {
+        fn with_store<R>(&self, document: &DocumentId, f: impl FnOnce(&mut HashStore) -> Result<R, DbError>) -> Result<R, DbError> {
             let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
             let store = stores.entry(document.0.clone()).or_insert_with(|| {
                 let envelope = store::create_document_envelope::<HashProjection, HashOperation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
@@ -507,8 +507,8 @@ pub mod vcs_integration {
         }
     }
 
-    impl db_core::VersionGraph for VcsVersionGraph {
-        fn record_change(&self, document: &db_core::DocumentId, change: db_core::ChangeRecord) -> Result<String, DbError> {
+    impl VersionGraph for VcsVersionGraph {
+        fn record_change(&self, document: &DocumentId, change: ChangeRecord) -> Result<String, DbError> {
             self.with_store(document, |store| {
                 let operation = HashOperation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
                 store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: Some(change.message.clone()) }).map_err(map_vcs_error)?;
@@ -524,7 +524,7 @@ pub mod vcs_integration {
         /// unused: `vcs`'s own `CommitCheckpoint` handler stamps its own `now_iso()` timestamp into
         /// the checkpoint (part of what its content-addressed id hashes over) — this crate cannot
         /// override that without reaching into `vcs`'s private state.
-        fn checkpoint(&self, document: &db_core::DocumentId, request: db_core::CheckpointRequest) -> Result<String, DbError> {
+        fn checkpoint(&self, document: &DocumentId, request: CheckpointRequest) -> Result<String, DbError> {
             self.with_store(document, |store| {
                 let authors: Vec<vcs::Author> = request.authors.iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0.clone(), avatar: None }).collect();
                 store.dispatch(store::DocumentCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).map_err(map_vcs_error)?;
@@ -532,11 +532,11 @@ pub mod vcs_integration {
             })
         }
 
-        fn merge_base(&self, document: &db_core::DocumentId, a: &str, b: &str) -> Result<Option<String>, DbError> {
+        fn merge_base(&self, document: &DocumentId, a: &str, b: &str) -> Result<Option<String>, DbError> {
             self.with_store(document, |store| Ok(store::merge_base(store.envelope(), a, b)))
         }
 
-        fn head(&self, document: &db_core::DocumentId, alternative: &str) -> Result<Option<String>, DbError> {
+        fn head(&self, document: &DocumentId, alternative: &str) -> Result<Option<String>, DbError> {
             self.with_store(document, |store| {
                 let envelope = store.envelope();
                 if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
@@ -555,7 +555,7 @@ pub mod vcs_integration {
 /// doesn't supply their own: an in-memory `db_observe::StructuredSink` (real JSON-lines encoding,
 /// just not flushed anywhere durable by default — a caller wanting file/pipe output constructs
 /// `db_observe::WriterSink` themselves and passes it via `Database::open_with_emit`).
-fn default_emit() -> Arc<dyn db_core::Emit> {
+fn default_emit() -> Arc<dyn Emit> {
     Arc::new(db_observe::StructuredSink::new(db_observe::MemorySink::new()))
 }
 //#endregion 🔖️Observe
@@ -596,7 +596,7 @@ fn decode_catalog(bytes: &[u8]) -> Result<Vec<CatalogEntry>, DbError> {
 }
 
 struct CatalogState {
-    epoch: db_core::EpochFence,
+    epoch: EpochFence,
     entries: Vec<CatalogEntry>,
 }
 //#endregion 🔖️Catalog
@@ -645,11 +645,11 @@ pub struct Database {
     config: DbConfig,
     capabilities: DbCapabilities,
     authz: Arc<dyn db_document::AuthzHook>,
-    /// @emoji 🌿️ Never `None`: `db_core::NullVersionGraph` (an `Unimplemented`-on-every-call
+    /// @emoji 🌿️ Never `None`: `NullVersionGraph` (an `Unimplemented`-on-every-call
     /// placeholder, not an `Option` layer — see its own doc) is the default when the `vcs` feature
     /// is disabled, exactly matching `db_document::DocumentEngineConfig::default`'s own choice.
-    version_graph: Arc<dyn db_core::VersionGraph>,
-    emit: Arc<dyn db_core::Emit>,
+    version_graph: Arc<dyn VersionGraph>,
+    emit: Arc<dyn Emit>,
     health: Arc<db_observe::HealthRegistry>,
     catalog: Mutex<CatalogState>,
     open_documents: Mutex<HashMap<String, Arc<db_document::DocumentAuthority>>>,
@@ -671,11 +671,11 @@ impl Database {
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
     /// over a real file) instead of the default in-memory one.
-    pub fn open_with_emit(config: DbConfig, storage: Arc<dyn DbStorage>, emit: Arc<dyn db_core::Emit>) -> Result<Database, DbError> {
+    pub fn open_with_emit(config: DbConfig, storage: Arc<dyn DbStorage>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
         Database::open_with(config, storage, Arc::new(db_document::AllowAll), emit)
     }
 
-    fn open_with(config: DbConfig, storage: Arc<dyn DbStorage>, authz: Arc<dyn db_document::AuthzHook>, emit: Arc<dyn db_core::Emit>) -> Result<Database, DbError> {
+    fn open_with(config: DbConfig, storage: Arc<dyn DbStorage>, authz: Arc<dyn db_document::AuthzHook>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
         let storage_capabilities = storage.capabilities();
         let capabilities = DbCapabilities {
             // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
@@ -695,18 +695,18 @@ impl Database {
             Some((bytes, epoch)) => (epoch, decode_catalog(&bytes)?),
             None => {
                 let empty = encode_catalog(&[])?;
-                let epoch = storage.catalog().cas_root(db_core::EpochFence::INITIAL, &empty)?;
+                let epoch = storage.catalog().cas_root(EpochFence::INITIAL, &empty)?;
                 (epoch, Vec::new())
             }
         };
         health.set("db_engine.catalog", db_observe::HealthState::Healthy);
 
         #[cfg(feature = "vcs")]
-        let version_graph: Arc<dyn db_core::VersionGraph> = Arc::new(vcs_integration::VcsVersionGraph::new());
+        let version_graph: Arc<dyn VersionGraph> = Arc::new(vcs_integration::VcsVersionGraph::new());
         #[cfg(not(feature = "vcs"))]
-        let version_graph: Arc<dyn db_core::VersionGraph> = Arc::new(db_core::NullVersionGraph);
+        let version_graph: Arc<dyn VersionGraph> = Arc::new(NullVersionGraph);
 
-        emit.emit(db_core::EmitEvent::new("db_engine.database_opened").field("documents", db_core::EmitField::U64(entries.len() as u64)));
+        emit.emit(EmitEvent::new("db_engine.database_opened").field("documents", EmitField::U64(entries.len() as u64)));
 
         Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_documents: Mutex::new(HashMap::new()) })
     }
@@ -777,7 +777,7 @@ impl Database {
             catalog.entries = entries;
         }
         let authority = self.spawn_authority_create(document.clone())?;
-        self.emit.emit(db_core::EmitEvent::new("db_engine.document_created").with_document(to_core_document_id(&document)));
+        self.emit.emit(EmitEvent::new("db_engine.document_created").with_document(to_core_document_id(&document)));
         Ok(self.register_handle(document, authority))
     }
 
@@ -793,7 +793,7 @@ impl Database {
             return Err(DbError::NotFound(format!("document {} not found", id.0)));
         }
         let authority = self.spawn_authority_open(id.clone())?;
-        self.emit.emit(db_core::EmitEvent::new("db_engine.document_opened").with_document(to_core_document_id(id)));
+        self.emit.emit(EmitEvent::new("db_engine.document_opened").with_document(to_core_document_id(id)));
         Ok(self.register_handle(id.clone(), authority))
     }
 
@@ -825,7 +825,7 @@ impl Database {
                 authority.shutdown();
             }
         }
-        self.emit.emit(db_core::EmitEvent::new("db_engine.database_shutdown"));
+        self.emit.emit(EmitEvent::new("db_engine.database_shutdown"));
         Ok(())
     }
 
@@ -871,7 +871,7 @@ impl Database {
     pub fn checkpoint_document(&self, document: &protocol::DocumentId, message: String, authors: &[protocol::ActorId]) -> Result<String, DbError> {
         let core_document = to_core_document_id(document);
         let core_authors = authors.iter().map(to_core_actor_id).collect();
-        self.version_graph.checkpoint(&core_document, db_core::CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message, authors: core_authors, timestamp_ms: now_ms() })
+        self.version_graph.checkpoint(&core_document, CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message, authors: core_authors, timestamp_ms: now_ms() })
     }
 }
 //#endregion 🔖️Database
@@ -885,7 +885,7 @@ pub struct DocumentHandle {
     authority: Arc<db_document::DocumentAuthority>,
     storage: Arc<dyn DbStorage>,
     document: protocol::DocumentId,
-    core_document: db_core::DocumentId,
+    core_document: DocumentId,
 }
 
 impl DocumentHandle {
@@ -1252,7 +1252,7 @@ mod tests {
     #[test]
     fn security_authz_hook_rejects_a_principal_denied_by_its_policy() {
         let policy = db_security::RoleBasedPolicy::new();
-        let gate = db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 16), db_security::BudgetRegistry::new(100, 10), Arc::new(db_core::NullEmit));
+        let gate = db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 16), db_security::BudgetRegistry::new(100, 10), Arc::new(NullEmit));
         let hook = SecurityAuthzHook::new(gate, |actor| db_security::Principal::new(actor.clone(), db_security::TenantId::from("tenant-1"), vec!["viewer".to_string()]));
 
         let document = protocol::DocumentId("doc-1".to_string());

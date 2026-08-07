@@ -1,0 +1,24 @@
+Ticket management commands
+
+Usage:
+  repo ticket [command]
+
+Available Commands:
+  change      Change a ticket
+  close       Close a ticket
+  open        Open a new ticket
+  reopen      Reopen a ticket
+
+Flags:
+  -h, --help   help for ticket
+
+Global Flags:
+      --format string      Output format: md, text, json (default "md")
+      --json               Shorthand for --format json
+      --md                 Shorthand for --format md
+      --repo string        Repo root path
+      --text               Shorthand for --format text
+      --timeout duration   Timeout for command execution (default 5m0s)
+      --verbose            Verbose output
+
+Use "repo ticket [command] --help" for more information about a command.

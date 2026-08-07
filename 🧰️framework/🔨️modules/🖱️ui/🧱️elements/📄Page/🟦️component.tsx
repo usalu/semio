@@ -7,8 +7,8 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
 import { getElementById } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters

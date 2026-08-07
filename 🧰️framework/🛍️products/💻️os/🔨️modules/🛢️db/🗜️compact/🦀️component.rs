@@ -30,7 +30,7 @@
 //! since a snapshot builder and a compactor may legitimately run concurrently for two different
 //! documents, but never for the SAME document at the same time).
 
-use db_core::{check_len, DbError, DocumentId};
+use {check_len, DbError, DocumentId};
 
 //#region 🔖️Budget
 /// @emoji 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the
@@ -78,18 +78,18 @@ impl CompactionLease {
     }
 
     /// @emoji 🤝️ Acquires (or idempotently re-acquires) the compaction lease for `document`.
-    pub fn acquire(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<db_core::EpochFence, DbError> {
+    pub fn acquire(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms)
     }
 
     /// @emoji ♻️ Extends `holder`'s existing compaction lease for `document`.
-    pub fn renew(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, fence: db_core::EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+    pub fn renew(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms)
     }
 
     /// @emoji 🕊️ Releases `holder`'s compaction lease for `document` — `Compactor::run` always
     /// calls this once, even if the pass itself failed (see that method's doc).
-    pub fn release(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, fence: db_core::EpochFence) -> Result<(), DbError> {
+    pub fn release(storage: &dyn db_storage::LeaseStorage, document: &DocumentId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         storage.release(&Self::resource(document), holder, fence)
     }
 
@@ -420,7 +420,7 @@ impl<'storage> Compactor<'storage> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use db_core::{DurabilityClass, Frontier};
+    use {DurabilityClass, Frontier};
     use db_storage::{MemoryStorage, PayloadStorage as _, SnapshotStorage as _, WalStorage as _};
     use db_wal::{WalPayloadRef, WalRecord};
 

@@ -7,15 +7,15 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { childElementId } from "../🫀️core/🆔ElementId/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { childElementId } from "../🆔ElementId/🟦️component.tsx";
 import { ActionGroup, ActionGroupItem } from "../⚡️ActionGroup/🟦️component.tsx";
-import { surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { surfaceClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
-import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️component.tsx";
+import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🌈️Surface/🟦️component.tsx";
 import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, windowSearchBodyClass, utilityBarBodyClass, focusActiveSearchInput } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

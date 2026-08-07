@@ -1,0 +1,101 @@
+=== started 2026-08-07T13:00:24Z ===
+=== command: bun ./📜️script.ts test exhaustive ===
+
+ NX   The following projects do not have a configuration for any of the provided targets ("build")
+
+- @semio-tech/compose-react
+
+
+ NX   Running target build for project @semio-tech/compose-js and 1 task it depends on:
+
+- @semio-tech/compose-js
+
+
+
+> nx run @semio-tech/assets:build
+
+> bun ./📜️script.ts build
+
+[asset] generated 1891 emoji + 249 catalog shortcodes
+[asset] generated 249 catalog icons + shortcodes
+[asset] generated 29 metabolism icons
+@semio-tech/assets build complete.
+
+> nx run @semio-tech/compose-js:build
+
+> bunx tsc --noEmit
+
+
+
+
+ NX   Successfully ran target build for project @semio-tech/compose-js and 1 task it depends on
+
+
+=== resumed 2026-08-07T13:02:29Z ===
+
+ NX   The following projects do not have a configuration for any of the provided targets ("build")
+
+- @semio-tech/compose-react
+
+
+ NX   Running target build for project @semio-tech/compose-js and 1 task it depends on:
+
+- @semio-tech/compose-js
+
+
+
+> nx run @semio-tech/assets:build  [local cache]
+
+> bun ./📜️script.ts build
+
+[asset] generated 1891 emoji + 249 catalog shortcodes
+[asset] generated 249 catalog icons + shortcodes
+[asset] generated 29 metabolism icons
+@semio-tech/assets build complete.
+
+> nx run @semio-tech/compose-js:build  [local cache]
+
+> bunx tsc --noEmit
+
+
+
+
+ NX   Successfully ran target build for project @semio-tech/compose-js and 1 task it depends on
+
+Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
+
+
+> nx run compose/graphql:build
+
+> bun ./📜️script.ts build
+
+error: Cannot find module '../../../../repo/lib/js/index.ts' from '/Users/ueli/Documents/semio/compose/client/schema/graphql/📜️script.ts'
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts build" exited with non-zero status code
+
+
+ NX   Running target build for project compose/graphql failed
+
+Failed tasks:
+
+- compose/graphql:build
+
+Hint: run the command with --verbose for more details.
+
+1371 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1372 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1373 |  */
+1374 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1375 |   const status = runCmdInternal(cmd, args, opts);
+1376 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: bun nx run compose/graphql:build exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:1376:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:874:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:815:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:850:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:4678:11
+
+Bun v1.3.14 (macOS arm64)
+=== exit: 1 ===

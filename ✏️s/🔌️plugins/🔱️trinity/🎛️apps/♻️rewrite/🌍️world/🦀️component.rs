@@ -5,7 +5,10 @@
 use crate::artifacts::jack::op::TrinityGraphOperation;
 use crate::artifacts::jack::{port_key, Graph, GraphFixture, Node, PortDirection};
 use crate::artifacts::rewrite::engine::{ApplyRuleResult, Rule};
-use crate::core::{complete as complete_jack, execute, parse, tokenize as tokenize_jack, QueryResult};
+use crate::ast::QueryResult;
+use crate::executor::execute;
+use crate::language_service::{complete as complete_jack, parse};
+use crate::lexer::tokenize as tokenize_jack;
 use infinite_board_port_directed::{
     compute_edge_bezier_points, distance_between,
     force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
@@ -959,7 +962,7 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::engine::{AssignmentJson, Lhs, PatternJson, Rhs};
-    use crate::core::{Completion as JackCompletion, TokenSpan as JackTokenSpan};
+    use crate::lexer::{TokenSpan as JackTokenSpan}; use math::graph::dsl::Completion as JackCompletion;
     use store::DocumentDsl;
 
     fn nakagin_graph() -> Graph {

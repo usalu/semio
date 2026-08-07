@@ -28,7 +28,7 @@ todos:
     status: completed
   - id: w3c-flow-brep
     content: "Wave 3.c (grok, largest, last): migrate flow 📐️brep (86 ops, 2364 lines, semio-s-3d) to a packaged extension; move tessellate_geometry/export_solid_json/import_solid_json/retain_geometry_handles/dispose_geometry to the kernel surface; hand-fix ~10 procedural3d .semio example graphs; clean up the stale 3d TS importing flow_extension_brep.js and its vitest alias."
-    status: in_progress
+    status: completed
   - id: w3d-flow-bim
     content: "Wave 3.d (grok): convert flow-extension-bim to the new extension world; delete the standalone-wasm feature, wasm-pack pkg output, @semio-tech/flow-module-bim workspace entry, and the hardcoded ShellHost import; fix its app_id which wrongly targets procedural3d-play."
     status: completed
@@ -46,10 +46,10 @@ todos:
     status: completed
   - id: w4-build-launch
     content: "Wave 4 (composer, batched to touch contended global files once): root Cargo.toml members, root package.json workspaces, nx.json defaults, per-extension project.json + script.ts, an `extension package` command producing .sxt, vite production copy for /extensions, .vscode/launch.json entries in existing grouping/naming, and AGENTS.md docs for the plugin/extension distinction."
-    status: in_progress
+    status: completed
   - id: w5-verify
     content: "Wave 5 (grok, serial gate): cargo test + clippy -D warnings, nx run-many -t test, vitest; runtime E2E with [DEBUG] logs and screenshots for flow and process proving empty palette -> install from URL -> capability appears -> eval computed inside the extension via invoke -> disable -> re-enable -> uninstall -> reload restores the ledger; sideload a package built outside the catalog; confirm no standalone-wasm, no @semio-tech/flow-module-bim, no RequestPluginExchange remain."
-    status: pending
+    status: completed
 isProject: false
 ---
 

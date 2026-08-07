@@ -1,6 +1,6 @@
 //! 🎞️ Protocol history log: the typed record model (`HistoryLog` and friends), the `.ops` text
 //! grammar twin (built directly on `dsl_schema`, never on `vcs`), per-kind binary payload codecs
-//! (built on `crate::os_spr::core::scalar` + `protocol_format`'s frame writer/reader), the whole-file
+//! (built on `crate::os_spr::wire::scalar` + `protocol_format`'s frame writer/reader), the whole-file
 //! codec, a streaming append API, and a lazy forward/reverse scan API. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_history`).
 //!
@@ -9,8 +9,8 @@
 //! crate this one does not depend on).
 
 use crate::os_dsl::schema::{FieldSpec, FieldValue, JoinMode, ParseOptions, RecordLayout, RecordSpec, RecordValue, Shape};
-use crate::os_pack::core::{ByteReader, ByteWriter, CodecId, PackSink};
-use crate::os_spr::core::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
+use crate::os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
+use crate::os_spr::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
 use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
 use std::collections::HashMap;
 
@@ -266,7 +266,7 @@ fn field_authors(record: &RecordValue, id: u16) -> Vec<HistoryAuthor> {
     }
 }
 
-fn text_error_to_protocol(err: crate::os_dsl::core::TextError) -> ProtocolError {
+fn text_error_to_protocol(err: crate::os_dsl::TextError) -> ProtocolError {
     ProtocolError::Malformed { what: "ops text", offset: err.span.line as u64, detail: err.message }
 }
 
@@ -473,10 +473,10 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
 //#endregion 🔖️TextGrammar
 
 //#region 🔖️Payloads
-// Binary codec for each record kind, using crate::os_spr::core::scalar + protocol_format's frame
+// Binary codec for each record kind, using crate::os_spr::wire::scalar + protocol_format's frame
 // writer/reader. Every payload starts `format: u8` (=1); trailing bytes are ignored on read
 // (additive-evolution slot) except a critical record demands `format <= known` (all kinds here
-// are critical per crate::os_spr::core::is_critical_kind, so every decode_* rejects format > 1).
+// are critical per crate::os_spr::is_critical_kind, so every decode_* rejects format > 1).
 //
 // 🎯️ Design choices (contract leaves these to the implementer, documented once here):
 // - Every encode_*/decode_* pair takes a SINGLE `DictBuilder`/`DictReader` (matching the frozen
@@ -515,14 +515,14 @@ fn read_str_field(input: &mut ByteReader<'_>) -> Result<String, ProtocolError> {
 }
 
 fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
-    crate::os_spr::core::scalar::write_id(out, id, |s| dict.intern(s), edit_ordinal_of).map_err(ProtocolError::from)
+    crate::os_spr::scalar::scalar::write_id(out, id, |s| dict.intern(s), edit_ordinal_of).map_err(ProtocolError::from)
 }
 
 fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<String, ProtocolError> {
-    crate::os_spr::core::scalar::read_id(
+    crate::os_spr::scalar::scalar::read_id(
         input,
-        |idx: u32| dict.resolve(idx).map_err(|_| crate::os_pack::core::PackError::Malformed { what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
-        |ord: u64| ordinal_to_id(ord).map_err(|_| crate::os_pack::core::PackError::Malformed { what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
+        |idx: u32| dict.resolve(idx).map_err(|_| crate::os_pack::PackError::Malformed { what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
+        |ord: u64| ordinal_to_id(ord).map_err(|_| crate::os_pack::PackError::Malformed { what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
     )
     .map_err(ProtocolError::from)
 }
@@ -679,12 +679,12 @@ pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: 
     }
     out.write_u8(presence);
     write_id_field(&mut out, &edit.id, dict, &|_: &str| None)?;
-    let mut prev_epoch_ms = crate::os_spr::core::scalar::write_timestamp(&mut out, &edit.started_at, None);
+    let mut prev_epoch_ms = crate::os_spr::scalar::scalar::write_timestamp(&mut out, &edit.started_at, None);
     if let Some(actor) = &edit.actor {
         write_id_field(&mut out, actor, dict, edit_ordinal_of)?;
     }
     if let Some(finished) = &edit.finished_at {
-        prev_epoch_ms = crate::os_spr::core::scalar::write_timestamp(&mut out, finished, prev_epoch_ms);
+        prev_epoch_ms = crate::os_spr::scalar::scalar::write_timestamp(&mut out, finished, prev_epoch_ms);
     }
     let _ = prev_epoch_ms;
     if let Some(key) = &edit.coalesce_key {
@@ -726,10 +726,10 @@ pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl
     }
     let presence = input.read_u8()?;
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (started_at, mut prev_epoch_ms) = crate::os_spr::core::scalar::read_timestamp(&mut input, None)?;
+    let (started_at, mut prev_epoch_ms) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None)?;
     let actor = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, ordinal_to_id)?) } else { None };
     let finished_at = if presence & (1 << 1) != 0 {
-        let (s, p) = crate::os_spr::core::scalar::read_timestamp(&mut input, prev_epoch_ms)?;
+        let (s, p) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, prev_epoch_ms)?;
         prev_epoch_ms = p;
         Some(s)
     } else {
@@ -784,7 +784,7 @@ pub fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_ordina
     }
     out.write_u8(presence);
     write_id_field(&mut out, &change.id, dict, &|_: &str| None)?;
-    crate::os_spr::core::scalar::write_timestamp(&mut out, &change.saved_at, None);
+    crate::os_spr::scalar::scalar::write_timestamp(&mut out, &change.saved_at, None);
     out.write_varint_u64(change.edit_ids.len() as u64);
     for edit_id in &change.edit_ids {
         write_id_field(&mut out, edit_id, dict, edit_ordinal_of)?;
@@ -804,7 +804,7 @@ pub fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: im
     }
     let presence = input.read_u8()?;
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (saved_at, _) = crate::os_spr::core::scalar::read_timestamp(&mut input, None)?;
+    let (saved_at, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None)?;
     let edit_count = input.read_varint_u64()?;
     let mut edit_ids = Vec::with_capacity(edit_count as usize);
     for _ in 0..edit_count {
@@ -828,7 +828,7 @@ pub fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBuilder)
     }
     out.write_u8(presence);
     write_id_field(&mut out, &checkpoint.id, dict, &|_: &str| None)?;
-    crate::os_spr::core::scalar::write_timestamp(&mut out, &checkpoint.timestamp, None);
+    crate::os_spr::scalar::scalar::write_timestamp(&mut out, &checkpoint.timestamp, None);
     out.write_varint_u64(checkpoint.change_ids.len() as u64);
     for change_id in &checkpoint.change_ids {
         write_id_field(&mut out, change_id, dict, &|_: &str| None)?;
@@ -855,7 +855,7 @@ pub fn decode_checkpoint(payload: &[u8], dict: &DictReader) -> Result<HistoryChe
     }
     let presence = input.read_u8()?;
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (timestamp, _) = crate::os_spr::core::scalar::read_timestamp(&mut input, None)?;
+    let (timestamp, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None)?;
     let change_count = input.read_varint_u64()?;
     let mut change_ids = Vec::with_capacity(change_count as usize);
     for _ in 0..change_count {
@@ -1028,7 +1028,7 @@ fn flush_dict_delta<S: PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, 
             payload.write_varint_u64(entry.len() as u64);
             payload.write_bytes(entry.as_bytes());
         }
-        writer.write_record(crate::os_spr::core::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0))?;
         *base = len;
     }
     Ok(())
@@ -1061,14 +1061,14 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
     if log.edits.len() as u64 > options.limits.max_record_count {
         return Err(ProtocolError::LimitExceeded("edit count exceeds ProtocolLimits::max_record_count"));
     }
-    let write_options = WriteOptions { required_flags: crate::os_spr::core::REQUIRED_HASH_CHAIN, optional_flags: if options.canonical { crate::os_spr::core::OPTIONAL_CANONICAL } else { 0 } };
+    let write_options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: if options.canonical { crate::os_spr::OPTIONAL_CANONICAL } else { 0 } };
     let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options)?;
     let mut dict = DictBuilder::new();
     let mut dict_base = 0u32;
 
     let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict);
     flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-    writer.write_record(crate::os_spr::core::REC_DOC, true, &doc_payload, CodecId(0))?;
+    writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0))?;
 
     // 🎯️ Built incrementally (an edit's own id is inserted only AFTER it is encoded), matching
     // `HistoryAppender::append_edit`'s streaming semantics and the decoder's causal resolution
@@ -1089,27 +1089,27 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
             encode_edit(&stripped, &mut dict, |id| ordinals.get(id).copied())?
         };
         flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::core::REC_EDIT, true, &payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0))?;
         ordinals.insert(edit.id.as_str(), index as u64);
     }
     for change in &log.changes {
         let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied())?;
         flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::core::REC_CHANGE, true, &payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0))?;
     }
     for checkpoint in &log.checkpoints {
         let payload = encode_checkpoint(checkpoint, &mut dict)?;
         flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::core::REC_CHECKPOINT, true, &payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0))?;
     }
     for alternative in &log.alternatives {
         let payload = encode_alternative(alternative, &mut dict)?;
         flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::core::REC_ALTERNATIVE, true, &payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0))?;
     }
     let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict);
     flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-    writer.write_record(crate::os_spr::core::REC_ACTIVE, true, &active_payload, CodecId(0))?;
+    writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0))?;
 
     if let Some(cursor) = &log.cursor {
         let cursor_payload = encode_cursor(cursor, &mut dict, |id| ordinals.get(id).copied())?;
@@ -1132,37 +1132,37 @@ fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<Histor
     let mut pending_digests: Vec<[u8; 32]> = Vec::new();
 
     while let Some(frame) = cursor.next_frame()? {
-        if full && frame.kind != crate::os_spr::core::REC_COMMIT {
+        if full && frame.kind != crate::os_spr::REC_COMMIT {
             let frame_bytes = &trusted[frame.offset as usize..(frame.offset + frame.frame_len()) as usize];
             pending_digests.push(hasher.hash(frame_bytes));
         }
         match frame.kind {
-            crate::os_spr::core::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
-            crate::os_spr::core::REC_ACTOR_DICT => {} // v1 never splits an actor dictionary — see 🔖️Payloads note
-            crate::os_spr::core::REC_DOC => {
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
+            crate::os_spr::REC_ACTOR_DICT => {} // v1 never splits an actor dictionary — see 🔖️Payloads note
+            crate::os_spr::REC_DOC => {
                 let (doc_id, schema) = decode_doc(frame.payload(), &dict)?;
                 log.doc_id = doc_id;
                 log.schema = schema;
             }
-            crate::os_spr::core::REC_EDIT => {
+            crate::os_spr::REC_EDIT => {
                 let edit_ids_ref = &edit_ids;
                 let edit = decode_edit(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
                 edit_ids.push(edit.id.clone());
                 log.edits.push(edit);
             }
-            crate::os_spr::core::REC_CHANGE => {
+            crate::os_spr::REC_CHANGE => {
                 let edit_ids_ref = &edit_ids;
                 let change = decode_change(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
                 log.changes.push(change);
             }
-            crate::os_spr::core::REC_CHECKPOINT => log.checkpoints.push(decode_checkpoint(frame.payload(), &dict)?),
-            crate::os_spr::core::REC_ALTERNATIVE => log.alternatives.push(decode_alternative(frame.payload(), &dict)?),
-            crate::os_spr::core::REC_ACTIVE => log.active_alternative_id = decode_active(frame.payload(), &dict)?,
+            crate::os_spr::REC_CHECKPOINT => log.checkpoints.push(decode_checkpoint(frame.payload(), &dict)?),
+            crate::os_spr::REC_ALTERNATIVE => log.alternatives.push(decode_alternative(frame.payload(), &dict)?),
+            crate::os_spr::REC_ACTIVE => log.active_alternative_id = decode_active(frame.payload(), &dict)?,
             REC_CURSOR => {
                 let edit_ids_ref = &edit_ids;
                 log.cursor = Some(decode_cursor(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?);
             }
-            crate::os_spr::core::REC_COMMIT if full => {
+            crate::os_spr::REC_COMMIT if full => {
                 let (commit_seq, chain_hash) = parse_commit_fields(frame.payload())?;
                 let mut concat = running_chain.to_vec();
                 for digest in &pending_digests {
@@ -1207,7 +1207,7 @@ impl<S: PackSink> HistoryAppender<S> {
         let mut dict_base = 0u32;
         let payload = encode_doc(doc_id, schema, &mut dict);
         flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::core::REC_DOC, true, &payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_DOC, true, &payload, CodecId(0))?;
         Ok(Self { writer, dict, dict_base, edit_ordinals: HashMap::new(), next_edit_ordinal: 0 })
     }
 
@@ -1215,7 +1215,7 @@ impl<S: PackSink> HistoryAppender<S> {
         let ordinals = &self.edit_ordinals;
         let payload = encode_edit(edit, &mut self.dict, |id| ordinals.get(id).copied())?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        let offset = self.writer.write_record(crate::os_spr::core::REC_EDIT, true, &payload, CodecId(0))?;
+        let offset = self.writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0))?;
         self.edit_ordinals.insert(edit.id.clone(), self.next_edit_ordinal);
         self.next_edit_ordinal += 1;
         Ok(offset)
@@ -1225,25 +1225,25 @@ impl<S: PackSink> HistoryAppender<S> {
         let ordinals = &self.edit_ordinals;
         let payload = encode_change(change, &mut self.dict, |id| ordinals.get(id).copied())?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::core::REC_CHANGE, true, &payload, CodecId(0))
+        self.writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0))
     }
 
     pub fn append_checkpoint(&mut self, checkpoint: &HistoryCheckpoint) -> Result<u64, ProtocolError> {
         let payload = encode_checkpoint(checkpoint, &mut self.dict)?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::core::REC_CHECKPOINT, true, &payload, CodecId(0))
+        self.writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0))
     }
 
     pub fn append_alternative(&mut self, alternative: &HistoryAlternative) -> Result<u64, ProtocolError> {
         let payload = encode_alternative(alternative, &mut self.dict)?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::core::REC_ALTERNATIVE, true, &payload, CodecId(0))
+        self.writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0))
     }
 
     pub fn set_active(&mut self, alternative_id: Option<&str>) -> Result<u64, ProtocolError> {
         let payload = encode_active(alternative_id, &mut self.dict);
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::core::REC_ACTIVE, true, &payload, CodecId(0))
+        self.writer.write_record(crate::os_spr::REC_ACTIVE, true, &payload, CodecId(0))
     }
 
     pub fn append_cursor(&mut self, cursor: &HistoryCursor) -> Result<u64, ProtocolError> {
@@ -1308,12 +1308,12 @@ impl<'a> Iterator for EditIter<'a> {
         loop {
             match self.cursor.next_frame() {
                 Ok(Some(frame)) => match frame.kind {
-                    crate::os_spr::core::REC_STR_DICT => {
+                    crate::os_spr::REC_STR_DICT => {
                         if let Err(e) = apply_dict_record(&mut self.dict, frame.payload()) {
                             return Some(Err(e));
                         }
                     }
-                    crate::os_spr::core::REC_EDIT => {
+                    crate::os_spr::REC_EDIT => {
                         let edit_ids_ref = &self.edit_ids;
                         let dict_ref = &self.dict;
                         let result = decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)));
@@ -1361,7 +1361,7 @@ impl<'a> Iterator for RevEditIter<'a> {
                 loop {
                     match ready.cursor.prev_frame() {
                         Ok(Some(frame)) => {
-                            if frame.kind == crate::os_spr::core::REC_EDIT {
+                            if frame.kind == crate::os_spr::REC_EDIT {
                                 let edit_ids_ref = &ready.edit_ids;
                                 let dict_ref = &ready.dict;
                                 let result = decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)));
@@ -1390,8 +1390,8 @@ fn prescan_full(trusted: &[u8]) -> Result<(DictReader, Vec<String>), ProtocolErr
     let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64);
     while let Some(frame) = cursor.next_frame()? {
         match frame.kind {
-            crate::os_spr::core::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
-            crate::os_spr::core::REC_EDIT => {
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
+            crate::os_spr::REC_EDIT => {
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
                 let edit = decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
@@ -1959,7 +1959,7 @@ mod tests {
     #[test]
     fn streamed_append_equals_buffered_encode() {
         let log = sample_log();
-        let options = WriteOptions { required_flags: crate::os_spr::core::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::core::OPTIONAL_CANONICAL };
+        let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
         let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).unwrap();
         for edit in &log.edits {
             appender.append_edit(edit).unwrap();
@@ -1988,7 +1988,7 @@ mod tests {
             edit.meta = None;
         }
         let cursor = HistoryCursor { applied_edit_ids: vec!["edit-1".to_string()], redo_edit_ids: vec!["edit-2".to_string()], checkpoint_id: Some("ck-1".to_string()) };
-        let options = WriteOptions { required_flags: crate::os_spr::core::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::core::OPTIONAL_CANONICAL };
+        let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
         let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).unwrap();
         for edit in &log.edits {
             appender.append_edit(edit).unwrap();

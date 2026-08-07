@@ -14,8 +14,8 @@ use crate::apps::fem2d::modes::edit::windows::model as model_window;
 use crate::apps::fem2d::modes::edit::windows::results as results_window;
 use crate::artifacts::fem2d::op::Fem2dOperation;
 use crate::artifacts::fem2d::Fem2dDocument;
-use crate::core::shared::{DisplayMode, ResultDisplay};
-use crate::core::{Dof, ElementResult};
+use crate::app_surface::{DisplayMode, ResultDisplay};
+use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
     UiNode,
@@ -77,7 +77,7 @@ use locale::set_locale;
 
 //#region 🔖️ExportImportHelpers
 /// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
-/// `Fem2dConfig` result-display fields back into `crate::core::shared::ResultDisplay`/`DisplayMode` so
+/// `Fem2dConfig` result-display fields back into `crate::app_surface::ResultDisplay`/`DisplayMode` so
 /// the results window's render pipeline (built around those shared types) needs no changes.
 fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
     let mode = match cfg.result_mode.as_str() {
@@ -88,8 +88,8 @@ fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
     ResultDisplay { source_id: cfg.result_source_id.clone(), mode }
 }
 
-/// 🎨️ Manual `crate::core::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
-/// — `crate::core::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (out of this ticket's
+/// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
+/// — `crate::model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (out of this ticket's
 /// scope: `🫀️core` is a shared crate), so this hand-rolls the same shape `serde_json::to_string` would
 /// have produced, using `Dof`'s existing `{:?}` formatting (already used for the reaction-label layers
 /// in the results window's render).
@@ -120,7 +120,7 @@ fn element_result_json(result: &ElementResult) -> Value {
     }
 }
 
-fn static_result_json(result: &crate::core::StaticResult) -> Value {
+fn static_result_json(result: &crate::model::StaticResult) -> Value {
     json!({
         "displacements": result.displacements.iter().map(|d| json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
         "reactions": result.reactions.iter().map(|r| json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
@@ -129,7 +129,7 @@ fn static_result_json(result: &crate::core::StaticResult) -> Value {
     })
 }
 
-fn results_map_json(results: &HashMap<String, crate::core::StaticResult>) -> Value {
+fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Value {
     Value::Object(results.iter().map(|(id, result)| (id.clone(), static_result_json(result))).collect())
 }
 //#endregion 🔖️ExportImportHelpers
@@ -222,7 +222,7 @@ impl DocumentApp for Fem2dPlayApp {
                     None => Vec::new(),
                 };
                 let material_id = doc.projection.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
-                let id = crate::core::shared::next_id(doc.projection.regions.iter().map(|r| r.id.clone()), "r");
+                let id = crate::app_surface::next_id(doc.projection.regions.iter().map(|r| r.id.clone()), "r");
                 let index = doc.projection.regions.len();
                 let region = crate::artifacts::fem2d::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
                 Ok(Emit::operations(vec![Fem2dOperation::SetRegion { index, region }]))
@@ -339,7 +339,7 @@ pub fn create_fem2d_app() -> App {
                     .default_value("default"),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
-            .action_args("setResultDisplay", crate::core::shared::result_display_action_args())
+            .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎯️ Typed channel surface — `config_spec()`/`fem2d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.

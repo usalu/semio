@@ -12,7 +12,7 @@
 //! that surface, exactly two primitive combinators are expressible:
 //! - **winner-take-all**: return one side's diff entirely, discarding the other (`Lww`,
 //!   `ContentAddressedBlob`'s non-equal-hash fallback) — arbitrated by
-//!   `HybridLogicalTimestamp::Ord` (`crate::os_spr::core::HybridLogicalTimestamp`), which is
+//!   `HybridLogicalTimestamp::Ord` (`crate::os_spr::ids::HybridLogicalTimestamp`), which is
 //!   actor-tiebroken so a strict winner always exists.
 //! - **chronological semio_compose_rs**: order the two sides by `OperationMeta.timestamp` and call
 //!   `earlier.absorb(later)` — every real `absorb` impl in this codebase (see
@@ -29,19 +29,19 @@
 //#region 🔖️Merge
 /// @emoji 🧩️ Replaces `crate::os_store::merge_concurrent_diffs` (`vcs/rs/lib.rs` L680), which collapsed every
 /// `MergeStrategyKind` to plain `absorb()`. Dispatches to a real per-strategy combinator instead.
-pub fn merge_concurrent_diffs<P, D: crate::os_spr::command::OperationDiff<P>>(strategy: crate::os_spr::core::MergeStrategyKind, existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+pub fn merge_concurrent_diffs<P, D: crate::os_spr::command::OperationDiff<P>>(strategy: crate::os_spr::MergeStrategyKind, existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
     match strategy {
-        crate::os_spr::core::MergeStrategyKind::LwwRegister => lww_merge(existing, incoming, existing_meta, incoming_meta),
-        crate::os_spr::core::MergeStrategyKind::OrderedSequence => ordered_sequence_merge(existing, incoming, existing_meta, incoming_meta),
-        crate::os_spr::core::MergeStrategyKind::TextSequence => text_sequence_merge(existing, incoming, existing_meta, incoming_meta),
-        crate::os_spr::core::MergeStrategyKind::TombstonedGraphSet => tombstoned_graph_set_merge(existing, incoming, existing_meta, incoming_meta),
-        crate::os_spr::core::MergeStrategyKind::ContentAddressedBlob => content_addressed_blob_merge(existing, incoming, existing_meta, incoming_meta),
+        crate::os_spr::MergeStrategyKind::LwwRegister => lww_merge(existing, incoming, existing_meta, incoming_meta),
+        crate::os_spr::MergeStrategyKind::OrderedSequence => ordered_sequence_merge(existing, incoming, existing_meta, incoming_meta),
+        crate::os_spr::MergeStrategyKind::TextSequence => text_sequence_merge(existing, incoming, existing_meta, incoming_meta),
+        crate::os_spr::MergeStrategyKind::TombstonedGraphSet => tombstoned_graph_set_merge(existing, incoming, existing_meta, incoming_meta),
+        crate::os_spr::MergeStrategyKind::ContentAddressedBlob => content_addressed_blob_merge(existing, incoming, existing_meta, incoming_meta),
     }
 }
 
 /// @emoji 🕰️ Shared "later absorbs into earlier" combinator: orders `existing`/`incoming` by
 /// `OperationMeta.timestamp` (ties — not expected post the `HybridLogicalTimestamp` actor-tiebreak
-/// fix, see `crate::os_spr::core::HybridLogicalTimestamp::cmp_key` — break toward `existing`) and calls
+/// fix, see `crate::os_spr::ids::HybridLogicalTimestamp::cmp_key` — break toward `existing`) and calls
 /// `earlier.absorb(later)`, so per-field overwrites land in chronological order regardless of which
 /// side the caller happened to pass as `existing` vs `incoming`.
 fn chronological_compose<P, D: crate::os_spr::command::OperationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
@@ -181,14 +181,14 @@ mod tests {
             dependencies: Vec::new(),
             base_version: 0,
             author_id: None,
-            timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(actor, physical_ms),
-            undo_policy: crate::os_spr::core::UndoPolicy::ExactBaseOnly,
+            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(actor, physical_ms),
+            undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
         }
     }
 
     fn meta_with_hash(actor: u64, physical_ms: u64, hash: Option<[u8; 32]>) -> crate::os_spr::command::OperationMeta {
-        crate::os_spr::command::OperationMeta { payload_hash: hash.map(crate::os_spr::core::PayloadHash), ..meta_at(actor, physical_ms) }
+        crate::os_spr::command::OperationMeta { payload_hash: hash.map(crate::os_spr::ids::PayloadHash), ..meta_at(actor, physical_ms) }
     }
     //#endregion 🧸️Fixtures
 
@@ -199,7 +199,7 @@ mod tests {
         let incoming = RegisterDiff { field_a: Some(2), field_b: None };
         let existing_meta = meta_at(1, 10);
         let incoming_meta = meta_at(2, 20);
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::LwwRegister, existing, incoming.clone(), &existing_meta, &incoming_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::LwwRegister, existing, incoming.clone(), &existing_meta, &incoming_meta);
         assert_eq!(merged, incoming, "later diff must win outright, including its unset field_b");
     }
 
@@ -211,7 +211,7 @@ mod tests {
         // must decide, not an accidental Equal (the bug the moved HLC fixes).
         let existing_meta = meta_at(9, 100);
         let incoming_meta = meta_at(1, 100);
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::LwwRegister, existing.clone(), incoming, &existing_meta, &incoming_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::LwwRegister, existing.clone(), incoming, &existing_meta, &incoming_meta);
         assert_eq!(merged, existing, "actor 9 must outrank actor 1 at equal physical_ms/logical");
     }
 
@@ -221,10 +221,10 @@ mod tests {
         let b = RegisterDiff { field_a: Some(2), field_b: Some(9) };
         let ma = meta_at(1, 10);
         let mb = meta_at(2, 20);
-        let forward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::LwwRegister, a.clone(), b.clone(), &ma, &mb);
-        let backward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::LwwRegister, b, a.clone(), &mb, &ma);
+        let forward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::LwwRegister, a.clone(), b.clone(), &ma, &mb);
+        let backward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::LwwRegister, b, a.clone(), &mb, &ma);
         assert_eq!(forward, backward);
-        let idempotent = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::LwwRegister, a.clone(), a.clone(), &ma, &ma);
+        let idempotent = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::LwwRegister, a.clone(), a.clone(), &ma, &ma);
         assert_eq!(idempotent, a);
     }
     //#endregion 🔖️Lww
@@ -236,7 +236,7 @@ mod tests {
         let incoming = RegisterDiff { field_a: Some(2), field_b: None };
         let existing_meta = meta_at(1, 10);
         let incoming_meta = meta_at(2, 20);
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::OrderedSequence, existing, incoming, &existing_meta, &incoming_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::OrderedSequence, existing, incoming, &existing_meta, &incoming_meta);
         assert_eq!(merged, RegisterDiff { field_a: Some(2), field_b: Some(100) }, "later field_a wins but earlier field_b survives, unlike Lww");
     }
 
@@ -246,10 +246,10 @@ mod tests {
         let b = RegisterDiff { field_a: None, field_b: Some(9) };
         let ma = meta_at(1, 10);
         let mb = meta_at(2, 20);
-        let forward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::OrderedSequence, a.clone(), b.clone(), &ma, &mb);
-        let backward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::OrderedSequence, b, a.clone(), &mb, &ma);
+        let forward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::OrderedSequence, a.clone(), b.clone(), &ma, &mb);
+        let backward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::OrderedSequence, b, a.clone(), &mb, &ma);
         assert_eq!(forward, backward);
-        let idempotent = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::OrderedSequence, a.clone(), a.clone(), &ma, &ma);
+        let idempotent = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::OrderedSequence, a.clone(), a.clone(), &ma, &ma);
         assert_eq!(idempotent, a);
     }
 
@@ -271,7 +271,7 @@ mod tests {
         let incoming = RegisterDiff { field_a: Some(2), field_b: None };
         let existing_meta = meta_at(1, 10);
         let incoming_meta = meta_at(2, 20);
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TextSequence, existing, incoming, &existing_meta, &incoming_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TextSequence, existing, incoming, &existing_meta, &incoming_meta);
         assert_eq!(merged, RegisterDiff { field_a: Some(2), field_b: Some(7) });
     }
 
@@ -281,10 +281,10 @@ mod tests {
         let b = RegisterDiff { field_a: None, field_b: Some(4) };
         let ma = meta_at(1, 5);
         let mb = meta_at(2, 6);
-        let forward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TextSequence, a.clone(), b.clone(), &ma, &mb);
-        let backward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TextSequence, b, a.clone(), &mb, &ma);
+        let forward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TextSequence, a.clone(), b.clone(), &ma, &mb);
+        let backward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TextSequence, b, a.clone(), &mb, &ma);
         assert_eq!(forward, backward);
-        let idempotent = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TextSequence, a.clone(), a.clone(), &ma, &ma);
+        let idempotent = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TextSequence, a.clone(), a.clone(), &ma, &ma);
         assert_eq!(idempotent, a);
     }
     //#endregion 🔖️TextSequence
@@ -296,7 +296,7 @@ mod tests {
         let remove = GraphDiff { add: None, remove: Some(true) };
         let add_meta = meta_at(1, 10);
         let remove_meta = meta_at(2, 20);
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TombstonedGraphSet, add, remove, &add_meta, &remove_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TombstonedGraphSet, add, remove, &add_meta, &remove_meta);
         assert!(!merged.apply(&true), "a tombstone later than the add must win");
     }
 
@@ -306,7 +306,7 @@ mod tests {
         let add = GraphDiff { add: Some(true), remove: None };
         let remove_meta = meta_at(1, 10);
         let add_meta = meta_at(2, 20);
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TombstonedGraphSet, remove, add, &remove_meta, &add_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TombstonedGraphSet, remove, add, &remove_meta, &add_meta);
         assert!(merged.apply(&false), "an add later than the tombstone must resurrect the node");
     }
 
@@ -316,10 +316,10 @@ mod tests {
         let remove = GraphDiff { add: None, remove: Some(true) };
         let ma = meta_at(1, 10);
         let mb = meta_at(2, 20);
-        let forward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TombstonedGraphSet, add.clone(), remove.clone(), &ma, &mb);
-        let backward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TombstonedGraphSet, remove, add.clone(), &mb, &ma);
+        let forward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TombstonedGraphSet, add.clone(), remove.clone(), &ma, &mb);
+        let backward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TombstonedGraphSet, remove, add.clone(), &mb, &ma);
         assert_eq!(forward, backward);
-        let idempotent = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::TombstonedGraphSet, add.clone(), add.clone(), &ma, &ma);
+        let idempotent = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::TombstonedGraphSet, add.clone(), add.clone(), &ma, &ma);
         assert_eq!(idempotent, add);
     }
     //#endregion 🔖️TombstonedGraphSet
@@ -331,7 +331,7 @@ mod tests {
         let incoming = existing.clone();
         let existing_meta = meta_with_hash(1, 10, Some([7u8; 32]));
         let incoming_meta = meta_with_hash(2, 20, Some([7u8; 32]));
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::ContentAddressedBlob, existing.clone(), incoming, &existing_meta, &incoming_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::ContentAddressedBlob, existing.clone(), incoming, &existing_meta, &incoming_meta);
         assert_eq!(merged, existing);
     }
 
@@ -341,7 +341,7 @@ mod tests {
         let incoming = RegisterDiff { field_a: Some(2), field_b: None };
         let existing_meta = meta_with_hash(1, 10, Some([1u8; 32]));
         let incoming_meta = meta_with_hash(2, 20, Some([2u8; 32]));
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::ContentAddressedBlob, existing, incoming.clone(), &existing_meta, &incoming_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::ContentAddressedBlob, existing, incoming.clone(), &existing_meta, &incoming_meta);
         assert_eq!(merged, incoming, "unequal hashes must fall back to timestamp-arbitrated Lww");
     }
 
@@ -351,7 +351,7 @@ mod tests {
         let incoming = RegisterDiff { field_a: Some(2), field_b: None };
         let existing_meta = meta_at(1, 10);
         let incoming_meta = meta_at(2, 20);
-        let merged = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::ContentAddressedBlob, existing, incoming.clone(), &existing_meta, &incoming_meta);
+        let merged = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::ContentAddressedBlob, existing, incoming.clone(), &existing_meta, &incoming_meta);
         assert_eq!(merged, incoming, "two None hashes must not short-circuit; falls back to Lww");
     }
 
@@ -361,10 +361,10 @@ mod tests {
         let b = RegisterDiff { field_a: Some(2), field_b: None };
         let ma = meta_with_hash(1, 10, Some([1u8; 32]));
         let mb = meta_with_hash(2, 20, Some([2u8; 32]));
-        let forward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::ContentAddressedBlob, a.clone(), b.clone(), &ma, &mb);
-        let backward = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::ContentAddressedBlob, b, a.clone(), &mb, &ma);
+        let forward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::ContentAddressedBlob, a.clone(), b.clone(), &ma, &mb);
+        let backward = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::ContentAddressedBlob, b, a.clone(), &mb, &ma);
         assert_eq!(forward, backward);
-        let idempotent = merge_concurrent_diffs(crate::os_spr::core::MergeStrategyKind::ContentAddressedBlob, a.clone(), a.clone(), &ma, &ma);
+        let idempotent = merge_concurrent_diffs(crate::os_spr::MergeStrategyKind::ContentAddressedBlob, a.clone(), a.clone(), &ma, &ma);
         assert_eq!(idempotent, a);
     }
     //#endregion 🔖️ContentAddressedBlob

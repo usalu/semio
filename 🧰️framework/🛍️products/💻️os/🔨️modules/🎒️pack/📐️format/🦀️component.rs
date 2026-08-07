@@ -2,7 +2,7 @@
 //! segment/manifest/symbols/chunk-table layout, a `PackWriter`/`PackFile` pair for building and
 //! random-access reading packs of any size, three verification levels trading speed for
 //! integrity guarantees, forward-scan recovery for footer-less/truncated files, and an optional
-//! deflate codec. Every length is validated against `crate::os_pack::core::PackLimits` before allocation.
+//! deflate codec. Every length is validated against `crate::os_pack::PackLimits` before allocation.
 //!
 //! Layout notes: see the `## pack_format` section of the wave-0 contract at
 //! `.🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`. One deliberate
@@ -11,7 +11,7 @@
 //! implements the mathematically self-consistent 84-byte footer and exports `FOOTER_SIZE` so
 //! downstream crates never have to hardcode the number themselves.
 
-use crate::os_pack::core::{crc32c, read_varint_u64, write_varint_u64, ByteRange, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource};
+use crate::os_pack::{crc32c, read_varint_u64, write_varint_u64, ByteRange, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource};
 
 //#region 🔖️Header
 /// @emoji 🧲️ The 8-byte magic every `.spk` pack file begins with.
@@ -591,11 +591,11 @@ impl<S: PackSink> PackWriter<S> {
         let base = self.sink.position();
         let encoded = encode_segment(kind, self.options.codec, payload)?;
         self.sink.write_all(&encoded.bytes)?;
-        if kind == crate::os_pack::core::KIND_SYMBOLS {
+        if kind == crate::os_pack::KIND_SYMBOLS {
             self.symbols = decode_symbols(payload, &PackLimits::default())?;
             self.symbols_span = Some(ByteRange { offset: base, len: encoded.bytes.len() as u64 });
         }
-        if kind == crate::os_pack::core::KIND_DOCUMENT {
+        if kind == crate::os_pack::KIND_DOCUMENT {
             self.document_hasher.update(payload);
         }
         Ok(())
@@ -605,7 +605,7 @@ impl<S: PackSink> PackWriter<S> {
     /// chunk table `finish` will emit.
     pub fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
         let base = self.sink.position();
-        let encoded = encode_segment(crate::os_pack::core::KIND_CHUNK, self.options.codec, payload)?;
+        let encoded = encode_segment(crate::os_pack::KIND_CHUNK, self.options.codec, payload)?;
         let payload_offset = base + encoded.header_len as u64;
         let stored_bytes = &encoded.bytes[encoded.header_len..encoded.header_len + encoded.stored_len];
         let stored_crc = crc32c(stored_bytes);
@@ -623,7 +623,7 @@ impl<S: PackSink> PackWriter<S> {
         if !self.chunks.is_empty() {
             let base = self.sink.position();
             let table_bytes = encode_chunk_table(&self.chunks);
-            let encoded = encode_segment(crate::os_pack::core::KIND_CHUNK_TABLE, self.options.codec, &table_bytes)?;
+            let encoded = encode_segment(crate::os_pack::KIND_CHUNK_TABLE, self.options.codec, &table_bytes)?;
             self.sink.write_all(&encoded.bytes)?;
             chunk_table_span = ByteRange { offset: base, len: encoded.bytes.len() as u64 };
         }
@@ -647,11 +647,11 @@ impl<S: PackSink> PackWriter<S> {
         };
         let manifest_bytes = encode_manifest_bytes(schema_symref, &final_manifest);
         let manifest_base = self.sink.position();
-        let manifest_encoded = encode_segment(crate::os_pack::core::KIND_MANIFEST, self.options.codec, &manifest_bytes)?;
+        let manifest_encoded = encode_segment(crate::os_pack::KIND_MANIFEST, self.options.codec, &manifest_bytes)?;
         self.sink.write_all(&manifest_encoded.bytes)?;
         let manifest_span = ByteRange { offset: manifest_base, len: manifest_encoded.bytes.len() as u64 };
 
-        let end_encoded = encode_segment(crate::os_pack::core::KIND_END, CodecId(0), &[])?;
+        let end_encoded = encode_segment(crate::os_pack::KIND_END, CodecId(0), &[])?;
         self.sink.write_all(&end_encoded.bytes)?;
 
         let content_hash = ContentHash(*self.document_hasher.finalize().as_bytes());
@@ -720,7 +720,7 @@ impl<S: PackSource> PackFile<S> {
         let mut this = Self::open_superblock(source, limits)?;
         let verify_crc = verification.checks_crc();
         let manifest_seg = decode_segment_at(&this.source, this.superblock.footer.manifest_offset, &this.limits, verify_crc)?;
-        if manifest_seg.kind != crate::os_pack::core::KIND_MANIFEST {
+        if manifest_seg.kind != crate::os_pack::KIND_MANIFEST {
             return Err(PackError::Malformed { what: "manifest", offset: this.superblock.footer.manifest_offset, detail: "expected KIND_MANIFEST segment".to_string() });
         }
         if manifest_seg.consumed != this.superblock.footer.manifest_len {
@@ -729,7 +729,7 @@ impl<S: PackSource> PackFile<S> {
         let raw = parse_raw_manifest(&manifest_seg.payload)?;
         let symbols = if raw.symbols_span.len > 0 {
             let seg = decode_segment_at(&this.source, raw.symbols_span.offset, &this.limits, verify_crc)?;
-            if seg.kind != crate::os_pack::core::KIND_SYMBOLS {
+            if seg.kind != crate::os_pack::KIND_SYMBOLS {
                 return Err(PackError::Malformed { what: "symbols", offset: raw.symbols_span.offset, detail: "expected KIND_SYMBOLS segment".to_string() });
             }
             decode_symbols(&seg.payload, &this.limits)?
@@ -738,7 +738,7 @@ impl<S: PackSource> PackFile<S> {
         };
         let chunk_table = if raw.chunk_table_span.len > 0 {
             let seg = decode_segment_at(&this.source, raw.chunk_table_span.offset, &this.limits, verify_crc)?;
-            if seg.kind != crate::os_pack::core::KIND_CHUNK_TABLE {
+            if seg.kind != crate::os_pack::KIND_CHUNK_TABLE {
                 return Err(PackError::Malformed { what: "chunk_table", offset: raw.chunk_table_span.offset, detail: "expected KIND_CHUNK_TABLE segment".to_string() });
             }
             decode_chunk_table(&seg.payload, &this.limits)?
@@ -821,7 +821,7 @@ impl<S: PackSource> PackFile<S> {
             let frames = manifest.doc_frame_count.max(1);
             for _ in 0..frames {
                 let seg = decode_segment_at(&self.source, offset, &self.limits, verification.checks_crc())?;
-                if seg.kind != crate::os_pack::core::KIND_DOCUMENT {
+                if seg.kind != crate::os_pack::KIND_DOCUMENT {
                     return Err(PackError::Malformed { what: "document", offset, detail: "expected KIND_DOCUMENT segment".to_string() });
                 }
                 out.extend_from_slice(&seg.payload);
@@ -889,7 +889,7 @@ pub fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<Recover
             Ok(seg) => {
                 segments_recovered += 1;
                 bytes_recovered += seg.consumed;
-                let is_end = seg.kind == crate::os_pack::core::KIND_END;
+                let is_end = seg.kind == crate::os_pack::KIND_END;
                 offset += seg.consumed;
                 found.push((seg.kind, seg.payload));
                 if is_end {
@@ -900,8 +900,8 @@ pub fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<Recover
         }
     }
 
-    let symbols = found.iter().find(|(kind, _)| *kind == crate::os_pack::core::KIND_SYMBOLS).and_then(|(_, payload)| decode_symbols(payload, limits).ok()).unwrap_or_default();
-    let manifest = found.iter().find(|(kind, _)| *kind == crate::os_pack::core::KIND_MANIFEST).and_then(|(_, payload)| parse_raw_manifest(payload).ok()).and_then(|raw| resolve_manifest(&raw, &symbols).ok());
+    let symbols = found.iter().find(|(kind, _)| *kind == crate::os_pack::KIND_SYMBOLS).and_then(|(_, payload)| decode_symbols(payload, limits).ok()).unwrap_or_default();
+    let manifest = found.iter().find(|(kind, _)| *kind == crate::os_pack::KIND_MANIFEST).and_then(|(_, payload)| parse_raw_manifest(payload).ok()).and_then(|raw| resolve_manifest(&raw, &symbols).ok());
 
     Ok(RecoveryReport { segments_recovered, bytes_recovered, manifest })
 }
@@ -1086,7 +1086,7 @@ mod tests {
     fn open_superblock_truncated_at_every_footer_byte_boundary_errors_never_panics() {
         let options = WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
         let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).unwrap();
-        writer.write_segment(crate::os_pack::core::KIND_DOCUMENT, b"hello world").unwrap();
+        writer.write_segment(crate::os_pack::KIND_DOCUMENT, b"hello world").unwrap();
         let manifest = Manifest {
             schema_name: String::new(),
             schema_hash: [0u8; 32],
@@ -1129,7 +1129,7 @@ mod tests {
         let header = Header { version_major: 1, version_minor: 0, required_flags: 0, optional_flags: 0 };
         let mut file = header.write_bytes().to_vec();
         file.extend_from_slice(&encode_segment(0x60, CodecId(0), b"future extension").unwrap().bytes);
-        file.extend_from_slice(&encode_segment(crate::os_pack::core::KIND_END, CodecId(0), &[]).unwrap().bytes);
+        file.extend_from_slice(&encode_segment(crate::os_pack::KIND_END, CodecId(0), &[]).unwrap().bytes);
         let limits = PackLimits::default();
         let report = recover(&file, &limits).unwrap();
         assert_eq!(report.segments_recovered, 2);
@@ -1138,7 +1138,7 @@ mod tests {
 
     #[test]
     fn segment_crc_mismatch_is_detected() {
-        let encoded = encode_segment(crate::os_pack::core::KIND_DOCUMENT, CodecId(0), b"payload").unwrap();
+        let encoded = encode_segment(crate::os_pack::KIND_DOCUMENT, CodecId(0), b"payload").unwrap();
         let mut file = vec![0u8; HEADER_SIZE];
         file.extend_from_slice(&encoded.bytes);
         let last = file.len() - 1;
@@ -1150,7 +1150,7 @@ mod tests {
 
     #[test]
     fn segment_crc_mismatch_ignored_at_trusted_level() {
-        let encoded = encode_segment(crate::os_pack::core::KIND_DOCUMENT, CodecId(0), b"payload").unwrap();
+        let encoded = encode_segment(crate::os_pack::KIND_DOCUMENT, CodecId(0), b"payload").unwrap();
         let mut file = vec![0u8; HEADER_SIZE];
         file.extend_from_slice(&encoded.bytes);
         let last = file.len() - 1;
@@ -1166,11 +1166,11 @@ mod tests {
         let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec };
         let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).unwrap();
 
-        writer.write_segment(crate::os_pack::core::KIND_SYMBOLS, &encode_symbols(&["widget.v1".to_string(), "name".to_string()])).unwrap();
+        writer.write_segment(crate::os_pack::KIND_SYMBOLS, &encode_symbols(&["widget.v1".to_string(), "name".to_string()])).unwrap();
 
         let doc_offset = writer.position();
         let document_payload = b"the quick brown fox jumps over the lazy dog, repeatedly, for compressibility".to_vec();
-        writer.write_segment(crate::os_pack::core::KIND_DOCUMENT, &document_payload).unwrap();
+        writer.write_segment(crate::os_pack::KIND_DOCUMENT, &document_payload).unwrap();
         let doc_len = writer.position() - doc_offset;
 
         let chunk_payload = vec![42u8; 4096];

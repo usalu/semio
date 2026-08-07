@@ -1,0 +1,10 @@
+{
+  "standalone-wasm": [],
+  "flow-module-bim": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🗂️workspaces/🟦️component.ts"
+  ],
+  "RequestPluginExchange": [],
+  "requestPluginExchange": []
+}

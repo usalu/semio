@@ -24,8 +24,8 @@ import {
   type MetabolismIconName,
 } from "@semio-tech/assets";
 import { uiSpacingLen } from "../🪵Tree/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 export type { IconName };
 // #endregion 🔌️Adapters
 

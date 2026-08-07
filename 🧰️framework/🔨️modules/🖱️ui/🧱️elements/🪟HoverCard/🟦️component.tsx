@@ -8,9 +8,9 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { glassClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🔧️HoverCard

@@ -1,7 +1,7 @@
 //! ⚡️ EN 1990 basis of structural design — operation enum + laws (constitutional: op).
 //!
 //! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
-//! (`crate::core::SetDocumentOperation<D>`, with its `Operation`/`OperationDiff`/`OpText`/`OpBinary`
+//! (`crate::document::SetDocumentOperation<D>`, with its `Operation`/`OperationDiff`/`OpText`/`OpBinary`
 //! impls already generic over any `D: DocumentDsl + DocumentPack` — see `norm_core`'s `🔖️OpText`
 //! region) so this slot only needs to bind that generic operation to `crate::artifacts::en1990::Document`.
 
@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::en1990::Document;
 
-pub type Operation = crate::core::SetDocumentOperation<Document>;
+pub type Operation = crate::document::SetDocumentOperation<Document>;
 
 #[cfg(test)]
 mod tests {

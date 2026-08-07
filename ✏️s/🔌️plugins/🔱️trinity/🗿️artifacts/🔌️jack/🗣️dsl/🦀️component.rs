@@ -88,7 +88,7 @@ fn node_dsl_to_node(node: NodeDsl) -> Node {
 /// 📦️ Local mirror of `GraphFixture` for the `.trinity` document DSL. `manifest: Manifest` is
 /// deliberately NOT a field here — the manifest is resolved from `manifestId` at load time (see
 /// `GraphFixture::resolve_manifest`), never round-tripped as text.
-#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(extension = "trinity", layout = "lines")]
 struct GraphFixtureDsl {
     schema: String,
@@ -102,14 +102,11 @@ struct GraphFixtureDsl {
     edges: Vec<crate::artifacts::jack::Edge>,
     root_node_id: Option<String>,
 }
-
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for GraphFixtureDsl {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
+    const EXTENSION: &'static str = "trinity";
+    fn envelope_id() -> &'static str { "trinity" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -128,13 +125,11 @@ impl store::DocumentDsl for GraphFixtureDsl {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
-        )
-        .expect("valid envelope_id");
+        ).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::DocumentPack for GraphFixtureDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
@@ -142,12 +137,12 @@ impl store::DocumentPack for GraphFixtureDsl {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
@@ -158,11 +153,11 @@ impl store::DocumentPack for GraphFixtureDsl {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+
 
 
 fn graph_fixture_to_dsl(fixture: &GraphFixture) -> GraphFixtureDsl {
@@ -197,7 +192,7 @@ fn graph_fixture_dsl_to_graph_fixture(parsed: GraphFixtureDsl) -> Result<GraphFi
 //#region 🔖️DslDocument
 /// 📜️ `.trinity` textual notation for a whole [`GraphFixture`] (`store::DocumentDsl`), delegating to
 /// the derive-generated `GraphFixtureDsl` mirror. Also hand-implements `dsl::DslField` (normally
-/// auto-emitted alongside `#[derive(dsl::DslDocument)]`) so `GraphFixture` can be nested as an
+/// auto-emitted alongside `#[derive(dsl::DslRecord)]`) so `GraphFixture` can be nested as an
 /// ordinary field too — `TrinityGraphOperation::SetFixture` embeds a whole fixture snapshot.
 impl DocumentDsl for GraphFixture {
     const EXTENSION: &'static str = "trinity";

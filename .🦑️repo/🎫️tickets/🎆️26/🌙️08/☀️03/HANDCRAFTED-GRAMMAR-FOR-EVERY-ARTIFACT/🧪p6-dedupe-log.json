@@ -1,0 +1,41 @@
+{
+  "totalRemoved": 9,
+  "report": [
+    {
+      "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs",
+      "removed": 1
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+      "removed": 1
+    }
+  ]
+}

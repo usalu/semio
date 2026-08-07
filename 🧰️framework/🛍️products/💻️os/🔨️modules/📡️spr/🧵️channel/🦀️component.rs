@@ -6,7 +6,7 @@
 //!
 //! 🎯️ Mirrors `protocol_wire`'s W5 hand-rolled binary layout exactly: `tag: u8` (the enum
 //! variant's declaration order) followed by its fields in declaration order, no per-field tags, no
-//! body-length prefix — one frame per channel message. `crate::os_spr::core::🔖️WireCodec` supplies the
+//! body-length prefix — one frame per channel message. `crate::os_spr::wire::🔖️WireCodec` supplies the
 //! primitive codec (`write_varint_u64`/`write_str`/`write_bytes`/`write_bool` and their `read_*`
 //! twins); this crate adds only the option/vec/`SectionProbe` combinators and the two enums' tag
 //! dispatch below. Unlike `crate::os_spr::wire::ClientFrame`/`ServerFrame`, `AppCommand`/`AppFrame` carry
@@ -167,91 +167,91 @@ pub enum AppFrame {
 
 //#region 🔖️Codec
 // Hand-rolled binary frame encode/decode: `tag: u8 | fields...` — see the module-level docstring.
-// `crate::os_spr::core::🔖️WireCodec` supplies the primitives; this region adds the option/vec/
+// `crate::os_spr::wire::🔖️WireCodec` supplies the primitives; this region adds the option/vec/
 // `SectionProbe` combinators the frame shapes need plus the tag-dispatch match arms.
 
-fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::os_spr::core::ProtocolError {
-    crate::os_spr::core::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
+fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::os_spr::ProtocolError {
+    crate::os_spr::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
 }
 
 //#region 🔖️Combinators
 fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
-    crate::os_spr::core::write_bool(out, value.is_some());
+    crate::os_spr::write_bool(out, value.is_some());
     if let Some(v) = value {
-        crate::os_spr::core::write_varint_u64(out, *v);
+        crate::os_spr::write_varint_u64(out, *v);
     }
 }
 
-fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crate::os_spr::core::ProtocolError> {
-    if crate::os_spr::core::read_bool(bytes, pos)? {
-        Ok(Some(crate::os_spr::core::read_varint_u64(bytes, pos)?))
+fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
+    if crate::os_spr::read_bool(bytes, pos)? {
+        Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
 fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
-    crate::os_spr::core::write_bool(out, value.is_some());
+    crate::os_spr::write_bool(out, value.is_some());
     if let Some(b) = value {
-        crate::os_spr::core::write_bytes(out, b);
+        crate::os_spr::write_bytes(out, b);
     }
 }
 
-fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, crate::os_spr::core::ProtocolError> {
-    if crate::os_spr::core::read_bool(bytes, pos)? {
-        Ok(Some(crate::os_spr::core::read_bytes(bytes, pos)?))
+fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, crate::os_spr::ProtocolError> {
+    if crate::os_spr::read_bool(bytes, pos)? {
+        Ok(Some(crate::os_spr::read_bytes(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
 fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
-    crate::os_spr::core::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::os_spr::core::write_bytes(out, value);
+        crate::os_spr::write_bytes(out, value);
     }
 }
 
-fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::os_spr::core::ProtocolError> {
-    let count = crate::os_spr::core::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| crate::os_spr::core::read_bytes(bytes, pos)).collect()
+fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+    (0..count).map(|_| crate::os_spr::read_bytes(bytes, pos)).collect()
 }
 
 fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::OperationEnvelope]) {
-    crate::os_spr::core::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
         crate::os_spr::causal::encode_envelope(value, out);
     }
 }
 
-fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::OperationEnvelope>, crate::os_spr::core::ProtocolError> {
-    let count = crate::os_spr::core::read_varint_u64(bytes, pos)?;
+fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::OperationEnvelope>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     (0..count).map(|_| crate::os_spr::causal::decode_envelope(bytes, pos)).collect()
 }
 
 fn encode_section_probe(probe: &SectionProbe, out: &mut Vec<u8>) {
     out.push(probe.kind);
-    crate::os_spr::core::write_str(out, &probe.key);
+    crate::os_spr::write_str(out, &probe.key);
     write_opt_u64(out, &probe.hash);
 }
 
-fn decode_section_probe(bytes: &[u8], pos: &mut usize) -> Result<SectionProbe, crate::os_spr::core::ProtocolError> {
+fn decode_section_probe(bytes: &[u8], pos: &mut usize) -> Result<SectionProbe, crate::os_spr::ProtocolError> {
     let kind = *bytes.get(*pos).ok_or_else(|| malformed("channel section-probe kind", *pos as u64, "truncated"))?;
     *pos += 1;
-    let key = crate::os_spr::core::read_str(bytes, pos)?;
+    let key = crate::os_spr::read_str(bytes, pos)?;
     let hash = read_opt_u64(bytes, pos)?;
     Ok(SectionProbe { kind, key, hash })
 }
 
 fn write_vec_section_probe(out: &mut Vec<u8>, values: &[SectionProbe]) {
-    crate::os_spr::core::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
         encode_section_probe(value, out);
     }
 }
 
-fn read_vec_section_probe(bytes: &[u8], pos: &mut usize) -> Result<Vec<SectionProbe>, crate::os_spr::core::ProtocolError> {
-    let count = crate::os_spr::core::read_varint_u64(bytes, pos)?;
+fn read_vec_section_probe(bytes: &[u8], pos: &mut usize) -> Result<Vec<SectionProbe>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     (0..count).map(|_| decode_section_probe(bytes, pos)).collect()
 }
 //#endregion 🔖️Combinators
@@ -262,148 +262,148 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
     match command {
         AppCommand::Hello { channel_version, app_id, actor, config } => {
             out.push(0);
-            crate::os_spr::core::write_varint_u64(&mut out, *channel_version as u64);
-            crate::os_spr::core::write_str(&mut out, app_id);
-            crate::os_spr::core::write_str(&mut out, actor);
-            crate::os_spr::core::write_bytes(&mut out, config);
+            crate::os_spr::write_varint_u64(&mut out, *channel_version as u64);
+            crate::os_spr::write_str(&mut out, app_id);
+            crate::os_spr::write_str(&mut out, actor);
+            crate::os_spr::write_bytes(&mut out, config);
         }
         AppCommand::ConfigCommand { seq, command } => {
             out.push(1);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, command);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
         }
         AppCommand::Command { seq, command, view_state } => {
             out.push(2);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, command);
-            crate::os_spr::core::write_bytes(&mut out, view_state);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
+            crate::os_spr::write_bytes(&mut out, view_state);
         }
         AppCommand::CommandText { seq, line } => {
             out.push(3);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_str(&mut out, line);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, line);
         }
         AppCommand::RefreshUi { seq, sections, view_state } => {
             out.push(4);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
             write_vec_section_probe(&mut out, sections);
-            crate::os_spr::core::write_bytes(&mut out, view_state);
+            crate::os_spr::write_bytes(&mut out, view_state);
         }
         AppCommand::ContextMenu { seq, request } => {
             out.push(5);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, request);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, request);
         }
         AppCommand::DocumentCommand { seq, command } => {
             out.push(6);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, command);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
         }
         AppCommand::ApplyEnvelopes { seq, envelopes } => {
             out.push(7);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
             write_vec_envelope(&mut out, envelopes);
         }
         AppCommand::LoadDocument { seq, pack, spr } => {
             out.push(8);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, pack);
-            crate::os_spr::core::write_bytes(&mut out, spr);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
         }
         AppCommand::ReadDocument { seq } => {
             out.push(9);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::LoadConfig { seq, pack, spr } => {
             out.push(10);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, pack);
-            crate::os_spr::core::write_bytes(&mut out, spr);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
         }
         AppCommand::ReadConfig { seq } => {
             out.push(11);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::AttachBackbone { seq, uri } => {
             out.push(12);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_str(&mut out, uri);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, uri);
         }
         AppCommand::DetachBackbone { seq } => {
             out.push(13);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::MediaIn { seq, port, descriptor, data } => {
             out.push(14);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_str(&mut out, port);
-            crate::os_spr::core::write_bytes(&mut out, descriptor);
-            crate::os_spr::core::write_bytes(&mut out, data);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, descriptor);
+            crate::os_spr::write_bytes(&mut out, data);
         }
         AppCommand::MediaOut { seq, port, request } => {
             out.push(15);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_str(&mut out, port);
-            crate::os_spr::core::write_bytes(&mut out, request);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, request);
         }
         AppCommand::MediaFingerprint { seq, port } => {
             out.push(16);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_str(&mut out, port);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, port);
         }
         AppCommand::Bye => out.push(17),
         AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
             out.push(18);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, command);
-            crate::os_spr::core::write_bytes(&mut out, document);
-            crate::os_spr::core::write_bytes(&mut out, document_spr);
-            crate::os_spr::core::write_bytes(&mut out, config);
-            crate::os_spr::core::write_bytes(&mut out, config_spr);
-            crate::os_spr::core::write_bytes(&mut out, draft);
-            crate::os_spr::core::write_bytes(&mut out, draft_spr);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
+            crate::os_spr::write_bytes(&mut out, document);
+            crate::os_spr::write_bytes(&mut out, document_spr);
+            crate::os_spr::write_bytes(&mut out, config);
+            crate::os_spr::write_bytes(&mut out, config_spr);
+            crate::os_spr::write_bytes(&mut out, draft);
+            crate::os_spr::write_bytes(&mut out, draft_spr);
         }
     }
     out
 }
 
 /// @emoji 📥️ Decodes one `AppCommand`, the inverse of [`encode_app_command`].
-pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::core::ProtocolError> {
+pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-command tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let command = match tag {
         0 => AppCommand::Hello {
-            channel_version: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32,
-            app_id: crate::os_spr::core::read_str(bytes, &mut pos)?,
-            actor: crate::os_spr::core::read_str(bytes, &mut pos)?,
-            config: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            channel_version: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32,
+            app_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            actor: crate::os_spr::read_str(bytes, &mut pos)?,
+            config: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
-        1 => AppCommand::ConfigCommand { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        2 => AppCommand::Command { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::core::read_bytes(bytes, &mut pos)?, view_state: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        3 => AppCommand::CommandText { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, line: crate::os_spr::core::read_str(bytes, &mut pos)? },
-        4 => AppCommand::RefreshUi { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, sections: read_vec_section_probe(bytes, &mut pos)?, view_state: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        5 => AppCommand::ContextMenu { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, request: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        6 => AppCommand::DocumentCommand { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        7 => AppCommand::ApplyEnvelopes { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
-        8 => AppCommand::LoadDocument { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::core::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        9 => AppCommand::ReadDocument { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? },
-        10 => AppCommand::LoadConfig { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::core::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        11 => AppCommand::ReadConfig { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? },
-        12 => AppCommand::AttachBackbone { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, uri: crate::os_spr::core::read_str(bytes, &mut pos)? },
-        13 => AppCommand::DetachBackbone { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? },
-        14 => AppCommand::MediaIn { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::core::read_bytes(bytes, &mut pos)?, data: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        15 => AppCommand::MediaOut { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)?, request: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        16 => AppCommand::MediaFingerprint { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)? },
+        1 => AppCommand::ConfigCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        2 => AppCommand::Command { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)?, view_state: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        3 => AppCommand::CommandText { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, line: crate::os_spr::read_str(bytes, &mut pos)? },
+        4 => AppCommand::RefreshUi { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, sections: read_vec_section_probe(bytes, &mut pos)?, view_state: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        5 => AppCommand::ContextMenu { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        6 => AppCommand::DocumentCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        7 => AppCommand::ApplyEnvelopes { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
+        8 => AppCommand::LoadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        9 => AppCommand::ReadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        10 => AppCommand::LoadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        11 => AppCommand::ReadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        12 => AppCommand::AttachBackbone { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, uri: crate::os_spr::read_str(bytes, &mut pos)? },
+        13 => AppCommand::DetachBackbone { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        14 => AppCommand::MediaIn { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        15 => AppCommand::MediaOut { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        16 => AppCommand::MediaFingerprint { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)? },
         17 => AppCommand::Bye,
         18 => AppCommand::PureCommand {
-            seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?,
-            command: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            document: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            document_spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            config: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            config_spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            draft: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            draft_spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            command: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            document: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            document_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            config: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            config_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            draft: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            draft_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
@@ -416,26 +416,26 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
     match frame {
         AppFrame::Welcome { channel_version, instance, manifest } => {
             out.push(0);
-            crate::os_spr::core::write_varint_u64(&mut out, *channel_version as u64);
-            crate::os_spr::core::write_varint_u64(&mut out, *instance as u64);
-            crate::os_spr::core::write_bytes(&mut out, manifest);
+            crate::os_spr::write_varint_u64(&mut out, *channel_version as u64);
+            crate::os_spr::write_varint_u64(&mut out, *instance as u64);
+            crate::os_spr::write_bytes(&mut out, manifest);
         }
         AppFrame::Done { in_reply_to } => {
             out.push(1);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
         }
         AppFrame::Invocation { in_reply_to, output, diagnostics } => {
             out.push(2);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_bytes(&mut out, output);
-            crate::os_spr::core::write_bytes(&mut out, diagnostics);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, output);
+            crate::os_spr::write_bytes(&mut out, diagnostics);
         }
         AppFrame::UiSection { in_reply_to, kind, key, hash, body } => {
             out.push(3);
             write_opt_u64(&mut out, in_reply_to);
             out.push(*kind);
-            crate::os_spr::core::write_str(&mut out, key);
-            crate::os_spr::core::write_varint_u64(&mut out, *hash);
+            crate::os_spr::write_str(&mut out, key);
+            crate::os_spr::write_varint_u64(&mut out, *hash);
             write_opt_bytes(&mut out, body);
         }
         AppFrame::Effects { in_reply_to, effects } => {
@@ -451,112 +451,112 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
         AppFrame::DocumentChanged { envelopes, origin } => {
             out.push(6);
             write_vec_envelope(&mut out, envelopes);
-            crate::os_spr::core::write_str(&mut out, origin);
+            crate::os_spr::write_str(&mut out, origin);
         }
         AppFrame::Document { in_reply_to, pack, spr, ops } => {
             out.push(7);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_bytes(&mut out, pack);
-            crate::os_spr::core::write_bytes(&mut out, spr);
-            crate::os_spr::core::write_str(&mut out, ops);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_str(&mut out, ops);
         }
         AppFrame::Config { in_reply_to, pack, spr, ops } => {
             out.push(8);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_bytes(&mut out, pack);
-            crate::os_spr::core::write_bytes(&mut out, spr);
-            crate::os_spr::core::write_str(&mut out, ops);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_str(&mut out, ops);
         }
         AppFrame::ConfigChanged { envelopes, origin } => {
             out.push(9);
             write_vec_envelope(&mut out, envelopes);
-            crate::os_spr::core::write_str(&mut out, origin);
+            crate::os_spr::write_str(&mut out, origin);
         }
         AppFrame::ContextMenu { in_reply_to, items } => {
             out.push(10);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_bytes(&mut out, items);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, items);
         }
         AppFrame::Media { in_reply_to, port, descriptor, data } => {
             out.push(11);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_str(&mut out, port);
-            crate::os_spr::core::write_bytes(&mut out, descriptor);
-            crate::os_spr::core::write_bytes(&mut out, data);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, descriptor);
+            crate::os_spr::write_bytes(&mut out, data);
         }
         AppFrame::MediaFingerprint { in_reply_to, port, fingerprint } => {
             out.push(12);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_str(&mut out, port);
-            crate::os_spr::core::write_bytes(&mut out, fingerprint);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, fingerprint);
         }
         AppFrame::Error { in_reply_to, fault } => {
             out.push(13);
             write_opt_u64(&mut out, in_reply_to);
-            crate::os_spr::core::write_bytes(&mut out, fault);
+            crate::os_spr::write_bytes(&mut out, fault);
         }
         AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics } => {
             out.push(14);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_bytes(&mut out, document_ops);
-            crate::os_spr::core::write_bytes(&mut out, config_ops);
-            crate::os_spr::core::write_bytes(&mut out, draft_ops);
-            crate::os_spr::core::write_bytes(&mut out, output);
-            crate::os_spr::core::write_bytes(&mut out, diagnostics);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, document_ops);
+            crate::os_spr::write_bytes(&mut out, config_ops);
+            crate::os_spr::write_bytes(&mut out, draft_ops);
+            crate::os_spr::write_bytes(&mut out, output);
+            crate::os_spr::write_bytes(&mut out, diagnostics);
         }
         AppFrame::Draft { in_reply_to, pack, spr, ops } => {
             out.push(15);
-            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::core::write_bytes(&mut out, pack);
-            crate::os_spr::core::write_bytes(&mut out, spr);
-            crate::os_spr::core::write_str(&mut out, ops);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_str(&mut out, ops);
         }
     }
     out
 }
 
 /// @emoji 📥️ Decodes one `AppFrame`, the inverse of [`encode_app_frame`].
-pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::core::ProtocolError> {
+pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-frame tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let frame = match tag {
-        0 => AppFrame::Welcome { channel_version: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32, instance: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32, manifest: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        1 => AppFrame::Done { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? },
-        2 => AppFrame::Invocation { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, output: crate::os_spr::core::read_bytes(bytes, &mut pos)?, diagnostics: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
+        0 => AppFrame::Welcome { channel_version: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32, instance: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32, manifest: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        1 => AppFrame::Done { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        2 => AppFrame::Invocation { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, output: crate::os_spr::read_bytes(bytes, &mut pos)?, diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)? },
         3 => {
             let in_reply_to = read_opt_u64(bytes, &mut pos)?;
             let kind = *bytes.get(pos).ok_or_else(|| malformed("channel ui-section kind", pos as u64, "truncated"))?;
             pos += 1;
-            let key = crate::os_spr::core::read_str(bytes, &mut pos)?;
-            let hash = crate::os_spr::core::read_varint_u64(bytes, &mut pos)?;
+            let key = crate::os_spr::read_str(bytes, &mut pos)?;
+            let hash = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
             let body = read_opt_bytes(bytes, &mut pos)?;
             AppFrame::UiSection { in_reply_to, kind, key, hash, body }
         }
         4 => AppFrame::Effects { in_reply_to: read_opt_u64(bytes, &mut pos)?, effects: read_vec_bytes(bytes, &mut pos)? },
         5 => AppFrame::Events { in_reply_to: read_opt_u64(bytes, &mut pos)?, events: read_vec_bytes(bytes, &mut pos)? },
-        6 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: crate::os_spr::core::read_str(bytes, &mut pos)? },
-        7 => AppFrame::Document { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::core::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::core::read_str(bytes, &mut pos)? },
-        8 => AppFrame::Config { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::core::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::core::read_str(bytes, &mut pos)? },
-        9 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: crate::os_spr::core::read_str(bytes, &mut pos)? },
-        10 => AppFrame::ContextMenu { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, items: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
+        6 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: crate::os_spr::read_str(bytes, &mut pos)? },
+        7 => AppFrame::Document { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
+        8 => AppFrame::Config { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
+        9 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: crate::os_spr::read_str(bytes, &mut pos)? },
+        10 => AppFrame::ContextMenu { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, items: crate::os_spr::read_bytes(bytes, &mut pos)? },
         11 => {
-            AppFrame::Media { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::core::read_bytes(bytes, &mut pos)?, data: crate::os_spr::core::read_bytes(bytes, &mut pos)? }
+            AppFrame::Media { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? }
         }
-        12 => AppFrame::MediaFingerprint { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)?, fingerprint: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, fault: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
+        12 => AppFrame::MediaFingerprint { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, fingerprint: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, fault: crate::os_spr::read_bytes(bytes, &mut pos)? },
         14 => AppFrame::Emit {
-            in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?,
-            document_ops: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            config_ops: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            draft_ops: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            output: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            diagnostics: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            document_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            config_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            draft_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            output: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         15 => AppFrame::Draft {
-            in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?,
-            pack: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
-            ops: crate::os_spr::core::read_str(bytes, &mut pos)?,
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            pack: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            ops: crate::os_spr::read_str(bytes, &mut pos)?,
         },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
@@ -572,13 +572,13 @@ mod tests {
     //#region 🧸️Fixtures
     fn sample_envelope(id: &str) -> crate::os_spr::causal::OperationEnvelope {
         crate::os_spr::causal::OperationEnvelope {
-            operation_id: crate::os_spr::core::OperationId(id.to_string()),
-            document_id: crate::os_spr::core::DocumentId("document-1".to_string()),
-            actor: crate::os_spr::core::ActorId("actor-1".to_string()),
+            operation_id: crate::os_spr::ids::OperationId(id.to_string()),
+            document_id: crate::os_spr::ids::DocumentId("document-1".to_string()),
+            actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::core::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-            inverse: crate::os_spr::causal::InverseOperation { schema: crate::os_spr::core::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(1, 0),
+            diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
+            inverse: crate::os_spr::causal::InverseOperation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
 
@@ -830,25 +830,25 @@ mod tests {
     #[test]
     fn decode_app_command_rejects_empty_bytes() {
         let err = decode_app_command(&[]).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "channel app-command tag", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
     }
 
     #[test]
     fn decode_app_frame_rejects_empty_bytes() {
         let err = decode_app_frame(&[]).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
     }
 
     #[test]
     fn decode_app_command_rejects_unknown_tag() {
         let err = decode_app_command(&[0xFF]).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "channel app-command tag", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
     }
 
     #[test]
     fn decode_app_frame_rejects_unknown_tag() {
         let err = decode_app_frame(&[0xFF]).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
     }
 
     #[test]

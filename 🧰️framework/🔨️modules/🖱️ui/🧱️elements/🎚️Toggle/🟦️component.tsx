@@ -11,11 +11,11 @@ import * as TogglePrimitive from "@radix-ui/react-toggle";
 import { cva } from "class-variance-authority";
 // 🧱️core: cn imported directly from 🫀️core/ClassNames, NOT via the barrel — this component calls
 // cn(...) at module top level (inside a top-level cva(cn(...)) call), which requires a non-circular
-// import (see 🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx's header comment for why the barrel import
+// import (see 🧱️elements/🏷️ClassNames/🟦️component.tsx's header comment for why the barrel import
 // caused a real bug).
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-import { type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
+import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
 import { chromeControlItemClass, chromeControlItemOnClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

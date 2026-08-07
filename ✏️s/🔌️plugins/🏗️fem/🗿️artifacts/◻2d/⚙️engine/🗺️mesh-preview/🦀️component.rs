@@ -4,11 +4,11 @@
 use crate::artifacts::fem2d::engine::meshing::build_nodes_and_elements;
 use crate::artifacts::fem2d::engine::Fem2dError;
 use crate::artifacts::fem2d::Fem2dDocument;
-use crate::core::Support;
+use crate::model::Support;
 use std::collections::HashMap;
 
 /// 🗺️ One meshed region's cheap preview geometry — mesh points plus triangle vertex indices, WITHOUT
-/// building any `crate::core::Element`. Used purely for a mesh-edge preview overlay in the model window
+/// building any `crate::model::Element`. Used purely for a mesh-edge preview overlay in the model window
 /// and to correlate `fem2d_solve_all`'s `Tri3Cst` results (ids `"{region_id}_t{tri_index}"`, see
 /// `crate::artifacts::fem2d::engine::meshing::build_nodes_and_elements`) back to screen-space triangles
 /// for contour rendering.
@@ -23,15 +23,15 @@ pub struct RegionMesh {
     pub node_ids: Vec<String>,
 }
 
-/// 🗺️ Triangulates every `FemRegion` in `doc` (same `crate::core::mesh::triangulate` call as
+/// 🗺️ Triangulates every `FemRegion` in `doc` (same `crate::mesh::triangulate` call as
 /// `build_nodes_and_elements`, so triangle indices/ids line up deterministically with solved results)
 /// and returns just the geometry — cheap enough to call on every render.
 pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dError> {
     let mut out = Vec::with_capacity(doc.regions.len());
     for region in &doc.regions {
-        let domain = crate::core::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
-        let opts = crate::core::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = crate::core::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
+        let domain = crate::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
+        let opts = crate::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
+        let tri_mesh = crate::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
         let node_ids = tri_mesh
             .points
             .iter()
@@ -48,15 +48,15 @@ pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dE
 
 /// 🎨️ Nodal-averaged von Mises stress for `case_id`'s solved result (via `fem2d_solve_all`, so `case_id`
 /// may name either a `FemLoadCase` or a `FemCombination`), keyed by node id — the document-layer bridge
-/// to `crate::core::analyses::nodal_averaged_scalar`, feeding the results window's banded contour
+/// to `crate::analyses::nodal_averaged_scalar`, feeding the results window's banded contour
 /// rendering.
 pub fn fem2d_nodal_von_mises(doc: &Fem2dDocument, case_id: &str) -> Result<HashMap<String, f64>, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
-    let model = crate::core::analyses::AnalysisModel { nodes, elements, supports };
+    let model = crate::analyses::AnalysisModel { nodes, elements, supports };
     let results = crate::artifacts::fem2d::engine::fem2d_solve_all(doc)?;
     let result = results.get(case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
-    Ok(crate::core::analyses::nodal_averaged_scalar(&model, result, crate::core::analyses::StressScalar::VonMises))
+    Ok(crate::analyses::nodal_averaged_scalar(&model, result, crate::analyses::StressScalar::VonMises))
 }
 
 // #region 🧪️Tests
@@ -100,7 +100,7 @@ mod tests {
     /// 🎨️ `fem2d_nodal_von_mises` returns one value per mesh node, and a uniform area-pressure load
     /// (biaxial-ish but still smoothly varying membrane stress) produces FINITE values at every node —
     /// not a tight numeric benchmark (the region isn't a pure patch-test field), just a wiring check that
-    /// the document-bridge correctly plumbs `crate::core::analyses::nodal_averaged_scalar`.
+    /// the document-bridge correctly plumbs `crate::analyses::nodal_averaged_scalar`.
     #[test]
     fn fem2d_nodal_von_mises_returns_one_value_per_mesh_node() {
         let mut doc = rectangle_region_doc();

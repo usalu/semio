@@ -114,6 +114,14 @@ export interface Taxonomy {
   readonly storyLeafFilename: string;
   readonly libWiringLineBudget: number;
   readonly forbiddenPathSegments: readonly string[];
+  /** 🔌️ Required plugin-root folder name under each `✏️s/🔌️plugins/<plugin>/`. */
+  readonly pluginDirName: string;
+  /** 🔌️ Required child folders of `pluginDirName` (V2 component folders). */
+  readonly pluginChildDirs: readonly string[];
+  /** 🚫️ Emoji-stripped directory/file stems banned repo-wide (e.g. `core`, `shared`). */
+  readonly bannedNameStems: readonly string[];
+  /** ✅️ Taxonomy directories must start with an emoji prefix that includes U+FE0F. */
+  readonly requireEmojiPrefixWithVs16: boolean;
   readonly rootDataDirNames: readonly string[];
   readonly rootDataFileNames: readonly string[];
   readonly rootDocFileNames: readonly string[];
@@ -183,6 +191,19 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     if (!specName.endsWith(`.${taxonomy.semioFileExtension}`)) {
       problems.push(`artifactSpecFilenames["${facet}"] must end with .${taxonomy.semioFileExtension}.`);
     }
+  }
+  if (!taxonomy.pluginDirName) problems.push(`pluginDirName is required.`);
+  for (const dir of taxonomy.pluginChildDirs ?? []) {
+    if (!dir) problems.push(`pluginChildDirs contains an empty entry.`);
+  }
+  if (!Array.isArray(taxonomy.bannedNameStems) || taxonomy.bannedNameStems.length === 0) {
+    problems.push(`bannedNameStems must be a non-empty array.`);
+  }
+  if (taxonomy.bannedNameStems?.includes("core") !== true) {
+    problems.push(`bannedNameStems must include "core".`);
+  }
+  if (taxonomy.requireEmojiPrefixWithVs16 !== true) {
+    problems.push(`requireEmojiPrefixWithVs16 must be true.`);
   }
   return problems;
 }

@@ -8,11 +8,11 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { veilClass, glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { veilClass, glassClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 import { CloseIconAlt } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

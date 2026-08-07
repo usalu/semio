@@ -140,7 +140,7 @@ pub mod open_space {
         // *something* openable.
         let document = crate::apps::home::resolve_studio_document(space_id).or_else(|| {
             if space_id == "demo" {
-                let name = { let demo = crate::core::parse_demo_space_document(); if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name } };
+                let name = { let demo = crate::parse_demo_space_document(); if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name } };
                 let projection = semio_framework_os::empty_space_projection(&name, semio_framework_os::SpaceKind::Atelier, semio_framework_os::SpaceVisibility::Private);
                 Some(create_backbone_document(S_SPACE_SCHEMA, "demo", &name, projection))
             } else {
@@ -162,9 +162,9 @@ pub mod open_space {
         // in one of `document`'s collections, (2) the bundled demo fixture's real content for the demo
         // space, (3) a freshly-minted, valid, empty `WorkflowDocument` for any other space that has none
         // yet — never the space manifest's own bytes.
-        let is_demo_space = space_id == "demo" || document.name == crate::core::DEMO_STUDIO_NAME;
+        let is_demo_space = space_id == "demo" || document.name == crate::DEMO_STUDIO_NAME;
         let workflow_document = crate::apps::home::resolve_workflow_artifact_document(space_id, &document)
-            .or_else(|| is_demo_space.then(crate::core::parse_demo_space_document))
+            .or_else(|| is_demo_space.then(crate::parse_demo_space_document))
             .unwrap_or_else(|| crate::apps::home::empty_workflow_artifact_document(space_id, &document.name));
         let active_node_id = workflow_document.vcs.initial_projection.graph.nodes.first().map(|node| node.id.clone());
         config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: active_node_id });

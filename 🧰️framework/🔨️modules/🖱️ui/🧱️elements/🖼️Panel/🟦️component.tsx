@@ -10,18 +10,18 @@ import * as React from "react";
 import { panelTabFirstDraggableElementId } from "@semio-tech/framework-core";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.useRef/.useMemo at module top level, which requires a non-circular import (see
-// 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
+// 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
 import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🪵Tree/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useFirstDraggableElementAlias } from "../🫀️core/🆔ElementId/🟦️component.tsx";
-import { borderNormalClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { useFirstDraggableElementAlias } from "../🆔ElementId/🟦️component.tsx";
+import { borderNormalClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { dropZoneReadyFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { FlowProvider, useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
-import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🫀️core/🌈️Surface/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { useShellScopeOptional } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { FlowProvider, useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
 import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { PanelTabBar, type PanelTabNode, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection } from "../📑PanelTabBar/🟦️component.tsx";
 import { CloseIcon, Icon } from "../🔣Icons/🟦️component.tsx";

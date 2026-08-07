@@ -6,7 +6,7 @@
 
 pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
 
-use crate::os_dsl::core::{lex, Limits, TextError, TextSpan, TokenKind};
+use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 
 //#region 🔖️SlashPath
 /// @emoji 🌲️ Parses a slash-path ident (`beams/solid-timber/glulam`) into its segments. `/` is

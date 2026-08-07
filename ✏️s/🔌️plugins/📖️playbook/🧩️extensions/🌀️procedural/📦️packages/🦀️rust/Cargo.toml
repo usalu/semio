@@ -21,7 +21,7 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-flow_extension_brep = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", default-features = false, package = "semio-framework-os-flow" }
+flow_core = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", default-features = false, package = "semio-framework-os-flow" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 serde = { version = "1.0.219", features = ["derive"] }

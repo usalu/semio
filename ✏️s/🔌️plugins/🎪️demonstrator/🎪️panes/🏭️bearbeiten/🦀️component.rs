@@ -5,7 +5,7 @@
 //!
 //! See <https://github.com/usalu/semio/issues/2510> for the bundle rationale.
 
-use semio_framework_plugin::{GlbExporter, MeshData, ObjExporter, PluginBundle, StlExporter};
+use semio_framework_plugin::{GlbExporter, MeshData, ObjExporter, Plugin, StlExporter};
 use serde_json::Value;
 
 use process::apps::process3d::{create_process3d_app, Process3dPlayApp};
@@ -40,7 +40,7 @@ pub fn register_exports() {
 }
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
-pub fn register_app(bundle: PluginBundle) -> PluginBundle {
+pub fn register_app(bundle: Plugin) -> Plugin {
     bundle.register_document_app::<Process3dPlayApp>(create_process3d_app())
 }
 

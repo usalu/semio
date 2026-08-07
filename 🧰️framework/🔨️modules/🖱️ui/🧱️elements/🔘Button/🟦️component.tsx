@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { type VariantProps } from "class-variance-authority";
-import { type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
 import { type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../🎛️ButtonGroup/🟦️component.tsx";
 // #endregion 🔌️Adapters

@@ -3,7 +3,7 @@
 
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::terminology::SStudioLabels;
-use crate::core::demo_space_projection;
+use crate::demo_space_projection;
 use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowDocument};
 use semio_framework_plugin::{
     build_node_graph_scene, resolve_labels_for_locale, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowEngagement,

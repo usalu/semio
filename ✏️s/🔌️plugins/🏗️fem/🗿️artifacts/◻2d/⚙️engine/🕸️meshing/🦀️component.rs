@@ -6,12 +6,12 @@
 
 use crate::artifacts::fem2d::engine::Fem2dError;
 use crate::artifacts::fem2d::{Fem2dDocument, FemElement};
-use crate::core::{Bar2, BeamEb2, Dof, Element, NodalLoad, Node};
+use crate::model::{Bar2, BeamEb2, Dof, Element, NodalLoad, Node};
 use std::collections::HashMap;
 
 /// ⚖️ Gravitational acceleration (m/s²) used both by the document-bridge's own lumped self-weight
 /// translation (`self_weight_nodal_loads`, feeding the frozen `fem2d_solve`) and as the `gravity`
-/// argument to `crate::core::analyses::solve_multi_case` (`fem2d_solve_all`).
+/// argument to `crate::analyses::solve_multi_case` (`fem2d_solve_all`).
 pub(crate) const GRAVITY_G: f64 = 9.81;
 
 /// 🌐️ One meshed `FemRegion` — resolved node ids (mesh point-index → doc/synthesized node id, ONE
@@ -70,9 +70,9 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGe
 
     let mut meshed_regions = Vec::with_capacity(doc.regions.len());
     for region in &doc.regions {
-        let domain = crate::core::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
-        let opts = crate::core::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = crate::core::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
+        let domain = crate::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
+        let opts = crate::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
+        let tri_mesh = crate::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
         let material = doc.materials.iter().find(|m| m.id == region.material_id).ok_or_else(|| Fem2dError::UnknownMaterialId(region.material_id.clone()))?;
 
         let mut node_ids = Vec::with_capacity(tri_mesh.points.len());
@@ -90,13 +90,13 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGe
 
         for (tri_index, tri) in tri_mesh.tris.iter().enumerate() {
             let tri_nodes = [node_ids[tri[0] as usize].clone(), node_ids[tri[1] as usize].clone(), node_ids[tri[2] as usize].clone()];
-            elements.push(Box::new(crate::core::elements2d::Tri3Cst {
+            elements.push(Box::new(crate::elements2d::Tri3Cst {
                 id: format!("{}_t{}", region.id, tri_index),
                 nodes: tri_nodes,
                 e: material.e,
                 nu: material.nu,
                 thickness: region.thickness,
-                kind: crate::core::elements2d::PlaneKind::Stress,
+                kind: crate::elements2d::PlaneKind::Stress,
                 density: material.rho,
             }));
         }
@@ -111,7 +111,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGe
 /// two end nodes, `ρ·thickness·triangleArea` split evenly at each region triangle's 3 nodes, summed
 /// per node. A simple document-bridge translation feeding ONLY the frozen `fem2d_solve`/`build_model`
 /// path (which has no native self-weight concept) — `fem2d_solve_all` never calls this helper, since it
-/// gets self-weight natively through `crate::core::analyses`' own `element.mass()`-based pipeline for
+/// gets self-weight natively through `crate::model::analyses`' own `element.mass()`-based pipeline for
 /// EVERY massed element (`Bar2`/`BeamEb2` and now `Tri3Cst` regions too), so the two paths never overlap.
 pub(crate) fn self_weight_nodal_loads(doc: &Fem2dDocument, regions: &[MeshedRegion]) -> Vec<NodalLoad> {
     let mut totals: HashMap<String, f64> = HashMap::new();

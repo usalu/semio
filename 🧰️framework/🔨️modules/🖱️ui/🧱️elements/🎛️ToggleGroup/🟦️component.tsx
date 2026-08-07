@@ -11,14 +11,14 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import { toggleVariants, type ToggleProps, type ToggleStandardProps, type ToggleWithActionProps, type ToggleDropdownProps } from "../../🧱️elements/🎚️Toggle/🟦️component.tsx";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
-// 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+// 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
-import { surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type Level, useLevel } from "../🫀️core/🌈️Surface/🟦️component.tsx";
-import { Label, useControlInlineText, useControlAccessibleLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { surfaceClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { type Level, useLevel } from "../🌈️Surface/🟦️component.tsx";
+import { Label, useControlInlineText, useControlAccessibleLabel } from "../🏷️Label/🟦️component.tsx";
 import { chromeControlGroupClass, ControlHotkeyBadge, ChromeControlHint } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { renderControlIcon, ChevronDownIcon, type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

@@ -10,7 +10,7 @@
 //! command enum and no DSL/pack/spr codec of its own, and the `semio_plugin!` macro (which assumes
 //! exactly that) does not apply. What demonstrator genuinely owns is the six PANES: each pane's host
 //! export wiring plus its bundle registration, one `🎪️panes/<variant>/🦀️component.rs` per playground
-//! variant declared in `Cargo.toml`. The manual `PluginBundle` builder + `plugin_exports!` invocation
+//! variant declared in `Cargo.toml`. The manual `Plugin` builder + `plugin_exports!` invocation
 //! below is the same pattern `🪐️space`'s bundle uses.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]`

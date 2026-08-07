@@ -1,0 +1,47 @@
+{
+  "injectedDocs": 9,
+  "injectedOps": 0,
+  "skippedDocs": 41,
+  "skippedOps": 38,
+  "errors": 0,
+  "injectedDocsSample": [
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+      "name": "BalancingInputs"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "name": "DemoProjection"
+    }
+  ],
+  "injectedOpsSample": [],
+  "errorsSample": []
+}

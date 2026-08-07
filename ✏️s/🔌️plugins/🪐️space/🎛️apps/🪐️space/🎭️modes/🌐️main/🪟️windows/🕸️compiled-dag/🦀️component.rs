@@ -2,7 +2,7 @@
 //! A read-only text view of the workflow projected onto the generic port-directed-DAG wire literal.
 
 use crate::apps::space::engine::compiled_dag_wire_literal;
-use crate::core::demo_space_projection;
+use crate::demo_space_projection;
 use semio_framework_os::WorkflowDocument;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 

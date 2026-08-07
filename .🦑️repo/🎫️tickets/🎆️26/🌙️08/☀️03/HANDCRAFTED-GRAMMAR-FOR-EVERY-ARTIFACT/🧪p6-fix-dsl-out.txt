@@ -1,0 +1,26 @@
+{
+  "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs",
+  "before": 78959,
+  "after": 75855,
+  "delta": -3104
+}
+impls [
+  "impl crate::os_store::DocumentDsl for DerivedDocument",
+  "impl crate::os_store::DocumentPack for DerivedDocument",
+  "impl crate::os_spr::OpText for DerivedOperation",
+  "impl crate::os_spr::OpBinary for DerivedOperation",
+  "impl crate::os_store::DocumentDsl for SceneDocument",
+  "impl crate::os_store::DocumentPack for SceneDocument",
+  "impl crate::os_store::DocumentDsl for ShapeDocument",
+  "impl crate::os_store::DocumentPack for ShapeDocument",
+  "impl crate::os_store::DocumentDsl for PaintDocument",
+  "impl crate::os_store::DocumentPack for PaintDocument",
+  "impl crate::os_store::DocumentDsl for BrushDocument",
+  "impl crate::os_store::DocumentPack for BrushDocument",
+  "impl crate::os_spr::OpText for PaintOp",
+  "impl crate::os_spr::OpBinary for PaintOp",
+  "impl crate::os_store::DocumentDsl for SelfRefDocument",
+  "impl crate::os_store::DocumentPack for SelfRefDocument",
+  "impl crate::os_store::DocumentDsl for TableDocument",
+  "impl crate::os_store::DocumentPack for TableDocument"
+]

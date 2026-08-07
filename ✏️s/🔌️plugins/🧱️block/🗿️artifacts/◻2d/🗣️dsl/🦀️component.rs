@@ -31,7 +31,7 @@ pub fn print_dsl(document: &Block2dDefinition) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate};
-    use crate::core::{BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity};
+    use crate::{BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity};
 
     /// 🌱️ Builds the `Hexagonal Cut Concrete Forest Left` node kind — the representative fixture also
     /// used to (re)generate the handcrafted example file via `print_dsl`.

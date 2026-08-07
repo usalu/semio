@@ -79,10 +79,10 @@ fn next_ident(rng: &mut SplitMix64, prefix: &str, index: usize, adversarial: boo
     id
 }
 
-/// ⏱️ Either a canonical `YYYY-MM-DDTHH:MM:SS[.fff]Z` string (exercising `crate::os_spr::core::scalar`'s
+/// ⏱️ Either a canonical `YYYY-MM-DDTHH:MM:SS[.fff]Z` string (exercising `crate::os_spr::wire::scalar`'s
 /// compact tag-1/2 timestamp encoding) or, in adversarial mode, a deliberately non-canonical raw
 /// string (a non-UTC offset, free text, or a Z-suffixed string with an out-of-grammar shape) that
-/// forces the tag-0 raw-text fallback — see `crate::os_spr::core::scalar`'s module note: correctness
+/// forces the tag-0 raw-text fallback — see `crate::os_spr::wire::scalar`'s module note: correctness
 /// never depends on which tag gets chosen, only on the round-trip equality check, so both branches
 /// are safe regardless of exact calendar validity.
 fn next_timestamp(rng: &mut SplitMix64, adversarial: bool) -> String {
@@ -437,7 +437,7 @@ pub fn assert_recovery_truncates_to_commit(bytes: &[u8], level: CorruptionLevel)
         let trusted = &truncated[..recovery.bytes_recovered as usize];
         let mut cursor = crate::os_spr::FrameCursor::new(trusted, recovery.last_commit_offset);
         let frame = cursor.next_frame().expect("the recovered trusted prefix must itself re-parse cleanly").expect("a frame must exist at the reported last_commit_offset");
-        assert_eq!(frame.kind, crate::os_spr::core::REC_COMMIT, "last_commit_offset must point at a REC_COMMIT frame (truncation length {len})");
+        assert_eq!(frame.kind, crate::os_spr::REC_COMMIT, "last_commit_offset must point at a REC_COMMIT frame (truncation length {len})");
         assert_eq!(frame.offset + frame.frame_len(), recovery.bytes_recovered, "bytes_recovered must end exactly after the last trusted commit frame (truncation length {len})");
     }
 }
@@ -454,7 +454,7 @@ fn structural_records(bytes: &[u8], limits: &crate::os_spr::ProtocolLimits) -> s
     let mut counts = std::collections::BTreeMap::new();
     let mut cursor = crate::os_spr::FrameCursor::new(trusted, crate::os_spr::format::HEADER_SIZE as u64);
     while let Some(frame) = cursor.next_frame().expect("trusted prefix must re-parse cleanly") {
-        if matches!(frame.kind, crate::os_spr::core::REC_DOC | crate::os_spr::core::REC_EDIT | crate::os_spr::core::REC_CHANGE | crate::os_spr::core::REC_CHECKPOINT | crate::os_spr::core::REC_ALTERNATIVE | crate::os_spr::core::REC_ACTIVE) {
+        if matches!(frame.kind, crate::os_spr::REC_DOC | crate::os_spr::REC_EDIT | crate::os_spr::REC_CHANGE | crate::os_spr::REC_CHECKPOINT | crate::os_spr::REC_ALTERNATIVE | crate::os_spr::REC_ACTIVE) {
             *counts.entry((frame.kind, frame.payload().to_vec())).or_insert(0) += 1;
         }
     }
@@ -844,9 +844,9 @@ mod tests {
         fn print_op(&self) -> String {
             format!("add {}", self.delta)
         }
-        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::core::TextError> {
-            let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::core::TextError::new("expected 'add <n>'", crate::os_dsl::core::TextSpan::at(1, 1)))?;
-            let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::core::TextError::new("invalid integer", crate::os_dsl::core::TextSpan::at(1, 1)))?;
+        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+            let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::TextError::new("expected 'add <n>'", crate::os_dsl::TextSpan::at(1, 1)))?;
+            let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::TextError::new("invalid integer", crate::os_dsl::TextSpan::at(1, 1)))?;
             Ok(AddOp { delta })
         }
     }
@@ -914,7 +914,7 @@ mod tests {
             fn print_op(&self) -> String {
                 "lossy".to_string()
             }
-            fn parse_op(_line: &str) -> Result<Self, crate::os_dsl::core::TextError> {
+            fn parse_op(_line: &str) -> Result<Self, crate::os_dsl::TextError> {
                 Ok(LossyOp { delta: 0 })
             }
         }

@@ -2,7 +2,7 @@
 
 use crate::artifacts::en1994::Document;
 use crate::artifacts::en1994::op::Operation;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, QuantityKind};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, QuantityKind};
 
 // #region 🔖️AnnexParams
 /// 🇪️🇺️ National-annex NDPs for EN 1994 (composite steel-concrete structures).

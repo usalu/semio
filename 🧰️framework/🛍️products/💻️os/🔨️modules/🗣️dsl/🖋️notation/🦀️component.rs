@@ -14,7 +14,7 @@
 //! and the `handcrafted-grammar-for-every-artifact` plan, wave W4e). This crate proves the
 //! labeled-edge notation in isolation, ready to be adopted then.
 
-use crate::os_dsl::core::{lex, Limits, SpannedToken, TextError, TextSpan, TokenKind};
+use crate::os_dsl::{lex, Limits, SpannedToken, TextError, TextSpan, TokenKind};
 
 //#region 🔖️Edge
 
@@ -313,7 +313,7 @@ pub fn print_edge(edge: &EdgeValue) -> String {
 /// rather than the start of the next statement. A number with no suffix at all is accepted too,
 /// read as already being in `native`'s unit. Rejects a suffix whose dimension doesn't match
 /// `native`'s (a length unit on an angle field, say) rather than silently reinterpreting it.
-pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::core::UnitSpec) -> Result<f64, TextError> {
+pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::UnitSpec) -> Result<f64, TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let number = tokens.first().ok_or_else(|| TextError::new("expected a quantity", TextSpan::at(1, 1)))?;
@@ -326,8 +326,8 @@ pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::core::Uni
     let value = match suffix {
         Some(suffix_token) => {
             let symbol = suffix_token.text.as_str();
-            let unit = crate::os_dsl::core::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit `{symbol}`"), suffix_token.span))?;
-            crate::os_dsl::core::convert(raw, unit, native).ok_or_else(|| TextError::new(format!("unit `{symbol}` is not compatible with `{}`", native.symbol), suffix_token.span))?
+            let unit = crate::os_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit `{symbol}`"), suffix_token.span))?;
+            crate::os_dsl::convert(raw, unit, native).ok_or_else(|| TextError::new(format!("unit `{symbol}` is not compatible with `{}`", native.symbol), suffix_token.span))?
         }
         None => raw,
     };
@@ -342,8 +342,8 @@ pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::core::Uni
 /// @emoji 🖨️ Canonical printer — always suffixes in `native`'s own unit (never the alien unit a
 /// value might have been parsed from), so re-parsing the printed form is always a same-unit,
 /// lossless round trip.
-pub fn print_quantity(value: f64, native: &'static crate::os_dsl::core::UnitSpec) -> String {
-    format!("{}{}", crate::os_dsl::core::format_f64(value), native.symbol)
+pub fn print_quantity(value: f64, native: &'static crate::os_dsl::UnitSpec) -> String {
+    format!("{}{}", crate::os_dsl::format_f64(value), native.symbol)
 }
 
 /// @emoji 📐️ `parse_quantity_text` specialized to degrees: a bare number with no suffix is read
@@ -351,14 +351,14 @@ pub fn print_quantity(value: f64, native: &'static crate::os_dsl::core::UnitSpec
 /// this pins the no-suffix case specifically, since degrees are what the architecture calls the
 /// canonical angle unit); `rad`/`turn` suffixes convert in.
 pub fn parse_angle_text(text: &str) -> Result<f64, TextError> {
-    let deg = crate::os_dsl::core::unit_by_symbol("deg").expect("`deg` is a built-in unit");
+    let deg = crate::os_dsl::unit_by_symbol("deg").expect("`deg` is a built-in unit");
     parse_quantity_text(text, deg)
 }
 
 /// @emoji 🖨️ Canonical printer for an angle in degrees — `45°` (the `°` symbol, not `deg`).
 pub fn print_angle(value_deg: f64) -> String {
-    let degree_symbol = crate::os_dsl::core::unit_by_symbol("°").expect("`°` is a built-in unit");
-    format!("{}{}", crate::os_dsl::core::format_f64(value_deg), degree_symbol.symbol)
+    let degree_symbol = crate::os_dsl::unit_by_symbol("°").expect("`°` is a built-in unit");
+    format!("{}{}", crate::os_dsl::format_f64(value_deg), degree_symbol.symbol)
 }
 //#endregion 🔖️Quantity
 
@@ -488,7 +488,7 @@ mod tests {
 
     #[test]
     fn parses_quantity_in_native_unit() {
-        let gpa = crate::os_dsl::core::unit_by_symbol("GPa").unwrap();
+        let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let value = parse_quantity_text("210GPa", gpa).expect("parse_quantity_text");
         assert!((value - 210.0).abs() < 1e-9);
         assert_eq!(print_quantity(value, gpa), "210GPa");
@@ -496,7 +496,7 @@ mod tests {
 
     #[test]
     fn converts_a_compatible_alien_unit_into_native_scale() {
-        let gpa = crate::os_dsl::core::unit_by_symbol("GPa").unwrap();
+        let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         // 210000 MPa == 210 GPa
         let value = parse_quantity_text("210000MPa", gpa).expect("parse_quantity_text");
         assert!((value - 210.0).abs() < 1e-6, "got {value}");
@@ -504,21 +504,21 @@ mod tests {
 
     #[test]
     fn bare_number_with_no_suffix_is_read_in_native_unit() {
-        let gpa = crate::os_dsl::core::unit_by_symbol("GPa").unwrap();
+        let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let value = parse_quantity_text("210", gpa).expect("parse_quantity_text");
         assert!((value - 210.0).abs() < 1e-9);
     }
 
     #[test]
     fn rejects_a_dimensionally_incompatible_unit() {
-        let gpa = crate::os_dsl::core::unit_by_symbol("GPa").unwrap();
+        let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let err = parse_quantity_text("210m", gpa).unwrap_err();
         assert!(err.message.contains("not compatible"), "unexpected message: {}", err.message);
     }
 
     #[test]
     fn rejects_an_unknown_unit_symbol() {
-        let gpa = crate::os_dsl::core::unit_by_symbol("GPa").unwrap();
+        let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let err = parse_quantity_text("210Zorkels", gpa).unwrap_err();
         assert!(err.message.contains("unknown unit"), "unexpected message: {}", err.message);
     }

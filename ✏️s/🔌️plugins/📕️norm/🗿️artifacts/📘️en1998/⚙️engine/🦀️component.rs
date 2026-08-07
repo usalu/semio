@@ -1,7 +1,7 @@
 //! ⚙️ EN 1998 app — headless compute (constitutional: engine).
 
 use crate::artifacts::en1998::Document;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {
@@ -420,8 +420,8 @@ pub mod part_5 {
     pub fn check_foundation_bearing(p_ed_kpa: f64, p_rd_kpa: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1998-5", "§7", "7.3"),
-            Quantity::new(crate::core::QuantityKind::Pressure, p_ed_kpa * 1000.0),
-            Quantity::new(crate::core::QuantityKind::Pressure, p_rd_kpa * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, p_ed_kpa * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, p_rd_kpa * 1000.0),
             "foundation seismic bearing",
             AnnexChoice::De,
         )
@@ -498,8 +498,8 @@ pub mod part_6 {
     pub fn check_tower_overturning(m_ed_knm: f64, m_rd_knm: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1998-6", "§4", "4.3.2"),
-            Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(crate::core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
             "tower overturning",
             AnnexChoice::En,
         )
@@ -709,12 +709,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
 /// headless `NormHost` session every norm app drives.
 pub struct En1998Family;
 
-impl crate::core::NormFamily for En1998Family {
+impl crate::document::NormFamily for En1998Family {
     type Document = Document;
     type Operation = crate::artifacts::en1998::op::Operation;
 
-    fn family_id() -> crate::core::NormFamilyId {
-        crate::core::NormFamilyId::En1998
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::En1998
     }
 
     fn evaluate(document: &Document) -> CheckReport {
@@ -722,7 +722,7 @@ impl crate::core::NormFamily for En1998Family {
     }
 }
 
-pub type Host = crate::core::NormHost<En1998Family>;
+pub type Host = crate::document::NormHost<En1998Family>;
 // #endregion 🔖️Session
 
 //#region 🧪️Tests

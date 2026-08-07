@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::block3d::{Block3dDefinition, Block3dVortexKind, Block3dVortexTemplate};
-use crate::core::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
+use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use protocol::OperationDiff;
 use serde::{Deserialize, Serialize};
 

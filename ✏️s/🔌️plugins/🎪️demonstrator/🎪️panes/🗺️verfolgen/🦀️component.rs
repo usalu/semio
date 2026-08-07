@@ -4,7 +4,7 @@
 //!
 //! See <https://github.com/usalu/semio/issues/2510> for the bundle rationale.
 
-use semio_framework_plugin::PluginBundle;
+use semio_framework_plugin::Plugin;
 
 use gis::apps::gis2d::{create_gis2d_app, Gis2dPlayApp};
 use gis::artifacts::gismap::engine::{gis2d_document_json_from_dwg, gis2d_document_json_to_svg};
@@ -22,6 +22,6 @@ pub fn register_exports() {
 }
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
-pub fn register_app(bundle: PluginBundle) -> PluginBundle {
+pub fn register_app(bundle: Plugin) -> Plugin {
     bundle.register_document_app::<Gis2dPlayApp>(create_gis2d_app())
 }

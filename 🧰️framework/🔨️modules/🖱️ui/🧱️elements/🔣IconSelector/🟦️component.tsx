@@ -7,11 +7,11 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../☑️Select/🟦️component.tsx";
 import { Textarea } from "../📄Textarea/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { type IconSelectorMode, decodeIcon, encodeIcon, classifyIconSelectorMode, Icon } from "../🔣Icons/🟦️component.tsx";
 import { Button } from "../🔘Button/🟦️component.tsx";
 // #endregion 🔌️Adapters

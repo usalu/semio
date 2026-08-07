@@ -278,7 +278,7 @@ mod tests {
     use super::*;
     use crate::apps::space::testkit::{apply_operations, seed_draw_plugin, seed_multi_port_plugins, studio_emit};
     use crate::apps::space::SpaceCommand;
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
     use std::collections::HashSet;
 
     #[test]

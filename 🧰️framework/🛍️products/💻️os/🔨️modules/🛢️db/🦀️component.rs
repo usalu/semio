@@ -32,7 +32,7 @@ pub use db_engine::{
     Profile, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
-/// 🗄️🌿️ The real `vcs`-backed `db_core::VersionGraph` — the ONLY place in the whole `db` family
+/// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family
 /// allowed to depend on `vcs` (hard dependency rule). Present exactly when this crate's own `vcs`
 /// feature (default-on) is enabled, mirroring `db_engine`'s identically-named feature it forwards.
 #[cfg(feature = "vcs")]
@@ -40,7 +40,7 @@ pub use db_engine::vcs_integration;
 
 /// 🗄️ The single error type every `db_*` crate returns — re-exported at the root too (not just
 /// via `db::core::DbError`) since it appears in the signature of virtually every facade-level call.
-pub use db_core::DbError;
+pub use db_ids::DbError;
 
 /// 🗄️#⃣ `CommandReceipt.state_hash`'s type — hashing is pack-style `ContentHash` throughout the
 /// `db` family per the contract, so it is nameable at the facade root without reaching past this
@@ -49,10 +49,21 @@ pub use pack::ContentHash;
 //#endregion 🔖️Database
 
 //#region 🔖️Family
-/// 🗄️#⃣ `db_core` — ids, `DbError`, limits, durability, frontier, epoch fencing, mailbox priority,
-/// capabilities, config/profiles, the `VersionGraph` seam, and the `Emit` observability seam.
-pub mod core {
-    pub use db_core::*;
+/// 🗄️#⃣ Former `db_core` surface — ids, durability, policy, and version-graph seams.
+pub mod ids {
+    pub use db_ids::*;
+}
+
+pub mod durability {
+    pub use db_durability::*;
+}
+
+pub mod policy {
+    pub use db_policy::*;
+}
+
+pub mod version_graph {
+    pub use db_version_graph::*;
 }
 
 /// 🗄️🎭️ `db_actor` — the six-lane bounded-priority mailbox actor runtime every document/catalog
@@ -265,11 +276,11 @@ mod tests {
     /// internal test suite.
     #[test]
     fn every_family_submodule_reexports_its_headline_public_surface() {
-        let limits = core::DbLimits::default();
+        let limits = ids::DbLimits::default();
         assert!(limits.max_command_bytes > 0);
-        core::check_len(1, 2, "smoke").unwrap();
+        ids::check_len(1, 2, "smoke").unwrap();
 
-        let (_address, _receiver) = actor::mailbox::<u8>(core::MailboxCapacities::default());
+        let (_address, _receiver) = actor::mailbox::<u8>(policy::MailboxCapacities::default());
 
         let mut map: state::PMap<String, i32> = state::PMap::new();
         map = map.insert("k".to_string(), 1);
@@ -306,8 +317,8 @@ mod tests {
         let sink = observe::MemorySink::new();
         assert!(sink.lines().is_empty());
 
-        let from = core::Frontier::genesis(core::DocumentId("doc-1".to_string()));
-        let to = core::Frontier { head_seq: 3, commit_seq: 3, ..core::Frontier::genesis(core::DocumentId("doc-1".to_string())) };
+        let from = durability::Frontier::genesis(ids::DocumentId("doc-1".to_string()));
+        let to = durability::Frontier { head_seq: 3, commit_seq: 3, ..durability::Frontier::genesis(ids::DocumentId("doc-1".to_string())) };
         let delta = sync::frontier_delta(&from, &to).unwrap();
         assert_eq!(delta.commands, 3);
     }

@@ -150,7 +150,7 @@ mod tests {
     use super::*;
     use crate::apps::space::engine::parameter_entity_id;
     use crate::apps::space::testkit::apply_operations;
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
     use semio_framework_plugin::HistoryView;
 
     #[test]

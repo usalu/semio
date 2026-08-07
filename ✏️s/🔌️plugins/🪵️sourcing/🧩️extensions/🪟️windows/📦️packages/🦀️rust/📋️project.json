@@ -2,7 +2,10 @@
   "name": "@semio-tech/sourcing-extension-windows-rust",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -34,6 +37,14 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts package",
         "forwardAllArgs": true
       }
     }

@@ -1,0 +1,267 @@
+//! 📔️ Flow extension registry and contribution install surface.
+
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::sync::{Arc, LazyLock, Mutex};
+
+use crate::dag;
+use crate::dag::{
+    computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
+    slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
+};
+use crate::canvas;
+use crate::neural::{
+    channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
+    INPUT_KIND, OUTPUT_KIND,
+};
+use crate::neural;
+use math::graph::manifest::{PropertyBag, PropertyValue};
+use flow_extension_sdk::FlowExtensionManifest;
+use serde::{Deserialize, Serialize};
+
+use crate::document::*;
+use crate::catalogue::*;
+use crate::bridge::*;
+use crate::host::*;
+use crate::drawing::*;
+use crate::wasm_session::*;
+use crate::vcs::*;
+use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
+
+
+// #region 🔖️ExtensionRegistry
+/// 🧩️ One installable flow extension (built-in or contributed).
+#[derive(Clone, Debug)]
+pub struct FlowExtensionSpec {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    pub install: fn(&mut neural::Registry),
+}
+
+/// 📋️ Installed extension metadata for host UI and debugging.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowExtensionInfo {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_id: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+struct ContributedFlowExtension {
+    plugin_id: String,
+    manifest_json: String,
+}
+
+struct FlowExtensionRegistryState {
+    contributed: BTreeMap<String, ContributedFlowExtension>,
+    registry: Arc<neural::Registry>,
+    generation: u64,
+}
+
+pub(crate) static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {
+    contributed: BTreeMap::new(),
+    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+    generation: 0,
+}));
+
+/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
+    // Light/draw/brep operator packs are runtime-installable packaged extensions.
+}
+
+struct ContributedExtensionStub {
+    extension_id: String,
+    operator_id: String,
+}
+
+impl neural::Operation for ContributedExtensionStub {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let node_hash = neural::node_hash(&self.operator_id, input);
+        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
+    }
+}
+
+fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) {
+    let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
+    for schema in manifest.contributes.schemas {
+        if !registry.schema_catalogue().iter().any(|existing| existing.id == schema.id) {
+            registry.register_schema(schema);
+        }
+    }
+    for info in manifest.contributes.operators {
+        if registry.operator_info(&info.id).is_some() {
+            continue;
+        }
+        let extension_id = manifest.id.clone();
+        let operator_id = info.id.clone();
+        registry.register_operator(
+            info,
+            vec![OperatorImpl { schemas: vec![], operation: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
+            &[],
+        );
+    }
+    let _ = plugin_id;
+    registry.finalize();
+}
+
+fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowExtension>) -> neural::Registry {
+    let mut registry = neural::Registry::new();
+    install_builtin_flow_extensions(&mut registry);
+    for entry in contributed.values() {
+        register_contributed_manifest(&mut registry, &entry.plugin_id, &entry.manifest_json);
+    }
+    registry
+}
+
+fn rebuild_flow_extension_registry(state: &mut FlowExtensionRegistryState) {
+    state.generation += 1;
+    state.registry = Arc::new(build_flow_extension_registry(&state.contributed));
+}
+
+/// 🔌️ Installs a built-in extension spec (idempotent on `id`).
+pub fn install_flow_extension(spec: FlowExtensionSpec) {
+    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    if state.contributed.contains_key(&spec.id) {
+        return;
+    }
+    let id = spec.id.clone();
+    let mut composed = neural::Registry::new();
+    install_builtin_flow_extensions(&mut composed);
+    for entry in state.contributed.values() {
+        register_contributed_manifest(&mut composed, &entry.plugin_id, &entry.manifest_json);
+    }
+    (spec.install)(&mut composed);
+    composed.finalize();
+    state.contributed.insert(
+        id.clone(),
+        ContributedFlowExtension {
+            plugin_id: format!("spec:{}", id),
+            manifest_json: serde_json::json!({
+                "schema": "flow.extension",
+                "id": id,
+                "name": spec.name,
+                "version": spec.version,
+                "activationEvents": ["onStartup"],
+                "contributes": { "schemas": [], "operators": [], "widgets": [], "commands": [], "settings": [] }
+            })
+            .to_string(),
+        },
+    );
+    // Preserve the live registry that includes spec.install side effects.
+    state.generation += 1;
+    state.registry = std::sync::Arc::new(composed);
+    let _ = (spec.name, spec.version);
+}
+
+/// 📥️ Merges a contributed `flow.extension` manifest from a hot-swapped plugin.
+/// 🔌️ Installs or refreshes contributed flow.extension manifests from host-pushed contributionsJson.
+pub fn sync_host_flow_extension_contributions(contributions_json: &str) {
+    use std::sync::Mutex;
+    static LAST: Mutex<String> = Mutex::new(String::new());
+    let mut last = LAST.lock().expect("flow contributions lock");
+    if *last == contributions_json {
+        return;
+    }
+    for info in installed_flow_extensions() {
+        uninstall_flow_extension(&info.id);
+    }
+    if let Ok(entries) = serde_json::from_str::<Vec<semio_framework_core::ProgramContributionEntry>>(contributions_json) {
+        for entry in entries {
+            if let semio_framework_core::Contribution::FlowExtension { manifest_json, .. } = entry.contribution {
+                install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
+            }
+        }
+    }
+    *last = contributions_json.to_string();
+}
+
+pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) {
+    let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
+    let id = manifest.id.clone();
+    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    state.contributed.insert(
+        id,
+        ContributedFlowExtension { plugin_id: plugin_id.to_string(), manifest_json: manifest_json.to_string() },
+    );
+    rebuild_flow_extension_registry(&mut state);
+}
+
+/// 🗑️ Removes a contributed extension and rebuilds the composed registry.
+pub fn uninstall_flow_extension(id: &str) {
+    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    if state.contributed.remove(id).is_some() {
+        rebuild_flow_extension_registry(&mut state);
+    }
+}
+
+/// 📜️ Lists installed contributed extensions (built-ins are implicit).
+pub fn installed_flow_extensions() -> Vec<FlowExtensionInfo> {
+    let state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    state
+        .contributed
+        .values()
+        .filter_map(|entry| {
+            let manifest = serde_json::from_str::<FlowExtensionManifest>(&entry.manifest_json).ok()?;
+            Some(FlowExtensionInfo { id: manifest.id, name: manifest.name, version: manifest.version, plugin_id: Some(entry.plugin_id.clone()) })
+        })
+        .collect()
+}
+
+/// 🧠️ Shared composed operator registry for evaluation and catalogue derivation.
+pub fn flow_extension_registry() -> Arc<neural::Registry> {
+    FLOW_EXTENSION_STATE.lock().expect("flow extension registry").registry.clone()
+}
+
+pub(crate) fn flow_registry() -> Arc<neural::Registry> {
+    flow_extension_registry()
+}
+
+/// 🔌️ Resolves the contributor plugin id for an installed contributed extension.
+pub fn flow_extension_plugin_id(extension_id: &str) -> Option<String> {
+    installed_flow_extensions().into_iter().find(|info| info.id == extension_id).and_then(|info| info.plugin_id)
+}
+
+/// 🌱️ Seeds a shared neural cache entry from a host-mediated extension eval response.
+pub fn seed_flow_eval_node_cache(cache: &NeuralCache, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
+    let dict: Dictionary = serde_json::from_str(output_json)?;
+    cache.seed(node_hash, dict);
+    Ok(())
+}
+
+/// 📚️ Extension-grouped catalogue sections (static widget sections merged at host).
+pub fn flow_catalogue_sections() -> Vec<CatalogueSection> {
+    let operators = flow_extension_registry().operator_catalogue();
+    let mut by_extension: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
+    for info in operators {
+        by_extension.entry(info.extension.clone()).or_default().push(info);
+    }
+    by_extension
+        .into_iter()
+        .map(|(extension, items)| CatalogueSection {
+            id: extension.clone(),
+            title: titleize_extension(&extension),
+            groups: vec![],
+            items: items
+                .into_iter()
+                .map(|info| CatalogueItem {
+                    kind: "neuron".into(),
+                    neuron_kind: Some(info.id),
+                    action: None,
+                    format: None,
+                    name: info.name,
+                    abbreviation: info.abbreviation,
+                    icon: info.icon,
+                    summary: info.summary,
+                })
+                .collect(),
+        })
+        .collect()
+}
+
+fn titleize_extension(extension: &str) -> String {
+    titleize_module(extension)
+}
+// #endregion 🔖️ExtensionRegistry

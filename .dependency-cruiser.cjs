@@ -78,6 +78,23 @@ function noImplSegmentRule() {
   };
 }
 
+/** 🚫️ Bans dependency paths whose emoji-stripped segment is a banned stem (`core`, `shared`, …). */
+function noCorePathRule() {
+  const stems = (TAXONOMY.bannedNameStems || ["core"]).map((segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  return {
+    name: "no-core-path",
+    severity: "warn",
+    comment: "Clean mechanism: no dependency may resolve through a banned name stem folder (core/shared/util/…) — WARN until Wave 4 flips to error after cores dissolve",
+    from: {
+      path: "^(✏️s/|🧰️framework/|🌎️hub/|♻️mit-bestand/)",
+    },
+    to: {
+      path: `(^|/)([^/]*?)(${stems})(/|$)`,
+      pathNot: "node_modules|target|/pkg/",
+    },
+  };
+}
+
 /** 📦️ Step 7's "`$1`-capture rule": a relative (`local`) import may freely reach anywhere inside its OWN
  * package/module family — same directory tree, any depth — but must not resolve into a SIBLING family via
  * a deep relative path; cross-family reuse goes through a `@semio-tech/…` package-name import instead.
@@ -214,6 +231,7 @@ module.exports = {
     ...crossTechnologyRules(),
     ...crossPluginRules(),
     noImplSegmentRule(),
+    noCorePathRule(),
     crossPackageRelativeRule(),
   ],
   options: {

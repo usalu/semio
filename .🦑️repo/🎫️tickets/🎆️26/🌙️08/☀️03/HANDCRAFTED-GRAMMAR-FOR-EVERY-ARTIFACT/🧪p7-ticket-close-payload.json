@@ -1,0 +1,27 @@
+{
+  "command": "repo ticket close",
+  "args": {
+    "repo": "/Users/ueli/Documents/semio",
+    "year": 2026,
+    "month": 8,
+    "day": 3,
+    "slug": "HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT",
+    "summary": "P7 E2E recorded: handcrafted policy 0 breaches; verify/test dsl/semio verify/exhaustive LCOV/OS boot blocked on Xcode license (cc exit 69), plugin capability lint (31), semio kernel package name, and compose/graphql build. Writer registers 6 language roles with DEBUG hooks; runtime tests not executed. Mechanism P0–P6 delivered per plan; re-run P7 after sudo xcodebuild -license and gate fixes."
+  },
+  "files": [
+    "p7-e2e-status.md",
+    "🧪p7-verify.txt",
+    "🧪p7-test-dsl.txt",
+    "🧪p7-test-exhaustive.txt",
+    "🧪p7-semio-verify.txt",
+    "🧪p7-policy-handcrafted.json",
+    "🧪p7-os-dry-run.txt",
+    "🧪p7-writer-test-quick.txt",
+    "🧪p7-writer-kinds-probe.json",
+    "🔧️p7-writer-kinds-probe.mjs",
+    "p6-flagday.md",
+    "🧪e2e-conformance-evidence.md"
+  ],
+  "invoked": false,
+  "reason": "P7 plan items not green; ticket left open intentionally"
+}

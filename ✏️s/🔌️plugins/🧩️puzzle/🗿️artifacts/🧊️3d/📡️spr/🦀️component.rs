@@ -34,7 +34,7 @@ pub type Puzzle3dStore = DocumentStore<Puzzle3dProjection, Puzzle3dOperation>;
 
 //#region 🔖️Puzzle3dEngineCommand
 /// 🎯️ Re-exports the puzzle 3d app-engine command envelope (`HEADLESS-ENGINE-LAW-AND-OFFENDER-FIXES`).
-/// `#[derive(dsl::DslOps)]` is applied where the type is declared, in `⚙️engine` — not here — because
+/// `#[derive(dsl::DslEnum)]` is applied where the type is declared, in `⚙️engine` — not here — because
 /// the derive's generated code needs `SceneConfig`/`BrushPlacePayload` (types `⚙️engine` owns) by
 /// value; re-exporting it here plus wrapping `encode_op`/`decode_op` mirrors exactly how
 /// `Puzzle3dOperation` (declared in `🔧️op`) is surfaced above.

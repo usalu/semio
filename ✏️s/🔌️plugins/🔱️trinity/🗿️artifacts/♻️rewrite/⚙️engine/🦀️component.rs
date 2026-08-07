@@ -3,7 +3,9 @@
 
 use crate::artifacts::jack::{Graph, PropertyValue};
 use crate::artifacts::rewrite::TrinityRewriteError;
-use crate::core::{execute, parse, Pattern, PatternEdge, PatternNode, QueryResult};
+use crate::ast::{Pattern, PatternEdge, PatternNode, QueryResult};
+use crate::executor::execute;
+use crate::language_service::parse;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -256,7 +258,7 @@ mod tests {
     #[test]
     fn jack_query_on_nakagin() {
         let mut g = nakagin_graph();
-        let result = crate::core::run(&mut g, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
+        let result = crate::executor::run(&mut g, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
         assert_eq!(result.rows.len(), 1);
     }
 

@@ -1,0 +1,654 @@
+{
+  "files": 80,
+  "removedRegions": 81,
+  "details": [
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:TrinityGraphOperationDsl",
+        "OpBinary:TrinityGraphOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:GraphFixtureDsl",
+        "DocumentPack:GraphFixtureDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:RewriteRuleOperation",
+        "OpBinary:RewriteRuleOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:RewriteRuleModel",
+        "DocumentPack:RewriteRuleModel"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:RemodelOperation",
+        "OpBinary:RemodelOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:RemodelProjection",
+        "DocumentPack:RemodelProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:RasterOperation",
+        "OpBinary:RasterOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:RasterProjection",
+        "DocumentPack:RasterProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Process3dOperationDsl",
+        "OpBinary:Process3dOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Process3dDocument",
+        "DocumentPack:Process3dDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:BalancingInputs",
+        "DocumentPack:BalancingInputs"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Document",
+        "DocumentPack:Document"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:CadOperation",
+        "OpBinary:CadOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:CadProjection",
+        "DocumentPack:CadProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Block3dOperation",
+        "OpBinary:Block3dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Block3dDefinition",
+        "DocumentPack:Block3dDefinition"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Block5dOperation",
+        "OpBinary:Block5dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Block5dDefinition",
+        "DocumentPack:Block5dDefinition"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Block2dOperation",
+        "OpBinary:Block2dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Block2dDefinition",
+        "DocumentPack:Block2dDefinition"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:MindmapWiresOperationDsl",
+        "OpBinary:MindmapWiresOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:MindmapWiresDocumentDsl",
+        "DocumentPack:MindmapWiresDocumentDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:SequenceOperationDsl",
+        "OpBinary:SequenceOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:WriterOperation",
+        "OpBinary:WriterOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:WriterProjection",
+        "DocumentPack:WriterProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:PresentOperationDsl",
+        "OpBinary:PresentOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:PresentDeck",
+        "DocumentPack:PresentDeck"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:SHomeOperation",
+        "OpBinary:SHomeOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:SHomeDocument",
+        "DocumentPack:SHomeDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Procedural2dOperationDsl",
+        "OpBinary:Procedural2dOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Procedural2dDocumentDsl",
+        "DocumentPack:Procedural2dDocumentDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Procedural3dOperationDsl",
+        "OpBinary:Procedural3dOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Procedural3dDocumentDsl",
+        "DocumentPack:Procedural3dDocumentDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:VcsDemoOperation",
+        "OpBinary:VcsDemoOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:VcsDemoProjection",
+        "DocumentPack:VcsDemoProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:GisMapOperationDsl",
+        "OpBinary:GisMapOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:GisMapDocument",
+        "DocumentPack:GisMapDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Gis3dTerrainOperation",
+        "OpBinary:Gis3dTerrainOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Gis3dTerrainDocument",
+        "DocumentPack:Gis3dTerrainDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:ImperativeOperationDsl",
+        "OpBinary:ImperativeOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:ImperativeDocumentDsl",
+        "DocumentPack:ImperativeDocumentDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:SourcingOperation",
+        "OpBinary:SourcingOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:CurateDocument",
+        "DocumentPack:CurateDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:NoteOperation",
+        "OpBinary:NoteOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:NoteDocument",
+        "DocumentPack:NoteDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Program",
+        "DocumentPack:Program"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:ShootingOperationDsl",
+        "OpBinary:ShootingOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:ShootingFixtureDsl",
+        "DocumentPack:ShootingFixtureDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:ShootingFixtureDsl",
+        "DocumentPack:ShootingFixtureDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:MathOperationDsl",
+        "OpBinary:MathOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:MathProjectionDsl",
+        "DocumentPack:MathProjectionDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:LayoutOperationDsl",
+        "OpBinary:LayoutOperationDsl"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:LayoutDocument",
+        "DocumentPack:LayoutDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Puzzle3dOperation",
+        "OpBinary:Puzzle3dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Puzzle3dProjection",
+        "DocumentPack:Puzzle3dProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/⚙️engine/⏳️session/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Puzzle3dEngineCommand",
+        "OpBinary:Puzzle3dEngineCommand"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Puzzle5dOperation",
+        "OpBinary:Puzzle5dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Puzzle5dProjection",
+        "DocumentPack:Puzzle5dProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Puzzle2dOperation",
+        "OpBinary:Puzzle2dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Puzzle2dProjection",
+        "DocumentPack:Puzzle2dProjection"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Fem3dOperation",
+        "OpBinary:Fem3dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Fem3dDocument",
+        "DocumentPack:Fem3dDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:Fem2dOperation",
+        "OpBinary:Fem2dOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:Fem2dDocument",
+        "DocumentPack:Fem2dDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:DrawOperation",
+        "OpBinary:DrawOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:DrawDocument",
+        "DocumentPack:DrawDocument"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs",
+      "kind": "OpCodec",
+      "impls": [
+        "OpText:LowpolyOperation",
+        "OpBinary:LowpolyOperation"
+      ]
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs",
+      "kind": "DocumentCodec",
+      "impls": [
+        "DocumentDsl:LowpolyProjection",
+        "DocumentPack:LowpolyProjection"
+      ]
+    }
+  ]
+}

@@ -13,7 +13,7 @@
 //! category checks in `part_13`/`part_1` respectively).
 
 use crate::artifacts::din16798::Document;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, OccupancyType, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, OccupancyType, Quantity};
 
 // #region 🔖️Part1
 pub mod part_1 {
@@ -105,19 +105,19 @@ pub mod part_1 {
     pub fn check_pmv_comfort(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> CheckResult {
         let pmv = pmv_iso7730(t_op_c, rh_percent, air_speed_m_s);
         let limit = 0.5;
-        CheckResult::from_utilization(ClauseId::new("EN 16798-1", "§7", "7.2.2"), Quantity::new(crate::core::QuantityKind::Dimensionless, pmv.abs()), Quantity::new(crate::core::QuantityKind::Dimensionless, limit), "ISO 7730 PMV comfort", AnnexChoice::De)
+        CheckResult::from_utilization(ClauseId::new("EN 16798-1", "§7", "7.2.2"), Quantity::new(crate::document::QuantityKind::Dimensionless, pmv.abs()), Quantity::new(crate::document::QuantityKind::Dimensionless, limit), "ISO 7730 PMV comfort", AnnexChoice::De)
     }
 
     /// ✅️ Check operative temperature within band (EN 16798-1).
     pub fn check_operative_temperature(occupancy: OccupancyType, t_op_c: f64) -> CheckResult {
         let (t_min, t_max) = operative_temperature_band(occupancy);
         let within = t_op_c >= t_min && t_op_c <= t_max;
-        let status = if within { crate::core::CheckStatus::Pass } else { crate::core::CheckStatus::Fail };
+        let status = if within { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail };
         CheckResult {
             clause: ClauseId::new("EN 16798-1", "§7", "7.2.2"),
             status,
-            computed: Quantity::new(crate::core::QuantityKind::Temperature, t_op_c),
-            limit: Quantity::new(crate::core::QuantityKind::Temperature, t_max),
+            computed: Quantity::new(crate::document::QuantityKind::Temperature, t_op_c),
+            limit: Quantity::new(crate::document::QuantityKind::Temperature, t_max),
             utilization: if within { 0.0 } else { 1.1 },
             message: "operative temperature band".into(),
             annex: AnnexChoice::De,
@@ -145,8 +145,8 @@ pub mod part_1 {
         let deviation = (t_op_c - centre).abs();
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-1", "Annex A", "A.2"),
-            Quantity::new(crate::core::QuantityKind::Temperature, deviation),
-            Quantity::new(crate::core::QuantityKind::Temperature, band),
+            Quantity::new(crate::document::QuantityKind::Temperature, deviation),
+            Quantity::new(crate::document::QuantityKind::Temperature, band),
             "adaptive comfort deviation",
             AnnexChoice::En,
         )
@@ -166,8 +166,8 @@ pub mod part_1 {
         let limit = design_co2_limit_ppm(occupancy, annex);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-1", annex.choice.label(), "6.2"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, co2_ppm),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, limit),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, co2_ppm),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, limit),
             "indoor CO₂ concentration",
             annex.choice,
         )
@@ -187,8 +187,8 @@ pub mod part_1 {
         let minimum = daylight_factor_min_percent(category);
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-1", "Annex B", "B.1"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, df_percent),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, minimum),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, df_percent),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, minimum),
             "daylight factor category",
             AnnexChoice::En,
         )
@@ -208,8 +208,8 @@ pub mod part_1 {
         let limit = acoustic_limit_db_by_category(category);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-1", "Annex B", "B.2"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, l_aeq_db),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, limit),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, l_aeq_db),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, limit),
             "acoustic category limit",
             AnnexChoice::En,
         )
@@ -282,8 +282,8 @@ pub mod part_3 {
         let required = required_outdoor_air_m3_h(occupancy, persons, ida_class);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "Table 1", "q"),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, supplied_m3_h),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, required),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, supplied_m3_h),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, required),
             "outdoor air supply",
             AnnexChoice::De,
         )
@@ -343,8 +343,8 @@ pub mod part_3 {
     pub fn check_design_sfp(sfp_w_m3_s: f64, required_class: SfpClass) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "Table 10", "SFP"),
-            Quantity::new(crate::core::QuantityKind::Power, sfp_w_m3_s),
-            Quantity::new(crate::core::QuantityKind::Power, required_class.bound_w_m3_s()),
+            Quantity::new(crate::document::QuantityKind::Power, sfp_w_m3_s),
+            Quantity::new(crate::document::QuantityKind::Power, required_class.bound_w_m3_s()),
             "specific fan power class",
             AnnexChoice::De,
         )
@@ -354,8 +354,8 @@ pub mod part_3 {
     pub fn check_heat_recovery_efficiency(eta_delivered: f64, eta_min: f64) -> CheckResult {
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-3", "§7", "7.3"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, eta_delivered),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, eta_min),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, eta_delivered),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, eta_min),
             "minimum heat-recovery efficiency",
             AnnexChoice::De,
         )
@@ -373,8 +373,8 @@ pub mod part_3 {
         let required = dwelling_ventilation_rate(floor_area_m2, bedrooms);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "§7", "7.1"),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, supplied_m3_h),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, required),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, supplied_m3_h),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, required),
             "dwelling ventilation rate",
             AnnexChoice::De,
         )
@@ -392,8 +392,8 @@ pub mod part_3 {
         let required = residential_ventilation_rate(floor_area_m2, occupants);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "§7", "7.2"),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, supplied_m3_h),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, required),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, supplied_m3_h),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, required),
             "residential ventilation rate",
             AnnexChoice::De,
         )
@@ -413,8 +413,8 @@ pub mod part_3 {
         let interval = inspection_interval_years(system_type);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "§8", "8.1"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, years_since_inspection as f64),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, interval as f64),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, years_since_inspection as f64),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, interval as f64),
             "ventilation inspection interval",
             AnnexChoice::De,
         )
@@ -422,7 +422,7 @@ pub mod part_3 {
 
     /// 💧️ Humidification capacity check (folded TR EN 16798-9 humidification guidance).
     pub fn check_humidification_capacity(required_kg_h: f64, provided_kg_h: f64) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 16798-3", "§7", "7.4"), Quantity::new(crate::core::QuantityKind::Mass, provided_kg_h), Quantity::new(crate::core::QuantityKind::Mass, required_kg_h), "humidification capacity", AnnexChoice::De)
+        CheckResult::from_utilization(ClauseId::new("EN 16798-3", "§7", "7.4"), Quantity::new(crate::document::QuantityKind::Mass, provided_kg_h), Quantity::new(crate::document::QuantityKind::Mass, required_kg_h), "humidification capacity", AnnexChoice::De)
     }
 }
 // #endregion 🔖️Part3
@@ -441,8 +441,8 @@ pub mod part_5_1 {
         let computed = fan_energy_kwh(sfp_w_m3_s, q_v_m3_s, t_run_h);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-5-1", "§6", "6.1"),
-            Quantity::new(crate::core::QuantityKind::Energy, computed),
-            Quantity::new(crate::core::QuantityKind::Energy, reference_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, computed),
+            Quantity::new(crate::document::QuantityKind::Energy, reference_kwh),
             "building-level ventilation fan energy",
             AnnexChoice::De,
         )
@@ -460,7 +460,7 @@ pub mod part_5_1 {
     /// ✅️ Check that the night setback is deep enough to count as a building-level energy-saving measure.
     pub fn check_night_setback(occupancy: OccupancyType, configured_k: f64) -> CheckResult {
         let required = night_setback_k(occupancy);
-        CheckResult::from_minimum(ClauseId::new("EN 16798-5-1", "§6", "6.2"), Quantity::new(crate::core::QuantityKind::Temperature, configured_k), Quantity::new(crate::core::QuantityKind::Temperature, required), "night setback depth", AnnexChoice::De)
+        CheckResult::from_minimum(ClauseId::new("EN 16798-5-1", "§6", "6.2"), Quantity::new(crate::document::QuantityKind::Temperature, configured_k), Quantity::new(crate::document::QuantityKind::Temperature, required), "night setback depth", AnnexChoice::De)
     }
 }
 // #endregion 🔖️Part5_1
@@ -483,8 +483,8 @@ pub mod part_5_2 {
         let computed = heat_recovery_savings_kwh(eta_t, m_dot_kg_s, cp_j_kgk, delta_t_c, t_h);
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-5-2", "§6", "6.3"),
-            Quantity::new(crate::core::QuantityKind::Energy, computed),
-            Quantity::new(crate::core::QuantityKind::Energy, reference_kwh),
+            Quantity::new(crate::document::QuantityKind::Energy, computed),
+            Quantity::new(crate::document::QuantityKind::Energy, reference_kwh),
             "system-level heat-recovery energy savings",
             AnnexChoice::De,
         )
@@ -506,8 +506,8 @@ pub mod part_7 {
         let computed = infiltration_rate_m3_h(n50_h_inv, volume_m3);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-7", "§6", "6.1"),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, computed),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, design_allowance_m3_h),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, computed),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, design_allowance_m3_h),
             "infiltration airflow",
             AnnexChoice::De,
         )
@@ -523,8 +523,8 @@ pub mod part_7 {
         let required = cellar_ventilation_rate(cellar_area_m2);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-7", "§6", "6.2"),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, supplied_m3_h),
-            Quantity::new(crate::core::QuantityKind::VentilationRate, required),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, supplied_m3_h),
+            Quantity::new(crate::document::QuantityKind::VentilationRate, required),
             "cellar ventilation rate",
             AnnexChoice::De,
         )
@@ -553,7 +553,7 @@ pub mod part_9 {
     #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
     pub fn check_cooling_energy_need(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64, reference_kwh: f64) -> CheckResult {
         let computed = cooling_energy_need_kwh(h_tr_w_k, h_ve_w_k, theta_e_c, theta_set_c, delta_t_h, gains_kwh, utilization_factor);
-        CheckResult::from_utilization(ClauseId::new("EN 16798-9", "§6", "6.1"), Quantity::new(crate::core::QuantityKind::Energy, computed), Quantity::new(crate::core::QuantityKind::Energy, reference_kwh), "net cooling energy need", AnnexChoice::De)
+        CheckResult::from_utilization(ClauseId::new("EN 16798-9", "§6", "6.1"), Quantity::new(crate::document::QuantityKind::Energy, computed), Quantity::new(crate::document::QuantityKind::Energy, reference_kwh), "net cooling energy need", AnnexChoice::De)
     }
 }
 // #endregion 🔖️Part9
@@ -583,8 +583,8 @@ pub mod part_13 {
     pub fn check_chiller_eer(chiller_type: ChillerType, eer_actual: f64) -> CheckResult {
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-13", "Table 5", "EER"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, eer_actual),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, eer_min(chiller_type)),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, eer_actual),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, eer_min(chiller_type)),
             "chiller EER",
             AnnexChoice::De,
         )
@@ -598,7 +598,7 @@ pub mod part_13 {
     /// ✅️ Check cooling generation energy against a reference value.
     pub fn check_generation_energy(q_c_kwh: f64, eer: f64, reference_kwh: f64) -> CheckResult {
         let computed = generation_energy_kwh(q_c_kwh, eer);
-        CheckResult::from_utilization(ClauseId::new("EN 16798-13", "§6", "6.2"), Quantity::new(crate::core::QuantityKind::Energy, computed), Quantity::new(crate::core::QuantityKind::Energy, reference_kwh), "cooling generation energy", AnnexChoice::De)
+        CheckResult::from_utilization(ClauseId::new("EN 16798-13", "§6", "6.2"), Quantity::new(crate::document::QuantityKind::Energy, computed), Quantity::new(crate::document::QuantityKind::Energy, reference_kwh), "cooling generation energy", AnnexChoice::De)
     }
 
     /// 🖥️ Data center supply air temperature band [°C] (folded TR EN 16798-16).
@@ -610,12 +610,12 @@ pub mod part_13 {
     pub fn check_supply_air_temperature(t_supply_c: f64) -> CheckResult {
         let (t_min, t_max) = supply_air_temperature_band_c();
         let within = t_supply_c >= t_min && t_supply_c <= t_max;
-        let status = if within { crate::core::CheckStatus::Pass } else { crate::core::CheckStatus::Fail };
+        let status = if within { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail };
         CheckResult {
             clause: ClauseId::new("EN 16798-13", "§7", "7.2"),
             status,
-            computed: Quantity::new(crate::core::QuantityKind::Temperature, t_supply_c),
-            limit: Quantity::new(crate::core::QuantityKind::Temperature, t_max),
+            computed: Quantity::new(crate::document::QuantityKind::Temperature, t_supply_c),
+            limit: Quantity::new(crate::document::QuantityKind::Temperature, t_max),
             utilization: if within { 0.0 } else { 1.1 },
             message: "data center supply air temperature".into(),
             annex: AnnexChoice::De,
@@ -636,7 +636,7 @@ pub mod part_15 {
     /// ✅️ Check storage losses against an allowance.
     pub fn check_storage_losses(h_st_w_k: f64, theta_st_c: f64, theta_amb_c: f64, t_h: f64, allowance_kwh: f64) -> CheckResult {
         let computed = storage_losses_kwh(h_st_w_k, theta_st_c, theta_amb_c, t_h);
-        CheckResult::from_utilization(ClauseId::new("EN 16798-15", "§6", "6.1"), Quantity::new(crate::core::QuantityKind::Energy, computed), Quantity::new(crate::core::QuantityKind::Energy, allowance_kwh), "storage losses", AnnexChoice::De)
+        CheckResult::from_utilization(ClauseId::new("EN 16798-15", "§6", "6.1"), Quantity::new(crate::document::QuantityKind::Energy, computed), Quantity::new(crate::document::QuantityKind::Energy, allowance_kwh), "storage losses", AnnexChoice::De)
     }
 
     /// 🚿️ DHW delivery temperature band [°C] (folded TR EN 16798-14).
@@ -648,12 +648,12 @@ pub mod part_15 {
     pub fn check_dhw_temperature(t_delivery_c: f64) -> CheckResult {
         let (t_min, t_max) = dhw_delivery_temperature_band_c();
         let within = t_delivery_c >= t_min && t_delivery_c <= t_max;
-        let status = if within { crate::core::CheckStatus::Pass } else { crate::core::CheckStatus::Fail };
+        let status = if within { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail };
         CheckResult {
             clause: ClauseId::new("EN 16798-15", "§7", "7.1"),
             status,
-            computed: Quantity::new(crate::core::QuantityKind::Temperature, t_delivery_c),
-            limit: Quantity::new(crate::core::QuantityKind::Temperature, t_max),
+            computed: Quantity::new(crate::document::QuantityKind::Temperature, t_delivery_c),
+            limit: Quantity::new(crate::document::QuantityKind::Temperature, t_max),
             utilization: if within { 0.0 } else { 1.1 },
             message: "DHW delivery temperature".into(),
             annex: AnnexChoice::De,
@@ -695,8 +695,8 @@ pub mod part_17 {
         let limit = leakage_limit_m3_s_m2(class, test_pressure_pa);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-17", "§8", "8.2"),
-            Quantity::new(crate::core::QuantityKind::AirPermeability, measured_m3_s_m2),
-            Quantity::new(crate::core::QuantityKind::AirPermeability, limit),
+            Quantity::new(crate::document::QuantityKind::AirPermeability, measured_m3_s_m2),
+            Quantity::new(crate::document::QuantityKind::AirPermeability, limit),
             "ductwork leakage class",
             AnnexChoice::De,
         )
@@ -862,7 +862,7 @@ pub struct DinEn16798Family;
 
 impl NormFamily for DinEn16798Family {
     type Document = Document;
-    type Operation = crate::core::SetDocumentOperation<Document>;
+    type Operation = crate::document::SetDocumentOperation<Document>;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinEn16798
@@ -890,7 +890,7 @@ mod tests {
     #[test]
     fn pmv_comfort_passes_for_office_conditions() {
         let check = part_1::check_pmv_comfort(24.0, 50.0, 0.1);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
         assert!(check.utilization < 1.0);
     }
 
@@ -907,7 +907,7 @@ mod tests {
         let centre = part_1::adaptive_comfort_temperature_c(20.0);
         assert!((centre - 25.4).abs() < 1e-9, "centre={centre}");
         let check = part_1::check_adaptive_comfort(20.0, 24.0, part_1::ComfortCategory::II);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -918,23 +918,23 @@ mod tests {
         assert!((de.co2_limit_classroom_ppm - 800.0).abs() < 1e-9);
         let en_check = part_1::check_co2_level(OccupancyType::Classroom, 850.0, &en);
         let de_check = part_1::check_co2_level(OccupancyType::Classroom, 850.0, &de);
-        assert_eq!(en_check.status, crate::core::CheckStatus::Pass);
-        assert_eq!(de_check.status, crate::core::CheckStatus::Fail);
+        assert_eq!(en_check.status, crate::document::CheckStatus::Pass);
+        assert_eq!(de_check.status, crate::document::CheckStatus::Fail);
     }
 
     #[test]
     fn daylight_factor_category_ii_minimum() {
         assert!((part_1::daylight_factor_min_percent(part_1::ComfortCategory::II) - 2.0).abs() < 1e-9);
         let pass = part_1::check_daylight_factor(part_1::ComfortCategory::II, 2.5);
-        assert_eq!(pass.status, crate::core::CheckStatus::Pass);
+        assert_eq!(pass.status, crate::document::CheckStatus::Pass);
         let fail = part_1::check_daylight_factor(part_1::ComfortCategory::II, 1.0);
-        assert_eq!(fail.status, crate::core::CheckStatus::Fail);
+        assert_eq!(fail.status, crate::document::CheckStatus::Fail);
     }
 
     #[test]
     fn acoustic_category_ii_limit() {
         let check = part_1::check_acoustic_category(part_1::ComfortCategory::II, 24.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -945,7 +945,7 @@ mod tests {
         assert_eq!(part_3::outdoor_air_per_person(OccupancyType::Retail), 20.0);
         assert_eq!(part_3::outdoor_air_per_person(OccupancyType::Kitchen), 60.0);
         let office = part_3::check_ventilation_rate(OccupancyType::Office, 10, part_3::IdaClass::Ida2, 360.0);
-        assert_eq!(office.status, crate::core::CheckStatus::Pass);
+        assert_eq!(office.status, crate::document::CheckStatus::Pass);
         assert!((office.limit.value - 360.0).abs() < 1e-9);
     }
 
@@ -955,7 +955,7 @@ mod tests {
         assert!((sfp_w_m3_s - 1500.0).abs() < 1e-9);
         assert_eq!(part_3::classify_sfp(sfp_w_m3_s), part_3::SfpClass::Sfp4);
         let check = part_3::check_design_sfp(sfp_w_m3_s, part_3::SfpClass::Sfp4);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -973,19 +973,19 @@ mod tests {
     #[test]
     fn heat_recovery_efficiency_minimum() {
         let check = part_3::check_heat_recovery_efficiency(0.75, 0.70);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
     fn inspection_due_within_interval() {
         let check = part_3::check_inspection_due("central_mech", 1);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
     fn humidification_capacity_meets_requirement() {
         let check = part_3::check_humidification_capacity(2.0, 2.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -993,13 +993,13 @@ mod tests {
         let energy = part_5_1::fan_energy_kwh(1500.0, 1.0, 8.0);
         assert!((energy - 12.0).abs() < 1e-9, "energy={energy}");
         let check = part_5_1::check_building_fan_energy(1500.0, 1.0, 8.0, 15.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
     fn night_setback_residential_minimum() {
         let check = part_5_1::check_night_setback(OccupancyType::Residential, 3.5);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -1007,7 +1007,7 @@ mod tests {
         let savings = part_5_2::heat_recovery_savings_kwh(0.75, 0.5, part_5_2::AIR_CP_J_KGK, 15.0, 10.0);
         assert!((savings - 56.53125).abs() < 1e-6, "savings={savings}");
         let check = part_5_2::check_heat_recovery_savings(0.75, 0.5, part_5_2::AIR_CP_J_KGK, 15.0, 10.0, 50.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -1015,7 +1015,7 @@ mod tests {
         let rate = part_7::infiltration_rate_m3_h(1.5, 500.0);
         assert!((rate - 37.5).abs() < 1e-9, "rate={rate}");
         let check = part_7::check_infiltration(1.5, 500.0, 45.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -1029,14 +1029,14 @@ mod tests {
         let net = part_9::cooling_energy_need_kwh(200.0, 100.0, 32.0, 26.0, 10.0, 5.0, 0.8);
         assert!((net - 14.0).abs() < 1e-9, "net={net}");
         let check = part_9::check_cooling_energy_need(200.0, 100.0, 32.0, 26.0, 10.0, 5.0, 0.8, 20.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
     fn chiller_eer_table_lookup_air_cooled() {
         assert!((part_13::eer_min(part_13::ChillerType::AirCooled) - 2.5).abs() < 1e-9);
         let check = part_13::check_chiller_eer(part_13::ChillerType::AirCooled, 3.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
         let generation = part_13::generation_energy_kwh(1000.0, 3.0);
         assert!((generation - 333.3333333333333).abs() < 1e-6, "generation={generation}");
     }
@@ -1044,7 +1044,7 @@ mod tests {
     #[test]
     fn data_center_supply_air_22c_passes() {
         let check = part_13::check_supply_air_temperature(22.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -1052,13 +1052,13 @@ mod tests {
         let losses = part_15::storage_losses_kwh(5.0, 60.0, 20.0, 24.0);
         assert!((losses - 4.8).abs() < 1e-9, "losses={losses}");
         let check = part_15::check_storage_losses(5.0, 60.0, 20.0, 24.0, 6.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
     fn dhw_delivery_temperature_58c_passes() {
         let check = part_15::check_dhw_temperature(58.0);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -1066,7 +1066,7 @@ mod tests {
         let limit = part_17::leakage_limit_m3_s_m2(part_17::DuctLeakageClass::C, 400.0);
         assert!((limit - 0.1473873631338949).abs() < 1e-6, "limit={limit}");
         let check = part_17::check_duct_leakage(part_17::DuctLeakageClass::C, 400.0, 0.10);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]

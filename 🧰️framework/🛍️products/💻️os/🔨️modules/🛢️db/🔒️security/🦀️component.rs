@@ -2,7 +2,7 @@
 //! document/command-kind/object/field/historical/preview), an injectable-`Signer`/
 //! `SignatureVerifier` signing bridge (`protocol_core`'s crypto traits — this crate never picks a
 //! concrete scheme), a bounded replay guard, token-bucket DoS budgets, structural field
-//! redaction, tenant isolation, and audit event emission over `db_core::Emit`. Frozen contract:
+//! redaction, tenant isolation, and audit event emission over `Emit`. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
@@ -26,7 +26,7 @@
 
 //#region 🔖️Identity
 /// @emoji 🏢️ A tenant's identity — the isolation unit `check_tenant` gates on. Kept as its own
-/// newtype (distinct from `protocol::ActorId`/`db_core::ActorId`) since one tenant spans many
+/// newtype (distinct from `protocol::ActorId`/`ActorId`) since one tenant spans many
 /// actors and a `Principal` always belongs to exactly one.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct TenantId(pub String);
@@ -51,7 +51,7 @@ impl From<String> for TenantId {
 
 /// @emoji 🪪️ The authenticated caller a `SecurityGate` decision is made against: which actor,
 /// which tenant they belong to, and which roles `RoleBasedPolicy` grants are matched against.
-/// Deliberately carries `protocol::ActorId` (not `db_core::ActorId`) — see module doc: this crate
+/// Deliberately carries `protocol::ActorId` (not `ActorId`) — see module doc: this crate
 /// authorizes the same actor identity that flows through `protocol::OperationEnvelope`.
 #[derive(Clone, Debug)]
 pub struct Principal {
@@ -76,11 +76,11 @@ impl Principal {
 /// @emoji 🚧️ Tenant isolation: succeeds only if `principal` belongs to `resource_tenant`. Kept as
 /// a standalone check (not folded into `RoleBasedPolicy`) since it is a hard boundary that must
 /// hold regardless of any role grant — a policy misconfiguration must never leak across tenants.
-pub fn check_tenant(principal: &Principal, resource_tenant: &TenantId) -> Result<(), db_core::DbError> {
+pub fn check_tenant(principal: &Principal, resource_tenant: &TenantId) -> Result<(), DbError> {
     if &principal.tenant == resource_tenant {
         Ok(())
     } else {
-        Err(db_core::DbError::Unauthorized(format!("tenant isolation: principal '{}' (tenant {}) may not act on resource tenant {}", principal.actor.0, principal.tenant.0, resource_tenant.0)))
+        Err(DbError::Unauthorized(format!("tenant isolation: principal '{}' (tenant {}) may not act on resource tenant {}", principal.actor.0, principal.tenant.0, resource_tenant.0)))
     }
 }
 //#endregion 🔖️Identity
@@ -173,10 +173,10 @@ impl Decision {
     }
 
     /// @emoji 🔀️ Collapses the decision into the family's standard `Result` shape.
-    pub fn into_result(self) -> Result<(), db_core::DbError> {
+    pub fn into_result(self) -> Result<(), DbError> {
         match self {
             Decision::Allow => Ok(()),
-            Decision::Deny { reason } => Err(db_core::DbError::Unauthorized(reason)),
+            Decision::Deny { reason } => Err(DbError::Unauthorized(reason)),
         }
     }
 }
@@ -305,20 +305,20 @@ pub struct Signature {
 }
 
 /// @emoji 🔀️ Maps `protocol::ProtocolError` (the error type `Signer`/`SignatureVerifier` return)
-/// onto this family's `DbError` by category, mirroring `db_core`'s `From<pack_core::PackError>`.
-fn map_protocol_error(err: protocol::ProtocolError) -> db_core::DbError {
+/// onto this family's `DbError` by category, mirroring `db_core`'s `From<pack::PackError>`.
+fn map_protocol_error(err: protocol::ProtocolError) -> DbError {
     match err {
-        protocol::ProtocolError::LimitExceeded(what) => db_core::DbError::LimitExceeded(what),
-        protocol::ProtocolError::Io(message) => db_core::DbError::Io(message),
-        protocol::ProtocolError::SignatureInvalid { .. } | protocol::ProtocolError::VerifierRequired => db_core::DbError::Unauthorized(err.to_string()),
-        other => db_core::DbError::Internal(other.to_string()),
+        protocol::ProtocolError::LimitExceeded(what) => DbError::LimitExceeded(what),
+        protocol::ProtocolError::Io(message) => DbError::Io(message),
+        protocol::ProtocolError::SignatureInvalid { .. } | protocol::ProtocolError::VerifierRequired => DbError::Unauthorized(err.to_string()),
+        other => DbError::Internal(other.to_string()),
     }
 }
 
 /// @emoji ✍️ Signs `message` (typically a commit/frontier `chain_hash`) with an injected
 /// `Signer` — this crate never picks a concrete scheme, matching the contract's "signatures via
 /// injected `Signer`/`Verifier` traits" wording.
-pub fn sign_message(signer: &dyn protocol::Signer, message: &[u8; 32]) -> Result<Signature, db_core::DbError> {
+pub fn sign_message(signer: &dyn protocol::Signer, message: &[u8; 32]) -> Result<Signature, DbError> {
     let bytes = signer.sign(message).map_err(map_protocol_error)?;
     Ok(Signature { scheme: signer.scheme().to_string(), key_id: signer.key_id().to_string(), bytes })
 }
@@ -327,12 +327,12 @@ pub fn sign_message(signer: &dyn protocol::Signer, message: &[u8; 32]) -> Result
 /// from a raw `bool` return: a cryptographically-valid-but-false verification and a
 /// verifier-internal error both surface as `Err`, but with different `DbError` variants, so a
 /// caller can tell "rejected" from "verifier broken" without inspecting a string.
-pub fn verify_signature(verifier: &dyn protocol::SignatureVerifier, signature: &Signature, message: &[u8; 32]) -> Result<(), db_core::DbError> {
+pub fn verify_signature(verifier: &dyn protocol::SignatureVerifier, signature: &Signature, message: &[u8; 32]) -> Result<(), DbError> {
     let ok = verifier.verify(&signature.scheme, &signature.key_id, message, &signature.bytes).map_err(map_protocol_error)?;
     if ok {
         Ok(())
     } else {
-        Err(db_core::DbError::Unauthorized(format!("signature verification failed for key '{}'", signature.key_id)))
+        Err(DbError::Unauthorized(format!("signature verification failed for key '{}'", signature.key_id)))
     }
 }
 //#endregion 🔖️Signing
@@ -362,7 +362,7 @@ impl ReplayGuard {
     /// rejects with `DbError::Conflict` if `operation_id` is still tracked; otherwise records it
     /// (evicting the oldest entry first if `capacity_per_actor` would be exceeded) and returns
     /// `Ok`.
-    pub fn check_and_record(&mut self, actor: &protocol::ActorId, operation_id: &protocol::OperationId, physical_ms: u64) -> Result<(), db_core::DbError> {
+    pub fn check_and_record(&mut self, actor: &protocol::ActorId, operation_id: &protocol::OperationId, physical_ms: u64) -> Result<(), DbError> {
         let deque = self.order.entry(actor.clone()).or_default();
         let set = self.seen.entry(actor.clone()).or_default();
 
@@ -377,7 +377,7 @@ impl ReplayGuard {
         }
 
         if set.contains(operation_id) {
-            return Err(db_core::DbError::Conflict(format!("replayed operation '{}' by actor '{}' within {}ms window", operation_id.0, actor.0, self.window_ms)));
+            return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}' within {}ms window", operation_id.0, actor.0, self.window_ms)));
         }
 
         if deque.len() >= self.capacity_per_actor {
@@ -438,13 +438,13 @@ impl BudgetRegistry {
 
     /// @emoji 🎟️ Attempts to consume `cost` tokens from `key`'s bucket at `now_ms`. Returns
     /// `DbError::LimitExceeded` if the bucket doesn't have enough tokens yet.
-    pub fn try_consume(&mut self, key: &str, cost: u32, now_ms: u64) -> Result<(), db_core::DbError> {
+    pub fn try_consume(&mut self, key: &str, cost: u32, now_ms: u64) -> Result<(), DbError> {
         let (capacity, refill_per_sec) = (self.capacity, self.refill_per_sec);
         let bucket = self.buckets.entry(key.to_string()).or_insert_with(|| TokenBucket::new(capacity, refill_per_sec, now_ms));
         if bucket.try_consume(cost, now_ms) {
             Ok(())
         } else {
-            Err(db_core::DbError::LimitExceeded("dos budget exceeded"))
+            Err(DbError::LimitExceeded("dos budget exceeded"))
         }
     }
 }
@@ -452,7 +452,7 @@ impl BudgetRegistry {
 
 //#region 🔖️Redaction
 /// @emoji 🛡️ A depth ceiling for `redact_fields`'s recursion. Not a contract number — this
-/// crate's own hardening choice, mirroring `db_core::check_len`'s "validate before allocating"
+/// crate's own hardening choice, mirroring `check_len`'s "validate before allocating"
 /// spirit for the recursive case: an adversarially-deep JSON payload could otherwise blow the
 /// stack before any redaction decision is even made, so depth beyond the ceiling is redacted
 /// outright (deny-by-default) rather than passed through unredacted or allowed to recurse further.
@@ -503,21 +503,21 @@ fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &
 //#endregion 🔖️Redaction
 
 //#region 🔖️Audit
-/// @emoji 📣️ Emits a `security.authz_allowed`/`security.authz_denied` `db_core::EmitEvent` for
-/// one policy decision, via the family's shared `Emit` seam (see `db_core::Emit`'s doc for why
+/// @emoji 📣️ Emits a `security.authz_allowed`/`security.authz_denied` `EmitEvent` for
+/// one policy decision, via the family's shared `Emit` seam (see `Emit`'s doc for why
 /// this crate takes `&dyn Emit` rather than depending on `db_observe` directly).
-pub fn audit_decision(emit: &dyn db_core::Emit, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
+pub fn audit_decision(emit: &dyn Emit, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
     let name = if decision.is_allowed() { "security.authz_allowed" } else { "security.authz_denied" };
-    let mut event = db_core::EmitEvent::new(name)
-        .field("actor", db_core::EmitField::Text(principal.actor.0.clone()))
-        .field("tenant", db_core::EmitField::Text(principal.tenant.0.clone()))
-        .field("action", db_core::EmitField::Text(format!("{action:?}")))
-        .field("scope", db_core::EmitField::Text(scope.segments().join("/")));
+    let mut event = EmitEvent::new(name)
+        .field("actor", EmitField::Text(principal.actor.0.clone()))
+        .field("tenant", EmitField::Text(principal.tenant.0.clone()))
+        .field("action", EmitField::Text(format!("{action:?}")))
+        .field("scope", EmitField::Text(scope.segments().join("/")));
     if let Some(document) = scope.document() {
-        event = event.with_document(db_core::DocumentId::from(document.0.clone()));
+        event = event.with_document(DocumentId::from(document.0.clone()));
     }
     if let Decision::Deny { reason } = decision {
-        event = event.field("reason", db_core::EmitField::Text(reason.clone()));
+        event = event.field("reason", EmitField::Text(reason.clone()));
     }
     emit.emit(event);
 }
@@ -525,19 +525,19 @@ pub fn audit_decision(emit: &dyn db_core::Emit, principal: &Principal, scope: &A
 /// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_command` calls this
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
-pub fn audit_replay_rejected(emit: &dyn db_core::Emit, actor: &protocol::ActorId, operation_id: &protocol::OperationId, document: &protocol::DocumentId) {
+pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, operation_id: &protocol::OperationId, document: &protocol::DocumentId) {
     emit.emit(
-        db_core::EmitEvent::new("security.replay_rejected")
-            .with_document(db_core::DocumentId::from(document.0.clone()))
-            .field("actor", db_core::EmitField::Text(actor.0.clone()))
-            .field("operation_id", db_core::EmitField::Text(operation_id.0.clone())),
+        EmitEvent::new("security.replay_rejected")
+            .with_document(DocumentId::from(document.0.clone()))
+            .field("actor", EmitField::Text(actor.0.clone()))
+            .field("operation_id", EmitField::Text(operation_id.0.clone())),
     );
 }
 
 /// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_command` calls this
 /// when `BudgetRegistry` rejects a submission.
-pub fn audit_budget_exceeded(emit: &dyn db_core::Emit, key: &str, document: &protocol::DocumentId) {
-    emit.emit(db_core::EmitEvent::new("security.budget_exceeded").with_document(db_core::DocumentId::from(document.0.clone())).field("key", db_core::EmitField::Text(key.to_string())));
+pub fn audit_budget_exceeded(emit: &dyn Emit, key: &str, document: &protocol::DocumentId) {
+    emit.emit(EmitEvent::new("security.budget_exceeded").with_document(DocumentId::from(document.0.clone())).field("key", EmitField::Text(key.to_string())));
 }
 //#endregion 🔖️Audit
 
@@ -551,24 +551,24 @@ fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 
 /// @emoji 🚪️ The composition root: everything `db_document`'s pipeline needs from this crate for
 /// its "admit → dedupe → ... → authz" stages, bundled behind one type. Every piece
-/// (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, `db_core::Emit`) is independently usable —
+/// (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, `Emit`) is independently usable —
 /// `SecurityGate` is a convenience, not the only entry point.
 pub struct SecurityGate {
     policy: RoleBasedPolicy,
     replay: std::sync::Mutex<ReplayGuard>,
     budgets: std::sync::Mutex<BudgetRegistry>,
-    emit: std::sync::Arc<dyn db_core::Emit>,
+    emit: std::sync::Arc<dyn Emit>,
 }
 
 impl SecurityGate {
-    pub fn new(policy: RoleBasedPolicy, replay: ReplayGuard, budgets: BudgetRegistry, emit: std::sync::Arc<dyn db_core::Emit>) -> Self {
+    pub fn new(policy: RoleBasedPolicy, replay: ReplayGuard, budgets: BudgetRegistry, emit: std::sync::Arc<dyn Emit>) -> Self {
         Self { policy, replay: std::sync::Mutex::new(replay), budgets: std::sync::Mutex::new(budgets), emit }
     }
 
     /// @emoji ⚖️ Evaluates `scope`/`action` against the gate's policy, audits the decision, and
     /// collapses it into a `Result` — the single authz entry point every scope granularity (db,
     /// document, command-kind, object, field, historical, preview) shares.
-    pub fn authorize(&self, principal: &Principal, scope: &AuthzScope, action: Action) -> Result<(), db_core::DbError> {
+    pub fn authorize(&self, principal: &Principal, scope: &AuthzScope, action: Action) -> Result<(), DbError> {
         let decision = self.policy.evaluate(principal, scope, action);
         audit_decision(self.emit.as_ref(), principal, scope, action, &decision);
         decision.into_result()
@@ -589,16 +589,16 @@ impl SecurityGate {
         envelope_actor: &protocol::ActorId,
         operation_id: &protocol::OperationId,
         physical_ms: u64,
-    ) -> Result<(), db_core::DbError> {
+    ) -> Result<(), DbError> {
         check_tenant(principal, resource_tenant)?;
         self.authorize(principal, &AuthzScope::CommandKind { document: document.clone(), kind: kind.to_string() }, Action::Write)?;
         if lock(&self.budgets).try_consume(&principal.actor.0, 1, physical_ms).is_err() {
             audit_budget_exceeded(self.emit.as_ref(), &principal.actor.0, document);
-            return Err(db_core::DbError::LimitExceeded("dos budget exceeded"));
+            return Err(DbError::LimitExceeded("dos budget exceeded"));
         }
         if lock(&self.replay).check_and_record(envelope_actor, operation_id, physical_ms).is_err() {
             audit_replay_rejected(self.emit.as_ref(), envelope_actor, operation_id, document);
-            return Err(db_core::DbError::Conflict(format!("replayed operation '{}' by actor '{}'", operation_id.0, envelope_actor.0)));
+            return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}'", operation_id.0, envelope_actor.0)));
         }
         Ok(())
     }
@@ -634,7 +634,7 @@ mod tests {
     fn check_tenant_allows_matching_and_rejects_mismatched() {
         let p = principal("editor");
         assert!(check_tenant(&p, &TenantId::from("tenant-1")).is_ok());
-        assert!(matches!(check_tenant(&p, &TenantId::from("tenant-2")), Err(db_core::DbError::Unauthorized(_))));
+        assert!(matches!(check_tenant(&p, &TenantId::from("tenant-2")), Err(DbError::Unauthorized(_))));
     }
 
     #[test]
@@ -708,7 +708,7 @@ mod tests {
     fn decision_into_result_maps_deny_to_unauthorized() {
         assert!(Decision::Allow.into_result().is_ok());
         let err = Decision::Deny { reason: "nope".to_string() }.into_result().unwrap_err();
-        assert!(matches!(err, db_core::DbError::Unauthorized(reason) if reason == "nope"));
+        assert!(matches!(err, DbError::Unauthorized(reason) if reason == "nope"));
     }
     //#endregion 🔖️Policy
 
@@ -788,13 +788,13 @@ mod tests {
         let signature = Signature { scheme: "test-scheme".to_string(), key_id: "test-key".to_string(), bytes: vec![9, 9, 9] };
         let verifier = ExactVerifier { expected: vec![1, 2, 3] };
         let err = verify_signature(&verifier, &signature, &[0u8; 32]).unwrap_err();
-        assert!(matches!(err, db_core::DbError::Unauthorized(_)));
+        assert!(matches!(err, DbError::Unauthorized(_)));
     }
 
     #[test]
     fn sign_message_maps_protocol_error_by_category() {
         let err = sign_message(&FailingSigner, &[0u8; 32]).unwrap_err();
-        assert_eq!(err, db_core::DbError::LimitExceeded("too big"));
+        assert_eq!(err, DbError::LimitExceeded("too big"));
     }
     //#endregion 🔖️Signing
 
@@ -806,7 +806,7 @@ mod tests {
         let o = op("op-1");
         assert!(guard.check_and_record(&a, &o, 0).is_ok());
         let err = guard.check_and_record(&a, &o, 500).unwrap_err();
-        assert!(matches!(err, db_core::DbError::Conflict(_)));
+        assert!(matches!(err, DbError::Conflict(_)));
     }
 
     #[test]
@@ -844,7 +844,7 @@ mod tests {
         let mut budgets = BudgetRegistry::new(2, 1);
         assert!(budgets.try_consume("alice", 1, 0).is_ok());
         assert!(budgets.try_consume("alice", 1, 0).is_ok());
-        assert!(matches!(budgets.try_consume("alice", 1, 0), Err(db_core::DbError::LimitExceeded(_))));
+        assert!(matches!(budgets.try_consume("alice", 1, 0), Err(DbError::LimitExceeded(_))));
         assert!(budgets.try_consume("alice", 1, 1_000).is_ok());
     }
 
@@ -911,10 +911,10 @@ mod tests {
 
     //#region 🔖️Audit
     struct RecordingEmit {
-        events: std::sync::Mutex<Vec<db_core::EmitEvent>>,
+        events: std::sync::Mutex<Vec<EmitEvent>>,
     }
-    impl db_core::Emit for RecordingEmit {
-        fn emit(&self, event: db_core::EmitEvent) {
+    impl Emit for RecordingEmit {
+        fn emit(&self, event: EmitEvent) {
             self.events.lock().unwrap().push(event);
         }
     }
@@ -926,7 +926,7 @@ mod tests {
         audit_decision(&sink, &principal("editor"), &AuthzScope::Document { document: doc("doc-1") }, Action::Read, &decision);
         let events = sink.events.lock().unwrap();
         assert_eq!(events[0].name, "security.authz_denied");
-        assert_eq!(events[0].document, Some(db_core::DocumentId::from("doc-1")));
+        assert_eq!(events[0].document, Some(DocumentId::from("doc-1")));
     }
     //#endregion 🔖️Audit
 
@@ -941,12 +941,12 @@ mod tests {
         assert!(gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 0).is_ok());
 
         let budget_err = gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-2"), 0).unwrap_err();
-        assert!(matches!(budget_err, db_core::DbError::LimitExceeded(_)));
+        assert!(matches!(budget_err, DbError::LimitExceeded(_)));
 
         let gate2 = SecurityGate::new(RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write])), ReplayGuard::new(10_000, 16), BudgetRegistry::new(10, 1), sink);
         assert!(gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 0).is_ok());
         let replay_err = gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 100).unwrap_err();
-        assert!(matches!(replay_err, db_core::DbError::Conflict(_)));
+        assert!(matches!(replay_err, DbError::Conflict(_)));
     }
 
     #[test]
@@ -956,7 +956,7 @@ mod tests {
         let gate = SecurityGate::new(policy, ReplayGuard::new(10_000, 16), BudgetRegistry::new(10, 1), sink);
         let editor = principal("editor");
         let err = gate.admit_command(&editor, &TenantId::from("tenant-2"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 0).unwrap_err();
-        assert!(matches!(err, db_core::DbError::Unauthorized(_)));
+        assert!(matches!(err, DbError::Unauthorized(_)));
     }
 
     #[test]

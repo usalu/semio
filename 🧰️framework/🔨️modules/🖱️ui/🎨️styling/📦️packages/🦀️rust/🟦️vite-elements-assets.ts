@@ -1383,9 +1383,7 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-logic",
   "@semio-tech/flow-module-dictionary",
   "@semio-tech/flow-module-list",
-  "@semio-tech/flow-module-brep",
   "@semio-tech/flow-module-draw",
-  "@semio-tech/flow-module-bim",
 ] as const;
 
 /** @emoji 🧭️ Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */

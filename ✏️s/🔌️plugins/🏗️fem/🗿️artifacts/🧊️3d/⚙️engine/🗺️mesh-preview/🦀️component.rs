@@ -3,12 +3,12 @@
 
 use crate::artifacts::fem3d::engine::{meshing, Fem3dError};
 use crate::artifacts::fem3d::Fem3dDocument;
-use crate::core::analyses;
+use crate::model::analyses;
 use std::collections::HashMap;
 
 /// 🗺️ One meshed solid's cheap preview geometry — the full volume mesh (points/tets) plus its outer
-/// boundary triangulation (via `crate::core::mesh::boundary_faces`) for surface rendering, WITHOUT
-/// building any `crate::core::Element`. Mirrors `fem_2d::RegionMesh`/`fem2d_mesh_preview`.
+/// boundary triangulation (via `crate::mesh::boundary_faces`) for surface rendering, WITHOUT
+/// building any `crate::model::Element`. Mirrors `fem_2d::RegionMesh`/`fem2d_mesh_preview`.
 pub struct SolidMesh {
     pub solid_id: String,
     pub points: Vec<[f64; 3]>,
@@ -17,17 +17,17 @@ pub struct SolidMesh {
     pub node_ids: Vec<String>,
 }
 
-/// 🗺️ Triangulates+extrudes+tet-splits every `FemSolid` in `doc` (same deterministic `crate::core::mesh`
+/// 🗺️ Triangulates+extrudes+tet-splits every `FemSolid` in `doc` (same deterministic `crate::model::mesh`
 /// calls as `resolve_geometry`, so tet indices line up with `"{solid_id}_c{i}"` element ids) and returns
 /// just the geometry plus its outer surface — cheap enough for every render.
 pub fn fem3d_mesh_preview(doc: &Fem3dDocument) -> Result<Vec<SolidMesh>, Fem3dError> {
     let mut out = Vec::with_capacity(doc.solids.len());
     for solid in &doc.solids {
-        let domain = crate::core::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
-        let opts = crate::core::mesh::MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = crate::core::mesh::triangulate(&domain, &opts).map_err(|e| Fem3dError::MeshFailed { solid_id: solid.id.clone(), reason: e.to_string() })?;
-        let volume_mesh = crate::core::mesh::extrude_tri_mesh(&tri_mesh, solid.height, solid.layers.max(1));
-        let tet_mesh = crate::core::mesh::split_to_tets(&volume_mesh);
+        let domain = crate::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
+        let opts = crate::mesh::MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 };
+        let tri_mesh = crate::mesh::triangulate(&domain, &opts).map_err(|e| Fem3dError::MeshFailed { solid_id: solid.id.clone(), reason: e.to_string() })?;
+        let volume_mesh = crate::mesh::extrude_tri_mesh(&tri_mesh, solid.height, solid.layers.max(1));
+        let tet_mesh = crate::mesh::split_to_tets(&volume_mesh);
         let points: Vec<[f64; 3]> = tet_mesh.points.iter().map(|p| [p[0], p[1], p[2] + solid.base_z]).collect();
         let node_ids = points
             .iter()
@@ -41,19 +41,19 @@ pub fn fem3d_mesh_preview(doc: &Fem3dDocument) -> Result<Vec<SolidMesh>, Fem3dEr
             .cells
             .iter()
             .filter_map(|c| match c {
-                crate::core::mesh::Cell::Tet4(t) => Some(*t),
+                crate::mesh::Cell::Tet4(t) => Some(*t),
                 _ => None,
             })
             .collect();
-        let boundary_mesh = crate::core::mesh::VolumeMesh { points: points.clone(), cells: tet_mesh.cells };
-        let boundary_tris = crate::core::mesh::boundary_faces(&boundary_mesh);
+        let boundary_mesh = crate::mesh::VolumeMesh { points: points.clone(), cells: tet_mesh.cells };
+        let boundary_tris = crate::mesh::boundary_faces(&boundary_mesh);
         out.push(SolidMesh { solid_id: solid.id.clone(), points, tets, boundary_tris, node_ids });
     }
     Ok(out)
 }
 
 /// 🎨️ Nodal-averaged von Mises stress for `case_id`'s solved result, keyed by node id — the
-/// document-layer bridge to `crate::core::analyses::nodal_averaged_scalar`, mirroring `fem_2d`'s
+/// document-layer bridge to `crate::analyses::nodal_averaged_scalar`, mirroring `fem_2d`'s
 /// `fem2d_nodal_von_mises`, feeding `fem-plugin`'s solid stress contour rendering.
 pub fn fem3d_nodal_von_mises(doc: &Fem3dDocument, case_id: &str) -> Result<HashMap<String, f64>, Fem3dError> {
     let (nodes, elements, _solids, supports) = meshing::resolve_geometry(doc)?;

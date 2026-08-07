@@ -1,12 +1,12 @@
 //! 🧩️ FEM 3D artifact engine — solid meshing (constitutional: engine, moved verbatim from the old
 //! `⚙️engine` crate's `🔖️SolidMeshing` region). Meshes every `FemSolid` footprint into `Tet4` elements
 //! and translates document loads (incl. `FemLoad::Area`, which needs a meshed solid's top surface) into
-//! `crate::core::Model` inputs — shared by `component.rs::build_model`/`fem3d_solve_all` and
+//! `crate::model::Model` inputs — shared by `component.rs::build_model`/`fem3d_solve_all` and
 //! `modal_buckling.rs`.
 
 use crate::artifacts::fem3d::engine::Fem3dError;
 use crate::artifacts::fem3d::{Fem3dDocument, FemElement, FemLoad};
-use crate::core::{Bar3, Dof, Element, Frame3, MemberUdl, NodalLoad, Node, Support};
+use crate::model::{Bar3, Dof, Element, Frame3, MemberUdl, NodalLoad, Node, Support};
 use std::collections::HashMap;
 
 // #region 🔖️SolidMeshing
@@ -33,7 +33,7 @@ pub struct MeshedSolid {
 pub type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedSolid>, Vec<Support>);
 
 /// 🌉️ Resolves a `Fem3dDocument`'s nodes/elements/supports (materials/sections looked up by id) plus
-/// every `FemSolid` meshed into `Tet4` elements (footprint triangulated via `crate::core::mesh::triangulate`,
+/// every `FemSolid` meshed into `Tet4` elements (footprint triangulated via `crate::mesh::triangulate`,
 /// extruded via `extrude_tri_mesh`, split via `split_to_tets` — mirrors `fem_2d::build_nodes_and_elements`'s
 /// `Tri3Cst` region meshing) — the geometry shared by `build_model`, `fem3d_solve_all`, modal, and
 /// buckling. A solid boundary point coinciding (within `1e-9`, all of x/y/z) with an existing document
@@ -73,12 +73,12 @@ pub fn resolve_geometry(doc: &Fem3dDocument) -> Result<ResolvedGeometry, Fem3dEr
     let mut meshed_solids = Vec::with_capacity(doc.solids.len());
     for solid in &doc.solids {
         let material = doc.materials.iter().find(|m| m.id == solid.material_id).ok_or_else(|| Fem3dError::MaterialNotFound(solid.material_id.clone()))?;
-        let domain = crate::core::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
-        let opts = crate::core::mesh::MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = crate::core::mesh::triangulate(&domain, &opts).map_err(|e| Fem3dError::MeshFailed { solid_id: solid.id.clone(), reason: e.to_string() })?;
+        let domain = crate::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
+        let opts = crate::mesh::MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 };
+        let tri_mesh = crate::mesh::triangulate(&domain, &opts).map_err(|e| Fem3dError::MeshFailed { solid_id: solid.id.clone(), reason: e.to_string() })?;
         let layers = solid.layers.max(1);
-        let volume_mesh = crate::core::mesh::extrude_tri_mesh(&tri_mesh, solid.height, layers);
-        let tet_mesh = crate::core::mesh::split_to_tets(&volume_mesh);
+        let volume_mesh = crate::mesh::extrude_tri_mesh(&tri_mesh, solid.height, layers);
+        let tet_mesh = crate::mesh::split_to_tets(&volume_mesh);
         let points: Vec<[f64; 3]> = tet_mesh.points.iter().map(|p| [p[0], p[1], p[2] + solid.base_z]).collect();
 
         let mut node_ids = Vec::with_capacity(points.len());
@@ -95,9 +95,9 @@ pub fn resolve_geometry(doc: &Fem3dDocument) -> Result<ResolvedGeometry, Fem3dEr
         }
 
         for (cell_index, cell) in tet_mesh.cells.iter().enumerate() {
-            let crate::core::mesh::Cell::Tet4(t) = cell else { continue };
+            let crate::mesh::Cell::Tet4(t) = cell else { continue };
             let tet_nodes = [node_ids[t[0] as usize].clone(), node_ids[t[1] as usize].clone(), node_ids[t[2] as usize].clone(), node_ids[t[3] as usize].clone()];
-            elements.push(Box::new(crate::core::elements3d::Tet4 { id: format!("{}_c{}", solid.id, cell_index), nodes: tet_nodes, e: material.e, nu: material.nu, density: material.rho }));
+            elements.push(Box::new(crate::elements3d::Tet4 { id: format!("{}_c{}", solid.id, cell_index), nodes: tet_nodes, e: material.e, nu: material.nu, density: material.rho }));
         }
 
         // The LAST extrusion layer's points are the top surface — `extrude_tri_mesh` numbers points

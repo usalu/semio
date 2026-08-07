@@ -5,7 +5,7 @@
 
 use crate::apps::block3d::config::{block3d_window_view, Block3dBrushPreview, Block3dConfig, Block3dWindowView};
 use crate::artifacts::block3d::{Block3dDefinition, Block3dVortexKind};
-use crate::core::BlockRepresentation;
+use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 use serde_json::json;
 
@@ -34,7 +34,7 @@ pub fn instance_offset_for_representation(definition: &Block3dDefinition, view: 
 //#endregion 🔖️Visibility
 
 //#region 🔖️Scene
-pub fn effective_camera<'a>(definition: &'a Block3dDefinition, config: &'a Block3dConfig) -> &'a crate::core::BlockCamera3d {
+pub fn effective_camera<'a>(definition: &'a Block3dDefinition, config: &'a Block3dConfig) -> &'a crate::BlockCamera3d {
     config.camera.as_ref().unwrap_or(&definition.camera3d)
 }
 

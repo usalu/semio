@@ -2,7 +2,7 @@
 
 use crate::artifacts::en1992::{part_1_2::FireRating, part_3::TightnessClass, Document};
 use crate::artifacts::en1992::op::Operation;
-use crate::core::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
+use crate::document::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
 
 // #region 🔖️NaDe
 pub mod na_de {
@@ -119,7 +119,7 @@ pub mod part_1_1 {
     }
 
     pub fn check_flexure(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.1", "6.1"), Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0), Quantity::new(crate::core::QuantityKind::Moment, m_rd_knm * 1_000_000.0), "flexural ULS", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.1", "6.1"), Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0), Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0), "flexural ULS", annex)
     }
 
     pub fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
@@ -131,7 +131,7 @@ pub mod part_1_1 {
     }
 
     pub fn check_torsion(t_ed_knm: f64, t_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.3", "6.3"), Quantity::new(crate::core::QuantityKind::Moment, t_ed_knm * 1_000_000.0), Quantity::new(crate::core::QuantityKind::Moment, t_rd_knm * 1_000_000.0), "torsion ULS", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.3", "6.3"), Quantity::new(crate::document::QuantityKind::Moment, t_ed_knm * 1_000_000.0), Quantity::new(crate::document::QuantityKind::Moment, t_rd_knm * 1_000_000.0), "torsion ULS", annex)
     }
 
     pub fn check_crack_width(w_k_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {

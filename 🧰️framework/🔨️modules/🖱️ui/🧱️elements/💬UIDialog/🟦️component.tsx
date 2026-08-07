@@ -8,11 +8,11 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework-core";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { veilClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { Surface } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { veilClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { Surface } from "../🌈️Surface/🟦️component.tsx";
 import { useControlKeybinding, GLASS_OVERLAY_BOX_CLASS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Button } from "../🔘Button/🟦️component.tsx";
 // #endregion 🔌️Adapters

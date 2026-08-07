@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Handle, Position } from "@xyflow/react";
-import { useLabel, useIdLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useLabel, useIdLabel } from "../🏷️Label/🟦️component.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

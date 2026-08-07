@@ -12,8 +12,8 @@ mod native {
     use std::collections::HashMap;
     use std::path::{Path, PathBuf};
 
-    use crate::os_pack::core::{CodecId, PackSource};
-    use crate::os_spr::core::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
+    use crate::os_pack::{CodecId, PackSource};
+    use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
     use crate::os_spr::format::{parse_commit_payload, read_header, recover as recover_records, Blake3Hasher, FrameCursor, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, COMMIT_FRAME_LEN, HEADER_SIZE};
     use crate::os_spr::history::{decode_history, encode_active, encode_alternative, encode_change, encode_checkpoint, encode_doc, encode_edit, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
 
@@ -254,7 +254,7 @@ mod native {
     /// the family): `format: u8 (=1), drop_ephemeral: u8 (0/1), keep_snapshots_tag: u8
     /// (0=All, 1=LatestPerAlternative, 2=LatestN), [latest_n: varint u64 iff tag==2]`.
     fn encode_compaction_payload(options: &CompactOptions) -> Vec<u8> {
-        let mut out = crate::os_pack::core::ByteWriter::new();
+        let mut out = crate::os_pack::ByteWriter::new();
         out.write_u8(1);
         out.write_u8(options.drop_ephemeral as u8);
         match options.keep_snapshots {
@@ -277,7 +277,7 @@ mod native {
         let len = dict.len();
         if len > *base {
             let entries = dict.entries_since(*base);
-            let mut payload = crate::os_pack::core::ByteWriter::new();
+            let mut payload = crate::os_pack::ByteWriter::new();
             payload.write_u8(1);
             payload.write_varint_u64(*base as u64);
             payload.write_varint_u64(entries.len() as u64);
@@ -285,7 +285,7 @@ mod native {
                 payload.write_varint_u64(entry.len() as u64);
                 payload.write_bytes(entry.as_bytes());
             }
-            writer.write_record(crate::os_spr::core::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0))?;
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0))?;
             *base = len;
         }
         Ok(())
@@ -320,35 +320,35 @@ mod native {
 
         let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict);
         flush_dict(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::core::REC_DOC, true, &doc_payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0))?;
 
         let compaction_payload = encode_compaction_payload(options);
-        writer.write_record(crate::os_spr::core::REC_COMPACTION, true, &compaction_payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_COMPACTION, true, &compaction_payload, CodecId(0))?;
 
         let ordinals: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(i, e)| (e.id.as_str(), i as u64)).collect();
         for edit in &log.edits {
             let payload = encode_edit(edit, &mut dict, |id| ordinals.get(id).copied())?;
             flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::core::REC_EDIT, true, &payload, CodecId(0))?;
+            writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0))?;
         }
         for change in &log.changes {
             let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied())?;
             flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::core::REC_CHANGE, true, &payload, CodecId(0))?;
+            writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0))?;
         }
         for checkpoint in &log.checkpoints {
             let payload = encode_checkpoint(checkpoint, &mut dict)?;
             flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::core::REC_CHECKPOINT, true, &payload, CodecId(0))?;
+            writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0))?;
         }
         for alternative in &log.alternatives {
             let payload = encode_alternative(alternative, &mut dict)?;
             flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::core::REC_ALTERNATIVE, true, &payload, CodecId(0))?;
+            writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0))?;
         }
         let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict);
         flush_dict(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::core::REC_ACTIVE, true, &active_payload, CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0))?;
 
         writer.commit()?;
         crate::os_pack::io::write_atomic(path, &writer.into_sink())?;
@@ -602,9 +602,9 @@ mod native {
             while let Some(frame) = cursor.next_frame().unwrap() {
                 kinds.push((frame.kind, frame.payload().to_vec()));
             }
-            let doc_index = kinds.iter().position(|(kind, _)| *kind == crate::os_spr::core::REC_DOC).expect("REC_DOC present");
+            let doc_index = kinds.iter().position(|(kind, _)| *kind == crate::os_spr::REC_DOC).expect("REC_DOC present");
             let (compaction_kind, compaction_payload) = &kinds[doc_index + 1];
-            assert_eq!(*compaction_kind, crate::os_spr::core::REC_COMPACTION);
+            assert_eq!(*compaction_kind, crate::os_spr::REC_COMPACTION);
             assert_eq!(compaction_payload[1], 1, "drop_ephemeral encoded as 1");
             assert_eq!(compaction_payload[2], 2, "keep_snapshots tag 2 = LatestN");
 

@@ -8,13 +8,13 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel, uiDataLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Icon, type IconSource } from "../🔣Icons/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { useShellScopeOptional } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
-import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
+import { useFlow } from "../🧭️Flow/🟦️component.tsx";
 import { floatingMenuItemClass, ContextMenuChrome, formatKeybindingShortcut } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 

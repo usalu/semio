@@ -2,13 +2,13 @@
 
 pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
 
-use crate::os_dsl::core::{lex, Limits, TextError, TokenKind};
+use crate::os_dsl::{lex, Limits, TextError, TokenKind};
 
 /// @emoji 📐️ Parses `id@x y [z]` layer placement literals.
 pub fn parse_layer_anchor_text(text: &str) -> Result<(String, f64, f64, Option<f64>), TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
-    let id = tokens.first().ok_or_else(|| TextError::new("expected layer id", crate::os_dsl::core::TextSpan::at(1, 1)))?;
+    let id = tokens.first().ok_or_else(|| TextError::new("expected layer id", crate::os_dsl::TextSpan::at(1, 1)))?;
     if id.kind != TokenKind::Ident {
         return Err(TextError::new("expected layer id", id.span.clone()));
     }

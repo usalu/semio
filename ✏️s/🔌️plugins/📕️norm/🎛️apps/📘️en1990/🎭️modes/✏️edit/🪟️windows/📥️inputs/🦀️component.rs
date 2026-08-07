@@ -11,13 +11,13 @@ pub const BODY_INPUTS: &str = "norm.en1990.play.inputs";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::en1990::create_en1990_app`.
 pub fn definition() -> WindowKindDefinition {
-    crate::core::app::window_definition(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, "download")
+    crate::app_surface::window_definition(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, "download")
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(document: &Document) -> UiNode {
-    crate::core::app::render_document_json(document)
+    crate::app_surface::render_document_json(document)
 }
 //#endregion 🔖️Render
 

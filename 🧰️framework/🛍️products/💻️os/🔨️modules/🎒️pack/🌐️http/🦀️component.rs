@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::os_pack::async_::{AsyncPackSource, CancellationToken, LoadPriority, ReadRequest as SchedulerRead, ReadScheduler};
-use crate::os_pack::core::{ByteRange, ContentHash, PackError};
+use crate::os_pack::{ByteRange, ContentHash, PackError};
 
 /// @emoji 📨️ One range-request against `url`, optionally revalidated against a previously seen
 /// etag via `if_range_etag`.
@@ -311,7 +311,7 @@ impl LruState {
 }
 
 /// @emoji 📦️ A bounded-size in-memory LRU cache of decoded chunk bytes keyed by
-/// `crate::os_pack::core::ContentHash`, built on `HashMap` plus a manual Vec-based intrusive doubly-linked
+/// `crate::os_pack::ContentHash`, built on `HashMap` plus a manual Vec-based intrusive doubly-linked
 /// list (no external `lru` crate, no `unsafe`). Eviction runs until the entry fits within
 /// `capacity_bytes`.
 pub struct ChunkLruCache {
@@ -392,7 +392,7 @@ mod ureq_transport {
     //! @emoji 🚚️ Native `RangeTransport` impl over the blocking `ureq` HTTP client, gated
     //! behind the `ureq` feature so wasm/browser builds of the facade stay lean.
     use super::{RangeRequest, RangeResponse, RangeTransport};
-    use crate::os_pack::core::PackError;
+    use crate::os_pack::PackError;
     use std::io::Read;
 
     /// @emoji 🐎️ A `RangeTransport` backed by `ureq`, issuing a single blocking HTTP `Range`

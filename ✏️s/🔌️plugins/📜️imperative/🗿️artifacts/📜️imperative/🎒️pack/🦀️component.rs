@@ -1,7 +1,7 @@
 //! 🎒️ Imperative artifact — binary document surface + laws (constitutional: pack).
 //!
 //! `ImperativeDocument` carries a manual `store::DocumentDsl` impl (see `🗣️dsl`, not
-//! `#[derive(dsl::DslDocument)]` directly), so it did NOT automatically gain `store::DocumentPack` from
+//! `#[derive(dsl::DslRecord)]` directly), so it did NOT automatically gain `store::DocumentPack` from
 //! `dsl_derive`'s expansion. This mirrors the derive-emitted shape exactly, substituting
 //! `dsl::ImperativeDocumentDsl`'s `__dsl_spec`/`__dsl_to_record`/`__dsl_from_record` trio for `Self`'s
 //! (unavailable here) and routing through the same mirror-struct conversion `🗣️dsl::parse_dsl`/

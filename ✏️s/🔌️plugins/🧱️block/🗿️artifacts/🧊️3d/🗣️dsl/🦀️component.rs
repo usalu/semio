@@ -31,7 +31,7 @@ pub fn print_dsl(document: &Block3dDefinition) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
-    use crate::core::{BlockCamera3d, BlockKindIdentity, BlockRepresentation};
+    use crate::{BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
     pub fn nakagin_capsule() -> Block3dDefinition {
         let mut definition = Block3dDefinition {

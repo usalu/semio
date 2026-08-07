@@ -1,0 +1,4 @@
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio

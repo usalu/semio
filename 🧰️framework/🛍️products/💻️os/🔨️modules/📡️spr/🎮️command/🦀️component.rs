@@ -20,7 +20,7 @@ pub trait OperationDiff<P>: Clone + Default + serde::Serialize + serde::de::Dese
 /// @emoji 🔁️ Stored operation: emits a diff and computes backwards from pre-state. Moved from
 /// `crate::os_store::Operation` verbatim except: `operation_id`/`dependencies`/`author_id` now return the
 /// `protocol_core` id newtypes (were bare `String`) and `base_version` now returns
-/// `Option<crate::os_spr::core::DocumentVersion>` (was a bare `u64` defaulting to `0`, which conflated
+/// `Option<crate::os_spr::ids::DocumentVersion>` (was a bare `u64` defaulting to `0`, which conflated
 /// "no base" with "based on version 0" — `None` fixes that); `conflict_rule`/`state_class` are new
 /// defaulted methods so every existing `impl` recompiles unchanged; `reconcile` becomes an instance
 /// method (`&self`) returning this crate's own `ReconcileReport` instead of `crate::os_store::SpaceConflict`,
@@ -32,35 +32,35 @@ pub trait Operation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     fn diff(&self, base: &P) -> Self::Diff;
     fn backwards(&self, base: &P) -> Vec<Self>;
 
-    fn operation_id(&self) -> Option<crate::os_spr::core::OperationId> {
+    fn operation_id(&self) -> Option<crate::os_spr::ids::OperationId> {
         None
     }
-    fn dependencies(&self) -> Vec<crate::os_spr::core::OperationId> {
+    fn dependencies(&self) -> Vec<crate::os_spr::ids::OperationId> {
         Vec::new()
     }
-    fn base_version(&self) -> Option<crate::os_spr::core::DocumentVersion> {
+    fn base_version(&self) -> Option<crate::os_spr::ids::DocumentVersion> {
         None
     }
-    fn author_id(&self) -> Option<crate::os_spr::core::ActorId> {
+    fn author_id(&self) -> Option<crate::os_spr::ids::ActorId> {
         None
     }
-    fn timestamp(&self) -> Option<crate::os_spr::core::HybridLogicalTimestamp> {
+    fn timestamp(&self) -> Option<crate::os_spr::ids::HybridLogicalTimestamp> {
         None
     }
-    fn undo_policy(&self) -> crate::os_spr::core::UndoPolicy {
-        crate::os_spr::core::UndoPolicy::ExactBaseOnly
+    fn undo_policy(&self) -> crate::os_spr::UndoPolicy {
+        crate::os_spr::UndoPolicy::ExactBaseOnly
     }
-    fn merge_strategy(&self) -> crate::os_spr::core::MergeStrategyKind {
-        crate::os_spr::core::MergeStrategyKind::LwwRegister
+    fn merge_strategy(&self) -> crate::os_spr::MergeStrategyKind {
+        crate::os_spr::MergeStrategyKind::LwwRegister
     }
     /// @emoji ⚖️ Per-operation conflict declaration; defaults to `Merge(self.merge_strategy())` so a
     /// technology that only overrode `merge_strategy` keeps its exact prior collapse-to-merge shape.
-    fn conflict_rule(&self) -> crate::os_spr::core::ConflictRule {
-        crate::os_spr::core::ConflictRule::Merge(self.merge_strategy())
+    fn conflict_rule(&self) -> crate::os_spr::ConflictRule {
+        crate::os_spr::ConflictRule::Merge(self.merge_strategy())
     }
     /// @emoji 🗂️ Which durability/visibility class this operation's diffs belong to.
-    fn state_class(&self) -> crate::os_spr::core::StateClass {
-        crate::os_spr::core::StateClass::Persistent
+    fn state_class(&self) -> crate::os_spr::StateClass {
+        crate::os_spr::StateClass::Persistent
     }
     /// @emoji 🤝️ Post-materialization reconciliation pass (e.g. cross-document studio graph checks).
     /// Defaults to a no-op so every existing document kind keeps its exact prior behavior.
@@ -97,7 +97,7 @@ pub enum ReconcileSeverity {
 /// contains `\n`; `Op::parse_op` recovers an equal operation from `op.print_op()`.
 pub trait OpText: Sized {
     fn print_op(&self) -> String;
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::core::TextError>;
+    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError>;
 }
 //#endregion 🔖️OpText
 
@@ -110,8 +110,8 @@ pub trait OpText: Sized {
 /// `Op::decode_op(op.encode_op()) == op == Op::parse_op(op.print_op())`, and encoding is
 /// deterministic — byte-identical output for equal operations.
 pub trait OpBinary: Sized {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::core::ProtocolError>;
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::core::ProtocolError>;
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError>;
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError>;
 }
 //#endregion 🔖️OpBinary
 
@@ -131,9 +131,9 @@ pub trait OpBinary: Sized {
 /// `print_diff` output never contains `\n`, and `encode_diff` is deterministic.
 pub trait DiffCodec: Sized {
     fn print_diff(&self) -> String;
-    fn parse_diff(line: &str) -> Result<Self, crate::os_dsl::core::TextError>;
-    fn encode_diff(&self) -> Result<Vec<u8>, crate::os_spr::core::ProtocolError>;
-    fn decode_diff(bytes: &[u8]) -> Result<Self, crate::os_spr::core::ProtocolError>;
+    fn parse_diff(line: &str) -> Result<Self, crate::os_dsl::TextError>;
+    fn encode_diff(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError>;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError>;
 }
 //#endregion 🔖️DiffCodec
 
@@ -146,16 +146,16 @@ pub trait DiffCodec: Sized {
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct OperationMeta {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub operation_id: Option<crate::os_spr::core::OperationId>,
+    pub operation_id: Option<crate::os_spr::ids::OperationId>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub dependencies: Vec<crate::os_spr::core::OperationId>,
+    pub dependencies: Vec<crate::os_spr::ids::OperationId>,
     pub base_version: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub author_id: Option<crate::os_spr::core::ActorId>,
-    pub timestamp: crate::os_spr::core::HybridLogicalTimestamp,
-    pub undo_policy: crate::os_spr::core::UndoPolicy,
+    pub author_id: Option<crate::os_spr::ids::ActorId>,
+    pub timestamp: crate::os_spr::ids::HybridLogicalTimestamp,
+    pub undo_policy: crate::os_spr::UndoPolicy,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub payload_hash: Option<crate::os_spr::core::PayloadHash>,
+    pub payload_hash: Option<crate::os_spr::ids::PayloadHash>,
 }
 
 /// @emoji 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
@@ -195,10 +195,10 @@ pub use crate::os_vcs::{
 /// `StateClass`/`ConflictRule`, and a content-addressed `fingerprint` over those four fields.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OperationDescriptor {
-    pub id: crate::os_spr::core::SchemaId,
-    pub schema_version: crate::os_spr::core::SchemaVersion,
-    pub state_class: crate::os_spr::core::StateClass,
-    pub conflict_rule: crate::os_spr::core::ConflictRule,
+    pub id: crate::os_spr::ids::SchemaId,
+    pub schema_version: crate::os_spr::ids::SchemaVersion,
+    pub state_class: crate::os_spr::StateClass,
+    pub conflict_rule: crate::os_spr::ConflictRule,
     pub fingerprint: [u8; 32],
 }
 
@@ -207,19 +207,19 @@ impl OperationDescriptor {
     /// four fields. The contract fixes the struct's shape but not how `fingerprint` is derived; our
     /// choice is a canonical-JSON encoding of `(id, schema_version, state_class, conflict_rule)`
     /// hashed with blake3 — stable across process runs and platforms, pinned by a golden test below.
-    pub fn new(id: crate::os_spr::core::SchemaId, schema_version: crate::os_spr::core::SchemaVersion, state_class: crate::os_spr::core::StateClass, conflict_rule: crate::os_spr::core::ConflictRule) -> Self {
+    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, conflict_rule: crate::os_spr::ConflictRule) -> Self {
         let fingerprint = descriptor_fingerprint(&id, schema_version, state_class, conflict_rule);
         Self { id, schema_version, state_class, conflict_rule, fingerprint }
     }
 }
 
-fn descriptor_fingerprint(id: &crate::os_spr::core::SchemaId, schema_version: crate::os_spr::core::SchemaVersion, state_class: crate::os_spr::core::StateClass, conflict_rule: crate::os_spr::core::ConflictRule) -> [u8; 32] {
+fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, conflict_rule: crate::os_spr::ConflictRule) -> [u8; 32] {
     #[derive(serde::Serialize)]
     struct Canonical<'a> {
         id: &'a str,
         schema_version: u32,
-        state_class: crate::os_spr::core::StateClass,
-        conflict_rule: crate::os_spr::core::ConflictRule,
+        state_class: crate::os_spr::StateClass,
+        conflict_rule: crate::os_spr::ConflictRule,
     }
     let canonical = Canonical { id: &id.0, schema_version: schema_version.0, state_class, conflict_rule };
     let bytes = serde_json::to_vec(&canonical).expect("descriptor canonical encoding never fails");
@@ -250,7 +250,7 @@ pub fn operation_descriptor(schema: &str) -> Option<OperationDescriptor> {
 /// @emoji ⬆️ Rewrites an operation authored at an older schema version into today's shape.
 /// LAW: `upcast(upcast(x)) == upcast(x)` — idempotence at the target version.
 pub trait OperationUpcaster<Op> {
-    fn upcast(&self, from_version: crate::os_spr::core::SchemaVersion, op: Op) -> Op;
+    fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
 }
 //#endregion 🔖️Upcast
 
@@ -258,8 +258,8 @@ pub trait OperationUpcaster<Op> {
 /// @emoji 📡️ One side-effect-channel event emitted alongside a persistent/UI diff.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct OperationEvent {
-    pub operation_id: crate::os_spr::core::OperationId,
-    pub state_class: crate::os_spr::core::StateClass,
+    pub operation_id: crate::os_spr::ids::OperationId,
+    pub state_class: crate::os_spr::StateClass,
     pub payload: serde_json::Value,
 }
 //#endregion 🔖️Events
@@ -315,9 +315,9 @@ mod tests {
         fn print_op(&self) -> String {
             format!("add {}", self.delta)
         }
-        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::core::TextError> {
-            let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::core::TextError::new("expected 'add <n>'", crate::os_dsl::core::TextSpan::at(1, 1)))?;
-            let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::core::TextError::new("invalid integer", crate::os_dsl::core::TextSpan::at(1, 1)))?;
+        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+            let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::TextError::new("expected 'add <n>'", crate::os_dsl::TextSpan::at(1, 1)))?;
+            let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::TextError::new("invalid integer", crate::os_dsl::TextSpan::at(1, 1)))?;
             Ok(AddOp { delta })
         }
     }
@@ -374,10 +374,10 @@ mod tests {
         assert_eq!(op.base_version(), None);
         assert_eq!(op.author_id(), None);
         assert_eq!(op.timestamp(), None);
-        assert_eq!(op.undo_policy(), crate::os_spr::core::UndoPolicy::ExactBaseOnly);
-        assert_eq!(op.merge_strategy(), crate::os_spr::core::MergeStrategyKind::LwwRegister);
-        assert_eq!(op.conflict_rule(), crate::os_spr::core::ConflictRule::Merge(crate::os_spr::core::MergeStrategyKind::LwwRegister));
-        assert_eq!(op.state_class(), crate::os_spr::core::StateClass::Persistent);
+        assert_eq!(op.undo_policy(), crate::os_spr::UndoPolicy::ExactBaseOnly);
+        assert_eq!(op.merge_strategy(), crate::os_spr::MergeStrategyKind::LwwRegister);
+        assert_eq!(op.conflict_rule(), crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::LwwRegister));
+        assert_eq!(op.state_class(), crate::os_spr::StateClass::Persistent);
         assert!(op.validate(&0).is_ok());
         let (projection, reports) = op.reconcile(42);
         assert_eq!(projection, 42);
@@ -406,13 +406,13 @@ mod tests {
     #[test]
     fn operation_meta_serde_round_trip() {
         let meta = OperationMeta {
-            operation_id: Some(crate::os_spr::core::OperationId("op-1".into())),
-            dependencies: vec![crate::os_spr::core::OperationId("op-0".into())],
+            operation_id: Some(crate::os_spr::ids::OperationId("op-1".into())),
+            dependencies: vec![crate::os_spr::ids::OperationId("op-0".into())],
             base_version: 3,
-            author_id: Some(crate::os_spr::core::ActorId("actor-1".into())),
-            timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(1, 1000),
-            undo_policy: crate::os_spr::core::UndoPolicy::TransformAgainstConcurrent,
-            payload_hash: Some(crate::os_spr::core::PayloadHash([7u8; 32])),
+            author_id: Some(crate::os_spr::ids::ActorId("actor-1".into())),
+            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 1000),
+            undo_policy: crate::os_spr::UndoPolicy::TransformAgainstConcurrent,
+            payload_hash: Some(crate::os_spr::ids::PayloadHash([7u8; 32])),
         };
         let json = serde_json::to_string(&meta).expect("serialize");
         let round_tripped: OperationMeta = serde_json::from_str(&json).expect("deserialize");
@@ -431,8 +431,8 @@ mod tests {
                 dependencies: Vec::new(),
                 base_version: 0,
                 author_id: None,
-                timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(1, 0),
-                undo_policy: crate::os_spr::core::UndoPolicy::ExactBaseOnly,
+                timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
+                undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
                 payload_hash: None,
             }],
             description: Some("two adds".into()),
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn operation_descriptor_fingerprint_is_golden_pinned() {
         let descriptor =
-            OperationDescriptor::new(crate::os_spr::core::SchemaId("note.append".into()), crate::os_spr::core::SchemaVersion(1), crate::os_spr::core::StateClass::Persistent, crate::os_spr::core::ConflictRule::Merge(crate::os_spr::core::MergeStrategyKind::TextSequence));
+            OperationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Persistent, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::TextSequence));
         let hex: String = descriptor.fingerprint.iter().map(|b| format!("{b:02x}")).collect();
         // Golden pin computed once from `descriptor_fingerprint`'s canonical-JSON+blake3 encoding;
         // any change to that encoding (or to serde's field order/derives on the id/enum types it
@@ -540,7 +540,7 @@ mod tests {
     // upcast(x)` holds because `max(max(x, 10), 10) == max(x, 10)` for every `x`.
     struct ClampToFloor;
     impl OperationUpcaster<i64> for ClampToFloor {
-        fn upcast(&self, _from_version: crate::os_spr::core::SchemaVersion, op: i64) -> i64 {
+        fn upcast(&self, _from_version: crate::os_spr::ids::SchemaVersion, op: i64) -> i64 {
             op.max(10)
         }
     }
@@ -548,7 +548,7 @@ mod tests {
     #[test]
     fn upcaster_is_idempotent_at_target_version() {
         let upcaster = ClampToFloor;
-        let version = crate::os_spr::core::SchemaVersion(1);
+        let version = crate::os_spr::ids::SchemaVersion(1);
         for start in [0i64, 3, 7, 10, 40] {
             let once = upcaster.upcast(version, start);
             let twice = upcaster.upcast(version, once);
@@ -570,7 +570,7 @@ mod tests {
 
     #[test]
     fn operation_event_serde_round_trip() {
-        let event = OperationEvent { operation_id: crate::os_spr::core::OperationId("op-1".into()), state_class: crate::os_spr::core::StateClass::Effect, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
+        let event = OperationEvent { operation_id: crate::os_spr::ids::OperationId("op-1".into()), state_class: crate::os_spr::StateClass::Effect, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
         let json = serde_json::to_string(&event).expect("serialize");
         let round_tripped: OperationEvent = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(round_tripped, event);

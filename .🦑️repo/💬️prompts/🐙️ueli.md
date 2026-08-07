@@ -366,6 +366,33 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+```
+<plugin>
+  artifacts
+    <artifact>
+      mutations
+        <mutation>
+          diff
+            component.rs
+            component.ts
+            …
+          inverse
+            component.rs
+            component.ts
+            …
+          mutation
+            builder.rs
+            builder.ts
+            …
+          …
+        …
+      …
+    …
+  …
+```
+
+---
+
 The current examples are extremely adhoc. Examples have assets, tests, etc. Examples are used for demonstration purposes, for testing purposes, etc.
 e.g. wrong ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs
 
@@ -386,6 +413,7 @@ e.g. wrong ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/�
             …
           …
 ```
+
 ---
 
 Currently commands that change the document by returning a diff are called operations. Rename to mutations. Dont keep any legacy. Make sure that op (the custom grammar for mutations)

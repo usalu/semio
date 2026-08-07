@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-/** � `@semio-tech/flow-extension-dictionary-rust` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+/** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(_segments: string[]): void {
@@ -8,5 +8,12 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+class PackageScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const outPath = segments[0];
+    await runExtensionComponentPackage({ rsDir: import.meta.dir, repoRoot: this.repoRoot, outPath });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("package", PackageScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

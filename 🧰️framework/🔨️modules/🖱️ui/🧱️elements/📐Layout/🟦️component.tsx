@@ -8,13 +8,13 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { type UiStatus } from "@semio-tech/ui-styling";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { type PanelProps, Panel } from "../🖼️Panel/🟦️component.tsx";
 import { type MobilePanelProps, MobilePanel } from "../📱MobilePanel/🟦️component.tsx";
 import { CanvasSkeleton } from "../🦴Skeletons/🟦️component.tsx";
-import { surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { surfaceClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 

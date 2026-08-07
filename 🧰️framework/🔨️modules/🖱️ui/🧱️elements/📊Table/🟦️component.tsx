@@ -8,14 +8,14 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { closestCenter, DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
-import { borderNormalBottomClass, surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { tableRowInteractiveClass, tableRowSelectedClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useUiDriverDragSurface, useNativeDragArm } from "../🫀️core/🚗️UiDriver/🟦️component.tsx";
+import { borderNormalBottomClass, surfaceClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { tableRowInteractiveClass, tableRowSelectedClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useUiDriverDragSurface, useNativeDragArm } from "../🚗️UiDriver/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

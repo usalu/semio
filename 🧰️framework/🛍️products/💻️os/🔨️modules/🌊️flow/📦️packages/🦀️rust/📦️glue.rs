@@ -1,15 +1,47 @@
-//! 🌊️ OS flow family glue — wires core, brep geometry kernel surface, and wasm SDK.
+//! 🌊️ OS flow family glue — wires document/catalogue/registry/bridge/host/drawing/wasm/vcs, brep geometry, and wasm SDK.
 //! Light/draw/brep operator packs are packaged extensions under ✏️s/🔌️plugins/🌊️flow.
 
-extern crate self as flow_core;
+extern crate self as flow;
 extern crate self as flow_extension_wasm;
 extern crate self as flow_extension_sdk;
 
-#[path = "../../🫀️core/🦀️component.rs"]
-pub mod core;
-pub use core::*;
+pub use crate::infinite::board::ports::directed::dag as dag;
+pub use crate::infinite::canvas as canvas;
+pub use neural_engine as neural;
 
-#[path = "../../🫀️core/📐️brep-geometry/🦀️component.rs"]
+#[path = "../../📄️document/🦀️component.rs"]
+pub mod document;
+pub use document::*;
+
+#[path = "../../📚️catalogue/🦀️component.rs"]
+pub mod catalogue;
+pub use catalogue::*;
+
+#[path = "../../📔️registry/🦀️component.rs"]
+pub mod registry;
+pub use registry::*;
+
+#[path = "../../🌉️bridge/🦀️component.rs"]
+pub mod bridge;
+pub use bridge::*;
+
+#[path = "../../🖥️host/🦀️component.rs"]
+pub mod host;
+pub use host::*;
+
+#[path = "../../🖍️drawing/🦀️component.rs"]
+pub mod drawing;
+pub use drawing::*;
+
+#[path = "../../🌉️wasm/🦀️component.rs"]
+pub mod wasm_session;
+pub use wasm_session::*;
+
+#[path = "../../🌿️vcs/🦀️component.rs"]
+pub mod vcs;
+pub use vcs::*;
+
+#[path = "../../📐️brep-geometry/🦀️component.rs"]
 pub mod brep_geometry;
 pub use brep_geometry::{
     dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry,

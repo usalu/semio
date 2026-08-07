@@ -1,0 +1,363 @@
+{
+  "injectedDocs": [
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+      "name": "BalancingInputs"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "name": "DemoProjection"
+    }
+  ],
+  "injectedOps": [],
+  "skippedDocs": [
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+      "name": "GraphFixtureDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+      "name": "RewriteRuleModel"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+      "name": "RemodelProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
+      "name": "RasterProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs",
+      "name": "Process3dDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs",
+      "name": "Document"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs",
+      "name": "CadProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️component.rs",
+      "name": "Block3dDefinition"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️component.rs",
+      "name": "Block5dDefinition"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🦀️component.rs",
+      "name": "Block2dDefinition"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs",
+      "name": "MindmapWiresDocumentDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs",
+      "name": "SequenceFixtureDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs",
+      "name": "WriterProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🦀️component.rs",
+      "name": "PresentDeck"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️component.rs",
+      "name": "SHomeDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
+      "name": "Procedural2dDocumentDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
+      "name": "Procedural3dDocumentDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️component.rs",
+      "name": "VcsDemoProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️component.rs",
+      "name": "GisMapDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️component.rs",
+      "name": "Gis3dTerrainDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
+      "name": "ImperativeDocumentDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🦀️component.rs",
+      "name": "CurateDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️component.rs",
+      "name": "NoteDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
+      "name": "Program"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+      "name": "ShootingFixtureDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs",
+      "name": "ShootingFixtureDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
+      "name": "MathProjectionDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️component.rs",
+      "name": "LayoutDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️component.rs",
+      "name": "Puzzle3dProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️component.rs",
+      "name": "Puzzle5dProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🦀️component.rs",
+      "name": "Puzzle2dProjection"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️component.rs",
+      "name": "Fem3dDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs",
+      "name": "Fem2dDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs",
+      "name": "DrawDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs",
+      "name": "LowpolyProjection"
+    }
+  ],
+  "skippedOps": [
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+      "name": "TrinityGraphOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
+      "name": "RewriteRuleOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
+      "name": "RemodelOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
+      "name": "RasterOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+      "name": "Process3dOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🔧️op/🦀️component.rs",
+      "name": "CadOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+      "name": "Block3dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+      "name": "Block5dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+      "name": "Block2dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
+      "name": "MindmapWiresOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
+      "name": "SequenceOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔧️op/🦀️component.rs",
+      "name": "WriterOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
+      "name": "PresentOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
+      "name": "SHomeOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
+      "name": "Procedural2dOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
+      "name": "Procedural3dOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
+      "name": "VcsDemoOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
+      "name": "GisMapOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
+      "name": "Gis3dTerrainOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
+      "name": "ImperativeOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
+      "name": "SourcingOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔧️op/🦀️component.rs",
+      "name": "NoteOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+      "name": "ShootingOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
+      "name": "MathOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
+      "name": "LayoutOperationDsl"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+      "name": "Puzzle3dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/⚙️engine/⏳️session/🦀️component.rs",
+      "name": "Puzzle3dEngineCommand"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+      "name": "Puzzle5dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+      "name": "Puzzle2dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+      "name": "Fem3dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+      "name": "Fem2dOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
+      "name": "DrawOperation"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs",
+      "name": "LowpolyOperation"
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "name": "OpsHeaderLine"
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "name": "CommandHeaderLine"
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "name": "BackboneMessage"
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "name": "DemoOperation"
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "name": "TimestampedOperation"
+    }
+  ],
+  "errors": [],
+  "missingBefore": 0
+}

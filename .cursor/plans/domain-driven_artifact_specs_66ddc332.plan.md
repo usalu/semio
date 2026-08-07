@@ -31,10 +31,10 @@ todos:
     status: completed
   - id: p6-flagday
     content: "P6: delete dsl_derive's DocumentDsl/OpText/DocumentPack/OpBinary emission and dsl::__rt, empty all allowlists, get script.ts policy fully green"
-    status: in_progress
+    status: completed
   - id: p7-e2e
     content: "P7: full verify, test exhaustive at 95% LCOV, semio verify over all 736 examples, OS boot smoke, writer opens 6+ kinds with logged evidence, close the ticket"
-    status: pending
+    status: completed
 isProject: false
 ---
 

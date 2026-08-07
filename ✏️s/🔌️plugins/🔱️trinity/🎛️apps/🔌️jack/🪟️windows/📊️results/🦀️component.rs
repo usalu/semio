@@ -2,7 +2,7 @@
 
 use crate::apps::jack::config::JackConfig;
 use crate::artifacts::jack::PropertyValue;
-use crate::core::{QueryResult, QueryResultKind};
+use crate::ast::{QueryResult, QueryResultKind};
 use semio_framework_plugin::{build_node_graph_scene, build_table_scene, NodeGraphScene, TableScene, UiNode};
 use serde_json::json;
 

@@ -16,10 +16,10 @@ import { STYLING_DOM, STYLING_COMPACT_ROOT_PX, domSizePx, sizeVar } from "@semio
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.useState at module top level, which requires a non-circular import (see
-// 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel, uiDataLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+// 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️component.tsx";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../↕️Collapsible/🟦️component.tsx";
 import { Input } from "../✏️Input/🟦️component.tsx";
@@ -28,13 +28,13 @@ import { Slider } from "../🎚️Slider/🟦️component.tsx";
 import { Stepper } from "../🪜Stepper/🟦️component.tsx";
 import { Textarea } from "../📄Textarea/🟦️component.tsx";
 import { Toggle } from "../🎛️ToggleGroup/🟦️component.tsx";
-import { childElementId } from "../🫀️core/🆔ElementId/🟦️component.tsx";
-import { borderNormalClass, interactiveActiveFillClass, interactiveControlTransitionClass, surfaceClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { childElementId } from "../🆔ElementId/🟦️component.tsx";
+import { borderNormalClass, interactiveActiveFillClass, interactiveControlTransitionClass, surfaceClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { dropZoneReadyFillClass, dropZoneReadyTextClass, loadingBorderStateClass, waitingBorderStateClass, panelTabIconSlotClass, panelTabLabelClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, windowPaneChromeToggleClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../🫀️core/🧭️Flow/🟦️component.tsx";
-import { type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
-import { useShellScopeOptional } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
+import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../🧭️Flow/🟦️component.tsx";
+import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
 import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";

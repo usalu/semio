@@ -10,12 +10,12 @@ import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-import { glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
-import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
-import { useLabel, useIdLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
+import { glassClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
+import { useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { useLabel, useIdLabel } from "../🏷️Label/🟦️component.tsx";
 import { useUiDriverTooltips, useUiDriver, useControlHotkey, useControlHotkeyTooltipVisible, resolveControlLabelId, isInternalChromeControlId, humanizeControlId, BookIcon, TutorialIcon, type UiTranslationKey, type UiRegisteredTranslationKey } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 

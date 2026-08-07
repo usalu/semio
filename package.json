@@ -10,10 +10,6 @@
     "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
     "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript",
     "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
-    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript",
-    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript",
-    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript",
-    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript",
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript",
     "✏️s/🔨️modules/◻2d/📦️packages/🟦️typescript",
@@ -61,7 +57,7 @@
     "🧰️framework/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg"
   ],
   "engines": {
     "bun": ">=1.2.0"

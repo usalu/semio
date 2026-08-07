@@ -32,7 +32,7 @@ pub fn print_dsl(document: &Document) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::en1991::part_1_2::FireCurve;
-    use crate::core::{AnnexChoice, ImposedCategory};
+    use crate::document::{AnnexChoice, ImposedCategory};
 
     #[test]
     fn document_dsl_round_trips() {

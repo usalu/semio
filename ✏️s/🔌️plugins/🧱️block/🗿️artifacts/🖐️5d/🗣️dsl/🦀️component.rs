@@ -31,7 +31,7 @@ pub fn print_dsl(document: &Block5dDefinition) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
-    use crate::core::{BlockCamera2d, BlockCamera3d, BlockKindIdentity, BlockRepresentation};
+    use crate::{BlockCamera2d, BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
     pub fn hexagonal_cut_concrete_forest_left() -> Block5dDefinition {
         let mut definition = Block5dDefinition {

@@ -11,7 +11,7 @@
 //! byte layout this module implements against.
 
 use crate::os_dsl::schema::{DslValue, FieldSpec, FieldValue, RecordSpec, RecordValue, Shape, WireEdgeLabel, WireNode, WireValue};
-use crate::os_pack::core::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackError, PackLimits};
+use crate::os_pack::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackError, PackLimits};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Tags
@@ -1297,7 +1297,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     let mut writer = crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options)?;
 
     let symbols_payload = crate::os_pack::format::encode_symbols(&symbols);
-    writer.write_segment(crate::os_pack::core::KIND_SYMBOLS, &symbols_payload)?;
+    writer.write_segment(crate::os_pack::KIND_SYMBOLS, &symbols_payload)?;
 
     let field_count = record.fields.values().filter(|v| !matches!(v, FieldValue::Absent)).count() as u64;
     let doc_payload = {
@@ -1309,7 +1309,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     let doc_start = writer.position();
     let mut frame_count: u64 = 0;
     for frame in doc_payload.chunks(frame_size) {
-        writer.write_segment(crate::os_pack::core::KIND_DOCUMENT, frame)?;
+        writer.write_segment(crate::os_pack::KIND_DOCUMENT, frame)?;
         frame_count += 1;
     }
     let doc_end = writer.position();
@@ -1317,11 +1317,11 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     let manifest = crate::os_pack::format::Manifest {
         schema_name: String::new(),
         schema_hash: schema_hash(spec),
-        doc_span: crate::os_pack::core::ByteRange { offset: doc_start, len: doc_end - doc_start },
+        doc_span: crate::os_pack::ByteRange { offset: doc_start, len: doc_end - doc_start },
         doc_frame_count: frame_count,
-        symbols_span: crate::os_pack::core::ByteRange { offset: 0, len: 0 },
-        chunk_table_span: crate::os_pack::core::ByteRange { offset: 0, len: 0 },
-        field_index_span: crate::os_pack::core::ByteRange { offset: 0, len: 0 },
+        symbols_span: crate::os_pack::ByteRange { offset: 0, len: 0 },
+        chunk_table_span: crate::os_pack::ByteRange { offset: 0, len: 0 },
+        field_index_span: crate::os_pack::ByteRange { offset: 0, len: 0 },
         uncompressed_body_len: doc_payload.len() as u64,
         field_count,
         chunk_count: 0,
@@ -1462,8 +1462,8 @@ mod tests {
                 FieldSpec::new(14, "value_field", Shape::Value),
                 FieldSpec::new(15, "table_field", Shape::Table(table_row_spec)),
                 FieldSpec::new(16, "wire_field", Shape::Wire),
-                FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::core::unit_by_symbol("GPa").unwrap())),
-                FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::core::unit_by_symbol("deg").unwrap())),
+                FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
+                FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
                 FieldSpec::new(19, "ref_field", Shape::Ref("material")),
                 FieldSpec::new(20, "coord_field", Shape::Coord(3)),
                 FieldSpec::new(21, "dir_field", Shape::Dir),

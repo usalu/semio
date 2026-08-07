@@ -29,23 +29,14 @@ extern crate semio_framework_os_kernel as vcs;
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 
-//#region 🫀️Core
-/// 🤝️ The cross-artifact, cross-app kernel: the norm domain model plus everything all fifteen apps
-/// share verbatim. Depends on no artifact and on no app.
-#[path = "."]
-pub mod core {
-    #[path = "../../🫀️core/🦀️component.rs"]
-    mod component;
-    pub use component::*;
-
-    #[path = "../../🫀️core/🎚️config/🦀️component.rs"]
-    mod config;
-    pub use config::*;
-
-    #[path = "../../🫀️core/🖥️app-surface/🦀️component.rs"]
-    pub mod app;
-}
-//#endregion 🫀️Core
+//#region 📄️Document kernel
+#[path = "../../📄️document/🦀️component.rs"]
+pub mod document;
+#[path = "../../🎚️config/🦀️component.rs"]
+pub mod config;
+#[path = "../../🖥️app-surface/🦀️component.rs"]
+pub mod app_surface;
+//#endregion 📄️Document kernel
 
 //#region 🗿️Artifacts
 #[path = "."]

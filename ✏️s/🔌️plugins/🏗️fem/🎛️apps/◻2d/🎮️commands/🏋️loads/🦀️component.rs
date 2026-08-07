@@ -35,7 +35,7 @@ pub mod add_nodal_load {
 
     pub fn handle(payload: &AddNodalLoad, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, payload.case_id.as_deref());
-        let new_id = crate::core::shared::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
+        let new_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
         load_case.loads.push(FemLoad::Nodal { id: new_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value });
         Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }]))
     }
@@ -57,7 +57,7 @@ pub mod add_member_udl {
 
     pub fn handle(payload: &AddMemberUdl, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, payload.case_id.as_deref());
-        let new_id = crate::core::shared::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
+        let new_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
         load_case.loads.push(FemLoad::MemberUdl { id: new_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy });
         Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }]))
     }
@@ -78,7 +78,7 @@ pub mod add_area_load {
 
     pub fn handle(payload: &AddAreaLoad, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, payload.case_id.as_deref());
-        let new_id = crate::core::shared::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
+        let new_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
         load_case.loads.push(FemLoad::Area { id: new_id, region_id: payload.region_id.clone(), pressure: payload.pressure });
         Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }]))
     }
@@ -98,7 +98,7 @@ pub mod add_load_case {
 
     pub fn handle(payload: &AddLoadCase, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
+        let id = crate::app_surface::next_id(projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
         let index = projection.load_cases.len();
         Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case: FemLoadCase { id, name: payload.name.clone(), loads: Vec::new(), self_weight: payload.self_weight } }]))
     }
@@ -118,7 +118,7 @@ pub mod add_combination {
 
     pub fn handle(payload: &AddCombination, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.combinations.iter().map(|c| c.id.clone()), "c");
+        let id = crate::app_surface::next_id(projection.combinations.iter().map(|c| c.id.clone()), "c");
         let index = projection.combinations.len();
         Ok(Emit::operations(vec![Fem2dOperation::SetCombination { index, combination: FemCombination { id, name: payload.name.clone(), terms: payload.terms.clone() } }]))
     }

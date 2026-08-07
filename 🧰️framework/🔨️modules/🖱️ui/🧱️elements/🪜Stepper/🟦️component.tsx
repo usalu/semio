@@ -7,13 +7,13 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
 import { formatNumber } from "../✏️Input/🟦️component.tsx";
-import { borderNormalClass, uiFormControlBrowserDefaultProps } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
-import { useLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { borderNormalClass, uiFormControlBrowserDefaultProps } from "../🏷️ClassNames/🟦️component.tsx";
+import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { useLabel, Label } from "../🏷️Label/🟦️component.tsx";
 import { useInteractionCommands, RemoveIcon, AddIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 

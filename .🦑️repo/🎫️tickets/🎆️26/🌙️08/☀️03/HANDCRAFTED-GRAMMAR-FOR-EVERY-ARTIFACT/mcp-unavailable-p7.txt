@@ -1,0 +1,11 @@
+Repo MCP: not used this session (dynamic MCP catalog empty for repo).
+
+Repo CLI: available at 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client
+
+ticket close attempts:
+1. Without --files → "missing files"
+2. With --files → GraphQL error: ticket not found at `.🦑️repo/🎫️tickets/🎆️2026/🌙️08/☀️03/...` (CLI expanded year 2026; on-disk folder is `🎆️26/🌙️08/☀️03`)
+
+Would-have-used close payload: see 🧪p7-ticket-close-payload.json
+
+P7 acceptance not met — ticket intentionally left open (see p7-e2e-status.md).

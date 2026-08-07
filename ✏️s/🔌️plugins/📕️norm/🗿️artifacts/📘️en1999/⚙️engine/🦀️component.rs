@@ -1,11 +1,11 @@
 //! ⚙️ EN 1999 app — headless compute (constitutional: engine).
 
 use crate::artifacts::en1999::Document;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {
-    use crate::core::AnnexChoice;
+    use crate::document::AnnexChoice;
     pub use crate::artifacts::en1990::engine::na_de::NaDe;
 
     pub const HAZ_ZONE_MM: f64 = 25.0;
@@ -116,8 +116,8 @@ pub mod part_1_1 {
     pub fn check_bending(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1999-1-1", "§6.2.5", "6.2.5"),
-            Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(crate::core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
             "aluminium bending ULS",
             annex,
         )
@@ -177,7 +177,7 @@ pub mod part_1_2 {
     }
 
     pub fn check_fire_protection(theta_c: f64, theta_limit_c: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1999-1-2", "§4", "4.2"), Quantity::new(crate::core::QuantityKind::Temperature, theta_c), Quantity::new(crate::core::QuantityKind::Temperature, theta_limit_c), "aluminium fire protection", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-2", "§4", "4.2"), Quantity::new(crate::document::QuantityKind::Temperature, theta_c), Quantity::new(crate::document::QuantityKind::Temperature, theta_limit_c), "aluminium fire protection", annex)
     }
 }
 // #endregion 🔖️Part1_2
@@ -232,8 +232,8 @@ pub mod part_1_4 {
         let m_rd_knm = w_eff_mm3 * alloy.f_0_2_mpa() / gamma_m1 / 1_000_000.0;
         CheckResult::from_utilization(
             ClauseId::new("EN 1999-1-4", "§5.4", "5.4"),
-            Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(crate::core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
             "cold-formed sheeting effective bending resistance",
             annex,
         )
@@ -402,12 +402,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
 /// headless `NormHost` session every norm app drives.
 pub struct En1999Family;
 
-impl crate::core::NormFamily for En1999Family {
+impl crate::document::NormFamily for En1999Family {
     type Document = Document;
     type Operation = crate::artifacts::en1999::op::Operation;
 
-    fn family_id() -> crate::core::NormFamilyId {
-        crate::core::NormFamilyId::En1999
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::En1999
     }
 
     fn evaluate(document: &Document) -> CheckReport {
@@ -415,7 +415,7 @@ impl crate::core::NormFamily for En1999Family {
     }
 }
 
-pub type Host = crate::core::NormHost<En1999Family>;
+pub type Host = crate::document::NormHost<En1999Family>;
 // #endregion 🔖️Session
 
 //#region 🧪️Tests

@@ -20,7 +20,7 @@
 // twin of an operation crossing the wire, matching M-C's "communication AND storage both binary"
 // requirement. `payload` is the `crate::os_spr::command::OpBinary` encoding of the op (or a
 // producer-defined encoding named by `schema` for a non-typed-op payload, e.g. `db`'s pathmap
-// convention); `schema` is a real `crate::os_spr::core::SchemaId`, no longer a `std::any::type_name`
+// convention); `schema` is a real `crate::os_spr::ids::SchemaId`, no longer a `std::any::type_name`
 // placeholder (see `🔖️Bridge` below). `InverseOperation.inverse_diff` is renamed to `payload` for
 // the same reason `DocumentDiff.payload` is named `payload`, not `diff` — both now hold the same
 // kind of thing (an encoded op), not a structural diff. Both fields still carry
@@ -31,26 +31,26 @@
 /// forward diff, its precomputed inverse, and the HLC tick it was authored at.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OperationEnvelope {
-    pub operation_id: crate::os_spr::core::OperationId,
-    pub document_id: crate::os_spr::core::DocumentId,
-    pub actor: crate::os_spr::core::ActorId,
-    pub dependencies: Vec<crate::os_spr::core::OperationId>,
+    pub operation_id: crate::os_spr::ids::OperationId,
+    pub document_id: crate::os_spr::ids::DocumentId,
+    pub actor: crate::os_spr::ids::ActorId,
+    pub dependencies: Vec<crate::os_spr::ids::OperationId>,
     pub diff: DocumentDiff,
     pub inverse: InverseOperation,
-    pub timestamp: crate::os_spr::core::HybridLogicalTimestamp,
+    pub timestamp: crate::os_spr::ids::HybridLogicalTimestamp,
 }
 
 /// @emoji 🧮️ A schema-tagged, opaque binary forward-op payload.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DocumentDiff {
-    pub schema: crate::os_spr::core::SchemaId,
+    pub schema: crate::os_spr::ids::SchemaId,
     pub payload: Vec<u8>,
 }
 
 /// @emoji ↩️ A schema-tagged, opaque binary inverse-op payload.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct InverseOperation {
-    pub schema: crate::os_spr::core::SchemaId,
+    pub schema: crate::os_spr::ids::SchemaId,
     pub payload: Vec<u8>,
 }
 //#endregion 🔖️Envelope
@@ -136,7 +136,7 @@ impl OpDag {
     }
 
     /// @emoji ✅️ Ids of currently-pending envelopes whose dependencies are all applied.
-    pub fn ready(&self) -> Vec<crate::os_spr::core::OperationId> {
+    pub fn ready(&self) -> Vec<crate::os_spr::ids::OperationId> {
         self.pending.iter().filter_map(|id| self.envelopes.get(id)).filter(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.contains(&dependency.0))).map(|envelope| envelope.operation_id.clone()).collect()
     }
 
@@ -152,7 +152,7 @@ impl OpDag {
     /// stays `Pending` forever, since `insert` only recognizes a dependency as satisfied through
     /// this dag's own `envelopes`/`applied` bookkeeping, never through edits a peer adopted by some
     /// other route.
-    pub fn seed_applied(&mut self, operation_id: crate::os_spr::core::OperationId) {
+    pub fn seed_applied(&mut self, operation_id: crate::os_spr::ids::OperationId) {
         let id = operation_id.0;
         if !self.applied.contains(&id) {
             self.mark_applied(&id);
@@ -185,7 +185,7 @@ impl OpDag {
 /// durable-log-derived version: they serve different layers (live runtime state vs on-disk log).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct FrontierSummary {
-    pub document_id: crate::os_spr::core::DocumentId,
+    pub document_id: crate::os_spr::ids::DocumentId,
     pub head_edit_ordinal: u64,
     pub head_edit_id: String,
     pub last_commit_seq: u64,
@@ -255,7 +255,7 @@ pub trait OperationTransform<P>: crate::os_spr::command::Operation<P> {
 // bound — every real op type has had this since W2's derive flip), so the function becomes
 // fallible (`Result<Vec<OperationEnvelope>, ProtocolError>`, one encode failure aborts the whole
 // batch — an op that can't encode is a hard error, not a partial envelope). `schema` is now a
-// caller-supplied real `crate::os_spr::core::SchemaId` (new parameter) instead of
+// caller-supplied real `crate::os_spr::ids::SchemaId` (new parameter) instead of
 // `std::any::type_name::<Op>()` — the type-name placeholder was never a stable/meaningful tag
 // across a process boundary; callers already know their document's schema string (it's what they
 // register a `DocumentCodec` under). `inverse.payload` is an empty `Vec<u8>` past the end of
@@ -274,15 +274,15 @@ pub trait OperationTransform<P>: crate::os_spr::command::Operation<P> {
 /// trait method, else `{edit.id}#{i}`), extracted so callers that only need identity (e.g.
 /// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`backwards` work, and so
 /// there is exactly one place this chain is spelled out.
-pub fn operation_ids_for_edit<P, Op: crate::os_spr::command::Operation<P>>(edit: &crate::os_spr::command::Edit<Op>) -> Vec<crate::os_spr::core::OperationId> {
-    edit.forwards.iter().enumerate().map(|(index, op)| edit.operation_meta.get(index).and_then(|m| m.operation_id.clone()).or_else(|| op.operation_id()).unwrap_or_else(|| crate::os_spr::core::OperationId(format!("{}#{index}", edit.id)))).collect()
+pub fn operation_ids_for_edit<P, Op: crate::os_spr::command::Operation<P>>(edit: &crate::os_spr::command::Edit<Op>) -> Vec<crate::os_spr::ids::OperationId> {
+    edit.forwards.iter().enumerate().map(|(index, op)| edit.operation_meta.get(index).and_then(|m| m.operation_id.clone()).or_else(|| op.operation_id()).unwrap_or_else(|| crate::os_spr::ids::OperationId(format!("{}#{index}", edit.id)))).collect()
 }
 
 pub fn operation_envelope_from_edit<P, Op: crate::os_spr::command::Operation<P> + crate::os_spr::command::OpBinary>(
     edit: &crate::os_spr::command::Edit<Op>,
-    document_id: &crate::os_spr::core::DocumentId,
-    schema: &crate::os_spr::core::SchemaId,
-) -> Result<Vec<OperationEnvelope>, crate::os_spr::core::ProtocolError> {
+    document_id: &crate::os_spr::ids::DocumentId,
+    schema: &crate::os_spr::ids::SchemaId,
+) -> Result<Vec<OperationEnvelope>, crate::os_spr::ProtocolError> {
     let operation_ids = operation_ids_for_edit(edit);
     edit.forwards
         .iter()
@@ -291,8 +291,8 @@ pub fn operation_envelope_from_edit<P, Op: crate::os_spr::command::Operation<P> 
             let meta = edit.operation_meta.get(index);
             let operation_id = operation_ids[index].clone();
             let dependencies = meta.map_or_else(|| op.dependencies(), |m| m.dependencies.clone());
-            let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| op.author_id()).unwrap_or_else(|| crate::os_spr::core::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".to_string())));
-            let timestamp = meta.map(|m| m.timestamp).or_else(|| op.timestamp()).unwrap_or_else(|| crate::os_spr::core::HybridLogicalTimestamp::new(0, 0));
+            let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| op.author_id()).unwrap_or_else(|| crate::os_spr::ids::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".to_string())));
+            let timestamp = meta.map(|m| m.timestamp).or_else(|| op.timestamp()).unwrap_or_else(|| crate::os_spr::ids::HybridLogicalTimestamp::new(0, 0));
             let payload = op.encode_op()?;
             let inverse_payload = edit.backwards.get(index).map(crate::os_spr::command::OpBinary::encode_op).transpose()?.unwrap_or_default();
             Ok(OperationEnvelope {
@@ -311,54 +311,54 @@ pub fn operation_envelope_from_edit<P, Op: crate::os_spr::command::Operation<P> 
 
 //#region 🔖️EnvelopeCodec
 /// @emoji 🎞️ Binary record codec for `OperationEnvelope`/`FrontierSummary`, built on
-/// `crate::os_spr::core::🔖️WireCodec`'s primitives — the storage/wire form `protocol_wire`'s frames
+/// `crate::os_spr::wire::🔖️WireCodec`'s primitives — the storage/wire form `protocol_wire`'s frames
 /// embed and `db_sync`'s WAL uses directly (see the amendment's "storage AND communication both
 /// binary" requirement). Field declaration order, no tags — the same convention `crate::os_dsl::op_rt` and
-/// `crate::os_spr::core::WireCodec` both use.
-fn encode_hlc(out: &mut Vec<u8>, hlt: &crate::os_spr::core::HybridLogicalTimestamp) {
-    crate::os_spr::core::write_varint_u64(out, hlt.actor);
-    crate::os_spr::core::write_varint_u64(out, hlt.physical_ms);
-    crate::os_spr::core::write_varint_u64(out, hlt.logical);
+/// `crate::os_spr::wire::WireCodec` both use.
+fn encode_hlc(out: &mut Vec<u8>, hlt: &crate::os_spr::ids::HybridLogicalTimestamp) {
+    crate::os_spr::write_varint_u64(out, hlt.actor);
+    crate::os_spr::write_varint_u64(out, hlt.physical_ms);
+    crate::os_spr::write_varint_u64(out, hlt.logical);
 }
 
-fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<crate::os_spr::core::HybridLogicalTimestamp, crate::os_spr::core::ProtocolError> {
-    let actor = crate::os_spr::core::read_varint_u64(bytes, pos)?;
-    let physical_ms = crate::os_spr::core::read_varint_u64(bytes, pos)?;
-    let logical = crate::os_spr::core::read_varint_u64(bytes, pos)?;
-    Ok(crate::os_spr::core::HybridLogicalTimestamp { actor, physical_ms, logical })
+fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<crate::os_spr::ids::HybridLogicalTimestamp, crate::os_spr::ProtocolError> {
+    let actor = crate::os_spr::read_varint_u64(bytes, pos)?;
+    let physical_ms = crate::os_spr::read_varint_u64(bytes, pos)?;
+    let logical = crate::os_spr::read_varint_u64(bytes, pos)?;
+    Ok(crate::os_spr::ids::HybridLogicalTimestamp { actor, physical_ms, logical })
 }
 
 /// @emoji 🎯️ `operation_id str | document_id str | actor str | dependencies vec<str> |
 /// diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc`.
 pub fn encode_envelope(envelope: &OperationEnvelope, out: &mut Vec<u8>) {
-    crate::os_spr::core::write_str(out, &envelope.operation_id.0);
-    crate::os_spr::core::write_str(out, &envelope.document_id.0);
-    crate::os_spr::core::write_str(out, &envelope.actor.0);
-    crate::os_spr::core::write_varint_u64(out, envelope.dependencies.len() as u64);
+    crate::os_spr::write_str(out, &envelope.operation_id.0);
+    crate::os_spr::write_str(out, &envelope.document_id.0);
+    crate::os_spr::write_str(out, &envelope.actor.0);
+    crate::os_spr::write_varint_u64(out, envelope.dependencies.len() as u64);
     for dependency in &envelope.dependencies {
-        crate::os_spr::core::write_str(out, &dependency.0);
+        crate::os_spr::write_str(out, &dependency.0);
     }
-    crate::os_spr::core::write_str(out, &envelope.diff.schema.0);
-    crate::os_spr::core::write_bytes(out, &envelope.diff.payload);
-    crate::os_spr::core::write_str(out, &envelope.inverse.schema.0);
-    crate::os_spr::core::write_bytes(out, &envelope.inverse.payload);
+    crate::os_spr::write_str(out, &envelope.diff.schema.0);
+    crate::os_spr::write_bytes(out, &envelope.diff.payload);
+    crate::os_spr::write_str(out, &envelope.inverse.schema.0);
+    crate::os_spr::write_bytes(out, &envelope.inverse.payload);
     encode_hlc(out, &envelope.timestamp);
 }
 
 /// @emoji 🎯️ Inverse of [`encode_envelope`].
-pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<OperationEnvelope, crate::os_spr::core::ProtocolError> {
-    let operation_id = crate::os_spr::core::OperationId(crate::os_spr::core::read_str(bytes, pos)?);
-    let document_id = crate::os_spr::core::DocumentId(crate::os_spr::core::read_str(bytes, pos)?);
-    let actor = crate::os_spr::core::ActorId(crate::os_spr::core::read_str(bytes, pos)?);
-    let dependency_count = crate::os_spr::core::read_varint_u64(bytes, pos)?;
+pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<OperationEnvelope, crate::os_spr::ProtocolError> {
+    let operation_id = crate::os_spr::ids::OperationId(crate::os_spr::read_str(bytes, pos)?);
+    let document_id = crate::os_spr::ids::DocumentId(crate::os_spr::read_str(bytes, pos)?);
+    let actor = crate::os_spr::ids::ActorId(crate::os_spr::read_str(bytes, pos)?);
+    let dependency_count = crate::os_spr::read_varint_u64(bytes, pos)?;
     let mut dependencies = Vec::with_capacity(dependency_count as usize);
     for _ in 0..dependency_count {
-        dependencies.push(crate::os_spr::core::OperationId(crate::os_spr::core::read_str(bytes, pos)?));
+        dependencies.push(crate::os_spr::ids::OperationId(crate::os_spr::read_str(bytes, pos)?));
     }
-    let diff_schema = crate::os_spr::core::SchemaId(crate::os_spr::core::read_str(bytes, pos)?);
-    let diff_payload = crate::os_spr::core::read_bytes(bytes, pos)?;
-    let inverse_schema = crate::os_spr::core::SchemaId(crate::os_spr::core::read_str(bytes, pos)?);
-    let inverse_payload = crate::os_spr::core::read_bytes(bytes, pos)?;
+    let diff_schema = crate::os_spr::ids::SchemaId(crate::os_spr::read_str(bytes, pos)?);
+    let diff_payload = crate::os_spr::read_bytes(bytes, pos)?;
+    let inverse_schema = crate::os_spr::ids::SchemaId(crate::os_spr::read_str(bytes, pos)?);
+    let inverse_payload = crate::os_spr::read_bytes(bytes, pos)?;
     let timestamp = decode_hlc(bytes, pos)?;
     Ok(OperationEnvelope { operation_id, document_id, actor, dependencies, diff: DocumentDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseOperation { schema: inverse_schema, payload: inverse_payload }, timestamp })
 }
@@ -366,20 +366,20 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<OperationEnvelop
 /// @emoji 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
 /// varint | chain_hash 32`.
 pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
-    crate::os_spr::core::write_str(out, &f.document_id.0);
-    crate::os_spr::core::write_varint_u64(out, f.head_edit_ordinal);
-    crate::os_spr::core::write_str(out, &f.head_edit_id);
-    crate::os_spr::core::write_varint_u64(out, f.last_commit_seq);
-    crate::os_spr::core::write_hash32(out, &f.chain_hash);
+    crate::os_spr::write_str(out, &f.document_id.0);
+    crate::os_spr::write_varint_u64(out, f.head_edit_ordinal);
+    crate::os_spr::write_str(out, &f.head_edit_id);
+    crate::os_spr::write_varint_u64(out, f.last_commit_seq);
+    crate::os_spr::write_hash32(out, &f.chain_hash);
 }
 
 /// @emoji 🎯️ Inverse of [`encode_frontier`].
-pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, crate::os_spr::core::ProtocolError> {
-    let document_id = crate::os_spr::core::DocumentId(crate::os_spr::core::read_str(bytes, pos)?);
-    let head_edit_ordinal = crate::os_spr::core::read_varint_u64(bytes, pos)?;
-    let head_edit_id = crate::os_spr::core::read_str(bytes, pos)?;
-    let last_commit_seq = crate::os_spr::core::read_varint_u64(bytes, pos)?;
-    let chain_hash = crate::os_spr::core::read_hash32(bytes, pos)?;
+pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, crate::os_spr::ProtocolError> {
+    let document_id = crate::os_spr::ids::DocumentId(crate::os_spr::read_str(bytes, pos)?);
+    let head_edit_ordinal = crate::os_spr::read_varint_u64(bytes, pos)?;
+    let head_edit_id = crate::os_spr::read_str(bytes, pos)?;
+    let last_commit_seq = crate::os_spr::read_varint_u64(bytes, pos)?;
+    let chain_hash = crate::os_spr::read_hash32(bytes, pos)?;
     Ok(FrontierSummary { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash })
 }
 
@@ -388,7 +388,7 @@ pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary,
 /// envelope (`ClientFrame::Commands`, which already carries `Vec<OperationEnvelope>` typed).
 pub fn encode_envelopes(envelopes: &[OperationEnvelope]) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::os_spr::core::write_varint_u64(&mut out, envelopes.len() as u64);
+    crate::os_spr::write_varint_u64(&mut out, envelopes.len() as u64);
     for envelope in envelopes {
         encode_envelope(envelope, &mut out);
     }
@@ -396,9 +396,9 @@ pub fn encode_envelopes(envelopes: &[OperationEnvelope]) -> Vec<u8> {
 }
 
 /// @emoji 🎯️ Inverse of [`encode_envelopes`].
-pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<OperationEnvelope>, crate::os_spr::core::ProtocolError> {
+pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<OperationEnvelope>, crate::os_spr::ProtocolError> {
     let mut pos = 0usize;
-    let count = crate::os_spr::core::read_varint_u64(bytes, &mut pos)?;
+    let count = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
     let mut envelopes = Vec::with_capacity(count as usize);
     for _ in 0..count {
         envelopes.push(decode_envelope(bytes, &mut pos)?);
@@ -411,20 +411,20 @@ pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<OperationEnvelope>, crate::o
 /// payloads that carry more than one composed op (e.g. framework/plugin's `result_from_last_edit`).
 pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::os_spr::core::write_varint_u64(&mut out, ops.len() as u64);
+    crate::os_spr::write_varint_u64(&mut out, ops.len() as u64);
     for op in ops {
-        crate::os_spr::core::write_bytes(&mut out, op);
+        crate::os_spr::write_bytes(&mut out, op);
     }
     out
 }
 
 /// @emoji 🎯️ Inverse of [`encode_ops_vec`].
-pub fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, crate::os_spr::core::ProtocolError> {
+pub fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, crate::os_spr::ProtocolError> {
     let mut pos = 0usize;
-    let count = crate::os_spr::core::read_varint_u64(bytes, &mut pos)?;
+    let count = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
     let mut ops = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        ops.push(crate::os_spr::core::read_bytes(bytes, &mut pos)?);
+        ops.push(crate::os_spr::read_bytes(bytes, &mut pos)?);
     }
     Ok(ops)
 }
@@ -467,14 +467,14 @@ mod tests {
     /// @emoji 🎯️ Hand-written (no `crate::os_dsl::DslOps` derive in this dependency-free fixture): `format
     /// u8 (=1) | delta i64 LE`.
     impl crate::os_spr::command::OpBinary for CausalAddOp {
-        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::core::ProtocolError> {
+        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             let mut out = vec![1u8];
             out.extend_from_slice(&self.delta.to_le_bytes());
             Ok(out)
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::core::ProtocolError> {
+        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
             if bytes.len() != 9 || bytes[0] != 1 {
-                return Err(crate::os_spr::core::ProtocolError::Malformed { what: "causal add op", offset: 0, detail: "expected 9 bytes, format 1".to_string() });
+                return Err(crate::os_spr::ProtocolError::Malformed { what: "causal add op", offset: 0, detail: "expected 9 bytes, format 1".to_string() });
             }
             let mut delta_bytes = [0u8; 8];
             delta_bytes.copy_from_slice(&bytes[1..9]);
@@ -495,13 +495,13 @@ mod tests {
 
     fn sample_envelope(id: &str, deps: Vec<&str>) -> OperationEnvelope {
         OperationEnvelope {
-            operation_id: crate::os_spr::core::OperationId(id.into()),
-            document_id: crate::os_spr::core::DocumentId("document-1".into()),
-            actor: crate::os_spr::core::ActorId("actor-1".into()),
-            dependencies: deps.into_iter().map(|dep| crate::os_spr::core::OperationId(dep.into())).collect(),
-            diff: DocumentDiff { schema: crate::os_spr::core::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
-            inverse: InverseOperation { schema: crate::os_spr::core::SchemaId("diff.v1".into()), payload: Vec::new() },
-            timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(1, 0),
+            operation_id: crate::os_spr::ids::OperationId(id.into()),
+            document_id: crate::os_spr::ids::DocumentId("document-1".into()),
+            actor: crate::os_spr::ids::ActorId("actor-1".into()),
+            dependencies: deps.into_iter().map(|dep| crate::os_spr::ids::OperationId(dep.into())).collect(),
+            diff: DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
+            inverse: InverseOperation { schema: crate::os_spr::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
+            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
     //#endregion 🧸️Fixtures
@@ -562,7 +562,7 @@ mod tests {
         let mut dag = OpDag::new();
         assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
         assert!(dag.ready().is_empty(), "dependency is not yet known to this dag");
-        dag.seed_applied(crate::os_spr::core::OperationId("operation-1".to_string()));
+        dag.seed_applied(crate::os_spr::ids::OperationId("operation-1".to_string()));
         let ready_ids: Vec<String> = dag.ready().iter().map(|id| id.0.clone()).collect();
         assert_eq!(ready_ids, vec!["operation-2".to_string()]);
     }
@@ -635,7 +635,7 @@ mod tests {
 
     //#region 🔖️Frontier
     fn frontier(document_id: &str, ordinal: u64, head_id: &str, commit_seq: u64, chain_byte: u8) -> FrontierSummary {
-        FrontierSummary { document_id: crate::os_spr::core::DocumentId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
+        FrontierSummary { document_id: crate::os_spr::ids::DocumentId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
     }
 
     #[test]
@@ -711,21 +711,21 @@ mod tests {
             backwards: vec![CausalAddOp { delta: -1 }, CausalAddOp { delta: -2 }],
             operation_meta: vec![
                 crate::os_spr::command::OperationMeta {
-                    operation_id: Some(crate::os_spr::core::OperationId("op-a".into())),
-                    dependencies: vec![crate::os_spr::core::OperationId("op-0".into())],
+                    operation_id: Some(crate::os_spr::ids::OperationId("op-a".into())),
+                    dependencies: vec![crate::os_spr::ids::OperationId("op-0".into())],
                     base_version: 0,
-                    author_id: Some(crate::os_spr::core::ActorId("actor-explicit".into())),
-                    timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(1, 1000),
-                    undo_policy: crate::os_spr::core::UndoPolicy::ExactBaseOnly,
+                    author_id: Some(crate::os_spr::ids::ActorId("actor-explicit".into())),
+                    timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 1000),
+                    undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
                     payload_hash: None,
                 },
                 crate::os_spr::command::OperationMeta {
-                    operation_id: Some(crate::os_spr::core::OperationId("op-b".into())),
-                    dependencies: vec![crate::os_spr::core::OperationId("op-a".into())],
+                    operation_id: Some(crate::os_spr::ids::OperationId("op-b".into())),
+                    dependencies: vec![crate::os_spr::ids::OperationId("op-a".into())],
                     base_version: 1,
                     author_id: None,
-                    timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(1, 2000),
-                    undo_policy: crate::os_spr::core::UndoPolicy::ExactBaseOnly,
+                    timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 2000),
+                    undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
                     payload_hash: None,
                 },
             ],
@@ -735,24 +735,24 @@ mod tests {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        let document_id = crate::os_spr::core::DocumentId("doc-1".into());
-        let schema = crate::os_spr::core::SchemaId("causal-add.v1".into());
+        let document_id = crate::os_spr::ids::DocumentId("doc-1".into());
+        let schema = crate::os_spr::ids::SchemaId("causal-add.v1".into());
 
         let envelopes = operation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
         assert_eq!(envelopes.len(), 2);
 
-        assert_eq!(envelopes[0].operation_id, crate::os_spr::core::OperationId("op-a".into()));
-        assert_eq!(envelopes[0].actor, crate::os_spr::core::ActorId("actor-explicit".into()));
-        assert_eq!(envelopes[0].dependencies, vec![crate::os_spr::core::OperationId("op-0".into())]);
+        assert_eq!(envelopes[0].operation_id, crate::os_spr::ids::OperationId("op-a".into()));
+        assert_eq!(envelopes[0].actor, crate::os_spr::ids::ActorId("actor-explicit".into()));
+        assert_eq!(envelopes[0].dependencies, vec![crate::os_spr::ids::OperationId("op-0".into())]);
         assert_eq!(envelopes[0].document_id, document_id);
-        assert_eq!(envelopes[0].timestamp, crate::os_spr::core::HybridLogicalTimestamp::new(1, 1000));
+        assert_eq!(envelopes[0].timestamp, crate::os_spr::ids::HybridLogicalTimestamp::new(1, 1000));
         assert_eq!(envelopes[0].diff.schema, schema);
         assert_eq!(envelopes[0].diff.payload, crate::os_spr::command::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
         assert_eq!(envelopes[0].inverse.payload, crate::os_spr::command::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
 
         // Second op's meta has no author_id -> falls back to `edit.actor`, not "unknown".
-        assert_eq!(envelopes[1].operation_id, crate::os_spr::core::OperationId("op-b".into()));
-        assert_eq!(envelopes[1].actor, crate::os_spr::core::ActorId("actor-fallback".into()));
+        assert_eq!(envelopes[1].operation_id, crate::os_spr::ids::OperationId("op-b".into()));
+        assert_eq!(envelopes[1].actor, crate::os_spr::ids::ActorId("actor-fallback".into()));
     }
 
     #[test]
@@ -769,15 +769,15 @@ mod tests {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        let document_id = crate::os_spr::core::DocumentId("doc-2".into());
-        let schema = crate::os_spr::core::SchemaId("causal-add.v1".into());
+        let document_id = crate::os_spr::ids::DocumentId("doc-2".into());
+        let schema = crate::os_spr::ids::SchemaId("causal-add.v1".into());
 
         let envelopes = operation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
         assert_eq!(envelopes.len(), 1);
-        assert_eq!(envelopes[0].operation_id, crate::os_spr::core::OperationId("edit-2#0".into()));
-        assert_eq!(envelopes[0].actor, crate::os_spr::core::ActorId("unknown".into()));
+        assert_eq!(envelopes[0].operation_id, crate::os_spr::ids::OperationId("edit-2#0".into()));
+        assert_eq!(envelopes[0].actor, crate::os_spr::ids::ActorId("unknown".into()));
         assert!(envelopes[0].dependencies.is_empty());
-        assert_eq!(envelopes[0].timestamp, crate::os_spr::core::HybridLogicalTimestamp::new(0, 0));
+        assert_eq!(envelopes[0].timestamp, crate::os_spr::ids::HybridLogicalTimestamp::new(0, 0));
         assert_eq!(envelopes[0].inverse.payload, Vec::<u8>::new(), "backwards vec shorter than forwards -> empty inverse payload");
     }
 
@@ -798,8 +798,8 @@ mod tests {
         // CausalAddOp::encode_op is infallible by construction, so this test instead documents
         // the law via the Result signature: a real Op whose encode_op can fail (e.g. exceeding a
         // size limit) aborts the whole batch rather than returning a partial Vec.
-        let document_id = crate::os_spr::core::DocumentId("doc-3".into());
-        let schema = crate::os_spr::core::SchemaId("causal-add.v1".into());
+        let document_id = crate::os_spr::ids::DocumentId("doc-3".into());
+        let schema = crate::os_spr::ids::SchemaId("causal-add.v1".into());
         assert!(operation_envelope_from_edit(&edit, &document_id, &schema).is_ok());
     }
     //#endregion 🔖️Bridge
@@ -829,13 +829,13 @@ mod tests {
     #[test]
     fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         let envelope = OperationEnvelope {
-            operation_id: crate::os_spr::core::OperationId("op-empty".into()),
-            document_id: crate::os_spr::core::DocumentId("doc-empty".into()),
-            actor: crate::os_spr::core::ActorId("actor-empty".into()),
+            operation_id: crate::os_spr::ids::OperationId("op-empty".into()),
+            document_id: crate::os_spr::ids::DocumentId("doc-empty".into()),
+            actor: crate::os_spr::ids::ActorId("actor-empty".into()),
             dependencies: Vec::new(),
-            diff: DocumentDiff { schema: crate::os_spr::core::SchemaId("s".into()), payload: Vec::new() },
-            inverse: InverseOperation { schema: crate::os_spr::core::SchemaId("s".into()), payload: Vec::new() },
-            timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(0, 0),
+            diff: DocumentDiff { schema: crate::os_spr::ids::SchemaId("s".into()), payload: Vec::new() },
+            inverse: InverseOperation { schema: crate::os_spr::ids::SchemaId("s".into()), payload: Vec::new() },
+            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(0, 0),
         };
         let mut out = Vec::new();
         encode_envelope(&envelope, &mut out);

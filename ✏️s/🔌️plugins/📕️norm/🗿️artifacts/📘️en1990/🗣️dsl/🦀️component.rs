@@ -30,7 +30,7 @@ pub fn print_dsl(document: &Document) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::AnnexChoice;
+    use crate::document::AnnexChoice;
 
     #[test]
     fn document_dsl_round_trips() {

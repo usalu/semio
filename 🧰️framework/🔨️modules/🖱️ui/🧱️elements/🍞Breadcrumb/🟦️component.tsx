@@ -8,10 +8,10 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { borderNormalClass, interactiveHoverClass, interactiveControlTransitionClass, glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { borderNormalClass, interactiveHoverClass, interactiveControlTransitionClass, glassClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 import { ChromeControlHint } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { ChevronDownIcon, ChevronRightIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters

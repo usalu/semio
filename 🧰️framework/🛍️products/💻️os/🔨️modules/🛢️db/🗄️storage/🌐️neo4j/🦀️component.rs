@@ -37,7 +37,7 @@
 //! Neo4j's own lock semantics is `db_cluster`'s ownership-lease concern, not this crate's.
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
 use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
@@ -45,7 +45,7 @@ use pack::{ByteRange, ContentHash};
 //#region 🔖️Codec
 /// @emoji 🛡️ Ceiling on any single blob this backend reads into memory in one call — mirrors
 /// `db_storage`'s own `MAX_READ_BYTES` choice (this crate's own choice too, the contract doesn't
-/// fix a number): validated via `db_core::check_len` BEFORE the base64 decode buffer is allocated.
+/// fix a number): validated via `check_len` BEFORE the base64 decode buffer is allocated.
 const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
 
 /// @emoji ✍️ Encodes a byte blob for storage in a Neo4j string property.

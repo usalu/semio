@@ -1377,7 +1377,7 @@ describe("computeWorkspaces", () => {
    * that must never surface, a wasm `pkg/` shadowed by its outer wrapper's identical name, a wasm `pkg/`
    * with a genuinely different name (included regardless of whether anything depends on it via
    * `workspace:*` — a real `bun install` only requires a listed workspace dir to exist on disk, and
-   * 🌊️flow's real `flow-module-bim` has no such dependent at all since it's loaded by path at runtime),
+   * 🌊️flow's real `flow-extension-bim` has no such dependent at all since it's loaded by path at runtime),
    * and a stray `pkg/` with no sibling `Cargo.toml` (must be skipped and never descended into). */
   function buildFixture(): string {
     const root = mkdtempSync(join(tmpdir(), "workspaces-fixture-"));
@@ -1394,7 +1394,7 @@ describe("computeWorkspaces", () => {
     write("c/📦️packages/🦀️rust/package.json", JSON.stringify({ name: "@t/c-rs" }));
     write("c/📦️packages/🦀️rust/Cargo.toml", "[package]\nname = \"c\"\n");
     write("c/📦️packages/🦀️rust/pkg/package.json", JSON.stringify({ name: "@t/c-rs" }));
-    // d: wasm pkg/ has its OWN name and no outer wrapper at all -> included (flow-module-bim's real shape).
+    // d: wasm pkg/ has its OWN name and no outer wrapper at all -> included (flow-extension-bim's real shape).
     write("d/📦️packages/🦀️rust/Cargo.toml", "[package]\nname = \"d\"\n");
     write("d/📦️packages/🦀️rust/pkg/package.json", JSON.stringify({ name: "@t/d-wasm" }));
     // f: wasm pkg/ differs from its outer wrapper's name too -> included the same way (flow-core's real shape).

@@ -4,7 +4,7 @@
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the two surfaces
 //! in `🎭️modes/✏️edit/🪟️windows/*`, panel trees in `📌️panels/*`, compliance compute in
 //! `crate::artifacts::en1991::engine`, and everything the fifteen norm apps share verbatim (config,
-//! media ports, render primitives, manifest constructors) in `crate::core::app` / `crate::core::config`.
+//! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::apps::en1991::commands::{evaluate, selected_check, set_document};
 use crate::apps::en1991::modes::edit as edit_mode;
@@ -13,7 +13,7 @@ use crate::apps::en1991::panels::{catalogue as catalogue_panel, document as docu
 use crate::artifacts::en1991::engine::En1991Family;
 use crate::artifacts::en1991::op::Operation;
 use crate::artifacts::en1991::Document;
-use crate::core::{NormConfig, NormConfigOperation, NormHost};
+use crate::config::{NormConfig, NormConfigOperation, NormHost};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
@@ -68,7 +68,7 @@ impl DocumentApp for En1991PlayApp {
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
+        Some(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
     fn command_id(command: &En1991Command) -> &'static str {
@@ -87,21 +87,21 @@ impl DocumentApp for En1991PlayApp {
             document_panel::BODY_DOCUMENT => document_panel::render(&host),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
             inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.projection.selected_check_index),
-            _ => crate::core::app::render_unknown_body(body_key),
+            _ => crate::app_surface::render_unknown_body(body_key),
         }
     }
 
     //#region 🔖️MediaPorts
-    /// 🎞️ `"report:out"`/`"document:out"` — see `crate::core::app::export_media`, which all fifteen apps
+    /// 🎞️ `"report:out"`/`"document:out"` — see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
-        crate::core::app::export_media::<En1991Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.projection)
+        crate::app_surface::export_media::<En1991Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.projection)
     }
 
-    /// 🎞️ `"model:in"`/`"document:in"` — see `crate::core::app::import_media`.
+    /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Operation, NormConfigOperation, Self::DraftOperation>, MediaError> {
-        crate::core::app::import_media::<Document>(port, media)
+        crate::app_surface::import_media::<Document>(port, media)
     }
     //#endregion 🔖️MediaPorts
 }
@@ -113,9 +113,9 @@ pub fn create_en1991_app() -> App {
         App::builder(APP_ID, LocalizedLabel::data(LABEL))
             .document(["semio", "norm", VARIANT])
             .artifact_kind(crate::artifacts::en1991::artifact_kind())
-            .io(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
+            .io(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
             .mode_def(edit_mode::definition())
-            .default_mode_id(crate::core::app::MODE_EDIT)
+            .default_mode_id(crate::app_surface::MODE_EDIT)
             .window_kind_def(inputs::definition())
             .window_kind_def(results::definition())
             .default_layout(edit_mode::layout())
@@ -225,7 +225,7 @@ mod tests {
         for body_key in [document_panel::BODY_DOCUMENT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
-        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::core::app::artifact_kind_id(VARIANT)));
+        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::app_surface::artifact_kind_id(VARIANT)));
     }
 
     /// 🔌️ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
@@ -235,7 +235,7 @@ mod tests {
         let ports = create_en1991_app().definition.io.ports;
         assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
         let report_out = ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
-        assert_eq!(report_out.kind_id.as_deref(), Some(crate::core::app::artifact_kind_id(VARIANT).as_str()));
+        assert_eq!(report_out.kind_id.as_deref(), Some(crate::app_surface::artifact_kind_id(VARIANT).as_str()));
     }
 
     #[test]
@@ -304,8 +304,8 @@ mod tests {
         let mut app = testkit::new_app();
         let media = PluginApp::export_media(&mut app, "report:out").expect("export report:out");
         let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
-        assert_eq!(schema, crate::core::app::artifact_kind_id(VARIANT));
-        let report: crate::core::CheckReport = serde_json::from_str(&json).expect("report json parses");
+        assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
+        let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
         assert!(!report.checks.is_empty());
     }
     //#endregion 🔖️Behavior

@@ -248,7 +248,7 @@ pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration
     FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().filter_map(|(key, value)| dsl::from_dsl_value(value).ok().map(|json| (key, json))).collect() }
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(id = "procedural.procedural3d", layout = "lines")]
 struct Procedural3dDocumentDsl {
     schema: String,
@@ -265,14 +265,11 @@ struct Procedural3dDocumentDsl {
     #[dsl(table)]
     generations: Vec<FormGenerationDsl>,
 }
-
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for Procedural3dDocumentDsl {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
+    const EXTENSION: &'static str = "procedural3d";
+    fn envelope_id() -> &'static str { "procedural.procedural3d" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -291,13 +288,11 @@ impl store::DocumentDsl for Procedural3dDocumentDsl {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
-        )
-        .expect("valid envelope_id");
+        ).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::DocumentPack for Procedural3dDocumentDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
@@ -305,12 +300,12 @@ impl store::DocumentPack for Procedural3dDocumentDsl {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
@@ -321,11 +316,11 @@ impl store::DocumentPack for Procedural3dDocumentDsl {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+
 
 
 fn procedural3d_document_to_dsl(document: &Procedural3dDocument) -> Procedural3dDocumentDsl {

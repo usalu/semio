@@ -5,7 +5,7 @@
 //! grammar renders both as multi-line canonical `Document` text and as one space-joined `Inline`
 //! line, and both re-parse to the same value.
 
-use dsl_core::{format_f64, lex, parse_f64, Limits, SpannedToken, TextError, TextSpan, TokenClass, TokenKind};
+use crate::os_dsl::{format_f64, lex, parse_f64, Limits, SpannedToken, TextError, TextSpan, TokenClass, TokenKind};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Shape
@@ -76,11 +76,11 @@ pub enum Shape {
     /// is stored in `unit`'s declared unit; a compatible alien suffix on parse (`210000MPa`)
     /// converts into it, an incompatible one (wrong dimension) is a parse error. No suffix at all
     /// means the bare number is already in the declared unit.
-    Quantity(&'static dsl_core::UnitSpec),
+    Quantity(&'static crate::os_dsl::UnitSpec),
     /// A `Shape::Quantity` restricted to angle units (`deg`/`rad`/`turn`) — kept as its own variant
     /// (rather than reusing `Quantity` with an angle unit) so `shape_type_name`/table headers can
     /// tell a length from a rotation at a glance (`NUM` vs `QTY` vs `ANG`).
-    Angle(&'static dsl_core::UnitSpec),
+    Angle(&'static crate::os_dsl::UnitSpec),
     /// A `Shape::Text` refinement: a checked reference to an entity of the named kind (e.g.
     /// `"material"`). Prints/parses identically to `Text` (bare-preferred) — the only difference
     /// is semantic (a paired `FieldSpec.defines` anchor lets `LanguageService::validate` flag a
@@ -684,7 +684,7 @@ fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
     match cursor.peek().kind {
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
+            let text = crate::os_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
             Ok(FieldValue::Text(text))
         }
         TokenKind::Ident => {
@@ -732,7 +732,7 @@ fn parse_field_shape(cursor: &mut Cursor, field: &FieldSpec, spec: &RecordSpec, 
 /// GLUED (no whitespace between — the lexer already ends a numeric token exactly where the next
 /// `Ident` token begins for input like `210GPa`) unit-symbol ident. No suffix means the number is
 /// already expressed in `declared`'s unit; a suffix converts, erroring if the dimensions differ.
-fn parse_quantity(cursor: &mut Cursor, declared: &'static dsl_core::UnitSpec) -> Result<FieldValue, TextError> {
+fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::UnitSpec) -> Result<FieldValue, TextError> {
     let is_number_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
     if !is_number_token {
         return Err(TextError::new(format!("expected a quantity, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
@@ -743,8 +743,8 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static dsl_core::UnitSpec) ->
     if suffix.kind == TokenKind::Ident && suffix.byte_range.0 == number_token.byte_range.1 {
         let suffix_token = cursor.advance();
         let symbol = suffix_token.text.as_str().to_string();
-        let suffix_unit = dsl_core::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
-        let converted = dsl_core::convert(value, suffix_unit, declared).ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
+        let suffix_unit = crate::os_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
+        let converted = crate::os_dsl::convert(value, suffix_unit, declared).ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
         Ok(FieldValue::Float(converted))
     } else {
         Ok(FieldValue::Float(value))
@@ -969,7 +969,7 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
         }
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
+            let text = crate::os_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
             Ok(DslValue::String(text))
         }
         TokenKind::Int | TokenKind::Float => {
@@ -1566,7 +1566,7 @@ impl Writer {
                         Chunk::OpenBlock => push("{".to_string(), &mut glued),
                         Chunk::CloseBlock => push("}".to_string(), &mut glued),
                         Chunk::NewRecord => {}
-                        Chunk::Verbatim { content, .. } => push(format!("\"{}\"", dsl_core::escape_text(content)), &mut glued),
+                        Chunk::Verbatim { content, .. } => push(format!("\"{}\"", crate::os_dsl::escape_text(content)), &mut glued),
                     }
                 }
                 parts.join(" ")
@@ -1825,10 +1825,10 @@ fn scalar_to_text(value: &FieldValue) -> String {
         // idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and number-shaped text, which always fall
         // through to the quoted+escaped form instead.
         FieldValue::Text(s) => {
-            if dsl_core::is_bare_ident(s) {
+            if crate::os_dsl::is_bare_ident(s) {
                 s.clone()
             } else {
-                format!("\"{}\"", dsl_core::escape_text(s))
+                format!("\"{}\"", crate::os_dsl::escape_text(s))
             }
         }
         FieldValue::Bytes64(bytes) => format!("\"{}\"", base64_encode(bytes)),
@@ -2005,7 +2005,7 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
         DslValue::Null => writer.atom("null"),
         DslValue::Bool(b) => writer.atom(b.to_string()),
         DslValue::Number(n) => writer.atom(format_f64(*n)),
-        DslValue::String(s) => writer.atom(format!("\"{}\"", dsl_core::escape_text(s))),
+        DslValue::String(s) => writer.atom(format!("\"{}\"", crate::os_dsl::escape_text(s))),
         DslValue::Array(items) => {
             writer.atom("[");
             for item in items {
@@ -2108,7 +2108,7 @@ impl<'g> LanguageService<'g> {
         let tokens = lex(text, &limits, true).unwrap_or_default();
         let keywords = self.keywords();
         let keyword_refs: Vec<&str> = keywords.iter().map(String::as_str).collect();
-        dsl_core::token_classes(&tokens, &keyword_refs)
+        crate::os_dsl::token_classes(&tokens, &keyword_refs)
     }
 
     pub fn diagnostics(&self, text: &str) -> Vec<TextError> {
@@ -2317,9 +2317,9 @@ mod tests {
             Some("material"),
             RecordLayout::Inline,
             vec![
-                FieldSpec::new(0, "e", Shape::Quantity(dsl_core::unit_by_symbol("GPa").unwrap())),
-                FieldSpec::new(1, "rho", Shape::Quantity(dsl_core::unit_by_symbol("kg/m3").unwrap())),
-                FieldSpec::new(2, "rotation", Shape::Angle(dsl_core::unit_by_symbol("deg").unwrap())),
+                FieldSpec::new(0, "e", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
+                FieldSpec::new(1, "rho", Shape::Quantity(crate::os_dsl::unit_by_symbol("kg/m3").unwrap())),
+                FieldSpec::new(2, "rotation", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
             ],
         )
     }

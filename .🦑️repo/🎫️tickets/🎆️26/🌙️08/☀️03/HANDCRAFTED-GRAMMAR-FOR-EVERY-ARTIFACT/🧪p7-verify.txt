@@ -1,0 +1,497 @@
+=== started 2026-08-07T12:59:28Z ===
+=== command: bun ./📜️script.ts verify ===
+=== xcode:  ===
+[verify] dependency-cruiser boundaries…
+Saved lockfile
+
+✔ no dependency violations found (97 modules, 118 dependencies cruised)
+
+[verify] generated catalog freshness…
+
+> nx run @semio-tech/plugin-registry:check
+
+> bun ./📜️script.ts check
+
+plugin taxonomy tree findings (area "✏️s/🔌️plugins" is "mixed" — not failing the gate yet):
+  - ✒️writer: 🎛️apps/✒️writer/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ✒️writer: 🗿️artifacts/✒️writer/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ✒️writer: 🗿️artifacts/✒️writer/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ✒️writer: 🗿️artifacts/✒️writer/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ✒️writer: 🗿️artifacts/✒️writer/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🎛️apps/➗️mathematical/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🗿️artifacts/➗️mathematical/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🗿️artifacts/➗️mathematical/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🗿️artifacts/➗️mathematical/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🗿️artifacts/➗️mathematical/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🎛️apps/🧊️3d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🎛️apps/◻2d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🌀️procedural2d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🌀️procedural2d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🌀️procedural2d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🌀️procedural2d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-fillet-preview/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-fillet-preview/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-fillet-preview/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-fillet-preview/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-cut-with-torus/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-cut-with-torus/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-cut-with-torus/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-cut-with-torus/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-wire-preview/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-wire-preview/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-wire-preview/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-wire-preview/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-box-fuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-box-fuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-box-fuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/sphere-box-fuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-extrude-volume/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-extrude-volume/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-extrude-volume/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-extrude-volume/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-shell-preview/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-shell-preview/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-shell-preview/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/box-shell-preview/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/face-sweep-extrude/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/face-sweep-extrude/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/face-sweep-extrude/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/face-sweep-extrude/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🎛️apps/🌊️flow/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🫀️core/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📐️brep/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📖️dictionary/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🏗️bim/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🧠️logic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🧮️math/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📃️list/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🖍️draw/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🎛️apps/🧊️3d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🎛️apps/◻2d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🗿️artifacts/🗺️gismap/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🗿️artifacts/🗺️gismap/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🗿️artifacts/🗺️gismap/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🗿️artifacts/🗺️gismap/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🎛️apps/🌿️vcs/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🗿️artifacts/🌿️vcs/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🗿️artifacts/🌿️vcs/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🗿️artifacts/🌿️vcs/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🗿️artifacts/🌿️vcs/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🎛️apps/🎬️present/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🗿️artifacts/🎬️present/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🗿️artifacts/🎬️present/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🗿️artifacts/🎬️present/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🗿️artifacts/🎬️present/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🎛️apps/🎥️shooting/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🗿️artifacts/🎥️shooting/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🗿️artifacts/🎥️shooting/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🗿️artifacts/🎥️shooting/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🗿️artifacts/🎥️shooting/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔺️diff/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔺️diff/📖️component.grammar.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔺️diff/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🗣️dsl/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🗣️dsl/📖️component.grammar.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🗣️dsl/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🎒️pack/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🎒️pack/📡️component.protocol.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🎒️pack/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔧️op/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔧️op/📖️component.grammar.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔧️op/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 📡️spr/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 📡️spr/📡️component.protocol.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 📡️spr/🟦️component.ts
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🎛️apps/🎬️sequence/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🗿️artifacts/🎬️sequence/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🗿️artifacts/🎬️sequence/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🗿️artifacts/🎬️sequence/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🗿️artifacts/🎬️sequence/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🎛️apps/🧊️3d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🎛️apps/◻2d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/◻2d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/◻2d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/◻2d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🗿️artifacts/◻2d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🎛️apps/🏛️architect/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🗿️artifacts/🏛️program/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🗿️artifacts/🏛️program/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🗿️artifacts/🏛️program/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🗿️artifacts/🏛️program/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🎛️apps/🧊️3d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🔩️metal/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🪵️wood/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🤖️robotic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🧱️concrete/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: 🎛️apps/💠️lowpoly/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: 🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: 🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: 🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: 🗿️artifacts/💠️lowpoly/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: artifact "🔌️wires" is missing 📚️examples/
+  - 💡️reasoning: plugin-root 📚️examples/ is forbidden — relocate under 🗿️artifacts/<artifact>/📚️examples
+  - 💡️reasoning: app "🔌️wires" is missing ⚙️engine/📚️examples/
+  - 💡️reasoning: 📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: 📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: 📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: 📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: 📚️examples/♻️reuse/🎮️commands/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🎛️apps/📋️forms/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🎛️apps/📏️layout/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🗿️artifacts/📏️layout/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🗿️artifacts/📏️layout/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🗿️artifacts/📏️layout/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🗿️artifacts/📏️layout/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🎛️apps/📐️cad/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🗿️artifacts/📐️cad/📚️examples/♻️default/🔧️ops/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🗿️artifacts/📐️cad/📚️examples/♻️default/📡️sprs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🗿️artifacts/📐️cad/📚️examples/♻️default/🗣️dsls/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🗿️artifacts/📐️cad/📚️examples/♻️default/🎒️packs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🏢️aec-building/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/📐️spatial-shape/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🏛️aec-building-structure/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🔥️aec-building-energy/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📕️din4108/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📙️din18599/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📗️din16798/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1995/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1992/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1993/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1994/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📔️vdi3805/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📓️iso16757/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1991/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1996/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1998/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1999/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1997/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🎛️apps/📘️en1990/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📕️din4108/📚️examples/♻️default/🔧️ops/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📕️din4108/📚️examples/♻️default/📡️sprs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📕️din4108/📚️examples/♻️default/🗣️dsls/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📕️din4108/📚️examples/♻️default/🎒️packs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📙️din18599/📚️examples/♻️default/🔧️ops/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📙️din18599/📚️examples/♻️default/📡️sprs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📙️din18599/📚️examples/♻️default/🗣️dsls/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📙️din18599/📚️examples/♻️default/🎒️packs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📗️din16798/📚️examples/♻️default/🔧️ops/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📗️din16798/📚️examples/♻️default/📡️sprs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📗️din16798/📚️examples/♻️default/🗣️dsls/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📗️din16798/📚️examples/♻️default/🎒️packs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1995/📚️examples/📕️glulam-footbridge/🔧️ops/📕️glulam-footbridge/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1995/📚️examples/📕️glulam-footbridge/📡️sprs/📕️glulam-footbridge/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1995/📚️examples/📕️glulam-footbridge/🗣️dsls/📕️glulam-footbridge/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1995/📚️examples/📕️glulam-footbridge/🎒️packs/📕️glulam-footbridge/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🔧️ops/📕️liquid-retaining-fem-anchor/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/📡️sprs/📕️liquid-retaining-fem-anchor/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🗣️dsls/📕️liquid-retaining-fem-anchor/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🎒️packs/📕️liquid-retaining-fem-anchor/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1993/📚️examples/📕️high-strength-connection/🔧️ops/📕️high-strength-connection/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1993/📚️examples/📕️high-strength-connection/📡️sprs/📕️high-strength-connection/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1993/📚️examples/📕️high-strength-connection/🗣️dsls/📕️high-strength-connection/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1993/📚️examples/📕️high-strength-connection/🎒️packs/📕️high-strength-connection/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1994/📚️examples/📕️composite-bridge-girder/🔧️ops/📕️composite-bridge-girder/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1994/📚️examples/📕️composite-bridge-girder/📡️sprs/📕️composite-bridge-girder/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1994/📚️examples/📕️composite-bridge-girder/🗣️dsls/📕️composite-bridge-girder/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1994/📚️examples/📕️composite-bridge-girder/🎒️packs/📕️composite-bridge-girder/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📔️vdi3805/📚️examples/♻️default/🔧️ops/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📔️vdi3805/📚️examples/♻️default/📡️sprs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📔️vdi3805/📚️examples/♻️default/🗣️dsls/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📔️vdi3805/📚️examples/♻️default/🎒️packs/♻️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📓️iso16757/📚️examples/📕️default/🔧️ops/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📓️iso16757/📚️examples/📕️default/📡️sprs/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📓️iso16757/📚️examples/📕️default/🗣️dsls/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📓️iso16757/📚️examples/📕️default/🎒️packs/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1991/📚️examples/📕️retail-hydrocarbon-fire/🔧️ops/📕️retail-hydrocarbon-fire/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1991/📚️examples/📕️retail-hydrocarbon-fire/📡️sprs/📕️retail-hydrocarbon-fire/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1991/📚️examples/📕️retail-hydrocarbon-fire/🗣️dsls/📕️retail-hydrocarbon-fire/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1991/📚️examples/📕️retail-hydrocarbon-fire/🎒️packs/📕️retail-hydrocarbon-fire/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1996/📚️examples/📕️loadbearing-wall/🔧️ops/📕️loadbearing-wall/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1996/📚️examples/📕️loadbearing-wall/📡️sprs/📕️loadbearing-wall/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1996/📚️examples/📕️loadbearing-wall/🗣️dsls/📕️loadbearing-wall/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1996/📚️examples/📕️loadbearing-wall/🎒️packs/📕️loadbearing-wall/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1998/📚️examples/📕️seismic-rc-frame/🔧️ops/📕️seismic-rc-frame/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1998/📚️examples/📕️seismic-rc-frame/📡️sprs/📕️seismic-rc-frame/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1998/📚️examples/📕️seismic-rc-frame/🗣️dsls/📕️seismic-rc-frame/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1998/📚️examples/📕️seismic-rc-frame/🎒️packs/📕️seismic-rc-frame/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1999/📚️examples/📕️aluminium-roof-purlin/🔧️ops/📕️aluminium-roof-purlin/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1999/📚️examples/📕️aluminium-roof-purlin/📡️sprs/📕️aluminium-roof-purlin/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1999/📚️examples/📕️aluminium-roof-purlin/🗣️dsls/📕️aluminium-roof-purlin/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1999/📚️examples/📕️aluminium-roof-purlin/🎒️packs/📕️aluminium-roof-purlin/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1997/📚️examples/📕️default/🔧️ops/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1997/📚️examples/📕️default/📡️sprs/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1997/📚️examples/📕️default/🗣️dsls/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1997/📚️examples/📕️default/🎒️packs/📕️default/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1990/📚️examples/📕️high-consequence-office/🔧️ops/📕️high-consequence-office/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1990/📚️examples/📕️high-consequence-office/📡️sprs/📕️high-consequence-office/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1990/📚️examples/📕️high-consequence-office/🗣️dsls/📕️high-consequence-office/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🗿️artifacts/📘️en1990/📚️examples/📕️high-consequence-office/🎒️packs/📕️high-consequence-office/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🎛️apps/📖️playbook/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🗿️artifacts/📖️playbook/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🗿️artifacts/📖️playbook/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🗿️artifacts/📖️playbook/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🗿️artifacts/📖️playbook/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🧩️extensions/🌀️procedural/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🎛️apps/📜️imperative/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🗿️artifacts/📜️imperative/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🗿️artifacts/📜️imperative/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🗿️artifacts/📜️imperative/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🗿️artifacts/📜️imperative/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/🫀️core/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/🧠️logic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/🧮️math/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/🎮️control/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🎛️apps/📸️remodel/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🗿️artifacts/📸️remodel/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🗿️artifacts/📸️remodel/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🗿️artifacts/📸️remodel/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🗿️artifacts/📸️remodel/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🔺️diff/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🔺️diff/📖️component.grammar.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🔺️diff/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 🗣️dsl/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🗣️dsl/📖️component.grammar.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🗣️dsl/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 🎒️pack/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🎒️pack/📡️component.protocol.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🎒️pack/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 🔧️op/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🔧️op/📖️component.grammar.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🔧️op/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 📡️spr/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 📡️spr/📡️component.protocol.semio
+  - 🔋️energy: artifact "🔋️model" is missing 📡️spr/🟦️component.ts
+  - 🔋️energy: 🗿️artifacts/🔋️model/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🎛️apps/🔌️jack/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🎛️apps/♻️rewrite/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/🔌️jack/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/♻️rewrite/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/♻️rewrite/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/♻️rewrite/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🗿️artifacts/♻️rewrite/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🎛️apps/🕸️dag/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🎛️apps/🖍️draw/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🔄️fsm/✨️macros/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🔄️fsm/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🗿️artifacts/🖍️draw/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🗿️artifacts/🖍️draw/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🎛️apps/🖨️raster/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🗿️artifacts/🖨️raster/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🗿️artifacts/🖨️raster/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🗿️artifacts/🖨️raster/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🗿️artifacts/🖨️raster/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🎛️apps/🗒️note/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/📚️examples/♻️semio/🔧️ops/♻️semio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/📚️examples/♻️semio/📡️sprs/♻️semio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/📚️examples/♻️semio/🗣️dsls/♻️semio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/📚️examples/♻️semio/🎒️packs/♻️semio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🎛️apps/🧊️3d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🎛️apps/🖐️5d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🎛️apps/◻2d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule-tower/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule-tower/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule-tower/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule-tower/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule-tower/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule-tower/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule-tower/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule-tower/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/🖐️5d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/nakagin-capsule-tower/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/nakagin-capsule-tower/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/nakagin-capsule-tower/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/nakagin-capsule-tower/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🗿️artifacts/◻2d/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🎛️apps/🧊️3d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🎛️apps/🖐️5d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🎛️apps/◻2d/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/hexagonal-cut-concrete-forest-left/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/hexagonal-cut-concrete-forest-left/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/hexagonal-cut-concrete-forest-left/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🧊️3d/📚️examples/hexagonal-cut-concrete-forest-left/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/hexagonal-cut-concrete-forest-left/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/hexagonal-cut-concrete-forest-left/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/hexagonal-cut-concrete-forest-left/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/🖐️5d/📚️examples/hexagonal-cut-concrete-forest-left/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-left/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-left/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-left/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-left/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-right/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-right/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-right/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-right/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🎛️apps/🏠️home/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🎛️apps/🪐️space/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🗿️artifacts/🏠️home/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🗿️artifacts/🏠️home/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🗿️artifacts/🏠️home/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🗿️artifacts/🏠️home/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🎛️apps/🗂️curate/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🗿️artifacts/🗂️curate/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🗿️artifacts/🗂️curate/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🗿️artifacts/🗂️curate/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🗿️artifacts/🗂️curate/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🪵️beams/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🧱️slabs/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🪟️windows/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+package discovery problems:
+  - [ambiguous-lang-shape] "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).
+plugin registry catalog is fresh (58 plugin crates, 58 playgrounds, 16 framework packages); .vscode/launch.json is fresh.
+
+
+
+ NX   Successfully ran target check for project @semio-tech/plugin-registry
+
+
+[verify] region/host-contract script lints…
+
+> nx run @semio-tech/framework-renderer-react:lint
+
+> bun ./📜️script.ts lint
+
+framework-renderer-react: region/host-contract lint passed
+
+
+
+ NX   Successfully ran target lint for project @semio-tech/framework-renderer-react
+
+
+
+> nx run @semio-tech/framework-os-dev:plugin lint
+
+> bun ./📜️script.ts plugin lint
+
+[plugin-capability-lint] semio-s-plugin-puzzle: uses std::fs/std::net without localBackboneStorage capability (✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs)
+[plugin-capability-lint] semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-flow-extension-core (flow-extension-core)
+[plugin-capability-lint] semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-flow-extension-dictionary (flow-extension-dictionary)
+[plugin-capability-lint] semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-flow-extension-list (flow-extension-list)
+[plugin-capability-lint] semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-flow-extension-logic (flow-extension-logic)
+[plugin-capability-lint] semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-flow-extension-math (flow-extension-math)
+[plugin-capability-lint] semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-flow-extension-text (flow-extension-text)
+[plugin-capability-lint] semio-s-plugin-process-wood: cross-plugin dependency on semio-s-plugin-process (process)
+[plugin-capability-lint] semio-s-plugin-process-concrete: cross-plugin dependency on semio-s-plugin-process (process)
+[plugin-capability-lint] semio-s-plugin-process-metal: cross-plugin dependency on semio-s-plugin-process (process)
+[plugin-capability-lint] semio-s-plugin-process-robotic: cross-plugin dependency on semio-s-plugin-process (process)
+[plugin-capability-lint] semio-s-plugin-sourcing-beams: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+[plugin-capability-lint] semio-s-plugin-sourcing-windows: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+[plugin-capability-lint] semio-s-plugin-sourcing-slabs: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+[plugin-capability-lint] semio-s-plugin-sequence: forbidden dependency web-sys
+[plugin-capability-lint] semio-s-plugin-sequence: forbidden dependency js-sys
+[plugin-capability-lint] semio-s-plugin-trinity: forbidden dependency web-sys
+[plugin-capability-lint] semio-s-plugin-trinity: forbidden dependency js-sys
+[plugin-capability-lint] semio-s-plugin-lowpoly: cross-plugin dependency on semio-s-plugin-cad (cad)
+[plugin-capability-lint] semio-s-plugin-writer: cross-plugin dependency on semio-s-plugin-trinity (trinity)
+[plugin-capability-lint] semio-s-plugin-layout: forbidden dependency web-sys
+[plugin-capability-lint] semio-s-plugin-layout: forbidden dependency js-sys
+[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-cad (cad)
+[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-gis (gis)
+[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-procedural (procedural)
+[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-process (process)
+[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-puzzle (puzzle)
+[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+[plugin-capability-lint] semio-s-plugin-animate: forbidden dependency wgpu
+[plugin-capability-lint] semio-s-plugin-animate: forbidden dependency winit
+[plugin-capability-lint] semio-s-plugin-norm: cross-plugin dependency on semio-s-plugin-fem (fem)
+1397 |     const grandfathered = failures.filter((f) => KNOWN_CAPABILITY_VIOLATIONS.has(f));
+1398 |     const blocking = [...failures.filter((f) => !KNOWN_CAPABILITY_VIOLATIONS.has(f)), ...(await checkPlaygroundAliasFreshness())];
+1399 |     for (const warning of grandfathered) console.warn(`[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): ${warning}`);
+1400 |     if (blocking.length > 0) {
+1401 |       for (const failure of blocking) console.error(`[plugin-capability-lint] ${failure}`);
+1402 |       throw new Error(`plugin capability lint failed (${blocking.length} issue(s), ${checkedPackageCount} plugin package(s) evaluated)`);
+                       ^
+error: plugin capability lint failed (31 issue(s), 58 plugin package(s) evaluated)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:1402:17)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts plugin lint" exited with non-zero status code
+
+
+ NX   Running target plugin for project @semio-tech/framework-os-dev failed
+
+Failed tasks:
+
+- @semio-tech/framework-os-dev:plugin
+
+Hint: run the command with --verbose for more details.
+
+1371 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1372 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1373 |  */
+1374 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1375 |   const status = runCmdInternal(cmd, args, opts);
+1376 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: bun nx run @semio-tech/framework-os-dev:plugin lint exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:1376:31)
+      at runGate (/Users/ueli/Documents/semio/📜️script.ts:681:5)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:664:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:815:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:850:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:4678:11
+
+Bun v1.3.14 (macOS arm64)
+=== exit: 1 ===

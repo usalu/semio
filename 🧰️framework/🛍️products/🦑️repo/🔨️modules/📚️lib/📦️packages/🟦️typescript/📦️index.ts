@@ -2457,6 +2457,92 @@ export function runWasmPackWebBuild(opts: {
   }
 }
 
+const EXTENSION_COMPONENT_WASM_TARGET = "wasm32-wasip2";
+
+/** @emoji 🪶️ Cargo profile for wasip2 extension components — mirrors os dev `pluginWasmProfile`. */
+function extensionComponentWasmProfile(): string {
+  return process.env.SEMIO_PLUGIN_PROFILE ?? (semioBuildMode() === "ship" ? "wasm-release" : "dev");
+}
+
+function parseCargoTomlStringArray(block: string, key: string): string[] {
+  const match = block.match(new RegExp(`^${key}\\s*=\\s*\\[([^\\]]*)\\]`, "m"));
+  if (!match) return [];
+  return [...match[1]!.matchAll(/"([^"]+)"/g)].map((row) => row[1]!);
+}
+
+function parseExtensionCargoManifest(manifestPath: string, repoRoot: string): {
+  readonly packageName: string;
+  readonly version: string;
+  readonly description: string;
+  readonly componentPackageId: string;
+  readonly extends: string;
+  readonly contributes: readonly string[];
+} {
+  const text = readFileSync(manifestPath, "utf8");
+  const packageName = text.match(/^name\s*=\s*"([^"]+)"/m)?.[1];
+  if (!packageName) throw new Error(`missing package name in ${manifestPath}`);
+  let version = text.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
+  if (!version && /^\s*version\.workspace\s*=\s*true/m.test(text)) {
+    const rootToml = readFileSync(join(repoRoot, "Cargo.toml"), "utf8");
+    version = rootToml.match(/\[workspace\.package\][\s\S]*?^version\s*=\s*"([^"]+)"/m)?.[1];
+  }
+  version = version ?? "0.1.0";
+  const description = text.match(/^description\s*=\s*"([^"]+)"/m)?.[1] ?? packageName;
+  const componentPackageId = text.match(/\[package\.metadata\.component\][\s\S]*?^package\s*=\s*"semio:([^"]+)"/m)?.[1];
+  if (!componentPackageId) throw new Error(`missing [package.metadata.component].package in ${manifestPath}`);
+  const semioLines: string[] = [];
+  let inSemio = false;
+  for (const line of text.split("\n")) {
+    if (line.trim() === "[package.metadata.semio]") {
+      inSemio = true;
+      continue;
+    }
+    if (inSemio && line.startsWith("[") && line.trim() !== "[package.metadata.semio]") break;
+    if (inSemio) semioLines.push(line);
+  }
+  const semioBlock = semioLines.join("\n");
+  const extendsHost = semioBlock.match(/^extends\s*=\s*"([^"]+)"/m)?.[1] ?? "";
+  const contributes = parseCargoTomlStringArray(semioBlock, "contributes");
+  return { packageName, version, description, componentPackageId, extends: extendsHost, contributes };
+}
+
+/** @emoji 📦 Builds a wasip2 component and writes a runtime-installable `.sxt` beside the crate (`dist/<id>.sxt` by default). */
+export async function runExtensionComponentPackage(opts: {
+  readonly rsDir: string;
+  readonly repoRoot?: string;
+  readonly outPath?: string;
+  readonly logPrefix?: string;
+}): Promise<string> {
+  const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
+  const rsDir = resolve(opts.rsDir);
+  const manifestPath = join(rsDir, "Cargo.toml");
+  const parsed = parseExtensionCargoManifest(manifestPath, repoRoot);
+  const profile = extensionComponentWasmProfile();
+  const logPrefix = opts.logPrefix ?? parsed.componentPackageId;
+  if (runCmdStatus("cargo", ["build", "-p", parsed.packageName, "--target", EXTENSION_COMPONENT_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+    throw new Error(`extension component build failed: ${parsed.packageName}`);
+  }
+  const wasmArtifact = join(repoRoot, "target", EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
+  if (!existsSync(wasmArtifact)) throw new Error(`missing wasm artifact ${wasmArtifact}`);
+  const componentWasm = new Uint8Array(readFileSync(wasmArtifact));
+  const { packExtensionPackage } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts");
+  const manifest = {
+    extensionId: parsed.componentPackageId,
+    label: parsed.description,
+    version: parsed.version,
+    extends: parsed.extends,
+    capabilities: [...parsed.contributes],
+    contributions: parsed.contributes,
+    packageFormat: 1,
+  };
+  const packed = packExtensionPackage({ manifest, componentWasm });
+  const outPath = opts.outPath ?? join(rsDir, "dist", `${parsed.componentPackageId}.sxt`);
+  mkdirSync(dirname(outPath), { recursive: true });
+  writeFileSync(outPath, packed);
+  console.log(`[DEBUG] ${logPrefix} packaged ${outPath} (${packed.length} bytes)`);
+  return outPath;
+}
+
 /** 🔗️Resolves `import.meta.url` of the bundle `script.ts`. */
 export function scriptPathFromUrl(scriptUrl: string): string {
   return fileURLToPath(scriptUrl);

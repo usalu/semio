@@ -15,7 +15,7 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
-pub use crate::os_dsl::core::*;
+pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
 pub use dsl_derive::{DslDiff, DslDocument, DslEnum, DslOps, DslRecord, DslScalar};
 pub use crate::os_dsl::schema::*;
 
@@ -114,7 +114,7 @@ impl DslField for f64 {
 
 /// @emoji 🔤️ `String` binds as `Shape::Text` — the one string shape. The parser accepts either a
 /// bare `Ident` token or a quoted `Text` token wherever `Text` is expected; the printer emits bare
-/// (unquoted) whenever `crate::os_dsl::core::is_bare_ident` holds for the value, quoted+escaped otherwise —
+/// (unquoted) whenever `crate::os_dsl::is_bare_ident` holds for the value, quoted+escaped otherwise —
 /// so bare-vs-quoted is entirely a printing decision now, not a separate shape a field opts into.
 impl DslField for String {
     fn shape() -> Shape {
@@ -287,89 +287,71 @@ pub mod __rt {
     }
 }
 
-//#region 🔖️OpCodec
-/// 🎞️ Handcrafted OpText (P6).
-impl OpText for this {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                )?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
-    }
-}
 
-/// 🎯️ Handcrafted OpBinary (P6).
-impl OpBinary for this {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+//#endregion 🔖️Runtime
+
+//#region 🔖️OpRt
+/// @emoji 🎯️ Handcrafted OpBinary helper (P6): layout `format u8 (=1) | variant ordinal varint | record body`.
+/// Called explicitly from handcrafted `protocol::OpBinary` impls — never re-emitted by derive.
+pub mod variants_binary {
+    use super::DslVariants;
+    use crate::os_pack::{decode_record_body, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};
+    use crate::os_spr::ProtocolError;
+
+    pub const OP_BINARY_FORMAT: u8 = 1;
+
+    pub fn encode_op<T: DslVariants>(op: &T) -> Result<Vec<u8>, ProtocolError> {
+        let (keyword, record) = op.to_named_record();
+        let variants = T::variants();
+        let ordinal = variants.iter().position(|(k, _)| k == &keyword).ok_or(ProtocolError::Malformed {
             what: "op variant",
             offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
+            detail: format!("keyword '{keyword}' missing from variants()"),
         })?;
-        let spec = (variants[ordinal].1)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let spec = variants[ordinal].1();
+        let body = encode_record_body(&spec, &record, &EncodeOptions::default()).map_err(ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        write_varint_u64(&mut out, ordinal as u64);
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = crate::os_pack::ByteReader::new(bytes);
+
+    pub fn decode_op<T: DslVariants>(bytes: &[u8]) -> Result<T, ProtocolError> {
+        let mut reader = ByteReader::new(bytes);
         let format = reader.read_u8()?;
         if format != OP_BINARY_FORMAT {
-            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+            return Err(ProtocolError::Malformed {
+                what: "op format",
+                offset: 0,
+                detail: format!("unsupported op format {format}"),
+            });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+        let variants = T::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(ProtocolError::Malformed {
             what: "op variant",
             offset: 1,
             detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
         })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
-        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+        let (record, _report) = decode_record_body(body, &spec, &DecodeOptions::default()).map_err(ProtocolError::from)?;
+        T::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed {
             what: "op record",
             offset: reader.position() as u64,
             detail: error.to_string(),
         })
     }
 }
-//#endregion 🔖️OpCodec
-
-//#endregion 🔖️Runtime
-
-//#region 🔖️OpRt
-// P6: generic OpBinary runtime deleted — artifacts handcraft OpBinary against their spr protocol.
 //#endregion 🔖️OpRt
 
 //#region 🔖️Idiom
 /// @emoji 🗣️ A custom front-end language layered on this engine: its own lexer/parser/printer/AST,
 /// sharing only the laws (round-trip, canonicalize idempotence) and — via `register_idiom` — the
 /// editor plumbing (`LanguageService` fence delegation, semantic tokens). Formalizes the technique
-/// Jack (`math_graph_dsl`) already used by hand: pre-scan tokens `crate::os_dsl::core::lex`'s fixed alphabet
-/// can't express, delegate every remaining run to `crate::os_dsl::core::lex`, reuse `escape_text`/`Writer`/
+/// Jack (`math_graph_dsl`) already used by hand: pre-scan tokens `crate::os_dsl::lex`'s fixed alphabet
+/// can't express, delegate every remaining run to `crate::os_dsl::lex`, reuse `escape_text`/`Writer`/
 /// `parse_wire_text` for anything already shared. Two integration routes:
 /// - **Route A — whole-surface idiom** (a document/op language in its own right, e.g. CAD's
 ///   Construct): the crate hand-implements `crate::os_store::DocumentDsl`/`crate::os_spr::OpText` by lowering its
@@ -402,66 +384,6 @@ pub struct CompletionItem {
     pub detail: Option<String>,
 }
 
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for CompletionItem {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = crate::os_dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-/// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for CompletionItem {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
-//#endregion 🔖️DocumentCodec
 
 
 /// @emoji 📇️ Type-erased vtable for one registered idiom — what `Shape::Embed` canonicalization
@@ -802,13 +724,13 @@ mod tests {
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for DerivedDocument {
+impl crate::os_store::DocumentDsl for DerivedDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -821,39 +743,39 @@ impl DocumentDsl for DerivedDocument {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
             1,
         )
         .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for DerivedDocument {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
+impl crate::os_store::DocumentPack for DerivedDocument {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
             1,
         )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -893,8 +815,8 @@ impl DocumentPack for DerivedDocument {
 
 //#region 🔖️OpCodec
 /// 🎞️ Handcrafted OpText (P6).
-impl OpText for DerivedOperation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
+impl crate::os_spr::OpText for DerivedOperation {
+    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -918,7 +840,7 @@ impl OpText for DerivedOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl OpBinary for DerivedOperation {
+impl crate::os_spr::OpBinary for DerivedOperation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
@@ -929,7 +851,7 @@ impl OpBinary for DerivedOperation {
             detail: format!("keyword {keyword:?} is not a declared variant"),
         })?;
         let spec = (variants[ordinal].1)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let body = crate::os_pack::encode_record_body(&spec, &record, &crate::os_store::PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -952,7 +874,7 @@ impl OpBinary for DerivedOperation {
         })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
-        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &crate::os_store::PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
             what: "op record",
             offset: reader.position() as u64,
@@ -1033,13 +955,13 @@ impl OpBinary for DerivedOperation {
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for SceneDocument {
+impl crate::os_store::DocumentDsl for SceneDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -1052,39 +974,39 @@ impl DocumentDsl for SceneDocument {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
             1,
         )
         .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for SceneDocument {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
+impl crate::os_store::DocumentPack for SceneDocument {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
             1,
         )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -1142,13 +1064,13 @@ impl DocumentPack for SceneDocument {
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for ShapeDocument {
+impl crate::os_store::DocumentDsl for ShapeDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -1161,39 +1083,39 @@ impl DocumentDsl for ShapeDocument {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
             1,
         )
         .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for ShapeDocument {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
+impl crate::os_store::DocumentPack for ShapeDocument {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
             1,
         )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -1207,7 +1129,7 @@ impl DocumentPack for ShapeDocument {
         let doc = ShapeDocument { shapes: vec![ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 }), ShapeNode::Square(SquareBody { id: "s1".to_string(), side: 3.0 })] };
         let printed = <ShapeDocument as crate::os_store::DocumentDsl>::print_dsl(&doc);
         // `"c1"` is bare-ident-shaped, so the unified "strings bare-preferred" law prints it
-        // unquoted (`circle c1 r=2`, not `circle "c1" r=2`) — see `crate::os_dsl::core::is_bare_ident`.
+        // unquoted (`circle c1 r=2`, not `circle "c1" r=2`) — see `crate::os_dsl::is_bare_ident`.
         assert!(printed.contains("circle c1 r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
         let parsed = <ShapeDocument as crate::os_store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");
@@ -1240,13 +1162,13 @@ impl DocumentPack for ShapeDocument {
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for PaintDocument {
+impl crate::os_store::DocumentDsl for PaintDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -1259,39 +1181,39 @@ impl DocumentDsl for PaintDocument {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
             1,
         )
         .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for PaintDocument {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
+impl crate::os_store::DocumentPack for PaintDocument {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
             1,
         )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -1334,13 +1256,13 @@ impl DocumentPack for PaintDocument {
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for BrushDocument {
+impl crate::os_store::DocumentDsl for BrushDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -1353,39 +1275,39 @@ impl DocumentDsl for BrushDocument {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
             1,
         )
         .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for BrushDocument {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
+impl crate::os_store::DocumentPack for BrushDocument {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
             1,
         )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -1424,8 +1346,8 @@ impl DocumentPack for BrushDocument {
 
 //#region 🔖️OpCodec
 /// 🎞️ Handcrafted OpText (P6).
-impl OpText for PaintOp {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
+impl crate::os_spr::OpText for PaintOp {
+    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -1449,7 +1371,7 @@ impl OpText for PaintOp {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl OpBinary for PaintOp {
+impl crate::os_spr::OpBinary for PaintOp {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
@@ -1460,7 +1382,7 @@ impl OpBinary for PaintOp {
             detail: format!("keyword {keyword:?} is not a declared variant"),
         })?;
         let spec = (variants[ordinal].1)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let body = crate::os_pack::encode_record_body(&spec, &record, &crate::os_store::PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -1483,7 +1405,7 @@ impl OpBinary for PaintOp {
         })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
-        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &crate::os_store::PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
             what: "op record",
             offset: reader.position() as u64,
@@ -1529,13 +1451,13 @@ impl OpBinary for PaintOp {
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for SelfRefDocument {
+impl crate::os_store::DocumentDsl for SelfRefDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -1548,39 +1470,39 @@ impl DocumentDsl for SelfRefDocument {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
             1,
         )
         .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for SelfRefDocument {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
+impl crate::os_store::DocumentPack for SelfRefDocument {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
             1,
         )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -1621,13 +1543,13 @@ impl DocumentPack for SelfRefDocument {
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for TableDocument {
+impl crate::os_store::DocumentDsl for TableDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+        let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -1640,39 +1562,39 @@ impl DocumentDsl for TableDocument {
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Dsl,
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Dsl,
             1,
         )
         .expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for TableDocument {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(
-            <Self as DocumentDsl>::envelope_id(),
-            semio_format::Component::Pack,
+impl crate::os_store::DocumentPack for TableDocument {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as crate::os_store::DocumentDsl>::envelope_id(),
+            crate::os_store::semio_format::Component::Pack,
             1,
         )
-        .map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as crate::os_store::DocumentDsl>::envelope_id() {
+            return Err(crate::os_store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
-                <Self as DocumentDsl>::envelope_id(),
+                <Self as crate::os_store::DocumentDsl>::envelope_id(),
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
         Some(Self::__dsl_spec())

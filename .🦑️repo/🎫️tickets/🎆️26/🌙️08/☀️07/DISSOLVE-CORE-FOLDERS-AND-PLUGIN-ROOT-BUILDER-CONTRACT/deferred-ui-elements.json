@@ -1,0 +1,22 @@
+{
+  "wave": "wave1-ui-elements-core",
+  "description": "References to the old UI elements core path outside the 🖱️ui module (not import edges).",
+  "outsideUiImports": [],
+  "commentOnlyReferences": [
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx",
+      "line": 63,
+      "note": "Comment cites 🧱️elements/🫀️core/Ports — update when that file is next edited."
+    }
+  ],
+  "intentionallyUnchanged": [
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_resolver.ts",
+      "note": "Imports 🧮️math/🕸️graph/🗣️dsl/🫀️core/… (math DSL core, not UI elements core)."
+    }
+  ],
+  "headerCommentsStillMentionCore": {
+    "note": "Several lifted element files still have legacy header/doc comments mentioning elements/🫀️core; no runtime impact.",
+    "optionalFollowUp": "Refresh headers in a docs-only pass."
+  }
+}

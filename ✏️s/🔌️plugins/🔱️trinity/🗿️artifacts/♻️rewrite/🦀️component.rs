@@ -67,7 +67,7 @@ impl From<LayoutPoint> for (f64, f64) {
 /// test, reverted to only the last field). `parameter_bindings` is `BTreeMap<String, PropertyValue>`
 /// (bare `HashMap` has no blanket `DslField` impl, only `BTreeMap` does), and `rule_layout` uses the
 /// `LayoutPoint` twin above in place of a bare tuple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "rewrite", layout = "lines")]
 pub struct RewriteRuleModel {
@@ -80,14 +80,11 @@ pub struct RewriteRuleModel {
     #[serde(default)]
     pub rule_layout: BTreeMap<String, LayoutPoint>,
 }
-
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for RewriteRuleModel {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
+    const EXTENSION: &'static str = "rewrite";
+    fn envelope_id() -> &'static str { "rewrite" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -106,13 +103,11 @@ impl store::DocumentDsl for RewriteRuleModel {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
-        )
-        .expect("valid envelope_id");
+        ).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::DocumentPack for RewriteRuleModel {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
@@ -120,12 +115,12 @@ impl store::DocumentPack for RewriteRuleModel {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
@@ -136,11 +131,11 @@ impl store::DocumentPack for RewriteRuleModel {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+
 
 
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
@@ -152,6 +147,6 @@ pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 // ports reuse jack's `"graph.trinity"` kind id. Not a gap — preserved verbatim.
 
 // 📜️ `RewriteRuleModel`/`RewriteRuleOperation` derive their `store::DocumentDsl`/`protocol::OpText`
-// impls directly (see `#[derive(dsl::DslDocument)]` above and `#[derive(dsl::DslOps)]` in `🔧️op`) —
+// impls directly (see `#[derive(dsl::DslRecord)]` above and `#[derive(dsl::DslEnum)]` in `🔧️op`) —
 // every field already binds through the `dsl::` engine with no foreign types, so no hand-written
 // parser/printer or twin type is needed anywhere in this artifact (unlike `jack`'s `GraphFixture`).

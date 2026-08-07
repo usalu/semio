@@ -2,7 +2,7 @@
 //! `selected_check_index` (the only view state a norm app carries).
 
 use crate::artifacts::din18599::engine::DinV18599Family;
-use crate::core::NormHost;
+use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -11,13 +11,13 @@ pub const BODY_INSPECTION: &str = "norm.din18599.play.inspection";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::core::app::panel_definition(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, BODY_INSPECTION)
+    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, BODY_INSPECTION)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(host: &NormHost<DinV18599Family>, selected_check_index: Option<u32>) -> UiNode {
-    crate::core::app::render_inspection(host.report(), selected_check_index)
+    crate::app_surface::render_inspection(host.report(), selected_check_index)
 }
 //#endregion 🔖️Render
 

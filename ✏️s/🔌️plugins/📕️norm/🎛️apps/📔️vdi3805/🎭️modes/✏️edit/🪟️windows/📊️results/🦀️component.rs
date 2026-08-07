@@ -1,7 +1,7 @@
 //! 📊️ VDI 3805 play app — the results window: every computed compliance check, one line each.
 
 use crate::artifacts::vdi3805::engine::Vdi3805Family;
-use crate::core::NormHost;
+use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -12,13 +12,13 @@ pub const BODY_RESULTS: &str = "norm.vdi3805.play.results";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::vdi3805::create_vdi3805_app`.
 pub fn definition() -> WindowKindDefinition {
-    crate::core::app::window_definition(WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), BODY_RESULTS, "bar-chart-3")
+    crate::app_surface::window_definition(WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), BODY_RESULTS, "bar-chart-3")
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(host: &NormHost<Vdi3805Family>) -> UiNode {
-    crate::core::app::render_report(host.report())
+    crate::app_surface::render_report(host.report())
 }
 //#endregion 🔖️Render
 

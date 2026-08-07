@@ -12,7 +12,7 @@
 
 use crate::apps::fem3d::config::Fem3dConfig;
 use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
-use crate::core::shared::{DisplayMode, ResultDisplay};
+use crate::app_surface::{DisplayMode, ResultDisplay};
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, UiNode};
 
 /// 🪟️ The manifest's Results window kind id.
@@ -22,7 +22,7 @@ pub const FEM3D_BODY_RESULTS: &str = "fem3d.play.results";
 
 // #region 🔖️ConfigHelpers
 /// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
-/// `Fem3dConfig` result-display fields back into `crate::core::shared::ResultDisplay`/`DisplayMode` so
+/// `Fem3dConfig` result-display fields back into `crate::app_surface::ResultDisplay`/`DisplayMode` so
 /// the render pipeline below (built around those shared types) needs no changes.
 pub fn config_result_display(cfg: &Fem3dConfig) -> ResultDisplay {
     let mode = match cfg.result_mode.as_str() {
@@ -36,7 +36,7 @@ pub fn config_result_display(cfg: &Fem3dConfig) -> ResultDisplay {
 
 // #region 🔖️Render
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every solid's footprint/height —
-/// drives mode-shape amplitude (see `crate::core::shared::MODE_SHAPE_AMPLITUDE_RATIO`'s doc). Falls
+/// drives mode-shape amplitude (see `crate::app_surface::MODE_SHAPE_AMPLITUDE_RATIO`'s doc). Falls
 /// back to `1.0` for a degenerate model.
 fn fem3d_model_extent(doc: &Fem3dDocument) -> f64 {
     let mut min = [f64::INFINITY; 3];
@@ -121,7 +121,7 @@ fn render_static(doc: &Fem3dDocument, source_id: Option<&str>, camera: &FemCamer
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
 fn render_modal(doc: &Fem3dDocument, mode_index: usize, camera: &FemCamera) -> UiNode {
     use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, modal_buckling::fem3d_modal_mode_values};
-    use crate::core::shared::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
+    use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
     let (freq_hz, mut disp_map) = match fem3d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
@@ -143,7 +143,7 @@ fn render_modal(doc: &Fem3dDocument, mode_index: usize, camera: &FemCamera) -> U
 /// load factor.
 fn render_buckling(doc: &Fem3dDocument, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, modal_buckling::fem3d_buckling_mode_values};
-    use crate::core::shared::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
+    use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text(Label::data("No load case defined"));

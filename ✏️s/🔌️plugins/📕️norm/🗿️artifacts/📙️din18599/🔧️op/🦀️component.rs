@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::din18599::Document;
 
-pub type Operation = crate::core::SetDocumentOperation<Document>;
+pub type Operation = crate::document::SetDocumentOperation<Document>;
 
 //#region 🧪️Tests
 #[cfg(test)]

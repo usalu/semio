@@ -28,7 +28,7 @@ use crate::apps::space::commands::studio_io::{export_studio_dsl, export_studio_p
 use crate::apps::space::commands::viewport::{node_graph_hover, node_graph_viewport, text_hover};
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::terminology::SStudioLabels;
-use crate::core::parse_demo_space_document;
+use crate::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_document, MediaContract, WorkflowDocument, WorkflowEdge, WorkflowOperation};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
 use store::EngineHandles;
@@ -614,7 +614,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::space::testkit::{empty_history, studio_emit};
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
     use semio_framework_plugin::testkit as plugin_testkit;
     use semio_framework_plugin::{PluginApp, VcsDocumentApp};
 

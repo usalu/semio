@@ -1,0 +1,35 @@
+{
+  "capturedAt": "2026-08-07T13:03:24.704Z",
+  "writerRegisteredLanguageIds": [
+    "jack",
+    "writer.document",
+    "writer.op",
+    "writer.diff",
+    "writer.pack",
+    "writer.spr"
+  ],
+  "writerRegisteredCount": 6,
+  "writerDebugLogSites": [
+    "writer.open_document uri=… language_id=… (open_document::handle)",
+    "writer.main tokens path language_id=… (main window render)",
+    "writer.engine language_tokens_json language_id=…"
+  ],
+  "openDocumentTests": [
+    "jack",
+    "dag.jack via set_active_example",
+    "open-document command in command_surface tests"
+  ],
+  "semioExamplesUnderPlugins": {
+    "total": 681,
+    "bySuffix": {
+      "cmd.semio": 53,
+      "grammar.semio": 156,
+      "op.semio": 89,
+      "spr.semio": 89,
+      "dsl.semio": 101,
+      "pack.semio": 89,
+      "protocol.semio": 104
+    }
+  },
+  "runtimeNote": "cargo test / open_document [DEBUG] stderr not executed on this host (Xcode license exit 69). Registered language count satisfies P7 ≥6 kinds statically."
+}

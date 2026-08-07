@@ -110,9 +110,9 @@ import { Link, useNavigate } from "react-router";
 // #endregion 🔌️Adapters
 
 // #region 🔌️Ports
-// 🧱️core-extracted: ReactHostPort + reactHostPort moved to 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx (a
+// 🧱️core-extracted: ReactHostPort + reactHostPort moved to 🧱️elements/🔌️Ports/🟦️component.tsx (a
 // module-top-level circular-import fix, see that file's header comment) — imported below, not redefined.
-import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../../../🧱️elements/🫀️core/🔌Ports/🟦️component.tsx";
+import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
 export { reactHostPort, type ReactHostPort };
 
 
@@ -122,18 +122,18 @@ export interface ThreeHostPort {
   readonly drei: { OrbitControls: typeof OrbitControls; Grid: typeof Grid };
 }
 
-// 🧱️core-extracted: SceneHostPort + sceneHostPort moved to 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx (same
+// 🧱️core-extracted: SceneHostPort + sceneHostPort moved to 🧱️elements/🔌️Ports/🟦️component.tsx (same
 // module-top-level circular-import fix as reactHostPort above, triggered by Scene's top-level
 // `sceneHostPort.drei.Line` read) — imported below, not redefined.
-import { sceneHostPort, setSceneHostPort, type SceneHostPort } from "../../../../🧱️elements/🫀️core/🔌Ports/🟦️component.tsx";
+import { sceneHostPort, setSceneHostPort, type SceneHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
 export { sceneHostPort, type SceneHostPort };
 // #endregion 🔌️Ports
 
 // #region 🔌️PortWiring
-import { flowHostPort, setFlowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider } from "../../../../🧱️elements/🫀️core/🔌Ports/🟦️component.tsx";
+import { flowHostPort, setFlowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
 export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider };
 // 🧱️core-extracted: reactHostPort's `let` binding + default value now live in
-// 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx (imported above, in the 🔌️Ports region) — reassignment below
+// 🧱️elements/🔌️Ports/🟦️component.tsx (imported above, in the 🔌️Ports region) — reassignment below
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
 // directly.
 
@@ -183,11 +183,11 @@ export function configureHostPorts(overrides: HostPortOverrides): () => void {
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
-import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../../../🧱️elements/🐚️ShellScope/🟦️component.tsx";
 export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
 // #endregion 🐚️ShellScope
 
-import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../../../🧱️elements/🐚️ShellScope/🟦️component.tsx";
 export { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF };
 
 // #region 🔖️IconRenderPort
@@ -590,8 +590,8 @@ export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextCl
 
 /** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
 
-// 🧱️core: cn/twMergeUi extracted to 🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx — ActionGroup/Toggle call
-import { cn } from "../../../../🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx";
+// 🧱️core: cn/twMergeUi extracted to 🧱️elements/🏷️ClassNames/🟦️component.tsx — ActionGroup/Toggle call
+import { cn } from "../../../../🧱️elements/🏷️ClassNames/🟦️component.tsx";
 export { cn };
 import {
   waitingBorderClass,
@@ -639,7 +639,7 @@ import {
   sliderValueClassName,
   tableRowInteractiveClass,
   tableRowSelectedClass
-} from "../../../../🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx";
+} from "../../../../🧱️elements/🏷️ClassNames/🟦️component.tsx";
 export {
   waitingBorderClass,
   waitingBorderActiveClass,
@@ -1060,7 +1060,7 @@ export { createDOMEventBinding, getElementById, queryElement, ContextMenu, conte
 
 
 // #region UiDriver
-import { type UiDriverLabels, type UiDriverLabelTier, type UiDriverDrag, type UiDriverReveal, type UiDriverTooltips, type UiDriverHotkeys, type UiDriver, DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, serializeUiDriver, resolveUiDriver, UI_CHROME_DRIVER_STORAGE_KEY, readStoredUiDriverId, writeStoredUiDriverId, UI_CUSTOM_DRIVERS_STORAGE_KEY, readStoredUiCustomDrivers, writeStoredUiCustomDrivers, readStoredUiDriver, setUiDriverProvider, activeUiDriver, useUiDriver, UiDriverProvider, useUiDriverDragSurface, useNativeDragArm, useUiDriverTooltips, setControlLabelIdResolver, resolveControlLabelId, panelKindFromPanelToggleControlId, isInternalChromeControlId, humanizeControlSegment, humanizeControlId, humanizeEngagementStepId } from "../../../../🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx";
+import { type UiDriverLabels, type UiDriverLabelTier, type UiDriverDrag, type UiDriverReveal, type UiDriverTooltips, type UiDriverHotkeys, type UiDriver, DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, serializeUiDriver, resolveUiDriver, UI_CHROME_DRIVER_STORAGE_KEY, readStoredUiDriverId, writeStoredUiDriverId, UI_CUSTOM_DRIVERS_STORAGE_KEY, readStoredUiCustomDrivers, writeStoredUiCustomDrivers, readStoredUiDriver, setUiDriverProvider, activeUiDriver, useUiDriver, UiDriverProvider, useUiDriverDragSurface, useNativeDragArm, useUiDriverTooltips, setControlLabelIdResolver, resolveControlLabelId, panelKindFromPanelToggleControlId, isInternalChromeControlId, humanizeControlSegment, humanizeControlId, humanizeEngagementStepId } from "../../../../🧱️elements/🚗️UiDriver/🟦️component.tsx";
 export type { UiDriverLabels, UiDriverLabelTier, UiDriverDrag, UiDriverReveal, UiDriverTooltips, UiDriverHotkeys, UiDriver };
 export { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, serializeUiDriver, resolveUiDriver, UI_CHROME_DRIVER_STORAGE_KEY, readStoredUiDriverId, writeStoredUiDriverId, UI_CUSTOM_DRIVERS_STORAGE_KEY, readStoredUiCustomDrivers, writeStoredUiCustomDrivers, readStoredUiDriver, setUiDriverProvider, activeUiDriver, useUiDriver, UiDriverProvider, useUiDriverDragSurface, useNativeDragArm, useUiDriverTooltips, setControlLabelIdResolver, resolveControlLabelId, panelKindFromPanelToggleControlId, isInternalChromeControlId, humanizeControlSegment, humanizeControlId, humanizeEngagementStepId };
 // #endregion UiDriver
@@ -1824,7 +1824,7 @@ export function writeStoredIntroductionSeen(storage: StoragePort, appId: string)
   storage.set(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
 }
 
-import { ChromeControlHint } from "../../../../🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx";
+import { ChromeControlHint } from "../../../../🧱️elements/🎛️Chrome/🟦️component.tsx";
 export { ChromeControlHint };
 // #endregion 🎛️UiChromeCompact
 
@@ -1841,11 +1841,11 @@ export { ChromeControlHint };
 /** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework-core`'s
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 // #region UiLabel
-import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️UiLabel/🟦️component.tsx";
 export { uiDataLabel, type UiLabel };
 // #endregion UiLabel
 
-import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentKey, type UiRibbonParentEntries, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/🫀️core/📚️I18n/🟦️component.tsx";
+import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentKey, type UiRibbonParentEntries, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
 export type { UiLocale, UiLabelPair, UiLabelValue, UiRibbonParentCategory, UiRibbonParentKey, UiRibbonParentEntries, UiTranslationSchema, UiTranslationKey, AssertUiRibbonParentKeysCovered, AssertUiSettingsLanguageKeysCovered, UiChromeTerminologyId, AssertUiSettingsTerminologyKeysCovered, UiTranslateFn, UiI18nPort, UiRegisteredTranslationKey };
 export { UI_RIBBON_PARENT_CATEGORIES };
 
@@ -5879,7 +5879,7 @@ import {
   type SurfaceActiveBindProps,
   useSurfaceActive,
   setSurfaceActiveRoot,
-} from "../../../../🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx";
+} from "../../../../🧱️elements/🌈️Surface/🟦️component.tsx";
 export {
   type Level,
   LEVELS,
@@ -6052,7 +6052,7 @@ export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
 
 // #region 🧭️Flow Context
 /** @emoji 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
-import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../../../🧱️elements/🫀️core/🧭️Flow/🟦️component.tsx";
+import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../../../🧱️elements/🧭️Flow/🟦️component.tsx";
 export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
 /** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
@@ -7371,7 +7371,7 @@ export const windowSearchBodyClass = windowEngagementBodyClass;
 /** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
-import { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll } from "../../../../🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx";
+import { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll } from "../../../../🧱️elements/🎛️Chrome/🟦️component.tsx";
 export { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll };
 
 /** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
@@ -7447,7 +7447,7 @@ export const windowMeasureToggleCompactClass =
 // #endregion 🎈️Level Context
 
 // #region 🐹️Element
-import { type Transaction, TransactionProvider, useTransaction, type ElementBaseProps, type ElementProps } from "../../../../🧱️elements/🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { type Transaction, TransactionProvider, useTransaction, type ElementBaseProps, type ElementProps } from "../../../../🧱️elements/🐹️ElementProps/🟦️component.tsx";
 export { type Transaction, TransactionProvider, useTransaction, type ElementBaseProps, type ElementProps };
 
 //#region 🧭️ElementState
@@ -7527,7 +7527,7 @@ export function celebrateAllElements(durationMs = CELEBRATE_STAMP_DURATION_MS, r
 //#endregion 🧭️ElementState
 
 //#region 🆔️ElementId
-import { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias } from "../../../../🧱️elements/🫀️core/🆔ElementId/🟦️component.tsx";
+import { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias } from "../../../../🧱️elements/🆔ElementId/🟦️component.tsx";
 export { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias };
 //#endregion 🆔️ElementId
 
@@ -7577,7 +7577,7 @@ export type { TooltipConfig, DescriptionTooltipData };
 
 // #region 🌥️Base Components
 // #region 🏷️Label
-import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation } from "../../../../🧱️elements/🫀️core/🏷️Label/🟦️component.tsx";
+import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation } from "../../../../🧱️elements/🏷️Label/🟦️component.tsx";
 export { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation };
 // #endregion 🏷️Label
 
@@ -7926,7 +7926,7 @@ export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slid
 //#endregion 🧭️UiElementRegistry
 
 // #region LoadingRow
-import { LoadingRow, type LoadingRowProps } from "../../../../🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx";
+import { LoadingRow, type LoadingRowProps } from "../../../../🧱️elements/🎛️Chrome/🟦️component.tsx";
 export { LoadingRow };
 export type { LoadingRowProps };
 // #endregion LoadingRow

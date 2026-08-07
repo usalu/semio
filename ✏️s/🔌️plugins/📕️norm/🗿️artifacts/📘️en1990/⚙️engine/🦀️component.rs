@@ -3,9 +3,9 @@
 
 use crate::artifacts::en1990::{Document, QkEntry};
 use crate::artifacts::en1990::op::Operation;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, NormFamily, NormFamilyId, NormHost, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, NormFamily, NormFamilyId, NormHost, Quantity};
 
-pub use crate::core::NationalAnnex;
+pub use crate::document::NationalAnnex;
 
 // #region 🔖️PsiTables
 /// 📊️ ψ factors for one imposed-load category (EN 1990 Table A1.1 / DIN EN 1990/NA Table NA.A.1.1).
@@ -389,8 +389,8 @@ pub fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult 
     CheckResult {
         clause: ClauseId::new("EN 1990", "Annex C", "C.2"),
         status: if passes { CheckStatus::Pass } else { CheckStatus::Fail },
-        computed: Quantity::new(crate::core::QuantityKind::Dimensionless, beta),
-        limit: Quantity::new(crate::core::QuantityKind::Dimensionless, target),
+        computed: Quantity::new(crate::document::QuantityKind::Dimensionless, beta),
+        limit: Quantity::new(crate::document::QuantityKind::Dimensionless, target),
         utilization: if passes { target / beta } else { beta / target },
         message: "reliability index β".into(),
         annex: AnnexChoice::En,

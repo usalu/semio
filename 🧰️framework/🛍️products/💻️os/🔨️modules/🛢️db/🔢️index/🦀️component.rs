@@ -11,16 +11,16 @@
 //! law: for a fixed `(document, kind)`, `get`/`scan_prefix` always resolve to the value written by
 //! the most recent `put`/`delete`, regardless of how many runs that history is currently spread
 //! across, and `compact`/the automatic merge policy never change what a reader observes — only how
-//! many runs it's spread across (checksums via `pack_core::crc32c` catch on-disk corruption either
+//! many runs it's spread across (checksums via `pack::crc32c` catch on-disk corruption either
 //! way). `db_storage::IndexStorage` stores opaque per-`(document, run_id)` byte blobs; this crate
 //! owns everything about what's inside a run and how `run_id`s are namespaced per `IndexKind`.
 
-use db_core::{check_len, ActorId, DbError, DocumentId, Frontier};
+use {check_len, ActorId, DbError, DocumentId, Frontier};
 use db_storage::IndexStorage;
-use pack_core::{crc32c, ByteReader, ByteWriter};
+use pack::{crc32c, ByteReader, ByteWriter};
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Ceiling on one entry's key, validated via `db_core::check_len` before the key's bytes
+/// @emoji 🛡️ Ceiling on one entry's key, validated via `check_len` before the key's bytes
 /// are read off storage (decode side) or written into a run (encode side).
 const MAX_KEY_LEN: u64 = 64 * 1024;
 
@@ -706,7 +706,7 @@ impl<'a> ActorSeqIndex<'a> {
 //#endregion 🔖️ActorSeqIndex
 
 //#region 🔖️FrontierIndex
-/// @emoji 🧭️ `commit_seq -> Frontier` — a per-commit snapshot of `db_core::Frontier`, letting
+/// @emoji 🧭️ `commit_seq -> Frontier` — a per-commit snapshot of `Frontier`, letting
 /// `Consistency::Historical`/replica resume resolve "what did the frontier look like at commit N"
 /// without replaying.
 pub struct FrontierIndex<'a> {

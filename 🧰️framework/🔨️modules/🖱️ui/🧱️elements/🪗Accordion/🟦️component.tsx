@@ -8,8 +8,8 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { borderNormalBottomClass, interactiveControlTransitionClass, interactiveHoverClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { borderNormalBottomClass, interactiveControlTransitionClass, interactiveHoverClass } from "../🏷️ClassNames/🟦️component.tsx";
 import { ChevronDownIconAlt } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

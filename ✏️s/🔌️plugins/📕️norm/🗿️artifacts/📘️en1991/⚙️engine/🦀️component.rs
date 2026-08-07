@@ -3,7 +3,7 @@
 use crate::artifacts::en1990::engine::{na_de::NaDe, na_en::NaEn};
 use crate::artifacts::en1991::{part_1_2::FireCurve, Document};
 use crate::artifacts::en1991::op::Operation;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, NationalAnnex, NormFamily, NormFamilyId, NormHost, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, NationalAnnex, NormFamily, NormFamilyId, NormHost, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {
@@ -109,8 +109,8 @@ pub mod part_1_1 {
         let g_k = self_weight_kn_m2(material, thickness_m);
         CheckResult::from_utilization(
             ClauseId::new("EN 1991-1-1", "Annex A", "A.1"),
-            Quantity::new(crate::core::QuantityKind::Pressure, g_k * 1000.0),
-            Quantity::new(crate::core::QuantityKind::Pressure, assumed_g_k_kn_m2 * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, g_k * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, assumed_g_k_kn_m2 * 1000.0),
             "self-weight vs assumed dead load",
             annex,
         )
@@ -148,7 +148,7 @@ pub mod part_1_2 {
     /// ✅️ Verify the member's rated fire-resistance temperature capacity exceeds the gas temperature at t_min.
     pub fn check_fire_action(curve: FireCurve, t_min: f64, member_capacity_c: f64, annex: AnnexChoice) -> CheckResult {
         let theta_g = gas_temperature_c(curve, t_min);
-        CheckResult::from_utilization(ClauseId::new("EN 1991-1-2", "§3.2", "3.4"), Quantity::new(crate::core::QuantityKind::Temperature, theta_g), Quantity::new(crate::core::QuantityKind::Temperature, member_capacity_c), "fire gas temperature", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-2", "§3.2", "3.4"), Quantity::new(crate::document::QuantityKind::Temperature, theta_g), Quantity::new(crate::document::QuantityKind::Temperature, member_capacity_c), "fire gas temperature", annex)
     }
 }
 // #endregion 🔖️Part1_2
@@ -193,7 +193,7 @@ pub mod part_1_3 {
     }
 
     pub fn check_snow(s_kn_m2: f64, limit: f64, annex: &dyn NationalAnnex) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1991-1-3", "§5", "5.1"), Quantity::new(crate::core::QuantityKind::Pressure, s_kn_m2 * 1000.0), Quantity::new(crate::core::QuantityKind::Pressure, limit * 1000.0), "snow load", annex.choice())
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-3", "§5", "5.1"), Quantity::new(crate::document::QuantityKind::Pressure, s_kn_m2 * 1000.0), Quantity::new(crate::document::QuantityKind::Pressure, limit * 1000.0), "snow load", annex.choice())
     }
 }
 // #endregion 🔖️Part1_3
@@ -274,7 +274,7 @@ pub mod part_1_4 {
     }
 
     pub fn check_wind(w_p_kn_m2: f64, limit: f64, annex: &dyn NationalAnnex) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1991-1-4", "§5", "5.1"), Quantity::new(crate::core::QuantityKind::Pressure, w_p_kn_m2 * 1000.0), Quantity::new(crate::core::QuantityKind::Pressure, limit * 1000.0), "wind pressure", annex.choice())
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-4", "§5", "5.1"), Quantity::new(crate::document::QuantityKind::Pressure, w_p_kn_m2 * 1000.0), Quantity::new(crate::document::QuantityKind::Pressure, limit * 1000.0), "wind pressure", annex.choice())
     }
 }
 // #endregion 🔖️Part1_4
@@ -292,14 +292,14 @@ pub mod part_1_5 {
     }
 
     pub fn check_temperature_action(delta_t_k: f64, limit_k: f64) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1991-1-5", "§6", "6.1"), Quantity::new(crate::core::QuantityKind::Temperature, delta_t_k), Quantity::new(crate::core::QuantityKind::Temperature, limit_k), "thermal action", AnnexChoice::De)
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-5", "§6", "6.1"), Quantity::new(crate::document::QuantityKind::Temperature, delta_t_k), Quantity::new(crate::document::QuantityKind::Temperature, limit_k), "thermal action", AnnexChoice::De)
     }
 
     pub fn check_fire_boundary_temperature(t_surface_k: f64, t_limit_k: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1991-1-5", "Annex A", "A.1"),
-            Quantity::new(crate::core::QuantityKind::Temperature, t_surface_k),
-            Quantity::new(crate::core::QuantityKind::Temperature, t_limit_k),
+            Quantity::new(crate::document::QuantityKind::Temperature, t_surface_k),
+            Quantity::new(crate::document::QuantityKind::Temperature, t_limit_k),
             "fire boundary temperature",
             AnnexChoice::De,
         )
@@ -344,8 +344,8 @@ pub mod part_1_7 {
     pub fn check_accidental_pressure(p_kpa: f64, limit_kpa: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1991-1-7", "Annex B", "B.1"),
-            Quantity::new(crate::core::QuantityKind::Pressure, p_kpa * 1000.0),
-            Quantity::new(crate::core::QuantityKind::Pressure, limit_kpa * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, p_kpa * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, limit_kpa * 1000.0),
             "accidental pressure",
             AnnexChoice::En,
         )
@@ -400,7 +400,7 @@ pub mod part_2 {
     pub fn check_lm1_moment(annex: AnnexChoice, span_m: f64, lane: u8, lane_width_m: f64, resistance_knm: f64) -> CheckResult {
         let tandem = lm1_design_tandem_kn(annex, lane);
         let m_ed = mid_span_moment_knm(span_m, tandem, lm1_udl_kn_m2(lane), lane_width_m);
-        CheckResult::from_utilization(ClauseId::new("EN 1991-2", "§4.3.2", "4.4"), Quantity::new(crate::core::QuantityKind::Moment, m_ed * 1000.0), Quantity::new(crate::core::QuantityKind::Moment, resistance_knm * 1000.0), "LM1 mid-span moment", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1991-2", "§4.3.2", "4.4"), Quantity::new(crate::document::QuantityKind::Moment, m_ed * 1000.0), Quantity::new(crate::document::QuantityKind::Moment, resistance_knm * 1000.0), "LM1 mid-span moment", annex)
     }
 }
 // #endregion 🔖️Part2
@@ -470,8 +470,8 @@ pub mod part_4 {
     pub fn check_silo_pressure(p_kpa: f64, limit_kpa: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1991-4", "§5", "5.1"),
-            Quantity::new(crate::core::QuantityKind::Pressure, p_kpa * 1000.0),
-            Quantity::new(crate::core::QuantityKind::Pressure, limit_kpa * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, p_kpa * 1000.0),
+            Quantity::new(crate::document::QuantityKind::Pressure, limit_kpa * 1000.0),
             "silo wall pressure",
             AnnexChoice::En,
         )

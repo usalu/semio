@@ -19,16 +19,9 @@ extern crate semio_framework_os_kernel as pack;
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 
-//#region 🫀️Core
-/// 🤝️ Record types shared by all three artifacts' document entities (non-constitutional cross-artifact
-/// kernel — see the constitutional-split recipe's "shared code used by ≥2 artifacts" rule).
-#[path = "."]
-pub mod core {
-    #[path = "../../🫀️core/🦀️component.rs"]
-    mod component;
-    pub use component::*;
-}
-//#endregion 🫀️Core
+#[path = "../../🦀️component.rs"]
+mod block_shared;
+pub use block_shared::*;
 
 //#region 🗿️Artifacts
 #[path = "."]

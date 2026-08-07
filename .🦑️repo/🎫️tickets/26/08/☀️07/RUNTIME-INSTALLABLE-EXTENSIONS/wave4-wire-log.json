@@ -1,0 +1,158 @@
+[
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-bim",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-list",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-brep",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-dictionary",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-text",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-draw",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-logic",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-math",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🫀️core/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-flow-extension-core",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-process-metal",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-process-robotic",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-process-concrete",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-process-wood",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-cad-aec-building-structure",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-cad-aec-building",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-cad-spatial-shape",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-cad-aec-building-energy",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-playbook-procedural",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-imperative-control",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-imperative-text",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-imperative-logic",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-imperative-math",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-imperative-core",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-sourcing-slabs",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-sourcing-windows",
+    "script": true,
+    "project": true
+  },
+  {
+    "rustDir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
+    "packageName": "semio-s-plugin-sourcing-beams",
+    "script": true,
+    "project": true
+  }
+]

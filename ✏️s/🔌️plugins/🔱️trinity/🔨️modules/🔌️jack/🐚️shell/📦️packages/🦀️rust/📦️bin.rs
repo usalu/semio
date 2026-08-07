@@ -7,7 +7,7 @@ use std::fs;
 use std::io::{self, BufRead, Write};
 use store::DocumentDsl;
 use trinity::artifacts::jack::{Graph, GraphFixture, PropertyValue};
-use trinity::core::{run, QueryResult};
+use trinity::executor::run; use trinity::ast::QueryResult;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.

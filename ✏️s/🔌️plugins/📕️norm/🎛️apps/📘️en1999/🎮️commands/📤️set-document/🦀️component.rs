@@ -6,7 +6,7 @@
 
 use crate::artifacts::en1999::op::Operation;
 use crate::artifacts::en1999::Document;
-use crate::core::{NormConfig, NormConfigOperation};
+use crate::config::{NormConfig, NormConfigOperation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -21,7 +21,7 @@ pub struct SetDocument {
 
 //#region 🔖️Handler
 pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
-    crate::core::app::commit_document(payload.document.clone(), "setDocument")
+    crate::app_surface::commit_document(payload.document.clone(), "setDocument")
 }
 //#endregion 🔖️Handler
 
@@ -29,7 +29,7 @@ pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, Document>, _cfg: &C
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::SetDocumentOperation;
+    use crate::document::SetDocumentOperation;
     use semio_framework_plugin::HistoryView;
 
     #[test]

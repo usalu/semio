@@ -107,7 +107,7 @@ mod tests {
     fn presence_heartbeat_publishes_peer_for_other_clients() {
         use crate::apps::space::testkit::{apply_config, studio_emit, studio_presence_peers_json};
         use crate::apps::space::SpaceCommand;
-        use crate::core::demo_space_projection;
+        use crate::demo_space_projection;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let first_node_id = projection.graph.nodes[0].id.clone();

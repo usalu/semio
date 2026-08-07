@@ -8,13 +8,13 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { panelTabFirstDraggableElementId } from "@semio-tech/framework-core";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { useFirstDraggableElementAlias } from "../🫀️core/🆔ElementId/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { useFirstDraggableElementAlias } from "../🆔ElementId/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
 import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
 import { PanelTreeUnitsPane, type PanelProps } from "../🖼️Panel/🟦️component.tsx";
-import { glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { LevelProvider } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { glassClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { LevelProvider } from "../🌈️Surface/🟦️component.tsx";
 import { PanelGhostRoot, shellChromeFrameLayerClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection } from "../📑PanelTabBar/🟦️component.tsx";
 // #endregion 🔌️Adapters

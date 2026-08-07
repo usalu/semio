@@ -2,7 +2,10 @@
   "name": "@semio-tech/process-extension-concrete-rust",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -34,6 +37,14 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts package",
         "forwardAllArgs": true
       }
     }

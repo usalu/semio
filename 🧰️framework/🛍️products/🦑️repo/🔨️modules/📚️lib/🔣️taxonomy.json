@@ -259,6 +259,27 @@
     "⚡️implementations",
     "⚡️implementation"
   ],
+  "pluginDirName": "🔌️plugin",
+  "pluginChildDirs": [
+    "🛂️manifest",
+    "🎟️capabilities",
+    "🔧️setup",
+    "🎛️apps"
+  ],
+  "bannedNameStems": [
+    "core",
+    "common",
+    "util",
+    "utils",
+    "helper",
+    "helpers",
+    "misc",
+    "shared",
+    "base",
+    "lib",
+    "impl"
+  ],
+  "requireEmojiPrefixWithVs16": true,
   "rootDataDirNames": [
     "🧫️fixtures",
     "🤖️generated",

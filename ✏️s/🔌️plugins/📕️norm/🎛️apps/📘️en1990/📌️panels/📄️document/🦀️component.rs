@@ -1,7 +1,7 @@
 //! 📄️ EN 1990 play app panel — the document headline: family, check count, worst utilization, verdict.
 
 use crate::artifacts::en1990::engine::En1990Family;
-use crate::core::NormHost;
+use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 
 //#region 🔖️Constants
@@ -10,13 +10,13 @@ pub const BODY_DOCUMENT: &str = "norm.en1990.play.document";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::core::app::panel_definition(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, BODY_DOCUMENT)
+    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, BODY_DOCUMENT)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(host: &NormHost<En1990Family>) -> UiNode {
-    crate::core::app::render_summary(host)
+    crate::app_surface::render_summary(host)
 }
 //#endregion 🔖️Render
 

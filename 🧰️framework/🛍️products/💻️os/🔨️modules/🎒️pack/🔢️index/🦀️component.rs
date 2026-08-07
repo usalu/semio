@@ -5,7 +5,7 @@
 //! `open`), leaf lookups are a binary search. It does not hook into `crate::os_pack::value::encode_document`
 //! / `decode_document`; a future caller wires a `FieldIndexBuilder` in around those calls.
 
-use crate::os_pack::core::{read_varint_u64, write_varint_u64, ByteRange, PackError};
+use crate::os_pack::{read_varint_u64, write_varint_u64, ByteRange, PackError};
 
 //#region 🔖️FieldIndex
 /// @emoji 🧭️ A sequence of field ids from the record root down to a leaf value, e.g. `[3, 0, 12]`

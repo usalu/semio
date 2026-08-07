@@ -8,12 +8,12 @@
 //! covers today and what it does not yet).
 //!
 //! Depends on `dsl_core` only, following the same "own pre-scan lexer delegating the shared
-//! alphabet to `crate::os_dsl::core::lex`" pattern `math::graph::dsl` (Jack) established — `?` and `|`
+//! alphabet to `crate::os_dsl::lex`" pattern `math::graph::dsl` (Jack) established — `?` and `|`
 //! aren't in the shared token alphabet (a structural-DSL alphabet has no need for them), so this
 //! crate's lexer pre-scans those two characters itself and hands every other run of characters to
-//! `crate::os_dsl::core::lex` unchanged.
+//! `crate::os_dsl::lex` unchanged.
 
-use crate::os_dsl::core::{lex as core_lex, Limits, TextError, TextSpan, TokenKind as CoreKind};
+use crate::os_dsl::{lex as core_lex, Limits, TextError, TextSpan, TokenKind as CoreKind};
 
 //#region 🔖️Model
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -172,7 +172,7 @@ struct GToken {
 }
 
 /// @emoji 🔬️ Pre-scans `?`/`|` (not in `dsl_core`'s alphabet) and delegates every other run of
-/// characters whole to `crate::os_dsl::core::lex`, exactly like `math::graph::crate::os_dsl::lex_spanned` does
+/// characters whole to `crate::os_dsl::lex`, exactly like `math::graph::crate::os_dsl::lex_spanned` does
 /// for its own two Cypher-specific extras.
 fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
     let bytes = text.as_bytes();
@@ -1268,7 +1268,7 @@ impl Recognizer {
     fn match_production(
         &self,
         production: &Production,
-        tokens: &[crate::os_dsl::core::SpannedToken],
+        tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
     ) -> Option<usize> {
         let mut covered = std::collections::HashSet::new();
@@ -1278,7 +1278,7 @@ impl Recognizer {
     fn match_production_tracked(
         &self,
         production: &Production,
-        tokens: &[crate::os_dsl::core::SpannedToken],
+        tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
         covered: &mut std::collections::HashSet<String>,
     ) -> Option<usize> {
@@ -1294,7 +1294,7 @@ impl Recognizer {
     fn match_sequence_tracked(
         &self,
         symbols: &[Symbol],
-        tokens: &[crate::os_dsl::core::SpannedToken],
+        tokens: &[crate::os_dsl::SpannedToken],
         mut pos: usize,
         covered: &mut std::collections::HashSet<String>,
     ) -> Option<usize> {
@@ -1307,7 +1307,7 @@ impl Recognizer {
     fn match_symbol_tracked(
         &self,
         symbol: &Symbol,
-        tokens: &[crate::os_dsl::core::SpannedToken],
+        tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
         covered: &mut std::collections::HashSet<String>,
     ) -> Option<usize> {
@@ -1366,7 +1366,7 @@ impl Recognizer {
     fn match_macro_span(
         &self,
         matcher: &MacroMatcher,
-        tokens: &[crate::os_dsl::core::SpannedToken],
+        tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
     ) -> Option<usize> {
         for end in pos + 1..=tokens.len() {
@@ -1379,7 +1379,7 @@ impl Recognizer {
     }
 }
 
-fn slice_source_text(tokens: &[crate::os_dsl::core::SpannedToken]) -> String {
+fn slice_source_text(tokens: &[crate::os_dsl::SpannedToken]) -> String {
     tokens
         .iter()
         .map(|t| t.text.as_str().to_string())
@@ -1388,7 +1388,7 @@ fn slice_source_text(tokens: &[crate::os_dsl::core::SpannedToken]) -> String {
 }
 
 /// @emoji 🏷️ Explicit terminal predicates — BOOL is Ident true|false.
-fn terminal_matches(name: &str, token: &crate::os_dsl::core::SpannedToken) -> bool {
+fn terminal_matches(name: &str, token: &crate::os_dsl::SpannedToken) -> bool {
     let upper = name.to_uppercase();
     let text = token.text.as_str();
     let text = text.as_ref();

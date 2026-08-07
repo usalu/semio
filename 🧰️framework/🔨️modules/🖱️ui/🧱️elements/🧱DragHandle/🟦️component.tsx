@@ -7,8 +7,8 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { ChromeControlHint } from "../🫀️core/🎛️Chrome/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { ChromeControlHint } from "../🎛️Chrome/🟦️component.tsx";
 import { GripVerticalIcon, MoveIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

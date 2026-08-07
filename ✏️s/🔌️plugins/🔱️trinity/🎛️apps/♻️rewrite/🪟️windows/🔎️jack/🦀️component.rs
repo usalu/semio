@@ -33,6 +33,6 @@ pub(crate) fn render(state: &RewriteRuleModel, cfg: &RewriteConfig) -> UiNode {
     build_text_editor_scene(
         crate::apps::rewrite::TRINITY_REWRITE_PLAY_SURFACE_JACK,
         crate::apps::rewrite::TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        TextEditorScene { tokens_json: serde_json::to_string(&crate::core::semantic_tokens(&query)).ok(), occurrences_json: var_occurrences_json(&query, active_var), ..TextEditorScene::base(query, Some("jack".into()), None) },
+        TextEditorScene { tokens_json: serde_json::to_string(&crate::language_service::semantic_tokens(&query)).ok(), occurrences_json: var_occurrences_json(&query, active_var), ..TextEditorScene::base(query, Some("jack".into()), None) },
     )
 }

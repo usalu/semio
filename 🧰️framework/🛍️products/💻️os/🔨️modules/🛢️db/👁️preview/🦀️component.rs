@@ -27,7 +27,7 @@
 //! `TouchedRegionOracle` (plain `TouchedSet::conflicts_with`, no bloom prefilter or kind matrix)
 //! remains available for callers that want to bypass `db_conflict` entirely.
 
-use db_core::{check_len, ActorId, DbError, DbLimits, DocumentId, Frontier};
+use {check_len, ActorId, DbError, DbLimits, DocumentId, Frontier};
 use db_state::TouchedSet;
 use protocol::OperationEnvelope;
 use std::collections::HashMap;
@@ -101,7 +101,7 @@ impl PreviewState {
 //#region 🔖️Budgets
 /// @emoji 🎛️ Admission ceilings for one document's preview population — checked (never bypassed)
 /// before a new preview is admitted; a breach evicts the globally-oldest `Active` preview rather
-/// than rejecting the publish, mirroring `db_core::Priority::Preview`'s "shed-previews-first,
+/// than rejecting the publish, mirroring `Priority::Preview`'s "shed-previews-first,
 /// never block a higher lane" admission law (a preview publish is itself the lowest-priority
 /// mailbox lane, so it should degrade gracefully, not error, under pressure).
 #[derive(Clone, Copy, PartialEq, Debug)]

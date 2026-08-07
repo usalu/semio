@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn high_strength_connection_example_fixture_parses_and_round_trips() {
-        use crate::core::AnnexChoice;
+        use crate::document::AnnexChoice;
         let document = parse_dsl(EN1993_HIGH_STRENGTH_CONNECTION_EXAMPLE_TEXT).expect("parse high strength connection example");
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.bolt_n_bolts, 4);

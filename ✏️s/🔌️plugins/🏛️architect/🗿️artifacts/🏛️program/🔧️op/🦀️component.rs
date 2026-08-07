@@ -104,7 +104,7 @@ pub enum ProgramOperation {
 }
 
 //#region 🔖️OpText
-/// @emoji 📝️ Hand-written (not `#[derive(dsl::DslOps)]`): every collection-register variant here
+/// @emoji 📝️ Hand-written (not `#[derive(dsl::DslEnum)]`): every collection-register variant here
 /// wraps `vcs::CollectionOperation<EntityId, T, TPatch>` — a type foreign to this crate (defined
 /// in `vcs`), so the orphan rule blocks `impl dsl::DslField for CollectionOperation<..>` from
 /// this crate, which is exactly what the derive's single-field tuple-variant delegation needs.

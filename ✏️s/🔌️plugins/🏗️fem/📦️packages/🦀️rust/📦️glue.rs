@@ -25,37 +25,30 @@ extern crate semio_framework_os_kernel as vcs;
 // decomposition.
 #[allow(clippy::result_large_err)]
 
-//#region 🫀️Core
-#[path = "."]
-pub mod core {
-    #[path = "../../🫀️core/🦀️component.rs"]
-    mod component;
-    pub use component::*;
+//#region 🏗️Kernel modules
+#[path = "../../🏗️model/🦀️component.rs"]
+pub mod model;
+#[path = "../../🧮️analyses/🦀️component.rs"]
+pub mod analyses;
+#[path = "../../📏️elements2d/🦀️component.rs"]
+pub mod elements2d;
+#[path = "../../🧊️elements3d/🦀️component.rs"]
+pub mod elements3d;
+#[path = "../../➗️formulation/🦀️component.rs"]
+pub mod formulation;
+#[path = "../../🕸️mesh/🦀️component.rs"]
+pub mod mesh;
+#[path = "../../🔢️sparse/🦀️component.rs"]
+pub mod sparse;
+#[path = "../../🖥️app-surface/🦀️component.rs"]
+pub mod app_surface;
 
-    #[path = "../../🫀️core/🧮️analyses/🦀️component.rs"]
-    pub mod analyses;
-    #[path = "../../🫀️core/📏️elements2d/🦀️component.rs"]
-    pub mod elements2d;
-    #[path = "../../🫀️core/🧊️elements3d/🦀️component.rs"]
-    pub mod elements3d;
-    #[path = "../../🫀️core/➗️formulation/🦀️component.rs"]
-    pub mod formulation;
-    #[path = "../../🫀️core/🕸️mesh/🦀️component.rs"]
-    pub mod mesh;
-    #[path = "../../🫀️core/🔢️sparse/🦀️component.rs"]
-    pub mod sparse;
-    #[path = "../../🫀️core/🤝️shared/🦀️component.rs"]
-    pub mod shared;
-
-    /// 🗂️ Registers both artifacts' engines with the host — the cross-artifact combinator the old
-    /// bundle crate's `register_fem_exports()` used to be; lives here (not in the plugin root) because
-    /// lib.rs is wiring-only.
-    pub fn register_all_engines() {
-        crate::artifacts::fem2d::engine::register();
-        crate::artifacts::fem3d::engine::register();
-    }
+/// 🗂️ Registers both artifacts' engines with the host.
+pub fn register_all_engines() {
+    crate::artifacts::fem2d::engine::register();
+    crate::artifacts::fem3d::engine::register();
 }
-//#endregion 🫀️Core
+//#endregion 🏗️Kernel modules
 
 //#region 🗿️Artifacts
 #[path = "."]
@@ -232,7 +225,7 @@ pub mod apps {
 //#region 🔖️Plugin
 semio_framework_plugin::semio_plugin! {
     id: "fem", label: "FEM", version: "0.1.0",
-    setup: core::register_all_engines,
+    setup: register_all_engines,
     apps: [ apps::fem2d::create_fem2d_app => apps::fem2d::Fem2dPlayApp, apps::fem3d::create_fem3d_app => apps::fem3d::Fem3dPlayApp ],
 }
 //#endregion 🔖️Plugin

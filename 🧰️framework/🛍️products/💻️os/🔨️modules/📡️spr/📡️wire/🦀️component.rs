@@ -6,7 +6,7 @@
 //! 🎯️ W5: the byte encoding is now a fully hand-rolled binary layout — `lane: u8` followed by
 //! `frame tag: u8` (the frame enum's variant declaration order) and its fields in declaration
 //! order, with no body-length prefix (one frame per WS message) and no per-field tags. This
-//! matches `crate::os_spr::core::🔖️WireCodec`'s convention (also used by `crate::os_spr::causal::🔖️EnvelopeCodec`
+//! matches `crate::os_spr::wire::🔖️WireCodec`'s convention (also used by `crate::os_spr::causal::🔖️EnvelopeCodec`
 //! and `crate::os_dsl::op_rt`). `DocumentDiff`/`InverseOperation` payloads are opaque `Vec<u8>` (never
 //! `serde_json::Value`). `ClientFrame::Presence`/`ServerFrame::Presence` carry opaque presence
 //! payload bytes (`peer: Vec<u8>` / `peers: Vec<Vec<u8>>`) — this crate has no dependency on
@@ -45,7 +45,7 @@ impl Lane {
 /// @emoji 📨️ One frame a client sends to the semio_hub.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
-    Hello { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], actor: crate::os_spr::core::ActorId, token: Option<String>, resume_token: Option<String>, frontier: Option<crate::os_spr::causal::FrontierSummary> },
+    Hello { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], actor: crate::os_spr::ids::ActorId, token: Option<String>, resume_token: Option<String>, frontier: Option<crate::os_spr::causal::FrontierSummary> },
     Commands { batch_id: u64, envelopes: Vec<crate::os_spr::causal::OperationEnvelope> },
     FrontierAdvertise { frontier: crate::os_spr::causal::FrontierSummary },
     PreviewPublish { key: String, seq: u64, payload: Vec<u8> },
@@ -89,9 +89,9 @@ pub enum ServerFrame {
     Welcome { session_id: String, resume_token: String, server_frontier: crate::os_spr::causal::FrontierSummary, bootstrap: Bootstrap },
     SnapshotChunk { seq: u32, bytes: Vec<u8> },
     SnapshotDone { seq_count: u32 },
-    Commands { envelopes: Vec<crate::os_spr::causal::OperationEnvelope>, origin: crate::os_spr::core::ActorId, frontier: crate::os_spr::causal::FrontierSummary },
+    Commands { envelopes: Vec<crate::os_spr::causal::OperationEnvelope>, origin: crate::os_spr::ids::ActorId, frontier: crate::os_spr::causal::FrontierSummary },
     Ack { batch_id: u64, stages: Vec<AckStage>, frontier: crate::os_spr::causal::FrontierSummary },
-    Preview { actor: crate::os_spr::core::ActorId, key: String, seq: u64, payload: Vec<u8> },
+    Preview { actor: crate::os_spr::ids::ActorId, key: String, seq: u64, payload: Vec<u8> },
     Presence { peers: Vec<Vec<u8>> },
     CreditGrant { n: u32 },
     Error { code: String, message: String },
@@ -100,53 +100,53 @@ pub enum ServerFrame {
 
 //#region 🔖️Codec
 // Hand-rolled binary frame encode/decode: `lane: u8 | frame tag: u8 | fields...` — see the
-// module-level docstring. `crate::os_spr::core::🔖️WireCodec` supplies the primitives; this region adds
+// module-level docstring. `crate::os_spr::wire::🔖️WireCodec` supplies the primitives; this region adds
 // the option/vec combinators the frame shapes need plus the tag-dispatch match arms.
 
-fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::os_spr::core::ProtocolError {
-    crate::os_spr::core::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
+fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::os_spr::ProtocolError {
+    crate::os_spr::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
 }
 
 //#region 🔖️Combinators
 fn write_opt_str(out: &mut Vec<u8>, value: &Option<String>) {
-    crate::os_spr::core::write_bool(out, value.is_some());
+    crate::os_spr::write_bool(out, value.is_some());
     if let Some(s) = value {
-        crate::os_spr::core::write_str(out, s);
+        crate::os_spr::write_str(out, s);
     }
 }
 
-fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, crate::os_spr::core::ProtocolError> {
-    if crate::os_spr::core::read_bool(bytes, pos)? {
-        Ok(Some(crate::os_spr::core::read_str(bytes, pos)?))
+fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, crate::os_spr::ProtocolError> {
+    if crate::os_spr::read_bool(bytes, pos)? {
+        Ok(Some(crate::os_spr::read_str(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
 fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
-    crate::os_spr::core::write_bool(out, value.is_some());
+    crate::os_spr::write_bool(out, value.is_some());
     if let Some(b) = value {
-        crate::os_spr::core::write_bytes(out, b);
+        crate::os_spr::write_bytes(out, b);
     }
 }
 
-fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, crate::os_spr::core::ProtocolError> {
-    if crate::os_spr::core::read_bool(bytes, pos)? {
-        Ok(Some(crate::os_spr::core::read_bytes(bytes, pos)?))
+fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, crate::os_spr::ProtocolError> {
+    if crate::os_spr::read_bool(bytes, pos)? {
+        Ok(Some(crate::os_spr::read_bytes(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
 fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<crate::os_spr::causal::FrontierSummary>) {
-    crate::os_spr::core::write_bool(out, value.is_some());
+    crate::os_spr::write_bool(out, value.is_some());
     if let Some(f) = value {
         crate::os_spr::causal::encode_frontier(f, out);
     }
 }
 
-fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<crate::os_spr::causal::FrontierSummary>, crate::os_spr::core::ProtocolError> {
-    if crate::os_spr::core::read_bool(bytes, pos)? {
+fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<crate::os_spr::causal::FrontierSummary>, crate::os_spr::ProtocolError> {
+    if crate::os_spr::read_bool(bytes, pos)? {
         Ok(Some(crate::os_spr::causal::decode_frontier(bytes, pos)?))
     } else {
         Ok(None)
@@ -154,26 +154,26 @@ fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<crate::os_s
 }
 
 fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
-    crate::os_spr::core::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::os_spr::core::write_bytes(out, value);
+        crate::os_spr::write_bytes(out, value);
     }
 }
 
-fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::os_spr::core::ProtocolError> {
-    let count = crate::os_spr::core::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| crate::os_spr::core::read_bytes(bytes, pos)).collect()
+fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+    (0..count).map(|_| crate::os_spr::read_bytes(bytes, pos)).collect()
 }
 
 fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::OperationEnvelope]) {
-    crate::os_spr::core::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
         crate::os_spr::causal::encode_envelope(value, out);
     }
 }
 
-fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::OperationEnvelope>, crate::os_spr::core::ProtocolError> {
-    let count = crate::os_spr::core::read_varint_u64(bytes, pos)?;
+fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::OperationEnvelope>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     (0..count).map(|_| crate::os_spr::causal::decode_envelope(bytes, pos)).collect()
 }
 //#endregion 🔖️Combinators
@@ -184,20 +184,20 @@ fn encode_bootstrap(bootstrap: &Bootstrap, out: &mut Vec<u8>) {
         Bootstrap::None => out.push(0),
         Bootstrap::Snapshot { pack_hash, inline } => {
             out.push(1);
-            crate::os_spr::core::write_hash32(out, pack_hash);
+            crate::os_spr::write_hash32(out, pack_hash);
             write_opt_bytes(out, inline);
         }
         Bootstrap::Tail => out.push(2),
     }
 }
 
-fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, crate::os_spr::core::ProtocolError> {
+fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, crate::os_spr::ProtocolError> {
     let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire bootstrap tag", *pos as u64, "truncated"))?;
     *pos += 1;
     match tag {
         0 => Ok(Bootstrap::None),
         1 => {
-            let pack_hash = crate::os_spr::core::read_hash32(bytes, pos)?;
+            let pack_hash = crate::os_spr::read_hash32(bytes, pos)?;
             let inline = read_opt_bytes(bytes, pos)?;
             Ok(Bootstrap::Snapshot { pack_hash, inline })
         }
@@ -215,18 +215,18 @@ fn encode_apply_outcome(outcome: &ApplyOutcome, out: &mut Vec<u8>) {
         }
         ApplyOutcome::Rejected { reason } => {
             out.push(2);
-            crate::os_spr::core::write_str(out, reason);
+            crate::os_spr::write_str(out, reason);
         }
     }
 }
 
-fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutcome, crate::os_spr::core::ProtocolError> {
+fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutcome, crate::os_spr::ProtocolError> {
     let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire apply-outcome tag", *pos as u64, "truncated"))?;
     *pos += 1;
     match tag {
         0 => Ok(ApplyOutcome::Accepted),
         1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::os_spr::causal::decode_envelope(bytes, pos)?) }),
-        2 => Ok(ApplyOutcome::Rejected { reason: crate::os_spr::core::read_str(bytes, pos)? }),
+        2 => Ok(ApplyOutcome::Rejected { reason: crate::os_spr::read_str(bytes, pos)? }),
         other => Err(malformed("wire apply-outcome tag", *pos as u64, &format!("unknown tag {other:#x}"))),
     }
 }
@@ -242,7 +242,7 @@ fn encode_ack_stage(stage: &AckStage, out: &mut Vec<u8>) {
     }
 }
 
-fn decode_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<AckStage, crate::os_spr::core::ProtocolError> {
+fn decode_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<AckStage, crate::os_spr::ProtocolError> {
     let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire ack-stage tag", *pos as u64, "truncated"))?;
     *pos += 1;
     match tag {
@@ -254,14 +254,14 @@ fn decode_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<AckStage, crate::os
 }
 
 fn write_vec_ack_stage(out: &mut Vec<u8>, values: &[AckStage]) {
-    crate::os_spr::core::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
         encode_ack_stage(value, out);
     }
 }
 
-fn read_vec_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<Vec<AckStage>, crate::os_spr::core::ProtocolError> {
-    let count = crate::os_spr::core::read_varint_u64(bytes, pos)?;
+fn read_vec_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<Vec<AckStage>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     (0..count).map(|_| decode_ack_stage(bytes, pos)).collect()
 }
 //#endregion 🔖️NestedEnums
@@ -273,18 +273,18 @@ pub fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
     match frame {
         ClientFrame::Hello { wire_version, protocol_version, schema, pack_schema_hash, actor, token, resume_token, frontier } => {
             out.push(0);
-            crate::os_spr::core::write_varint_u64(&mut out, *wire_version as u64);
-            crate::os_spr::core::write_varint_u64(&mut out, *protocol_version as u64);
-            crate::os_spr::core::write_str(&mut out, schema);
-            crate::os_spr::core::write_hash32(&mut out, pack_schema_hash);
-            crate::os_spr::core::write_str(&mut out, &actor.0);
+            crate::os_spr::write_varint_u64(&mut out, *wire_version as u64);
+            crate::os_spr::write_varint_u64(&mut out, *protocol_version as u64);
+            crate::os_spr::write_str(&mut out, schema);
+            crate::os_spr::write_hash32(&mut out, pack_schema_hash);
+            crate::os_spr::write_str(&mut out, &actor.0);
             write_opt_str(&mut out, token);
             write_opt_str(&mut out, resume_token);
             write_opt_frontier(&mut out, frontier);
         }
         ClientFrame::Commands { batch_id, envelopes } => {
             out.push(1);
-            crate::os_spr::core::write_varint_u64(&mut out, *batch_id);
+            crate::os_spr::write_varint_u64(&mut out, *batch_id);
             write_vec_envelope(&mut out, envelopes);
         }
         ClientFrame::FrontierAdvertise { frontier } => {
@@ -293,17 +293,17 @@ pub fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
         }
         ClientFrame::PreviewPublish { key, seq, payload } => {
             out.push(3);
-            crate::os_spr::core::write_str(&mut out, key);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, payload);
+            crate::os_spr::write_str(&mut out, key);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, payload);
         }
         ClientFrame::Presence { peer } => {
             out.push(4);
-            crate::os_spr::core::write_bytes(&mut out, peer);
+            crate::os_spr::write_bytes(&mut out, peer);
         }
         ClientFrame::CreditGrant { n } => {
             out.push(5);
-            crate::os_spr::core::write_varint_u64(&mut out, *n as u64);
+            crate::os_spr::write_varint_u64(&mut out, *n as u64);
         }
         ClientFrame::Bye => out.push(6),
     }
@@ -311,7 +311,7 @@ pub fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
 }
 
 /// @emoji 📥️ Decodes one `ClientFrame`, returning the `Lane` it was tagged with.
-pub fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), crate::os_spr::core::ProtocolError> {
+pub fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), crate::os_spr::ProtocolError> {
     let lane_byte = *bytes.first().ok_or_else(|| malformed("wire frame", 0, "empty frame"))?;
     let lane = Lane::from_byte(lane_byte).ok_or_else(|| malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")))?;
     let mut pos = 1usize;
@@ -319,20 +319,20 @@ pub fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), crate::o
     pos += 1;
     let frame = match tag {
         0 => ClientFrame::Hello {
-            wire_version: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32,
-            protocol_version: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32,
-            schema: crate::os_spr::core::read_str(bytes, &mut pos)?,
-            pack_schema_hash: crate::os_spr::core::read_hash32(bytes, &mut pos)?,
-            actor: crate::os_spr::core::ActorId(crate::os_spr::core::read_str(bytes, &mut pos)?),
+            wire_version: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32,
+            protocol_version: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32,
+            schema: crate::os_spr::read_str(bytes, &mut pos)?,
+            pack_schema_hash: crate::os_spr::read_hash32(bytes, &mut pos)?,
+            actor: crate::os_spr::ids::ActorId(crate::os_spr::read_str(bytes, &mut pos)?),
             token: read_opt_str(bytes, &mut pos)?,
             resume_token: read_opt_str(bytes, &mut pos)?,
             frontier: read_opt_frontier(bytes, &mut pos)?,
         },
-        1 => ClientFrame::Commands { batch_id: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
+        1 => ClientFrame::Commands { batch_id: crate::os_spr::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
         2 => ClientFrame::FrontierAdvertise { frontier: crate::os_spr::causal::decode_frontier(bytes, &mut pos)? },
-        3 => ClientFrame::PreviewPublish { key: crate::os_spr::core::read_str(bytes, &mut pos)?, seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, payload: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        4 => ClientFrame::Presence { peer: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        5 => ClientFrame::CreditGrant { n: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32 },
+        3 => ClientFrame::PreviewPublish { key: crate::os_spr::read_str(bytes, &mut pos)?, seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, payload: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        4 => ClientFrame::Presence { peer: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        5 => ClientFrame::CreditGrant { n: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32 },
         6 => ClientFrame::Bye,
         other => return Err(malformed("wire client-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
@@ -346,38 +346,38 @@ pub fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
     match frame {
         ServerFrame::Welcome { session_id, resume_token, server_frontier, bootstrap } => {
             out.push(0);
-            crate::os_spr::core::write_str(&mut out, session_id);
-            crate::os_spr::core::write_str(&mut out, resume_token);
+            crate::os_spr::write_str(&mut out, session_id);
+            crate::os_spr::write_str(&mut out, resume_token);
             crate::os_spr::causal::encode_frontier(server_frontier, &mut out);
             encode_bootstrap(bootstrap, &mut out);
         }
         ServerFrame::SnapshotChunk { seq, bytes } => {
             out.push(1);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq as u64);
-            crate::os_spr::core::write_bytes(&mut out, bytes);
+            crate::os_spr::write_varint_u64(&mut out, *seq as u64);
+            crate::os_spr::write_bytes(&mut out, bytes);
         }
         ServerFrame::SnapshotDone { seq_count } => {
             out.push(2);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq_count as u64);
+            crate::os_spr::write_varint_u64(&mut out, *seq_count as u64);
         }
         ServerFrame::Commands { envelopes, origin, frontier } => {
             out.push(3);
             write_vec_envelope(&mut out, envelopes);
-            crate::os_spr::core::write_str(&mut out, &origin.0);
+            crate::os_spr::write_str(&mut out, &origin.0);
             crate::os_spr::causal::encode_frontier(frontier, &mut out);
         }
         ServerFrame::Ack { batch_id, stages, frontier } => {
             out.push(4);
-            crate::os_spr::core::write_varint_u64(&mut out, *batch_id);
+            crate::os_spr::write_varint_u64(&mut out, *batch_id);
             write_vec_ack_stage(&mut out, stages);
             crate::os_spr::causal::encode_frontier(frontier, &mut out);
         }
         ServerFrame::Preview { actor, key, seq, payload } => {
             out.push(5);
-            crate::os_spr::core::write_str(&mut out, &actor.0);
-            crate::os_spr::core::write_str(&mut out, key);
-            crate::os_spr::core::write_varint_u64(&mut out, *seq);
-            crate::os_spr::core::write_bytes(&mut out, payload);
+            crate::os_spr::write_str(&mut out, &actor.0);
+            crate::os_spr::write_str(&mut out, key);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, payload);
         }
         ServerFrame::Presence { peers } => {
             out.push(6);
@@ -385,19 +385,19 @@ pub fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
         }
         ServerFrame::CreditGrant { n } => {
             out.push(7);
-            crate::os_spr::core::write_varint_u64(&mut out, *n as u64);
+            crate::os_spr::write_varint_u64(&mut out, *n as u64);
         }
         ServerFrame::Error { code, message } => {
             out.push(8);
-            crate::os_spr::core::write_str(&mut out, code);
-            crate::os_spr::core::write_str(&mut out, message);
+            crate::os_spr::write_str(&mut out, code);
+            crate::os_spr::write_str(&mut out, message);
         }
     }
     out
 }
 
 /// @emoji 📥️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
-pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::os_spr::core::ProtocolError> {
+pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::os_spr::ProtocolError> {
     let lane_byte = *bytes.first().ok_or_else(|| malformed("wire frame", 0, "empty frame"))?;
     let lane = Lane::from_byte(lane_byte).ok_or_else(|| malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")))?;
     let mut pos = 1usize;
@@ -405,24 +405,24 @@ pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::o
     pos += 1;
     let frame = match tag {
         0 => ServerFrame::Welcome {
-            session_id: crate::os_spr::core::read_str(bytes, &mut pos)?,
-            resume_token: crate::os_spr::core::read_str(bytes, &mut pos)?,
+            session_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            resume_token: crate::os_spr::read_str(bytes, &mut pos)?,
             server_frontier: crate::os_spr::causal::decode_frontier(bytes, &mut pos)?,
             bootstrap: decode_bootstrap(bytes, &mut pos)?,
         },
-        1 => ServerFrame::SnapshotChunk { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32, bytes: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
-        2 => ServerFrame::SnapshotDone { seq_count: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32 },
-        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: crate::os_spr::core::ActorId(crate::os_spr::core::read_str(bytes, &mut pos)?), frontier: crate::os_spr::causal::decode_frontier(bytes, &mut pos)? },
-        4 => ServerFrame::Ack { batch_id: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos)?, frontier: crate::os_spr::causal::decode_frontier(bytes, &mut pos)? },
+        1 => ServerFrame::SnapshotChunk { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32, bytes: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        2 => ServerFrame::SnapshotDone { seq_count: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32 },
+        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: crate::os_spr::ids::ActorId(crate::os_spr::read_str(bytes, &mut pos)?), frontier: crate::os_spr::causal::decode_frontier(bytes, &mut pos)? },
+        4 => ServerFrame::Ack { batch_id: crate::os_spr::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos)?, frontier: crate::os_spr::causal::decode_frontier(bytes, &mut pos)? },
         5 => ServerFrame::Preview {
-            actor: crate::os_spr::core::ActorId(crate::os_spr::core::read_str(bytes, &mut pos)?),
-            key: crate::os_spr::core::read_str(bytes, &mut pos)?,
-            seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?,
-            payload: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            actor: crate::os_spr::ids::ActorId(crate::os_spr::read_str(bytes, &mut pos)?),
+            key: crate::os_spr::read_str(bytes, &mut pos)?,
+            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            payload: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos)? },
-        7 => ServerFrame::CreditGrant { n: crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as u32 },
-        8 => ServerFrame::Error { code: crate::os_spr::core::read_str(bytes, &mut pos)?, message: crate::os_spr::core::read_str(bytes, &mut pos)? },
+        7 => ServerFrame::CreditGrant { n: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32 },
+        8 => ServerFrame::Error { code: crate::os_spr::read_str(bytes, &mut pos)?, message: crate::os_spr::read_str(bytes, &mut pos)? },
         other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok((lane, frame))
@@ -437,18 +437,18 @@ mod tests {
     //#region 🧸️Fixtures
     fn sample_envelope(id: &str) -> crate::os_spr::causal::OperationEnvelope {
         crate::os_spr::causal::OperationEnvelope {
-            operation_id: crate::os_spr::core::OperationId(id.to_string()),
-            document_id: crate::os_spr::core::DocumentId("document-1".to_string()),
-            actor: crate::os_spr::core::ActorId("actor-1".to_string()),
+            operation_id: crate::os_spr::ids::OperationId(id.to_string()),
+            document_id: crate::os_spr::ids::DocumentId("document-1".to_string()),
+            actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::core::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-            inverse: crate::os_spr::causal::InverseOperation { schema: crate::os_spr::core::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: crate::os_spr::core::HybridLogicalTimestamp::new(1, 0),
+            diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
+            inverse: crate::os_spr::causal::InverseOperation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
 
     fn sample_frontier() -> crate::os_spr::causal::FrontierSummary {
-        crate::os_spr::causal::FrontierSummary { document_id: crate::os_spr::core::DocumentId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
+        crate::os_spr::causal::FrontierSummary { document_id: crate::os_spr::ids::DocumentId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
     }
     //#endregion 🧸️Fixtures
 
@@ -477,7 +477,7 @@ mod tests {
                 protocol_version: 1,
                 schema: "schema.v1".to_string(),
                 pack_schema_hash: [1u8; 32],
-                actor: crate::os_spr::core::ActorId("actor-1".to_string()),
+                actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
                 token: Some("token".to_string()),
                 resume_token: None,
                 frontier: Some(sample_frontier()),
@@ -489,7 +489,7 @@ mod tests {
     #[test]
     fn client_frame_hello_with_no_optionals_round_trips() {
         assert_client_round_trips(
-            &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [0u8; 32], actor: crate::os_spr::core::ActorId("actor-2".to_string()), token: None, resume_token: None, frontier: None },
+            &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [0u8; 32], actor: crate::os_spr::ids::ActorId("actor-2".to_string()), token: None, resume_token: None, frontier: None },
             Lane::Command,
         );
     }
@@ -552,7 +552,7 @@ mod tests {
 
     #[test]
     fn server_frame_commands_round_trips() {
-        assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1")], origin: crate::os_spr::core::ActorId("actor-1".to_string()), frontier: sample_frontier() }, Lane::Command);
+        assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1")], origin: crate::os_spr::ids::ActorId("actor-1".to_string()), frontier: sample_frontier() }, Lane::Command);
     }
 
     #[test]
@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn server_frame_preview_round_trips() {
-        assert_server_round_trips(&ServerFrame::Preview { actor: crate::os_spr::core::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
+        assert_server_round_trips(&ServerFrame::Preview { actor: crate::os_spr::ids::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
     }
 
     #[test]
@@ -587,27 +587,27 @@ mod tests {
     #[test]
     fn decode_client_frame_rejects_empty_bytes() {
         let err = decode_client_frame(&[]).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "wire frame", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "wire frame", .. }));
     }
 
     #[test]
     fn decode_client_frame_rejects_unknown_lane_byte() {
         let err = decode_client_frame(&[2u8, 0]).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "wire frame lane byte", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "wire frame lane byte", .. }));
     }
 
     #[test]
     fn decode_client_frame_rejects_unknown_tag() {
         let bytes = vec![Lane::Command.to_byte(), 0xFF];
         let err = decode_client_frame(&bytes).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
     }
 
     #[test]
     fn decode_server_frame_rejects_unknown_tag() {
         let bytes = vec![Lane::Command.to_byte(), 0xFF];
         let err = decode_server_frame(&bytes).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "wire server-frame tag", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "wire server-frame tag", .. }));
     }
 
     #[test]
@@ -627,7 +627,7 @@ mod tests {
     #[test]
     fn decode_client_frame_rejects_empty_body_after_lane() {
         let err = decode_client_frame(&[Lane::Command.to_byte()]).unwrap_err();
-        assert!(matches!(err, crate::os_spr::core::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
     }
 
     #[test]
@@ -706,7 +706,7 @@ pub struct PresencePeer {
 /// same as `DocumentDiff.payload` staying opaque bytes).
 pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::os_spr::core::write_str(&mut out, &peer.actor);
+    crate::os_spr::write_str(&mut out, &peer.actor);
     let mut presence = 0u8;
     if peer.label.is_some() {
         presence |= 1 << 0;
@@ -730,61 +730,61 @@ pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
         presence |= 1 << 6;
     }
     out.push(presence);
-    crate::os_spr::core::write_varint_u64(&mut out, peer.connected_at_ms as u64);
+    crate::os_spr::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
-        crate::os_spr::core::write_str(&mut out, label);
+        crate::os_spr::write_str(&mut out, label);
     }
     if let Some(selection_json) = &peer.selection_json {
-        crate::os_spr::core::write_str(&mut out, selection_json);
+        crate::os_spr::write_str(&mut out, selection_json);
     }
     if let Some(user_id) = &peer.user_id {
-        crate::os_spr::core::write_str(&mut out, user_id);
+        crate::os_spr::write_str(&mut out, user_id);
     }
     if let Some(role) = &peer.role {
-        crate::os_spr::core::write_str(&mut out, role);
+        crate::os_spr::write_str(&mut out, role);
     }
     if let Some(cursor) = &peer.cursor {
-        crate::os_spr::core::write_f64(&mut out, cursor.x);
-        crate::os_spr::core::write_f64(&mut out, cursor.y);
+        crate::os_spr::write_f64(&mut out, cursor.x);
+        crate::os_spr::write_f64(&mut out, cursor.y);
     }
     if let Some(viewport) = &peer.viewport {
-        crate::os_spr::core::write_f64(&mut out, viewport.x);
-        crate::os_spr::core::write_f64(&mut out, viewport.y);
-        crate::os_spr::core::write_f64(&mut out, viewport.zoom);
+        crate::os_spr::write_f64(&mut out, viewport.x);
+        crate::os_spr::write_f64(&mut out, viewport.y);
+        crate::os_spr::write_f64(&mut out, viewport.zoom);
     }
     if let Some(drag_ghost_json) = &peer.drag_ghost_json {
-        crate::os_spr::core::write_str(&mut out, drag_ghost_json);
+        crate::os_spr::write_str(&mut out, drag_ghost_json);
     }
     out
 }
 
 /// @emoji 🎯️ Inverse of [`encode_presence_peer`].
-pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::os_spr::core::ProtocolError> {
+pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::os_spr::ProtocolError> {
     let mut pos = 0usize;
-    let actor = crate::os_spr::core::read_str(bytes, &mut pos)?;
-    let presence = *bytes.get(pos).ok_or(crate::os_spr::core::ProtocolError::Malformed { what: "presence peer", offset: pos as u64, detail: "truncated".to_string() })?;
+    let actor = crate::os_spr::read_str(bytes, &mut pos)?;
+    let presence = *bytes.get(pos).ok_or(crate::os_spr::ProtocolError::Malformed { what: "presence peer", offset: pos as u64, detail: "truncated".to_string() })?;
     pos += 1;
-    let connected_at_ms = crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as i64;
-    let label = if presence & (1 << 0) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
-    let selection_json = if presence & (1 << 1) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
-    let user_id = if presence & (1 << 2) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
-    let role = if presence & (1 << 3) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
+    let connected_at_ms = crate::os_spr::read_varint_u64(bytes, &mut pos)? as i64;
+    let label = if presence & (1 << 0) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let selection_json = if presence & (1 << 1) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let user_id = if presence & (1 << 2) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let role = if presence & (1 << 3) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
     let cursor = if presence & (1 << 4) != 0 {
-        let x = crate::os_spr::core::read_f64(bytes, &mut pos)?;
-        let y = crate::os_spr::core::read_f64(bytes, &mut pos)?;
+        let x = crate::os_spr::read_f64(bytes, &mut pos)?;
+        let y = crate::os_spr::read_f64(bytes, &mut pos)?;
         Some(PresencePoint { x, y })
     } else {
         None
     };
     let viewport = if presence & (1 << 5) != 0 {
-        let x = crate::os_spr::core::read_f64(bytes, &mut pos)?;
-        let y = crate::os_spr::core::read_f64(bytes, &mut pos)?;
-        let zoom = crate::os_spr::core::read_f64(bytes, &mut pos)?;
+        let x = crate::os_spr::read_f64(bytes, &mut pos)?;
+        let y = crate::os_spr::read_f64(bytes, &mut pos)?;
+        let zoom = crate::os_spr::read_f64(bytes, &mut pos)?;
         Some(PresenceViewport { x, y, zoom })
     } else {
         None
     };
-    let drag_ghost_json = if presence & (1 << 6) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
+    let drag_ghost_json = if presence & (1 << 6) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
     Ok(PresencePeer { actor, label, selection_json, connected_at_ms, user_id, role, cursor, viewport, drag_ghost_json })
 }
 

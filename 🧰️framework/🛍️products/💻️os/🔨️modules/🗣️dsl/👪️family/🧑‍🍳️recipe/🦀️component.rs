@@ -5,9 +5,9 @@
 //! declaration time, which fits a construction chain where every statement calls the same function
 //! (`extrude = brep.solid.extrude(...)`) but not a recipe step, where each step's target varies
 //! (`state.set`, `state.get`, `math.add`, ...) and the separator is `:`. Built directly on
-//! `crate::os_dsl::core::lex`, matching `dsl_notation`/`dsl_family_graph`/`dsl_family_catalog`'s pattern.
+//! `crate::os_dsl::lex`, matching `dsl_notation`/`dsl_family_graph`/`dsl_family_catalog`'s pattern.
 
-use crate::os_dsl::core::{lex, Limits, TextError, TextSpan, TokenKind};
+use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 
 //#region 🔖️Step
 /// @emoji 🪜️ One recipe step: `name: target(arg1 arg2 ...)`. Arguments are positional only in
@@ -21,16 +21,16 @@ pub struct RecipeStep {
 }
 
 struct Cursor {
-    tokens: Vec<crate::os_dsl::core::SpannedToken>,
+    tokens: Vec<crate::os_dsl::SpannedToken>,
     pos: usize,
 }
 
 impl Cursor {
-    fn peek(&self) -> &crate::os_dsl::core::SpannedToken {
+    fn peek(&self) -> &crate::os_dsl::SpannedToken {
         &self.tokens[self.pos.min(self.tokens.len() - 1)]
     }
 
-    fn advance(&mut self) -> crate::os_dsl::core::SpannedToken {
+    fn advance(&mut self) -> crate::os_dsl::SpannedToken {
         let token = self.tokens[self.pos.min(self.tokens.len() - 1)].clone();
         if self.pos < self.tokens.len() - 1 {
             self.pos += 1;
@@ -38,7 +38,7 @@ impl Cursor {
         token
     }
 
-    fn expect(&mut self, kind: TokenKind) -> Result<crate::os_dsl::core::SpannedToken, TextError> {
+    fn expect(&mut self, kind: TokenKind) -> Result<crate::os_dsl::SpannedToken, TextError> {
         if self.peek().kind == kind {
             Ok(self.advance())
         } else {
@@ -51,10 +51,10 @@ impl Cursor {
     }
 }
 
-fn arg_text(token: &crate::os_dsl::core::SpannedToken) -> Result<String, TextError> {
+fn arg_text(token: &crate::os_dsl::SpannedToken) -> Result<String, TextError> {
     match token.kind {
         TokenKind::Ident | TokenKind::Int | TokenKind::Float => Ok(token.text.as_str().to_string()),
-        TokenKind::Text => Ok(format!("\"{}\"", crate::os_dsl::core::escape_text(&token.text.as_str()))),
+        TokenKind::Text => Ok(format!("\"{}\"", crate::os_dsl::escape_text(&token.text.as_str()))),
         other => Err(TextError::new(format!("expected an argument, found {other:?}"), token.span)),
     }
 }

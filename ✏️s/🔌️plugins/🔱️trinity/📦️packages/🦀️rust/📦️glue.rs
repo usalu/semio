@@ -19,14 +19,16 @@ extern crate semio_framework_os_kernel as vcs;
 // others never do), so per-function `Ok(...)`-only bodies are intentional, not a mistake to unwrap.
 #![allow(clippy::unnecessary_wraps)]
 
-//#region 🔖️Core
-#[path = "."]
-pub mod core {
-    #[path = "../../🫀️core/🦀️component.rs"]
-    mod component;
-    pub use component::*;
-}
-//#endregion 🔖️Core
+//#region 🔤️Jack kernel
+#[path = "../../🌳️ast/🦀️component.rs"]
+pub mod ast;
+#[path = "../../🔤️lexer/🦀️component.rs"]
+pub mod lexer;
+#[path = "../../🧮️executor/🦀️component.rs"]
+pub mod executor;
+#[path = "../../🗣️language-service/🦀️component.rs"]
+pub mod language_service;
+//#endregion 🔤️Jack kernel
 
 //#region 🔖️Artifacts
 #[path = "."]

@@ -5,9 +5,9 @@ use semio_framework_plugin::{create_default_layout, ModeDefinition, WindowLayout
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::en1997::create_en1997_app`. Every norm app declares
-/// the same single `edit` mode, so its shape is constructed once in `crate::core::app`.
+/// the same single `edit` mode, so its shape is constructed once in `crate::document::app`.
 pub fn definition() -> ModeDefinition {
-    crate::core::app::edit_mode_definition()
+    crate::app_surface::edit_mode_definition()
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn the_mode_is_the_apps_default() {
-        assert_eq!(definition().id, crate::core::app::MODE_EDIT);
+        assert_eq!(definition().id, crate::app_surface::MODE_EDIT);
     }
 }
 //#endregion 🧪️Tests

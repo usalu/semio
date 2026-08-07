@@ -44,7 +44,7 @@ pub fn sequence_edge_from_dsl(edge: SequenceEdgeDsl) -> Result<SequenceEdge, Str
 /// 📄️ DSL-only mirror of `SequenceFixture` — `steps`/`edges` print as SoA `#[dsl(table)]` columns
 /// instead of the old array-of-structures form, and `edges` goes through `SequenceEdgeDsl` for the
 /// unified wire syntax. See this region's opening doc comment on `SequenceEdgeDsl`.
-#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(extension = "sequence")]
 #[dsl(layout = "lines")]
 pub(crate) struct SequenceFixtureDsl {

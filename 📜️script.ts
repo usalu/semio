@@ -2408,9 +2408,8 @@ const POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS = new Set<string>([]);
  */
 const POLICY_EMPTY_EXAMPLE_EXEMPTIONS = new Set<string>([]);
 /**
- * ⚖️P1/M3b staged ban: plugin artifact `.rs` files allowed to keep `#[derive(DslDocument|DslOps)]`
- * (which emit generic DocumentDsl/OpText/DocumentPack/OpBinary). Full deletion is P6.
- * Seeded 93 paths at M3b — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ * ⚖️P6: empty — DocumentDsl/OpText/DocumentPack/OpBinary emission deleted from DslDocument/DslOps.
+ * Scanner now flags residual __rt/op_rt codec calls (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 const POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS = new Set<string>([]);
 
@@ -4113,10 +4112,11 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
 
 /**
  * 📏️Anti-inlining tripwire (Single-File-Repo hazard ruling, master ticket): a migrated package's entry
- * `📦️glue.rs` must stay wiring-only (`#[path]` mod declarations + `semio_plugin!{}` registration) — no
+ * `📦️glue.rs` must stay wiring-only (`#[path]` mod declarations + `plugin_exports!(plugin::plugin)`) — no
  * non-trivial `fn`/`impl` body content beyond `taxonomy.libWiringLineBudget`. Catches the exact
  * regression this repo has hit twice before: an agent following the (now-scoped) "single file repo" goal
- * inlining split `#[path]` modules back into `glue.rs`.
+ * inlining split `#[path]` modules back into `glue.rs`. Plugin identity lives in `🔌️plugin/` via
+ * `Plugin::builder`, never `semio_plugin!{}`.
  */
 const POLICY_FN_OR_IMPL_OPEN_RE = /^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?(?:fn\s+\w+\s*(?:<[^>]*>)?\s*\([^;{]*\)[^;{]*|impl(?:<[^>]*>)?\s+[^;{]+)\{\s*$/;
 
@@ -4152,8 +4152,8 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
       kind: "taxonomy/lib-shape",
       scope: crate.pluginId || crate.ownerRel,
       priority: policyNewSurfacePriority(crate, "medium"),
-      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️glue.rs is #[path] mod wiring + semio_plugin!{} registration only — real logic lives in the taxonomy component files, never inlined back.",
-      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s); glue.rs should only declare "#[path = \\"...\\"] mod ...;" and call semio_plugin!{...}.`,
+      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️glue.rs is #[path] mod wiring + plugin_exports!(plugin::plugin) only — real logic lives in taxonomy component files / 🔌️plugin/, never inlined back.",
+      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s) or 🔌️plugin/; glue.rs should only declare "#[path = \\"...\\"] mod ...;" and call plugin_exports!(plugin::plugin).`,
     });
   }
   return breaches;
@@ -4199,6 +4199,187 @@ function policyTaxonomyBarrelShapeBreaches(repoRoot: string): BreachRecord[] {
 }
 
 const POLICY_PROTOCOL_SEGMENT_RE = /^protocol$/i;
+
+const POLICY_BANNED_STEM_SCAN_ROOTS = ["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand"] as const;
+const POLICY_VS16 = "\uFE0F";
+
+/**
+ * 🚫️ Bans emoji-stripped directory/file stems listed in `taxonomy.bannedNameStems` (e.g. `core`, `shared`).
+ * Medium during migration; Wave 4 flips to high once cores are dissolved.
+ */
+function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
+  const stems = new Set((loadTaxonomy().bannedNameStems ?? []).map((s) => s.toLowerCase()));
+  if (stems.size === 0) return [];
+  const breaches: BreachRecord[] = [];
+  const walk = (relDir: string): void => {
+    for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "pkg") continue;
+      const childRel = `${relDir}/${entry.name}`;
+      const stem = policyStripEmoji(entry.name.replace(/\.(rs|ts|tsx|js|mjs|cjs|go|py|cs)$/, "")).toLowerCase();
+      if (stems.has(stem)) {
+        breaches.push({
+          id: `banned-name-stem-${childRel}`,
+          summary: `"${childRel}" uses banned name stem "${stem}" — use a domain concept folder instead`,
+          kind: "taxonomy/banned-name-stem",
+          scope: childRel,
+          priority: "medium",
+          reason: "Clean mechanism: bannedNameStems forbids vague grab-bag folders (core/shared/util/…).",
+          solution: `Rename "${entry.name}" to a domain-specific concept folder and update #[path]/imports.`,
+        });
+      }
+      if (entry.isDirectory) walk(childRel);
+    }
+  };
+  for (const root of POLICY_BANNED_STEM_SCAN_ROOTS) walk(root);
+  return breaches;
+}
+
+/**
+ * ✅️ Taxonomy directories under plugin/framework/hub areas must carry an emoji prefix that includes U+FE0F.
+ */
+function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  if (taxonomy.requireEmojiPrefixWithVs16 !== true) return [];
+  const breaches: BreachRecord[] = [];
+  const hasEmojiPrefix = (name: string): boolean => {
+    if (!name) return false;
+    const first = [...name][0];
+    if (!first || first === "." || first === "_") return true;
+    const cp = first.codePointAt(0) ?? 0;
+    const isEmoji = cp > 0x7f;
+    if (!isEmoji) return false;
+    return name.includes(POLICY_VS16) || /[\u{1F300}-\u{1FAFF}]/u.test(first);
+  };
+  const needsVs16 = (name: string): boolean => {
+    const chars = [...name];
+    if (chars.length < 2) return false;
+    const first = chars[0]!;
+    const cp = first.codePointAt(0) ?? 0;
+    if (cp <= 0x7f) return false;
+    // Allow ASCII-only tooling dirs
+    if (name.startsWith(".")) return false;
+    // Require VS16 when the stem after emoji is latin (e.g. 🧩core, 🔌Ports)
+    const rest = name.slice(first.length);
+    if (/^[A-Za-z]/.test(rest) && !name.includes(POLICY_VS16)) return true;
+    return false;
+  };
+  const walk = (relDir: string): void => {
+    for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+      if (!entry.isDirectory) continue;
+      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "pkg") continue;
+      const childRel = `${relDir}/${entry.name}`;
+      if (needsVs16(entry.name)) {
+        breaches.push({
+          id: `emoji-vs16-${childRel}`,
+          summary: `"${childRel}" is missing U+FE0F variation selector on its emoji prefix`,
+          kind: "taxonomy/emoji-prefix",
+          scope: childRel,
+          priority: "medium",
+          reason: "taxonomy.requireEmojiPrefixWithVs16: emoji-prefixed taxonomy dirs must include U+FE0F.",
+          solution: `Rename so the emoji prefix includes ${POLICY_VS16} (e.g. 🧩${POLICY_VS16}core → dissolve; 🔌Ports → 🔌${POLICY_VS16}Ports).`,
+        });
+      }
+      walk(childRel);
+    }
+  };
+  for (const root of POLICY_BANNED_STEM_SCAN_ROOTS) walk(root);
+  void hasEmojiPrefix;
+  return breaches;
+}
+
+/**
+ * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must eventually carry `🔌️plugin/` with required children.
+ * Medium while Wave 3 migrates; Wave 4 flips to high.
+ */
+function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const pluginDir = taxonomy.pluginDirName ?? "🔌️plugin";
+  const children = taxonomy.pluginChildDirs ?? [];
+  const pluginsRoot = "✏️s/🔌️plugins";
+  const breaches: BreachRecord[] = [];
+  for (const entry of policyReaddirSafe(repoRoot, pluginsRoot)) {
+    if (!entry.isDirectory) continue;
+    const ownerRel = `${pluginsRoot}/${entry.name}`;
+    const contractRel = `${ownerRel}/${pluginDir}`;
+    if (!existsSync(join(repoRoot, contractRel))) {
+      breaches.push({
+        id: `plugin-root-missing-${ownerRel}`,
+        summary: `"${ownerRel}" is missing required ${pluginDir}/ root contract folder`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "medium",
+        reason: "Every plugin must expose general plugin code under 🔌️plugin/ via Plugin::builder.",
+        solution: `Create ${contractRel}/🦀️component.rs plus ${children.map((c) => c + "/🦀️component.rs").join(", ")}.`,
+      });
+      continue;
+    }
+    if (!existsSync(join(repoRoot, contractRel, "🦀️component.rs"))) {
+      breaches.push({
+        id: `plugin-root-leaf-${contractRel}`,
+        summary: `"${contractRel}" is missing 🦀️component.rs`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "medium",
+        reason: "🔌️plugin/ must have a leaf component that returns Plugin via Plugin::builder.",
+        solution: `Add ${contractRel}/🦀️component.rs exporting pub fn plugin() -> Plugin.`,
+      });
+    }
+    for (const child of children) {
+      const childLeaf = join(repoRoot, contractRel, child, "🦀️component.rs");
+      if (!existsSync(childLeaf)) {
+        breaches.push({
+          id: `plugin-root-child-${contractRel}/${child}`,
+          summary: `"${contractRel}" is missing ${child}/🦀️component.rs`,
+          kind: "taxonomy/plugin-root-shape",
+          scope: ownerRel,
+          priority: "medium",
+          reason: "🔌️plugin/ required children: manifest, capabilities, setup, apps.",
+          solution: `Add ${contractRel}/${child}/🦀️component.rs.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🏗️ Bans `semio_plugin!` and `PluginBundle::new` outside the SDK; prefers `Plugin::builder(`.
+ * Medium until Wave 3 finishes migrating all plugins.
+ */
+function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const sdkRel = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/";
+  for (const crate of crates) {
+    if (crate.role !== "plugin" && crate.role !== "extension") continue;
+    const abs = join(repoRoot, crate.libRelPath);
+    if (!existsSync(abs)) continue;
+    if (crate.libRelPath.replaceAll("\\", "/").startsWith(sdkRel)) continue;
+    const content = readFileSync(abs, "utf8");
+    if (content.includes("semio_plugin!")) {
+      breaches.push({
+        id: `plugin-builder-macro-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still uses semio_plugin! — migrate to Plugin::builder in 🔌️plugin/`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "medium",
+        reason: "semio_plugin! is retired; plugin identity lives under 🔌️plugin/ via typestate PluginBuilder.",
+        solution: "Move registration into 🔌️plugin/🦀️component.rs using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin).",
+      });
+    }
+    if (content.includes("PluginBundle::new") || content.includes("PluginBundle {")) {
+      breaches.push({
+        id: `plugin-builder-bundle-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still references PluginBundle — use Plugin::builder / Plugin::new`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "medium",
+        reason: "PluginBundle was renamed to Plugin; registration goes through Plugin::builder.",
+        solution: "Replace PluginBundle with Plugin::builder(...).",
+      });
+    }
+  }
+  return breaches;
+}
 
 /**
  * 📏️Discovery-contract clause 4: no path segment (dir or file stem) or `mod`/`struct`/`enum`/`type`
@@ -4563,7 +4744,7 @@ function policyEmptyExampleBreaches(repoRoot: string): BreachRecord[] {
 /**
  * ⚖️P1/M3b staged ban on generic codec derives: flags NEW `#[derive(...DslDocument|DslOps...)]`
  * uses under plugin artifact Rust files outside `POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS`.
- * Those macros emit DocumentDsl/OpText/DocumentPack/OpBinary today; full deletion of that emission is P6.
+ * Those macros are banned after P6; codecs must be handcrafted.
  */
 function policyGenericCodecDeriveBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -4651,6 +4832,10 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyTaxonomyLibShapeBreaches(repoRoot, crateDirs));
   breaches.push(...policyTaxonomyBarrelShapeBreaches(repoRoot));
   breaches.push(...policySprNamingBreaches(repoRoot, crateDirs));
+  breaches.push(...policyBannedNameStemBreaches(repoRoot));
+  breaches.push(...policyEmojiPrefixBreaches(repoRoot));
+  breaches.push(...policyPluginRootShapeBreaches(repoRoot));
+  breaches.push(...policyPluginBuilderBreaches(repoRoot, crateDirs));
   breaches.push(...policyJsonFixtureBreaches(repoRoot));
   breaches.push(...policyOpsGrammarBreaches(repoRoot));
   breaches.push(...policyDslCompletenessBreaches(repoRoot));

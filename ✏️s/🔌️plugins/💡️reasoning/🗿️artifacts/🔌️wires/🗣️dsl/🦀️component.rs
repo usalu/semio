@@ -2,7 +2,7 @@
 //!
 //! The `.wires` textual DSL and op-text grammar are declared, not hand-rolled — see
 //! `impl store::DocumentDsl for MindmapWiresDocument` (in `crate::artifacts::wires`, `🔖️Dsl` region) and
-//! `#[derive(dsl::DslOps)]` on `MindmapWiresOperation` (in `crate::artifacts::wires::op`).
+//! `#[derive(dsl::DslEnum)]` on `MindmapWiresOperation` (in `crate::artifacts::wires::op`).
 //! `MindmapWiresDocument` itself keeps `wires_fixture`/`board_fixture` as opaque `dsl::DslValue` (the
 //! `op`/`ui`/`engine` code addresses board nodes/edges and wires relationships generically by id for
 //! mergeable, granular JSON-patch edits), but the TEXTUAL `.wires` surface is fully typed via the

@@ -2,7 +2,7 @@
 //! 📚️ Models the classic (pre-2024) Eurocode 7 generation only: EN 1997-1 (general design rules, including piles) + EN 1997-2 (ground investigation and testing); the second-generation EN 1997-3 does not apply here.
 
 use crate::artifacts::en1997::Document;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 pub mod na_de {
     pub use crate::artifacts::en1990::engine::na_de::NaDe;
@@ -332,12 +332,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
 /// headless `NormHost` session every norm app drives.
 pub struct En1997Family;
 
-impl crate::core::NormFamily for En1997Family {
+impl crate::document::NormFamily for En1997Family {
     type Document = Document;
     type Operation = crate::artifacts::en1997::op::Operation;
 
-    fn family_id() -> crate::core::NormFamilyId {
-        crate::core::NormFamilyId::En1997
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::En1997
     }
 
     fn evaluate(document: &Document) -> CheckReport {
@@ -345,14 +345,14 @@ impl crate::core::NormFamily for En1997Family {
     }
 }
 
-pub type Host = crate::core::NormHost<En1997Family>;
+pub type Host = crate::document::NormHost<En1997Family>;
 // #endregion 🔖️Session
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::CheckStatus;
+    use crate::document::CheckStatus;
 
     #[test]
     fn bearing_factor_n_c_phi30() {

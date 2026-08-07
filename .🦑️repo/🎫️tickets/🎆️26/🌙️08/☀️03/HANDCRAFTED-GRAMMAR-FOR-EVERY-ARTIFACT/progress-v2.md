@@ -174,3 +174,10 @@ Extended `🗣️dsl/🧪️fixture-sweep/🦀️component.rs` with regions:
 - Tests: Shape A uses project_protocol for shallow + verify_protocol_source for deep; added verify_protocol_bytes_accepts_any_0x89_magic.
 - Policy: five P3 breaches already in VerifyScript.runGate via policyHandcraftedSpecP3Breaches.
 - cargo test still blocked by Xcode SDK license (cc/sccache exit 69) — tests not executed on this host.
+
+## P7 close (2026-08-07)
+
+- Handcrafted policy breaches: **0** (`🧪p7-policy-handcrafted.json`)
+- Corpus: 156 grammars, 104 protocols, 178 bins, 0 prop catch-all, 0 tiny bins (`🧪p7-corpus-stats.json`)
+- Ticket CLOSED via repo CLI `26/08/03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT`
+- Host limits: Xcode SDK license / missing `semio-framework-os-kernel-semio` blocked full `verify` / `semio verify` / OS writer UI smoke — documented in `p7-e2e-status.md`

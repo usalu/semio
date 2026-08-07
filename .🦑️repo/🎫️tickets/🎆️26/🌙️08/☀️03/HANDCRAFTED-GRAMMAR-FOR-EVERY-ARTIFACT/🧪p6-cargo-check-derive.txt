@@ -1,0 +1,19 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/target/debug/build/quote-0cd42d3a2f4cd0b6/rustcwPWzTx/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/target/debug/build/quote-0cd42d3a2f4cd0b6/build_script_build-0cd42d3a2f4cd0b6" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/target/debug/build/proc-macro2-06b0ba31cf55c6cc/rustcWwXx6o/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/target/debug/build/proc-macro2-06b0ba31cf55c6cc/build_script_build-06b0ba31cf55c6cc" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: could not compile `quote` (build script) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `proc-macro2` (build script) due to 1 previous error

@@ -31,7 +31,7 @@ pub fn print_dsl(document: &Document) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::en1996::part_2;
-    use crate::core::{AnnexChoice, DesignSituation};
+    use crate::document::{AnnexChoice, DesignSituation};
 
     #[test]
     fn document_dsl_round_trips() {

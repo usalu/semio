@@ -35,7 +35,7 @@ pub mod add_nodal_load {
 
     pub fn handle(payload: &AddNodalLoad, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
         let (index, mut load_case) = resolve_load_case(doc.projection, payload.case_id.as_deref());
-        let load_id = crate::core::shared::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
+        let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
         load_case.loads.push(crate::artifacts::fem3d::FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value });
         Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }]))
     }
@@ -59,7 +59,7 @@ pub mod add_member_udl {
 
     pub fn handle(payload: &AddMemberUdl, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
         let (index, mut load_case) = resolve_load_case(doc.projection, payload.case_id.as_deref());
-        let load_id = crate::core::shared::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
+        let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
         load_case.loads.push(crate::artifacts::fem3d::FemLoad::MemberUdl { id: load_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy, wz: payload.wz });
         Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }]))
     }
@@ -81,7 +81,7 @@ pub mod add_area_load {
 
     pub fn handle(payload: &AddAreaLoad, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
         let (index, mut load_case) = resolve_load_case(doc.projection, payload.case_id.as_deref());
-        let load_id = crate::core::shared::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
+        let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
         load_case.loads.push(crate::artifacts::fem3d::FemLoad::Area { id: load_id, solid_id: payload.solid_id.clone(), pressure: payload.pressure });
         Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }]))
     }
@@ -102,7 +102,7 @@ pub mod add_load_case {
 
     pub fn handle(payload: &AddLoadCase, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
+        let id = crate::app_surface::next_id(projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
         let index = projection.load_cases.len();
         Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case: FemLoadCase { id, name: payload.name.clone(), loads: Vec::new(), self_weight: payload.self_weight } }]))
     }
@@ -129,7 +129,7 @@ pub mod add_combination {
         match serde_json::from_str::<Vec<(String, f64)>>(&payload.terms) {
             Ok(parsed) => {
                 let terms: std::collections::BTreeMap<String, f64> = parsed.into_iter().collect();
-                let id = crate::core::shared::next_id(projection.combinations.iter().map(|c| c.id.clone()), "c");
+                let id = crate::app_surface::next_id(projection.combinations.iter().map(|c| c.id.clone()), "c");
                 let index = projection.combinations.len();
                 Ok(Emit::operations(vec![Fem3dOperation::SetCombination { index, combination: crate::artifacts::fem3d::FemCombination { id, name: payload.name.clone(), terms } }]))
             }

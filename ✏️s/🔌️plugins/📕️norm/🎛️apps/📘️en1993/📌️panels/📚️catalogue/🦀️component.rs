@@ -12,13 +12,13 @@ pub const BODY_CATALOGUE: &str = "norm.en1993.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::core::app::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render() -> UiNode {
-    crate::core::app::render_catalogue(crate::apps::en1993::LABEL)
+    crate::app_surface::render_catalogue(crate::apps::en1993::LABEL)
 }
 //#endregion 🔖️Render
 

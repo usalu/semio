@@ -29,7 +29,7 @@
 //! owns envelope interpretation, has both) — so the layer that calls `state_at`/`preview_augmented`
 //! hands this crate only the resulting bytes, never the engine or the envelope.
 
-use db_core::{check_len, DbError, Frontier};
+use {check_len, DbError, Frontier};
 use db_index::{CommitIndex, FrontierIndex, FullTextIndex};
 use db_projection::ProjectionState;
 use db_state::PVec;
@@ -484,9 +484,9 @@ impl Query {
 //#endregion 🔖️Query
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Query-side ceilings, checked via `db_core::check_len` before allocating the next row
+/// @emoji 🛡️ Query-side ceilings, checked via `check_len` before allocating the next row
 /// or byte, mirroring the family-wide "validate before allocating" invariant. `max_result_bytes`
-/// defaults to `db_core::DbLimits::default().max_query_bytes` — the same budget the mailbox layer
+/// defaults to `DbLimits::default().max_query_bytes` — the same budget the mailbox layer
 /// already reserves for one query's wire payload, kept as a single source of truth.
 #[derive(Clone, Debug)]
 pub struct QueryLimits {
@@ -497,7 +497,7 @@ pub struct QueryLimits {
 
 impl Default for QueryLimits {
     fn default() -> Self {
-        QueryLimits { max_scan_rows: 1_000_000, max_result_rows: 10_000, max_result_bytes: db_core::DbLimits::default().max_query_bytes }
+        QueryLimits { max_scan_rows: 1_000_000, max_result_rows: 10_000, max_result_bytes: DbLimits::default().max_query_bytes }
     }
 }
 
@@ -571,7 +571,7 @@ impl<'a> FullTextLookup for FullTextIndex<'a> {
 
 //#region 🔖️ProjectionBridge
 /// @emoji 🛡️ Ceiling on a decoded `Value::List`/`Value::Map`'s declared element count, checked via
-/// `db_core::check_len` BEFORE `decode_value` allocates its `Vec`/`BTreeMap` — the same
+/// `check_len` BEFORE `decode_value` allocates its `Vec`/`BTreeMap` — the same
 /// "validate before allocating" invariant `QueryLimits` and every decoder across the family holds to.
 const MAX_PROJECTION_VALUE_ELEMENTS: u64 = 1_000_000;
 
@@ -1319,7 +1319,7 @@ mod tests {
         }
 
         fn frontier_at(seq: u64) -> Frontier {
-            Frontier { document: db_core::DocumentId::from("doc-1"), head_seq: seq, commit_seq: seq, chain_hash: [0u8; 32], epoch: 0 }
+            Frontier { document: DocumentId::from("doc-1"), head_seq: seq, commit_seq: seq, chain_hash: [0u8; 32], epoch: 0 }
         }
 
         #[test]
@@ -1443,7 +1443,7 @@ mod tests {
 
         #[test]
         fn default_result_bytes_matches_db_core_query_budget() {
-            assert_eq!(QueryLimits::default().max_result_bytes, db_core::DbLimits::default().max_query_bytes);
+            assert_eq!(QueryLimits::default().max_result_bytes, DbLimits::default().max_query_bytes);
         }
 
         #[test]

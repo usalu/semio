@@ -80,7 +80,7 @@ mod tests {
     fn node_graph_viewport_persists_camera() {
         use crate::apps::space::testkit::studio_emit;
         use crate::apps::space::SpaceCommand;
-        use crate::core::demo_space_projection;
+        use crate::demo_space_projection;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: r#"{"x":7.0,"y":9.0,"zoom":0.5}"#.into() })).expect("handle");

@@ -4,7 +4,7 @@ pub mod add_compatibility_rule {
     use crate::apps::block2d::config::{Block2dConfig, Block2dConfigOperation};
     use crate::artifacts::block2d::op::Block2dOperation;
     use crate::artifacts::block2d::Block2dDefinition;
-    use crate::core::BlockCompatibilityRule;
+    use crate::BlockCompatibilityRule;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 

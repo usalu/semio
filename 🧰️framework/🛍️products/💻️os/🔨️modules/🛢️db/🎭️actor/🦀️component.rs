@@ -24,7 +24,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use db_core::{DbError, GenerationId, MailboxCapacities, Priority};
+use {DbError, GenerationId, MailboxCapacities, Priority};
 
 //#region 🔖️Envelope
 /// @emoji ✉️ One message in flight through a `Mailbox`: its admitted lane, an ever-increasing
@@ -138,7 +138,7 @@ impl<M: Send + 'static> MailboxInner<M> {
     /// @emoji 🔁️ Bumps the live generation for a supervised restart. Every `Address` cloned
     /// *before* this call is now stale: its next send fails loudly with
     /// `DbError::StaleGeneration` instead of silently enqueuing into a mailbox the old actor
-    /// incarnation will never drain again (see `db_core::GenerationId`'s doc).
+    /// incarnation will never drain again (see `GenerationId`'s doc).
     fn bump_generation(&self) -> GenerationId {
         GenerationId(self.generation.fetch_add(1, Ordering::AcqRel) + 1)
     }
@@ -229,7 +229,7 @@ impl<M: Send + 'static> MailboxInner<M> {
     }
 
     /// @emoji 🥇️ `System` then `Recovery`, strictly — "never queued behind anything" per
-    /// `db_core::Priority`'s own doc — then deficit-round-robin across the remaining four lanes.
+    /// `Priority`'s own doc — then deficit-round-robin across the remaining four lanes.
     fn try_recv(&self) -> Option<Envelope<M>> {
         let mut state = self.state.lock().unwrap();
         for &strict in &[Priority::System, Priority::Recovery] {
@@ -290,7 +290,7 @@ impl<M> Clone for Address<M> {
 }
 
 impl<M: Send + 'static> Address<M> {
-    /// @emoji 🪪️ The generation this handle was obtained at (see `db_core::GenerationId`).
+    /// @emoji 🪪️ The generation this handle was obtained at (see `GenerationId`).
     pub fn generation(&self) -> GenerationId {
         self.bound_generation
     }
@@ -357,8 +357,8 @@ pub fn mailbox<M: Send + 'static>(capacities: MailboxCapacities) -> (Address<M>,
     (Address { inner: inner.clone(), bound_generation: GenerationId::INITIAL }, Receiver { inner })
 }
 
-/// @emoji ⚙️ Convenience over `mailbox` that pulls lane capacities out of a `db_core::DbConfig`.
-pub fn mailbox_from_config<M: Send + 'static>(config: &db_core::DbConfig) -> (Address<M>, Receiver<M>) {
+/// @emoji ⚙️ Convenience over `mailbox` that pulls lane capacities out of a `DbConfig`.
+pub fn mailbox_from_config<M: Send + 'static>(config: &DbConfig) -> (Address<M>, Receiver<M>) {
     mailbox(config.mailbox_capacities)
 }
 //#endregion 🔖️Mailbox
@@ -650,7 +650,7 @@ pub trait Actor: Send + 'static {
 pub struct ActorContext<M: Send + 'static> {
     pub address: Address<M>,
     pub generation: GenerationId,
-    pub emit: Arc<dyn db_core::Emit>,
+    pub emit: Arc<dyn Emit>,
 }
 //#endregion 🔖️Actor
 
@@ -744,7 +744,7 @@ enum ActorOutcome {
 /// poisoned incarnation can never take down the OS thread pool or a sibling actor, then reports
 /// its terminal `ActorOutcome` back to the owning `Supervisor` through a `Reply` oneshot.
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, address: Address<A::Message>, generation: GenerationId, emit: &Arc<dyn db_core::Emit>, outcome_tx: ReplySender<ActorOutcome>) {
+fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, address: Address<A::Message>, generation: GenerationId, emit: &Arc<dyn Emit>, outcome_tx: ReplySender<ActorOutcome>) {
     use std::panic::AssertUnwindSafe;
 
     let mut ctx = ActorContext { address, generation, emit: emit.clone() };
@@ -767,7 +767,7 @@ fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, addre
         }
     }
     if poisoned {
-        emit.emit(db_core::EmitEvent::new("db_actor.incarnation_poisoned").field("generation", db_core::EmitField::U64(generation.0)));
+        emit.emit(EmitEvent::new("db_actor.incarnation_poisoned").field("generation", EmitField::U64(generation.0)));
     }
     outcome_tx.send(if poisoned { ActorOutcome::Panicked } else { ActorOutcome::Stopped });
 }
@@ -790,7 +790,7 @@ pub struct Supervisor<A: Actor> {
     strategy: RestartStrategy,
     capacities: MailboxCapacities,
     spawner: Arc<dyn ThreadSpawner>,
-    emit: Arc<dyn db_core::Emit>,
+    emit: Arc<dyn Emit>,
     factory: Box<dyn Fn() -> A + Send + Sync>,
     slots: Mutex<Vec<SupervisorSlot<A::Message>>>,
 }
@@ -799,7 +799,7 @@ pub struct Supervisor<A: Actor> {
 impl<A: Actor> Supervisor<A> {
     /// @emoji 🆕️ Spawns `children` fresh incarnations of `factory()`'s actor at
     /// `GenerationId::INITIAL`, each with its own mailbox sized by `capacities`.
-    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<dyn ThreadSpawner>, emit: Arc<dyn db_core::Emit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
+    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<dyn ThreadSpawner>, emit: Arc<dyn Emit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
         let supervisor = Supervisor { strategy, capacities, spawner, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
         let mut slots = Vec::with_capacity(children);
         for _ in 0..children {
@@ -900,7 +900,7 @@ impl<A: Actor> Supervisor<A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use db_core::{NullEmit, Profile};
+    use {NullEmit, Profile};
 
     fn generous_capacities() -> MailboxCapacities {
         MailboxCapacities::uniform(64)
@@ -1145,7 +1145,7 @@ mod tests {
     //#region 🔖️Config
     #[test]
     fn mailbox_from_config_honors_the_profile_default_capacities() {
-        let config = db_core::DbConfig::for_profile(Profile::Test);
+        let config = DbConfig::for_profile(Profile::Test);
         let (address, _receiver) = mailbox_from_config::<u32>(&config);
         assert_eq!(address.generation(), GenerationId::INITIAL);
     }

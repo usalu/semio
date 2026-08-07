@@ -1,0 +1,434 @@
+[
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/⚙️engine/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 10
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔺️diff/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 2
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 2
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 3
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔧️op/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/⚙️engine/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 4
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔺️diff/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 7
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🎒️pack/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️widget/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 2
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️widget/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/⚙️engine/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 3
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️grid/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🛍️catalogue/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️eval/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️view/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️synapse/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗣️locale/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️lod/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔄️layout/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️extension/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️eval/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔧️op/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/✏️edit/🪟️windows/🗣️compiled/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 4
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️options/🔭️lod/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/✏️edit/🪟️windows/🌊️main/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️widget/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 2
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️generation/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️sun/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 2
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 3
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 2
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/📌️panels/🛍️catalogue/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 8
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/📌️panels/🔍️inspection/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 5
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/📌️panels/📄️document/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️gumball/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 2
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/📌️panels/🛍️catalogue/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🦀️component.rs",
+    "old": "flow_core::",
+    "new": "flow::",
+    "occurrences": 1
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "workspaceMembers": [
+    {
+      "oldPath": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust",
+      "newPath": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust",
+      "oldPackageName": "semio-s-plugin-imperative-core",
+      "newPackageName": "semio-s-plugin-imperative-effect"
+    }
+  ],
+  "externCrateRenames": [
+    {
+      "old": "imperative_module_core",
+      "new": "imperative_module_effect"
+    }
+  ]
+}

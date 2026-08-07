@@ -8,13 +8,13 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
 import { formatNumber, Input } from "../✏️Input/🟦️component.tsx";
-import { loadingBorderStateClass, waitingBorderStateClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
-import { useLabel, useControlAccessibleLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { loadingBorderStateClass, waitingBorderStateClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦️component.tsx";
 import { useInteractionCommands, sliderRangeClassName, sliderReadyClassName, sliderThumbClassName, sliderValueClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 

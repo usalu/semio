@@ -8,11 +8,11 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } from "../💬Dialog/🟦️component.tsx";
-import { borderNormalBottomClass, uiFormControlBrowserDefaultProps, menuListItemClassName } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { borderNormalBottomClass, uiFormControlBrowserDefaultProps, menuListItemClassName } from "../🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { SearchIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

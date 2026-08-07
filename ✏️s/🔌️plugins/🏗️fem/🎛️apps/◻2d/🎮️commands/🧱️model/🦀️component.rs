@@ -22,7 +22,7 @@ pub mod add_node {
 
     pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
+        let id = crate::app_surface::next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
         let index = projection.nodes.len();
         Ok(Emit::operations(vec![Fem2dOperation::SetNode { index, node: FemNode { id, x: payload.x, y: payload.y } }]))
     }
@@ -44,7 +44,7 @@ pub mod add_bar {
 
     pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.elements.iter().map(|e| element_id(e).to_string()), "e");
+        let id = crate::app_surface::next_id(projection.elements.iter().map(|e| element_id(e).to_string()), "e");
         let index = projection.elements.len();
         let element = FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
         Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }]))
@@ -67,7 +67,7 @@ pub mod add_beam {
 
     pub fn handle(payload: &AddBeam, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.elements.iter().map(|e| element_id(e).to_string()), "e");
+        let id = crate::app_surface::next_id(projection.elements.iter().map(|e| element_id(e).to_string()), "e");
         let index = projection.elements.len();
         let element = FemElement::Beam { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
         Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }]))
@@ -88,7 +88,7 @@ pub mod add_material {
 
     pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
+        let id = crate::app_surface::next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
         let index = projection.materials.len();
         Ok(Emit::operations(vec![Fem2dOperation::SetMaterial { index, material: FemMaterial { id, name: payload.name.clone(), e: payload.e, nu: 0.3, rho: 7850.0 } }]))
     }
@@ -109,7 +109,7 @@ pub mod add_section {
 
     pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
+        let id = crate::app_surface::next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
         let index = projection.sections.len();
         Ok(Emit::operations(vec![Fem2dOperation::SetSection { index, section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy } }]))
     }
@@ -129,7 +129,7 @@ pub mod add_support {
 
     pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
+        let id = crate::app_surface::next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
         let index = projection.supports.len();
         Ok(Emit::operations(vec![Fem2dOperation::SetSupport { index, support: FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
     }
@@ -154,7 +154,7 @@ pub mod add_region {
 
     pub fn handle(payload: &AddRegion, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
-        let id = crate::core::shared::next_id(projection.regions.iter().map(|r| r.id.clone()), "r");
+        let id = crate::app_surface::next_id(projection.regions.iter().map(|r| r.id.clone()), "r");
         let index = projection.regions.len();
         let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.height], [payload.x, payload.y + payload.height]];
         let region = FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: payload.thickness.unwrap_or(0.02), material_id: payload.material_id.clone(), mesh_size: payload.mesh_size.unwrap_or(0.25) };

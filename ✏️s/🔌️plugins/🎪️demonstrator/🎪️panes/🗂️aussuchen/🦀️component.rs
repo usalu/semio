@@ -4,7 +4,7 @@
 //!
 //! See <https://github.com/usalu/semio/issues/2510> for the bundle rationale.
 
-use semio_framework_plugin::PluginBundle;
+use semio_framework_plugin::Plugin;
 
 use sourcing::apps::curate::{create_sourcing_curate_app, SourcingCurateApp};
 use sourcing::artifacts::curate::SOURCING_CURATE_SCHEMA;
@@ -15,6 +15,6 @@ pub fn register_exports() {
 }
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
-pub fn register_app(bundle: PluginBundle) -> PluginBundle {
+pub fn register_app(bundle: Plugin) -> Plugin {
     bundle.register_document_app::<SourcingCurateApp>(create_sourcing_curate_app())
 }

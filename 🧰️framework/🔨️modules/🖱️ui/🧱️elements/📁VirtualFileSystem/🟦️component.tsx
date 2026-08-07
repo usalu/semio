@@ -11,15 +11,15 @@ import { format, formatDistanceToNow } from "date-fns";
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: uiDataLabel/UiLabel imported directly from 🫀️core/UiLabel, NOT via the barrel — this component
 // calls uiDataLabel(...) at module top level (inside a top-level demo-fixture object literal), which
-// requires a non-circular import (see 🧱️elements/🫀️core/🏷️UiLabel/🟦️component.tsx's header comment for why
+// requires a non-circular import (see 🧱️elements/🏷️UiLabel/🟦️component.tsx's header comment for why
 // the barrel import caused a real bug).
-import { type UiLabel, uiDataLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
+import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { TableAvatar } from "../👤Avatar/🟦️component.tsx";
 import { Table } from "../🦴Skeletons/🧪️story.tsx";
 import { type TableColumn, type TableProps, type HierarchicalRowData, type DragDropConfig } from "../📊Table/🟦️component.tsx";
 import { type TreeSelectionMode, normalizeTreeSelectedIds, getTreeNextSelectionState } from "../🪵Tree/🟦️component.tsx";
-import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { Icon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

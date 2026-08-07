@@ -30,8 +30,22 @@ pub mod db_storage_sqlite;
 #[path = "../../🗄️storage/🌐️neo4j/🦀️component.rs"]
 pub mod db_storage_neo4j;
 
-#[path = "../../🫀️core/🦀️component.rs"]
-pub mod db_core;
+#[path = "../../🆔ids/🦀️component.rs"]
+pub mod db_ids;
+
+#[path = "../../💾️durability/🦀️component.rs"]
+pub mod db_durability;
+
+#[path = "../../🎚️policy/🦀️component.rs"]
+pub mod db_policy;
+
+#[path = "../../🕸️version-graph/🦀️component.rs"]
+pub mod db_version_graph;
+
+pub use db_ids::*;
+pub use db_durability::*;
+pub use db_policy::*;
+pub use db_version_graph::*;
 
 #[path = "../../🎭️actor/🦀️component.rs"]
 pub mod db_actor;

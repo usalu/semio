@@ -8,7 +8,7 @@
 //! `### protocol (facade) — additional re-exports`).
 
 //#region 🔖️Reexports
-pub use crate::os_spr::core::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
 pub use crate::os_spr::history::{
     decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange,
@@ -27,7 +27,7 @@ pub use crate::os_spr::command::{
     apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor, CollectionDiff, CollectionOperation, CommandOutcome, DiffCodec, Edit, Identified, ItemPatch, OpBinary,
     OpText, Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationMeta, OperationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
 };
-pub use crate::os_spr::core::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+pub use crate::os_spr::wire::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
 pub use crate::os_spr::crdt::merge_concurrent_diffs;
 pub use crate::os_spr::wire::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
 //#endregion 🔖️Reexports
@@ -74,7 +74,7 @@ pub fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64
     let mut start_offset: Option<u64> = None;
     let mut end_offset: Option<u64> = None;
     while let Some(frame) = cursor.next_frame()? {
-        if frame.kind == crate::os_spr::core::REC_EDIT {
+        if frame.kind == crate::os_spr::REC_EDIT {
             if start_offset.is_none() && ordinal >= ordinals.start {
                 start_offset = Some(frame.offset);
             }
@@ -263,7 +263,7 @@ mod tests {
         let mut cursor = FrameCursor::new(&bytes, crate::os_spr::format::HEADER_SIZE as u64);
         let mut edit_spans = Vec::new();
         while let Some(frame) = cursor.next_frame().unwrap() {
-            if frame.kind == crate::os_spr::core::REC_EDIT {
+            if frame.kind == crate::os_spr::REC_EDIT {
                 edit_spans.push((frame.offset, frame.offset + frame.frame_len()));
             }
         }
@@ -279,7 +279,7 @@ mod tests {
         let mut inner = FrameCursor::new(slice.bytes, 0);
         let mut edit_kinds_in_slice = 0;
         while let Some(frame) = inner.next_frame().unwrap() {
-            if frame.kind == crate::os_spr::core::REC_EDIT {
+            if frame.kind == crate::os_spr::REC_EDIT {
                 edit_kinds_in_slice += 1;
             }
         }
@@ -323,7 +323,7 @@ mod tests {
         let mut reverse = ReverseFrameCursor::at_end(&bytes[crate::os_spr::format::HEADER_SIZE..]);
         let last_commit = loop {
             let frame = reverse.prev_frame().unwrap().unwrap();
-            if frame.kind == crate::os_spr::core::REC_COMMIT {
+            if frame.kind == crate::os_spr::REC_COMMIT {
                 break frame;
             }
         };

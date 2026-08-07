@@ -73,13 +73,13 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 //#endregion 🔖️Schema
 
 //#region 🔖️Runtime
-use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+use {check_len, DbError, DocumentId, DurabilityClass, EpochFence};
 use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use pack::{ByteRange, ContentHash};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 
 /// @emoji 🛡️ Mirrors `db_storage`'s own read-size ceiling (its `MAX_READ_BYTES` is private to that
-/// crate) — validated via `db_core::check_len` before a `Vec<u8>` sized by an untrusted on-disk
+/// crate) — validated via `check_len` before a `Vec<u8>` sized by an untrusted on-disk
 /// length is allocated, per the repo's "validate before allocating" invariant.
 const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
 

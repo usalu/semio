@@ -215,7 +215,7 @@ pub fn render(projection: &WorkflowDocument, config: &SpaceConfig, term_labels: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
     use semio_framework_plugin::UiControlNode;
 
     #[test]

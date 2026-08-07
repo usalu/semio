@@ -11,10 +11,10 @@ import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTyp
 import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, ConnectionMode, getBezierPath, Handle, MiniMap, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal } from "@xyflow/react";
 import * as dagre from "dagre";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { surfaceClass, loadingBorderClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { HostReactFlow, HostReactFlowProvider } from "../🫀️core/🔌Ports/🟦️component.tsx";
+import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
+import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { surfaceClass, loadingBorderClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { HostReactFlow, HostReactFlowProvider } from "../🔌️Ports/🟦️component.tsx";
 import { queryElement } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

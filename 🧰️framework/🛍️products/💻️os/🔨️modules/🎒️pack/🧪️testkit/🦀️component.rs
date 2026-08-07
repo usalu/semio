@@ -74,14 +74,14 @@ impl RecordValueGen {
     /// @emoji 🔢️ Deliberately never NaN/Infinity — `FieldValue`'s derived `PartialEq` uses `==`,
     /// under which `NaN != NaN` always, so a generated NaN would make
     /// `assert_encode_decode_identity` fail even on a perfectly correct codec. Round-trips through
-    /// `crate::os_dsl::core::format_f64`/`parse_f64` so every generated float is also exactly
+    /// `crate::os_dsl::format_f64`/`parse_f64` so every generated float is also exactly
     /// DSL-representable — load-bearing for any future `assert_dsl_pack_bidirectional` caller that
     /// seeds its sample from this generator.
     fn next_f64(&mut self) -> f64 {
         let magnitude = self.next_range(1_000_000) as f64 / 100.0;
         let sign = if self.next_bool() { -1.0 } else { 1.0 };
         let raw = sign * magnitude;
-        crate::os_dsl::core::parse_f64(&crate::os_dsl::core::format_f64(raw)).unwrap_or(raw)
+        crate::os_dsl::parse_f64(&crate::os_dsl::format_f64(raw)).unwrap_or(raw)
     }
 
     const ALPHABET: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ";

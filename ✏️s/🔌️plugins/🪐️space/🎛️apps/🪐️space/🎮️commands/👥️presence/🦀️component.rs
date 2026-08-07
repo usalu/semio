@@ -40,7 +40,7 @@ mod tests {
     fn presence_heartbeat_declares_none_ui_scope() {
         use crate::apps::space::testkit::studio_emit;
         use crate::apps::space::SpaceCommand;
-        use crate::core::demo_space_projection;
+        use crate::demo_space_projection;
         use semio_framework_core::kernel::UiDirtyScope;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();

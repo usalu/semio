@@ -1,7 +1,7 @@
 //! ⚡️ EN 1994 design of composite steel and concrete structures — operation enum + laws (constitutional: op).
 //!
 //! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
-//! (`crate::core::SetDocumentOperation<D>`) so this slot only needs to bind that generic operation to
+//! (`crate::document::SetDocumentOperation<D>`) so this slot only needs to bind that generic operation to
 //! `crate::artifacts::en1994::Document`.
 
 
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::en1994::Document;
 
-pub type Operation = crate::core::SetDocumentOperation<Document>;
+pub type Operation = crate::document::SetDocumentOperation<Document>;
 
 #[cfg(test)]
 mod tests {

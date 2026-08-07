@@ -61,7 +61,7 @@ mod tests {
     fn liquid_retaining_fem_anchor_example_fixture_parses_and_round_trips() {
         use crate::artifacts::en1992::part_1_2::FireRating;
         use crate::artifacts::en1992::part_3::TightnessClass;
-        use crate::core::AnnexChoice;
+        use crate::document::AnnexChoice;
         let document = parse_dsl(EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT).expect("parse liquid retaining fem anchor example");
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.fire_rating, FireRating::R90);

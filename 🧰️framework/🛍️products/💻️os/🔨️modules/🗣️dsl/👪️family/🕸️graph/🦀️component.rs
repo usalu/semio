@@ -10,7 +10,7 @@
 
 pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
 
-use crate::os_dsl::core::{lex, Limits, TextError, TokenKind};
+use crate::os_dsl::{lex, Limits, TextError, TokenKind};
 
 //#region 🔖️Chain
 /// @emoji ⛓️ A run of nodes joined by uniformly-directed, unlabeled edges: `v1 -- v2 -- v3 -- v1`
@@ -124,12 +124,12 @@ pub fn parse_chain_text(text: &str) -> Result<ChainValue, TextError> {
     Ok(ChainValue { nodes, directed: directed.unwrap_or(true) })
 }
 
-fn node_error(message: &str, tokens: &[crate::os_dsl::core::SpannedToken], pos: usize) -> TextError {
-    let span = tokens.get(pos).or_else(|| tokens.last()).map(|t| t.span).unwrap_or(crate::os_dsl::core::TextSpan::at(1, 1));
+fn node_error(message: &str, tokens: &[crate::os_dsl::SpannedToken], pos: usize) -> TextError {
+    let span = tokens.get(pos).or_else(|| tokens.last()).map(|t| t.span).unwrap_or(crate::os_dsl::TextSpan::at(1, 1));
     TextError::new(message.to_string(), span)
 }
 
-fn parse_node(tokens: &[crate::os_dsl::core::SpannedToken], mut pos: usize) -> Result<(EdgeNode, usize), TextError> {
+fn parse_node(tokens: &[crate::os_dsl::SpannedToken], mut pos: usize) -> Result<(EdgeNode, usize), TextError> {
     let id_token = tokens.get(pos).filter(|t| t.kind == TokenKind::Ident).ok_or_else(|| node_error("expected a node identifier", tokens, pos))?;
     let id = id_token.text.as_str().to_string();
     pos += 1;

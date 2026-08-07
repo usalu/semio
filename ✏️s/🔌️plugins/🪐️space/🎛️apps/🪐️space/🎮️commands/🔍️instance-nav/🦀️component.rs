@@ -56,7 +56,7 @@ mod tests {
     use super::*;
     use crate::apps::space::testkit::{apply_config, seed_draw_plugin, studio_emit};
     use crate::apps::space::SpaceCommand;
-    use crate::core::demo_space_projection;
+    use crate::demo_space_projection;
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {

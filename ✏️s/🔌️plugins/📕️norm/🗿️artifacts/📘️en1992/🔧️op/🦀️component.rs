@@ -1,12 +1,12 @@
 //! ⚡️ EN 1992 design of concrete structures — operation enum + laws (constitutional: op).
 //!
 //! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
-//! (`crate::core::SetDocumentOperation<D>`) so this slot only needs to bind that generic operation to
+//! (`crate::document::SetDocumentOperation<D>`) so this slot only needs to bind that generic operation to
 //! `crate::artifacts::en1992::Document`.
 
 use crate::artifacts::en1992::Document;
 
-pub type Operation = crate::core::SetDocumentOperation<Document>;
+pub type Operation = crate::document::SetDocumentOperation<Document>;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

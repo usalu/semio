@@ -1,0 +1,1 @@
+{"capturedAt":"2026-08-07T12:59:58.530Z","totalPolicyBreaches":517,"handcraftedBreaches":0,"handcraftedHigh":0,"kinds":{},"verifyGateHandcraftedOnly":true}

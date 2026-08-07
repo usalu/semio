@@ -1,6 +1,6 @@
 //! 🔧️ VDI 3805 manufacturer product data for building services: Part 1 + sheets 2–100 — document entities.
 
-use crate::core::{NormError, QuantityKind};
+use crate::document::{NormError, QuantityKind};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -18,9 +18,9 @@ impl LocalizedText {
     }
 }
 
-/// 🔒️ A `QuantityKind` tag mirroring `crate::core::QuantityKind`'s 19 variants, kept locally: the DSL
+/// 🔒️ A `QuantityKind` tag mirroring `crate::document::QuantityKind`'s 19 variants, kept locally: the DSL
 /// engine's `DslField` binding can only be derived for a type/trait pair with a local half (orphan
-/// rule), and `crate::core::QuantityKind` doesn't derive `dsl::DslScalar` itself. Converted at the
+/// rule), and `crate::document::QuantityKind` doesn't derive `dsl::DslScalar` itself. Converted at the
 /// `VdiUnit` boundary via `From`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
 pub enum VdiQuantityKind {
@@ -1040,7 +1040,7 @@ pub enum EditionProfileChoice {
 pub const VDI3805_EXTENSION: &str = "vdi3805";
 
 /// 📋️ VDI 3805 evaluation document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(id = "norm.vdi3805", layout = "lines")]
 pub struct Document {
     pub manufacturer_file: ManufacturerFile,
@@ -1053,14 +1053,11 @@ pub struct Document {
     pub curves: BTreeMap<String, CharacteristicCurve>,
     pub limits: SecurityLimits,
 }
-
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for Document {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
+    const EXTENSION: &'static str = "vdi3805";
+    fn envelope_id() -> &'static str { "norm.vdi3805" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -1079,13 +1076,11 @@ impl store::DocumentDsl for Document {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
-        )
-        .expect("valid envelope_id");
+        ).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::DocumentPack for Document {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
@@ -1093,12 +1088,12 @@ impl store::DocumentPack for Document {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
@@ -1109,11 +1104,11 @@ impl store::DocumentPack for Document {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+
 
 
 impl Default for Document {
@@ -1174,7 +1169,7 @@ pub fn reference_fixture() -> Document {
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::core::app::artifact_kind_spec("vdi3805", "VDI 3805")
+    crate::app_surface::artifact_kind_spec("vdi3805", "VDI 3805")
 }
 //#endregion 🔖️ArtifactKind
 

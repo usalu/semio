@@ -5,7 +5,7 @@
 //!
 //! See <https://github.com/usalu/semio/issues/2510> for the bundle rationale.
 
-use semio_framework_plugin::{GlbExporter, GlbImporter, ObjExporter, ObjImporter, PluginBundle, StlExporter, StlImporter};
+use semio_framework_plugin::{GlbExporter, GlbImporter, ObjExporter, ObjImporter, Plugin, StlExporter, StlImporter};
 
 use procedural::apps::procedural3d::{create_procedural3d_app, Procedural3dPlayApp};
 use procedural::artifacts::procedural3d::engine::{procedural3d_document_from_mesh, procedural3d_mesh_from_document};
@@ -29,6 +29,6 @@ pub fn register_exports() {
 }
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
-pub fn register_app(bundle: PluginBundle) -> PluginBundle {
+pub fn register_app(bundle: Plugin) -> Plugin {
     bundle.register_document_app::<Procedural3dPlayApp>(create_procedural3d_app())
 }

@@ -3,7 +3,6 @@
 //! Infinite/flow component files exist under 🔨️modules/ but are unwired pending dep-DAG cleanup.
 
 extern crate self as dsl;
-extern crate self as dsl_core;
 extern crate self as dsl_grammar;
 extern crate self as dsl_notation;
 extern crate self as store;
@@ -24,8 +23,26 @@ pub mod os_dsl {
   mod component;
   pub use component::*;
 
-  #[path = "../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs"]
-  pub mod core;
+  #[path = "../../🔨️modules/🗣️dsl/📍️span/🦀️component.rs"]
+  pub mod span;
+
+  #[path = "../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs"]
+  pub mod diagnostic;
+
+  #[path = "../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs"]
+  pub mod token;
+
+  #[path = "../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs"]
+  pub mod lexer;
+
+  #[path = "../../🔨️modules/🗣️dsl/🎖️trust/🦀️component.rs"]
+  pub mod trust;
+
+  pub use self::span::*;
+  pub use self::diagnostic::*;
+  pub use self::token::*;
+  pub use self::lexer::*;
+  pub use self::trust::*;
 
   #[path = "."]
   pub mod family {
@@ -86,8 +103,18 @@ pub mod os_pack {
   #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs"]
   pub mod cli;
 
-  #[path = "../../🔨️modules/🎒️pack/🫀️core/🦀️component.rs"]
-  pub mod core;
+  #[path = "../../🔨️modules/🎒️pack/🆔ids/🦀️component.rs"]
+  pub mod ids;
+
+  #[path = "../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs"]
+  pub mod codec;
+
+  #[path = "../../🔨️modules/🎒️pack/🚰️source/🦀️component.rs"]
+  pub mod source;
+
+  pub use self::ids::*;
+  pub use self::codec::*;
+  pub use self::source::*;
 
   #[path = "../../🔨️modules/🎒️pack/📐️format/🦀️component.rs"]
   pub mod format;
@@ -129,8 +156,25 @@ pub mod os_spr {
   #[path = "../../🔨️modules/📡️spr/🎮️command/🦀️component.rs"]
   pub mod command;
 
-  #[path = "../../🔨️modules/📡️spr/🫀️core/🦀️component.rs"]
-  pub mod core;
+  #[path = "../../🔨️modules/📡️spr/🆔ids/🦀️component.rs"]
+  pub mod ids;
+
+  #[path = "../../🔨️modules/📡️spr/🔢️scalar/🦀️component.rs"]
+  pub mod scalar;
+
+  #[path = "../../🔨️modules/📡️spr/📖️dictionary/🦀️component.rs"]
+  pub mod dictionary;
+
+  #[path = "../../🔨️modules/📡️spr/🔐️crypto/🦀️component.rs"]
+  pub mod crypto;
+
+  #[path = "../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs"]
+  pub mod wire_codec;
+
+  pub use self::ids::*;
+  pub use self::dictionary::*;
+  pub use self::crypto::*;
+  pub use self::wire_codec::*;
 
   #[path = "../../🔨️modules/📡️spr/🔀️crdt/🦀️component.rs"]
   pub mod crdt;
@@ -200,4 +244,4 @@ pub use crate::os_extension as extension;
 // Former dsl_notation crate root surface
 pub use crate::os_dsl::notation::*;
 pub use crate::os_dsl::grammar::*;
-pub use crate::os_dsl::core::*;
+pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};

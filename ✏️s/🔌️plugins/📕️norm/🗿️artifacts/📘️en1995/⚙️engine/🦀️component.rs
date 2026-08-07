@@ -1,7 +1,7 @@
 //! ⚙️ EN 1995 app — headless compute (constitutional: engine).
 
 use crate::artifacts::en1995::Document;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, LoadDuration, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LoadDuration, Quantity};
 
 pub mod na_de {
     pub use crate::artifacts::en1990::engine::na_de::NaDe;
@@ -157,7 +157,7 @@ pub mod part_1_1 {
     }
 
     pub fn check_bending(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1995-1-1", "§6.1.6", "6.1"), Quantity::new(crate::core::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(crate::core::QuantityKind::Moment, m_rd * 1_000_000.0), "timber bending ULS", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1995-1-1", "§6.1.6", "6.1"), Quantity::new(crate::document::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(crate::document::QuantityKind::Moment, m_rd * 1_000_000.0), "timber bending ULS", annex)
     }
 
     pub fn check_compression(n_ed_kn: f64, n_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
@@ -237,8 +237,8 @@ pub mod part_2 {
         let m_rd_fatigue_knm = m_rd_knm * k_fat;
         CheckResult::from_utilization(
             ClauseId::new("EN 1995-2", "Annex A", "A.1"),
-            Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(crate::core::QuantityKind::Moment, m_rd_fatigue_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_fatigue_knm * 1_000_000.0),
             "bridge timber fatigue-reduced bending",
             AnnexChoice::En,
         )
@@ -368,12 +368,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
 /// headless `NormHost` session every norm app drives.
 pub struct En1995Family;
 
-impl crate::core::NormFamily for En1995Family {
+impl crate::document::NormFamily for En1995Family {
     type Document = Document;
     type Operation = crate::artifacts::en1995::op::Operation;
 
-    fn family_id() -> crate::core::NormFamilyId {
-        crate::core::NormFamilyId::En1995
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::En1995
     }
 
     fn evaluate(document: &Document) -> CheckReport {
@@ -381,7 +381,7 @@ impl crate::core::NormFamily for En1995Family {
     }
 }
 
-pub type Host = crate::core::NormHost<En1995Family>;
+pub type Host = crate::document::NormHost<En1995Family>;
 // #endregion 🔖️Session
 
 //#region 🧪️Tests

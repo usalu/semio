@@ -6,7 +6,7 @@
 //! OpText for SetDocumentOperation<D>`. A coarse, whole-value-replace operation is the legitimate,
 //! sufficient choice: this reference/lookup-table document has no interactive editor driving
 //! fine-grained field-level edits, so reusing the generic pair (rather than hand-deriving a redundant
-//! one-variant `#[derive(dsl::DslOps)]` enum that would duplicate exactly this shape) keeps every norm
+//! one-variant `#[derive(dsl::DslEnum)]` enum that would duplicate exactly this shape) keeps every norm
 //! artifact's operation layer DRY. The `NormFamily` binding lives in `⚙️engine`, next to `evaluate`.
 
 
@@ -18,7 +18,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::vdi3805::Document;
-use crate::core::SetDocumentOperation;
+use crate::document::SetDocumentOperation;
 
 //#region 🔖️Types
 /// 🧬️ See module doc comment.

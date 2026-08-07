@@ -1112,6 +1112,20 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   }
   if (containsProtocolSegment(pluginRoot)) findings.push(`${pluginId}: found a "📡️protocol" path segment under the plugin dir (renamed to 📡️spr)`);
 
+  const pluginDirName = (TAXONOMY as { pluginDirName?: string }).pluginDirName ?? "🔌️plugin";
+  const pluginChildDirs = (TAXONOMY as { pluginChildDirs?: string[] }).pluginChildDirs ?? ["🛂️manifest", "🎟️capabilities", "🔧️setup", "🎛️apps"];
+  const pluginContract = join(pluginRoot, pluginDirName);
+  if (existsSync(pluginContract)) {
+    if (!existsSync(join(pluginContract, TAXONOMY_LEAF_FILENAME))) {
+      findings.push(`${pluginId}: ${pluginDirName} is missing ${TAXONOMY_LEAF_FILENAME}`);
+    }
+    for (const child of pluginChildDirs) {
+      if (!existsSync(join(pluginContract, child, TAXONOMY_LEAF_FILENAME))) {
+        findings.push(`${pluginId}: ${pluginDirName} is missing ${child}/${TAXONOMY_LEAF_FILENAME}`);
+      }
+    }
+  }
+
   return findings;
 }
 //#endregion 🗿️TaxonomyValidator

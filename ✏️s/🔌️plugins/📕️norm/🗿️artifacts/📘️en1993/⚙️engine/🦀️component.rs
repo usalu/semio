@@ -2,7 +2,7 @@
 
 use crate::artifacts::en1993::Document;
 use crate::artifacts::en1993::op::Operation;
-use crate::core::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity};
 
 // #region 🔖️AnnexParams
 /// 🇪️🇺️🇩️🇪️ Resolved partial safety factors for one national annex choice, threaded through every EN 1993 formula.
@@ -162,8 +162,8 @@ pub mod part_1_1 {
     pub fn check_bending(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1993-1-1", "§6.2.5", "6.2.5"),
-            Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(crate::core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
             "cross-section bending ULS",
             annex,
         )
@@ -221,8 +221,8 @@ pub mod part_1_2 {
         let theta_a_cr = critical_temperature_c(mu_0);
         CheckResult::from_minimum(
             ClauseId::new("EN 1993-1-2", "§4.2.3", "4.22"),
-            Quantity::new(crate::core::QuantityKind::Temperature, theta_a_cr),
-            Quantity::new(crate::core::QuantityKind::Temperature, design_temperature_c),
+            Quantity::new(crate::document::QuantityKind::Temperature, theta_a_cr),
+            Quantity::new(crate::document::QuantityKind::Temperature, design_temperature_c),
             "critical steel temperature",
             annex,
         )
@@ -278,8 +278,8 @@ pub mod part_1_4 {
     pub fn check_stainless_steel(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1993-1-4", "§6", "6.1"),
-            Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(crate::core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
             "stainless steel bending",
             annex,
         )
@@ -515,7 +515,7 @@ pub mod part_1_10 {
 
     /// 📊️ Max permissible thickness [mm] per EN 1993-1-10 Table 2.1 (bilinear lookup, not an ad-hoc offset).
     pub fn max_permissible_thickness_mm(steel_subgrade: &str, t_ed_c: f64) -> f64 {
-        crate::core::table_lookup_bilinear(t_ed_c, subgrade_index(steel_subgrade), &T_ED_C, &SUBGRADE_INDEX, &MAX_THICKNESS_MM)
+        crate::document::table_lookup_bilinear(t_ed_c, subgrade_index(steel_subgrade), &T_ED_C, &SUBGRADE_INDEX, &MAX_THICKNESS_MM)
     }
 
     pub fn check_through_thickness(actual_thickness_mm: f64, steel_subgrade: &str, t_ed_c: f64, annex: AnnexChoice) -> CheckResult {
@@ -561,8 +561,8 @@ pub mod part_1_12 {
     pub fn check_high_strength_bending(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1993-1-12", "§4", "4.1"),
-            Quantity::new(crate::core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(crate::core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
             "high-strength steel elastic bending",
             annex,
         )
@@ -581,7 +581,7 @@ pub mod part_2 {
 
     pub fn check_steel_bridge(n_ed_kn: f64, n_rd_kn: f64, m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
         let eta = bridge_interaction_eta(n_ed_kn, n_rd_kn, m_ed_knm, m_rd_knm);
-        CheckResult::from_utilization(ClauseId::new("EN 1993-2", "§6", "6.1"), Quantity::new(crate::core::QuantityKind::Dimensionless, eta), Quantity::new(crate::core::QuantityKind::Dimensionless, 1.0), "steel bridge interaction", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1993-2", "§6", "6.1"), Quantity::new(crate::document::QuantityKind::Dimensionless, eta), Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0), "steel bridge interaction", annex)
     }
 
     /// 🌉️ Damage-equivalent fatigue stress range Δσ_E2 = λ·Φ₂·Δσ_p per EN 1993-2 §9.3.

@@ -1,7 +1,7 @@
 //! ⚙️ DIN 4108 app — headless compute (constitutional: engine).
 
 use crate::artifacts::din4108::Document;
-use crate::core::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
+use crate::document::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
 
 pub const R_SI_WALL_M2K_W: f64 = 0.13;
 pub const R_SE_WALL_M2K_W: f64 = 0.04;
@@ -68,9 +68,9 @@ pub mod part_1 {
         let applies = applies_to_element(part, element);
         CheckResult {
             clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
-            status: if applies { crate::core::CheckStatus::Pass } else { crate::core::CheckStatus::NotApplicable },
-            computed: Quantity::new(crate::core::QuantityKind::Dimensionless, if applies { 1.0 } else { 0.0 }),
-            limit: Quantity::new(crate::core::QuantityKind::Dimensionless, 1.0),
+            status: if applies { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::NotApplicable },
+            computed: Quantity::new(crate::document::QuantityKind::Dimensionless, if applies { 1.0 } else { 0.0 }),
+            limit: Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
             utilization: if applies { 1.0 } else { 0.0 },
             message: format!("scope: {} for {:?}", part_scope(part), element),
             annex: AnnexChoice::De,
@@ -85,9 +85,9 @@ pub mod part_1 {
         if layers.is_empty() {
             return CheckResult {
                 clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
-                status: crate::core::CheckStatus::NotApplicable,
-                computed: Quantity::new(crate::core::QuantityKind::Dimensionless, 0.0),
-                limit: Quantity::new(crate::core::QuantityKind::Dimensionless, 1.0),
+                status: crate::document::CheckStatus::NotApplicable,
+                computed: Quantity::new(crate::document::QuantityKind::Dimensionless, 0.0),
+                limit: Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
                 utilization: 0.0,
                 message: "no layers supplied; input plausibility validation not applicable".into(),
                 annex: AnnexChoice::De,
@@ -100,7 +100,7 @@ pub mod part_1 {
         let plausible = lambda_ok && r_ok && u_ok;
         CheckResult {
             clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
-            status: if plausible { crate::core::CheckStatus::Pass } else { crate::core::CheckStatus::Fail },
+            status: if plausible { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail },
             computed: Quantity::u_value_w_m2k(u_value),
             limit: Quantity::u_value_w_m2k(U_VALUE_PLAUSIBLE_MAX_W_M2K),
             utilization: if plausible { u_value / U_VALUE_PLAUSIBLE_MAX_W_M2K } else { 2.0 },
@@ -280,8 +280,8 @@ pub mod part_3 {
         let f = interior_surface_temperature_factor(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, t_int_c, t_ext_c, rh_int);
         Ok(CheckResult::from_minimum(
             ClauseId::new("DIN 4108-3", "§6", "6.1"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, f),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, F_RSI_MINIMUM),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, f),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, F_RSI_MINIMUM),
             "interior surface temperature factor f_Rsi",
             AnnexChoice::De,
         ))
@@ -296,8 +296,8 @@ pub mod part_3 {
         let margin = if condenses { 0.0 } else { 1.0 };
         Ok(CheckResult::from_minimum(
             ClauseId::new("DIN 4108-3", "§7", "7.1"),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, margin),
-            Quantity::new(crate::core::QuantityKind::Dimensionless, 1.0),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, margin),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
             "Glaser interface dew-point margin",
             AnnexChoice::De,
         ))
@@ -359,8 +359,8 @@ pub mod part_4 {
         let limit = design_lambda_for_material(material)?;
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN 4108-4", "Table 1", "λ"),
-            Quantity::new(crate::core::QuantityKind::ThermalConductivity, lambda_design),
-            Quantity::new(crate::core::QuantityKind::ThermalConductivity, limit),
+            Quantity::new(crate::document::QuantityKind::ThermalConductivity, lambda_design),
+            Quantity::new(crate::document::QuantityKind::ThermalConductivity, limit),
             "design thermal conductivity",
             AnnexChoice::De,
         ))
@@ -394,7 +394,7 @@ pub mod part_5 {
         }
         let flux = peak_summer_heat_flux_w_m2(layers, climate, t_int_c, solar_absorptance, irradiance_w_m2);
         let limit = summer_heat_flux_limit_w_m2(climate);
-        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-5", "§4", "4.1"), Quantity::new(crate::core::QuantityKind::Power, flux), Quantity::new(crate::core::QuantityKind::Power, limit), "peak summer heat flux", AnnexChoice::De))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-5", "§4", "4.1"), Quantity::new(crate::document::QuantityKind::Power, flux), Quantity::new(crate::document::QuantityKind::Power, limit), "peak summer heat flux", AnnexChoice::De))
     }
 }
 // #endregion 🔖️Part5
@@ -457,8 +457,8 @@ pub mod part_7 {
         let limit = class.n50_limit_h();
         CheckResult::from_utilization(
             ClauseId::new("DIN 4108-7", "§4", "4.2"),
-            Quantity::new(crate::core::QuantityKind::AirPermeability, n50_measured),
-            Quantity::new(crate::core::QuantityKind::AirPermeability, limit),
+            Quantity::new(crate::document::QuantityKind::AirPermeability, n50_measured),
+            Quantity::new(crate::document::QuantityKind::AirPermeability, limit),
             "n50 airtightness",
             AnnexChoice::De,
         )
@@ -553,9 +553,9 @@ pub mod part_10 {
         let admissible = declared_class >= required;
         CheckResult {
             clause: ClauseId::new("DIN 4108-10", "Table 1", "1.1"),
-            status: if admissible { crate::core::CheckStatus::Pass } else { crate::core::CheckStatus::Fail },
-            computed: Quantity::new(crate::core::QuantityKind::Dimensionless, declared_class as i32 as f64),
-            limit: Quantity::new(crate::core::QuantityKind::Dimensionless, required as i32 as f64),
+            status: if admissible { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail },
+            computed: Quantity::new(crate::document::QuantityKind::Dimensionless, declared_class as i32 as f64),
+            limit: Quantity::new(crate::document::QuantityKind::Dimensionless, required as i32 as f64),
             utilization: if admissible { 1.0 } else { 2.0 },
             message: format!("application class {declared_class:?} for {} (requires >= {required:?})", application_description(application)),
             annex: AnnexChoice::De,
@@ -725,7 +725,7 @@ pub fn evaluate(document: &Document) -> CheckReport {
     )
     .unwrap_or_else(|err| {
         let mut report = CheckReport::default();
-        report.push(CheckResult::from_utilization(ClauseId::new("DIN 4108", "input", "1"), Quantity::new(crate::core::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::core::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
+        report.push(CheckResult::from_utilization(ClauseId::new("DIN 4108", "input", "1"), Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
         report
     })
 }
@@ -734,7 +734,7 @@ pub struct Din4108Family;
 
 impl NormFamily for Din4108Family {
     type Document = Document;
-    type Operation = crate::core::SetDocumentOperation<Document>;
+    type Operation = crate::document::SetDocumentOperation<Document>;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::Din4108
@@ -782,7 +782,7 @@ mod tests {
         let f = part_3::interior_surface_temperature_factor(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.5);
         assert!(f > F_RSI_MINIMUM, "f_Rsi = {f}, must exceed {F_RSI_MINIMUM}");
         let check = part_3::check_surface_temperature(&layers, 20.0, -14.0, 0.5).unwrap();
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -790,7 +790,7 @@ mod tests {
         let layers = sample_moisture_wall();
         assert!(!part_3::condensation_at_interfaces(&layers, 20.0, -14.0, 0.5));
         let check = part_3::check_glaser_moisture(&layers, 20.0, -14.0, 0.5).unwrap();
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -818,7 +818,7 @@ mod tests {
     #[test]
     fn part_4_mineral_wool_lambda() {
         let r = part_4::check_design_lambda("mineral_wool", 0.038).unwrap();
-        assert_eq!(r.status, crate::core::CheckStatus::Pass);
+        assert_eq!(r.status, crate::document::CheckStatus::Pass);
         let design = part_4::design_lambda_for_material("mineral_wool").unwrap();
         assert!((design - 0.0385).abs() < 0.001);
     }
@@ -839,7 +839,7 @@ mod tests {
         let flux_z4 = part_5::peak_summer_heat_flux_w_m2(&layers, ClimateZoneDe::Zone4, 26.0, 0.6, 600.0);
         assert!(flux_z4 > flux_z2);
         let check = part_5::check_summer_heat_protection(&layers, ClimateZoneDe::Zone2, 26.0, 0.6, 600.0).unwrap();
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -849,7 +849,7 @@ mod tests {
         let u_bridged = part_6::u_value_with_thermal_bridges(u_element, 0.05);
         assert!((u_bridged - (u_element + 0.05)).abs() < 1e-9);
         let check = part_6::check_u_value_with_bridges(&layers, 0.05, 0.35).unwrap();
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -858,7 +858,7 @@ mod tests {
         assert!((entry.u_typical_w_m2k - 0.24).abs() < 0.01);
         let u = part_2::u_value_from_resistance(part_2::total_resistance(&sample_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let check = part_8::check_against_catalog("AW-01", u).unwrap();
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -886,19 +886,19 @@ mod tests {
     fn part_1_plausibility_flags_implausible_u_value() {
         let layers = sample_wall();
         let ok = part_1::check_input_plausibility(&layers, 0.224);
-        assert_eq!(ok.status, crate::core::CheckStatus::Pass);
+        assert_eq!(ok.status, crate::document::CheckStatus::Pass);
         let bad = part_1::check_input_plausibility(&layers, 12.0);
-        assert_eq!(bad.status, crate::core::CheckStatus::Fail);
+        assert_eq!(bad.status, crate::document::CheckStatus::Fail);
         let na = part_1::check_input_plausibility(&[], 0.3);
-        assert_eq!(na.status, crate::core::CheckStatus::NotApplicable);
+        assert_eq!(na.status, crate::document::CheckStatus::NotApplicable);
     }
 
     #[test]
     fn part_10_application_class_admissibility() {
         let admissible = part_10::check_application_class(part_10::ApplicationType::Deo, part_10::ApplicationClass::Dk);
-        assert_eq!(admissible.status, crate::core::CheckStatus::Pass);
+        assert_eq!(admissible.status, crate::document::CheckStatus::Pass);
         let inadmissible = part_10::check_application_class(part_10::ApplicationType::Duk, part_10::ApplicationClass::Dm);
-        assert_eq!(inadmissible.status, crate::core::CheckStatus::Fail);
+        assert_eq!(inadmissible.status, crate::document::CheckStatus::Fail);
         assert_eq!(part_10::minimum_class(part_10::ApplicationType::Duk), part_10::ApplicationClass::Dg);
     }
 
@@ -909,7 +909,7 @@ mod tests {
         let delta = bb_2::delta_u_wb_actual_w_m2k(psi_l_sum, area);
         assert!((delta - 0.045).abs() < 1e-9, "delta = {delta}");
         let check = bb_2::check_beiblatt_2_equivalence(psi_l_sum, area, true).unwrap();
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
@@ -918,9 +918,9 @@ mod tests {
         let area = 400.0;
         let check = bb_2::check_beiblatt_2_equivalence(psi_l_sum, area, false).unwrap();
         assert!((check.limit.value - bb_2::DELTA_U_WB_FLAT_RATE_W_M2K).abs() < 1e-9);
-        assert_eq!(check.status, crate::core::CheckStatus::Pass);
+        assert_eq!(check.status, crate::document::CheckStatus::Pass);
         let over_flat_rate = bb_2::check_beiblatt_2_equivalence(45.0, area, false).unwrap();
-        assert_eq!(over_flat_rate.status, crate::core::CheckStatus::Fail);
+        assert_eq!(over_flat_rate.status, crate::document::CheckStatus::Fail);
     }
 }
 //#endregion 🧪️Tests

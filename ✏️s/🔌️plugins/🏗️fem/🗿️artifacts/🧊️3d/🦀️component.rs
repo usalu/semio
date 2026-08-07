@@ -1,17 +1,17 @@
 //! 🏙️ FEM 3D artifact — document entity types (constitutional: general).
 
-use crate::core::Dof;
+use crate::model::Dof;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 pub const FEM_3D_SCHEMA: &str = "fem.3d";
 
 // #region 🔖️Document
-/// 🔁️ fem_3d's own DSL-printable mirror of `crate::core::Dof` — `crate::core::Dof` can't derive
+/// 🔁️ fem_3d's own DSL-printable mirror of `crate::model::Dof` — `crate::model::Dof` can't derive
 /// `dsl::DslScalar` from outside its own defining module the same way a foreign crate couldn't (the
 /// orphan rule blocks implementing a foreign `dsl::DslField` for it from here), so every DOF-typed
 /// field in the `Fem3dDocument` grammar (`FemSupport::fixed`, `FemLoad::Nodal::dof`) uses this local tag
-/// instead, converting to/from `crate::core::Dof` at the `crate::core::Model`/`Support`/`NodalLoad`
+/// instead, converting to/from `crate::model::Dof` at the `crate::model::Model`/`Support`/`NodalLoad`
 /// boundary (see `crate::artifacts::fem3d::engine::meshing::resolve_geometry`, `translate_loads`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum FemDof {
@@ -195,7 +195,7 @@ impl Default for FemAnalysisSettings {
 /// 🧱️ A meshed continuum solid — a polygon footprint (with optional holes) extruded upward from
 /// `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at solve time
 /// (see `crate::artifacts::fem3d::engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
-/// extended into 3D via `crate::core::mesh`'s extrusion + tet-splitting.
+/// extended into 3D via `crate::model::mesh`'s extrusion + tet-splitting.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "solid")]
@@ -229,7 +229,7 @@ impl Default for FemCamera {
 /// 🧾️ Persistent fem-3d document — nodes, members, catalogs, supports and load cases. The camera is
 /// session-only view state (never a VCS-tracked document field) — see `Fem3dConfig::camera` in the
 /// app's `🎚️config`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslDocument)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[dsl(id = "fem.fem3d", layout = "lines")]
 pub struct Fem3dDocument {
@@ -252,14 +252,11 @@ pub struct Fem3dDocument {
     #[dsl(block)]
     pub analysis: FemAnalysisSettings,
 }
-
-//#region 🔖️DocumentCodec
-/// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for Fem3dDocument {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
+    const EXTENSION: &'static str = "fem3d";
+    fn envelope_id() -> &'static str { "fem.fem3d" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -278,13 +275,11 @@ impl store::DocumentDsl for Fem3dDocument {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
             1,
-        )
-        .expect("valid envelope_id");
+        ).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📦️ Handcrafted DocumentPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::DocumentPack for Fem3dDocument {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
@@ -292,12 +287,12 @@ impl store::DocumentPack for Fem3dDocument {
             <Self as store::DocumentDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
@@ -308,17 +303,17 @@ impl store::DocumentPack for Fem3dDocument {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-//#endregion 🔖️DocumentCodec
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+
 
 // #endregion 🔖️Document
 
 // #region 🔖️ArtifactKind
 /// 🏷️ The `computation.fem3d` artifact kind — every load case/combination's solved
-/// `crate::core::StaticResult`, pinned to this kind by the `results:out` media port (see
+/// `crate::model::StaticResult`, pinned to this kind by the `results:out` media port (see
 /// `crate::artifacts::fem3d::engine::fem3d_results_out_port`) and produced by
 /// `crate::apps::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
 /// `create_fem3d_app`'s inline `.artifact_kind(...)` call so the app's manifest can reference it by name.
