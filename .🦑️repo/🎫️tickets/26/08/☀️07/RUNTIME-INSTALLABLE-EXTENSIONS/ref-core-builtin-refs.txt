@@ -1,0 +1,1100 @@
+
+### flow_extension_core line 1380
+ 1372|static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {
+ 1373|    contributed: BTreeMap::new(),
+ 1374|    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+ 1375|    generation: 0,
+ 1376|}));
+ 1377|
+ 1378|/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+ 1379|pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+ 1380|    flow_extension_core::register(registry);
+ 1381|    flow_extension_math::register(registry);
+ 1382|    flow_extension_text::register(registry);
+ 1383|    flow_extension_logic::register(registry);
+ 1384|    flow_extension_dictionary::register(registry);
+ 1385|    flow_extension_list::register(registry);
+ 1386|    flow_extension_brep::register(registry);
+ 1387|    flow_extension_draw::register(registry);
+ 1388|}
+ 1389|
+ 1390|struct ContributedExtensionStub {
+ 1391|    extension_id: String,
+
+### flow_extension_core line 5864
+ 5856|            let payload = input.get(name).and_then(|v| v.as_dictionary()).cloned().ok_or_else(|| EvalError::MissingInput(name.into()))?;
+ 5857|            return Ok(channel_output(name, payload));
+ 5858|        }
+ 5859|        Err(EvalError::UnknownKind(kind.into()))
+ 5860|    }
+ 5861|
+ 5862|    fn fixture_kind_infos_json() -> String {
+ 5863|        let mut registry = Registry::new();
+ 5864|        flow_extension_core::register(&mut registry);
+ 5865|        flow_extension_math::register(&mut registry);
+ 5866|        flow_extension_brep::register(&mut registry);
+ 5867|        serde_json::to_string(&registry.operator_catalogue()).unwrap_or_else(|_| "[]".into())
+ 5868|    }
+ 5869|
+ 5870|    fn test_kind_infos_json() -> String {
+ 5871|        serde_json::to_string(&[
+ 5872|            NeuronKindInfo {
+ 5873|                id: "math.add".into(),
+ 5874|                extension: "math".into(),
+ 5875|                name: "Add".into(),
+
+### flow_extension_math line 1381
+ 1373|    contributed: BTreeMap::new(),
+ 1374|    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+ 1375|    generation: 0,
+ 1376|}));
+ 1377|
+ 1378|/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+ 1379|pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+ 1380|    flow_extension_core::register(registry);
+ 1381|    flow_extension_math::register(registry);
+ 1382|    flow_extension_text::register(registry);
+ 1383|    flow_extension_logic::register(registry);
+ 1384|    flow_extension_dictionary::register(registry);
+ 1385|    flow_extension_list::register(registry);
+ 1386|    flow_extension_brep::register(registry);
+ 1387|    flow_extension_draw::register(registry);
+ 1388|}
+ 1389|
+ 1390|struct ContributedExtensionStub {
+ 1391|    extension_id: String,
+ 1392|    operator_id: String,
+
+### flow_extension_math line 5865
+ 5857|            return Ok(channel_output(name, payload));
+ 5858|        }
+ 5859|        Err(EvalError::UnknownKind(kind.into()))
+ 5860|    }
+ 5861|
+ 5862|    fn fixture_kind_infos_json() -> String {
+ 5863|        let mut registry = Registry::new();
+ 5864|        flow_extension_core::register(&mut registry);
+ 5865|        flow_extension_math::register(&mut registry);
+ 5866|        flow_extension_brep::register(&mut registry);
+ 5867|        serde_json::to_string(&registry.operator_catalogue()).unwrap_or_else(|_| "[]".into())
+ 5868|    }
+ 5869|
+ 5870|    fn test_kind_infos_json() -> String {
+ 5871|        serde_json::to_string(&[
+ 5872|            NeuronKindInfo {
+ 5873|                id: "math.add".into(),
+ 5874|                extension: "math".into(),
+ 5875|                name: "Add".into(),
+ 5876|                abbreviation: "Add".into(),
+
+### flow_extension_text line 1382
+ 1374|    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+ 1375|    generation: 0,
+ 1376|}));
+ 1377|
+ 1378|/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+ 1379|pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+ 1380|    flow_extension_core::register(registry);
+ 1381|    flow_extension_math::register(registry);
+ 1382|    flow_extension_text::register(registry);
+ 1383|    flow_extension_logic::register(registry);
+ 1384|    flow_extension_dictionary::register(registry);
+ 1385|    flow_extension_list::register(registry);
+ 1386|    flow_extension_brep::register(registry);
+ 1387|    flow_extension_draw::register(registry);
+ 1388|}
+ 1389|
+ 1390|struct ContributedExtensionStub {
+ 1391|    extension_id: String,
+ 1392|    operator_id: String,
+ 1393|}
+
+### flow_extension_logic line 1383
+ 1375|    generation: 0,
+ 1376|}));
+ 1377|
+ 1378|/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+ 1379|pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+ 1380|    flow_extension_core::register(registry);
+ 1381|    flow_extension_math::register(registry);
+ 1382|    flow_extension_text::register(registry);
+ 1383|    flow_extension_logic::register(registry);
+ 1384|    flow_extension_dictionary::register(registry);
+ 1385|    flow_extension_list::register(registry);
+ 1386|    flow_extension_brep::register(registry);
+ 1387|    flow_extension_draw::register(registry);
+ 1388|}
+ 1389|
+ 1390|struct ContributedExtensionStub {
+ 1391|    extension_id: String,
+ 1392|    operator_id: String,
+ 1393|}
+ 1394|
+
+### flow_extension_dictionary line 1384
+ 1376|}));
+ 1377|
+ 1378|/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+ 1379|pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+ 1380|    flow_extension_core::register(registry);
+ 1381|    flow_extension_math::register(registry);
+ 1382|    flow_extension_text::register(registry);
+ 1383|    flow_extension_logic::register(registry);
+ 1384|    flow_extension_dictionary::register(registry);
+ 1385|    flow_extension_list::register(registry);
+ 1386|    flow_extension_brep::register(registry);
+ 1387|    flow_extension_draw::register(registry);
+ 1388|}
+ 1389|
+ 1390|struct ContributedExtensionStub {
+ 1391|    extension_id: String,
+ 1392|    operator_id: String,
+ 1393|}
+ 1394|
+ 1395|impl neural::Operation for ContributedExtensionStub {
+
+### flow_extension_list line 1385
+ 1377|
+ 1378|/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+ 1379|pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+ 1380|    flow_extension_core::register(registry);
+ 1381|    flow_extension_math::register(registry);
+ 1382|    flow_extension_text::register(registry);
+ 1383|    flow_extension_logic::register(registry);
+ 1384|    flow_extension_dictionary::register(registry);
+ 1385|    flow_extension_list::register(registry);
+ 1386|    flow_extension_brep::register(registry);
+ 1387|    flow_extension_draw::register(registry);
+ 1388|}
+ 1389|
+ 1390|struct ContributedExtensionStub {
+ 1391|    extension_id: String,
+ 1392|    operator_id: String,
+ 1393|}
+ 1394|
+ 1395|impl neural::Operation for ContributedExtensionStub {
+ 1396|    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+
+### math.add line 270
+  262|
+  263|impl Default for FlowFixture {
+  264|    fn default() -> Self {
+  265|        Self {
+  266|            schema: "flow.fixture".into(),
+  267|            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+  268|            widgets: vec![
+  269|                Widget::InputSlider { id: "slider".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+  270|                Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true },
+  271|                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::new() },
+  272|            ],
+  273|            synapses: vec![
+  274|                SynapseSpec { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "a".into() },
+  275|                SynapseSpec { id: "s2".into(), from: "add".into(), to: "preview".into(), from_port: "sum".into(), to_port: String::new() },
+  276|            ],
+  277|            layout: BTreeMap::new(),
+  278|        }
+  279|    }
+  280|}
+  281|
+
+### math.add line 345
+  337|
+  338|impl Default for FlowDocument {
+  339|    fn default() -> Self {
+  340|        Self {
+  341|            schema: "flow.document".into(),
+  342|            tree: Tree {
+  343|                neurons: vec![
+  344|                    Neuron::with_kind("slider", INPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("number".into())))),
+  345|                    Neuron::with_kind("add", "math.add", Dictionary::new()),
+  346|                    Neuron::with_kind("out_sum", OUTPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("sum".into())))),
+  347|                ],
+  348|                synapses: vec![
+  349|                    Synapse { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: String::new(), to_port: "a".into() },
+  350|                    Synapse { id: "s2".into(), from: "add".into(), to: "out_sum".into(), from_port: "sum".into(), to_port: String::new() },
+  351|                ],
+  352|            },
+  353|            ui: FlowUi {
+  354|                camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+  355|                nodes: BTreeMap::from([
+  356|                    ("slider".into(), FlowNodeGui { layout: WidgetLayout { x: 0.0, y: 0.0 }, chrome: NodeChrome::Slider { min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP, value: 3.0 } }),
+
+### math.add line 5750
+ 5742|        fixture.widgets.push(Widget::Cluster {
+ 5743|            id: "cluster-1".into(),
+ 5744|            name: "Cluster One".into(),
+ 5745|            tree: Tree {
+ 5746|                neurons: vec![
+ 5747|                    Neuron { id: "inner-in".into(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(1.0))), tree: None },
+ 5748|                    Neuron {
+ 5749|                        id: "inner-add".into(),
+ 5750|                        kind: "math.add".into(),
+ 5751|                        params: Dictionary::new().insert("count", NeuralValue::Atom(Atom::Integer(2))),
+ 5752|                        tree: Some(Box::new(Tree { neurons: vec![Neuron::with_kind("nested", "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String("deep".into()))))], synapses: vec![] })),
+ 5753|                    },
+ 5754|                ],
+ 5755|                synapses: vec![Synapse { id: "inner-s1".into(), from: "inner-in".into(), to: "inner-add".into(), from_port: "number".into(), to_port: "a".into() }],
+ 5756|            },
+ 5757|            flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: BTreeMap::new(), previews: Vec::new() },
+ 5758|        });
+ 5759|        fixture.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: BTreeSet::from(["a".to_string(), "b".to_string()]) });
+ 5760|        crate::os_store::test_support::assert_dsl_round_trip(&fixture);
+ 5761|        crate::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
+
+### math.add line 5845
+ 5837|        if kind == "core.text" {
+ 5838|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5839|            return Ok(channel_output("text", Dictionary::with_schema("text").insert("value", NeuralValue::Atom(Atom::String(value.into())))));
+ 5840|        }
+ 5841|        if kind == "core.image" {
+ 5842|            let value = input.get("dataUrl").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5843|            return Ok(channel_output("image", Dictionary::with_schema("image").insert("dataUrl", NeuralValue::Atom(Atom::String(value.into())))));
+ 5844|        }
+ 5845|        if kind == "math.add" {
+ 5846|            let a = input.get("a").or_else(|| input.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("a".into()))?;
+ 5847|            let b = input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5848|            return Ok(channel_output("sum", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(a + b)))));
+ 5849|        }
+ 5850|        if kind == "math.passThrough" {
+ 5851|            let n = input.get("number").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
+ 5852|            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(n)))));
+ 5853|        }
+ 5854|        if kind == "core.variable" {
+ 5855|            let name = input.get("name").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).ok_or_else(|| EvalError::MissingInput("name".into()))?;
+ 5856|            let payload = input.get(name).and_then(|v| v.as_dictionary()).cloned().ok_or_else(|| EvalError::MissingInput(name.into()))?;
+
+### math.add line 5873
+ 5865|        flow_extension_math::register(&mut registry);
+ 5866|        flow_extension_brep::register(&mut registry);
+ 5867|        serde_json::to_string(&registry.operator_catalogue()).unwrap_or_else(|_| "[]".into())
+ 5868|    }
+ 5869|
+ 5870|    fn test_kind_infos_json() -> String {
+ 5871|        serde_json::to_string(&[
+ 5872|            NeuronKindInfo {
+ 5873|                id: "math.add".into(),
+ 5874|                extension: "math".into(),
+ 5875|                name: "Add".into(),
+ 5876|                abbreviation: "Add".into(),
+ 5877|                icon: "emoji:➕️".into(),
+ 5878|                summary: "Sums two numbers".into(),
+ 5879|                inputs: vec![InputSpec::number("a", NUMBER_OPS), InputSpec::number_default("b", 0.0, NUMBER_OPS)],
+ 5880|                outputs: vec![InputSpec::named("S", "Sum", "sum", "Sum")],
+ 5881|                ..Default::default()
+ 5882|            },
+ 5883|            NeuronKindInfo {
+ 5884|                id: "math.passThrough".into(),
+
+### math.add line 5908
+ 5900|        host.set_eval_bridge_fn(Box::new(test_math_bridge));
+ 5901|        host.set_neuron_kind_infos_json(&test_kind_infos_json());
+ 5902|        host.set_host_catalogue_json(
+ 5903|            &serde_json::to_string(&[CatalogueSection {
+ 5904|                id: "math".into(),
+ 5905|                title: "Math".into(),
+ 5906|                groups: vec![],
+ 5907|                items: vec![
+ 5908|                    CatalogueItem { kind: "neuron".into(), neuron_kind: Some("math.add".into()), action: None, format: None, name: "Add".into(), abbreviation: "Add".into(), icon: "emoji:➕️".into(), summary: "Sums two numbers".into() },
+ 5909|                    CatalogueItem {
+ 5910|                        kind: "neuron".into(),
+ 5911|                        neuron_kind: Some("math.passThrough".into()),
+ 5912|                        action: None,
+ 5913|                        format: None,
+ 5914|                        name: "PassThrough".into(),
+ 5915|                        abbreviation: "Pass".into(),
+ 5916|                        icon: "emoji:➡️".into(),
+ 5917|                        summary: "Forwards a number".into(),
+ 5918|                    },
+ 5919|                ],
+
+### math.add line 6186
+ 6178|        host.connect_ports(&slider_b_id, "number", &pass_id, "number").unwrap();
+ 6179|        host.evaluate_internal();
+ 6180|        calls.lock().unwrap().clear();
+ 6181|
+ 6182|        host.set_slider_value("slider", 5.0);
+ 6183|        host.evaluate_internal();
+ 6184|
+ 6185|        let dispatched = calls.lock().unwrap().clone();
+ 6186|        assert!(dispatched.iter().any(|kind| kind == "math.add"), "branch A (add) should re-dispatch after its slider changed");
+ 6187|        assert!(!dispatched.iter().any(|kind| kind == "math.passThrough"), "branch B (pass) must stay clean when only branch A changed");
+ 6188|    }
+ 6189|
+ 6190|    #[test]
+ 6191|    fn neural_cache_persists_across_evaluations() {
+ 6192|        use std::sync::atomic::{AtomicUsize, Ordering};
+ 6193|        use std::sync::Arc;
+ 6194|        let calls = Arc::new(AtomicUsize::new(0));
+ 6195|        let calls_for_bridge = calls.clone();
+ 6196|        let mut host = FlowHost::default();
+ 6197|        host.set_eval_bridge_fn(Box::new(move |kind, input| {
+
+### math.add line 6480
+ 6472|    }
+ 6473|
+ 6474|    #[test]
+ 6475|    fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
+ 6476|        let mut host = host_with_test_bridge();
+ 6477|        host.replace_fixture(FlowFixture {
+ 6478|            schema: "flow.fixture".into(),
+ 6479|            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+ 6480|            widgets: vec![Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
+ 6481|            synapses: vec![],
+ 6482|            layout: BTreeMap::new(),
+ 6483|        });
+ 6484|        let node = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
+ 6485|        let input_ids: Vec<&str> = node.inputs().iter().map(|port| port.id.as_str()).collect();
+ 6486|        assert_eq!(input_ids, vec!["a", "b"]);
+ 6487|    }
+ 6488|
+ 6489|    #[test]
+ 6490|    fn catalogue_nested_groups_round_trip() {
+ 6491|        let host_json = serde_json::to_string(&[CatalogueSection {
+
+### math.add line 6523
+ 6515|        assert_eq!(prim3d.items[0].neuron_kind.as_deref(), Some("brep.prim3d.box"));
+ 6516|    }
+ 6517|
+ 6518|    #[test]
+ 6519|    fn catalogue_has_module_sections() {
+ 6520|        let host = host_with_test_bridge();
+ 6521|        let json = host.catalogue_json().unwrap();
+ 6522|        assert!(json.contains("math"));
+ 6523|        assert!(json.contains("math.add"));
+ 6524|        assert!(json.contains("Inputs"));
+ 6525|        assert!(json.contains("Outputs"));
+ 6526|    }
+ 6527|
+ 6528|    #[test]
+ 6529|    fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
+ 6530|        let host = host_with_test_bridge();
+ 6531|        let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
+ 6532|        assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
+ 6533|        assert!(extras.operators.iter().any(|info| info.id == "math.add"));
+ 6534|        assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
+
+### math.add line 6533
+ 6525|        assert!(json.contains("Outputs"));
+ 6526|    }
+ 6527|
+ 6528|    #[test]
+ 6529|    fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
+ 6530|        let host = host_with_test_bridge();
+ 6531|        let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
+ 6532|        assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
+ 6533|        assert!(extras.operators.iter().any(|info| info.id == "math.add"));
+ 6534|        assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
+ 6535|        assert!(extras.catalogue_json.as_ref().is_some_and(|json| json.contains("brep") || json.contains("math")));
+ 6536|        assert!(extras.lod_json.as_ref().is_some_and(|json| json.contains(r#""automatic":true"#)));
+ 6537|    }
+ 6538|
+ 6539|    #[test]
+ 6540|    fn contributed_extension_manifest_installs_catalogue_operator() {
+ 6541|        let manifest = r#"{"schema":"flow.extension","id":"stubext","name":"Stub","version":"0.0.1","activationEvents":[],"contributes":{"schemas":[],"operators":[{"id":"stubext.echo","extension":"stubext","name":"Echo","abbreviation":"Echo","icon":"emoji:📣️","summary":"Echo","inputs":[],"outputs":[]}],"widgets":[],"commands":[],"settings":[]}}"#;
+ 6542|        install_flow_extension_manifest("stub-plugin", manifest);
+ 6543|        assert!(flow_extension_registry().operator_info("stubext.echo").is_some());
+ 6544|        let sections = flow_catalogue_sections();
+
+### math.add line 6723
+ 6715|            })
+ 6716|            .expect("preview");
+ 6717|        assert_eq!(preview.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(2.0));
+ 6718|    }
+ 6719|
+ 6720|    #[test]
+ 6721|    fn widget_to_dag_node_carries_display_meta() {
+ 6722|        let mut host = host_with_test_bridge();
+ 6723|        let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 0.0, 0.0).unwrap();
+ 6724|        let node = host.dag.fixture.nodes.iter().find(|node| node.id == id).expect("node");
+ 6725|        assert_eq!(node.name, "Add");
+ 6726|        assert_eq!(node.abbreviation, "Add");
+ 6727|        assert_eq!(node.icon, "emoji:➕️");
+ 6728|    }
+ 6729|
+ 6730|    #[test]
+ 6731|    fn add_slider_widget_with_explicit_range() {
+ 6732|        let mut host = host_with_test_bridge();
+ 6733|        let id = host.add_widget(r#"{"kind":"inputSlider","value":10.2,"min":10.2,"max":15.0,"step":0.1}"#, 0.0, 0.0).unwrap();
+ 6734|        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+
+### math.add line 6902
+ 6894|        let placed_id = host.add_widget(descriptor, 80.0, 80.0).unwrap();
+ 6895|        let placed_width = host.dag.fixture.nodes.iter().find(|node| node.id == placed_id).expect("placed").width;
+ 6896|        assert!((ghost_width - placed_width).abs() < 1e-6, "ghost width {ghost_width} != placed {placed_width}");
+ 6897|    }
+ 6898|
+ 6899|    #[test]
+ 6900|    fn ghost_widget_preview_and_clear() {
+ 6901|        let mut host = host_with_test_bridge();
+ 6902|        host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 42.0, 24.0).unwrap();
+ 6903|        let ghost = host.ghost_node.as_ref().expect("ghost");
+ 6904|        assert!((ghost.x - 42.0).abs() < 1e-6);
+ 6905|        assert!((ghost.y - 24.0).abs() < 1e-6);
+ 6906|        assert_eq!(ghost.name, "Add");
+ 6907|        assert_eq!(ghost.abbreviation, "Add");
+ 6908|        assert_eq!(ghost.icon, "emoji:➕️");
+ 6909|        host.clear_ghost_widget();
+ 6910|        assert!(host.ghost_node.is_none());
+ 6911|    }
+ 6912|
+ 6913|    #[test]
+
+### math.add line 6997
+ 6989|        let ghost_rows: Vec<_> = overlay["labels"].as_array().unwrap().iter().filter(|row| row["ghost"] == true).collect();
+ 6990|        assert_eq!(ghost_rows.len(), 3);
+ 6991|    }
+ 6992|
+ 6993|    #[test]
+ 6994|    fn ghost_widget_paint_scene_smoke() {
+ 6995|        let mut host = host_with_test_bridge();
+ 6996|        host.set_viewport(800, 600, 1.0);
+ 6997|        host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 10.0, 20.0).unwrap();
+ 6998|        let mut scene = canvas::Scene::new();
+ 6999|        host.paint_scene(&mut scene, 800, 600, 1.0);
+ 7000|    }
+ 7001|
+ 7002|    #[test]
+ 7003|    fn selection_and_preview_state_round_trip() {
+ 7004|        let mut host = FlowHost::default();
+ 7005|        host.set_selection_json(r#"["slider","add"]"#);
+ 7006|        let selected: Vec<String> = serde_json::from_str(&host.selected_widget_ids_json()).unwrap();
+ 7007|        assert_eq!(selected, vec!["slider", "add"]);
+ 7008|        host.set_hover(Some("add"));
+
+### math.add line 7663
+ 7655|        assert!(mesh.indices.len() >= 3);
+ 7656|    }
+ 7657|
+ 7658|    #[test]
+ 7659|    fn compiled_wire_literal_includes_operator_kinds() {
+ 7660|        let host = host_with_test_bridge();
+ 7661|        let text = host.compiled_wire_literal();
+ 7662|        assert!(text.contains("core.number"));
+ 7663|        assert!(text.contains("math.add"));
+ 7664|    }
+ 7665|
+ 7666|    #[test]
+ 7667|    fn flow_fixture_to_form_spec_maps_input_widgets() {
+ 7668|        use self::forms_bridge::flow_fixture_to_form_spec;
+ 7669|        let fixture = FlowFixture::default();
+ 7670|        let spec = flow_fixture_to_form_spec(&fixture);
+ 7671|        let kinds: Vec<&str> = spec.steps[0].blocks.iter().map(|question| question.kind.as_str()).collect();
+ 7672|        assert!(kinds.contains(&"slider"));
+ 7673|    }
+ 7674|
+
+### core.number line 324
+  316|                let mut params = params.clone();
+  317|                if !output_ports.is_empty() {
+  318|                    params = params.insert("count", NeuralValue::Atom(Atom::Decimal(output_ports.len() as f64)));
+  319|                } else if let Some(spec) = kind_infos.get(neuron_kind).and_then(|info| info.variadic_output.as_ref()) {
+  320|                    params = params.insert("count", NeuralValue::Atom(Atom::Decimal(spec.min as f64)));
+  321|                }
+  322|                Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
+  323|            }
+  324|            Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
+  325|            Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
+  326|            Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
+  327|            Widget::Variable { id, name, schema } => {
+  328|                Some(Neuron { id: id.clone(), kind: "core.variable".into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))), tree: None })
+  329|            }
+  330|            Widget::Cluster { id, name, tree, .. } => Some(Neuron { id: id.clone(), kind: CLUSTER_KIND.into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))), tree: Some(Box::new(tree.clone())) }),
+  331|            _ => None,
+  332|        })
+  333|        .collect();
+  334|    let synapses = fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
+  335|    Tree { neurons, synapses }
+
+### core.number line 639
+  631|
+  632|fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
+  633|    serde_json::from_value(serde_json::to_value(dict).unwrap_or(serde_json::Value::Null)).unwrap_or_default()
+  634|}
+  635|
+  636|fn widget_operator_kind(widget: &Widget) -> Option<String> {
+  637|    match widget {
+  638|        Widget::Neuron { neuron_kind, .. } => Some(neuron_kind.clone()),
+  639|        Widget::InputSlider { .. } => Some("core.number".into()),
+  640|        Widget::InputNote { .. } => Some("core.text".into()),
+  641|        Widget::InputImage { .. } => Some("core.image".into()),
+  642|        Widget::Variable { .. } => Some("core.variable".into()),
+  643|        Widget::Cluster { .. } => Some(CLUSTER_KIND.into()),
+  644|        _ => None,
+  645|    }
+  646|}
+  647|
+  648|fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> PropertyBag {
+  649|    match widget {
+  650|        Widget::Neuron { neuron_kind, params, output_ports, .. } => {
+
+### core.number line 1762
+ 1754|        Widget::Cluster { id, name, tree, .. } => Some(cluster_operator_info(id, if name.is_empty() { "Cluster" } else { name }, tree)),
+ 1755|        _ => None,
+ 1756|    }
+ 1757|}
+ 1758|
+ 1759|fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
+ 1760|    match widget {
+ 1761|        Widget::Neuron { id, neuron_kind, params, .. } => Some(Neuron::with_kind(id, neuron_kind, params.clone())),
+ 1762|        Widget::InputSlider { id, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
+ 1763|        Widget::InputNote { id, text } => Some(Neuron::with_kind(id, "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))))),
+ 1764|        Widget::InputImage { id, src } => Some(Neuron::with_kind(id, "core.image", Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))))),
+ 1765|        Widget::Variable { id, name, schema } => Some(Neuron::with_kind(id, "core.variable", Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))))),
+ 1766|        _ => None,
+ 1767|    }
+ 1768|}
+ 1769|
+ 1770|fn contract_boundary_params(channel: &str, schema: &str) -> Dictionary {
+ 1771|    Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String(channel.into()))).insert("operators", NeuralValue::Atom(Atom::String(schema.into())))
+ 1772|}
+ 1773|
+
+### core.number line 1855
+ 1847|    Text,
+ 1848|    Image,
+ 1849|    Variable,
+ 1850|}
+ 1851|
+ 1852|impl CoreNeuronKind {
+ 1853|    fn parse(kind: &str) -> Option<Self> {
+ 1854|        match kind {
+ 1855|            "core.number" => Some(Self::Number),
+ 1856|            "core.text" => Some(Self::Text),
+ 1857|            "core.image" => Some(Self::Image),
+ 1858|            "core.variable" => Some(Self::Variable),
+ 1859|            _ => None,
+ 1860|        }
+ 1861|    }
+ 1862|}
+ 1863|
+ 1864|fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
+ 1865|    match neuron.kind.as_str() {
+ 1866|        INPUT_KIND => {
+
+### core.number line 5747
+ 5739|    #[test]
+ 5740|    fn flow_fixture_dsl_round_trips_including_cluster_widget() {
+ 5741|        let mut fixture = FlowFixture::default();
+ 5742|        fixture.widgets.push(Widget::Cluster {
+ 5743|            id: "cluster-1".into(),
+ 5744|            name: "Cluster One".into(),
+ 5745|            tree: Tree {
+ 5746|                neurons: vec![
+ 5747|                    Neuron { id: "inner-in".into(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(1.0))), tree: None },
+ 5748|                    Neuron {
+ 5749|                        id: "inner-add".into(),
+ 5750|                        kind: "math.add".into(),
+ 5751|                        params: Dictionary::new().insert("count", NeuralValue::Atom(Atom::Integer(2))),
+ 5752|                        tree: Some(Box::new(Tree { neurons: vec![Neuron::with_kind("nested", "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String("deep".into()))))], synapses: vec![] })),
+ 5753|                    },
+ 5754|                ],
+ 5755|                synapses: vec![Synapse { id: "inner-s1".into(), from: "inner-in".into(), to: "inner-add".into(), from_port: "number".into(), to_port: "a".into() }],
+ 5756|            },
+ 5757|            flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: BTreeMap::new(), previews: Vec::new() },
+ 5758|        });
+
+### core.number line 5829
+ 5821|mod tests {
+ 5822|    use super::*;
+ 5823|    use canvas::camera::{world_to_screen, Camera, Viewport};
+ 5824|    use canvas::Point;
+ 5825|    use dag::HandleRole;
+ 5826|    use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
+ 5827|    use std::sync::{Mutex, OnceLock};
+ 5828|
+ 5829|    const NUMBER_OPS: &[&str] = &["core.number"];
+ 5830|    static RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+ 5831|
+ 5832|    fn test_math_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+ 5833|        if kind == "core.number" {
+ 5834|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5835|            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(value)))));
+ 5836|        }
+ 5837|        if kind == "core.text" {
+ 5838|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5839|            return Ok(channel_output("text", Dictionary::with_schema("text").insert("value", NeuralValue::Atom(Atom::String(value.into())))));
+ 5840|        }
+
+### core.number line 5833
+ 5825|    use dag::HandleRole;
+ 5826|    use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
+ 5827|    use std::sync::{Mutex, OnceLock};
+ 5828|
+ 5829|    const NUMBER_OPS: &[&str] = &["core.number"];
+ 5830|    static RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+ 5831|
+ 5832|    fn test_math_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+ 5833|        if kind == "core.number" {
+ 5834|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5835|            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(value)))));
+ 5836|        }
+ 5837|        if kind == "core.text" {
+ 5838|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5839|            return Ok(channel_output("text", Dictionary::with_schema("text").insert("value", NeuralValue::Atom(Atom::String(value.into())))));
+ 5840|        }
+ 5841|        if kind == "core.image" {
+ 5842|            let value = input.get("dataUrl").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5843|            return Ok(channel_output("image", Dictionary::with_schema("image").insert("dataUrl", NeuralValue::Atom(Atom::String(value.into())))));
+ 5844|        }
+
+### core.number line 6650
+ 6642|        host.replace_fixture(FlowFixture { schema: "flow.fixture".into(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }], synapses: vec![], layout: BTreeMap::new() });
+ 6643|        assert_eq!(host.fixture.camera.x, 120.0);
+ 6644|        assert_eq!(host.fixture.camera.y, -45.0);
+ 6645|        assert!((host.fixture.camera.zoom - 1.75).abs() < 1e-9);
+ 6646|        assert!(host.fixture.widgets.iter().any(|w| widget_id_for(w) == "note"));
+ 6647|    }
+ 6648|
+ 6649|    fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+ 6650|        if kind == "core.number" {
+ 6651|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 6652|            return Ok(Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(value))));
+ 6653|        }
+ 6654|        if kind != "dictionary.merge" {
+ 6655|            return Err(EvalError::UnknownKind(kind.into()));
+ 6656|        }
+ 6657|        let items = input.get("items").and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput("items".into()))?;
+ 6658|        let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
+ 6659|        indices.sort_unstable();
+ 6660|        if indices.len() < 2 {
+ 6661|            return Err(EvalError::MissingInput("items".into()));
+
+### core.number line 7380
+ 7372|        host.evaluate_internal();
+ 7373|        assert_eq!(host.preview_text(), "7.5");
+ 7374|    }
+ 7375|
+ 7376|    #[test]
+ 7377|    fn cluster_ports_from_contract() {
+ 7378|        let inner = Tree {
+ 7379|            neurons: vec![
+ 7380|                Neuron::with_kind("in_a", INPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("a".into()))).insert("operators", NeuralValue::Atom(Atom::String("core.number".into())))),
+ 7381|                Neuron::with_kind("out_sum", OUTPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("sum".into()))).insert("operators", NeuralValue::Atom(Atom::String("core.number".into())))),
+ 7382|            ],
+ 7383|            synapses: vec![],
+ 7384|        };
+ 7385|        let widget = Widget::Cluster { id: "cluster".into(), name: "Add cluster".into(), tree: inner, flow: FlowGui::default() };
+ 7386|        let (inputs, outputs, _, _) = widget_io_ports(&widget, &[], &HashMap::new());
+ 7387|        assert_eq!(inputs.len(), 1);
+ 7388|        assert_eq!(outputs.len(), 1);
+ 7389|        assert_eq!(inputs[0].id, "a");
+ 7390|        assert_eq!(outputs[0].id, "sum");
+ 7391|    }
+
+### core.number line 7381
+ 7373|        assert_eq!(host.preview_text(), "7.5");
+ 7374|    }
+ 7375|
+ 7376|    #[test]
+ 7377|    fn cluster_ports_from_contract() {
+ 7378|        let inner = Tree {
+ 7379|            neurons: vec![
+ 7380|                Neuron::with_kind("in_a", INPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("a".into()))).insert("operators", NeuralValue::Atom(Atom::String("core.number".into())))),
+ 7381|                Neuron::with_kind("out_sum", OUTPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("sum".into()))).insert("operators", NeuralValue::Atom(Atom::String("core.number".into())))),
+ 7382|            ],
+ 7383|            synapses: vec![],
+ 7384|        };
+ 7385|        let widget = Widget::Cluster { id: "cluster".into(), name: "Add cluster".into(), tree: inner, flow: FlowGui::default() };
+ 7386|        let (inputs, outputs, _, _) = widget_io_ports(&widget, &[], &HashMap::new());
+ 7387|        assert_eq!(inputs.len(), 1);
+ 7388|        assert_eq!(outputs.len(), 1);
+ 7389|        assert_eq!(inputs[0].id, "a");
+ 7390|        assert_eq!(outputs[0].id, "sum");
+ 7391|    }
+ 7392|
+
+### core.number line 7662
+ 7654|        assert!(!mesh.positions.is_empty());
+ 7655|        assert!(mesh.indices.len() >= 3);
+ 7656|    }
+ 7657|
+ 7658|    #[test]
+ 7659|    fn compiled_wire_literal_includes_operator_kinds() {
+ 7660|        let host = host_with_test_bridge();
+ 7661|        let text = host.compiled_wire_literal();
+ 7662|        assert!(text.contains("core.number"));
+ 7663|        assert!(text.contains("math.add"));
+ 7664|    }
+ 7665|
+ 7666|    #[test]
+ 7667|    fn flow_fixture_to_form_spec_maps_input_widgets() {
+ 7668|        use self::forms_bridge::flow_fixture_to_form_spec;
+ 7669|        let fixture = FlowFixture::default();
+ 7670|        let spec = flow_fixture_to_form_spec(&fixture);
+ 7671|        let kinds: Vec<&str> = spec.steps[0].blocks.iter().map(|question| question.kind.as_str()).collect();
+ 7672|        assert!(kinds.contains(&"slider"));
+ 7673|    }
+
+### core.text line 325
+  317|                if !output_ports.is_empty() {
+  318|                    params = params.insert("count", NeuralValue::Atom(Atom::Decimal(output_ports.len() as f64)));
+  319|                } else if let Some(spec) = kind_infos.get(neuron_kind).and_then(|info| info.variadic_output.as_ref()) {
+  320|                    params = params.insert("count", NeuralValue::Atom(Atom::Decimal(spec.min as f64)));
+  321|                }
+  322|                Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
+  323|            }
+  324|            Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
+  325|            Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
+  326|            Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
+  327|            Widget::Variable { id, name, schema } => {
+  328|                Some(Neuron { id: id.clone(), kind: "core.variable".into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))), tree: None })
+  329|            }
+  330|            Widget::Cluster { id, name, tree, .. } => Some(Neuron { id: id.clone(), kind: CLUSTER_KIND.into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))), tree: Some(Box::new(tree.clone())) }),
+  331|            _ => None,
+  332|        })
+  333|        .collect();
+  334|    let synapses = fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
+  335|    Tree { neurons, synapses }
+  336|}
+
+### core.text line 640
+  632|fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
+  633|    serde_json::from_value(serde_json::to_value(dict).unwrap_or(serde_json::Value::Null)).unwrap_or_default()
+  634|}
+  635|
+  636|fn widget_operator_kind(widget: &Widget) -> Option<String> {
+  637|    match widget {
+  638|        Widget::Neuron { neuron_kind, .. } => Some(neuron_kind.clone()),
+  639|        Widget::InputSlider { .. } => Some("core.number".into()),
+  640|        Widget::InputNote { .. } => Some("core.text".into()),
+  641|        Widget::InputImage { .. } => Some("core.image".into()),
+  642|        Widget::Variable { .. } => Some("core.variable".into()),
+  643|        Widget::Cluster { .. } => Some(CLUSTER_KIND.into()),
+  644|        _ => None,
+  645|    }
+  646|}
+  647|
+  648|fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> PropertyBag {
+  649|    match widget {
+  650|        Widget::Neuron { neuron_kind, params, output_ports, .. } => {
+  651|            let mut bag = property_bag_from_dictionary(params);
+
+### core.text line 1763
+ 1755|        _ => None,
+ 1756|    }
+ 1757|}
+ 1758|
+ 1759|fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
+ 1760|    match widget {
+ 1761|        Widget::Neuron { id, neuron_kind, params, .. } => Some(Neuron::with_kind(id, neuron_kind, params.clone())),
+ 1762|        Widget::InputSlider { id, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
+ 1763|        Widget::InputNote { id, text } => Some(Neuron::with_kind(id, "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))))),
+ 1764|        Widget::InputImage { id, src } => Some(Neuron::with_kind(id, "core.image", Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))))),
+ 1765|        Widget::Variable { id, name, schema } => Some(Neuron::with_kind(id, "core.variable", Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))))),
+ 1766|        _ => None,
+ 1767|    }
+ 1768|}
+ 1769|
+ 1770|fn contract_boundary_params(channel: &str, schema: &str) -> Dictionary {
+ 1771|    Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String(channel.into()))).insert("operators", NeuralValue::Atom(Atom::String(schema.into())))
+ 1772|}
+ 1773|
+ 1774|fn boundary_schema_from_params(params: &Dictionary) -> String {
+
+### core.text line 1856
+ 1848|    Image,
+ 1849|    Variable,
+ 1850|}
+ 1851|
+ 1852|impl CoreNeuronKind {
+ 1853|    fn parse(kind: &str) -> Option<Self> {
+ 1854|        match kind {
+ 1855|            "core.number" => Some(Self::Number),
+ 1856|            "core.text" => Some(Self::Text),
+ 1857|            "core.image" => Some(Self::Image),
+ 1858|            "core.variable" => Some(Self::Variable),
+ 1859|            _ => None,
+ 1860|        }
+ 1861|    }
+ 1862|}
+ 1863|
+ 1864|fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
+ 1865|    match neuron.kind.as_str() {
+ 1866|        INPUT_KIND => {
+ 1867|            Widget::Variable { id: neuron.id.clone(), name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(), schema: boundary_schema_from_params(&neuron.params) }
+
+### core.text line 5752
+ 5744|            name: "Cluster One".into(),
+ 5745|            tree: Tree {
+ 5746|                neurons: vec![
+ 5747|                    Neuron { id: "inner-in".into(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(1.0))), tree: None },
+ 5748|                    Neuron {
+ 5749|                        id: "inner-add".into(),
+ 5750|                        kind: "math.add".into(),
+ 5751|                        params: Dictionary::new().insert("count", NeuralValue::Atom(Atom::Integer(2))),
+ 5752|                        tree: Some(Box::new(Tree { neurons: vec![Neuron::with_kind("nested", "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String("deep".into()))))], synapses: vec![] })),
+ 5753|                    },
+ 5754|                ],
+ 5755|                synapses: vec![Synapse { id: "inner-s1".into(), from: "inner-in".into(), to: "inner-add".into(), from_port: "number".into(), to_port: "a".into() }],
+ 5756|            },
+ 5757|            flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: BTreeMap::new(), previews: Vec::new() },
+ 5758|        });
+ 5759|        fixture.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: BTreeSet::from(["a".to_string(), "b".to_string()]) });
+ 5760|        crate::os_store::test_support::assert_dsl_round_trip(&fixture);
+ 5761|        crate::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
+ 5762|    }
+ 5763|
+
+### core.text line 5837
+ 5829|    const NUMBER_OPS: &[&str] = &["core.number"];
+ 5830|    static RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+ 5831|
+ 5832|    fn test_math_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+ 5833|        if kind == "core.number" {
+ 5834|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5835|            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(value)))));
+ 5836|        }
+ 5837|        if kind == "core.text" {
+ 5838|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5839|            return Ok(channel_output("text", Dictionary::with_schema("text").insert("value", NeuralValue::Atom(Atom::String(value.into())))));
+ 5840|        }
+ 5841|        if kind == "core.image" {
+ 5842|            let value = input.get("dataUrl").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5843|            return Ok(channel_output("image", Dictionary::with_schema("image").insert("dataUrl", NeuralValue::Atom(Atom::String(value.into())))));
+ 5844|        }
+ 5845|        if kind == "math.add" {
+ 5846|            let a = input.get("a").or_else(|| input.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("a".into()))?;
+ 5847|            let b = input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5848|            return Ok(channel_output("sum", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(a + b)))));
+
+### core.image line 326
+  318|                    params = params.insert("count", NeuralValue::Atom(Atom::Decimal(output_ports.len() as f64)));
+  319|                } else if let Some(spec) = kind_infos.get(neuron_kind).and_then(|info| info.variadic_output.as_ref()) {
+  320|                    params = params.insert("count", NeuralValue::Atom(Atom::Decimal(spec.min as f64)));
+  321|                }
+  322|                Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
+  323|            }
+  324|            Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
+  325|            Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
+  326|            Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
+  327|            Widget::Variable { id, name, schema } => {
+  328|                Some(Neuron { id: id.clone(), kind: "core.variable".into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))), tree: None })
+  329|            }
+  330|            Widget::Cluster { id, name, tree, .. } => Some(Neuron { id: id.clone(), kind: CLUSTER_KIND.into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))), tree: Some(Box::new(tree.clone())) }),
+  331|            _ => None,
+  332|        })
+  333|        .collect();
+  334|    let synapses = fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
+  335|    Tree { neurons, synapses }
+  336|}
+  337|
+
+### core.image line 641
+  633|    serde_json::from_value(serde_json::to_value(dict).unwrap_or(serde_json::Value::Null)).unwrap_or_default()
+  634|}
+  635|
+  636|fn widget_operator_kind(widget: &Widget) -> Option<String> {
+  637|    match widget {
+  638|        Widget::Neuron { neuron_kind, .. } => Some(neuron_kind.clone()),
+  639|        Widget::InputSlider { .. } => Some("core.number".into()),
+  640|        Widget::InputNote { .. } => Some("core.text".into()),
+  641|        Widget::InputImage { .. } => Some("core.image".into()),
+  642|        Widget::Variable { .. } => Some("core.variable".into()),
+  643|        Widget::Cluster { .. } => Some(CLUSTER_KIND.into()),
+  644|        _ => None,
+  645|    }
+  646|}
+  647|
+  648|fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> PropertyBag {
+  649|    match widget {
+  650|        Widget::Neuron { neuron_kind, params, output_ports, .. } => {
+  651|            let mut bag = property_bag_from_dictionary(params);
+  652|            if !output_ports.is_empty() {
+
+### core.image line 1764
+ 1756|    }
+ 1757|}
+ 1758|
+ 1759|fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
+ 1760|    match widget {
+ 1761|        Widget::Neuron { id, neuron_kind, params, .. } => Some(Neuron::with_kind(id, neuron_kind, params.clone())),
+ 1762|        Widget::InputSlider { id, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
+ 1763|        Widget::InputNote { id, text } => Some(Neuron::with_kind(id, "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))))),
+ 1764|        Widget::InputImage { id, src } => Some(Neuron::with_kind(id, "core.image", Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))))),
+ 1765|        Widget::Variable { id, name, schema } => Some(Neuron::with_kind(id, "core.variable", Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))))),
+ 1766|        _ => None,
+ 1767|    }
+ 1768|}
+ 1769|
+ 1770|fn contract_boundary_params(channel: &str, schema: &str) -> Dictionary {
+ 1771|    Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String(channel.into()))).insert("operators", NeuralValue::Atom(Atom::String(schema.into())))
+ 1772|}
+ 1773|
+ 1774|fn boundary_schema_from_params(params: &Dictionary) -> String {
+ 1775|    params.get("operators").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("dictionary").to_string()
+
+### core.image line 1857
+ 1849|    Variable,
+ 1850|}
+ 1851|
+ 1852|impl CoreNeuronKind {
+ 1853|    fn parse(kind: &str) -> Option<Self> {
+ 1854|        match kind {
+ 1855|            "core.number" => Some(Self::Number),
+ 1856|            "core.text" => Some(Self::Text),
+ 1857|            "core.image" => Some(Self::Image),
+ 1858|            "core.variable" => Some(Self::Variable),
+ 1859|            _ => None,
+ 1860|        }
+ 1861|    }
+ 1862|}
+ 1863|
+ 1864|fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
+ 1865|    match neuron.kind.as_str() {
+ 1866|        INPUT_KIND => {
+ 1867|            Widget::Variable { id: neuron.id.clone(), name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(), schema: boundary_schema_from_params(&neuron.params) }
+ 1868|        }
+
+### core.image line 5841
+ 5833|        if kind == "core.number" {
+ 5834|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5835|            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(value)))));
+ 5836|        }
+ 5837|        if kind == "core.text" {
+ 5838|            let value = input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5839|            return Ok(channel_output("text", Dictionary::with_schema("text").insert("value", NeuralValue::Atom(Atom::String(value.into())))));
+ 5840|        }
+ 5841|        if kind == "core.image" {
+ 5842|            let value = input.get("dataUrl").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or_default();
+ 5843|            return Ok(channel_output("image", Dictionary::with_schema("image").insert("dataUrl", NeuralValue::Atom(Atom::String(value.into())))));
+ 5844|        }
+ 5845|        if kind == "math.add" {
+ 5846|            let a = input.get("a").or_else(|| input.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("a".into()))?;
+ 5847|            let b = input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5848|            return Ok(channel_output("sum", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(a + b)))));
+ 5849|        }
+ 5850|        if kind == "math.passThrough" {
+ 5851|            let n = input.get("number").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
+ 5852|            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(n)))));
+
+### core.variable line 328
+  320|                    params = params.insert("count", NeuralValue::Atom(Atom::Decimal(spec.min as f64)));
+  321|                }
+  322|                Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
+  323|            }
+  324|            Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
+  325|            Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
+  326|            Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
+  327|            Widget::Variable { id, name, schema } => {
+  328|                Some(Neuron { id: id.clone(), kind: "core.variable".into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))), tree: None })
+  329|            }
+  330|            Widget::Cluster { id, name, tree, .. } => Some(Neuron { id: id.clone(), kind: CLUSTER_KIND.into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))), tree: Some(Box::new(tree.clone())) }),
+  331|            _ => None,
+  332|        })
+  333|        .collect();
+  334|    let synapses = fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
+  335|    Tree { neurons, synapses }
+  336|}
+  337|
+  338|impl Default for FlowDocument {
+  339|    fn default() -> Self {
+
+### core.variable line 642
+  634|}
+  635|
+  636|fn widget_operator_kind(widget: &Widget) -> Option<String> {
+  637|    match widget {
+  638|        Widget::Neuron { neuron_kind, .. } => Some(neuron_kind.clone()),
+  639|        Widget::InputSlider { .. } => Some("core.number".into()),
+  640|        Widget::InputNote { .. } => Some("core.text".into()),
+  641|        Widget::InputImage { .. } => Some("core.image".into()),
+  642|        Widget::Variable { .. } => Some("core.variable".into()),
+  643|        Widget::Cluster { .. } => Some(CLUSTER_KIND.into()),
+  644|        _ => None,
+  645|    }
+  646|}
+  647|
+  648|fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> PropertyBag {
+  649|    match widget {
+  650|        Widget::Neuron { neuron_kind, params, output_ports, .. } => {
+  651|            let mut bag = property_bag_from_dictionary(params);
+  652|            if !output_ports.is_empty() {
+  653|                bag.insert("count".into(), PropertyValue::Number(output_ports.len() as f64));
+
+### core.variable line 1742
+ 1734|}
+ 1735|
+ 1736|fn widget_operator_info(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> Option<OperatorInfo> {
+ 1737|    match widget {
+ 1738|        Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).cloned(),
+ 1739|        Widget::Variable { name, schema, .. } => {
+ 1740|            let (inputs, outputs) = variable_io_ports(name, schema);
+ 1741|            let info = OperatorInfo {
+ 1742|                id: "core.variable".into(),
+ 1743|                extension: "core".into(),
+ 1744|                name: name.clone(),
+ 1745|                abbreviation: name.chars().take(3).collect(),
+ 1746|                icon: "emoji:🔣️".into(),
+ 1747|                summary: "Named typed dictionary".into(),
+ 1748|                inputs: inputs.iter().map(|port| ChannelSpec::requires(&port.id, &[schema.as_str()])).collect(),
+ 1749|                outputs: outputs.iter().map(|port| ChannelSpec::provides(&port.id, vec![schema.clone()])).collect(),
+ 1750|                ..Default::default()
+ 1751|            };
+ 1752|            Some(info)
+ 1753|        }
+
+### core.variable line 1765
+ 1757|}
+ 1758|
+ 1759|fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
+ 1760|    match widget {
+ 1761|        Widget::Neuron { id, neuron_kind, params, .. } => Some(Neuron::with_kind(id, neuron_kind, params.clone())),
+ 1762|        Widget::InputSlider { id, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
+ 1763|        Widget::InputNote { id, text } => Some(Neuron::with_kind(id, "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))))),
+ 1764|        Widget::InputImage { id, src } => Some(Neuron::with_kind(id, "core.image", Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))))),
+ 1765|        Widget::Variable { id, name, schema } => Some(Neuron::with_kind(id, "core.variable", Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))))),
+ 1766|        _ => None,
+ 1767|    }
+ 1768|}
+ 1769|
+ 1770|fn contract_boundary_params(channel: &str, schema: &str) -> Dictionary {
+ 1771|    Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String(channel.into()))).insert("operators", NeuralValue::Atom(Atom::String(schema.into())))
+ 1772|}
+ 1773|
+ 1774|fn boundary_schema_from_params(params: &Dictionary) -> String {
+ 1775|    params.get("operators").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("dictionary").to_string()
+ 1776|}
+
+### core.variable line 1858
+ 1850|}
+ 1851|
+ 1852|impl CoreNeuronKind {
+ 1853|    fn parse(kind: &str) -> Option<Self> {
+ 1854|        match kind {
+ 1855|            "core.number" => Some(Self::Number),
+ 1856|            "core.text" => Some(Self::Text),
+ 1857|            "core.image" => Some(Self::Image),
+ 1858|            "core.variable" => Some(Self::Variable),
+ 1859|            _ => None,
+ 1860|        }
+ 1861|    }
+ 1862|}
+ 1863|
+ 1864|fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
+ 1865|    match neuron.kind.as_str() {
+ 1866|        INPUT_KIND => {
+ 1867|            Widget::Variable { id: neuron.id.clone(), name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(), schema: boundary_schema_from_params(&neuron.params) }
+ 1868|        }
+ 1869|        OUTPUT_KIND => {
+
+### core.variable line 5854
+ 5846|            let a = input.get("a").or_else(|| input.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("a".into()))?;
+ 5847|            let b = input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+ 5848|            return Ok(channel_output("sum", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(a + b)))));
+ 5849|        }
+ 5850|        if kind == "math.passThrough" {
+ 5851|            let n = input.get("number").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
+ 5852|            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(n)))));
+ 5853|        }
+ 5854|        if kind == "core.variable" {
+ 5855|            let name = input.get("name").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).ok_or_else(|| EvalError::MissingInput("name".into()))?;
+ 5856|            let payload = input.get(name).and_then(|v| v.as_dictionary()).cloned().ok_or_else(|| EvalError::MissingInput(name.into()))?;
+ 5857|            return Ok(channel_output(name, payload));
+ 5858|        }
+ 5859|        Err(EvalError::UnknownKind(kind.into()))
+ 5860|    }
+ 5861|
+ 5862|    fn fixture_kind_infos_json() -> String {
+ 5863|        let mut registry = Registry::new();
+ 5864|        flow_extension_core::register(&mut registry);
+ 5865|        flow_extension_math::register(&mut registry);

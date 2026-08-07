@@ -22,31 +22,31 @@ todos:
     status: completed
   - id: w3a-flow-light
     content: "Wave 3.a (grok then composer): extract flow built-ins 🫀️core, 🧮️math, 📝️text, 🧠️logic, 📖️dictionary, 📃️list (50 operators total) out of the single semio-framework-os-flow crate into individually-packaged extensions; hand-fix fixtures using math.add/core.* and the flow-core unit tests hardcoding those kinds."
-    status: in_progress
+    status: completed
   - id: w3b-flow-draw
     content: "Wave 3.b (grok): migrate flow 🖍️draw (19 ops, 1321 lines, semio-s-2d) to a packaged extension; move render_scene_json to the kernel surface since procedural2d calls it directly."
-    status: pending
+    status: completed
   - id: w3c-flow-brep
     content: "Wave 3.c (grok, largest, last): migrate flow 📐️brep (86 ops, 2364 lines, semio-s-3d) to a packaged extension; move tessellate_geometry/export_solid_json/import_solid_json/retain_geometry_handles/dispose_geometry to the kernel surface; hand-fix ~10 procedural3d .semio example graphs; clean up the stale 3d TS importing flow_extension_brep.js and its vitest alias."
-    status: pending
+    status: in_progress
   - id: w3d-flow-bim
     content: "Wave 3.d (grok): convert flow-extension-bim to the new extension world; delete the standalone-wasm feature, wasm-pack pkg output, @semio-tech/flow-module-bim workspace entry, and the hardcoded ShellHost import; fix its app_id which wrongly targets procedural3d-play."
-    status: in_progress
+    status: completed
   - id: w3e-process-catalogs
     content: "Wave 3.e (composer): move process machine catalogs 🪵️wood/🧱️concrete/🔩️metal/🤖️robotic out of the process crate and its glue path-mod block into four packaged extensions contributing ProcessMachines; keep GenericCatalog built in."
-    status: in_progress
+    status: completed
   - id: w3f-cad
     content: "Wave 3.f (composer): port the four cad TypeScript extensions (spatial-shape, aec-building, aec-building-energy, aec-building-structure) to Rust extension crates contributing CadComputer, replacing bootstrapCadModules' hardcoded register() calls."
-    status: in_progress
+    status: completed
   - id: w3g-imperative
     content: "Wave 3.g (composer): convert the five imperative rlib modules (core, math, logic, control, text) into packaged extensions contributing ImperativeModule, replacing the compile-time imperative_module_registry aggregation."
-    status: in_progress
+    status: completed
   - id: w3h-sourcing-playbook
     content: "Wave 3.h (composer): verify the four already-packaged sourcing and playbook extensions install, enable, and invoke end to end under the new mechanism."
-    status: pending
+    status: completed
   - id: w4-build-launch
     content: "Wave 4 (composer, batched to touch contended global files once): root Cargo.toml members, root package.json workspaces, nx.json defaults, per-extension project.json + script.ts, an `extension package` command producing .sxt, vite production copy for /extensions, .vscode/launch.json entries in existing grouping/naming, and AGENTS.md docs for the plugin/extension distinction."
-    status: pending
+    status: in_progress
   - id: w5-verify
     content: "Wave 5 (grok, serial gate): cargo test + clippy -D warnings, nx run-many -t test, vitest; runtime E2E with [DEBUG] logs and screenshots for flow and process proving empty palette -> install from URL -> capability appears -> eval computed inside the extension via invoke -> disable -> re-enable -> uninstall -> reload restores the ledger; sideload a package built outside the catalog; confirm no standalone-wasm, no @semio-tech/flow-module-bim, no RequestPluginExchange remain."
     status: pending

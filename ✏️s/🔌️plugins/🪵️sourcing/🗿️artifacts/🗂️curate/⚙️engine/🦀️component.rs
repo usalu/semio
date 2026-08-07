@@ -28,28 +28,28 @@ pub fn register_pilot_languages() {
         id: "sourcing.curate",
         extension: Some("curate"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::curate::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::curate::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("sourcing.curate"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "sourcing.curate.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::curate::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::curate::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("sourcing.curate.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "sourcing.curate.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::curate::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::curate::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("sourcing.curate.diff"),
@@ -60,8 +60,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::curate::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("curate.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -70,8 +70,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("curate.spr"),
     });
 }
@@ -560,16 +560,10 @@ pub fn sync_sourcing_module_contributions(contributions_json: &str) {
     *last = contributions_json.to_string();
 }
 
-fn builtin_sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
-    vec![Box::new(beams::BeamsModule), Box::new(windows::WindowsModule), Box::new(slabs::SlabsModule)]
-}
-
 /// 🧩️ Every sourcing module known to this crate, in stable order.
 pub fn sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
-    let mut modules = builtin_sourcing_modules();
     let contributed = CONTRIBUTED_SOURCING_MODULES.lock().expect("sourcing contributed modules lock");
-    modules.extend(contributed.iter().map(|module| Box::new(module.clone()) as Box<dyn SourcingModule>));
-    modules
+    contributed.iter().map(|module| Box::new(module.clone()) as Box<dyn SourcingModule>).collect()
 }
 
 /// 🔎️ Looks up a single module by id.
@@ -794,9 +788,26 @@ mod tests {
     }
 
     #[test]
-    fn available_modules_uses_the_built_in_module_registry() {
+    fn available_modules_tracks_contributed_modules() {
+        sync_sourcing_module_contributions("[]");
+        assert!(available_modules().is_empty());
+        let beams = beams::BeamsModule;
+        let entry = semio_framework_core::ProgramContributionEntry {
+            plugin_id: "sourcing-module-beams".into(),
+            contribution: semio_framework_core::Contribution::SourcingModule {
+                app_id: SOURCING_CURATE_APP_ID.into(),
+                module_id: beams.module_id().into(),
+                label: beams.label().into(),
+                icon_id: "beam".into(),
+                typology_json: serde_json::to_string(&beams.typology()).unwrap(),
+                kinds_json: serde_json::to_string(&beams.demo_kinds()).unwrap(),
+            },
+        };
+        sync_sourcing_module_contributions(&serde_json::to_string(&vec![entry]).unwrap());
         let modules = available_modules();
-        assert_eq!(modules.len(), sourcing_modules().len());
+        assert_eq!(modules.len(), 1);
+        assert_eq!(modules[0].module_id, "beams");
+        sync_sourcing_module_contributions("[]");
     }
 
     #[test]

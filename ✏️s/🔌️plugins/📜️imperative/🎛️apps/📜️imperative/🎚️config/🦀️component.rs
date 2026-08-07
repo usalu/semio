@@ -22,11 +22,18 @@ pub struct ImperativeConfig {
     pub run_output_json: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
+    /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `imperative.module` hot-swap installs.
+    #[serde(default = "default_contributions_json")]
+    pub contributions_json: String,
+}
+
+fn default_contributions_json() -> String {
+    "[]".into()
 }
 
 impl Default for ImperativeConfig {
     fn default() -> Self {
-        Self { selected_step_ids: Vec::new(), run_output_json: String::new(), locale: "en-US".into() }
+        Self { selected_step_ids: Vec::new(), run_output_json: String::new(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
 
@@ -53,6 +60,8 @@ pub enum ImperativeConfigOperation {
     SetRunOutput { json: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
 }
 
 impl protocol::Operation<ImperativeConfig> for ImperativeConfigOperation {
@@ -65,6 +74,10 @@ impl protocol::Operation<ImperativeConfig> for ImperativeConfigOperation {
             ImperativeConfigOperation::SetSelectedSteps { ids } => next.selected_step_ids = ids.clone(),
             ImperativeConfigOperation::SetRunOutput { json } => next.run_output_json = json.clone(),
             ImperativeConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            ImperativeConfigOperation::SetContributions { json } => {
+                next.contributions_json = json.clone();
+                imperative_engine::sync_imperative_module_contributions(json);
+            }
         }
         next
     }

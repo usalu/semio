@@ -366,6 +366,28 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The current examples are extremely adhoc. Examples have assets, tests, etc. Examples are used for demonstration purposes, for testing purposes, etc.
+e.g. wrong ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs
+
+```
+<plugin>
+  artifacts
+    <artifact>
+      examples
+        <example>
+          assets
+            <name>.pack.semio
+            <name>.spr.semio
+            <name>.dsl.semio
+            <name>.op.semio
+          tests
+            test.rs
+            test.ts
+            …
+          …
+```
+---
+
 Currently commands that change the document by returning a diff are called operations. Rename to mutations. Dont keep any legacy. Make sure that op (the custom grammar for mutations)
 A mutation is declarative and returns a diff. Every mutation has an implementation for inverse mutations (list of arguments for calling other mutations to revert the mutation).
 Every artifact defines mutations.

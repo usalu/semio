@@ -155,6 +155,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn bundle_contributes_core_module_for_imperative_play() {
+        let entry = imperative_module_contribution();
+        assert_eq!(entry.plugin_id, EXTENSION_ID);
+        let semio_framework_core::Contribution::ImperativeModule { app_id, module_id, manifest_json, .. } = entry.contribution else {
+            panic!("expected ImperativeModule");
+        };
+        assert_eq!(app_id, imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID);
+        assert_eq!(module_id, "core");
+        assert!(manifest_json.contains("imperative.extension"));
+    }
+
+    #[test]
     fn catalogue_json_includes_input_channels() {
         let registry = module_registry();
         let raw = catalogue_json(&registry);

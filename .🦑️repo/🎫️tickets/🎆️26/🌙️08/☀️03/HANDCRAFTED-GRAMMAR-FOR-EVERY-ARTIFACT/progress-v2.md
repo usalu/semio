@@ -166,3 +166,11 @@ Extended `🗣️dsl/🧪️fixture-sweep/🦀️component.rs` with regions:
 
 ### Compile
 `cargo check -p semio-framework-os-kernel --lib` still blocked by unaccepted Xcode SDK license (linker/cc exit 69) — same host constraint as prior waves. TypeScript policy import smoke green.
+
+### P1 protocol engine — verify API correction (session continue)
+- Restored required split: verify_protocol_bytes(&GrammarFile, bytes) = shallow any-0x89 (>=32 pack / non-empty spr); verify_protocol_source = parse + walk_protocol deep.
+- Removed verify_protocol_envelope from grammar + dsl re-exports.
+- walk_protocol: Framing::Record named records consume body-as-rest; magic/chunked skip named records; empty-name spr preamble fields walk normally (Prim::Bytes rest).
+- Tests: Shape A uses project_protocol for shallow + verify_protocol_source for deep; added verify_protocol_bytes_accepts_any_0x89_magic.
+- Policy: five P3 breaches already in VerifyScript.runGate via policyHandcraftedSpecP3Breaches.
+- cargo test still blocked by Xcode SDK license (cc/sccache exit 69) — tests not executed on this host.

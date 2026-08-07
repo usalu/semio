@@ -69,6 +69,8 @@ pub mod apps {
             pub mod step;
             #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️view/🦀️component.rs"]
             pub mod view;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🧩️contribution/🦀️component.rs"]
+            pub mod contribution;
         }
 
         #[path = "."]

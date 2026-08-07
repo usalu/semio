@@ -1,0 +1,8 @@
+[
+  "semio-s-plugin-flow-extension-core",
+  "semio-s-plugin-flow-extension-math",
+  "semio-s-plugin-flow-extension-text",
+  "semio-s-plugin-flow-extension-logic",
+  "semio-s-plugin-flow-extension-dictionary",
+  "semio-s-plugin-flow-extension-list"
+]

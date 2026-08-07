@@ -21,5 +21,3 @@ pub use registry::{
     contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_default_imperative_contributions, register_native_imperative_module,
     sync_imperative_module_contributions,
 };
-#[cfg(feature = "linked-modules")]
-pub use registry::bootstrap_linked_modules;

@@ -1639,20 +1639,31 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
         Framing::Record | Framing::Chunked => {}
     }
 
-    let skip_records = matches!(spec.framing, Framing::Magic(_) | Framing::Chunked);
+    let skip_named_records = matches!(spec.framing, Framing::Magic(_) | Framing::Chunked);
+    let record_body_as_rest = matches!(spec.framing, Framing::Record);
+    let mut consumed_record_body = false;
 
     for (index, block) in spec.blocks.iter().enumerate() {
         if definitions_only(block) {
-            continue;
-        }
-        if skip_records && matches!(block, Block::Record { .. }) {
             continue;
         }
         let reserved = trailing_reserved(&spec.blocks, index + 1);
         match block {
             Block::Header(fields) => walk_fields(fields, bytes, &mut pos, reserved)?,
             Block::Segment { fields, .. } => walk_fields(fields, bytes, &mut pos, reserved)?,
-            Block::Record { fields, .. } => walk_fields(fields, bytes, &mut pos, reserved)?,
+            Block::Record { name, fields, .. } => {
+                if skip_named_records && !name.is_empty() {
+                    continue;
+                }
+                if record_body_as_rest && !name.is_empty() {
+                    if !consumed_record_body {
+                        pos = bytes.len();
+                        consumed_record_body = true;
+                    }
+                    continue;
+                }
+                walk_fields(fields, bytes, &mut pos, reserved)?;
+            }
             Block::Footer(size) => {
                 need(bytes, pos, *size, "footer")?;
                 pos += *size;
@@ -1671,30 +1682,42 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
     Ok(ProtocolTrace { consumed: pos })
 }
 
-/// @emoji 📡️ Byte-level protocol conformance via [`walk_protocol`].
-pub fn verify_protocol_bytes(spec: &ProtocolFile, bytes: &[u8]) -> Result<(), String> {
-    walk_protocol(spec, bytes).map(|_| ()).map_err(|e| format!("offset {}: {}", e.offset, e.message))
-}
-
-/// @emoji 📡️ Parses handcrafted `.protocol.semio` source then verifies bytes (M5 pack/spr law).
-pub fn verify_protocol_source(source: &str, bytes: &[u8]) -> Result<(), String> {
-    let spec = parse_protocol(source).map_err(|error| error.message)?;
-    verify_protocol_bytes(&spec, bytes)
-}
-
-/// @emoji 🛟 Shallow envelope check — any 0x89 magic (pack) or non-empty (spr).
-pub fn verify_protocol_envelope(framing_hint: &str, bytes: &[u8]) -> Result<(), String> {
-    if framing_hint.contains("record") || framing_hint.ends_with(".spr") {
+/// @emoji 📡️ Shallow [`GrammarFile`] back-compat check: pack requires leading `0x89` magic
+/// (any family) and ≥32 bytes; spr requires non-empty bytes. Deep walks use [`verify_protocol_source`].
+pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), String> {
+    let id = spec.id.to_ascii_lowercase();
+    let start = spec.start.to_ascii_lowercase();
+    let is_spr = start == "record" || id.contains("spr");
+    let is_pack = start == "frame" || id.contains("pack") || (matches!(spec.dialect, SemioDialect::Protocol) && !is_spr);
+    if is_spr {
         if bytes.is_empty() {
             return Err("spr envelope rejects empty bytes".into());
         }
         return Ok(());
     }
-    if bytes.len() < 8 || bytes[0] != 0x89 {
-        return Err(format!("pack envelope requires 0x89 magic prefix, got {} bytes", bytes.len()));
+    if is_pack || bytes.first() == Some(&0x89) {
+        if bytes.len() < 32 {
+            return Err(format!("pack envelope requires ≥32 bytes, got {}", bytes.len()));
+        }
+        if bytes[0] != 0x89 {
+            return Err("pack magic must start with 0x89".into());
+        }
+        return Ok(());
     }
-    Ok(())
+    Err(format!(
+        "verify_protocol_bytes: cannot classify protocol id='{}' start='{}'",
+        spec.id, spec.start
+    ))
 }
+
+/// @emoji 📡️ Parses handcrafted `.protocol.semio` source then deep-walks bytes via [`walk_protocol`].
+pub fn verify_protocol_source(source: &str, bytes: &[u8]) -> Result<(), String> {
+    let spec = parse_protocol(source).map_err(|error| error.message)?;
+    walk_protocol(&spec, bytes)
+        .map(|_| ())
+        .map_err(|e| format!("offset {}: {}", e.offset, e.message))
+}
+
 //#endregion 📡️ProtocolWalk
 
 //#region 🔖️Tests
@@ -1900,7 +1923,8 @@ footer fixed 84
         bytes.extend(std::iter::repeat(0u8).take(84));
         let trace = walk_protocol(&spec, &bytes).expect("walk Shape A");
         assert_eq!(trace.consumed, bytes.len());
-        verify_protocol_bytes(&spec, &bytes).expect("verify");
+        verify_protocol_bytes(&project_protocol(spec.clone()), &bytes).expect("shallow verify");
+        verify_protocol_source(source, &bytes).expect("deep verify");
         let mut bad = bytes.clone();
         bad[0] = 0x00;
         assert!(walk_protocol(&spec, &bad).is_err());
@@ -1978,6 +2002,33 @@ field body bytes
         let mut bytes = vec![0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0A];
         bytes.extend_from_slice(&0u32.to_le_bytes());
         verify_protocol_source(source, &bytes).expect("verify_protocol_source");
+    }
+
+    #[test]
+    fn verify_protocol_bytes_accepts_any_0x89_magic() {
+        let g = GrammarFile {
+            dialect: SemioDialect::Protocol,
+            id: "demo.pack".into(),
+            extension: None,
+            uses: vec![],
+            start: "frame".into(),
+            productions: vec![],
+        };
+        let mut bytes = vec![0x89];
+        bytes.extend(std::iter::repeat(0u8).take(31));
+        verify_protocol_bytes(&g, &bytes).expect("any 0x89");
+        bytes[0] = 0x00;
+        assert!(verify_protocol_bytes(&g, &bytes).is_err());
+        let spr = GrammarFile {
+            dialect: SemioDialect::Protocol,
+            id: "demo.spr".into(),
+            extension: None,
+            uses: vec![],
+            start: "record".into(),
+            productions: vec![],
+        };
+        verify_protocol_bytes(&spr, &[1u8]).expect("spr non-empty");
+        assert!(verify_protocol_bytes(&spr, &[]).is_err());
     }
 
 }

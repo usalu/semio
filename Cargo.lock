@@ -6660,7 +6660,15 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-s-2d",
  "semio-s-3d",
+ "semio-s-plugin-flow-extension-brep",
+ "semio-s-plugin-flow-extension-core",
+ "semio-s-plugin-flow-extension-dictionary",
+ "semio-s-plugin-flow-extension-list",
+ "semio-s-plugin-flow-extension-logic",
+ "semio-s-plugin-flow-extension-math",
+ "semio-s-plugin-flow-extension-text",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6973,11 +6981,17 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-plugin-imperative-control",
- "semio-s-plugin-imperative-core",
- "semio-s-plugin-imperative-logic",
- "semio-s-plugin-imperative-math",
- "semio-s-plugin-imperative-text",
+ "semio-s-imperative-extension-sdk",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-imperative-extension-sdk"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-neural-engine",
  "serde",
  "serde_json",
 ]
@@ -7203,12 +7217,118 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
+ "semio-s-plugin-flow-extension-core",
+ "semio-s-plugin-flow-extension-dictionary",
+ "semio-s-plugin-flow-extension-list",
+ "semio-s-plugin-flow-extension-logic",
+ "semio-s-plugin-flow-extension-math",
+ "semio-s-plugin-flow-extension-text",
  "serde",
  "serde_json",
 ]
 
 [[package]]
 name = "semio-s-plugin-flow-extension-bim"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-brep"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-3d",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-core"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-dictionary"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-draw"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-2d",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-list"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-logic"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-math"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-text"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
@@ -7263,39 +7383,60 @@ dependencies = [
 name = "semio-s-plugin-imperative-control"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-imperative-extension-sdk",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-imperative-core"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-imperative-extension-sdk",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-imperative-logic"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-imperative-extension-sdk",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-imperative-math"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-imperative-extension-sdk",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-imperative-text"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-imperative-extension-sdk",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

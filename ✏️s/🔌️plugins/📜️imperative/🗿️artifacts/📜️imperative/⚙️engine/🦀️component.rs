@@ -11,6 +11,7 @@ use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_m
 pub fn register() {
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::imperative::ImperativePlayApp>(crate::artifacts::imperative::IMPERATIVE_DOCUMENT_SCHEMA);
+    imperative_engine::bootstrap_linked_modules();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -19,28 +20,28 @@ pub fn register_pilot_languages() {
         id: "imperative.document",
         extension: Some("imperative"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("imperative.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "imperative.imperative.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::imperative::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::imperative::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("imperative.imperative.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "imperative.imperative.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::imperative::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::imperative::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("imperative.imperative.diff"),
@@ -51,8 +52,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::imperative::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("imperative.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -61,8 +62,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("imperative.spr"),
     });
 }

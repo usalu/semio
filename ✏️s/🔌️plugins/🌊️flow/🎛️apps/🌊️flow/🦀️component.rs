@@ -370,13 +370,33 @@ pub(crate) mod testkit {
 
     pub type FlowApp = VcsDocumentApp<FlowPlayApp>;
 
+    fn install_first_party_light_flow_extensions_for_tests() {
+        use std::sync::Once;
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
+            for (plugin_id, manifest) in [
+                ("flow-extension-core", semio_s_plugin_flow_extension_core::extension_manifest_json()),
+                ("flow-extension-math", semio_s_plugin_flow_extension_math::extension_manifest_json()),
+                ("flow-extension-text", semio_s_plugin_flow_extension_text::extension_manifest_json()),
+                ("flow-extension-logic", semio_s_plugin_flow_extension_logic::extension_manifest_json()),
+                ("flow-extension-dictionary", semio_s_plugin_flow_extension_dictionary::extension_manifest_json()),
+                ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
+            ] {
+                flow_core::install_flow_extension_manifest(plugin_id, &manifest);
+            }
+        });
+    }
+
+
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn flow_app() -> FlowApp {
+        install_first_party_light_flow_extensions_for_tests();
         new_app::<FlowPlayApp>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn flow_app_with_registry() -> FlowApp {
+        install_first_party_light_flow_extensions_for_tests();
         new_app_with_registry::<FlowPlayApp>(create_flow_app)
     }
 

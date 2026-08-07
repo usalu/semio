@@ -1,0 +1,448 @@
+
+===== flow_extension_brep::retain_geometry_handles @ 2834 =====
+            let mut dispatch = |kind: &str, input: &Dictionary| registry.as_ref().dispatch(kind, input);
+            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
+        };
+        match budgeted {
+            Ok(BudgetedEval { channels, remaining, pending_extension }) => {
+                self.pending_extension_eval = pending_extension;
+                self.outputs = channels.outputs.clone();
+                self.apply_preview_outputs(&channels.outputs);
+                self.apply_export_outputs(&channels.outputs);
+                self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
+                if !remaining.is_empty() {
+                    return remaining;
+                }
+                self.neural_cache.sweep();
+                let live_handles = collect_live_geometry_handles_from_channels(&channels);
+                flow_extension_brep::retain_geometry_handles(&live_handles);
+                let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
+                flow_extension_draw::retain_drawing_handles(&live_drawing_handles);
+                // 🔒️ Only advance the snapshot/channels pair together, and only on success — a
+                // failed evaluation keeps diffing against the last known-good state next time,
+                // which is always a safe (never under-dirty) baseline.
+                self.previous_snapshot = Some(snapshot);
+                self.previous_channels = Some(channels);
+                Vec::new()
+            }
+            Err(err) => {
+                self.neural_cache.sweep();
+                if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
+                    self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
+                }
+
+===== flow_extension_brep::retain_geometry_handles @ 3784 =====
+// #region 🔖️EvalSession
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
+
+/// ⏱️ Max cache-missed neuron dispatches per `flowEvalTick` — keeps one dispatch from blocking the worker while still converging small graphs in a single tick.
+pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
+
+static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, std::collections::HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
+
+fn sync_flow_geometry_retention() {
+    let merged: std::collections::HashSet<String> = FLOW_SESSION_GEOMETRY
+        .lock()
+        .map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect())
+        .unwrap_or_default();
+    let live: Vec<String> = merged.into_iter().collect();
+    flow_extension_brep::retain_geometry_handles(&live);
+}
+
+/// 🚦 Per-widget evaluation state for flow graph chrome (not persisted in config).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "camelCase")]
+pub enum NodeEvalStatus {
+    Ok,
+    Stale,
+    Queued,
+    Computing,
+    Error { message: String },
+    Blocked { ports: Vec<String> },
+}
+
+
+===== flow_extension_brep::dispose_geometry @ 4658 =====
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn trace_drawing_bitmap(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
+    flow_extension_draw::trace_bitmap_json(width, height, mask, threshold, simplify_epsilon)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn boolean_drawing_segments(a_json: &str, b_json: &str, operation: &str) -> String {
+    flow_extension_draw::boolean_segments_json(a_json, b_json, operation)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dispose(handle: &str) {
+    flow_extension_brep::dispose_geometry(handle);
+}
+
+/// 📐️ Encodes a `MeshData` JSON payload as base64 DWG bytes, for JS consumers holding a mesh but no drawing/geometry handle.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dwg_encode_mesh_json(mesh_json: &str) -> String {
+    let Ok(mesh) = serde_json::from_str::<semio_framework_core::MeshData>(mesh_json) else {
+        return serde_json::json!({ "error": "invalid mesh json" }).to_string();
+    };
+    let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
+    match semio_framework_core::dwg_to_bytes(&drawing) {
+        Ok(bytes) => {
+            use base64::Engine;
+            serde_json::json!({ "dwg": base64::engine::general_purpose::STANDARD.encode(bytes) }).to_string()
+
+===== flow_extension_brep::tessellate_geometry @ 4601 =====
+
+    #[wasm_bindgen(js_name = hasSelection)]
+    pub fn has_selection(&self) -> bool {
+        self.state.borrow().host.has_selection()
+    }
+
+    #[wasm_bindgen(js_name = selectAll)]
+    pub fn select_all(&self) {
+        self.state.borrow_mut().host.select_all();
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn tessellate(handle: &str, tolerance: f64) -> String {
+    match flow_extension_brep::tessellate_geometry(handle, tolerance) {
+        Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "mesh encode failed" }).to_string()),
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn render_drawing_scene(handle: &str) -> String {
+    flow_extension_draw::render_scene_json(handle)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn export_drawing_svg(handle: &str) -> String {
+
+===== flow_extension_brep::tessellate_geometry @ 7653 =====
+    "extrude": { "x": 34.842068675720895, "y": -154.18083645790136 },
+    "column-preview": { "x": 237.4197774877085, "y": -103.14518978933415 }
+  }
+}
+"#;
+        let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
+        let mut host = FlowHost::from_fixture(fixture);
+        host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
+        let eval_json = host.evaluate().expect("evaluate");
+        let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
+        let solid = parsed.get("extrude").and_then(|entry| entry.get("out")).and_then(|out| out.get("solid").or_else(|| out.get("S"))).expect("extrude solid output");
+        assert_eq!(solid.get("$schema").and_then(serde_json::Value::as_str), Some("geometry"));
+        assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
+        let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
+        assert!(handle.starts_with("solid-"));
+        let mesh = flow_extension_brep::tessellate_geometry(handle, 0.05).expect("solid mesh");
+        assert!(!mesh.positions.is_empty());
+        assert!(mesh.indices.len() >= 3);
+    }
+
+    #[test]
+    fn compiled_wire_literal_includes_operator_kinds() {
+        let host = host_with_test_bridge();
+        let text = host.compiled_wire_literal();
+        assert!(text.contains("core.number"));
+        assert!(text.contains("math.add"));
+    }
+
+    #[test]
+    fn flow_fixture_to_form_spec_maps_input_widgets() {
+
+===== flow_extension_brep::register @ 1386 =====
+
+static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {
+    contributed: BTreeMap::new(),
+    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+    generation: 0,
+}));
+
+/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+    flow_extension_core::register(registry);
+    flow_extension_math::register(registry);
+    flow_extension_text::register(registry);
+    flow_extension_logic::register(registry);
+    flow_extension_dictionary::register(registry);
+    flow_extension_list::register(registry);
+    flow_extension_brep::register(registry);
+    flow_extension_draw::register(registry);
+}
+
+struct ContributedExtensionStub {
+    extension_id: String,
+    operator_id: String,
+}
+
+impl neural::Operation for ContributedExtensionStub {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let node_hash = neural::node_hash(&self.operator_id, input);
+        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
+    }
+}
+
+===== flow_extension_brep::register @ 5866 =====
+            let n = input.get("number").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
+            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(n)))));
+        }
+        if kind == "core.variable" {
+            let name = input.get("name").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).ok_or_else(|| EvalError::MissingInput("name".into()))?;
+            let payload = input.get(name).and_then(|v| v.as_dictionary()).cloned().ok_or_else(|| EvalError::MissingInput(name.into()))?;
+            return Ok(channel_output(name, payload));
+        }
+        Err(EvalError::UnknownKind(kind.into()))
+    }
+
+    fn fixture_kind_infos_json() -> String {
+        let mut registry = Registry::new();
+        flow_extension_core::register(&mut registry);
+        flow_extension_math::register(&mut registry);
+        flow_extension_brep::register(&mut registry);
+        serde_json::to_string(&registry.operator_catalogue()).unwrap_or_else(|_| "[]".into())
+    }
+
+    fn test_kind_infos_json() -> String {
+        serde_json::to_string(&[
+            NeuronKindInfo {
+                id: "math.add".into(),
+                extension: "math".into(),
+                name: "Add".into(),
+                abbreviation: "Add".into(),
+                icon: "emoji:➕️".into(),
+                summary: "Sums two numbers".into(),
+                inputs: vec![InputSpec::number("a", NUMBER_OPS), InputSpec::number_default("b", 0.0, NUMBER_OPS)],
+                outputs: vec![InputSpec::named("S", "Sum", "sum", "Sum")],
+
+===== flow_extension_brep:: @ 1386 =====
+
+static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {
+    contributed: BTreeMap::new(),
+    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+    generation: 0,
+}));
+
+/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+    flow_extension_core::register(registry);
+    flow_extension_math::register(registry);
+    flow_extension_text::register(registry);
+    flow_extension_logic::register(registry);
+    flow_extension_dictionary::register(registry);
+    flow_extension_list::register(registry);
+    flow_extension_brep::register(registry);
+    flow_extension_draw::register(registry);
+}
+
+struct ContributedExtensionStub {
+    extension_id: String,
+    operator_id: String,
+}
+
+impl neural::Operation for ContributedExtensionStub {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let node_hash = neural::node_hash(&self.operator_id, input);
+        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
+    }
+}
+
+===== flow_extension_brep:: @ 2834 =====
+            let mut dispatch = |kind: &str, input: &Dictionary| registry.as_ref().dispatch(kind, input);
+            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
+        };
+        match budgeted {
+            Ok(BudgetedEval { channels, remaining, pending_extension }) => {
+                self.pending_extension_eval = pending_extension;
+                self.outputs = channels.outputs.clone();
+                self.apply_preview_outputs(&channels.outputs);
+                self.apply_export_outputs(&channels.outputs);
+                self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
+                if !remaining.is_empty() {
+                    return remaining;
+                }
+                self.neural_cache.sweep();
+                let live_handles = collect_live_geometry_handles_from_channels(&channels);
+                flow_extension_brep::retain_geometry_handles(&live_handles);
+                let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
+                flow_extension_draw::retain_drawing_handles(&live_drawing_handles);
+                // 🔒️ Only advance the snapshot/channels pair together, and only on success — a
+                // failed evaluation keeps diffing against the last known-good state next time,
+                // which is always a safe (never under-dirty) baseline.
+                self.previous_snapshot = Some(snapshot);
+                self.previous_channels = Some(channels);
+                Vec::new()
+            }
+            Err(err) => {
+                self.neural_cache.sweep();
+                if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
+                    self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
+                }
+
+===== flow_extension_brep:: @ 3784 =====
+// #region 🔖️EvalSession
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
+
+/// ⏱️ Max cache-missed neuron dispatches per `flowEvalTick` — keeps one dispatch from blocking the worker while still converging small graphs in a single tick.
+pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
+
+static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, std::collections::HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
+
+fn sync_flow_geometry_retention() {
+    let merged: std::collections::HashSet<String> = FLOW_SESSION_GEOMETRY
+        .lock()
+        .map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect())
+        .unwrap_or_default();
+    let live: Vec<String> = merged.into_iter().collect();
+    flow_extension_brep::retain_geometry_handles(&live);
+}
+
+/// 🚦 Per-widget evaluation state for flow graph chrome (not persisted in config).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "camelCase")]
+pub enum NodeEvalStatus {
+    Ok,
+    Stale,
+    Queued,
+    Computing,
+    Error { message: String },
+    Blocked { ports: Vec<String> },
+}
+
+
+===== flow_extension_brep:: @ 4601 =====
+
+    #[wasm_bindgen(js_name = hasSelection)]
+    pub fn has_selection(&self) -> bool {
+        self.state.borrow().host.has_selection()
+    }
+
+    #[wasm_bindgen(js_name = selectAll)]
+    pub fn select_all(&self) {
+        self.state.borrow_mut().host.select_all();
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn tessellate(handle: &str, tolerance: f64) -> String {
+    match flow_extension_brep::tessellate_geometry(handle, tolerance) {
+        Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "mesh encode failed" }).to_string()),
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn render_drawing_scene(handle: &str) -> String {
+    flow_extension_draw::render_scene_json(handle)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn export_drawing_svg(handle: &str) -> String {
+
+===== flow_extension_brep:: @ 4658 =====
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn trace_drawing_bitmap(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
+    flow_extension_draw::trace_bitmap_json(width, height, mask, threshold, simplify_epsilon)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn boolean_drawing_segments(a_json: &str, b_json: &str, operation: &str) -> String {
+    flow_extension_draw::boolean_segments_json(a_json, b_json, operation)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dispose(handle: &str) {
+    flow_extension_brep::dispose_geometry(handle);
+}
+
+/// 📐️ Encodes a `MeshData` JSON payload as base64 DWG bytes, for JS consumers holding a mesh but no drawing/geometry handle.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dwg_encode_mesh_json(mesh_json: &str) -> String {
+    let Ok(mesh) = serde_json::from_str::<semio_framework_core::MeshData>(mesh_json) else {
+        return serde_json::json!({ "error": "invalid mesh json" }).to_string();
+    };
+    let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
+    match semio_framework_core::dwg_to_bytes(&drawing) {
+        Ok(bytes) => {
+            use base64::Engine;
+            serde_json::json!({ "dwg": base64::engine::general_purpose::STANDARD.encode(bytes) }).to_string()
+
+===== flow_extension_brep:: @ 5866 =====
+            let n = input.get("number").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
+            return Ok(channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(n)))));
+        }
+        if kind == "core.variable" {
+            let name = input.get("name").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).ok_or_else(|| EvalError::MissingInput("name".into()))?;
+            let payload = input.get(name).and_then(|v| v.as_dictionary()).cloned().ok_or_else(|| EvalError::MissingInput(name.into()))?;
+            return Ok(channel_output(name, payload));
+        }
+        Err(EvalError::UnknownKind(kind.into()))
+    }
+
+    fn fixture_kind_infos_json() -> String {
+        let mut registry = Registry::new();
+        flow_extension_core::register(&mut registry);
+        flow_extension_math::register(&mut registry);
+        flow_extension_brep::register(&mut registry);
+        serde_json::to_string(&registry.operator_catalogue()).unwrap_or_else(|_| "[]".into())
+    }
+
+    fn test_kind_infos_json() -> String {
+        serde_json::to_string(&[
+            NeuronKindInfo {
+                id: "math.add".into(),
+                extension: "math".into(),
+                name: "Add".into(),
+                abbreviation: "Add".into(),
+                icon: "emoji:➕️".into(),
+                summary: "Sums two numbers".into(),
+                inputs: vec![InputSpec::number("a", NUMBER_OPS), InputSpec::number_default("b", 0.0, NUMBER_OPS)],
+                outputs: vec![InputSpec::named("S", "Sum", "sum", "Sum")],
+
+===== flow_extension_brep:: @ 7653 =====
+    "extrude": { "x": 34.842068675720895, "y": -154.18083645790136 },
+    "column-preview": { "x": 237.4197774877085, "y": -103.14518978933415 }
+  }
+}
+"#;
+        let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
+        let mut host = FlowHost::from_fixture(fixture);
+        host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
+        let eval_json = host.evaluate().expect("evaluate");
+        let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
+        let solid = parsed.get("extrude").and_then(|entry| entry.get("out")).and_then(|out| out.get("solid").or_else(|| out.get("S"))).expect("extrude solid output");
+        assert_eq!(solid.get("$schema").and_then(serde_json::Value::as_str), Some("geometry"));
+        assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
+        let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
+        assert!(handle.starts_with("solid-"));
+        let mesh = flow_extension_brep::tessellate_geometry(handle, 0.05).expect("solid mesh");
+        assert!(!mesh.positions.is_empty());
+        assert!(mesh.indices.len() >= 3);
+    }
+
+    #[test]
+    fn compiled_wire_literal_includes_operator_kinds() {
+        let host = host_with_test_bridge();
+        let text = host.compiled_wire_literal();
+        assert!(text.contains("core.number"));
+        assert!(text.contains("math.add"));
+    }
+
+    #[test]
+    fn flow_fixture_to_form_spec_maps_input_widgets() {

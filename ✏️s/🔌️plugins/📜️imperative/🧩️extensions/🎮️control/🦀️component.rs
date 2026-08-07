@@ -43,6 +43,37 @@ pub fn catalogue_json() -> String {
     .unwrap_or_else(|_| "{}".into())
 }
 
+pub fn module_registry() -> neural_engine::Registry {
+    let mut registry = neural_engine::Registry::new();
+    registry.finalize();
+    registry
+}
+
+//#region 🔖️Bundle
+const EXTENSION_ID: &str = "imperative-extension-control";
+const MODULE_VERSION: &str = "0.1.0";
+
+pub fn imperative_module_contribution() -> semio_framework_core::ProgramContributionEntry {
+    let registry = module_registry();
+    let catalogue = catalogue_json();
+    imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "control", "Control", "git-branch", "control", "Control", MODULE_VERSION, &registry, Some(&catalogue))
+}
+
+fn bundle() -> semio_framework_plugin::ExtensionBundle {
+    let entry = imperative_module_contribution();
+    semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Control", MODULE_VERSION)
+        .extends("imperative")
+        .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
+            imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| {
+                semio_framework_core::Fault::new(semio_framework_core::FaultOrigin::Plugin, semio_framework_core::FaultCode::new("extension.evaluate"), message)
+            })
+        })
+        .contributes(entry.contribution)
+}
+
+semio_framework_plugin::extension_exports!(bundle);
+//#endregion 🔖️Bundle
+
 #[cfg(test)]
 mod tests {
     use super::*;

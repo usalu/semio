@@ -1,0 +1,80 @@
+// #region 🔖️ExtensionRegistry
+/// 🧩️ One installable flow extension (built-in or contributed).
+#[derive(Clone, Debug)]
+pub struct FlowExtensionSpec {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    pub install: fn(&mut neural::Registry),
+}
+
+/// 📋️ Installed extension metadata for host UI and debugging.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowExtensionInfo {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_id: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+struct ContributedFlowExtension {
+    plugin_id: String,
+    manifest_json: String,
+}
+
+struct FlowExtensionRegistryState {
+    contributed: BTreeMap<String, ContributedFlowExtension>,
+    registry: Arc<neural::Registry>,
+    generation: u64,
+}
+
+static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {
+    contributed: BTreeMap::new(),
+    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+    generation: 0,
+}));
+
+/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+    flow_extension_core::register(registry);
+    flow_extension_math::register(registry);
+    flow_extension_text::register(registry);
+    flow_extension_logic::register(registry);
+    flow_extension_dictionary::register(registry);
+    flow_extension_list::register(registry);
+    flow_extension_brep::register(registry);
+    flow_extension_draw::register(registry);
+}
+
+struct ContributedExtensionStub {
+    extension_id: String,
+    operator_id: String,
+}
+
+impl neural::Operation for ContributedExtensionStub {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let node_hash = neural::node_hash(&self.operator_id, input);
+        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
+    }
+}
+
+fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) {
+    let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
+    for schema in manifest.contributes.schemas {
+        if !registry.schema_catalogue().iter().any(|existing| existing.id == schema.id) {
+            registry.register_schema(schema);
+        }
+    }
+    for info in manifest.contributes.operators {
+        if registry.operator_info(&info.id).is_some() {
+            continue;
+        }
+        let extension_id = manifest.id.clone();
+        let operator_id = info.id.clone();
+        registry.register_operator(
+            info,
+            vec![OperatorImpl { schemas: vec![], operation: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
+            &[],

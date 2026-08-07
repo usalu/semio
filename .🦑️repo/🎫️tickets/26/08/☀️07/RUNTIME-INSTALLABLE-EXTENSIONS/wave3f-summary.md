@@ -56,6 +56,10 @@ bun nx run @semio-tech/cad-js:test quick
 
 Local agent run blocked by Xcode license on `cc` (blake3); re-run after `sudo xcodebuild -license`.
 
+## Status
+
+**Complete** for contribution metadata + host sync; TS module implementations remain in workspace packages (compute logic); Rust extensions own installable manifests.
+
 ## Follow-up
 
 - Wire OS shell `contributions_json` push into cad-js when the React cad renderer binds config (Rust host already stores JSON).

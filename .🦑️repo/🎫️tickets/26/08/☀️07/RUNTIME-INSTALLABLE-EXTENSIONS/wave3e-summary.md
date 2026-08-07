@@ -61,6 +61,7 @@ No compile-time fallback path-deps from process → extensions (clean split; avo
 | Check | Status |
 |-------|--------|
 | `cargo check -p semio-s-plugin-process -p semio-s-plugin-process-{wood,concrete,metal,robotic}` | **Blocked** on this machine: Xcode license not accepted (`blake3` C build). Re-run after `sudo xcodebuild -license`. |
+| Host `builtin_installed_catalogs()` | **Confirmed** — only `GenericCatalog`; no path-mods for wood/concrete/metal/robotic in process glue/engine. |
 | Extension unit tests (catalog integrity + JSON round-trip) | Moved with catalog sources; wood adds `bundle_contributes_wood_machines_for_process3d_play`. |
 | Process engine test `sync_process_machine_contributions_merges_hot_installed_catalogs` | Unchanged; still validates merge path without builtin domain catalogs. |
 

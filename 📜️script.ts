@@ -1951,7 +1951,7 @@ const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle#3d", "p
  * these crates are neutral shared domain/library crates that also happen to ship their own minimal
  * playground app (documented via each crate's `AGENTS.md`) — depending on them is not app-to-app coupling.
  */
-const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow_extension_draw", "flow_extension_brep", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
+const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
 
 /**
  * 🎫️ dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
@@ -2412,101 +2412,7 @@ const POLICY_EMPTY_EXAMPLE_EXEMPTIONS = new Set<string>([]);
  * (which emit generic DocumentDsl/OpText/DocumentPack/OpBinary). Full deletion is P6.
  * Seeded 93 paths at M3b — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
-const POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS = new Set<string>([
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/⚙️engine/⏳️session/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🦀️component.rs",
-]);
+const POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS = new Set<string>([]);
 
 //#endregion 🔧️PolicyAllowlists
 
@@ -4664,29 +4570,29 @@ function policyGenericCodecDeriveBreaches(repoRoot: string): BreachRecord[] {
   const files = policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (relPath, name) => {
     return relPath.includes("/🗿️artifacts/") && name.endsWith(".rs");
   });
-  const deriveRe = /#\[derive\s*\(([^)]*)\)\]/g;
-  const banned = /\b(?:dsl::)?(?:DslDocument|DslOps)\b/;
+  const banned = [
+    { re: /dsl::__rt::parse_document_record|dsl::__rt::print_document_record|dsl::__rt::parse_inline_record|dsl::__rt::print_inline_record/g, label: "__rt codec wrapper" },
+    { re: /dsl::op_rt::|store::op_rt::/g, label: "op_rt generic OpBinary" },
+  ];
   for (const relPath of files) {
-    if (POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS.has(relPath)) continue;
     const content = readFileSync(join(repoRoot, relPath), "utf8");
-    let match: RegExpExecArray | null;
-    deriveRe.lastIndex = 0;
-    while ((match = deriveRe.exec(content)) !== null) {
-      const attrs = match[1] ?? "";
-      if (!banned.test(attrs)) continue;
-      const before = content.slice(0, match.index);
-      const line = before.split(/\r?\n/).length;
-      const which = [...attrs.matchAll(/\b(?:dsl::)?(DslDocument|DslOps)\b/g)].map((m) => m[1]).join("+");
-      breaches.push({
-        id: `generic-codec-derive-${relPath}-${line}`,
-        summary: `New generic codec derive ${which} in "${relPath}" (line ${line})`,
-        kind: "handcrafted-grammar/generic-codec-derive",
-        scope: relPath,
-        line,
-        priority: "high",
-        reason: "DslDocument/DslOps still emit generic DocumentDsl/OpText/DocumentPack/OpBinary; new uses are frozen mid-migration. Full derive emission deletion is P6.",
-        solution: `Handcraft codecs for ${relPath} (or add to POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS only during migration), then remove the derive by P6.`,
-      });
+    for (const { re, label } of banned) {
+      re.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = re.exec(content)) !== null) {
+        const before = content.slice(0, match.index);
+        const line = before.split(/\r?\n/).length;
+        breaches.push({
+          id: `generic-codec-runtime-${relPath}-${line}`,
+          summary: `Residual generic codec path (${label}) in "${relPath}" (line ${line})`,
+          kind: "handcrafted-grammar/generic-codec-derive",
+          scope: relPath,
+          line,
+          priority: "high",
+          reason: "P6 deleted derive-emitted DocumentDsl/OpText/DocumentPack/OpBinary and their __rt/op_rt entrypoints; artifacts must use handcrafted codecs.",
+          solution: `Replace ${label} usage in ${relPath} with the artifact's handcrafted DocumentDsl/OpText/DocumentPack/OpBinary impl.`,
+        });
+      }
     }
   }
   return breaches;

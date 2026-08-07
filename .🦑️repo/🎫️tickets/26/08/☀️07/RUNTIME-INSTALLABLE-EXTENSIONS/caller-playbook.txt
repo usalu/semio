@@ -1,0 +1,10 @@
+FILE /Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs
+4: use flow_extension_brep::{export_solid_json, import_solid_json, tessellate_geometry};
+313:             if let Ok(data) = tessellate_geometry(&handle, 0.05) {
+4: use flow_extension_brep::{export_solid_json, import_solid_json, tessellate_geometry};
+391:     let result_json = if handles.is_empty() { json!({ "error": "no procedural solid geometry to export" }) } else { serde_json::from_str(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(json!({ "error": "export failed" })) };
+4: use flow_extension_brep::{export_solid_json, import_solid_json, tessellate_geometry};
+402:     let result_json = if data.is_empty() { json!({ "error": "no import data provided" }) } else { serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" })) };
+4: use flow_extension_brep::{export_solid_json, import_solid_json, tessellate_geometry};
+383: /// 📤️ Handles `Command::ExportSolid`: re-evaluates the active fixture, exports every preview geometry handle through `flow_extension_brep`'s STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
+400: /// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow_extension_brep`'s in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.

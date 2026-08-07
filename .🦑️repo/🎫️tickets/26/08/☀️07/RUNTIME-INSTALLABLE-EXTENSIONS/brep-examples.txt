@@ -1,0 +1,8 @@
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/box-fillet-preview/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/sphere-cut-with-torus/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-wire-preview/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/sphere-box-fuse/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-extrude-volume/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/box-shell-preview/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/face-sweep-extrude/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio

@@ -13,6 +13,7 @@ package = "semio:sourcing-module-slabs"
 
 [package.metadata.semio]
 role = "extension"
+extends = "sourcing"
 contributes = ["sourcing.module"]
 
 [package.metadata.wasm-pack.profile.dev]

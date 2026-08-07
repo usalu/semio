@@ -185,43 +185,6 @@ pub fn contributions_json_from_entries(entries: &[ProgramContributionEntry]) -> 
 }
 // #endregion 🔖️ModuleRegistry
 
-#[cfg(feature = "linked-modules")]
-// #region 🔖️LinkedModules
-mod linked_modules {
-    use super::*;
-
-    /// 🔌️ Registers native module crates bundled in this build.
-    pub fn install_native_registrars() {
-        register_native_imperative_module("imperative-extension-core", |registry| imperative_module_core::register(registry));
-        register_native_imperative_module("imperative-extension-text", |registry| imperative_module_text::register(registry));
-        register_native_imperative_module("imperative-extension-math", |registry| imperative_module_math::register(registry));
-        register_native_imperative_module("imperative-extension-logic", |registry| imperative_module_logic::register(registry));
-        register_native_imperative_module("imperative-extension-control", |_registry| {});
-    }
-
-    /// 📥️ Default contributions for dev hosts (all five linked extensions).
-    pub fn default_contributions_json() -> String {
-        contributions_json_from_entries(&[
-            imperative_module_core::imperative_module_contribution(),
-            imperative_module_text::imperative_module_contribution(),
-            imperative_module_math::imperative_module_contribution(),
-            imperative_module_logic::imperative_module_contribution(),
-            imperative_module_control::imperative_module_contribution(),
-        ])
-    }
-
-    /// 🚀️ One-shot dev bootstrap: native registrars + default contributions sync.
-    pub fn bootstrap_linked_modules() {
-        install_native_registrars();
-        register_default_imperative_contributions(default_contributions_json);
-        sync_imperative_module_contributions(&default_contributions_json());
-    }
-}
-// #endregion 🔖️LinkedModules
-
-#[cfg(feature = "linked-modules")]
-pub use linked_modules::bootstrap_linked_modules;
-
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -239,6 +202,15 @@ mod tests {
         sync_imperative_module_contributions("[]");
         sync_imperative_module_contributions("[]");
         assert!(imperative_module_registry().operator_catalogue().is_empty());
+    }
+
+    #[cfg(feature = "linked-modules")]
+    #[test]
+    fn linked_modules_bootstrap_registers_text_operators() {
+        super::linked_modules::bootstrap_linked_modules();
+        let registry = imperative_module_registry();
+        assert!(registry.operator_info("text.uppercase").is_some());
+        assert!(registry.operator_info("math.add").is_some());
     }
 }
 // #endregion 🧪️Tests

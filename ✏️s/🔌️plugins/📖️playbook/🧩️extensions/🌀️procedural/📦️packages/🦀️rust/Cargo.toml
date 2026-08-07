@@ -12,6 +12,7 @@ package = "semio:playbook-module-procedural"
 
 [package.metadata.semio]
 role = "extension"
+extends = "playbook"
 contributes = ["playbook.blockKind"]
 
 [lib]

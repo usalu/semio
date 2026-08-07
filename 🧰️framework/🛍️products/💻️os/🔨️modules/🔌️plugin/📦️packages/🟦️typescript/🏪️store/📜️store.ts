@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
-import { unzipSync } from "fflate";
+import { strToU8, unzipSync, zipSync } from "fflate";
 import { decodePackValue } from "@semio-tech/framework-os-core";
 import {
   PLUGIN_HOST_SHIM_FILE,
@@ -26,6 +26,8 @@ export const EXTENSION_INSTALL_META = "install.json";
 export const EXTENSION_COMPONENT_FILE = "component.wasm";
 export const EXTENSION_MANIFEST_ZIP_ENTRY = "manifest.semio";
 export const EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI = "🛂️manifest.semio";
+export const EXTENSION_PACKAGE_FORMAT = 1;
+export const EXTENSION_PACKAGE_ENVELOPE_TOKEN = "os.extension.pack v1";
 
 const SEMIO_BINARY_MAGIC = new Uint8Array([0x89, 0x53, 0x45, 0x4d, 0x0d, 0x0a, 0x1a, 0x0a]);
 const FOLDER_WATCH_DEBOUNCE_MS = 200;
@@ -39,6 +41,17 @@ export type ExtensionManifestRecord = {
   readonly extends: string;
   readonly capabilities?: readonly unknown[];
   readonly contributions?: readonly unknown[];
+};
+
+/** @emoji 📦 On-disk `.sxt` manifest (`🛂️manifest.semio` inside the zip), camelCase JSON matching `ExtensionPackageManifest`. */
+export type ExtensionPackageManifestRecord = {
+  readonly extensionId: string;
+  readonly label: string;
+  readonly version: string;
+  readonly extends: string;
+  readonly capabilities: readonly string[];
+  readonly contributions: unknown;
+  readonly packageFormat: number;
 };
 
 export type InstalledExtensionRecord = {
@@ -103,6 +116,49 @@ function unwrapSemioEnvelope(bytes: Uint8Array): Uint8Array {
   const payloadStart = 12 + tokenLen;
   if (payloadStart > bytes.length) throw new Error("truncated semio extension package envelope");
   return bytes.subarray(payloadStart);
+}
+
+/** @emoji 📨 Wraps deflate zip bytes in the Wave-1.A semio binary envelope (`os.extension.pack v1`). */
+export function wrapExtensionPackageEnvelope(zipBytes: Uint8Array): Uint8Array {
+  const tokenBytes = strToU8(EXTENSION_PACKAGE_ENVELOPE_TOKEN);
+  const out = new Uint8Array(SEMIO_BINARY_MAGIC.length + 4 + tokenBytes.length + zipBytes.length);
+  out.set(SEMIO_BINARY_MAGIC, 0);
+  new DataView(out.buffer, out.byteOffset + 8, 4).setUint32(0, tokenBytes.length, true);
+  out.set(tokenBytes, 12);
+  out.set(zipBytes, 12 + tokenBytes.length);
+  return out;
+}
+
+function buildExtensionZipPayload(manifest: ExtensionPackageManifestRecord, componentWasm: Uint8Array, assets: ReadonlyMap<string, Uint8Array>): Uint8Array {
+  if (componentWasm.length === 0) throw new Error("extension component.wasm is empty");
+  if (manifest.packageFormat !== EXTENSION_PACKAGE_FORMAT) throw new Error(`invalid extension package format ${manifest.packageFormat}`);
+  const manifestBytes = strToU8(`${JSON.stringify(manifest)}\n`);
+  const files: Record<string, Uint8Array> = {
+    [EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI]: manifestBytes,
+    [EXTENSION_COMPONENT_FILE]: componentWasm,
+  };
+  const assetNames = [...assets.keys()].sort();
+  for (const name of assetNames) {
+    const payload = assets.get(name);
+    if (!payload) continue;
+    files[name.startsWith("assets/") ? name : `assets/${name}`] = payload;
+  }
+  return zipSync(files, { level: 6 });
+}
+
+/** @emoji 📦 Packs manifest + wasip2 component bytes into a `.sxt` stream (semio envelope + deterministic deflate zip). */
+export function packExtensionPackage(input: {
+  readonly manifest: ExtensionPackageManifestRecord;
+  readonly componentWasm: Uint8Array;
+  readonly assets?: ReadonlyMap<string, Uint8Array>;
+}): Uint8Array {
+  const zipBytes = buildExtensionZipPayload(input.manifest, input.componentWasm, input.assets ?? new Map());
+  return wrapExtensionPackageEnvelope(zipBytes);
+}
+
+/** @emoji 🔓️ SHA-256 hex digest of the full `.sxt` bytes (matches install-store dedup). */
+export function extensionPackageContentHash(bytes: Uint8Array): string {
+  return packageContentHash(bytes);
 }
 
 function zipEntryBytes(files: Record<string, Uint8Array>, predicate: (name: string) => boolean): Uint8Array | undefined {

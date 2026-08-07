@@ -6,7 +6,7 @@ use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
 use flow_core::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowFixture, FlowHost};
-use flow_extension_draw::render_scene_json;
+use flow_core::render_scene_json;
 use playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
 use store::DocumentDsl;
@@ -282,28 +282,28 @@ pub fn register_pilot_languages() {
         id: "procedural.procedural2d.document",
         extension: Some("procedural2d"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural.procedural2d.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural.procedural2d.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural.procedural2d.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural.procedural2d.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("procedural.procedural2d.diff"),
@@ -314,8 +314,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural2d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -324,8 +324,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural2d.spr"),
     });
 }

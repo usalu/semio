@@ -1376,15 +1376,8 @@ static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyL
 }));
 
 /// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
-pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
-    flow_extension_core::register(registry);
-    flow_extension_math::register(registry);
-    flow_extension_text::register(registry);
-    flow_extension_logic::register(registry);
-    flow_extension_dictionary::register(registry);
-    flow_extension_list::register(registry);
-    flow_extension_brep::register(registry);
-    flow_extension_draw::register(registry);
+pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
+    // Light/draw/brep operator packs are runtime-installable packaged extensions.
 }
 
 struct ContributedExtensionStub {
@@ -2831,9 +2824,9 @@ impl FlowHost {
                 }
                 self.neural_cache.sweep();
                 let live_handles = collect_live_geometry_handles_from_channels(&channels);
-                flow_extension_brep::retain_geometry_handles(&live_handles);
+                crate::retain_geometry_handles(&live_handles);
                 let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
-                flow_extension_draw::retain_drawing_handles(&live_drawing_handles);
+                retain_drawing_handles(&live_drawing_handles);
                 // 🔒️ Only advance the snapshot/channels pair together, and only on success — a
                 // failed evaluation keeps diffing against the last known-good state next time,
                 // which is always a safe (never under-dirty) baseline.
@@ -3781,7 +3774,7 @@ fn sync_flow_geometry_retention() {
         .map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect())
         .unwrap_or_default();
     let live: Vec<String> = merged.into_iter().collect();
-    flow_extension_brep::retain_geometry_handles(&live);
+    crate::retain_geometry_handles(&live);
 }
 
 /// 🚦 Per-widget evaluation state for flow graph chrome (not persisted in config).
@@ -4015,6 +4008,211 @@ fn widget_has_input(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec
     })
 }
 // #endregion 🔖️FlowHost
+
+
+// #region 🖍️DrawingKernel
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::wasm_bindgen;
+use semio_s_2d::{block_on as drawing_block_on, DrawingHandle, DrawingStore};
+
+static DRAWING_KERNEL: LazyLock<Mutex<DrawingStore>> = LazyLock::new(|| Mutex::new(DrawingStore::new()));
+
+fn drawing_kernel() -> &'static Mutex<DrawingStore> {
+    &DRAWING_KERNEL
+}
+
+/// 🖊️ Runs `f` against the process-wide 2D drawing kernel.
+pub fn with_drawing_kernel<T>(f: impl FnOnce(&mut DrawingStore) -> Result<T, EvalError>) -> Result<T, EvalError> {
+    let mut guard = drawing_kernel().lock().map_err(|_| EvalError::InvalidInput("draw kernel lock poisoned".into()))?;
+    f(&mut guard)
+}
+
+/// 🧯️ Internal error type for drawing JSON-bridging helpers.
+#[derive(Debug, thiserror::Error)]
+enum DrawingKernelError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("{0}")]
+    Invalid(String),
+}
+
+/// 🧹️ Retains only drawing handles referenced by the current evaluation outputs.
+pub fn retain_drawing_handles(live: &[String]) {
+    let live_set: HashSet<String> = live.iter().cloned().collect();
+    if let Ok(mut guard) = drawing_kernel().lock() {
+        guard.retain_sync(&live_set);
+    }
+}
+
+/// 🎬️ Flattens a drawing handle to JSON scene payload.
+pub fn render_scene_json(handle: &str) -> String {
+    drawing_kernel()
+        .lock()
+        .ok()
+        .map(|store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match drawing_block_on(store.flatten_scene(&drawing)) {
+                Ok(scene) => serde_json::to_string(&scene).unwrap_or_else(|_| "{}".into()),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+            }
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 📄️ Exports a drawing handle as SVG JSON wrapper.
+pub fn export_svg_json(handle: &str) -> String {
+    drawing_kernel()
+        .lock()
+        .ok()
+        .map(|store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match drawing_block_on(store.export_svg(&drawing)) {
+                Ok(svg) => serde_json::json!({ "svg": svg }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+            }
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 📑️ Exports a drawing handle as base64 PDF JSON wrapper.
+pub fn export_pdf_json(handle: &str) -> String {
+    drawing_kernel()
+        .lock()
+        .ok()
+        .map(|store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match drawing_block_on(store.export_pdf(&drawing)) {
+                Ok(pdf) => serde_json::json!({ "pdf": drawing_base64_encode(&pdf) }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+            }
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 📐️ Exports a drawing handle as base64 DWG JSON wrapper.
+pub fn export_dwg_json(handle: &str) -> String {
+    drawing_kernel()
+        .lock()
+        .ok()
+        .map(|store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match drawing_block_on(store.export_dwg(&drawing)) {
+                Ok(dwg) => serde_json::json!({ "dwg": drawing_base64_encode(&dwg) }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+            }
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 📐️ Imports a base64 DWG payload into the in-process draw kernel, returning the new drawing handle JSON wrapper.
+pub fn import_dwg_json(data_base64: &str) -> String {
+    let Ok(bytes) = drawing_base64_decode(data_base64) else {
+        return serde_json::json!({ "error": "invalid base64 dwg payload" }).to_string();
+    };
+    drawing_kernel()
+        .lock()
+        .ok()
+        .map(|mut store| match drawing_block_on(store.import_dwg(&bytes)) {
+            Ok(handle) => serde_json::json!({ "handle": handle.as_str() }).to_string(),
+            Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 🗑️ Disposes a drawing handle owned by the in-process draw kernel.
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub fn dispose_drawing(handle: &str) {
+    if let Ok(mut store) = drawing_kernel().lock() {
+        drawing_block_on(store.dispose(&DrawingHandle(handle.to_string())));
+    }
+}
+
+/// 🔍️ Autotraces a bitmap mask into path segments JSON.
+pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
+    drawing_kernel()
+        .lock()
+        .ok()
+        .and_then(|mut store| match drawing_block_on(store.trace_bitmap(width, height, mask, threshold, simplify_epsilon)) {
+            Ok(handle) => match drawing_block_on(store.flatten_scene(&handle)) {
+                Ok(scene) => {
+                    let segments = scene.nodes.into_iter().find_map(|node| if let semio_s_2d::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
+                    segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
+                }
+                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+            },
+            Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 🔀️ Boolean-combines two path segment arrays.
+pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> String {
+    let parse = |json: &str| -> Result<Vec<semio_s_2d::PathSegment>, DrawingKernelError> {
+        let parsed: serde_json::Value = serde_json::from_str(json)?;
+        if let Some(error) = parsed.get("error").and_then(|v| v.as_str()) {
+            return Err(DrawingKernelError::Invalid(error.to_string()));
+        }
+        let segments_value = parsed.get("segments").cloned().ok_or_else(|| DrawingKernelError::Invalid("missing segments".to_string()))?;
+        serde_json::from_value(segments_value).map_err(DrawingKernelError::from)
+    };
+    drawing_kernel()
+        .lock()
+        .ok()
+        .map(|store| match (parse(a_json), parse(b_json)) {
+            (Ok(a), Ok(b)) => match drawing_block_on(store.boolean_segments(&a, &b, operation)) {
+                Ok(segments) => serde_json::json!({ "segments": segments }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+            },
+            (Err(error), _) | (_, Err(error)) => serde_json::json!({ "error": error.to_string() }).to_string(),
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+fn drawing_base64_encode(data: &[u8]) -> String {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::new();
+    for chunk in data.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = chunk.get(1).copied().unwrap_or(0) as u32;
+        let b2 = chunk.get(2).copied().unwrap_or(0) as u32;
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        out.push(TABLE[((triple >> 18) & 63) as usize] as char);
+        out.push(TABLE[((triple >> 12) & 63) as usize] as char);
+        out.push(if chunk.len() > 1 { TABLE[((triple >> 6) & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { TABLE[(triple & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
+fn drawing_base64_decode(data: &str) -> Result<Vec<u8>, DrawingKernelError> {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut lookup = [255u8; 256];
+    for (index, &byte) in TABLE.iter().enumerate() {
+        lookup[byte as usize] = index as u8;
+    }
+    let cleaned: Vec<u8> = data.bytes().filter(|byte| *byte != b'=' && !byte.is_ascii_whitespace()).collect();
+    let mut out = Vec::with_capacity(cleaned.len() * 3 / 4);
+    for chunk in cleaned.chunks(4) {
+        let mut values = [0u8; 4];
+        for (index, &byte) in chunk.iter().enumerate() {
+            let value = lookup[byte as usize];
+            if value == 255 {
+                return Err(DrawingKernelError::Invalid("invalid base64 character".to_string()));
+            }
+            values[index] = value;
+        }
+        let triple = ((values[0] as u32) << 18) | ((values[1] as u32) << 12) | ((values[2] as u32) << 6) | (values[3] as u32);
+        out.push((triple >> 16) as u8);
+        if chunk.len() > 2 {
+            out.push((triple >> 8) as u8);
+        }
+        if chunk.len() > 3 {
+            out.push(triple as u8);
+        }
+    }
+    Ok(out)
+}
+// #endregion 🖍️DrawingKernel
 
 // #region 🔖️WasmSession
 #[cfg(target_arch = "wasm32")]
@@ -4598,7 +4796,7 @@ impl FlowSession {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn tessellate(handle: &str, tolerance: f64) -> String {
-    match flow_extension_brep::tessellate_geometry(handle, tolerance) {
+    match crate::tessellate_geometry(handle, tolerance) {
         Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "mesh encode failed" }).to_string()),
         Err(error) => serde_json::json!({ "error": error }).to_string(),
     }
@@ -4607,55 +4805,49 @@ pub fn tessellate(handle: &str, tolerance: f64) -> String {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn render_drawing_scene(handle: &str) -> String {
-    flow_extension_draw::render_scene_json(handle)
+    render_scene_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn export_drawing_svg(handle: &str) -> String {
-    flow_extension_draw::export_svg_json(handle)
+    export_svg_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn export_drawing_pdf(handle: &str) -> String {
-    flow_extension_draw::export_pdf_json(handle)
+    export_pdf_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn export_drawing_dwg(handle: &str) -> String {
-    flow_extension_draw::export_dwg_json(handle)
+    export_dwg_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn import_drawing_dwg(data_base64: &str) -> String {
-    flow_extension_draw::import_dwg_json(data_base64)
-}
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub fn dispose_drawing(handle: &str) {
-    flow_extension_draw::dispose_drawing(handle);
+    import_dwg_json(data_base64)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn trace_drawing_bitmap(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
-    flow_extension_draw::trace_bitmap_json(width, height, mask, threshold, simplify_epsilon)
+    trace_bitmap_json(width, height, mask, threshold, simplify_epsilon)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn boolean_drawing_segments(a_json: &str, b_json: &str, operation: &str) -> String {
-    flow_extension_draw::boolean_segments_json(a_json, b_json, operation)
+    boolean_segments_json(a_json, b_json, operation)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn dispose(handle: &str) {
-    flow_extension_brep::dispose_geometry(handle);
+    crate::dispose_geometry(handle);
 }
 
 /// 📐️ Encodes a `MeshData` JSON payload as base64 DWG bytes, for JS consumers holding a mesh but no drawing/geometry handle.
@@ -5859,12 +6051,43 @@ mod tests {
         Err(EvalError::UnknownKind(kind.into()))
     }
 
+
+    /// 🧪️ Installs first-party light flow extension manifests + real in-process ops for fixture tests.
+    /// 🧪️ Installs first-party light (+brep) flow extension manifests and real in-process ops for fixture tests.
+    fn install_first_party_light_flow_extensions_for_tests() {
+        use std::sync::Once;
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
+            for (plugin_id, manifest) in [
+                ("flow-extension-core", semio_s_plugin_flow_extension_core::extension_manifest_json()),
+                ("flow-extension-math", semio_s_plugin_flow_extension_math::extension_manifest_json()),
+                ("flow-extension-text", semio_s_plugin_flow_extension_text::extension_manifest_json()),
+                ("flow-extension-logic", semio_s_plugin_flow_extension_logic::extension_manifest_json()),
+                ("flow-extension-dictionary", semio_s_plugin_flow_extension_dictionary::extension_manifest_json()),
+                ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
+                ("flow-extension-brep", semio_s_plugin_flow_extension_brep::extension_manifest_json()),
+            ] {
+                install_flow_extension_manifest(plugin_id, &manifest);
+            }
+            let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+            let mut registry = neural::Registry::new();
+            semio_s_plugin_flow_extension_core::register(&mut registry);
+            semio_s_plugin_flow_extension_math::register(&mut registry);
+            semio_s_plugin_flow_extension_text::register(&mut registry);
+            semio_s_plugin_flow_extension_logic::register(&mut registry);
+            semio_s_plugin_flow_extension_dictionary::register(&mut registry);
+            semio_s_plugin_flow_extension_list::register(&mut registry);
+            semio_s_plugin_flow_extension_brep::register(&mut registry);
+            registry.finalize();
+            state.registry = std::sync::Arc::new(registry);
+            state.generation += 1;
+        });
+    }
+
+
     fn fixture_kind_infos_json() -> String {
-        let mut registry = Registry::new();
-        flow_extension_core::register(&mut registry);
-        flow_extension_math::register(&mut registry);
-        flow_extension_brep::register(&mut registry);
-        serde_json::to_string(&registry.operator_catalogue()).unwrap_or_else(|_| "[]".into())
+        install_first_party_light_flow_extensions_for_tests();
+        serde_json::to_string(&flow_extension_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into())
     }
 
     fn test_kind_infos_json() -> String {
@@ -6527,6 +6750,7 @@ mod tests {
 
     #[test]
     fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
+        install_first_party_light_flow_extensions_for_tests();
         let host = host_with_test_bridge();
         let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
         assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
@@ -6548,6 +6772,7 @@ mod tests {
 
     #[test]
     fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
+        install_first_party_light_flow_extensions_for_tests();
         let mut host = host_with_test_bridge();
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
         host.replace_fixture(<FlowFixture as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../📚️examples/🌊️default.flow")).expect("fixture"));
@@ -7650,7 +7875,7 @@ mod tests {
         assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
         let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
         assert!(handle.starts_with("solid-"));
-        let mesh = flow_extension_brep::tessellate_geometry(handle, 0.05).expect("solid mesh");
+        let mesh = crate::tessellate_geometry(handle, 0.05).expect("solid mesh");
         assert!(!mesh.positions.is_empty());
         assert!(mesh.indices.len() >= 3);
     }

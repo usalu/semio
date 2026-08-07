@@ -332,22 +332,13 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
   };
 }
 
-/** @emoji ⏳️ Loads brep tessellation WASM (flow_core in browser — same kernel as flow eval). */
+/** @emoji ⏳️ Loads brep tessellation WASM via flow_core (standalone `flow_extension_brep` pack removed in Wave 3.c). */
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
   if (brepWasm.current) return brepWasm.current;
-  if (import.meta.env.VITEST) {
-    const { readFileSync } = await import("node:fs");
-    const { dirname, join } = await import("node:path");
-    const { fileURLToPath } = await import("node:url");
-    const here = dirname(fileURLToPath(import.meta.url));
-    const mod = (await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep.js")) as BrepWasmModule & {
-      initSync?: (input: { module: BufferSource }) => void;
-    };
-    mod.initSync?.({ module: readFileSync(join(here, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep_bg.wasm")) });
-    brepWasm.current = mod;
-    return mod;
-  }
-  const [{ default: initFlow, tessellate, dispose }, { default: wasmUrl }] = await Promise.all([import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core.js"), import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core_bg.wasm?url")]);
+  const [{ default: initFlow, tessellate, dispose }, { default: wasmUrl }] = await Promise.all([
+    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core.js"),
+    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core_bg.wasm?url"),
+  ]);
   if (typeof tessellate !== "function" || typeof dispose !== "function") {
     throw new Error("flow_core brep tessellation exports missing — rebuild flow/core wasm");
   }
@@ -370,28 +361,12 @@ type BrepModuleWasm = {
 
 const brepModuleWasm = ephemeralBox<BrepModuleWasm | null>("s.modules.3d.packages.typescript.index.ts.brepModuleWasm", null);
 
-/** @emoji ⏳️ Loads flow brep module WASM for geometry IO operators. */
+/** @emoji ⏳️ Brep operator WASM loader — standalone `flow_extension_brep` pack removed in Wave 3.c; install the packaged brep extension instead. */
 export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
   if (brepModuleWasm.current) return brepModuleWasm.current;
-  if (import.meta.env.VITEST) {
-    const { readFileSync } = await import("node:fs");
-    const { dirname, join } = await import("node:path");
-    const { fileURLToPath } = await import("node:url");
-    const here = dirname(fileURLToPath(import.meta.url));
-    const mod = (await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep.js")) as BrepModuleWasm;
-    mod.initSync?.({ module: readFileSync(join(here, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep_bg.wasm")) });
-    mod.activate();
-    brepModuleWasm.current = mod;
-    return mod;
-  }
-  const [{ default: initBrep, evaluate, activate }, { default: wasmUrl }] = await Promise.all([import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep.js"), import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep_bg.wasm?url")]);
-  if (typeof evaluate !== "function" || typeof activate !== "function") {
-    throw new Error("flow_extension_brep evaluate exports missing — rebuild flow/module/brep wasm");
-  }
-  if (initBrep) await initBrep({ module_or_path: wasmUrl });
-  activate();
-  brepModuleWasm.current = { evaluate, activate };
-  return brepModuleWasm.current;
+  throw new Error(
+    "flow_extension_brep wasm pack removed (Wave 3.c). Geometry IO operators now live in the packaged flow-extension-brep extension; install/enable it or call host flow tessellate/export APIs.",
+  );
 }
 
 function brepGeometryInput(handle: GeometryRef): string {

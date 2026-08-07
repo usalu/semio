@@ -204,6 +204,7 @@ pub mod apps {
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse these
 /// documents without depending on this crate's concrete `Projection`/`Operation` types.
 fn register_s_exports() {
+    crate::artifacts::home::register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::home::HomeApp>("s.home");
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::space::SpaceApp>(semio_framework_os::OS_SPACE_SCHEMA);
 }

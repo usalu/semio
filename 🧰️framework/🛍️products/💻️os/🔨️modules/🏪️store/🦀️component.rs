@@ -213,6 +213,20 @@ pub mod pack_rt {
         crate::os_pack::decode_document(bytes, spec, options)
     }
 
+    /// @emoji 🎯️ P6: container-less record body helpers for handcrafted OpBinary impls.
+    pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        crate::os_pack::encode_record_body(spec, record, options)
+    }
+    pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, crate::os_pack::DecodeReport), PackError> {
+        crate::os_pack::decode_record_body(bytes, spec, options)
+    }
+    pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
+        crate::os_pack::write_varint_u64(out, value)
+    }
+    pub use crate::os_pack::ByteReader;
+    /// @emoji 🎯️ Format byte every encoded operation starts with (handcrafted OpBinary convention).
+    pub const OP_BINARY_FORMAT: u8 = 1;
+
     /// @emoji 🌱️ Field id the JSON bridge's synthetic single-field record wraps a whole
     /// `serde_json::Value` payload in — mirrors `crate::os_dsl::DslField for serde_json::Value`'s
     /// `Shape::Value` escape hatch (`dsl/rs/lib.rs`), lifted one level from "one field" to "one
@@ -396,6 +410,68 @@ pub struct DocumentPackFiles {
     pub ops: String,
 }
 
+//#region 🔖️DocumentCodec
+/// 📜️ Handcrafted DocumentDsl (P6).
+impl DocumentDsl for DocumentPackFiles {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let body = match semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = crate::os_dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6).
+impl DocumentPack for DocumentPackFiles {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| PackError::Schema(e.to_string()))?;
+        Ok(semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
+            return Err(PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️DocumentCodec
+
+
 /// @emoji 🔌️ Wire codec for the authoritative half of `DocumentPackFiles` (`pack` + `spr`; `ops` is
 /// a derived text mirror, not carried — `parse_document_pack` never reads it) — one length-prefixed
 /// `pack` blob followed by the remaining bytes as `spr`. Used wherever a single binary blob must
@@ -450,11 +526,7 @@ pub fn text_error_to_pack_error(error: TextError) -> PackError {
 //#endregion 🔖️Pack
 
 //#region 🔖️OpRt
-/// @emoji 🎯️ Facade re-export of the `OpBinary` runtime (`format u8 | variant ordinal
-/// varint | record body`) — the op-level mirror of `pack_rt` behind `DocumentPack`. Hosted in
-/// `dsl` (the crate that owns the `DslVariants` bound) rather than here so `dsl`'s own test build
-/// binds the same trait instance; re-exported so apps keep the one-facade rule (`crate::os_store::op_rt`).
-pub use crate::os_dsl::op_rt;
+// P6: dsl::op_rt deleted. Handcrafted OpBinary impls use pack_rt record-body helpers; see OP_BINARY_FORMAT.
 //#endregion 🔖️OpRt
 
 //#region 🔖️CodecRegistry
@@ -909,6 +981,78 @@ enum OpsHeaderLine {
     /// marker (see `DocumentCursor`'s doc for why). Mirrors `crate::os_spr::HistoryCursor`'s grammar.
     Cursor { applied: Vec<String>, redo: Vec<String>, checkpoint: Option<String> },
 }
+
+//#region 🔖️OpCodec
+/// 🎞️ Handcrafted OpText (P6).
+impl OpText for OpsHeaderLine {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl OpBinary for OpsHeaderLine {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 0,
+            detail: format!("keyword {keyword:?} is not a declared variant"),
+        })?;
+        let spec = (variants[ordinal].1)();
+        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 1,
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
+        })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            what: "op record",
+            offset: reader.position() as u64,
+            detail: error.to_string(),
+        })
+    }
+}
+//#endregion 🔖️OpCodec
+
 //#endregion 🔖️OpsHeaderGrammar
 
 /// @emoji 📤️ Prints one edit as an `edit ...` header line followed by one two-space-indented
@@ -1482,6 +1626,78 @@ enum CommandHeaderLine {
     PruneDrafts,
 }
 
+//#region 🔖️OpCodec
+/// 🎞️ Handcrafted OpText (P6).
+impl OpText for CommandHeaderLine {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl OpBinary for CommandHeaderLine {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 0,
+            detail: format!("keyword {keyword:?} is not a declared variant"),
+        })?;
+        let spec = (variants[ordinal].1)();
+        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 1,
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
+        })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            what: "op record",
+            offset: reader.position() as u64,
+            detail: error.to_string(),
+        })
+    }
+}
+//#endregion 🔖️OpCodec
+
+
 fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {
     match policy {
         UndoPolicy::ExactBaseOnly => "exact-base-only",
@@ -1858,6 +2074,78 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
         }
     }
 }
+
+//#region 🔖️OpCodec
+/// 🎞️ Handcrafted OpText (P6).
+impl OpText for does {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl OpBinary for does {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 0,
+            detail: format!("keyword {keyword:?} is not a declared variant"),
+        })?;
+        let spec = (variants[ordinal].1)();
+        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 1,
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
+        })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            what: "op record",
+            offset: reader.position() as u64,
+            detail: error.to_string(),
+        })
+    }
+}
+//#endregion 🔖️OpCodec
+
 //#endregion 🔖️CommandFormat
 
 //#region 🔖️History
@@ -2834,6 +3122,78 @@ pub enum BackboneMessage {
     },
 }
 
+//#region 🔖️OpCodec
+/// 🎞️ Handcrafted OpText (P6).
+impl OpText for BackboneMessage {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl OpBinary for BackboneMessage {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 0,
+            detail: format!("keyword {keyword:?} is not a declared variant"),
+        })?;
+        let spec = (variants[ordinal].1)();
+        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 1,
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
+        })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            what: "op record",
+            offset: reader.position() as u64,
+            detail: error.to_string(),
+        })
+    }
+}
+//#endregion 🔖️OpCodec
+
+
 /// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
 /// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
@@ -3470,6 +3830,140 @@ pub struct SpaceHost {
     members: HashMap<String, Box<dyn SpaceMember>>,
 }
 
+//#region 🔖️OpCodec
+/// 🎞️ Handcrafted OpText (P6).
+impl OpText for SpaceHost {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl OpBinary for SpaceHost {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 0,
+            detail: format!("keyword {keyword:?} is not a declared variant"),
+        })?;
+        let spec = (variants[ordinal].1)();
+        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 1,
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
+        })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            what: "op record",
+            offset: reader.position() as u64,
+            detail: error.to_string(),
+        })
+    }
+}
+//#endregion 🔖️OpCodec
+
+
+//#region 🔖️DocumentCodec
+/// 📜️ Handcrafted DocumentDsl (P6).
+impl DocumentDsl for SpaceHost {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let body = match semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = crate::os_dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6).
+impl DocumentPack for SpaceHost {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| PackError::Schema(e.to_string()))?;
+        Ok(semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
+            return Err(PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️DocumentCodec
+
+
 impl SpaceHost {
     pub fn new(meta_envelope: DocumentEnvelope<SpaceHistoryProjection, SpaceHistoryOperation>) -> Self {
         Self { meta: DocumentStore::new(meta_envelope), members: HashMap::new() }
@@ -3921,6 +4415,68 @@ mod tests {
         n: Option<i32>,
     }
 
+//#region 🔖️DocumentCodec
+/// 📜️ Handcrafted DocumentDsl (P6).
+impl DocumentDsl for DemoDiff {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let body = match semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = crate::os_dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6).
+impl DocumentPack for DemoDiff {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| PackError::Schema(e.to_string()))?;
+        Ok(semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
+            return Err(PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️DocumentCodec
+
+
     impl OperationDiff<DemoProjection> for DemoDiff {
         fn apply(&self, projection: &DemoProjection) -> DemoProjection {
             DemoProjection { n: self.n.unwrap_or(projection.n) }
@@ -3939,6 +4495,78 @@ mod tests {
         #[dsl(key = "set-n")]
         SetN { n: i32 },
     }
+
+//#region 🔖️OpCodec
+/// 🎞️ Handcrafted OpText (P6).
+impl OpText for DemoOperation {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl OpBinary for DemoOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 0,
+            detail: format!("keyword {keyword:?} is not a declared variant"),
+        })?;
+        let spec = (variants[ordinal].1)();
+        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 1,
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
+        })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            what: "op record",
+            offset: reader.position() as u64,
+            detail: error.to_string(),
+        })
+    }
+}
+//#endregion 🔖️OpCodec
+
 
     impl Operation<DemoProjection> for DemoOperation {
         type Diff = DemoDiff;
@@ -4542,11 +5170,11 @@ mod tests {
     #[test]
     fn demo_op_binary_round_trips_and_matches_text() {
         let operation = DemoOperation::SetN { n: 7 };
-        let encoded = op_rt::encode_op(&operation).expect("op encode");
-        let encoded_again = op_rt::encode_op(&operation).expect("op re-encode");
+        let encoded = operation.encode_op().expect("op encode");
+        let encoded_again = operation.encode_op().expect("op re-encode");
         assert_eq!(encoded, encoded_again, "op binary encoding must be deterministic");
-        assert_eq!(encoded[0], op_rt::OP_BINARY_FORMAT);
-        let decoded: DemoOperation = op_rt::decode_op(&encoded).expect("op decode");
+        assert_eq!(encoded[0], pack_rt::OP_BINARY_FORMAT);
+        let decoded = DemoOperation::decode_op(&encoded).expect("op decode");
         assert_eq!(decoded, operation);
         let via_text = DemoOperation::parse_op(&operation.print_op()).expect("op parse");
         assert_eq!(via_text, decoded, "binary and text round trips diverged");
@@ -4555,11 +5183,11 @@ mod tests {
     #[test]
     fn demo_op_binary_rejects_unknown_format_and_ordinal() {
         let operation = DemoOperation::SetN { n: 7 };
-        let mut wrong_format = op_rt::encode_op(&operation).expect("op encode");
+        let mut wrong_format = operation.encode_op().expect("op encode");
         wrong_format[0] = 9;
-        assert!(op_rt::decode_op::<DemoOperation>(&wrong_format).is_err(), "format 9 must be rejected");
-        let out_of_range = [op_rt::OP_BINARY_FORMAT, 0x7E];
-        assert!(op_rt::decode_op::<DemoOperation>(&out_of_range).is_err(), "ordinal beyond declared variants must be rejected");
+        assert!(DemoOperation::decode_op(&wrong_format).is_err(), "format 9 must be rejected");
+        let out_of_range = [pack_rt::OP_BINARY_FORMAT, 0x7E];
+        assert!(DemoOperation::decode_op(&out_of_range).is_err(), "ordinal beyond declared variants must be rejected");
     }
 
     #[test]
@@ -4642,6 +5270,140 @@ mod tests {
         #[dsl(key = "set-n")]
         SetN { n: i32, physical_ms: u64 },
     }
+
+//#region 🔖️OpCodec
+/// 🎞️ Handcrafted OpText (P6).
+impl OpText for TimestampedOperation {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                )?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl OpBinary for TimestampedOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 0,
+            detail: format!("keyword {keyword:?} is not a declared variant"),
+        })?;
+        let spec = (variants[ordinal].1)();
+        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
+            what: "op variant",
+            offset: 1,
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
+        })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            what: "op record",
+            offset: reader.position() as u64,
+            detail: error.to_string(),
+        })
+    }
+}
+//#endregion 🔖️OpCodec
+
+
+//#region 🔖️DocumentCodec
+/// 📜️ Handcrafted DocumentDsl (P6).
+impl DocumentDsl for TimestampedOperation {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let body = match semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = crate::os_dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted DocumentPack (P6).
+impl DocumentPack for TimestampedOperation {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(
+            <Self as DocumentDsl>::envelope_id(),
+            semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| PackError::Schema(e.to_string()))?;
+        Ok(semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as DocumentDsl>::envelope_id() {
+            return Err(PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️DocumentCodec
+
 
     impl Operation<DemoProjection> for TimestampedOperation {
         type Diff = DemoDiff;

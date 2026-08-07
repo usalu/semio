@@ -1,0 +1,6 @@
+FILE /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/⚙️engine/🦀️component.rs
+12: use flow_extension_brep::tessellate_geometry;
+386:                 if let Ok(data) = tessellate_geometry(handle, tolerance) {
+553: /// 🧵️ `flow_extension_brep::tessellate_geometry` (and the flow-eval neuron kernel cache it sits behind)
+12: use flow_extension_brep::tessellate_geometry;
+553: /// 🧵️ `flow_extension_brep::tessellate_geometry` (and the flow-eval neuron kernel cache it sits behind)

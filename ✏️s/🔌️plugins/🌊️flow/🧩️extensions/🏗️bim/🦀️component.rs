@@ -763,7 +763,6 @@ mod tests {
 // #endregion 🔖️Tests
 
 // #region 🔖️ExtensionGuest
-#[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::module_registry;
     use flow_extension_sdk::{build_manifest_json, evaluate_json};

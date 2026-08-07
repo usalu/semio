@@ -1079,6 +1079,7 @@ export type ExtensionsPanelEntry = {
 export type ExtensionsHostApi = {
   readonly extensions: readonly ExtensionsPanelEntry[];
   readonly installFromUrl: (sourceUri: string) => void;
+  readonly installFromFile: (file: File) => void;
   readonly uninstall: (extensionId: string) => void;
   readonly setEnabled: (extensionId: string, enabled: boolean) => void;
 };
@@ -1111,6 +1112,26 @@ function buildExtensionsTree(host: ExtensionsHostApi): TreePanelConfig {
                 if (sourceUri?.trim()) host.installFromUrl(sourceUri.trim());
               }}
             />
+          ),
+        },
+        {
+          id: "framework.settings.extensions.install.file",
+          label: uiDataLabel("From file"),
+          control: (
+            <label className="inline-flex cursor-pointer">
+              <input
+                id="framework.settings.extensions.install.file"
+                type="file"
+                accept=".sxt,.semio,application/octet-stream"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) host.installFromFile(file);
+                  event.target.value = "";
+                }}
+              />
+              <Button id="framework.settings.extensions.install.file.trigger" size="sm" text={uiDataLabel("Install from file")} />
+            </label>
           ),
         },
       ],

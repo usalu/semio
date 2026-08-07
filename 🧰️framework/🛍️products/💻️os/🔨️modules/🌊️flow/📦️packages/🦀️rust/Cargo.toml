@@ -3,7 +3,7 @@ name = "semio-framework-os-flow"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "OS flow family — core + extensions Shape V2 glue"
+description = "OS flow family — core + brep geometry session; operators (light/draw/brep/bim) are packaged extensions"
 
 [package.metadata.semio]
 role = "product"
@@ -21,7 +21,17 @@ semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", 
 semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-os-kernel-neural-engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 semio-s-3d = { path = "../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-s-2d = { path = "../../../../../../../✏️s/🔨️modules/◻2d/📦️packages/🦀️rust" }
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
+
+[dev-dependencies]
+semio-s-plugin-flow-extension-brep = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-core = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🫀️core/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-math = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-text = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-logic = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-dictionary = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-list = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", default-features = false }

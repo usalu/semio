@@ -1,0 +1,78 @@
+core lines 7691
+1://! 🌊️ Flow core: widgets, neural evaluation, and DAG canvas host.
+2:
+3:pub use crate::infinite::board::ports::directed::dag as dag;
+4:pub use crate::infinite::canvas as canvas;
+5:pub use neural_engine as neural;
+6:
+7:use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+8:use std::sync::{Arc, LazyLock, Mutex};
+9:
+10:use dag::{
+11:    computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
+12:    slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
+13:};
+14:use math::graph::manifest::{PropertyBag, PropertyValue};
+15:use neural::{
+16:    channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
+17:    INPUT_KIND, OUTPUT_KIND,
+18:};
+19:use flow_extension_sdk::FlowExtensionManifest;
+20:use serde::{Deserialize, Serialize};
+21:
+22:// #region 🔖️Document
+23:fn default_slider_value() -> f64 {
+24:    3.0
+25:}
+26:
+27:fn default_slider_min() -> f64 {
+28:    FLOW_SLIDER_MIN
+29:}
+30:
+31:fn default_slider_max() -> f64 {
+32:    FLOW_SLIDER_MAX
+33:}
+34:
+35:fn default_slider_step() -> f64 {
+36:    FLOW_SLIDER_STEP
+37:}
+38:
+39:fn default_neuron_preview() -> bool {
+40:    true
+--- regions ---
+22:// #region 🔖️Document
+1038:// #endregion 🔖️Widget
+1040:// #region 🔖️Catalogue
+1337:// #endregion 🔖️Catalogue
+1339:// #region 🔖️ExtensionRegistry
+1582:// #endregion 🔖️ExtensionRegistry
+1584:// #region 🔖️EvalBridge
+1629:// #endregion 🔖️EvalBridge
+1631:// #region 🔖️ChannelEval
+1983:// #endregion 🔖️ChannelEval
+1985:// #region ⚠️ Errors
+2049:// #endregion ⚠️ Errors
+2051:// #region 🔖️FlowHost
+2593:    // #region GumballEditing
+2665:    // #endregion GumballEditing
+3682:    // #region History
+3766:    // #endregion History
+3769:// #region 🔖️EvalSession
+3969:// #endregion 🔖️EvalSession
+4017:// #endregion 🔖️FlowHost
+4019:// #region 🔖️WasmSession
+4694:// #endregion 🔖️WasmSession
+4696:// #region 🔖️DocumentVcs
+4709://#region 🔖️CollectionSupport
+4788://#endregion 🔖️CollectionSupport
+4790://#region 🔖️Operations
+4933://#endregion 🔖️Operations
+4935://#region 🔖️Dsl
+5280://#endregion 🔖️Dsl
+5282://#region 🔖️OpText
+5399://#endregion 🔖️OpText
+5449:// #region 🔖️FormsBridge
+5664:// #endregion 🔖️FormsBridge
+5817:// #endregion 🔖️DocumentVcs
+5819:// #region 🔖️Tests
+7690:// #endregion 🔖️Tests

@@ -1198,6 +1198,77 @@ function FrameworkOsShellInner({
     [dispatchSpaceExtensionOp, extensionTargetById, pluginSource],
   );
 
+  /** 🧩️ Installs an extension package from a local `.sxt` / `.semio` file via the extension store. */
+  const installExtensionFromFile = useCallback(
+    async (file: File) => {
+      let extensionId = "";
+      let version = "0.0.0";
+      let moduleUrl = "";
+      let packageHash = "";
+      try {
+        const bytes = await file.arrayBuffer();
+        const response = await fetch("/extensions/install", {
+          method: "POST",
+          headers: { "content-type": "application/octet-stream" },
+          body: bytes,
+        });
+        if (!response.ok) {
+          const body = await response.text();
+          throw new Error(`extension store install failed (${response.status}): ${body}`);
+        }
+        const result = (await response.json()) as { extensionId: string; version: string; moduleUrl: string; packageHash?: string };
+        extensionId = result.extensionId;
+        version = result.version;
+        moduleUrl = result.moduleUrl;
+        packageHash = result.packageHash ?? "";
+        console.log("[DEBUG] extension store install from file ok", { file: file.name, ...result });
+      } catch (error) {
+        console.warn("[DEBUG] installExtensionFromFile failed", error instanceof Error ? error.message : String(error));
+        return;
+      }
+      if (!extensionId || !moduleUrl) return;
+      if (pluginOpInFlightRef.current.has(extensionId)) return;
+      pluginOpInFlightRef.current.add(extensionId);
+      dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "installing" });
+      const sourceUri = `file:${file.name}`;
+      try {
+        const handle = await loadPluginModuleResilient(extensionId, moduleUrl);
+        if (!handle) {
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "failed" });
+          return;
+        }
+        pluginModuleUrlByIdRef.current.set(extensionId, moduleUrl);
+        dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId: extensionId, value: "loaded" });
+        const extendsHost = extensionTargetById.get(extensionId)?.extends ?? "unscoped";
+        const entry: ExtensionLedgerEntry = {
+          extensionId,
+          version: handle.manifest.version || version,
+          sourceUri,
+          packageHash,
+          enabled: true,
+          extendsHost,
+        };
+        setExtensionLedger((prev) => {
+          const next = prev.filter((existing) => existing.extensionId !== extensionId);
+          next.push(entry);
+          return next;
+        });
+        void dispatchSpaceExtensionOp("installExtension", {
+          extensionId: entry.extensionId,
+          version: entry.version,
+          sourceUri: entry.sourceUri,
+          packageHash: entry.packageHash,
+          enabled: entry.enabled,
+        });
+      } finally {
+        pluginOpInFlightRef.current.delete(extensionId);
+      }
+    },
+    [dispatchSpaceExtensionOp, extensionTargetById],
+  );
+
   /** 🧩️ Unloads an extension, drops it from the ledger, and best-effort asks the store / space
    * document to forget it. */
   const uninstallExtension = useCallback(
@@ -1627,7 +1698,12 @@ function FrameworkOsShellInner({
       // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
-      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
+      const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
+      const contributionsJson = buildContributionsJson(
+        loadedPlugins
+          .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
+          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
+      );
       // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — mirrors
       // `contributionsJson` above exactly (same opt-in hint-push shape below), because the space app is
       // its own wasm component: `semio_framework_os::APP_REGISTRATIONS` (populated at native/test
@@ -1677,23 +1753,19 @@ function FrameworkOsShellInner({
         const contributionsPushKey = `${nextSession.instanceId}::${contributionsJson}`;
         if (contributionsPushKey !== contributionsJsonRef.current) {
           contributionsJsonRef.current = contributionsPushKey;
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
-          // 🛡️ `setContributions` is an opt-in hint push — only `procedural3d`'s `Procedural3dCommand::SetContributions`
-          // (flow.extension hot-swap) and `forms`'s `FormsCommand::SetContributions` (playbook block-kind catalogue)
-          // actually implement it; it is deliberately NOT declared in either app's action catalog (same
-          // uncatalogued-bridge shape as `setLocale`), so catalog membership can't gate this call. Every other
-          // app's `DocumentApp::command_from_action` default rejects unknown ids — swallow that rejection here
-          // rather than gating by app id, so this stays correct if a future app adds its own `SetContributions`
-          // variant without this call site needing to know about it.
-          // 🧵️ B1: MUST go through `handleAction` (kind:"action" → `dispatch_action` → `command_from_action`
-          // → `dispatch_typed_command_inner`) — `handleCommand` (kind:"command") always hard-errors now, see
-          // `VcsDocumentApp::dispatch_command`'s doc; there are no framework-reserved COMMANDS, only actions.
-          if (pluginEntry) {
+          for (const pluginEntry of loadedPlugins) {
+            if (!pluginEntry.manifest.apps?.length) continue;
+            const isActive = pluginEntry.handle.pluginId === nextSession.pluginId;
+            const instanceId = isActive ? nextSession.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId);
+            if (instanceId == null) continue;
+            const controllerId = isActive
+              ? nextSession.app.controllerId
+              : ((pluginEntry.manifest.apps[0] as { controllerId?: string } | undefined)?.controllerId ?? nextSession.app.controllerId);
             try {
-              const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setContributions", args: { json: contributionsJson } });
-              await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+              const wire = encodeActionWire({ controllerId, action: "setContributions", args: { json: contributionsJson } });
+              await pluginEntry.handle.handleAction(instanceId, wire, nextSession.viewState);
             } catch (error) {
-              console.warn("[DEBUG] setContributions push skipped", error instanceof Error ? error.message : String(error));
+              console.warn("[DEBUG] setContributions push skipped", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
             }
           }
         }
@@ -1822,7 +1894,12 @@ function FrameworkOsShellInner({
         spawnedUiRefreshCacheRef.current = new Map();
       }
       const cache = spawnedUiRefreshCacheRef.current;
-      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
+      const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
+      const contributionsJson = buildContributionsJson(
+        loadedPlugins
+          .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
+          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
+      );
       const bodyKey = resolveCanvasBodyKey(app);
       const fullViewState: ViewModel = injectActiveUtility(
         { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
@@ -3627,7 +3704,9 @@ function FrameworkOsShellInner({
   const pluginsHostRef = useRef<PluginsHostApi | null>(null);
   const pluginsHost: PluginsHostApi = useMemo(
     () => ({
-      plugins: registry.map((entry): PluginsPanelEntry => {
+      plugins: registry
+        .filter((entry) => !extensionIdSet.has(entry.pluginId))
+        .map((entry): PluginsPanelEntry => {
         const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === entry.pluginId);
         return {
           pluginId: entry.pluginId,
@@ -3642,10 +3721,51 @@ function FrameworkOsShellInner({
       uninstall: (pluginId) => void uninstallPlugin(pluginId),
       reload: (pluginId) => void reloadPlugin(pluginId),
     }),
-    [registry, loadedPlugins, pluginStatusById, pluginSource, primaryPluginId, session?.pluginId, installPlugin, uninstallPlugin, reloadPlugin],
+    [registry, loadedPlugins, pluginStatusById, pluginSource, primaryPluginId, session?.pluginId, installPlugin, uninstallPlugin, reloadPlugin, extensionIdSet],
   );
   pluginsHostRef.current = pluginsHost;
   const frameworkPluginsTabs = useMemo(() => createFrameworkPluginsPanelTabs(() => pluginsHostRef.current), [pluginsHost]);
+
+  const extensionsHostRef = useRef<ExtensionsHostApi | null>(null);
+  const extensionsHost: ExtensionsHostApi = useMemo(
+    () => ({
+      extensions: (() => {
+        const byId = new Map<string, ExtensionsPanelEntry>();
+        for (const target of EXTENSION_TARGETS) {
+          const ledger = extensionLedger.find((entry) => entry.extensionId === target.pluginId);
+          const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === target.pluginId);
+          byId.set(target.pluginId, {
+            extensionId: target.pluginId,
+            label: loadedEntry?.manifest.label ?? target.pluginId,
+            version: ledger?.version ?? loadedEntry?.manifest.version,
+            extendsHost: ledger?.extendsHost ?? target.extends ?? "unscoped",
+            enabled: ledger?.enabled ?? false,
+            status: pluginStatusById[target.pluginId] ?? (ledger ? "loaded" : "available"),
+          });
+        }
+        for (const ledger of extensionLedger) {
+          if (byId.has(ledger.extensionId)) continue;
+          const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === ledger.extensionId);
+          byId.set(ledger.extensionId, {
+            extensionId: ledger.extensionId,
+            label: loadedEntry?.manifest.label ?? ledger.extensionId,
+            version: ledger.version,
+            extendsHost: ledger.extendsHost,
+            enabled: ledger.enabled,
+            status: pluginStatusById[ledger.extensionId] ?? "loaded",
+          });
+        }
+        return [...byId.values()];
+      })(),
+      installFromUrl: (sourceUri) => void installExtension(sourceUri),
+      installFromFile: (file) => void installExtensionFromFile(file),
+      uninstall: (extensionId) => void uninstallExtension(extensionId),
+      setEnabled: (extensionId, enabled) => void setExtensionEnabled(extensionId, enabled),
+    }),
+    [extensionTargetById, extensionLedger, loadedPlugins, pluginStatusById, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled],
+  );
+  extensionsHostRef.current = extensionsHost;
+  const frameworkExtensionsTabs = useMemo(() => createFrameworkExtensionsPanelTabs(() => extensionsHostRef.current), [extensionsHost]);
 
   // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
   // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
@@ -3964,7 +4084,7 @@ function FrameworkOsShellInner({
     }
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
     const topRight: PanelTabNode[] = [...detailsRightTabs];
-    const bottomRight: PanelTabNode[] = [...settingsRightTabs, ...frameworkPluginsTabs];
+    const bottomRight: PanelTabNode[] = [...settingsRightTabs, ...frameworkPluginsTabs, ...frameworkExtensionsTabs];
     if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
     // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
     // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
@@ -3977,7 +4097,7 @@ function FrameworkOsShellInner({
       ...(commandCategoryTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 1, children: commandCategoryTabs }] : []),
     ];
     return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "right-middle": [], "bottom-right": bottomRight, "bottom-middle": bottomMiddle, "bottom-left": bottomLeft, "left-middle": [] } };
-  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkPluginsTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
+  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkExtensionsTabs, frameworkPluginsTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });

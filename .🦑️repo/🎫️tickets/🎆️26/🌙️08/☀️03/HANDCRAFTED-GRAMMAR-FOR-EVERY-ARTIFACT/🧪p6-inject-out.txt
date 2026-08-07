@@ -1,0 +1,49 @@
+{
+  "injectedDocs": 54,
+  "injectedOps": 47,
+  "skippedDocs": 12,
+  "skippedOps": 15,
+  "errors": 30,
+  "errorSample": [
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslOps"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslOps"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslOps"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslDocument"
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
+      "err": "resolve type failed",
+      "attrs": "dsl::DslDocument"
+    }
+  ]
+}

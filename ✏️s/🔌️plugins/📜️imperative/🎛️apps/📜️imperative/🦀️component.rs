@@ -55,11 +55,13 @@ semio_framework_plugin::app_commands! {
         "setSelection" as "set-selection" => set_selection::SetSelection,
         "run" as "run" => run::Run,
         "setLocale" as "locale" => set_locale::SetLocale,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
+use crate::apps::imperative::commands::contribution::set_contributions;
 use crate::apps::imperative::commands::step::{add_step, add_step_at, move_step, move_step_at, remove_step, remove_step_at, set_step_params, set_step_params_at};
 use crate::apps::imperative::commands::view::{run, set_locale, set_selection};
 //#endregion 🔖️Commands
@@ -122,6 +124,7 @@ impl DocumentApp for ImperativePlayApp {
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
+        imperative_engine::sync_imperative_module_contributions(&cfg.projection.contributions_json);
         let document = doc.projection;
         let config = cfg.projection;
         let labels = imperative_labels(config);
@@ -257,7 +260,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 11, "every ImperativeCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 12, "every ImperativeCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -315,6 +318,7 @@ mod tests {
             ImperativeCommand::SetSelection(set_selection::SetSelection { ids: vec!["step-1".into(), "step-2".into()] }),
             ImperativeCommand::Run(run::Run {}),
             ImperativeCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            ImperativeCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         ]
     }
     //#endregion 🔖️CommandSurface

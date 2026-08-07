@@ -1,0 +1,17 @@
+{
+  "flowRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow",
+  "extRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions",
+  "brepDir": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep",
+  "brepFile": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs",
+  "coreDir": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core",
+  "coreFile": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🦀️component.rs",
+  "glueFile": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs",
+  "flowCargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+  "pluginExt": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions",
+  "bimRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim",
+  "bimRust": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust",
+  "s3d": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d",
+  "brepExtRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep",
+  "brepRust": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust",
+  "geometryPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📐️brep-geometry/🦀️component.rs"
+}

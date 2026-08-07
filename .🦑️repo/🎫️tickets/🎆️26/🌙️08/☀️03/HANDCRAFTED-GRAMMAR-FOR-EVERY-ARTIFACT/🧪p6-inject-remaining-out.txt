@@ -1,0 +1,15 @@
+{
+  "injectedDocs": 0,
+  "injectedOps": 1,
+  "skippedDocs": 57,
+  "skippedOps": 39,
+  "errors": 0,
+  "errorSample": [],
+  "injectedDocSample": [],
+  "injectedOpsSample": [
+    {
+      "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+      "name": "ShootingOperationDsl"
+    }
+  ]
+}

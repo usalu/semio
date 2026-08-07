@@ -9,7 +9,7 @@ use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
 use flow_core::{flow_host_with_session, FlowEvalSession, FlowFixture, FlowHost, Widget};
-use flow_extension_brep::tessellate_geometry;
+use flow_core::tessellate_geometry; // crate-root re-export via flow alias
 use playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
 use store::DocumentDsl;
@@ -550,7 +550,7 @@ pub fn register() {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️TestSupport
-/// 🧵️ `flow_extension_brep::tessellate_geometry` (and the flow-eval neuron kernel cache it sits behind)
+/// 🧵️ `tessellate_geometry` (flow core brep geometry session) (and the flow-eval neuron kernel cache it sits behind)
 /// is a process-wide cache shared by every test in this ONE merged crate — before the crate
 /// consolidation, the artifact/app constitutional crates each ran in their own `cargo test` process, so
 /// a `TEST_SERIAL` local to one of them never had to coordinate with the other's. Now that every
