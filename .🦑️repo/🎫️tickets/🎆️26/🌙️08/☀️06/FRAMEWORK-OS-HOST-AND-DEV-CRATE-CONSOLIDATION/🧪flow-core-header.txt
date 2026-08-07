@@ -1,0 +1,14 @@
+flow null
+20 |   }
+21 |   return null;
+22 | }
+23 | const f = findFlow();
+24 | console.log("flow", f);
+25 | const coreRs = join(f, "🙰core", "🦀️component.rs");
+                    ^
+TypeError: The "paths[0]" property must be of type string, got object
+ code: "ERR_INVALID_ARG_TYPE"
+
+      at /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FRAMEWORK-OS-HOST-AND-DEV-CRATE-CONSOLIDATION/scratch-flow-core-header.mjs:25:16
+
+Bun v1.3.14 (macOS arm64)

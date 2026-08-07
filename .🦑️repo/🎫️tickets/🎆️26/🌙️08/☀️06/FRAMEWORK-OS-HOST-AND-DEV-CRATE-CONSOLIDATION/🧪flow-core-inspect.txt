@@ -1,0 +1,10 @@
+ROOT /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow exists true
+  /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/package.json
+  /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js
+  /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep/package.json
+ROOT /Users/ueli/Documents/semio/node_modules/@semio-tech/flow-core exists true
+  /Users/ueli/Documents/semio/node_modules/@semio-tech/flow-core/package.json
+  /Users/ueli/Documents/semio/node_modules/@semio-tech/flow-core/flow_core.js
+PKG /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/package.json @semio-tech/flow-core {"main":"./flow_core.js"}
+PKG /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep/package.json @semio-tech/flow-module-brep {"exports":{".":"./pkg/flow_extension_brep.js","./pkg/flow_extension_brep.js":"./pkg/flow_extension_brep.js","./pkg/flow_extension_brep_bg.wasm":"./pkg/flow_extension_brep_bg.wasm"}}
+vite flow-core mentions [ "flow-core\"," ]

@@ -1,0 +1,88 @@
+flow /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow
+
+FILE /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🦀️component.rs
+struct FlowSessionInner {
+impl FlowSessionInner {
+pub struct FlowSession {
+    state: Rc<RefCell<FlowSessionInner>>,
+impl FlowSession {
+        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
+
+GLUE
+ //! 🌊️ OS flow family glue — wires core and extensions.
+
+extern crate self as flow_core;
+extern crate self as flow_extension_brep;
+extern crate self as flow_extension_draw;
+extern crate self as flow_extension_wasm;
+extern crate self as flow_extension_sdk;
+
+#[path = "../../🫀️core/🦀️component.rs"]
+pub mod core;
+pub use core::*;
+
+#[path = "."]
+pub mod extensions {
+  #[path = "../../../🧩️extensions/📃️list/🦀️component.rs"]
+  pub mod list;
+
+  #[path = "../../../🧩️extensions/📐️brep/🦀️component.rs"]
+  pub mod brep;
+
+  #[path = "../../../🧩️extensions/📖️dictionary/🦀️component.rs"]
+  pub mod dictionary;
+
+  #[path = "../../../🧩️extensions/📝️text/🦀️component.rs"]
+  pub mod text;
+
+  #[path = "../../../🧩️extensions/🕸️wasm/🦀️component.rs"]
+  pub mod wasm;
+
+  #[path = "../../../🧩️extensions/🖍️draw/🦀️component.rs"]
+  pub mod draw;
+
+  #[path = "../../../🧩️extensions/🧠️logic/🦀️component.rs"]
+  pub mod logic;
+
+  #[path = "../../../🧩️extensions/🧮️math/🦀️component.rs"]
+  pub mod math;
+
+  #[path = "../../../🧩️extensions/🫀️core/🦀️component.rs"]
+  pub mod ext_core;
+
+}
+
+pub use extensions::brep::*;
+pub use extensions::draw::*;
+pub use extensions::wasm::*;
+
+
+CARGO
+ [package]
+name = "semio-framework-os-flow"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "OS flow family — core + extensions Shape V2 glue"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_os_flow"
+path = "📦️glue.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
+semio-framework-os-kernel-neural-engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+semio-s-3d = { path = "../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+

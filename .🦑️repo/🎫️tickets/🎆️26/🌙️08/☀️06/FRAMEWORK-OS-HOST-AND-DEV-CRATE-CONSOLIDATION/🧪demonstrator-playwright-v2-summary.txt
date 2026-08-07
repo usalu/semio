@@ -1,0 +1,15 @@
+{
+  "title": "Entwerfen mit Bestand · Demonstrator",
+  "navError": null,
+  "hasCnError": false,
+  "pageErrorCount": 1,
+  "pageErrors": [
+    {
+      "message": "Icon is not defined",
+      "stack": "ReferenceError: Icon is not defined\n    at DemonstratorCard (http://127.0.0.1:6029/%F0%9F%93%A6%EF%B8%8Findex.tsx:366:205)\n    at Object.react_stack_bottom_frame (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:18241:20)\n    at renderWithHooks (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:5386:24)\n    at updateFunctionComponent (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:7207:21)\n    at beginWork (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:8257:20)\n    at runWithFiberInDEV (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:729:72)\n    at performUnitOfWork (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:12293:98)\n    at workLoopSync (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:12156:43)\n    at renderRootSync (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:12140:13)\n    at performWorkOnRoot (http://127.0.0.1:6"
+    }
+  ],
+  "consoleErrorCount": 0,
+  "consoleErrors": [],
+  "bodyTextSample": ""
+}

@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentProps, type DragEvent, type MouseEvent } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, Suspense, useSyncExternalStore, type ComponentProps, type DragEvent, type MouseEvent } from "react";
 import { Box3, BufferAttribute, BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, Object3D, OrthographicCamera, PointsMaterial, Quaternion, ShaderMaterial, TextureLoader, Vector3, type ThreeEvent } from "three";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";

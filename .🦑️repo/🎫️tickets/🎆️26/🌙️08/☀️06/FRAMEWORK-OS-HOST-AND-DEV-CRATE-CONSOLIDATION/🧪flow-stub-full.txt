@@ -1,0 +1,5 @@
+wrote /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js bytes 4680
+/** @emoji 🧪 Dev stub for `@semio-tech/flow-core` until wasm-pack emits pkg/. */
+const wasmMissing = () => { throw new Error("wasm pkg not built — run the matching nx wasm target"); };
+const wasmJson = () => "{}";
+const dagLodScaleJson = () => "[{\"id\":\"minimap\",\"name\":\"Minimap\",\"description\":\"Whole-graph silhouette; fill only.\",\"maxZoom\":0.4},{\"id\":\"overview\",\"name\":\"Overview

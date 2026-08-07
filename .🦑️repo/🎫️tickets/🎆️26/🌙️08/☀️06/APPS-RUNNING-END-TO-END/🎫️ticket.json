@@ -1,19 +1,8 @@
 {
   "title": "Apps Running End To End",
   "emoji": "🚀",
-  "status": "open",
+  "status": "closed",
   "description": "After the heavy monorepo restructure, get all apps running end to end: fix playground catalog path, electron-forge bun.lock discovery, verify each bun run dev:* boots.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": [],
-  "summary": "Unblocked apps after restructure:\n1. Patched @electron-forge/core-utils to recognize bun.lock so compose-desktop finds hoisted electron.\n2. Added puzzle 2d/3d/5d aliases (\"puzzle Nd\") so package.json scripts resolve.\n3. Set plugin-registry nx.includedScripts=[] so generate uses project.json (was infinite nx recursion).\n4. Unknown `dev <app>` no longer silently falls through to compose-desktop.\n5. Smoke: 32/32 priority playgrounds HTTP-ready; process3d routes to framework-os-dev and serves :6022.",
-  "files": [
-    "package.json",
-    "patches/@electron-forge%2Fcore-utils@7.11.2.patch",
-    "bun.lock",
-    "📜️script.ts",
-    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/package.json",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🔣️playgrounds.json",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts"
-  ]
+  "summary": "Restored end-to-end app boots after monorepo restructure. Electron Forge finds electron under bun.lock (existing patch applied). Retargeted package.json build:* scripts from removed @semio-tech/framework-playground-dev to @semio-tech/framework-os-dev. Hardened root DevScript to regenerate the playground catalog when empty. Retargeted stale ⚡️implementations path aliases to Shape-V2 📦️packages glue entries (framework-core, framework-os-core, infinite renderers, host/ui scripts, session/brand imports). Verified: bun run dev:procedural:3d serves HTTP 200; 10 priority playground apps smoke OK; compose-desktop launches Electron. Remaining known gap: @semio-tech/animate-present-core is still missing for mit-bestand presentation.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
 }

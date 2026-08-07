@@ -1,0 +1,91 @@
+pkgJs /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js true
+stubPath /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts true
+PLAYGROUND_WASM_JS_STUB:
+ const wasmMissing = () => { throw new Error("wasm pkg not built — run the matching nx wasm target"); };
+const wasmJson = () => "{}";
+const dagLodScaleJson = () => ${JSON.stringify(
+  JSON.stringify([
+    { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; fill only.", maxZoom: 0.4 },
+    { id: "overview", name: "Overview", description: "Node icons only.", maxZoom: 0.6 },
+    { id: "compact", name: "Compact", description: "Horizontal abbreviations.", maxZoom: 0.8 },
+    { id: "normal", name: "Normal", description: "Vertical names with sections; channel abbreviations on ports.", maxZoom: 1.5 },
+    { id: "detail", name: "Detail", description: "Channel names on ports, port handles, and control text.", maxZoom: 2.75 },
+    { id: "micro", name: "Micro", description: "Full channel names on ports and maximum node fidelity.", maxZoom: Number.MAX_VALUE },
+  ]),
+)};
+export default async function initWasm() {}
+export const initSync = () => {};
+export class FlowSession { lodScaleJson() { return dagLodScaleJson(); } attachCanvas() { return Promise.resolve(); } setSize() {} renderFrame() {} loadFixtureJson() {} fixtureJson() { return "{}"; } setCatalogueJson() {} catalogueJson() { return "[]"; } setNeuronKindInfosJson() {} setComputingProgress() {} setAutomaticLod() {} setForcedDrawLodLabel() {} setCanvasThemeJson() {} setCamera() {} pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } sliderOverlayStateJson() { return '{"sliders":[]}'; } selectionUnionBoundsScreenJson() { return "{}"; } selectionPreviewPointsJson() { return "[]"; } selectionPreviewCrossing() { return false; } selectedWidgetIds() { return "[]"; } hoveredWidgetId() { return undefined; } hoveredChannelJson() { return "{}"; } pickTargetsAtScreenJson() { return "[]"; } previewText() { return ""; } preselectWidgetIdsJson() { return "[]"; } previewOffWidgetIds() { return "[]"; } alignSelection() {} undo() { return false; } redo() { return false; } selectAll() {} deleteSelection() {} addWidget() { return ""; } setGhostWidget() {} clearGhostWidget() {} worldFromScreen() { return '{"x":0,"y":0}'; } applyEvalOutputsJson() {} setSliderValue() {} setNeuronParams() {} setSelection() {} setPreviewOff() {} syncFromSceneJson() {}}
+export class GraphSession { lodScaleJson() { return dagLodScaleJson(); } syncFromSceneJson() {} syncFromScenePack() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } selectionUnionBoundsScreenJson() { return '{}'; } selectionPreviewPointsJson() { return '[]'; } selectionPreviewCrossing() { return false; } selectionPreviewMethod() { return 'rectangle'; } selectedNodeIdsJson() { return '[]'; } hoveredNodeId() { return null; } hoveredChannelJson() { return '{}'; } cameraJson() { return '{"x":0,"y":0,"zoom":1}'; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} }
+export class EditorSession { syncFromSceneJson() {} syncFromScenePack() {} setText() {} text() { return ''; } caret() { return 0; } anchor() { return 0; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScrollScreen() {} insertText() {} backspace() {} deleteForward() {} selectAll() {} replaceSelection() {} selectionText() { return ''; } hoverTokenRangeJson() { return 'null'; } setHoverRange() {} cameraJson() { return '{}'; } }
+export class DagSession { lodScaleJson() { return dagLodScaleJson(); } }
+export class BoardSession { lodScaleJson() { return dagLodScaleJson(); } }
+export class WriterSession {}
+export class ImperativeSession {}
+export class SequenceSession {}
+export class RasterSession {}
+export class MapSession {}
+export class Puzzle3dPrecomputeSession {}
+export class TrinitySession {}
+export class JackLspSession {}
+export const render_drawing_scene = wasmMissing;
+export const export_drawing_svg = wasmMissing;
+export const export_drawing_pdf = wasmMissing;
+export const dispose_drawing = () => {};
+export const trace_drawing_bitmap = wasmMissing;
+export const boolean_drawing_segments = wasmMissing;
+export const tessellate = async () => JSON.stringify({ positions: [], normals: [], index: [], edges: [], points: [], faceGroups: [] });
+export const dispose = () => {};
+export const evaluate = wasmMissing;
+export const ruleQueryJson = wasmJson;
+export const boardComputeEdgeBezier = wasmJson;
+export const boardHandlePositionCircle = wasmJson;
+export const boardHandlePositionRectangle = wasmJson;
+export const boardRedrawHandlesFixtureJson = wasmJson;
+export const boardRedrawLayoutFixtureJson = wasmJson;
+
+FlowWasmSession type:
+ export type FlowWasmSession = GraphWasmSession & {
+  loadFixtureJson(json: string): void;
+  resyncFixtureJson?(json: string): void;
+  fixtureJson(): string;
+  syncFromSceneJson?(json: string): void;
+  setSelection(json: string): void;
+  setPreviewOff(json: string): void;
+  setCatalogueJson(json: string): void;
+  catalogueJson(): string;
+  setNeuronKindInfosJson(json: string): void;
+  setComputingProgress(json: string): void;
+  setNodeStatuses?(json: string): void;
+  setAutomaticLod(enabled: boolean): void;
+  setForcedDrawLodLabel(label: string): void;
+  setCanvasThemeJson(json: string): void;
+  setCamera(x: number, y: number, zoom: number): void;
+  pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean, pan: boolean): void;
+  pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+  pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+  wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): void;
+  labelOverlayPaintStateJson(): string;
+  sliderOverlayStateJson(): string;
+  selectionUnionBoundsScreenJson(): 
+editor /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js true
+/** @emoji 🧪 Dev stub for `@semio-tech/framework-editor-rs` until `bun ./📜️script.ts wasm` emits pkg/. */
+export default async function init(_input) { return undefined; }
+export class EditorSession {}
+
+wrote stub /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js bytes 436
+/** @emoji 🧪 Dev stub for `@semio-tech/flow-core` until `bun ./📜️script.ts wasm` emits pkg/. */
+export default async function init(_input) { return undefined; }
+export class FlowSession {
+  free() {}
+  syncFromSceneJson(_json) {}
+  setSize(_w, _h, _dpr) {}
+  render() {}
+  pointerDownScreen() {}
+  pointerMoveScreen() {}
+  pointerUpScreen() {}
+  wheelScrollScreen() {}
+  cameraJson() { return "{}"; }
+  setCanvasThemeJson(_json) {}
+}
+

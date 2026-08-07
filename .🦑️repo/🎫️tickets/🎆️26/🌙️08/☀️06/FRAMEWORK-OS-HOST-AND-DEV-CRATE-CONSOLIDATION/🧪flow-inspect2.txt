@@ -1,0 +1,91 @@
+flows [ "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow" ]
+D 📚️examples
+D 🫀️core
+  F 🦀️component.rs 357207
+  D pkg
+    F package.json 171
+    F flow_core.js 19
+D 📦️packages
+  D 🦀️rust
+    F 📦️glue.rs 1299
+    F Cargo.toml 945
+D 🧩️extensions
+  D 🫀️core
+    F 🦀️component.rs 9951
+  D 📐️brep
+    F 🦀️component.rs 106320
+    F package.json 760
+  D 📖️dictionary
+    F 🦀️component.rs 14039
+  D 🧠️logic
+    F 🦀️component.rs 5962
+  D 🧮️math
+    F 🦀️component.rs 29943
+  D 🕸️wasm
+    F 🦀️component.rs 7101
+  D 📃️list
+    F 🦀️component.rs 17804
+  D 🖍️draw
+    F 🦀️component.rs 56822
+  D 📝️text
+    F 🦀️component.rs 5432
+FILE /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/package.json (171)
+{
+  "name": "@semio-tech/flow-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "flow core wasm pkg stub",
+  "main": "./flow_core.js"
+}
+
+---
+FILE /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js (19)
+export default {};
+
+---
+FILE /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml (945)
+[package]
+name = "semio-framework-os-flow"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "OS flow family — core + extensions Shape V2 glue"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_os_flow"
+path = "📦️glue.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
+semio-framework-os-kernel-neural-engine = { path = "../
+---
+FILE /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep/package.json (760)
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/flow-module-brep",
+  "version": "0.1.0",
+  "description": "flow · module · brep",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./pkg/flow_extension_brep.js",
+    "./pkg/flow_extension_brep.js": "./pkg/flow_extension_brep.js",
+    "./pkg/flow_extension_brep_bg.wasm": "./pkg/flow_extension_brep_bg.wasm"
+  },
+  "scripts": {
+    "wasm": "bun nx run @semio-tech/flow-module-brep:wasm"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.co
+---

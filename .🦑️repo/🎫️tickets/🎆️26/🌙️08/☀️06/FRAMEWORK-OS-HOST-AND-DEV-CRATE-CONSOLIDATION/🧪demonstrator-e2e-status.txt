@@ -1,0 +1,17 @@
+Demonstrator E2E status (2026-08-06)
+
+Fixed:
+1. buildEngineWasm export dangling in os/dev script.ts (startup SyntaxError)
+2. Missing `cn` + `Icon` imports in mit-bestand demonstrator 📦️index.tsx (DemonstratorPane/Card crash)
+3. Missing `Suspense` named import in World3dHost
+4. flow_core.js was `export default {}` — replaced with full PLAYGROUND_WASM_JS_STUB (init + FlowSession)
+
+Verified:
+- bun run dev:mit-bestand:demonstrator -> Vite on http://127.0.0.1:6029/
+- Playwright: title ok, German shell UI renders, no cn/Icon/Suspense/default-is-not-a-function critical errors
+
+Remaining non-blocking (asset/host limits):
+- Some /mesh/*.glb 404s (HTML fallback parsed as GLB)
+- setActiveExample unknown fault for some examples
+- NoCompatibleDevice under headless Playwright (no WebGPU)
+- Invalid 3 panel layout: 68%, 32% in one canvas session

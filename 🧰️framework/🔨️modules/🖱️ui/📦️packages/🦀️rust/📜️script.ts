@@ -110,7 +110,7 @@ type GeneratedTarget = { readonly path: string; readonly content: string };
 function generatedTargets(repoRoot: string, axes: UiAxesSpec): GeneratedTarget[] {
   return [
     { path: join(wgpuTargetRoot, "🤖️generated.rs"), content: emitRust(axes) },
-    { path: join(repoRoot, "🧰️framework/⚡️implementations/🟦️typescript/🤖️generated/🟦️ui-axes.ts"), content: emitTypeScript(axes) },
+    { path: join(repoRoot, "🧰️framework/📦️packages/🟦️typescript/🤖️generated/🟦️ui-axes.ts"), content: emitTypeScript(axes) },
   ];
 }
 //#endregion 🔖️targets

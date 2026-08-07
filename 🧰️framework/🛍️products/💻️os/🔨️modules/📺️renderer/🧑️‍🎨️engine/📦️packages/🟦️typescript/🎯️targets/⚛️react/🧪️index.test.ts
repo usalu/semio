@@ -28,7 +28,7 @@ import {
   ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
-} from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🏷️brand/📦️index.ts";
+} from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🏷️brand/📦️index.ts";
 import {
   ENTWERFEN_MIT_BESTAND_BRAND_IDS,
   ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION,

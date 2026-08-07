@@ -1,0 +1,31 @@
+{
+  "title": "Entwerfen mit Bestand · Demonstrator",
+  "ok": true,
+  "critical": [],
+  "pageErrorCount": 3,
+  "bodyTextSample": "Dokument\nKatalog\nInspektion\nVollbild\nsemio · procedural · 3d\nBeispiel\nSechseckige Pilzsäule\nBearbeiten\nGenerieren\nWorkflow\nFokussieren\nSchließen\nFensteroptionen\nAktionen\nHilfsmittel\nVorschau\nFokussieren\nSchließen\nLädt…\nProjektion\nFensteroptionen\nAktionen\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nTastenkü",
+  "pageErrors": [
+    {
+      "message": "Could not load /mesh/🧊️hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', \"<!doctype \"... is not valid JSON",
+      "stack": "Error: Could not load /mesh/🧊️hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', \"<!doctype \"... is not valid JSON\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-7H47KHLN.js?v=9e8c3cc1:1209:38\n    at _onError (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=9e8c3cc1:215:9)\n    at Object.onLoad (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=9e8c3cc1:234:9)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-C6VUKSS7.js?v=9e8c3cc1:24105:39"
+    },
+    {
+      "message": "Could not load /mesh/🧊️hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', \"<!doctype \"... is not valid JSON",
+      "stack": "Error: Could not load /mesh/🧊️hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', \"<!doctype \"... is not valid JSON\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-7H47KHLN.js?v=9e8c3cc1:1209:38\n    at _onError (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=9e8c3cc1:215:9)\n    at Object.onLoad (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=9e8c3cc1:234:9)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-C6VUKSS7.js?v=9e8c3cc1:24105:39"
+    },
+    {
+      "message": "NoCompatibleDevice",
+      "stack": ""
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "[DEBUG] action failed setActiveExample {exampleId: hexagonal-cut-concrete-forest-left} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcompone",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "%o\n\n%s\n\n%s\n Error: Invalid 3 panel layout: 68%, 32%\n    at K (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:864:11)\n    at Bt (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:1507:58)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.",
+    "[DEBUG] shell fault session-canvas Error: Invalid 3 panel layout: 68%, 32%\n    at K (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:864:11)\n    at Bt (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:1507:58)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/"
+  ]
+}

@@ -1,0 +1,64 @@
+nm listing [ "package.json", "flow_core.js" ]
+realpath /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg
+pkg {
+  "name": "@semio-tech/flow-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "flow core wasm pkg stub",
+  "main": "./flow_core.js"
+}
+
+workspaces [
+  "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+  "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+  "♻️mit-bestand/🧺️demonstrator", "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/pkg",
+  "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
+  "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript",
+  "✏️s/🔨️modules/◻2d/📦️packages/🟦️typescript",
+  "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
+  "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
+  "compose/client/bin/engine", "compose/client/bin/gql",
+  "compose/client/lib/go", "compose/client/lib/js",
+  "compose/client/lib/net/Compose", "compose/client/lib/py",
+  "compose/client/lib/query", "compose/client/lib/react",
+  "compose/client/lib/rs", "compose/client/lib/rs/pkg",
+  "compose/client/lib/sketchpad/doc", "compose/client/lib/sketchpad/js",
+  "compose/client/lib/sketchpad/play", "compose/client/schema/sqlite",
+  "compose/client/ui/3dm/Compose.Rhino", "compose/client/ui/3dm/ui",
+  "compose/client/ui/desktop", "compose/client/ui/gh/Compose.Grasshopper",
+  "compose/client/ui/vscode", "compose/dev/algorithm",
+  "compose/fixture", "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry",
+  "🧰️framework/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/📐️brep"
+]
+overrides keys with flow []
+flow-core package.json locations []
+FLOW TREE
+scripts mentioning flow/wasm-pack count 0

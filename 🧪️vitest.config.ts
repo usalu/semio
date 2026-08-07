@@ -59,11 +59,11 @@ function isDiscoverable(relPath: string): boolean {
  * Re-include as each underlying bug is fixed by its owning team. */
 const KNOWN_BROKEN_IN_AGGREGATOR = new Map<string, string>([
   [
-    "🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🧪️vitest.config.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🧪️vitest.config.ts",
     "custom nested-worker test environment (backbone-worker.ts) throws EnvironmentTeardownError when collected alongside sibling projects, even with --no-file-parallelism",
   ],
   [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🧪️vitest.config.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🧪️vitest.config.ts",
     "📜️script.ts has a pre-existing 'Cannot access join before initialization' bug reproducible standalone (bun:sqlite/env-transform ordering) — unrelated to this file",
   ],
   [

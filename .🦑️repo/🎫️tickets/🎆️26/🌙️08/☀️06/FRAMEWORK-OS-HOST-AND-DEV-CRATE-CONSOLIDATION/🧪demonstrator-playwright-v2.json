@@ -1,0 +1,84 @@
+{
+  "title": "Entwerfen mit Bestand · Demonstrator",
+  "navError": null,
+  "hasCnError": false,
+  "bodyTextSample": "Dokument\nKatalog\nInspektion\nVollbild\nsemio · procedural · 3d\nBeispiel\nSechseckige Pilzsäule\nBearbeiten\nGenerieren\nWorkflow\nFokussieren\nSchließen\nFensteroptionen\nAktionen\nHilfsmittel\nVorschau\nFokussieren\nSchließen\nLädt…\nProjektion\nFensteroptionen\nAktionen\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nTastenkürzel\nPlugins\nVerlauf\nBefehl\nSuche\n\nNach Elementen suchen\n\nFinden\n\nElemente in dieser Ansicht finden\n\nDokument\nKatalog\nInspektion\nVollbild\nEntwerfen mit Bestand · cad\nBeispiel\nSechseckig geschnittener Betonwald links\nForm\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nGebäude\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nEnergie\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nTragwerk Klassisch\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nTastenkürzel\nPl",
+  "pageErrors": [
+    {
+      "message": "mod2.default is not a function",
+      "stack": "TypeError: mod2.default is not a function\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/WasmSessionLoader/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:67:25\n    at async createFlowSession (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/WasmSessionLoader/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:71:15)"
+    },
+    {
+      "message": "NoCompatibleDevice",
+      "stack": ""
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] action failed setActiveExample {exampleId: hexagonal-cut-concrete-forest-left} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] action failed setActiveExample {exampleId: concrete-forest} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)"
+    },
+    {
+      "type": "error",
+      "text": "%o\n\n%s\n\n%s\n ReferenceError: Suspense is not defined\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:4288:55\n    at Array.map (<anonymous>)\n    at World3dHost (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:4287:35)\n    at Ob"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] shell fault surface-world-3d ReferenceError: Suspense is not defined\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:4288:55\n    at Array.map (<anonymous>)\n    at World3dHost (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcompone"
+    },
+    {
+      "type": "error",
+      "text": "%o\n\n%s\n\n%s\n ReferenceError: Suspense is not defined\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:4288:55\n    at Array.map (<anonymous>)\n    at World3dHost (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:4287:35)\n    at Ob"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] shell fault surface-world-3d ReferenceError: Suspense is not defined\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:4288:55\n    at Array.map (<anonymous>)\n    at World3dHost (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/World3dHost/%F0%9F%9F%A6%EF%B8%8Fcompone"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "%o\n\n%s\n\n%s\n Error: Invalid 3 panel layout: 68%, 32%\n    at K (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:864:11)\n    at Bt (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:1507:58)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:1749:15\n    at Object.react_stack_bottom_frame (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:18299:20)\n    at runWithFiberInDEV (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] shell fault session-canvas Error: Invalid 3 panel layout: 68%, 32%\n    at K (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:864:11)\n    at Bt (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:1507:58)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=9e8c3cc1:1749:15\n    at Object.react_stack_bottom_frame (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=9e8c3cc1:18299:20)\n    at runWithFiberInDEV (http://127.0.0.1:6029/@fs/Users/ueli/Documents/s"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] action failed setActiveExample {exampleId: demo-stock} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] action failed setActiveExample {exampleId: timber-beam-joinery} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)"
+    }
+  ],
+  "reqFailed": [],
+  "screenshotPath": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FRAMEWORK-OS-HOST-AND-DEV-CRATE-CONSOLIDATION/🧪demonstrator-e2e-screenshot.png"
+}
