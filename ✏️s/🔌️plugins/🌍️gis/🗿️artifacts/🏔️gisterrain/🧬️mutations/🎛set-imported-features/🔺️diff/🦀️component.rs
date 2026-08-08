@@ -1,8 +1,8 @@
-use crate::artifacts::gisterrain::diff::Gis3dTerrainDiff;
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
-use crate::artifacts::gisterrain::mutations::Gis3dTerrainMutation;
+use crate::artifacts::gisterrain::diff::GisTerrainDiff;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
 use protocol::MutationDiff;
 
-pub fn diff_for(mutation: &Gis3dTerrainMutation, base: &Gis3dTerrainDocument) -> Gis3dTerrainDiff {
-    <Gis3dTerrainMutation as protocol::Mutation<Gis3dTerrainDocument>>::diff(mutation, base)
+pub fn diff_for(mutation: &GisTerrainMutation, base: &GisTerrainSnapshot) -> GisTerrainDiff {
+    <GisTerrainMutation as protocol::Mutation<GisTerrainSnapshot>>::diff(mutation, base)
 }

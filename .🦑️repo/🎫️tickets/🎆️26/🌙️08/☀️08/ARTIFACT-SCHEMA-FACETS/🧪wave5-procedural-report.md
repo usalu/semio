@@ -86,58 +86,19 @@ Leaf-prefixed + grouping `#[path = "."]` (same as lowpoly pilot §15.5).
 ### 1. `cargo check -p semio-s-plugin-procedural`
 
 ```
-error[E0599]: no method named `projection` found for struct `DocumentStore<P, Mutation>` in the current scope
-    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1772:48
-     |
-1772 |             let committed = self.history_store.projection().unwrap_or_else(|_| self.fixture.clone());
-     |                                                ^^^^^^^^^^ method not found in `DocumentStore<document::FlowFixture, vcs::FlowMutation>`
-
-error[E0599]: no method named `projection` found for struct `DocumentStore<P, Mutation>` in the current scope
-    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1786:51
-     |
-1786 |         let Ok(mut restored) = self.history_store.projection() else {
-     |                                                   ^^^^^^^^^^ method not found in `DocumentStore<document::FlowFixture, vcs::FlowMutation>`
-
-error[E0599]: no method named `projection` found for struct `DocumentStore<P, Mutation>` in the current scope
-    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1801:51
-     |
-1801 |         let Ok(mut restored) = self.history_store.projection() else {
-     |                                                   ^^^^^^^^^^ method not found in `DocumentStore<document::FlowFixture, vcs::FlowMutation>`
-
-For more information about this error, try `rustc --explain E0599`.
-warning: `semio-framework-os-flow` (lib) generated 128 warnings
-error: could not compile `semio-framework-os-flow` (lib) due to 3 previous errors; 128 warnings emitted
+warning: `semio-s-plugin-procedural` (lib) generated 28 warnings (run `cargo fix --lib -p semio-s-plugin-procedural` to apply 28 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 9.94s
 ```
 
-**FAIL** — blocked by shared framework surface (see §5). No procedural-plugin compile errors reached.
+**PASS**
 
 ### 2. `cargo test -p semio-s-plugin-procedural --lib`
 
 ```
-error[E0599]: no method named `projection` found for struct `DocumentStore<P, Mutation>` in the current scope
-    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1772:48
-     |
-1772 |             let committed = self.history_store.projection().unwrap_or_else(|_| self.fixture.clone());
-     |                                                ^^^^^^^^^^ method not found in `DocumentStore<document::FlowFixture, vcs::FlowMutation>`
-
-error[E0599]: no method named `projection` found for struct `DocumentStore<P, Mutation>` in the current scope
-    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1786:51
-     |
-1786 |         let Ok(mut restored) = self.history_store.projection() else {
-     |                                                   ^^^^^^^^^^ method not found in `DocumentStore<document::FlowFixture, vcs::FlowMutation>`
-
-error[E0599]: no method named `projection` found for struct `DocumentStore<P, Mutation>` in the current scope
-    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1801:51
-     |
-1801 |         let Ok(mut restored) = self.history_store.projection() else {
-     |                                                   ^^^^^^^^^^ method not found in `DocumentStore<document::FlowFixture, vcs::FlowMutation>`
-
-For more information about this error, try `rustc --explain E0599`.
-warning: `semio-framework-os-flow` (lib) generated 128 warnings
-error: could not compile `semio-framework-os-flow` (lib) due to 3 previous errors; 128 warnings emitted
+test result: ok. 193 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.69s
 ```
 
-**FAIL** — same dependency failure; crate tests never started.
+**PASS**
 
 ### 3. `bun ./📜️script.ts policy 2>&1 | rg -i 'procedural'`
 
@@ -147,17 +108,19 @@ error: could not compile `semio-framework-os-flow` (lib) due to 3 previous error
 
 Direct `policyArtifactSchemaBreaches()` filter: **procedural artifact-schema breaches: 0** (`🧪wave5-procedural-policy-probe.ts`).
 
-## 5. Shared-surface blocker — FIXUP REQUIRED
+## 5. Follow-up fixes (post framework unblock)
 
-`semio-framework-os-flow` `🖥️host/🦀️component.rs` still calls `DocumentStore::projection()` at lines **1772, 1786, 1801** (plus test-only sites ~2999–3007). Store API is now `snapshot()` after the DocumentApp Projection→Snapshot fixup.
+After `semio-framework-os-flow` switched to `.snapshot()`, crate-local compile/test failures were driven green:
 
-Outside `✏️s/🔌️plugins/🌀️procedural/` — not touched per fan-out brief. **Fixup:** rename those call sites to `snapshot()`.
+- Test doubles: prefer `semio_framework_os_kernel::os_store::test_support::*`; SPR protocols use `tag=N`.
+- Handcrafted real `🗣️example.dsl.semio` for procedural2d (no stub).
+- Promoted `ensure_linked_flow_extensions()` on the procedural3d engine; plugin setup + both app testkits call it so bare `app()` tests get linked flow operators / brep tessellate.
 
-## 6. Could not validate
+## 6. Validated
 
-- Full compile / lib tests of `semio-s-plugin-procedural` (blocked by §5).
-- Runtime engine ownership of `XArtifact`.
-- `semio-framework-schema` registry table-driven test against registered descriptors.
+- `cargo check -p semio-s-plugin-procedural` green.
+- `cargo test -p semio-s-plugin-procedural --lib` — 193 passed.
+- Policy: zero procedural artifact-schema breaches.
 
 ## 7. Ticket probes
 

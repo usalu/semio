@@ -15,8 +15,7 @@ pub mod set_show_mode {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "set-show-mode")]
     pub struct SetShowMode {
-        pub value: String,
-    }
+        pub value: String}
 
     pub fn handle(payload: &SetShowMode, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetShowMode { value: payload.value.clone() }]))

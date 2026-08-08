@@ -1,0 +1,99 @@
+syntax = "proto3";
+package semio.s.trinity.jack.artifact;
+
+// 🧬️ Jack artifact schema — every field with its state class.
+
+message JackArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string name = 2;
+  // @state persistent
+  optional string manifest_id = 3;
+  // @state persistent
+  Manifest manifest = 4;
+  // @state persistent
+  Camera camera = 5;
+  // @state persistent
+  repeated Node nodes = 6;
+  // @state persistent
+  repeated Edge edges = 7;
+  // @state persistent
+  optional string root_node_id = 8;
+  // @state shared-ui
+  repeated string selected_node_ids = 9;
+  // @state shared-ui
+  string active_fixture_id = 10;
+  // @state shared-ui
+  string jack_query = 11;
+  // @state shared-ui
+  map<string, string> lod_mode_by_window = 12;
+  // @state local-ui
+  Camera viewport_camera = 13;
+  // @state local-ui
+  string jack_result_json = 14;
+  // @state local-ui
+  string editor_engagement_input = 15;
+  // @state local-ui
+  string graph_engagement_input = 16;
+  // @state local-ui
+  string results_engagement_input = 17;
+  // @state local-ui
+  int64 reorganize_epoch = 18;
+  // @state local-ui
+  optional JackEditorSelection editor_selection = 19;
+  // @state local-ui
+  int64 revision = 20;
+  // @state local-ui
+  string locale = 21;
+}
+
+message JackEditorSelection {
+  int64 start = 1;
+  int64 end = 2;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message Port {
+  string id = 1;
+  string kind = 2;
+  string direction = 3;
+}
+
+message Node {
+  string id = 1;
+  string kind = 2;
+  string name = 3;
+  double x = 4;
+  double y = 5;
+  double width = 6;
+  double height = 7;
+  repeated Port ports = 8;
+}
+
+message Edge {
+  string id = 1;
+  string kind = 2;
+  string source = 3;
+  string target = 4;
+}
+
+message Manifest {
+  repeated ManifestKind node_kinds = 1;
+  repeated ManifestKind edge_kinds = 2;
+  repeated ManifestPortKind port_kinds = 3;
+}
+
+message ManifestKind {
+  string name = 1;
+}
+
+message ManifestPortKind {
+  string name = 1;
+  string direction = 2;
+}

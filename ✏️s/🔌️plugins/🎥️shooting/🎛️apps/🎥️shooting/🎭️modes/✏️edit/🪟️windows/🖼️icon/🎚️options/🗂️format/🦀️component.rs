@@ -2,12 +2,12 @@
 //! Its command handler lives in `🎮️commands/📷️shot::set_active_shot_format`.
 
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
-pub fn measure(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowMeasure {
-    let shot = crate::artifacts::shooting::engine::active_shot(fixture);
+pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
+    let shot = crate::artifacts::shooting::engine::active_shot(snapshot);
     WindowMeasure::Select {
         id: "shooting.measure.format".into(),
         label: Some(labels.format_select_label.into()),
@@ -30,9 +30,9 @@ mod tests {
 
     #[test]
     fn format_measure_offers_svg_and_png() {
-        let fixture = crate::artifacts::shooting::engine::default_fixture();
+        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
-        match measure(&fixture, labels) {
+        match measure(&snapshot, labels) {
             WindowMeasure::Select { items, value, .. } => {
                 assert_eq!(items.len(), 2);
                 assert_eq!(value, "svg");

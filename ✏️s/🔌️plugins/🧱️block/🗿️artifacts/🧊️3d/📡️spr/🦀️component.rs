@@ -26,19 +26,19 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block3d::{Block3dDefinition, BLOCK_3D_SCHEMA};
+    use crate::artifacts::block3d::{Block3dSnapshot, BLOCK_3D_SCHEMA};
     use crate::BlockKindIdentity;
     use store::{create_document_envelope, DocumentCommand};
 
     #[test]
     fn block3d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::block3d::op::Block3dStore;
+        use crate::artifacts::block3d::mutations::Block3dStore;
 
-        let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dDefinition::default(), None));
+        let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None));
         store
             .dispatch(DocumentCommand::Apply { mutations: vec![Block3dMutation::SetObjectKind { object_kind: BlockKindIdentity { id: "o1".into(), name: "o1".into(), label: "O1".into(), ..Default::default() } }], description: None })
             .expect("apply");
-        let projection = store.projection().expect("projection");
+        let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.object_kind.id, "o1");
     }
 

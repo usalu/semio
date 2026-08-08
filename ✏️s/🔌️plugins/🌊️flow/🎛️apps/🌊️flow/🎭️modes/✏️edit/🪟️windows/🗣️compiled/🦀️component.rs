@@ -2,8 +2,8 @@
 
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
-use crate::artifacts::flow::engine::host_from_fixture;
-use crate::artifacts::flow::FlowFixture;
+use crate::artifacts::flow::engine::host_from_snapshot;
+use crate::artifacts::flow::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -34,8 +34,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
-    let host = host_from_fixture(fixture, config, session);
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+    let host = host_from_snapshot(fixture, config, session);
     build_text_editor_scene(FLOW_PLAY_SURFACE_COMPILED, FLOW_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 //#endregion 🔖️Render

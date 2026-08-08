@@ -6,7 +6,7 @@
 
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingCamera, ShootingFixture, ShootingSavedCamera};
+use crate::artifacts::shooting::{ShootingCamera, ShootingSnapshot, ShootingSavedCamera};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ pub mod set_shot_camera {
         pub camera: ShootingCamera,
     }
 
-    pub fn handle(payload: &SetShotCamera, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetShotCamera, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::SetShotCamera { shot_id: payload.shot_id.clone(), camera: payload.camera.clone() }]))
     }
 }
@@ -41,14 +41,14 @@ pub mod save_camera {
     #[dsl(keyword = "save-camera")]
     pub struct SaveCamera {}
 
-    pub fn handle(_payload: &SaveCamera, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(_payload: &SaveCamera, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let config = cfg.snapshot;
         let draft = config.camera_draft_label.trim().to_string();
-        let label = if draft.is_empty() { format!("Camera {}", fixture.saved_cameras.len() + 1) } else { draft };
+        let label = if draft.is_empty() { format!("Camera {}", snapshot.saved_cameras.len() + 1) } else { draft };
         let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: config.camera.clone() };
         Ok(Emit {
-            document_mutations: vec![ShootingMutation::SavedCameras(CollectionMutation::Add { index: fixture.saved_cameras.len(), item: saved_camera })],
+            document_mutations: vec![ShootingMutation::SavedCameras(CollectionMutation::Add { index: snapshot.saved_cameras.len(), item: saved_camera })],
             config_mutations: vec![ShootingConfigMutation::SetCameraDraftLabel { value: String::new() }],
             ..Default::default()
         })
@@ -66,8 +66,8 @@ pub mod load_saved_camera {
         pub id: String,
     }
 
-    pub fn handle(payload: &LoadSavedCamera, doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        match doc.projection.saved_cameras.iter().find(|entry| entry.id == payload.id) {
+    pub fn handle(payload: &LoadSavedCamera, doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        match doc.snapshot.saved_cameras.iter().find(|entry| entry.id == payload.id) {
             Some(saved) => Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: saved.camera.clone() }])),
             None => Ok(Emit::default()),
         }
@@ -85,7 +85,7 @@ pub mod set_camera_draft_label {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetCameraDraftLabel, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCameraDraftLabel, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetCameraDraftLabel { value: payload.value.clone() }]))
     }
 }
@@ -102,7 +102,7 @@ pub mod set_camera {
         pub camera: ShootingCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }

@@ -13,15 +13,13 @@ use serde::{Deserialize, Serialize};
 
 pub struct Procedural2dSnapshot {
     #[state(persistent)] pub fixture: FlowFixture,
-    #[state(persistent)] pub generation: GenerationPlayState,
-}
+    #[state(persistent)] pub generation: GenerationPlayState}
 //#endregion 🔖️Procedural2dSnapshot
 
 impl Default for Procedural2dSnapshot {
     fn default() -> Self {
         Self {
             fixture: FlowFixture::default(),
-            generation: GenerationPlayState::default(),
-        }
+            generation: GenerationPlayState::default()}
     }
 }

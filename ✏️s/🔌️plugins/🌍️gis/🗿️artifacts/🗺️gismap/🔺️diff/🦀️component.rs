@@ -1,7 +1,3 @@
-//! 🔺️ GIS map artifact — the operation diff and its `MutationDiff` law (split out of the old
-//! constitutional `op` crate).
-
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
@@ -9,80 +5,199 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch};
-use protocol::{CollectionDiff, MutationDiff, Patchable};
-use serde::{Deserialize, Serialize};
+pub use super::schema::*;
 
-//#region 🔖️Helpers
-fn apply_map_collection_diff(items: &mut Vec<MapFeature>, diff: &CollectionDiff<String, MapFeaturePatch, MapFeature>) {
-    for id in &diff.removed {
-        items.retain(|item| &item.id != id);
+use crate::artifacts::gismap::schema::GisMapArtifact;
+use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, MapFeaturePatch};
+use protocol::{CollectionMutation, MutationDiff, Patchable};
+
+//#region 🔹Apply
+/// Applies an identified-collection delta to a feature list.
+pub fn apply_features_delta(items: &[MapFeature], delta: &GisMapFeaturesDelta) -> Vec<MapFeature> {
+    let mut next = items.to_vec();
+    for id in &delta.removed {
+        next.retain(|item| &item.id != id);
     }
-    for patch in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|item| item.id == patch.id) {
-            item.apply_patch(&patch.patch);
+    for item in &delta.added {
+        next.push(item.clone());
+    }
+    for entry in &delta.patched {
+        if let Some(item) = next.iter_mut().find(|item| item.id == entry.id) {
+            item.apply_patch(&entry.patch);
         }
     }
-    for added in &diff.added {
-        items.push(added.clone());
-    }
-}
-
-fn absorb_map_collection_diff(target: &mut Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>, incoming: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>) {
-    if let Some(next) = incoming {
-        match target {
-            Some(existing) => {
-                existing.removed.extend(next.removed);
-                existing.modified.extend(next.modified);
-                existing.added.extend(next.added);
+    if let Some(order) = &delta.reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> =
+            next.into_iter().map(|item| (item.id.clone(), item)).collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(item) = by_id.remove(id) {
+                ordered.push(item);
             }
-            None => *target = Some(next),
+        }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
+}
+
+fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Option<GisMapFeaturesDelta>) {
+    if let Some(src) = incoming {
+        match target {
+            Some(dst) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+                dst.patched.extend(src.patched);
+                if src.reordered.is_some() {
+                    dst.reordered = src.reordered;
+                }
+            }
+            None => *target = Some(src),
         }
     }
 }
-//#endregion 🔖️Helpers
 
-//#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GisMapDiff {
-    pub document: Option<GisMapDocument>,
-    pub positions: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
-    pub routes: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
-    pub regions: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+impl GisMapDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> GisMapArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(delta) = &self.positions {
+            next.positions = apply_features_delta(&next.positions, delta);
+        }
+        if let Some(delta) = &self.routes {
+            next.routes = apply_features_delta(&next.routes, delta);
+        }
+        if let Some(delta) = &self.regions {
+            next.regions = apply_features_delta(&next.regions, delta);
+        }
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
+        }
+        if let Some(value) = &self.feature_selection_json {
+            next.feature_selection_json = value.clone();
+        }
+        if let Some(delta) = &self.layer_visibility {
+            for (key, value) in &delta.entries {
+                match value {
+                    Some(v) => { next.layer_visibility.insert(key.clone(), *v); }
+                    None => { next.layer_visibility.remove(key); }
+                }
+            }
+        }
+        if let Some(delta) = &self.layer_stroke_scale {
+            for (key, value) in &delta.entries {
+                match value {
+                    Some(v) => { next.layer_stroke_scale.insert(key.clone(), *v); }
+                    None => { next.layer_stroke_scale.remove(key); }
+                }
+            }
+        }
+        if let Some(value) = &self.camera_json { next.camera_json = value.clone(); }
+        if let Some(value) = &self.render_mode { next.render_mode = value.clone(); }
+        if let Some(value) = &self.vector_style { next.vector_style = value.clone(); }
+        if let Some(value) = &self.lod_mode { next.lod_mode = value.clone(); }
+        if let Some(value) = &self.hover_json { next.hover_json = value.clone(); }
+        if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
+        if let Some(value) = &self.selection_mode { next.selection_mode = value.clone(); }
+        if let Some(value) = &self.locale { next.locale = value.clone(); }
+        next
+    }
 }
 
-impl MutationDiff<GisMapDocument> for GisMapDiff {
-    fn apply(&self, projection: &GisMapDocument) -> GisMapDocument {
-        if let Some(document) = &self.document {
-            return document.clone();
+impl MutationDiff<GisMapSnapshot> for GisMapDiff {
+    fn apply(&self, snapshot: &GisMapSnapshot) -> GisMapSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
         }
-        let mut next = projection.clone();
-        if let Some(diff) = &self.positions {
-            apply_map_collection_diff(&mut next.positions, diff);
+        let mut next = snapshot.clone();
+        if let Some(delta) = &self.positions {
+            next.positions = apply_features_delta(&next.positions, delta);
         }
-        if let Some(diff) = &self.routes {
-            apply_map_collection_diff(&mut next.routes, diff);
+        if let Some(delta) = &self.routes {
+            next.routes = apply_features_delta(&next.routes, delta);
         }
-        if let Some(diff) = &self.regions {
-            apply_map_collection_diff(&mut next.regions, diff);
+        if let Some(delta) = &self.regions {
+            next.regions = apply_features_delta(&next.regions, delta);
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.document.is_some() {
-            *self = GisMapDiff { document: other.document, ..Default::default() };
+        if other.artifact.is_some() {
+            *self = other;
             return;
         }
-        absorb_map_collection_diff(&mut self.positions, other.positions);
-        absorb_map_collection_diff(&mut self.routes, other.routes);
-        absorb_map_collection_diff(&mut self.regions, other.regions);
+        absorb_features_delta(&mut self.positions, other.positions);
+        absorb_features_delta(&mut self.routes, other.routes);
+        absorb_features_delta(&mut self.regions, other.regions);
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(selected_ids);
+        take!(feature_selection_json);
+        take!(camera_json);
+        take!(render_mode);
+        take!(vector_style);
+        take!(lod_mode);
+        take!(hover_json);
+        take!(selection_method);
+        take!(selection_mode);
+        take!(locale);
+        match (&mut self.layer_visibility, other.layer_visibility) {
+            (Some(dst), Some(src)) => dst.entries.extend(src.entries),
+            (None, Some(src)) => self.layer_visibility = Some(src),
+            _ => {}
+        }
+        match (&mut self.layer_stroke_scale, other.layer_stroke_scale) {
+            (Some(dst), Some(src)) => dst.entries.extend(src.entries),
+            (None, Some(src)) => self.layer_stroke_scale = Some(src),
+            _ => {}
+        }
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔹Apply
 
-//#region 🧪️Tests
+//#region 🔹Helpers
+/// Builds a features delta from a collection mutation against the pre-state list.
+pub fn features_delta_from_collection_mutation(
+    base: &[MapFeature],
+    op: &CollectionMutation<String, MapFeature, MapFeaturePatch>,
+) -> GisMapFeaturesDelta {
+    match op {
+        CollectionMutation::Add { item, .. } => GisMapFeaturesDelta { added: vec![item.clone()], ..Default::default() },
+        CollectionMutation::Remove { id } => GisMapFeaturesDelta { removed: vec![id.clone()], ..Default::default() },
+        CollectionMutation::Patch { id, patch } => GisMapFeaturesDelta {
+            patched: vec![GisMapFeaturePatchEntry { id: id.clone(), patch: patch.clone() }],
+            ..Default::default()
+        },
+        CollectionMutation::Move { id, to_index } => {
+            let mut ids: Vec<String> = base.iter().map(|f| f.id.clone()).collect();
+            if let Some(from) = ids.iter().position(|x| x == id) {
+                let item = ids.remove(from);
+                let to = (*to_index).min(ids.len());
+                ids.insert(to, item);
+            }
+            GisMapFeaturesDelta { reordered: Some(ids), ..Default::default() }
+        }
+    }
+}
+
+pub fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
+    GisMapDiff {
+        artifact: Some(Box::new(GisMapArtifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔹Helpers
+
+//#region 🔹Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,22 +207,31 @@ mod tests {
     }
 
     #[test]
-    fn a_whole_document_diff_wins_over_every_collection_diff() {
-        let base = GisMapDocument { positions: vec![feature("p1")], ..Default::default() };
-        let replacement = GisMapDocument { routes: vec![feature("r1")], ..Default::default() };
-        let mut diff = GisMapDiff { positions: Some(CollectionDiff { removed: vec!["p1".into()], modified: Vec::new(), added: Vec::new() }), ..Default::default() };
-        diff.absorb(GisMapDiff { document: Some(replacement.clone()), ..Default::default() });
+    fn a_whole_artifact_diff_wins_over_every_collection_diff() {
+        let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
+        let replacement = GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() };
+        let mut diff = GisMapDiff {
+            positions: Some(GisMapFeaturesDelta { removed: vec!["p1".into()], ..Default::default() }),
+            ..Default::default()
+        };
+        diff.absorb(diff_set_snapshot(&replacement));
         assert_eq!(diff.apply(&base), replacement);
     }
 
     #[test]
     fn collection_diffs_absorb_and_apply_add_remove_patch() {
-        let base = GisMapDocument { positions: vec![feature("p1")], ..Default::default() };
-        let mut diff = GisMapDiff { positions: Some(CollectionDiff { removed: vec!["p1".into()], modified: Vec::new(), added: Vec::new() }), ..Default::default() };
-        diff.absorb(GisMapDiff { positions: Some(CollectionDiff { removed: Vec::new(), modified: Vec::new(), added: vec![feature("p2")] }), ..Default::default() });
+        let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
+        let mut diff = GisMapDiff {
+            positions: Some(GisMapFeaturesDelta { removed: vec!["p1".into()], ..Default::default() }),
+            ..Default::default()
+        };
+        diff.absorb(GisMapDiff {
+            positions: Some(GisMapFeaturesDelta { added: vec![feature("p2")], ..Default::default() }),
+            ..Default::default()
+        });
         let next = diff.apply(&base);
         assert_eq!(next.positions.len(), 1);
         assert_eq!(next.positions[0].id, "p2");
     }
 }
-//#endregion 🧪️Tests
+//#endregion 🔹Tests

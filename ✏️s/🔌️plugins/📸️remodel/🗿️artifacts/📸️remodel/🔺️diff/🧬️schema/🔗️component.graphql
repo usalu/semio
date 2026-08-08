@@ -1,0 +1,37 @@
+# 🧬️ Remodel diff schema — sparse field delta.
+
+type RemodelDiff {
+  artifact: RemodelArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  id: String @state(class: PERSISTENT)
+  streams: RemodelMediaStreamList @state(class: PERSISTENT)
+  assets: [ImageAssetEntry!] @state(class: PERSISTENT)
+  calibration: CalibrationState @state(class: PERSISTENT)
+  params: ReconstructionParams @state(class: PERSISTENT)
+  gcps: RemodelGcpList @state(class: PERSISTENT)
+  job: ReconstructionJob @state(class: PERSISTENT)
+  results: ReconstructionResults @state(class: PERSISTENT)
+  selection: RemodelUiSelection @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  reportTable: String @state(class: SHARED_UI)
+  frameCursor: RemodelUiFrameCursor @state(class: SHARED_UI)
+  camera: RemodelUiCamera @state(class: LOCAL_UI)
+  layers: RemodelUiLayers @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type RemodelArtifact { _placeholder: Boolean }
+type RemodelMediaStreamList { values: [MediaStream!]! }
+type RemodelGcpList { values: [GroundControlPoint!]! }
+type RemodelUiCamera { fov: Float }
+type RemodelUiSelection { mode: String }
+type RemodelUiLayers { mesh: Boolean }
+type RemodelUiFrameCursor { frameIndex: Int }
+type MediaStream { id: String! }
+type ImageAsset { mime: String! }
+type ImageAssetEntry { key: String! value: ImageAsset! }
+type CalibrationState { _placeholder: Boolean }
+type ReconstructionParams { _placeholder: Boolean }
+type GroundControlPoint { id: String! }
+type ReconstructionJob { _placeholder: Boolean }
+type ReconstructionResults { _placeholder: Boolean }

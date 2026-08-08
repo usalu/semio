@@ -1,8 +1,8 @@
 //! 🧭️ Remodel mutation — `SetSfmParams` apply.
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Mutation
-pub fn apply(next: &mut RemodelProjection, params: &crate::artifacts::remodel::SfmParams) {
+pub fn apply(next: &mut RemodelSnapshot, params: &crate::artifacts::remodel::SfmParams) {
     next.params.sfm = params.clone();
 }
 //#endregion 🔖️Mutation

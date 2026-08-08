@@ -1,10 +1,10 @@
 //! ⚡️ EN 1998 artifact — the operation type + its laws.
 //!
 //! 🧩️ EN family artifacts carry no bespoke operation enum: the sole mutation is a whole-document
-//! replace, already generically implemented as `crate::document::SetDocumentMutation<D>` (its
-//! `OpText`/`OpBinary` impls are blanket ones bounded on `D: DocumentDsl`/`DocumentPack`, satisfied
+//! replace, already generically implemented as `crate::document::En1998Mutation<D>` (its
+//! `OpText`/`OpBinary` impls are blanket ones bounded on `D: En1998SnapshotDsl`/`En1998SnapshotPack`, satisfied
 //! for free by this artifact's `#[derive(dsl::DslRecord)]`). The `NormFamily` binding that ties
-//! `Document` to `evaluate` lives in `⚙️engine`, next to the compute it names.
+//! `En1998Snapshot` to `evaluate` lives in `⚙️engine`, next to the compute it names.
 
 
 //#region 📖️SemioGrammar
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1998::Document;
+use crate::artifacts::en1998::En1998Snapshot;
 
 pub use crate::artifacts::en1998::mutations::En1998Mutation;
 
@@ -24,8 +24,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn set_document_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&En1998Mutation::SetDocument { document: Document::default() });
+    fn set_snapshot_op_text_round_trips() {
+        store::test_support::assert_op_line_round_trip(&En1998Mutation::SetSnapshot { snapshot: En1998Snapshot::default() });
     }
 }
 //#endregion 🧪️Tests

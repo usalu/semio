@@ -1,8 +1,8 @@
 //! 📈️ Remodel mutation — `SetTracks` apply.
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Mutation
-pub fn apply(next: &mut RemodelProjection, tracks: &Vec<crate::artifacts::remodel::MotionTrackSummary>) {
+pub fn apply(next: &mut RemodelSnapshot, tracks: &Vec<crate::artifacts::remodel::MotionTrackSummary>) {
     next.results.tracks = tracks.clone();
 }
 //#endregion 🔖️Mutation

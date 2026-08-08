@@ -1,0 +1,98 @@
+{
+  "block2d": {
+    "persistent": [
+      "schema",
+      "nodeKind",
+      "presentation",
+      "handleKinds",
+      "handles",
+      "compatibility",
+      "attributes",
+      "authors",
+      "camera2d",
+      "meta"
+    ],
+    "ui": [
+      "selectedIds",
+      "locale"
+    ],
+    "optional": [],
+    "collections": {
+      "handleKinds": "Block2dHandleKind",
+      "handles": "Block2dHandleTemplate",
+      "compatibility": "BlockCompatibilityRule",
+      "attributes": "BlockAttribute"
+    }
+  },
+  "block3d": {
+    "persistent": [
+      "schema",
+      "objectKind",
+      "representations",
+      "vortexKinds",
+      "vortices",
+      "compatibility",
+      "attributes",
+      "authors",
+      "camera3d",
+      "meta"
+    ],
+    "ui": [
+      "selectedIds",
+      "activeRepresentationId",
+      "wantedTags",
+      "locale",
+      "windows",
+      "brushVortexKindId",
+      "brushRadius",
+      "brushFlip",
+      "brushPreview",
+      "camera",
+      "hoveredVortexFullId"
+    ],
+    "optional": [
+      "camera",
+      "brushPreview",
+      "hoveredVortexFullId",
+      "activeRepresentationId",
+      "brushVortexKindId"
+    ],
+    "collections": {
+      "representations": "BlockRepresentation",
+      "vortexKinds": "Block3dVortexKind",
+      "vortices": "Block3dVortexTemplate",
+      "compatibility": "BlockCompatibilityRule",
+      "attributes": "BlockAttribute"
+    }
+  },
+  "block5d": {
+    "persistent": [
+      "schema",
+      "partKind",
+      "part2d",
+      "part2d",
+      "part3d",
+      "representations",
+      "gripKinds",
+      "grips",
+      "compatibility",
+      "attributes",
+      "authors",
+      "camera2d",
+      "camera3d",
+      "meta"
+    ],
+    "ui": [
+      "selectedIds",
+      "locale"
+    ],
+    "optional": [],
+    "collections": {
+      "representations": "BlockRepresentation",
+      "gripKinds": "Block5dGripKind",
+      "grips": "Block5dGripTemplate",
+      "compatibility": "BlockCompatibilityRule",
+      "attributes": "BlockAttribute"
+    }
+  }
+}

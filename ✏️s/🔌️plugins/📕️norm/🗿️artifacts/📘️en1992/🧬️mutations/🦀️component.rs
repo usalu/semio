@@ -1,8 +1,28 @@
-//! 🧬️ En1992 artifact — document mutation dispatch (SetDocument only).
+//! 🧬️ En1992 artifact — snapshot mutation dispatch.
 
-pub use crate::document::SetDocumentMutation;
+use crate::artifacts::en1992::diff::{diff_set_snapshot, En1992Diff};
+use crate::artifacts::en1992::En1992Snapshot;
+use protocol::Mutation;
+use serde::{Deserialize, Serialize};
 
-use crate::artifacts::en1992::Document;
+//#region 🔖️Mutation
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+pub enum En1992Mutation {
+    SetSnapshot { snapshot: En1992Snapshot },
+}
 
-/// @emoji 🧬️ Whole-document replace — the only norm-family document mutation today.
-pub type En1992Mutation = SetDocumentMutation<Document>;
+impl Mutation<En1992Snapshot> for En1992Mutation {
+    type Diff = En1992Diff;
+
+    fn diff(&self, _snapshot: &En1992Snapshot) -> En1992Diff {
+        match self {
+            Self::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+        }
+    }
+
+    fn inverse(&self, snapshot: &En1992Snapshot) -> Vec<Self> {
+        vec![Self::SetSnapshot { snapshot: snapshot.clone() }]
+    }
+}
+//#endregion 🔖️Mutation

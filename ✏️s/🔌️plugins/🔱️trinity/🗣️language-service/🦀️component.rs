@@ -1,16 +1,18 @@
 //! 🗣️ Trinity jack language service — parse, complete, lint, hover.
 #![allow(dead_code)]
 
-use crate::artifacts::jack::{port_node_id, port_port_id, Camera, Edge, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key};
-use crate::lexer::{lex_spanned, tokenize, Token, TokenClass, TokenSpan, SpannedToken};
+use crate::artifacts::jack::{port_node_id, port_port_id, Camera, Edge, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key};
+use crate::lexer::{lex, lex_spanned, tokenize, Token, TokenClass, TokenSpan, SpannedToken};
 use math::graph::dsl::{QueryableEdge, QueryableGraph};
 use std::collections::BTreeSet;
 
 pub mod queryable {
     use super::*;
 
-    fn trinity_jack_manifest() -> math::graph::manifest::GraphManifest {
-        math::graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest").clone()
+    fn trinity_jack_manifest() -> &'static math::graph::manifest::GraphManifest {
+        use std::sync::OnceLock;
+        static MANIFEST: OnceLock<math::graph::manifest::GraphManifest> = OnceLock::new();
+        MANIFEST.get_or_init(|| math::graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest").clone())
     }
 
     fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {
@@ -496,9 +498,9 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
 // #endregion 🔖️LanguageService
 /// 🧩️ Demo `Piece`/`Connection` fixture shared by the jack language server default session
 /// and playgrounds that need a non-empty graph for completions, hover and lint.
-pub fn example_graph_fixture() -> GraphFixture {
-    GraphFixture {
-        schema: GraphFixture::SCHEMA.into(),
+pub fn example_graph_fixture() -> JackSnapshot {
+    JackSnapshot {
+        schema: JackSnapshot::SCHEMA.into(),
         name: "jack-example".into(),
         manifest_id: Some("nakagin".into()),
         manifest: Manifest::nakagin_default(),

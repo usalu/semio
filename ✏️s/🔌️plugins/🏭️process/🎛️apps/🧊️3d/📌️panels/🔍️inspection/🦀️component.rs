@@ -5,7 +5,7 @@ use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::{process3d_measure_label, Process3dLabels};
 use crate::artifacts::process3d::engine::{find_capability, processed_volume, validate_capability, validation_context_for_stock, validation_reason};
-use crate::artifacts::process3d::{CapabilityRule, Process3dDocument, ProcessStep, SolidSpec, Stock, StockQuantity, WorkshopMachine};
+use crate::artifacts::process3d::{CapabilityRule, Process3dSnapshot, ProcessStep, SolidSpec, Stock, StockQuantity, WorkshopMachine};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -85,7 +85,7 @@ fn text_field(id: impl Into<String>, label: impl Into<Label>, value: &str, targe
 //#endregion 🔖️Fields
 
 //#region 🔖️StockInspector
-fn build_stock_inspector(stock: &Stock, fixture: &Process3dDocument, labels: &Process3dLabels) -> UiNode {
+fn build_stock_inspector(stock: &Stock, fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
     let mut fields = vec![text_field("process3d-inspector.label", labels.label_field, &stock.label, &stock.id, "label")];
     match &stock.solid {
         SolidSpec::Box { width, depth, height } => {
@@ -166,7 +166,7 @@ fn build_machine_inspector(machine: &WorkshopMachine, labels: &Process3dLabels) 
 //#endregion 🔖️MachineInspector
 
 //#region 🔖️StepInspector
-fn build_step_inspector(step: &ProcessStep, fixture: &Process3dDocument, labels: &Process3dLabels) -> UiNode {
+fn build_step_inspector(step: &ProcessStep, fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
     let target = format!("step:{}", step.id);
     let mut fields = vec![text_field("process3d-inspector.label", labels.label_field, &step.label, &target, "label")];
     if let Some(origin) = &step.origin {
@@ -216,7 +216,7 @@ fn build_step_inspector(step: &ProcessStep, fixture: &Process3dDocument, labels:
 //#endregion 🔖️StepInspector
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dDocument, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
+pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
     let Some(selected_id) = cfg.selected_id.as_deref() else {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "process3d-play-inspector.empty".into(),
@@ -269,7 +269,7 @@ mod tests {
     fn add_step_action_inserts_and_selects() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         assert_eq!(document.steps.len(), 5);
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
         assert!(!rendered.contains("No selection"), "expected the newly added step to be selected: {rendered}");
@@ -283,7 +283,7 @@ mod tests {
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
         assert!(!result.mutations.is_empty(), "circular saw crosscut should be valid against the shrunk stock");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         let last = document.steps.last().expect("inserted step");
         let origin = last.origin.as_ref().expect("origin");
         assert_eq!(origin.machine_id, "circularSaw");
@@ -306,7 +306,7 @@ mod tests {
     fn measure_arg_routes_to_generic_machine() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         let last = document.steps.last().expect("inserted step");
         let origin = last.origin.as_ref().expect("origin");
         assert_eq!(origin.machine_id, "saw");
@@ -321,7 +321,7 @@ mod tests {
         let add_result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
         assert!(!add_result.mutations.is_empty());
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.5), text: None }));
-        let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
+        let step_id = app.snapshot().expect("snapshot").steps.last().expect("step").id.clone();
         testkit::dispatch(&mut app, Process3dCommand::SetSelection(crate::apps::process3d::commands::selection::set_selection::SetSelection { id: Some(step_id) }));
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
         assert!(rendered.contains("needs stock"), "expected a validation warning after growing stock above the step's max cut depth: {rendered}");
@@ -332,7 +332,7 @@ mod tests {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
         testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
+        let step_id = app.snapshot().expect("snapshot").steps.last().expect("step").id.clone();
         testkit::dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(crate::apps::process3d::commands::workshop::remove_workshop_machine::RemoveWorkshopMachine { id: "circularSaw".into() }));
         testkit::dispatch(&mut app, Process3dCommand::SetSelection(crate::apps::process3d::commands::selection::set_selection::SetSelection { id: Some(step_id) }));
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);

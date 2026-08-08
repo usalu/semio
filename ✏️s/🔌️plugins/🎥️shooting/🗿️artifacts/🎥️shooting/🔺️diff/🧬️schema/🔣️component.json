@@ -1,0 +1,667 @@
+{
+  "$id": "https://semio.tech/schema/s/shooting/shooting/diff.json",
+  "title": "ShootingDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "ShootingArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "assets": {
+      "$ref": "#/$defs/ShootingAssetsDelta",
+      "x-semio-state": "persistent"
+    },
+    "savedCameras": {
+      "$ref": "#/$defs/ShootingSavedCamerasDelta",
+      "x-semio-state": "persistent"
+    },
+    "scene": {
+      "$ref": "#/$defs/ShootingSceneLighting",
+      "x-semio-state": "persistent"
+    },
+    "shots": {
+      "$ref": "#/$defs/ShootingShotsDelta",
+      "x-semio-state": "persistent"
+    },
+    "activeShotId": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "activeAssetId": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "selectedShotIds": {
+      "$ref": "#/$defs/ShootingStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedAssetIds": {
+      "$ref": "#/$defs/ShootingStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "defaultShotFormat": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "defaultShotShape": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "defaultAssetFormat": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "centerModel": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "fitRevision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "cameraDraftLabel": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/ShootingCamera",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredAssetId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "ShootingCamera": {
+      "title": "ShootingCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "zoom",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        },
+        "fov": {
+          "type": "number",
+          "format": "double"
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "projection": {
+          "type": "string"
+        }
+      }
+    },
+    "ShootingSavedCamera": {
+      "title": "ShootingSavedCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "camera"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/ShootingCamera"
+        }
+      }
+    },
+    "ShootingAsset": {
+      "title": "ShootingAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "url",
+        "format",
+        "origin"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "orientation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "scale": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "ShootingShot": {
+      "title": "ShootingShot",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "width",
+        "height",
+        "format",
+        "shape"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "format": {
+          "type": "string"
+        },
+        "shape": {
+          "type": "string"
+        },
+        "background": {
+          "type": "string"
+        },
+        "cameraId": {
+          "type": "string"
+        }
+      }
+    },
+    "ShootingSun": {
+      "title": "ShootingSun",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "azimuth",
+        "elevation",
+        "intensity",
+        "color"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "azimuth": {
+          "type": "number",
+          "format": "double"
+        },
+        "elevation": {
+          "type": "number",
+          "format": "double"
+        },
+        "intensity": {
+          "type": "number",
+          "format": "double"
+        },
+        "color": {
+          "type": "string"
+        }
+      }
+    },
+    "ShootingAmbient": {
+      "title": "ShootingAmbient",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intensity",
+        "color"
+      ],
+      "properties": {
+        "intensity": {
+          "type": "number",
+          "format": "double"
+        },
+        "color": {
+          "type": "string"
+        }
+      }
+    },
+    "ShootingShadow": {
+      "title": "ShootingShadow",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "opacity",
+        "softness"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number",
+          "format": "double"
+        },
+        "softness": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "ShootingMaterial": {
+      "title": "ShootingMaterial",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "metalness",
+        "roughness",
+        "emissive",
+        "emissiveIntensity"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "metalness": {
+          "type": "number",
+          "format": "double"
+        },
+        "roughness": {
+          "type": "number",
+          "format": "double"
+        },
+        "emissive": {
+          "type": "string"
+        },
+        "emissiveIntensity": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "ShootingSceneLighting": {
+      "title": "ShootingSceneLighting",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "background",
+        "sun",
+        "ambient",
+        "shadow",
+        "material"
+      ],
+      "properties": {
+        "background": {
+          "type": "string"
+        },
+        "sun": {
+          "$ref": "#/$defs/ShootingSun"
+        },
+        "ambient": {
+          "$ref": "#/$defs/ShootingAmbient"
+        },
+        "shadow": {
+          "$ref": "#/$defs/ShootingShadow"
+        },
+        "material": {
+          "$ref": "#/$defs/ShootingMaterial"
+        },
+        "emblemBase64": {
+          "type": "string"
+        }
+      }
+    },
+    "ShootingStringList": {
+      "title": "ShootingStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ShootingAssetPatch": {
+      "title": "ShootingAssetPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "orientation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "scale": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "ShootingShotPatch": {
+      "title": "ShootingShotPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "format": {
+          "type": "string"
+        },
+        "shape": {
+          "type": "string"
+        }
+      }
+    },
+    "ShootingSavedCameraPatch": {
+      "title": "ShootingSavedCameraPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/ShootingCamera"
+        }
+      }
+    },
+    "ShootingAssetPatchEntry": {
+      "title": "ShootingAssetPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ShootingAssetPatch"
+        }
+      }
+    },
+    "ShootingShotPatchEntry": {
+      "title": "ShootingShotPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ShootingShotPatch"
+        }
+      }
+    },
+    "ShootingSavedCameraPatchEntry": {
+      "title": "ShootingSavedCameraPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ShootingSavedCameraPatch"
+        }
+      }
+    },
+    "ShootingAssetsDelta": {
+      "title": "ShootingAssetsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShootingAsset"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShootingAssetPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ShootingShotsDelta": {
+      "title": "ShootingShotsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShootingShot"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShootingShotPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ShootingSavedCamerasDelta": {
+      "title": "ShootingSavedCamerasDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShootingSavedCamera"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShootingSavedCameraPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

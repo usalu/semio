@@ -8,8 +8,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::rewrite::diff::RewriteRuleDiff;
-use crate::artifacts::rewrite::{RewriteRuleModel, TrinityRewriteError, REWRITE_RULE_SCHEMA};
+use crate::artifacts::rewrite::diff::RewriteDiff;
+use crate::artifacts::rewrite::{RewriteSnapshot, TrinityRewriteError, REWRITE_RULE_SCHEMA};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
@@ -17,40 +17,40 @@ use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, Documen
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum RewriteRuleMutation {
-    SetState { state: RewriteRuleModel },
+    SetState { state: RewriteSnapshot },
 }
 
 
 
 
 
-impl Mutation<RewriteRuleModel> for RewriteRuleMutation {
-    type Diff = RewriteRuleDiff;
+impl Mutation<RewriteSnapshot> for RewriteRuleMutation {
+    type Diff = RewriteDiff;
 
-    fn diff(&self, _projection: &RewriteRuleModel) -> Self::Diff {
+    fn diff(&self, _snapshot: &RewriteSnapshot) -> Self::Diff {
         match self {
-            RewriteRuleMutation::SetState { state } => RewriteRuleDiff { next: Some(state.clone()) },
+            RewriteRuleMutation::SetState { state } => crate::artifacts::rewrite::diff::diff_set_state(state),
         }
     }
 
-    fn inverse(&self, projection: &RewriteRuleModel) -> Vec<Self> {
-        vec![RewriteRuleMutation::SetState { state: projection.clone() }]
+    fn inverse(&self, snapshot: &RewriteSnapshot) -> Vec<Self> {
+        vec![RewriteRuleMutation::SetState { state: snapshot.clone() }]
     }
 }
 
-pub type RewriteRuleEnvelope = DocumentEnvelope<RewriteRuleModel, RewriteRuleMutation>;
-pub type RewriteRuleStore = DocumentStore<RewriteRuleModel, RewriteRuleMutation>;
+pub type RewriteRuleEnvelope = DocumentEnvelope<RewriteSnapshot, RewriteRuleMutation>;
+pub type RewriteRuleStore = DocumentStore<RewriteSnapshot, RewriteRuleMutation>;
 
-pub fn create_rewrite_rule_envelope(id: &str, state: RewriteRuleModel) -> RewriteRuleEnvelope {
+pub fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> RewriteRuleEnvelope {
     create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None)
 }
 
-pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteRuleModel) -> Result<(), TrinityRewriteError> {
-    let current = store.projection()?;
+pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteSnapshot) -> Result<(), TrinityRewriteError> {
+    let current = store.snapshot()?;
     if current == state {
         return Ok(());
     }
-    store.dispatch(DocumentCommand::Apply { mutations: vec![RewriteRuleMutation::SetState { state }], description: None }).map_err(TrinityRewriteError::from)
+    store.dispatch(DocumentCommand::Apply { mutations: vec![RewriteRuleMutation::SetState { state }], description: None }).map_err(TrinityRewriteError::from).map(|_| ())
 }
 
 //#region 🧪️Tests
@@ -61,15 +61,15 @@ mod tests {
     use crate::artifacts::rewrite::LayoutPoint;
     use protocol::OpText;
     use std::collections::BTreeMap;
-    use store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+    use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
-    fn sample_rule_state() -> RewriteRuleModel {
+    fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint::from((10.5, -20.25)));
-        RewriteRuleModel {
+        RewriteSnapshot {
             before_fixture_json: "{\"schema\":\"trinity.graph\",\"name\":\"x \\\"quoted\\\"\\nline\"}".to_string(),
             lhs_json: r#"{"pattern":{"leftVar":"a","leftKind":"Piece"}}"#.to_string(),
             rhs_json: r#"{"set":[{"var":"a","prop":"label","value":"$label"}]}"#.to_string(),
@@ -110,16 +110,18 @@ mod tests {
         next.lhs_json = "{}".into();
         dispatch_rewrite_rule_state(&mut store, next).unwrap();
         let edit: &Edit<RewriteRuleMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<RewriteRuleModel, RewriteRuleMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        ::store::os_store::test_support::assert_command_envelope_round_trip::<RewriteSnapshot, RewriteRuleMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 }
 //#endregion 🧪️Tests
 
 
-pub fn apply_rewrite_rule_mutation(projection: &mut RewriteRuleDocument, mutation: &RewriteRuleMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_rewrite_rule_mutation(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) {
+    match mutation {
+        RewriteRuleMutation::SetState { state } => *snapshot = state.clone(),
+    }
 }
 
-pub fn inverse_rewrite_rule_mutation(projection: &RewriteRuleDocument, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
-    mutation.inverse(projection)
+pub fn inverse_rewrite_rule_mutation(snapshot: &RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
+    mutation.inverse(snapshot)
 }

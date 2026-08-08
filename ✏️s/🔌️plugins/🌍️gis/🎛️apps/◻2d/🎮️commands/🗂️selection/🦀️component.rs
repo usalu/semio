@@ -4,7 +4,7 @@
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::apps::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::GisMapDocument;
+use crate::artifacts::gismap::GisMapSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -64,7 +64,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -82,10 +82,10 @@ pub mod set_feature_selection {
         pub mode: String,
     }
 
-    pub fn handle(payload: &SetFeatureSelection, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &SetFeatureSelection, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let selection = merge_feature_selection(&config.feature_selection_json, payload.positions.clone(), payload.routes.clone(), &payload.mode);
-        let mut host = map_host_from(doc.projection, config);
+        let mut host = map_host_from(doc.snapshot, config);
         if host.set_selection_json(&selection.to_string()).is_ok() {
             Ok(Emit::config(vec![Gis2dConfigMutation::SetFeatureSelection { value_json: selection.to_string() }]))
         } else {
@@ -103,7 +103,7 @@ pub mod clear_selection {
     #[dsl(keyword = "clear-selection")]
     pub struct ClearSelection {}
 
-    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetFeatureSelection { value_json: Gis2dConfig::default().feature_selection_json }]))
     }
 }
@@ -117,8 +117,8 @@ pub mod select_all {
     #[dsl(keyword = "select-all")]
     pub struct SelectAll {}
 
-    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        let host = map_host_from(doc.projection, cfg.projection);
+    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let host = map_host_from(doc.snapshot, cfg.snapshot);
         let selection = json!({
             "positions": host.features.positions.keys().cloned().collect::<Vec<_>>(),
             "routes": host.features.routes.keys().cloned().collect::<Vec<_>>(),
@@ -139,8 +139,8 @@ pub mod deselect {
         pub feature_kind: String,
     }
 
-    pub fn handle(payload: &Deselect, _doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        let mut selection: Value = serde_json::from_str(&cfg.projection.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
+    pub fn handle(payload: &Deselect, _doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let mut selection: Value = serde_json::from_str(&cfg.snapshot.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
         let bucket = if payload.feature_kind == "position" { "positions" } else { "routes" };
         if let Some(rows) = selection.get_mut(bucket).and_then(|value| value.as_array_mut()) {
             rows.retain(|row| row.as_str() != Some(payload.feature_id.as_str()));
@@ -161,8 +161,8 @@ pub mod focus_feature {
         pub feature_kind: String,
     }
 
-    pub fn handle(payload: &FocusFeature, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        let mut host = map_host_from(doc.projection, cfg.projection);
+    pub fn handle(payload: &FocusFeature, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let mut host = map_host_from(doc.snapshot, cfg.snapshot);
         if host.focus_feature(&payload.feature_kind, &payload.feature_id) {
             Ok(Emit::config(vec![Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() }]))
         } else {
@@ -182,7 +182,7 @@ pub mod set_selection_method {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetSelectionMethod { value: payload.value.clone() }]))
     }
 }
@@ -198,7 +198,7 @@ pub mod set_selection_mode {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetSelectionMode, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelectionMode, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetSelectionMode { value: payload.value.clone() }]))
     }
 }
@@ -223,9 +223,9 @@ mod tests {
     #[test]
     fn selection_actions_emit_no_ops_under_registry_kind_discipline() {
         let mut app = app_with_registry();
-        assert!(dispatch(&mut app, Gis2dCommand::SelectAll(select_all::SelectAll {})).operations.is_empty());
-        assert!(dispatch(&mut app, Gis2dCommand::ClearSelection(clear_selection::ClearSelection {})).operations.is_empty());
-        assert!(dispatch(&mut app, Gis2dCommand::SetFeatureSelection(set_feature_selection::SetFeatureSelection { positions: vec!["p1".into()], routes: Vec::new(), mode: "default".into() })).operations.is_empty());
+        assert!(dispatch(&mut app, Gis2dCommand::SelectAll(select_all::SelectAll {})).mutations.is_empty());
+        assert!(dispatch(&mut app, Gis2dCommand::ClearSelection(clear_selection::ClearSelection {})).mutations.is_empty());
+        assert!(dispatch(&mut app, Gis2dCommand::SetFeatureSelection(set_feature_selection::SetFeatureSelection { positions: vec!["p1".into()], routes: Vec::new(), mode: "default".into() })).mutations.is_empty());
     }
 
     /// 🗂️ Probes the emitted `SetFeatureSelection` payload directly rather than the rendered scene:
@@ -236,17 +236,17 @@ mod tests {
         const PIN: &str = "p_institut_de_botanique_ulg_liege";
         let document = crate::artifacts::gismap::engine::default_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
+        let doc = DocumentView { snapshot: &document, history: &history };
 
         let base = Gis2dConfig::default();
-        let all = select_all::handle(&select_all::SelectAll {}, &doc, &ConfigView { projection: &base }).expect("selectAll");
+        let all = select_all::handle(&select_all::SelectAll {}, &doc, &ConfigView { snapshot: &base }).expect("selectAll");
         let Some(Gis2dConfigMutation::SetFeatureSelection { value_json }) = all.config_mutations.first().cloned() else {
             panic!("selectAll emits one SetFeatureSelection");
         };
         assert!(value_json.contains(PIN), "select-all writes every position id into the selection");
 
         let selected = Gis2dConfig { feature_selection_json: value_json, ..Gis2dConfig::default() };
-        let dropped = deselect::handle(&deselect::Deselect { feature_id: PIN.into(), feature_kind: "position".into() }, &doc, &ConfigView { projection: &selected }).expect("deselect");
+        let dropped = deselect::handle(&deselect::Deselect { feature_id: PIN.into(), feature_kind: "position".into() }, &doc, &ConfigView { snapshot: &selected }).expect("deselect");
         let Some(Gis2dConfigMutation::SetFeatureSelection { value_json }) = dropped.config_mutations.first().cloned() else {
             panic!("deselect emits one SetFeatureSelection");
         };

@@ -17,7 +17,7 @@ use crate::apps::remodel::panels::{calibration as calibration_panel, document, m
 use crate::apps::remodel::terminology::remodel_labels;
 use crate::artifacts::remodel::engine::decode_still_image;
 use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelProjection, REMODEL_DOCUMENT_SCHEMA};
+use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, REMODEL_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
@@ -51,7 +51,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
     /// `"setSelection" as "selection"` and `"setLocale" as "locale"` are the rows that prove it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum RemodelCommand for RemodelProjection, RemodelMutation, RemodelConfig, RemodelConfigMutation {
+    pub enum RemodelCommand for RemodelSnapshot, RemodelMutation, RemodelConfig, RemodelConfigMutation {
         // 🚀️ Staged reconstruction — fully synchronous; there is no advance/cancel tick.
         "runReconstruction" as "run-reconstruction" => run_reconstruction::RunReconstruction,
         "retryStage" as "retry-stage" => retry_stage::RetryStage,
@@ -325,7 +325,7 @@ mod args_bridge {
 pub struct RemodelPlayApp;
 
 impl DocumentApp for RemodelPlayApp {
-    type Projection = RemodelProjection;
+    type Snapshot = RemodelSnapshot;
     type Mutation = RemodelMutation;
     type Config = RemodelConfig;
     type ConfigMutation = RemodelConfigMutation;
@@ -337,7 +337,7 @@ impl DocumentApp for RemodelPlayApp {
     const APP_ID: &'static str = REMODEL_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> RemodelProjection {
+    fn initial_snapshot() -> RemodelSnapshot {
         default_remodel_scene()
     }
 
@@ -346,18 +346,18 @@ impl DocumentApp for RemodelPlayApp {
     }
 
     /// 🎞️ `mesh:out` (the current reconstructed mesh, GLB-encoded) plus the inherited `document:out`
-    /// default (the pack of `doc.projection`, replicated inline — overriding `export_media` shadows the
+    /// default (the pack of `doc.snapshot`, replicated inline — overriding `export_media` shadows the
     /// trait's provided body for every port, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, RemodelProjection>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, RemodelSnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
-                let mesh = &doc.projection.results.mesh.mesh;
+                let mesh = &doc.snapshot.results.mesh.mesh;
                 let bytes = MeshExporter::export(&GlbExporter, mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64::engine::general_purpose::STANDARD.encode(bytes) } })
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -369,7 +369,7 @@ impl DocumentApp for RemodelPlayApp {
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodel
     /// has no whole-document-replace `Mutation` variant to satisfy `whole_document_mutation`
     /// (`RemodelMutation` is deliberately field-granular — see that enum's doc comment).
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelProjection>) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -377,7 +377,7 @@ impl DocumentApp for RemodelPlayApp {
                 };
                 let bytes = base64::engine::general_purpose::STANDARD.decode(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let (width, height) = decode_still_image("image/png", &bytes).map_or((0, 0), |image| (image.width, image.height));
-                let scene = doc.projection;
+                let scene = doc.snapshot;
                 let stream_id = REMODEL_WORKFLOW_PHOTOS_STREAM_ID;
                 let frame_index = scene.streams.iter().find(|stream| stream.id == stream_id).map_or(0, |stream| stream.frames.len() as u32);
                 let asset_key = format!("{stream_id}-frame-{frame_index}");
@@ -419,13 +419,13 @@ impl DocumentApp for RemodelPlayApp {
         args_bridge::command_from_action(action, args)
     }
 
-    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
-        let scene = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
+        let scene = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = remodel_labels(config);
         match body_key {
             model::windows::model::REMODEL_PLAY_BODY_MAIN => model::windows::model::render(scene, config),
@@ -444,8 +444,8 @@ impl DocumentApp for RemodelPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(_doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        HashMap::from([(model::windows::model::REMODEL_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.projection, remodel_labels(cfg.projection)))])
+    fn window_measures(_doc: &DocumentView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::from([(model::windows::model::REMODEL_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.snapshot, remodel_labels(cfg.snapshot)))])
     }
 }
 //#endregion 🔖️RemodelPlayApp
@@ -826,7 +826,7 @@ mod tests {
         let commands = every_command();
         assert_eq!(commands.len(), keywords.len(), "the keyword list must cover every row");
         for (command, keyword) in commands.iter().zip(keywords) {
-            store::test_support::assert_op_text_binary_equivalence(command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(command);
             assert!(command.print_op().starts_with(keyword), "row must print its wire keyword {keyword}, got {:?}", command.print_op());
         }
     }
@@ -868,19 +868,19 @@ mod tests {
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         testkit::assert_declared_actions_bridge_to_commands::<RemodelPlayApp>(create_remodel_app);
-        assert!(RemodelPlayApp.command_from_action("nonsense", None).is_err());
+        assert!(RemodelPlayApp::command_from_action("nonsense", None).is_err());
     }
 
     /// 🌉️ Select-typed args arrive as strings; numeric-option selects (`textureSize`) must still land in
     /// a `u32` field, and a `setCamera` payload is accepted both flat and `{camera:{…}}`-nested.
     #[test]
     fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
-        let mesh = RemodelPlayApp.command_from_action("setMeshParams", Some(&serde_json::json!({ "textureSize": "4096" }))).expect("bridge");
+        let mesh = RemodelPlayApp::command_from_action("setMeshParams", Some(&serde_json::json!({ "textureSize": "4096" }))).expect("bridge");
         let RemodelCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
         assert_eq!(payload.texture_size, 4096);
 
-        let flat = RemodelPlayApp.command_from_action("setCamera", Some(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 }))).expect("bridge");
-        let nested = RemodelPlayApp.command_from_action("setCamera", Some(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 } }))).expect("bridge");
+        let flat = RemodelPlayApp::command_from_action("setCamera", Some(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 }))).expect("bridge");
+        let nested = RemodelPlayApp::command_from_action("setCamera", Some(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 } }))).expect("bridge");
         assert_eq!(flat, nested);
     }
 
@@ -956,7 +956,7 @@ mod tests {
             RemodelCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: "akaze".into(), target_count: 1000, octaves: 4, edge_threshold: 10.0 }),
             RemodelCommand::AddGcp(add_gcp::AddGcp { name: "corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }),
             |app| {
-                let projection = app.projection().expect("materialize projection");
+                let projection = app.snapshot().expect("materialize projection");
                 (projection.params.feature.detector, projection.gcps.first().map(|gcp| gcp.name.clone()))
             },
         );
@@ -968,8 +968,8 @@ mod tests {
     #[test]
     fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
         let app = app();
-        let projection = app.projection().expect("projection");
-        let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
+        let projection = app.snapshot().expect("projection");
+        let doc = DocumentView { snapshot: &projection, history: &HistoryView::empty() };
         let inner = RemodelPlayApp;
         let media = Media {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
@@ -978,15 +978,15 @@ mod tests {
                 json: base64::engine::general_purpose::STANDARD.encode(crate::artifacts::remodel::engine::images::encode_png(&crate::artifacts::remodel::engine::images::ImageRgba8::new(4, 4)).expect("encode png")),
             },
         };
-        let emit = inner.import_media("photos:in", &media, &doc).expect("photos:in import");
+        let emit = RemodelPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
         assert_eq!(emit.document_mutations.len(), 2, "one SetAsset + one SetStreams");
         let next = emit.document_mutations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next.streams.len(), 1);
         assert_eq!(next.streams[0].id, REMODEL_WORKFLOW_PHOTOS_STREAM_ID);
         assert_eq!(next.streams[0].frames.len(), 1);
 
-        let doc2 = DocumentView { projection: &next, history: &HistoryView::empty() };
-        let emit2 = inner.import_media("photos:in", &media, &doc2).expect("second photos:in import");
+        let doc2 = DocumentView { snapshot: &next, history: &HistoryView::empty() };
+        let emit2 = RemodelPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
         let next2 = emit2.document_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
         assert_eq!(next2.streams[0].frames.len(), 2, "second import appends a second frame");
@@ -996,9 +996,9 @@ mod tests {
     #[test]
     fn export_media_mesh_out_exports_a_structured_3d_mesh() {
         let app = app();
-        let projection = app.projection().expect("projection");
-        let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
-        let media = RemodelPlayApp.export_media("mesh:out", &doc).expect("mesh:out export");
+        let projection = app.snapshot().expect("projection");
+        let doc = DocumentView { snapshot: &projection, history: &HistoryView::empty() };
+        let media = RemodelPlayApp::export_media("mesh:out", &doc).expect("mesh:out export");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Mesh);
         match media.payload {

@@ -1,0 +1,62 @@
+// 🧬️ EN 1999 diff schema.
+syntax = "proto3";
+package semio.s.norm.en1999.diff;
+
+message En1999Diff {
+  // @state persistent
+  En1999Artifact artifact = 1;
+  // @state persistent
+  optional double n_ed_kn = 2;
+  // @state persistent
+  optional double m_ed_knm = 3;
+  // @state persistent
+  optional double a_mm2 = 4;
+  // @state persistent
+  optional double w_el_mm3 = 5;
+  // @state persistent
+  optional double alloy = 6;
+  // @state persistent
+  optional double chi = 7;
+  // @state persistent
+  optional double i_t_mm4 = 8;
+  // @state persistent
+  optional double l_cr_mm = 9;
+  // @state persistent
+  optional double theta_c = 10;
+  // @state persistent
+  optional double delta_sigma_ed = 11;
+  // @state persistent
+  optional double delta_sigma_c = 12;
+  // @state persistent
+  optional double fatigue_m = 13;
+  // @state persistent
+  optional double n_cycles = 14;
+  // @state persistent
+  optional double v_weld_ed_kn = 15;
+  // @state persistent
+  optional double weld_throat_mm = 16;
+  // @state persistent
+  optional double weld_length_mm = 17;
+  // @state persistent
+  optional double beta_w = 18;
+  // @state persistent
+  optional double sheet_b_mm = 19;
+  // @state persistent
+  optional double sheet_t_mm = 20;
+  // @state persistent
+  optional double sheet_k_sigma = 21;
+  // @state persistent
+  optional double sheet_w_el_mm3 = 22;
+  // @state persistent
+  optional double sheet_m_ed_knm = 23;
+  // @state persistent
+  optional double shell_t_mm = 24;
+  // @state persistent
+  optional double shell_r_mm = 25;
+  // @state persistent
+  optional double sigma_ed_shell_mpa = 26;
+  // @state persistent
+  optional double annex = 27;
+  // @state shared-ui
+  optional uint32 selected_check_index = 28;
+}

@@ -1,0 +1,28 @@
+# 🧬️ EN 1997 diff schema.
+
+type En1997Diff {
+  artifact: En1997Artifact @state(class: PERSISTENT)
+  vEdKn: Float @state(class: PERSISTENT)
+  hEdKn: Float @state(class: PERSISTENT)
+  footingAreaM2: Float @state(class: PERSISTENT)
+  phiDeg: Float @state(class: PERSISTENT)
+  cKpa: Float @state(class: PERSISTENT)
+  gammaKnM3: Float @state(class: PERSISTENT)
+  bM: Float @state(class: PERSISTENT)
+  dFM: Float @state(class: PERSISTENT)
+  eSMpa: Float @state(class: PERSISTENT)
+  nu: Float @state(class: PERSISTENT)
+  designApproach: Float @state(class: PERSISTENT)
+  annex: Float @state(class: PERSISTENT)
+  settlementLimitMm: Float @state(class: PERSISTENT)
+  nPileEdKn: Float @state(class: PERSISTENT)
+  alphaS: Float @state(class: PERSISTENT)
+  pileDM: Float @state(class: PERSISTENT)
+  qSKpa: Float @state(class: PERSISTENT)
+  pileLM: Float @state(class: PERSISTENT)
+  qBKpa: Float @state(class: PERSISTENT)
+  pileBaseAreaM2: Float @state(class: PERSISTENT)
+  pileNProfiles: Int @state(class: PERSISTENT)
+  zInvestigatedM: Float @state(class: PERSISTENT)
+  selectedCheckIndex: Int @state(class: SHARED_UI)
+}

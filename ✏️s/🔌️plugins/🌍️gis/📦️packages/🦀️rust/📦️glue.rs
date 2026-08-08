@@ -8,6 +8,8 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
+extern crate semio_framework_schema as schema;
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
@@ -29,8 +31,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🗺️gismap/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🗺️gismap/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -40,20 +53,25 @@ pub mod artifacts {
             pub use component::*;
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🗺️gismap/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🗺️gismap/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🗺️gismap/⚙️engine/🦀️component.rs"]
@@ -66,8 +84,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -97,20 +126,25 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🏔️gisterrain/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🏔️gisterrain/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🏔️gisterrain/⚙️engine/🦀️component.rs"]

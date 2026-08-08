@@ -2,15 +2,15 @@
 //! Its command handler lives in `🎮️commands/☀️scene::set_sun_intensity`.
 
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowMeasure {
+pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "shooting.measure.sun-intensity".into(),
         label: Some(labels.measure_sun_intensity.into()),
-        value: fixture.scene.sun.intensity,
+        value: snapshot.scene.sun.intensity,
         min: 0.0,
         max: 5.0,
         step: Some(0.1),
@@ -33,9 +33,9 @@ mod tests {
 
     #[test]
     fn sun_intensity_measure_matches_the_fixture_default() {
-        let fixture = crate::artifacts::shooting::engine::default_fixture();
+        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
-        match measure(&fixture, labels) {
+        match measure(&snapshot, labels) {
             WindowMeasure::Slider { value, .. } => assert_eq!(value, 2.4),
             other => panic!("sun-intensity measure must be a slider, got {other:?}"),
         }

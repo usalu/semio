@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1990::Document;
+use crate::artifacts::en1990::En1990Snapshot;
 
 /// 🏢️ The high-consequence-office example fixture, handcrafted in `en1990`'s DSL
 /// (`store::DocumentDsl`): a CC3 (high-consequence) office building basis-of-design check with

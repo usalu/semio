@@ -21,7 +21,7 @@ fn shot_patch_for_field(field: &str, value: &Value) -> Option<ShootingShotPatch>
     }
 }
 
-fn active_shot_id(fixture: &crate::artifacts::shooting::ShootingFixture) -> Option<String> {
+fn active_shot_id(fixture: &crate::artifacts::shooting::ShootingSnapshot) -> Option<String> {
     crate::artifacts::shooting::engine::active_shot(fixture).map(|shot| shot.id.clone())
 }
 
@@ -35,7 +35,7 @@ pub mod set_active_shot {
         pub shot_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetActiveShot, _doc: &DocumentView<'_, crate::artifacts::shooting::ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveShot, _doc: &DocumentView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match payload.shot_id.as_deref().filter(|id| !id.is_empty()) {
             Some(id) => Ok(Emit::mutations(vec![ShootingMutation::SetActiveShot { shot_id: Some(id.into()) }])),
             None => Ok(Emit::default()),
@@ -54,8 +54,8 @@ pub mod set_active_shot_label {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetActiveShotLabel, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        match active_shot_id(doc.projection) {
+    pub fn handle(payload: &SetActiveShotLabel, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        match active_shot_id(doc.snapshot) {
             Some(shot_id) => Ok(Emit::mutations(vec![ShootingMutation::Shots(CollectionMutation::Patch { id: shot_id, patch: ShootingShotPatch { label: Some(payload.value.clone()), ..Default::default() } })])),
             None => Ok(Emit::default()),
         }
@@ -73,8 +73,8 @@ pub mod set_active_shot_format {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetActiveShotFormat, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        match (active_shot_id(doc.projection), shot_patch_for_field("format", &json!(payload.value))) {
+    pub fn handle(payload: &SetActiveShotFormat, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        match (active_shot_id(doc.snapshot), shot_patch_for_field("format", &json!(payload.value))) {
             (Some(shot_id), Some(patch)) => Ok(Emit::mutations(vec![ShootingMutation::Shots(CollectionMutation::Patch { id: shot_id, patch })])),
             _ => Ok(Emit::default()),
         }
@@ -92,8 +92,8 @@ pub mod set_active_shot_shape {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetActiveShotShape, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        match (active_shot_id(doc.projection), shot_patch_for_field("shape", &json!(payload.value))) {
+    pub fn handle(payload: &SetActiveShotShape, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        match (active_shot_id(doc.snapshot), shot_patch_for_field("shape", &json!(payload.value))) {
             (Some(shot_id), Some(patch)) => Ok(Emit::mutations(vec![ShootingMutation::Shots(CollectionMutation::Patch { id: shot_id, patch })])),
             _ => Ok(Emit::default()),
         }
@@ -113,7 +113,7 @@ pub mod patch_shots {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchShots, _doc: &DocumentView<'_, crate::artifacts::shooting::ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchShots, _doc: &DocumentView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match shot_patch_for_field(&payload.field, &json!(payload.value)) {
             Some(patch) if !payload.shot_ids.is_empty() => Ok(Emit::mutations(payload.shot_ids.iter().cloned().map(|id| ShootingMutation::Shots(CollectionMutation::Patch { id, patch: patch.clone() })).collect())),
             _ => Ok(Emit::default()),
@@ -134,12 +134,12 @@ pub mod add_shot {
         pub shape: String,
     }
 
-    pub fn handle(payload: &AddShot, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let fixture = doc.projection;
+    pub fn handle(payload: &AddShot, doc: &DocumentView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
         let id = next_shooting_id("shot");
-        let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", fixture.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: None };
+        let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: None };
         Ok(Emit {
-            document_mutations: vec![ShootingMutation::Shots(CollectionMutation::Add { index: fixture.shots.len(), item: shot }), ShootingMutation::SetActiveShot { shot_id: Some(id.clone()) }],
+            document_mutations: vec![ShootingMutation::Shots(CollectionMutation::Add { index: snapshot.shots.len(), item: shot }), ShootingMutation::SetActiveShot { shot_id: Some(id.clone()) }],
             config_mutations: vec![ShootingConfigMutation::SetSelection { shot_ids: vec![id], asset_ids: Vec::new() }],
             ..Default::default()
         })
@@ -158,22 +158,22 @@ mod tests {
     fn set_active_shot_label_patches_active_shot() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero Shot".into() }));
-        assert_eq!(crate::artifacts::shooting::engine::active_shot(&app.projection().expect("projection")).unwrap().label, "Hero Shot");
+        assert_eq!(crate::artifacts::shooting::engine::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
     }
 
     #[test]
     fn add_shot_action_appends_shot() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
-        assert!(app.projection().expect("projection").shots.iter().any(|shot| shot.format == "svg" && shot.shape == "ellipse"));
+        assert!(app.snapshot().expect("snapshot").shots.iter().any(|shot| shot.format == "svg" && shot.shape == "ellipse"));
     }
 
     #[test]
     fn set_active_shot_updates_fixture() {
         let mut app = shooting_app();
-        let second_id = app.projection().expect("projection").shots.get(1).map(|shot| shot.id.clone()).expect("second shot");
+        let second_id = app.snapshot().expect("snapshot").shots.get(1).map(|shot| shot.id.clone()).expect("second shot");
         dispatch(&mut app, ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some(second_id.clone()) }));
-        assert_eq!(app.projection().expect("projection").active_shot_id, second_id);
+        assert_eq!(app.snapshot().expect("snapshot").active_shot_id, second_id);
     }
 }
 //#endregion 🧪️Tests

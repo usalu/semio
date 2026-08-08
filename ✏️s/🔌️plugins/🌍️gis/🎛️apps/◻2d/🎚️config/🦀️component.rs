@@ -16,6 +16,7 @@ use std::collections::BTreeMap;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "gis2dcfg")]
+#[dsl(id = "gis.gis2dcfg")]
 #[dsl(layout = "lines")]
 pub struct Gis2dConfig {
     /// 👁️ Selected document-tree layer ids.
@@ -347,12 +348,12 @@ mod tests {
 
     #[test]
     fn gis2d_config_dsl_round_trips_default_and_populated() {
-        store::test_support::assert_dsl_round_trip(&Gis2dConfig::default());
+        store::os_store::test_support::assert_dsl_round_trip(&Gis2dConfig::default());
         let mut populated = Gis2dConfig { selected_ids: vec!["roads".into()], ..Gis2dConfig::default() };
         populated.layer_visibility.insert("water".into(), false);
         populated.layer_stroke_scale.insert("roads".into(), 1.5);
-        store::test_support::assert_dsl_round_trip(&populated);
-        store::test_support::assert_dsl_pack_equivalence(&populated);
+        store::os_store::test_support::assert_dsl_round_trip(&populated);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
     }
 
     #[test]
@@ -377,19 +378,19 @@ mod tests {
 
     #[test]
     fn gis2d_config_operation_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelection { ids: vec!["roads".into()] });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetRenderMode { value: "vector".into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetVectorStyle { value: "figureGround".into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLodMode { value: "automatic".into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetFeatureSelection { value_json: r#"{"positions":[],"routes":[]}"#.into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetHover { value_json: "null".into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelectionMethod { value: "lasso".into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelectionMode { value: "additive".into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::Snapshot { config: Gis2dConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelection { ids: vec!["roads".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetRenderMode { value: "vector".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetVectorStyle { value: "figureGround".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLodMode { value: "automatic".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetFeatureSelection { value_json: r#"{"positions":[],"routes":[]}"#.into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetHover { value_json: "null".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelectionMethod { value: "lasso".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelectionMode { value: "additive".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::Snapshot { config: Gis2dConfig::default() });
     }
 }
 //#endregion 🧪️Tests

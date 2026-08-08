@@ -6,14 +6,14 @@
 
 use crate::apps::gis2d::config::Gis2dConfig;
 use crate::artifacts::gismap::engine::gis_map_descriptor_json;
-use crate::artifacts::gismap::GisMapDocument;
+use crate::artifacts::gismap::GisMapSnapshot;
 use framework_surface::tiled_map::MapHost;
 use serde_json::Value;
 
 //#region 🔖️MapHost
 /// 🗺️ Builds a `MapHost` from the document content (derived descriptor JSON) plus the config's
 /// camera/render/style/LOD/selection view state.
-pub fn map_host_from(document: &GisMapDocument, cfg: &Gis2dConfig) -> MapHost {
+pub fn map_host_from(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> MapHost {
     let mut host = MapHost::new();
     let descriptor = gis_map_descriptor_json(document);
     let _ = host.sync_map_json(&descriptor);
@@ -42,7 +42,7 @@ mod tests {
         let document = default_document();
         let config = Gis2dConfig { camera_json: r#"{"x":10,"y":20,"zoom":4}"#.into(), ..Gis2dConfig::default() };
         let host = map_host_from(&document, &config);
-        assert!(!host.positions.is_empty(), "the reuse-map fixture seeds position features");
+        assert!(!host.features.positions.is_empty(), "the reuse-map fixture seeds position features");
         let camera: Value = serde_json::from_str(&host.camera_json()).expect("camera json");
         assert_eq!(camera.get("zoom").and_then(Value::as_f64), Some(4.0));
     }
@@ -50,7 +50,7 @@ mod tests {
     #[test]
     fn a_malformed_camera_json_leaves_the_host_at_its_own_default() {
         let config = Gis2dConfig { camera_json: "not json".into(), ..Gis2dConfig::default() };
-        let host = map_host_from(&GisMapDocument::default(), &config);
+        let host = map_host_from(&GisMapSnapshot::default(), &config);
         assert!(serde_json::from_str::<Value>(&host.camera_json()).is_ok(), "the host still reports a valid camera");
     }
 }

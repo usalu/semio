@@ -4,7 +4,7 @@
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::apps::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::GisMapDocument;
+use crate::artifacts::gismap::GisMapSnapshot;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -19,8 +19,8 @@ pub mod open_source {
         pub feature_id: String,
     }
 
-    pub fn handle(payload: &OpenSource, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        let host = map_host_from(doc.projection, cfg.projection);
+    pub fn handle(payload: &OpenSource, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let host = map_host_from(doc.snapshot, cfg.snapshot);
         match host.features.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
             Some(url) => Ok(Emit::effect(HostEffect::OpenExternalUrl { url })),
             None => Ok(Emit::default()),
@@ -52,7 +52,7 @@ mod tests {
         let action = definition.actions.iter().find(|action| action.id == "openSource").expect("openSource declared");
         assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Shell));
         let mut app = crate::apps::gis2d::testkit::app_with_registry();
-        assert!(dispatch(&mut app, Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "nope".into() })).operations.is_empty());
+        assert!(dispatch(&mut app, Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "nope".into() })).mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

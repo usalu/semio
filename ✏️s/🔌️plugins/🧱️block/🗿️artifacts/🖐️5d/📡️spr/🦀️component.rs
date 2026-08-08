@@ -26,17 +26,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::{Block5dDefinition, BLOCK_5D_SCHEMA};
+    use crate::artifacts::block5d::{Block5dSnapshot, BLOCK_5D_SCHEMA};
     use crate::BlockKindIdentity;
     use store::{create_document_envelope, DocumentCommand};
 
     #[test]
     fn block5d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::block5d::op::Block5dStore;
+        use crate::artifacts::block5d::mutations::Block5dStore;
 
-        let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dDefinition::default(), None));
+        let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![Block5dMutation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }], description: None }).expect("apply");
-        let projection = store.projection().expect("projection");
+        let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.part_kind.id, "p1");
     }
 

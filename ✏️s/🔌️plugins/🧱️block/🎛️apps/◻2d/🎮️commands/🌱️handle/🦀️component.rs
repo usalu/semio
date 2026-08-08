@@ -3,7 +3,7 @@
 pub mod add_handle {
     use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
     use crate::artifacts::block2d::op::Block2dMutation;
-    use crate::artifacts::block2d::{Block2dDefinition, Block2dHandleTemplate};
+    use crate::artifacts::block2d::{Block2dSnapshot, Block2dHandleTemplate};
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -11,20 +11,20 @@ pub mod add_handle {
     #[dsl(keyword = "addHandle")]
     pub struct AddHandle {}
 
-    pub fn handle(_payload: &AddHandle, doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-        let Some(handle_kind_id) = doc.projection.handle_kinds.first().map(|kind| kind.id.clone()) else {
+    pub fn handle(_payload: &AddHandle, doc: &DocumentView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+        let Some(handle_kind_id) = doc.snapshot.handle_kinds.first().map(|kind| kind.id.clone()) else {
             return Ok(Emit::default());
         };
-        let id = crate::artifacts::block2d::engine::next_id(doc.projection.handles.iter().map(|handle| handle.id.as_str()), "handle-");
+        let id = crate::artifacts::block2d::engine::next_id(doc.snapshot.handles.iter().map(|handle| handle.id.as_str()), "handle-");
         let handle = Block2dHandleTemplate { id, handle_kind: handle_kind_id, angle: 0.0, radius: 0.36 };
-        Ok(Emit::mutations(vec![Block2dMutation::SetHandle { index: doc.projection.handles.len(), handle }]))
+        Ok(Emit::mutations(vec![Block2dMutation::SetHandle { index: doc.snapshot.handles.len(), handle }]))
     }
 }
 
 pub mod remove_handle {
     use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
     use crate::artifacts::block2d::op::Block2dMutation;
-    use crate::artifacts::block2d::Block2dDefinition;
+    use crate::artifacts::block2d::Block2dSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -34,7 +34,7 @@ pub mod remove_handle {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveHandle, _doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveHandle, _doc: &DocumentView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![Block2dMutation::RemoveHandle { id: payload.id.clone() }]))
     }
 }

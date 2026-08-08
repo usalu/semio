@@ -43,8 +43,7 @@ pub fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabel
         "inputSlider" => labels.catalog_slider.as_str(),
         "inputNote" => labels.catalog_note.as_str(),
         "outputPreview" => labels.catalog_preview.as_str(),
-        _ => kind,
-    }
+        _ => kind}
 }
 //#endregion 🔖️Labels
 

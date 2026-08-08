@@ -1,0 +1,449 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1993/snapshot.json",
+  "title": "En1993Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "annex",
+    "nEdKn",
+    "mEdKnm",
+    "vEdKn",
+    "aMm2",
+    "aVMm2",
+    "wPlMm3",
+    "fYMpa",
+    "fUMpa",
+    "chi",
+    "aNetMm2",
+    "tensionNEdKn",
+    "fireThicknessMm",
+    "fireRating",
+    "fireMassivity",
+    "fireMu0",
+    "fireDesignTemperatureC",
+    "cfBBarMm",
+    "cfTMm",
+    "cfKSigma",
+    "cfPsi",
+    "cfNEdKn",
+    "cfGrossResistanceKn",
+    "stainlessMEdKnm",
+    "stainlessWPlMm3",
+    "stainlessFYMpa",
+    "platedLambdaP",
+    "platedSigmaEdMpa",
+    "siloTMm",
+    "siloRMm",
+    "shellSigmaXEdMpa",
+    "siloK",
+    "siloGammaKnM3",
+    "siloDepthM",
+    "boltFEdKn",
+    "boltNBolts",
+    "boltASMm2",
+    "boltE1Mm",
+    "boltE2Mm",
+    "boltD0Mm",
+    "boltDMm",
+    "boltTMm",
+    "boltFUMpa",
+    "boltFUbMpa",
+    "weldAMm",
+    "weldLMm",
+    "weldFUMpa",
+    "weldSteelGrade",
+    "weldFEdKn",
+    "deltaSigmaMpa",
+    "fatigueCategory",
+    "fatigueMethod",
+    "t10SteelSubgrade",
+    "t10ActualThicknessMm",
+    "t10TEdC",
+    "tensionComponentFUkKn",
+    "tensionComponentFKKn",
+    "tensionComponentNEdKn",
+    "hssWElMm3",
+    "hssFYMpa",
+    "hssSectionClass",
+    "hssMEdKnm",
+    "bridgeLambda",
+    "bridgePhi2",
+    "bridgeDeltaSigmaPMpa",
+    "towerWindFactor",
+    "towerNEdKn",
+    "pileSigmaMpa",
+    "pileKRed",
+    "pileNEdKn",
+    "craneFZEdKn",
+    "craneWheelContactLengthMm",
+    "craneDispersionMm",
+    "craneTWMm"
+  ],
+  "properties": {
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "nEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "mEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aVMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wPlMm3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fYMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fUMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "chi": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aNetMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tensionNEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireThicknessMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireRating": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "fireMassivity": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireMu0": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireDesignTemperatureC": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cfBBarMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cfTMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cfKSigma": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cfPsi": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cfNEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "cfGrossResistanceKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "stainlessMEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "stainlessWPlMm3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "stainlessFYMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "platedLambdaP": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "platedSigmaEdMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloTMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloRMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "shellSigmaXEdMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloGammaKnM3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloDepthM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltFEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltNBolts": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "boltASMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltE1Mm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltE2Mm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltD0Mm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltDMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltTMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltFUMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "boltFUbMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "weldAMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "weldLMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "weldFUMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "weldSteelGrade": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "weldFEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "deltaSigmaMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fatigueCategory": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "fatigueMethod": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "t10SteelSubgrade": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "t10ActualThicknessMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "t10TEdC": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tensionComponentFUkKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tensionComponentFKKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tensionComponentNEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hssWElMm3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hssFYMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hssSectionClass": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "hssMEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeLambda": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgePhi2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeDeltaSigmaPMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "towerWindFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "towerNEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pileSigmaMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pileKRed": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pileNEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "craneFZEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "craneWheelContactLengthMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "craneDispersionMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "craneTWMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    }
+  }
+}

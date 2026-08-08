@@ -1,0 +1,162 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gismap/artifact.json",
+  "title": "GisMapArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "positions",
+    "routes",
+    "regions",
+    "selectedIds",
+    "featureSelectionJson",
+    "layerVisibility",
+    "layerStrokeScale",
+    "cameraJson",
+    "renderMode",
+    "vectorStyle",
+    "lodMode",
+    "hoverJson",
+    "selectionMethod",
+    "selectionMode",
+    "locale"
+  ],
+  "properties": {
+    "positions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GisMapFeature"
+      },
+      "x-semio-state": "persistent"
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GisMapFeature"
+      },
+      "x-semio-state": "persistent"
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GisMapFeature"
+      },
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "featureSelectionJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "shared-ui"
+    },
+    "layerVisibility": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "layerStrokeScale": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "format": "double"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "cameraJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "renderMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "vectorStyle": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoverJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "GisMapFeature": {
+      "title": "GisMapFeature",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "GisMapBoolEntry": {
+      "title": "GisMapBoolEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GisMapNumberEntry": {
+      "title": "GisMapNumberEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

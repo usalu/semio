@@ -1,0 +1,488 @@
+{
+  "$id": "https://semio.tech/schema/s/block/block5d/diff.json",
+  "title": "Block5dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Block5dArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "partKind": {
+      "$ref": "#/$defs/BlockKindIdentity",
+      "x-semio-state": "persistent"
+    },
+    "part2d": {
+      "$ref": "#/$defs/Block5dPart2d",
+      "x-semio-state": "persistent"
+    },
+    "part3d": {
+      "$ref": "#/$defs/Block5dPart3d",
+      "x-semio-state": "persistent"
+    },
+    "representations": {
+      "$ref": "#/$defs/Block5dRepresentationsDelta",
+      "x-semio-state": "persistent"
+    },
+    "gripKinds": {
+      "$ref": "#/$defs/Block5dGripKindsDelta",
+      "x-semio-state": "persistent"
+    },
+    "grips": {
+      "$ref": "#/$defs/Block5dGripsDelta",
+      "x-semio-state": "persistent"
+    },
+    "compatibility": {
+      "$ref": "#/$defs/Block5dCompatibilityDelta",
+      "x-semio-state": "persistent"
+    },
+    "attributes": {
+      "$ref": "#/$defs/Block5dAttributesDelta",
+      "x-semio-state": "persistent"
+    },
+    "authors": {
+      "$ref": "#/$defs/Block5dAuthorList",
+      "x-semio-state": "persistent"
+    },
+    "camera2d": {
+      "$ref": "#/$defs/BlockCamera2d",
+      "x-semio-state": "persistent"
+    },
+    "camera3d": {
+      "$ref": "#/$defs/BlockCamera3d",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/BlockMeta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/Block5dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "BlockKindIdentity": {
+      "title": "BlockKindIdentity",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block5dPart2d": {
+      "title": "Block5dPart2d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block5dPart3d": {
+      "title": "Block5dPart3d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockRepresentation": {
+      "title": "BlockRepresentation",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block5dGripKind": {
+      "title": "Block5dGripKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block5dGripTemplate": {
+      "title": "Block5dGripTemplate",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCompatibilityRule": {
+      "title": "BlockCompatibilityRule",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAttribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAuthor": {
+      "title": "BlockAuthor",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCamera2d": {
+      "title": "BlockCamera2d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCamera3d": {
+      "title": "BlockCamera3d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockMeta": {
+      "title": "BlockMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block5dStringList": {
+      "title": "Block5dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block5dAuthorList": {
+      "title": "Block5dAuthorList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthor"
+          }
+        }
+      }
+    },
+    "Block5dRepresentationsDelta": {
+      "title": "Block5dRepresentationsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockRepresentation"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dRepresentationsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block5dRepresentationsPatchEntry": {
+      "title": "Block5dRepresentationsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block5dRepresentationsPatch"
+        }
+      }
+    },
+    "Block5dRepresentationsPatch": {
+      "title": "Block5dRepresentationsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockRepresentation"
+        }
+      }
+    },
+    "Block5dGripKindsDelta": {
+      "title": "Block5dGripKindsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dGripKind"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dGripKindsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block5dGripKindsPatchEntry": {
+      "title": "Block5dGripKindsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block5dGripKindsPatch"
+        }
+      }
+    },
+    "Block5dGripKindsPatch": {
+      "title": "Block5dGripKindsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Block5dGripKind"
+        }
+      }
+    },
+    "Block5dGripsDelta": {
+      "title": "Block5dGripsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dGripTemplate"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dGripsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block5dGripsPatchEntry": {
+      "title": "Block5dGripsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block5dGripsPatch"
+        }
+      }
+    },
+    "Block5dGripsPatch": {
+      "title": "Block5dGripsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Block5dGripTemplate"
+        }
+      }
+    },
+    "Block5dCompatibilityDelta": {
+      "title": "Block5dCompatibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockCompatibilityRule"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dCompatibilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block5dCompatibilityPatchEntry": {
+      "title": "Block5dCompatibilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block5dCompatibilityPatch"
+        }
+      }
+    },
+    "Block5dCompatibilityPatch": {
+      "title": "Block5dCompatibilityPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockCompatibilityRule"
+        }
+      }
+    },
+    "Block5dAttributesDelta": {
+      "title": "Block5dAttributesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttribute"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block5dAttributesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block5dAttributesPatchEntry": {
+      "title": "Block5dAttributesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block5dAttributesPatch"
+        }
+      }
+    },
+    "Block5dAttributesPatch": {
+      "title": "Block5dAttributesPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockAttribute"
+        }
+      }
+    }
+  }
+}

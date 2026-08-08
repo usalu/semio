@@ -1,38 +1,21 @@
 //! 🔺️ Diff fragment yielded by `SetStreams`.
-use crate::artifacts::remodel::mutations::RemodelMutation;
-use crate::artifacts::remodel::RemodelProjection;
-use protocol::MutationDiff;
+use crate::artifacts::remodel::diff::RemodelDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `SetStreams` mutation.
+/// @emoji 🔺️ Diff produced by one `SetStreams` mutation — a sparse [`RemodelDiff`].
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct SetStreamsDiff {
-    pub mutation: Option<RemodelMutation>,
+    pub diff: RemodelDiff,
 }
 
 impl SetStreamsDiff {
-    pub fn from_mutation(mutation: RemodelMutation) -> Self {
-        Self { mutation: Some(mutation) }
-    }
-}
-
-impl MutationDiff<RemodelProjection> for SetStreamsDiff {
-    fn apply(&self, projection: &RemodelProjection) -> RemodelProjection {
-        match &self.mutation {
-            Some(m) => {
-                let mut next = projection.clone();
-                crate::artifacts::remodel::mutations::apply_remodel_mutation_in_place(&mut next, m);
-                next
-            }
-            None => projection.clone(),
-        }
+    pub fn from_diff(diff: RemodelDiff) -> Self {
+        Self { diff }
     }
 
-    fn absorb(&mut self, other: Self) {
-        if other.mutation.is_some() {
-            *self = other;
-        }
+    pub fn into_remodel_diff(self) -> RemodelDiff {
+        self.diff
     }
 }
 //#endregion 🔖️Diff

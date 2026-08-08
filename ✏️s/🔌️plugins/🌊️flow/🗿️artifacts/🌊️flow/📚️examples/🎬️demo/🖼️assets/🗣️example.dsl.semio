@@ -1,3 +1,51 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio flow.flow.dsl v1
+{
+  "schema": "flow.fixture",
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "widgets": [
+    {
+      "kind": "inputSlider",
+      "id": "slider",
+      "value": 3.0,
+      "min": 0.0,
+      "max": 10.0,
+      "step": 0.1
+    },
+    {
+      "kind": "neuron",
+      "id": "add",
+      "neuronKind": "math.add",
+      "params": {},
+      "input_ports": [],
+      "output_ports": [],
+      "preview": true
+    },
+    {
+      "kind": "outputPreview",
+      "id": "preview",
+      "preview": {},
+      "expanded": []
+    }
+  ],
+  "synapses": [
+    {
+      "id": "s1",
+      "from": "slider",
+      "to": "add",
+      "fromPort": "number",
+      "toPort": "a"
+    },
+    {
+      "id": "s2",
+      "from": "add",
+      "to": "preview",
+      "fromPort": "sum",
+      "toPort": ""
+    }
+  ],
+  "layout": {}
+}

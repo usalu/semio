@@ -12,15 +12,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 
-/// 📖️ Parses `.remodel` DSL text into a `RemodelProjection`.
-pub fn parse_dsl(text: &str) -> Result<RemodelProjection, store::TextError> {
-    <RemodelProjection as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.remodel` DSL text into a `RemodelSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<RemodelSnapshot, store::TextError> {
+    <RemodelSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `RemodelProjection` back to `.remodel` DSL text.
-pub fn print_dsl(scene: &RemodelProjection) -> String {
+/// 🖨️ Prints a `RemodelSnapshot` back to `.remodel` DSL text.
+pub fn print_dsl(scene: &RemodelSnapshot) -> String {
     store::DocumentDsl::print_dsl(scene)
 }
 
@@ -35,7 +35,7 @@ mod tests {
 
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that
     /// crate's `populated_scene_fixture` doc comment for why this is copied rather than shared.
-    fn populated_scene_fixture() -> RemodelProjection {
+    fn populated_scene_fixture() -> RemodelSnapshot {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -119,12 +119,12 @@ mod tests {
 
     #[test]
     fn default_scene_roundtrips_through_dsl() {
-        store::test_support::assert_dsl_round_trip(&default_remodel_scene());
+        store::os_store::test_support::assert_dsl_round_trip(&default_remodel_scene());
     }
 
     #[test]
     fn populated_scene_roundtrips_through_dsl() {
-        store::test_support::assert_dsl_round_trip(&populated_scene_fixture());
+        store::os_store::test_support::assert_dsl_round_trip(&populated_scene_fixture());
     }
 }
 //#endregion 🧪️Tests

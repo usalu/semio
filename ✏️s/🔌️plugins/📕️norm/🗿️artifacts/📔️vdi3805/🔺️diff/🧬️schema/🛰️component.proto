@@ -1,0 +1,42 @@
+syntax = "proto3";
+package semio.s.norm.vdi3805.diff;
+
+message Vdi3805Diff {
+  // @state persistent
+  optional Vdi3805Artifact artifact = 1;
+  // @state persistent
+  optional string manufacturer_file = 2;
+  // @state persistent
+  optional string catalog = 3;
+  // @state persistent
+  optional map<string, string> edition_profile = 4;
+  // @state persistent
+  optional string correction_as_of = 5;
+  // @state persistent
+  optional bool strict_mode = 6;
+  // @state persistent
+  optional string index = 7;
+  // @state persistent
+  optional map<string, string> geometry = 8;
+  // @state persistent
+  optional map<string, string> curves = 9;
+  // @state persistent
+  optional string limits = 10;
+  // @state shared-ui
+  optional uint32 selected_check_index = 11;
+}
+
+message Vdi3805Artifact {
+  string manufacturer_file = 1;
+  string catalog = 2;
+  map<string, string> edition_profile = 3;
+  string correction_as_of = 4;
+  bool strict_mode = 5;
+  string index = 6;
+  map<string, string> geometry = 7;
+  map<string, string> curves = 8;
+  string limits = 9;
+  optional uint32 selected_check_index = 10;
+}
+
+message Vdi3805StringList { repeated string values = 1; }

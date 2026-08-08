@@ -1,13 +1,13 @@
 //! ⚙️ GIS map artifact — headless compute over the map projection (constitutional: engine).
 //!
 //! 🧭️ Placement rule for helpers: anything here takes ONLY document-side types
-//! (`GisMapDocument`/`MapFeature`/descriptor JSON). Helpers that also need the ◻2d app's view state
+//! (`GisMapSnapshot`/`MapFeature`/descriptor JSON). Helpers that also need the ◻2d app's view state
 //! (`crate::apps::gis2d::config::Gis2dConfig`) stay at app level — an artifact must never depend on an
 //! app.
 
 use crate::artifacts::gismap::dsl::REUSE_MAP_EXAMPLE_TEXT;
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch, GIS_MAP_SCHEMA};
+use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, MapFeaturePatch, GIS_MAP_SCHEMA};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
 use serde_json::{json, Value};
@@ -22,13 +22,13 @@ fn dsl_to_value(value: &dsl::DslValue) -> Value {
 }
 
 //#region 🔖️DocumentHelpers
-pub fn empty_gis_map_projection() -> GisMapDocument {
-    GisMapDocument::default()
+pub fn empty_gis_map_snapshot() -> GisMapSnapshot {
+    GisMapSnapshot::default()
 }
 
-/// 📥️ Parses a `{ positions, routes, regions }` map-descriptor JSON into a `GisMapDocument` — each
+/// 📥️ Parses a `{ positions, routes, regions }` map-descriptor JSON into a `GisMapSnapshot` — each
 /// array entry becomes a `MapFeature` keyed by its `id`, keeping the full object as the payload.
-pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapDocument {
+pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot {
     let value: Value = serde_json::from_str(json).unwrap_or_else(|_| serde_json::json!({}));
     let features = |key: &str| -> Vec<MapFeature> {
         value
@@ -45,12 +45,12 @@ pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapDocument {
             })
             .unwrap_or_default()
     };
-    GisMapDocument { positions: features("positions"), routes: features("routes"), regions: features("regions") }
+    GisMapSnapshot { positions: features("positions"), routes: features("routes"), regions: features("regions") }
 }
 
 /// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
 /// emitting each feature's opaque payload.
-pub fn gis_map_descriptor_json(document: &GisMapDocument) -> String {
+pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
     let payloads = |features: &[MapFeature]| -> Vec<Value> { features.iter().map(|feature| dsl_to_value(&feature.data)).collect() };
     serde_json::json!({
         "positions": payloads(&document.positions),
@@ -61,9 +61,9 @@ pub fn gis_map_descriptor_json(document: &GisMapDocument) -> String {
 }
 
 /// 🗺️ The default map document, seeded from the bundled reuse example (see
-/// `crate::artifacts::gismap::GisMapDocument`'s derive-generated `.gismap` DSL).
-pub fn default_document() -> GisMapDocument {
-    <GisMapDocument as store::DocumentDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_projection())
+/// `crate::artifacts::gismap::GisMapSnapshot`'s derive-generated `.gismap` DSL).
+pub fn default_document() -> GisMapSnapshot {
+    <GisMapSnapshot as store::DocumentDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -154,7 +154,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🎞️ `map:out`'s `Media` value — this document's positions/routes/regions as a `2d.map` structured
 /// payload; reuses the exact descriptor JSON shape the ◻2d window's renderer/`MapHost` already consume,
 /// so there is exactly one "gis map as JSON" shape in the whole app.
-pub fn gis2d_map_media(document: &GisMapDocument) -> semio_framework_plugin::Media {
+pub fn gis2d_map_media(document: &GisMapSnapshot) -> semio_framework_plugin::Media {
     semio_framework_plugin::Media {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.map".into(), json: gis_map_descriptor_json(document) },
@@ -194,7 +194,7 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
             MapFeature { id: id.clone(), data: value_to_dsl(&json!({ "id": id, "lon": point[0], "lat": point[1] })) }
         })
         .collect();
-    serde_json::to_value(GisMapDocument { positions, routes: Vec::new(), regions: Vec::new() }).map_err(|error| error.to_string())
+    serde_json::to_value(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new() }).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport
 
@@ -204,6 +204,8 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
 /// root's `📦️glue.rs` setup fn.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
+
     semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.map", gis2d_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::gis2d::Gis2dPlayApp>(GIS_MAP_SCHEMA);
@@ -230,8 +232,8 @@ mod tests {
     fn dwg_import_falls_back_to_default_document_when_empty() {
         let drawing = DwgDrawing::default();
         let value = gis2d_document_json_from_dwg(&drawing).expect("import empty dwg");
-        let document: GisMapDocument = serde_json::from_value(value).expect("document");
-        assert!(!document.positions.is_empty(), "fallback seeds the reuse-map document");
+        let snapshot: GisMapSnapshot = serde_json::from_value(value).expect("document");
+        assert!(!snapshot.positions.is_empty(), "fallback seeds the reuse-map document");
     }
 
     #[test]
@@ -265,7 +267,7 @@ mod tests {
         let operations = positions_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Remove { id }) if id == "gone")));
         assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Patch { id, .. }) if id == "keep")));
-        assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Add { id, .. }) if id == "new")));
+        assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Add { item, .. }) if item.id == "new")));
         assert!(routes_operations(&before, &before).is_empty(), "an unchanged collection produces no operations");
         assert!(regions_operations(&before, &before).is_empty());
     }
@@ -274,6 +276,20 @@ mod tests {
 
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+
+use std::sync::{Mutex, OnceLock};
+
+static SCHEMA_REGISTRY: OnceLock<Mutex<schema::ArtifactSchemaRegistry>> = OnceLock::new();
+
+/// Registers the fifteen handcrafted schema leaves for `s.gis.gismap`.
+pub fn register_artifact_schema() {
+    let registry = SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor());
+}
+
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "gis.gismap",
@@ -281,8 +297,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::gismap::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::gismap::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gismap::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gismap::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("gis.gismap"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -311,8 +327,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::gismap::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gismap::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("gismap.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -328,34 +344,50 @@ pub fn register_pilot_languages() {
 }
 
 
-//#region 🔖️ArtifactEngine
+
+//#region 🔹ArtifactEngine
+/// ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct GisMapEngine {
-    projection: crate::artifacts::gismap::GisMapDocument,
+    artifact: crate::artifacts::gismap::schema::GisMapArtifact,
+    snapshot: GisMapSnapshot,
 }
 
 impl GisMapEngine {
-    pub fn new(projection: crate::artifacts::gismap::GisMapDocument) -> Self {
-        Self { projection }
+    /// Seeds the engine from a persisted snapshot.
+    pub fn new(snapshot: GisMapSnapshot) -> Self {
+        let artifact = crate::artifacts::gismap::schema::GisMapArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+
+    /// Consumes the engine and returns its persisted snapshot.
+    pub fn into_snapshot(self) -> GisMapSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for GisMapEngine {
-    type Projection = crate::artifacts::gismap::GisMapDocument;
+    type Artifact = crate::artifacts::gismap::schema::GisMapArtifact;
+    type Snapshot = GisMapSnapshot;
     type Mutation = crate::artifacts::gismap::mutations::GisMapMutation;
     type Diff = crate::artifacts::gismap::diff::GisMapDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::gismap::mutations::apply_gis_map_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
-//#endregion 🔖️ArtifactEngine
+//#endregion 🔹ArtifactEngine

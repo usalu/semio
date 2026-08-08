@@ -1,0 +1,397 @@
+{
+  "$id": "https://semio.tech/schema/s/block/block2d/diff.json",
+  "title": "Block2dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Block2dArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "nodeKind": {
+      "$ref": "#/$defs/BlockKindIdentity",
+      "x-semio-state": "persistent"
+    },
+    "presentation": {
+      "$ref": "#/$defs/Block2dPresentation",
+      "x-semio-state": "persistent"
+    },
+    "handleKinds": {
+      "$ref": "#/$defs/Block2dHandleKindsDelta",
+      "x-semio-state": "persistent"
+    },
+    "handles": {
+      "$ref": "#/$defs/Block2dHandlesDelta",
+      "x-semio-state": "persistent"
+    },
+    "compatibility": {
+      "$ref": "#/$defs/Block2dCompatibilityDelta",
+      "x-semio-state": "persistent"
+    },
+    "attributes": {
+      "$ref": "#/$defs/Block2dAttributesDelta",
+      "x-semio-state": "persistent"
+    },
+    "authors": {
+      "$ref": "#/$defs/Block2dAuthorList",
+      "x-semio-state": "persistent"
+    },
+    "camera2d": {
+      "$ref": "#/$defs/BlockCamera2d",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/BlockMeta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/Block2dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "BlockKindIdentity": {
+      "title": "BlockKindIdentity",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block2dPresentation": {
+      "title": "Block2dPresentation",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block2dHandleKind": {
+      "title": "Block2dHandleKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block2dHandleTemplate": {
+      "title": "Block2dHandleTemplate",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCompatibilityRule": {
+      "title": "BlockCompatibilityRule",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAttribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAuthor": {
+      "title": "BlockAuthor",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCamera2d": {
+      "title": "BlockCamera2d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockMeta": {
+      "title": "BlockMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block2dStringList": {
+      "title": "Block2dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block2dAuthorList": {
+      "title": "Block2dAuthorList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthor"
+          }
+        }
+      }
+    },
+    "Block2dHandleKindsDelta": {
+      "title": "Block2dHandleKindsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dHandleKind"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dHandleKindsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block2dHandleKindsPatchEntry": {
+      "title": "Block2dHandleKindsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block2dHandleKindsPatch"
+        }
+      }
+    },
+    "Block2dHandleKindsPatch": {
+      "title": "Block2dHandleKindsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Block2dHandleKind"
+        }
+      }
+    },
+    "Block2dHandlesDelta": {
+      "title": "Block2dHandlesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dHandleTemplate"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dHandlesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block2dHandlesPatchEntry": {
+      "title": "Block2dHandlesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block2dHandlesPatch"
+        }
+      }
+    },
+    "Block2dHandlesPatch": {
+      "title": "Block2dHandlesPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Block2dHandleTemplate"
+        }
+      }
+    },
+    "Block2dCompatibilityDelta": {
+      "title": "Block2dCompatibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockCompatibilityRule"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dCompatibilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block2dCompatibilityPatchEntry": {
+      "title": "Block2dCompatibilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block2dCompatibilityPatch"
+        }
+      }
+    },
+    "Block2dCompatibilityPatch": {
+      "title": "Block2dCompatibilityPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockCompatibilityRule"
+        }
+      }
+    },
+    "Block2dAttributesDelta": {
+      "title": "Block2dAttributesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttribute"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block2dAttributesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block2dAttributesPatchEntry": {
+      "title": "Block2dAttributesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block2dAttributesPatch"
+        }
+      }
+    },
+    "Block2dAttributesPatch": {
+      "title": "Block2dAttributesPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockAttribute"
+        }
+      }
+    }
+  }
+}

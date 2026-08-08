@@ -1,0 +1,19 @@
+syntax = "proto3";
+package semio.s.process.process3d.snapshot;
+
+// 🧬️ Process3d snapshot schema — persistent fields only.
+
+message Process3dSnapshot {
+  // @state persistent
+  Process3dWorkshop workshop = 1;
+  // @state persistent
+  Process3dStock stock = 2;
+  // @state persistent
+  repeated Process3dStep steps = 3;
+  // @state persistent
+  optional uint32 resolved_up_to = 4;
+}
+
+message Process3dWorkshop {}
+message Process3dStock {}
+message Process3dStep {}

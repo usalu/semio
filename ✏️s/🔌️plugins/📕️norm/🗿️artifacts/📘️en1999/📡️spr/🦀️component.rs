@@ -25,11 +25,11 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1999Mutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1999::Document;
+    use crate::artifacts::en1999::En1999Snapshot;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let mutation = En1999Mutation::SetDocument { document: Document::default() };
+        let mutation = En1999Mutation::SetSnapshot { snapshot: En1999Snapshot::default() };
         store::test_support::assert_op_line_round_trip(&mutation);
         let bytes = encode_op(&mutation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), mutation);
@@ -37,9 +37,9 @@ mod tests {
 
     #[test]
     fn document_text_round_trips_through_store() {
-        let envelope = store::create_document_envelope("norm.en1999/v1", "en1999", Document::default(), None);
-        let mut store = store::DocumentStore::new(envelope);
-        store.dispatch(store::DocumentCommand::Apply { mutations: vec![En1999Mutation::SetDocument { document: Document::default() }], description: None }).expect("apply");
+        let envelope = store::create_document_envelope("norm.en1999/v1", "en1999", En1999Snapshot::default(), None);
+        let mut store = store::En1999SnapshotStore::new(envelope);
+        store.dispatch(store::En1999SnapshotCommand::Apply { mutations: vec![En1999Mutation::SetSnapshot { snapshot: En1999Snapshot::default() }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

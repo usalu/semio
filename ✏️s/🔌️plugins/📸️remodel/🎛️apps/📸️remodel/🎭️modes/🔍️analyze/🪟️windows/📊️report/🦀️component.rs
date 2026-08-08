@@ -2,7 +2,7 @@
 //! config's `report_table` selects.
 
 use crate::apps::remodel::config::RemodelConfig;
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 use semio_framework_plugin::{build_table_scene, LocalizedLabel, SurfaceKind, TableScene, UiNode, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Scene
 /// 📊️ The `(columns_json, rows_json)` pair for one dataset name; any unknown name falls back to the
 /// frame list.
-fn report_table_json(scene: &RemodelProjection, table: &str) -> (String, String) {
+fn report_table_json(scene: &RemodelSnapshot, table: &str) -> (String, String) {
     let (columns, rows): (Vec<Value>, Vec<Value>) = match table {
         "cameras" => (
             vec![json!({ "id": "id", "label": "Id" }), json!({ "id": "model", "label": "Model" }), json!({ "id": "fx", "label": "fx" }), json!({ "id": "fy", "label": "fy" }), json!({ "id": "rms", "label": "RMS (px)" })],
@@ -66,7 +66,7 @@ fn report_table_json(scene: &RemodelProjection, table: &str) -> (String, String)
     (serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()))
 }
 
-pub fn render(scene: &RemodelProjection, config: &RemodelConfig) -> UiNode {
+pub fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
     let (columns_json, rows_json) = report_table_json(scene, &config.report_table);
     build_table_scene(REMODEL_PLAY_SURFACE_REPORT, crate::apps::remodel::REMODEL_PLAY_APP_ID, TableScene::base(columns_json, rows_json))
 }

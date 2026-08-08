@@ -11,6 +11,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault>`, the exact signature
@@ -29,8 +30,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🎥️shooting/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🎥️shooting/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🎥️shooting/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🗿️artifacts/🎥️shooting/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+
         #[path = "../../🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -140,20 +152,27 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_fixture {
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-fixture/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-fixture/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-fixture/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/🎥️shooting/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🎥️shooting/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🎥️shooting/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🎥️shooting/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+        pub use snapshot::pack;
         #[path = "../../🗿️artifacts/🎥️shooting/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs"]

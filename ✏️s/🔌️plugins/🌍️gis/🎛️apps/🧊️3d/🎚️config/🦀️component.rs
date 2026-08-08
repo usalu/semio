@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "gis3dcfg")]
+#[dsl(id = "gis.gis3dcfg")]
 #[dsl(layout = "lines")]
 pub struct Gis3dConfig {
     /// 🎥️ The free/live world camera (`{position,target,up,fov}` JSON).
@@ -229,10 +230,10 @@ mod tests {
 
     #[test]
     fn gis3d_config_dsl_round_trips_default_and_populated() {
-        store::test_support::assert_dsl_round_trip(&Gis3dConfig::default());
+        store::os_store::test_support::assert_dsl_round_trip(&Gis3dConfig::default());
         let populated = Gis3dConfig { selected_ids: vec!["p_institut_de_botanique_ulg_liege".into()], ..Gis3dConfig::default() };
-        store::test_support::assert_dsl_round_trip(&populated);
-        store::test_support::assert_dsl_pack_equivalence(&populated);
+        store::os_store::test_support::assert_dsl_round_trip(&populated);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
     }
 
     #[test]
@@ -248,10 +249,10 @@ mod tests {
 
     #[test]
     fn gis3d_config_operation_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetSelection { ids: vec!["p1".into()] });
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::Snapshot { config: Gis3dConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetSelection { ids: vec!["p1".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::Snapshot { config: Gis3dConfig::default() });
     }
 }
 //#endregion 🧪️Tests

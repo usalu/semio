@@ -1,4 +1,4 @@
-//! ⚙️ Remodel artifact — headless compute. Pure translation between `RemodelProjection`'s document types
+//! ⚙️ Remodel artifact — headless compute. Pure translation between `RemodelSnapshot`'s document types
 //! and the ten sibling photogrammetry topic files (`images`/`video`/`camera`/`feature`/`sfm`/`dense`/
 //! `mesh`/`motion`/`geo`/`reconstruction`), plus the mesh/raster export encoders and this artifact's
 //! host registration.
@@ -8,7 +8,7 @@
 
 use crate::artifacts::remodel::engine::{camera as remodel_camera, geo as remodel_geo, images as remodel_image, mesh as remodel_mesh, reconstruction as remodel_engine, sfm as remodel_sfm, video as remodel_video};
 use crate::artifacts::remodel::{
-    CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelProjection, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
+    CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelSnapshot, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
 };
 use base64::Engine as _;
 use semio_framework_plugin::{MeshData, MeshExporter, OsMediaFormat};
@@ -21,6 +21,7 @@ use serde_json::Value;
 /// DWG mesh handler and the PNG raster export. Moved verbatim out of the old bundle crate's
 /// `register_remodel_exports`; `semio_plugin!`'s `setup:` now points here.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::remodel::RemodelPlayApp>(REMODEL_DOCUMENT_SCHEMA);
     semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
@@ -40,8 +41,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::remodel::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::remodel::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::remodel::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::remodel::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("remodel.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -70,8 +71,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::remodel::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::remodel::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("remodel.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -501,14 +502,14 @@ fn mesh_to_las(mesh: &MeshData) -> Vec<u8> {
 }
 
 pub fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let scene: RemodelProjection = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    let scene: RemodelSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     Ok(scene.results.mesh.mesh)
 }
 
 /// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else the mesh's baked
 /// texture) verbatim — every such asset is already a base64 PNG, so this is a lookup, not a re-encode.
 pub fn remodel_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
-    let scene: RemodelProjection = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    let scene: RemodelSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     let asset_id = scene
         .results
         .geo
@@ -609,38 +610,58 @@ mod tests {
 
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent remodel artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent remodel artifact engine — owns the full artifact; snapshot is the persisted subset.
 pub struct RemodelEngine {
-    projection: crate::artifacts::remodel::RemodelProjection,
+    artifact: crate::artifacts::remodel::schema::RemodelArtifact,
+    snapshot: crate::artifacts::remodel::RemodelSnapshot,
 }
 
 impl RemodelEngine {
-    pub fn new(projection: crate::artifacts::remodel::RemodelProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::remodel::RemodelSnapshot) -> Self {
+        Self {
+            artifact: crate::artifacts::remodel::schema::RemodelArtifact::from_snapshot(snapshot.clone()),
+            snapshot,
+        }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::remodel::RemodelProjection {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::remodel::RemodelSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for RemodelEngine {
-    type Projection = crate::artifacts::remodel::RemodelProjection;
+    type Artifact = crate::artifacts::remodel::schema::RemodelArtifact;
+    type Snapshot = crate::artifacts::remodel::RemodelSnapshot;
     type Mutation = crate::artifacts::remodel::mutations::RemodelMutation;
     type Diff = crate::artifacts::remodel::diff::RemodelDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::remodel::mutations::apply_remodel_mutation_in_place(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
+
+/// 🧬️ Registers the remodel artifact schema descriptor once.
+pub fn register_artifact_schema() {
+    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+        std::sync::OnceLock::new();
+    let registry = REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    let mut guard = registry.lock().expect("schema registry");
+    guard.register(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor());
+}
+
 //#endregion 🔖️ArtifactEngine

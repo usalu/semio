@@ -8,12 +8,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::jack::diff::{NodeGeometryPatch, PropertyPatch, TrinityGraphDiff};
-use crate::artifacts::jack::{EntityRef, GraphFixture, Node, Port, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
+use crate::artifacts::jack::diff::JackDiff;
+use crate::artifacts::jack::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
-use vcs::{apply_mutation, CollectionDiff, ItemPatch};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -61,18 +60,18 @@ pub enum TrinityGraphMutation {
     },
     /// 📦️ Replace the whole fixture (preset load, node-graph drag import); the inverse restores the prior fixture.
     SetFixture {
-        fixture: GraphFixture,
+        fixture: JackSnapshot,
     },
 }
 
-pub type TrinityGraphEnvelope = DocumentEnvelope<GraphFixture, TrinityGraphMutation>;
-pub type TrinityGraphStore = DocumentStore<GraphFixture, TrinityGraphMutation>;
+pub type TrinityGraphEnvelope = DocumentEnvelope<JackSnapshot, TrinityGraphMutation>;
+pub type TrinityGraphStore = DocumentStore<JackSnapshot, TrinityGraphMutation>;
 
-pub fn create_trinity_graph_envelope(id: &str, fixture: GraphFixture) -> TrinityGraphEnvelope {
+pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
     create_document_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
 }
 
-pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &GraphFixture) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     match operation {
         TrinityGraphMutation::CreateNode { id, kind, ports, .. } => {
@@ -130,28 +129,31 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
     Ok(())
 }
 
-pub fn apply_trinity_graph_mutations(fixture: GraphFixture, operations: &[TrinityGraphMutation]) -> Result<GraphFixture, crate::artifacts::jack::TrinityRamError> {
-    let mut projection = fixture;
+pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::artifacts::jack::TrinityRamError> {
+    let mut snapshot = fixture;
     for operation in operations {
-        validate_trinity_graph_operation(operation, &projection)?;
-        projection = apply_mutation(&projection, operation);
+        validate_trinity_graph_operation(operation, &snapshot)?;
+        apply_trinity_graph_mutation(&mut snapshot, operation);
     }
-    Ok(projection)
+    Ok(snapshot)
 }
 
 pub fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if operations.is_empty() {
         return Ok(());
     }
-    let mut projection = store.projection()?;
+    let mut snapshot = store.snapshot()?;
     for operation in &operations {
-        validate_trinity_graph_operation(operation, &projection)?;
-        projection = apply_mutation(&projection, operation);
+        validate_trinity_graph_operation(operation, &snapshot)?;
+        apply_trinity_graph_mutation(&mut snapshot, operation);
     }
-    store.dispatch(DocumentCommand::Apply { mutations, description: None }).map_err(crate::artifacts::jack::TrinityRamError::from)
+    store
+        .dispatch(DocumentCommand::Apply { mutations: operations, description: None })
+        .map_err(crate::artifacts::jack::TrinityRamError::from)
+        .map(|_| ())
 }
 
-fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     match entity {
         EntityRef::Node(id) => {
@@ -165,7 +167,7 @@ fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key:
     Ok(())
 }
 
-fn validate_set_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::{PropertyKind, TrinityRamError};
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
@@ -263,74 +265,38 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artif
     }
 }
 
-fn delete_node_snapshot(fixture: &GraphFixture, id: &str) -> (Option<Node>, Vec<crate::artifacts::jack::Edge>) {
+fn delete_node_snapshot(fixture: &JackSnapshot, id: &str) -> (Option<Node>, Vec<crate::artifacts::jack::Edge>) {
     let node = fixture.nodes.iter().find(|node| node.id == id).cloned();
     let edges: Vec<crate::artifacts::jack::Edge> = fixture.edges.iter().filter(|edge| crate::artifacts::jack::port_node_id(&edge.source) == Some(id) || crate::artifacts::jack::port_node_id(&edge.target) == Some(id)).cloned().collect();
     (node, edges)
 }
 
-fn entity_property_value(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Option<PropertyValue> {
+fn entity_property_value(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Option<PropertyValue> {
     match entity {
         EntityRef::Node(id) => fixture.nodes.iter().find(|node| node.id == *id).and_then(|node| node.properties.get(key).cloned()),
         EntityRef::Edge(id) => fixture.edges.iter().find(|edge| edge.id == *id).and_then(|edge| edge.properties.get(key).cloned()),
     }
 }
 
-impl Mutation<GraphFixture> for TrinityGraphMutation {
-    type Diff = TrinityGraphDiff;
+impl Mutation<JackSnapshot> for TrinityGraphMutation {
+    type Diff = JackDiff;
 
-    fn diff(&self, projection: &GraphFixture) -> TrinityGraphDiff {
+    fn diff(&self, snapshot: &JackSnapshot) -> JackDiff {
         match self {
-            TrinityGraphMutation::CreateNode { id, kind, name, x, y, width, height, ports } => TrinityGraphDiff {
-                nodes: CollectionDiff { added: vec![Node { id: id.clone(), kind: kind.clone(), name: name.clone(), x: *x, y: *y, width: *width, height: *height, properties: PropertyBag::new(), ports: ports.clone() }], ..Default::default() },
-                recompute_derived: true,
-                ..Default::default()
-            },
-            TrinityGraphMutation::DeleteNode { id } => {
-                let (node, edges) = delete_node_snapshot(projection, id);
-                TrinityGraphDiff {
-                    nodes: CollectionDiff { removed: node.as_ref().map(|node| vec![node.id.clone()]).unwrap_or_default(), ..Default::default() },
-                    edges: CollectionDiff { removed: edges.iter().map(|edge| edge.id.clone()).collect(), ..Default::default() },
-                    recompute_derived: true,
-                    ..Default::default()
-                }
+            TrinityGraphMutation::SetFixture { fixture } => crate::artifacts::jack::diff::diff_set_snapshot(fixture),
+            _ => {
+                let mut next = snapshot.clone();
+                apply_trinity_graph_mutation(&mut next, self);
+                crate::artifacts::jack::diff::diff_set_snapshot(&next)
             }
-            TrinityGraphMutation::CreateEdge { id, kind, source, target, properties } => TrinityGraphDiff {
-                edges: CollectionDiff { added: vec![crate::artifacts::jack::Edge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() }], ..Default::default() },
-                recompute_derived: true,
-                ..Default::default()
-            },
-            TrinityGraphMutation::DeleteEdge { id } => TrinityGraphDiff { edges: CollectionDiff { removed: vec![id.clone()], ..Default::default() }, recompute_derived: true, ..Default::default() },
-            TrinityGraphMutation::Rename { id, name } => {
-                TrinityGraphDiff { nodes: CollectionDiff { modified: vec![ItemPatch { id: id.clone(), patch: NodeGeometryPatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }, ..Default::default() }
-            }
-            TrinityGraphMutation::Reposition { id, x, y } => {
-                TrinityGraphDiff { nodes: CollectionDiff { modified: vec![ItemPatch { id: id.clone(), patch: NodeGeometryPatch { x: Some(*x), y: Some(*y), ..Default::default() } }], ..Default::default() }, ..Default::default() }
-            }
-            TrinityGraphMutation::SetDataProperty { entity, key, value } => {
-                let patch = PropertyPatch { key: key.clone(), value: Some(value.clone()) };
-                let recompute = matches!(entity, EntityRef::Edge(_)) && (key == "u" || key == "v");
-                match entity {
-                    EntityRef::Node(id) => TrinityGraphDiff { node_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: key == "flatPosition", ..Default::default() },
-                    EntityRef::Edge(id) => TrinityGraphDiff { edge_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: recompute, ..Default::default() },
-                }
-            }
-            TrinityGraphMutation::ClearDataProperty { entity, key } => {
-                let patch = PropertyPatch { key: key.clone(), value: None };
-                match entity {
-                    EntityRef::Node(id) => TrinityGraphDiff { node_properties: vec![ItemPatch { id: id.clone(), patch }], ..Default::default() },
-                    EntityRef::Edge(id) => TrinityGraphDiff { edge_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: key == "u" || key == "v", ..Default::default() },
-                }
-            }
-            TrinityGraphMutation::SetFixture { fixture } => TrinityGraphDiff { set_fixture: Some(fixture.clone()), recompute_derived: true, ..Default::default() },
         }
     }
 
-    fn inverse(&self, projection: &GraphFixture) -> Vec<Self> {
+    fn inverse(&self, snapshot: &JackSnapshot) -> Vec<Self> {
         match self {
             TrinityGraphMutation::CreateNode { id, .. } => vec![TrinityGraphMutation::DeleteNode { id: id.clone() }],
             TrinityGraphMutation::DeleteNode { id } => {
-                let (node, edges) = delete_node_snapshot(projection, id);
+                let (node, edges) = delete_node_snapshot(snapshot, id);
                 let mut out = Vec::new();
                 if let Some(node) = node {
                     out.push(TrinityGraphMutation::CreateNode { id: node.id, kind: node.kind, name: node.name, x: node.x, y: node.y, width: node.width, height: node.height, ports: node.ports });
@@ -341,16 +307,16 @@ impl Mutation<GraphFixture> for TrinityGraphMutation {
                 out
             }
             TrinityGraphMutation::CreateEdge { id, .. } => vec![TrinityGraphMutation::DeleteEdge { id: id.clone() }],
-            TrinityGraphMutation::DeleteEdge { id } => projection
+            TrinityGraphMutation::DeleteEdge { id } => snapshot
                 .edges
                 .iter()
                 .find(|edge| edge.id == *id)
                 .map(|edge| vec![TrinityGraphMutation::CreateEdge { id: edge.id.clone(), kind: edge.kind.clone(), source: edge.source.clone(), target: edge.target.clone(), properties: edge.properties.clone() }])
                 .unwrap_or_default(),
-            TrinityGraphMutation::Rename { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphMutation::Rename { id: id.clone(), name: node.name.clone() }]).unwrap_or_default(),
-            TrinityGraphMutation::Reposition { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphMutation::Reposition { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+            TrinityGraphMutation::Rename { id, .. } => snapshot.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphMutation::Rename { id: id.clone(), name: node.name.clone() }]).unwrap_or_default(),
+            TrinityGraphMutation::Reposition { id, .. } => snapshot.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphMutation::Reposition { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
             TrinityGraphMutation::SetDataProperty { entity, key, .. } => {
-                let prior = entity_property_value(projection, entity, key);
+                let prior = entity_property_value(snapshot, entity, key);
                 match (entity, prior) {
                     (EntityRef::Node(id), Some(old)) => vec![TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node(id.clone()), key: key.clone(), value: old }],
                     (EntityRef::Edge(id), Some(old)) => vec![TrinityGraphMutation::SetDataProperty { entity: EntityRef::Edge(id.clone()), key: key.clone(), value: old }],
@@ -358,9 +324,9 @@ impl Mutation<GraphFixture> for TrinityGraphMutation {
                 }
             }
             TrinityGraphMutation::ClearDataProperty { entity, key } => {
-                entity_property_value(projection, entity, key).map(|old| vec![TrinityGraphMutation::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default()
+                entity_property_value(snapshot, entity, key).map(|old| vec![TrinityGraphMutation::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default()
             }
-            TrinityGraphMutation::SetFixture { .. } => vec![TrinityGraphMutation::SetFixture { fixture: projection.clone() }],
+            TrinityGraphMutation::SetFixture { .. } => vec![TrinityGraphMutation::SetFixture { fixture: snapshot.clone() }],
         }
     }
 }
@@ -372,9 +338,9 @@ mod tests {
     use crate::artifacts::jack::{Camera, Manifest, PortDirection};
     use protocol::MutationDiff;
 
-    fn mini_fixture() -> GraphFixture {
-        GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
+    fn mini_fixture() -> JackSnapshot {
+        JackSnapshot {
+            schema: JackSnapshot::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
@@ -523,8 +489,8 @@ mod tests {
     fn document_text_round_trip_graph_store() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Rename { id: "root".into(), name: "renamed".into() }]).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        ::store::os_store::test_support::assert_document_text_round_trip(&store);
+        ::store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 
     #[test]
@@ -539,33 +505,33 @@ mod tests {
     fn graph_op_reposition_and_rename_undo_restore_prior_values() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Reposition { id: "root".into(), x: 50.0, y: 60.0 }]).expect("reposition");
-        assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 50.0);
+        assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 50.0);
         store.dispatch(DocumentCommand::Undo).expect("undo reposition");
-        assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 0.0);
+        assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 0.0);
 
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Rename { id: "root".into(), name: "renamed".into() }]).expect("rename");
         store.dispatch(DocumentCommand::Undo).expect("undo rename");
-        assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().name, "core");
+        assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().name, "core");
     }
 
     #[test]
     fn graph_op_delete_edge_undo_recreates_edge() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::DeleteEdge { id: "e1".into() }]).expect("delete edge");
-        assert!(store.projection().unwrap().edges.is_empty());
+        assert!(store.snapshot().unwrap().edges.is_empty());
         store.dispatch(DocumentCommand::Undo).expect("undo delete edge");
-        assert_eq!(store.projection().unwrap().edges.len(), 1);
+        assert_eq!(store.snapshot().unwrap().edges.len(), 1);
     }
 
     #[test]
     fn graph_op_delete_node_undo_restores_node_and_incident_edges() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::DeleteNode { id: "root".into() }]).expect("delete node");
-        let projection = store.projection().unwrap();
+        let projection = store.snapshot().unwrap();
         assert_eq!(projection.nodes.len(), 1);
         assert!(projection.edges.is_empty());
         store.dispatch(DocumentCommand::Undo).expect("undo delete node");
-        let projection = store.projection().unwrap();
+        let projection = store.snapshot().unwrap();
         assert_eq!(projection.nodes.len(), 2);
         assert_eq!(projection.edges.len(), 1);
     }
@@ -576,49 +542,122 @@ mod tests {
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("first".into()) }]).expect("set");
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("second".into()) }]).expect("set again");
         store.dispatch(DocumentCommand::Undo).expect("undo second set");
-        let value = store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
+        let value = store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
 
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::ClearDataProperty { entity: EntityRef::Node("root".into()), key: "label".into() }]).expect("clear");
-        assert!(!store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.contains_key("label"));
+        assert!(!store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.contains_key("label"));
         store.dispatch(DocumentCommand::Undo).expect("undo clear");
-        let value = store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
+        let value = store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
     }
 
-    /// 🌱️ `camera` is now a seed-only field on `GraphFixture` (never touched by any operation — see
+    /// 🌱️ `camera` is now a seed-only field on `JackSnapshot` (never touched by any operation — see
     /// `nodeGraphViewport`'s runtime-only handling in the jack/rewrite apps), so this only exercises
     /// `SetFixture`'s undo; it no longer asserts camera-as-a-document-operation behavior.
     #[test]
     fn graph_op_set_fixture_undo() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        assert_eq!(store.projection().unwrap().camera, Camera::default());
+        assert_eq!(store.snapshot().unwrap().camera, Camera::default());
 
-        let replacement = GraphFixture { name: "replacement".into(), ..mini_fixture() };
+        let replacement = JackSnapshot { name: "replacement".into(), ..mini_fixture() };
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::SetFixture { fixture: replacement }]).expect("set fixture");
-        assert_eq!(store.projection().unwrap().name, "replacement");
+        assert_eq!(store.snapshot().unwrap().name, "replacement");
         store.dispatch(DocumentCommand::Undo).expect("undo set fixture");
-        assert_eq!(store.projection().unwrap().name, "mini");
+        assert_eq!(store.snapshot().unwrap().name, "mini");
     }
 
     #[test]
-    fn trinity_graph_diff_apply_uses_set_fixture_as_base_and_recomputes() {
+    fn trinity_graph_diff_apply_uses_artifact_replacement() {
         let base = mini_fixture();
         let mut replacement = base.clone();
         replacement.name = "swapped".into();
-        let diff = TrinityGraphDiff { set_fixture: Some(replacement), recompute_derived: true, ..Default::default() };
+        let diff = crate::artifacts::jack::diff::diff_set_snapshot(&replacement);
         let applied = diff.apply(&base);
         assert_eq!(applied.name, "swapped");
-        assert!(applied.nodes.iter().any(|n| n.properties.contains_key("flatPosition")));
     }
 }
 //#endregion 🧪️Tests
 
 
-pub fn apply_trinity_graph_mutation(projection: &mut TrinityGraphDocument, mutation: &TrinityGraphMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) {
+    match mutation {
+        TrinityGraphMutation::CreateNode { id, kind, name, x, y, width, height, ports } => {
+            snapshot.nodes.push(Node {
+                id: id.clone(),
+                kind: kind.clone(),
+                name: name.clone(),
+                x: *x,
+                y: *y,
+                width: *width,
+                height: *height,
+                properties: PropertyBag::new(),
+                ports: ports.clone(),
+            });
+        }
+        TrinityGraphMutation::DeleteNode { id } => {
+            snapshot.nodes.retain(|node| &node.id != id);
+            snapshot.edges.retain(|edge| {
+                crate::artifacts::jack::port_node_id(&edge.source) != Some(id.as_str())
+                    && crate::artifacts::jack::port_node_id(&edge.target) != Some(id.as_str())
+            });
+            if snapshot.root_node_id.as_deref() == Some(id.as_str()) {
+                snapshot.root_node_id = None;
+            }
+        }
+        TrinityGraphMutation::CreateEdge { id, kind, source, target, properties } => {
+            snapshot.edges.push(Edge {
+                id: id.clone(),
+                kind: kind.clone(),
+                source: source.clone(),
+                target: target.clone(),
+                properties: properties.clone(),
+            });
+        }
+        TrinityGraphMutation::DeleteEdge { id } => {
+            snapshot.edges.retain(|edge| &edge.id != id);
+        }
+        TrinityGraphMutation::Rename { id, name } => {
+            if let Some(node) = snapshot.nodes.iter_mut().find(|node| &node.id == id) {
+                node.name = name.clone();
+            }
+        }
+        TrinityGraphMutation::Reposition { id, x, y } => {
+            if let Some(node) = snapshot.nodes.iter_mut().find(|node| &node.id == id) {
+                node.x = *x;
+                node.y = *y;
+            }
+        }
+        TrinityGraphMutation::SetDataProperty { entity, key, value } => match entity {
+            EntityRef::Node(id) => {
+                if let Some(node) = snapshot.nodes.iter_mut().find(|node| &node.id == id) {
+                    node.properties.insert(key.clone(), value.clone());
+                }
+            }
+            EntityRef::Edge(id) => {
+                if let Some(edge) = snapshot.edges.iter_mut().find(|edge| &edge.id == id) {
+                    edge.properties.insert(key.clone(), value.clone());
+                }
+            }
+        },
+        TrinityGraphMutation::ClearDataProperty { entity, key } => match entity {
+            EntityRef::Node(id) => {
+                if let Some(node) = snapshot.nodes.iter_mut().find(|node| &node.id == id) {
+                    node.properties.remove(key);
+                }
+            }
+            EntityRef::Edge(id) => {
+                if let Some(edge) = snapshot.edges.iter_mut().find(|edge| &edge.id == id) {
+                    edge.properties.remove(key);
+                }
+            }
+        },
+        TrinityGraphMutation::SetFixture { fixture } => {
+            *snapshot = fixture.clone();
+        }
+    }
 }
 
-pub fn inverse_trinity_graph_mutation(projection: &TrinityGraphDocument, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
+pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
     mutation.inverse(projection)
 }

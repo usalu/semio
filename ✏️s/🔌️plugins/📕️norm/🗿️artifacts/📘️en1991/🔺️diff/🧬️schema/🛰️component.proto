@@ -1,0 +1,111 @@
+syntax = "proto3";
+package semio.s.norm.en1991.diff;
+
+message En1991Diff {
+  // @state persistent
+  optional En1991Artifact artifact = 1;
+  // @state persistent
+  optional double area_m2 = 2;
+  // @state persistent
+  optional string category = 3;
+  // @state persistent
+  optional string annex = 4;
+  // @state persistent
+  optional string self_weight_material = 5;
+  // @state persistent
+  optional double self_weight_thickness_m = 6;
+  // @state persistent
+  optional double assumed_g_k_kn_m2 = 7;
+  // @state persistent
+  optional string fire_curve = 8;
+  // @state persistent
+  optional double fire_resistance_min = 9;
+  // @state persistent
+  optional double fire_member_capacity_c = 10;
+  // @state persistent
+  optional uint32 snow_zone = 11;
+  // @state persistent
+  optional double snow_altitude_m = 12;
+  // @state persistent
+  optional double en_s_k_kn_m2 = 13;
+  // @state persistent
+  optional uint32 wind_zone = 14;
+  // @state persistent
+  optional double en_v_b_m_s = 15;
+  // @state persistent
+  optional double delta_t_k = 16;
+  // @state persistent
+  optional string construction_activity = 17;
+  // @state persistent
+  optional double accidental_mass_t = 18;
+  // @state persistent
+  optional double accidental_speed_km_h = 19;
+  // @state persistent
+  optional uint32 bridge_lane = 20;
+  // @state persistent
+  optional double bridge_span_m = 21;
+  // @state persistent
+  optional double bridge_lane_width_m = 22;
+  // @state persistent
+  optional double bridge_moment_resistance_knm = 23;
+  // @state persistent
+  optional string crane_class = 24;
+  // @state persistent
+  optional string hoist_class = 25;
+  // @state persistent
+  optional double hoisting_speed_m_s = 26;
+  // @state persistent
+  optional double silo_bulk_density_kn_m3 = 27;
+  // @state persistent
+  optional double silo_height_m = 28;
+  // @state persistent
+  optional double silo_hydraulic_radius_m = 29;
+  // @state persistent
+  optional double silo_mu = 30;
+  // @state persistent
+  optional double silo_k = 31;
+  // @state persistent
+  optional double c_s = 32;
+  // @state persistent
+  optional double c_d = 33;
+  // @state shared-ui
+  optional uint32 selected_check_index = 34;
+}
+
+message En1991Artifact {
+  double area_m2 = 1;
+  string category = 2;
+  string annex = 3;
+  string self_weight_material = 4;
+  double self_weight_thickness_m = 5;
+  double assumed_g_k_kn_m2 = 6;
+  string fire_curve = 7;
+  double fire_resistance_min = 8;
+  double fire_member_capacity_c = 9;
+  uint32 snow_zone = 10;
+  double snow_altitude_m = 11;
+  double en_s_k_kn_m2 = 12;
+  uint32 wind_zone = 13;
+  double en_v_b_m_s = 14;
+  double delta_t_k = 15;
+  string construction_activity = 16;
+  double accidental_mass_t = 17;
+  double accidental_speed_km_h = 18;
+  uint32 bridge_lane = 19;
+  double bridge_span_m = 20;
+  double bridge_lane_width_m = 21;
+  double bridge_moment_resistance_knm = 22;
+  string crane_class = 23;
+  string hoist_class = 24;
+  double hoisting_speed_m_s = 25;
+  double silo_bulk_density_kn_m3 = 26;
+  double silo_height_m = 27;
+  double silo_hydraulic_radius_m = 28;
+  double silo_mu = 29;
+  double silo_k = 30;
+  double c_s = 31;
+  double c_d = 32;
+  optional uint32 selected_check_index = 33;
+}
+
+message En1991StringList { repeated string values = 1; }

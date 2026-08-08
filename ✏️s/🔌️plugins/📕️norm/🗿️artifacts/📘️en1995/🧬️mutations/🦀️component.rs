@@ -1,8 +1,31 @@
-//! 🧬️ En1995 artifact — document mutation dispatch (SetDocument only).
+//! 🧬️ En1995 artifact — document mutation dispatch.
 
-pub use crate::document::SetDocumentMutation;
+use crate::artifacts::en1995::diff::{diff_set_snapshot, En1995Diff};
+use crate::artifacts::en1995::En1995Snapshot;
+use protocol::Mutation;
+use serde::{Deserialize, Serialize};
 
-use crate::artifacts::en1995::Document;
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+pub enum En1995Mutation {
+    SetSnapshot {
+        #[dsl(block)]
+        snapshot: En1995Snapshot,
+    },
+}
 
-/// @emoji 🧬️ Whole-document replace — the only norm-family document mutation today.
-pub type En1995Mutation = SetDocumentMutation<Document>;
+impl Mutation<En1995Snapshot> for En1995Mutation {
+    type Diff = En1995Diff;
+
+    fn diff(&self, _snapshot: &En1995Snapshot) -> En1995Diff {
+        match self {
+            En1995Mutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+        }
+    }
+
+    fn inverse(&self, snapshot: &En1995Snapshot) -> Vec<Self> {
+        match self {
+            En1995Mutation::SetSnapshot { .. } => vec![En1995Mutation::SetSnapshot { snapshot: snapshot.clone() }],
+        }
+    }
+}

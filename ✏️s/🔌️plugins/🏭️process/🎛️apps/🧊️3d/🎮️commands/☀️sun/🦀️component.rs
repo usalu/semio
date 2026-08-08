@@ -1,7 +1,7 @@
 //! ☀️ Process 3d play app commands — the scene sun (config-only, ephemeral view state).
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::{op::Process3dMutation, Process3dDocument};
+use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -13,8 +13,8 @@ pub mod toggle_sun {
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
-    pub fn handle(_payload: &ToggleSun, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(_payload: &ToggleSun, _doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: !config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }]))
     }
 }
@@ -30,8 +30,8 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: payload.value, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }]))
     }
 }
@@ -47,8 +47,8 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: payload.value, intensity: config.sun_intensity, color: config.sun_color.clone() }]))
     }
 }
@@ -64,8 +64,8 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: payload.value, color: config.sun_color.clone() }]))
     }
 }

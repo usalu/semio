@@ -30,8 +30,7 @@ pub enum Procedural2dMutation {
     RemoveLayout { id: String },
     SetCamera { camera: CameraJson },
     SetSchema { schema: String },
-    Generation(GenerationMutation),
-}
+    Generation(GenerationMutation)}
 
 fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.widgets.iter().position(|widget| widget_id(widget) == id)
@@ -46,8 +45,7 @@ impl Mutation<Procedural2dSnapshot> for Procedural2dMutation {
 
     fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
         use crate::artifacts::procedural2d::diff::{
-            diff_fixture_from_helpers, diff_generation_from_ops, LayoutDiff, SynapsesDiff, WidgetsDiff,
-        };
+            diff_fixture_from_helpers, diff_generation_from_ops, LayoutDiff, SynapsesDiff, WidgetsDiff};
         match self {
             Procedural2dMutation::SetWidget { index, widget } => diff_fixture_from_helpers(
                 base,
@@ -113,8 +111,7 @@ impl Mutation<Procedural2dSnapshot> for Procedural2dMutation {
                 None,
                 Some(schema.clone()),
             ),
-            Procedural2dMutation::Generation(operation) => diff_generation_from_ops(base, vec![operation.clone()]),
-        }
+            Procedural2dMutation::Generation(operation) => diff_generation_from_ops(base, vec![operation.clone()])}
     }
 
     fn inverse(&self, projection: &Procedural2dSnapshot) -> Vec<Self> {
@@ -122,23 +119,19 @@ impl Mutation<Procedural2dSnapshot> for Procedural2dMutation {
         match self {
             Procedural2dMutation::SetWidget { widget, .. } => match widget_index(fixture, widget_id(widget)) {
                 Some(index) => vec![Procedural2dMutation::SetWidget { index, widget: fixture.widgets[index].clone() }],
-                None => vec![Procedural2dMutation::RemoveWidget { id: widget_id(widget).to_string() }],
-            },
+                None => vec![Procedural2dMutation::RemoveWidget { id: widget_id(widget).to_string() }]},
             Procedural2dMutation::RemoveWidget { id } => widget_index(fixture, id).map(|index| vec![Procedural2dMutation::SetWidget { index, widget: fixture.widgets[index].clone() }]).unwrap_or_default(),
             Procedural2dMutation::SetSynapse { synapse, .. } => match synapse_index(fixture, &synapse.id) {
                 Some(index) => vec![Procedural2dMutation::SetSynapse { index, synapse: fixture.synapses[index].clone() }],
-                None => vec![Procedural2dMutation::RemoveSynapse { id: synapse.id.clone() }],
-            },
+                None => vec![Procedural2dMutation::RemoveSynapse { id: synapse.id.clone() }]},
             Procedural2dMutation::RemoveSynapse { id } => synapse_index(fixture, id).map(|index| vec![Procedural2dMutation::SetSynapse { index, synapse: fixture.synapses[index].clone() }]).unwrap_or_default(),
             Procedural2dMutation::SetLayout { id, .. } => match fixture.layout.get(id) {
                 Some(layout) => vec![Procedural2dMutation::SetLayout { id: id.clone(), layout: layout.clone() }],
-                None => vec![Procedural2dMutation::RemoveLayout { id: id.clone() }],
-            },
+                None => vec![Procedural2dMutation::RemoveLayout { id: id.clone() }]},
             Procedural2dMutation::RemoveLayout { id } => fixture.layout.get(id).map(|layout| vec![Procedural2dMutation::SetLayout { id: id.clone(), layout: layout.clone() }]).unwrap_or_default(),
             Procedural2dMutation::SetCamera { .. } => vec![Procedural2dMutation::SetCamera { camera: fixture.camera.clone() }],
             Procedural2dMutation::SetSchema { .. } => vec![Procedural2dMutation::SetSchema { schema: fixture.schema.clone() }],
-            Procedural2dMutation::Generation(operation) => invert_generation_operation(&projection.generation, operation).into_iter().map(Procedural2dMutation::Generation).collect(),
-        }
+            Procedural2dMutation::Generation(operation) => invert_generation_operation(&projection.generation, operation).into_iter().map(Procedural2dMutation::Generation).collect()}
     }
 }
 

@@ -5,7 +5,7 @@
 //! record "the user asked for a fresh evaluation" in the command log.
 
 use crate::artifacts::en1993::op::En1993Mutation;
-use crate::artifacts::en1993::Document;
+use crate::artifacts::en1993::En1993Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1993Mutation, NormConfigMutation>, Fault> {
+pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, En1993Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1993Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_document(doc.projection.clone(), "evaluate")
 }
 //#endregion 🔖️Handler
@@ -33,10 +33,10 @@ mod tests {
 
     #[test]
     fn handle_recommits_the_current_projection_under_its_action_id() {
-        let projection = Document::default();
+        let projection = En1993Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&Evaluate {}, &DocumentView { projection: &projection, history: &HistoryView::empty() }, &ConfigView { projection: &config }).expect("handle");
-        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: Document::default() }]);
+        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: En1993Snapshot::default() }]);
         assert_eq!(emit.description.as_deref(), Some("evaluate"));
     }
 }

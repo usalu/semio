@@ -1,0 +1,72 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/vdi3805/diff.json",
+  "title": "Vdi3805Diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Vdi3805Artifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "manufacturerFile": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "catalog": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "editionProfile": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "persistent"
+    },
+    "correctionAsOf": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "strictMode": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "index": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "persistent"
+    },
+    "curves": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "persistent"
+    },
+    "limits": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

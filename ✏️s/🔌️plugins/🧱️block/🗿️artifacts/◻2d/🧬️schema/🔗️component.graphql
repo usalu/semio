@@ -1,0 +1,34 @@
+# 🧬️ Block2d artifact schema — every field with its state class.
+
+type Block2dArtifact {
+  schema: String! @state(class: PERSISTENT)
+  nodeKind: BlockKindIdentity! @state(class: PERSISTENT)
+  presentation: Block2dPresentation! @state(class: PERSISTENT)
+  handleKinds: [Block2dHandleKind!]! @state(class: PERSISTENT)
+  handles: [Block2dHandleTemplate!]! @state(class: PERSISTENT)
+  compatibility: [BlockCompatibilityRule!]! @state(class: PERSISTENT)
+  attributes: [BlockAttribute!]! @state(class: PERSISTENT)
+  authors: [BlockAuthor!]! @state(class: PERSISTENT)
+  camera2d: BlockCamera2d! @state(class: PERSISTENT)
+  meta: BlockMeta! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type BlockKindIdentity { _placeholder: Boolean }
+
+type Block2dPresentation { _placeholder: Boolean }
+
+type Block2dHandleKind { _placeholder: Boolean }
+
+type Block2dHandleTemplate { _placeholder: Boolean }
+
+type BlockCompatibilityRule { _placeholder: Boolean }
+
+type BlockAttribute { _placeholder: Boolean }
+
+type BlockAuthor { _placeholder: Boolean }
+
+type BlockCamera2d { _placeholder: Boolean }
+
+type BlockMeta { _placeholder: Boolean }

@@ -2,7 +2,7 @@
 
 use crate::artifacts::en1990::engine::{na_de::NaDe, na_en::NaEn};
 use crate::artifacts::en1991::mutations::En1991Mutation;
-use crate::artifacts::en1991::{part_1_2::FireCurve, Document};
+use crate::artifacts::en1991::{part_1_2::FireCurve, En1991Snapshot};
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, NationalAnnex, NormFamily, NormFamilyId, NormHost, Quantity};
 
 // #region 🔖️NaDe
@@ -493,7 +493,7 @@ pub fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb
 }
 
 /// 📋️ Full EN 1991 action checks across parts 1-1 through 1-7 and parts 2–4.
-pub fn check_full_actions(document: &Document) -> CheckReport {
+pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
     let mut report = CheckReport::default();
     report.push(part_1_1::check_imposed(document.area_m2, document.category, annex));
@@ -524,59 +524,67 @@ pub fn check_full_actions(document: &Document) -> CheckReport {
 // #region 🔖️Session
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1991 artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent En1991 artifact engine — owns the artifact; every transition is a mutation.
 pub struct En1991Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1991::schema::En1991Artifact,
+    snapshot: En1991Snapshot,
 }
 
 impl En1991Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: En1991Snapshot) -> Self {
+        let artifact = crate::artifacts::en1991::schema::En1991Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> En1991Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1991Engine {
-    type Projection = Document;
-    type Mutation = En1991Mutation;
-    type Diff = crate::artifacts::en1991::diff::Diff;
+    type Artifact = crate::artifacts::en1991::schema::En1991Artifact;
+    type Snapshot = En1991Snapshot;
+    type Mutation = crate::artifacts::en1991::mutations::En1991Mutation;
+    type Diff = crate::artifacts::en1991::diff::En1991Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = protocol::Mutation::diff(mutation, &self.snapshot);
+        self.snapshot = vcs::apply_mutation(&self.snapshot, mutation);
+        self.artifact = crate::artifacts::en1991::schema::En1991Artifact::from_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        protocol::Mutation::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
 
 pub type Host = NormHost<En1991Family>;
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1991Snapshot) -> CheckReport {
     check_full_actions(document)
 }
 
 pub struct En1991Family;
 
 impl NormFamily for En1991Family {
-    type Document = Document;
+    type Document = En1991Snapshot;
     type Mutation = En1991Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1991
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &En1991Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
@@ -610,7 +618,7 @@ mod tests {
 
     #[test]
     fn full_actions_de_na_numeric() {
-        let doc = Document::default();
+        let doc = En1991Snapshot::default();
         let annex = NaDe;
         let report = check_full_actions(&doc);
         assert_eq!(report.checks.len(), 11);
@@ -645,7 +653,7 @@ mod tests {
 
     #[test]
     fn snow_and_wind_de_vs_en_diverge_at_altitude() {
-        let doc = Document { snow_altitude_m: 400.0, annex: AnnexChoice::De, ..Document::default() };
+        let doc = En1991Snapshot { snow_altitude_m: 400.0, annex: AnnexChoice::De, ..En1991Snapshot::default() };
         let de_s_k = part_1_3::design_ground_snow_load(doc.annex, doc.snow_zone, doc.snow_altitude_m, doc.en_s_k_kn_m2);
         let en_s_k = part_1_3::design_ground_snow_load(AnnexChoice::En, doc.snow_zone, doc.snow_altitude_m, doc.en_s_k_kn_m2);
         assert!(de_s_k > en_s_k);
@@ -661,7 +669,7 @@ mod tests {
 
     #[test]
     fn evaluate_reaches_every_part_module() {
-        let report = evaluate(&Document::default());
+        let report = evaluate(&En1991Snapshot::default());
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-1")));
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-2")));
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-3")));
@@ -681,7 +689,7 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1991.document",
         extension: Some("en1991"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1991Snapshot,
         grammar: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1990::pack::COMPONENT_PROTOCOL_SEMIO),

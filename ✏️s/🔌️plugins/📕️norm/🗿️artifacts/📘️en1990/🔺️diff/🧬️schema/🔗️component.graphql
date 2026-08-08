@@ -1,0 +1,31 @@
+# 🧬️ En1990 diff schema — sparse field delta.
+
+type En1990Diff {
+  artifact: En1990Artifact @state(class: PERSISTENT)
+  gK: Float @state(class: PERSISTENT)
+  qK: En1990QkList @state(class: PERSISTENT)
+  resistanceKn: Float @state(class: PERSISTENT)
+  consequenceClass: Int @state(class: PERSISTENT)
+  annex: String @state(class: PERSISTENT)
+  seismicAEdKn: Float @state(class: PERSISTENT)
+  selectedCheckIndex: Int @state(class: SHARED_UI)
+}
+
+type En1990Artifact {
+  gK: Float
+  qK: [qKItem!]!
+  resistanceKn: Float
+  consequenceClass: Int
+  annex: String
+  seismicAEdKn: Float
+  selectedCheckIndex: Int
+}
+
+type En1990QkEntry {
+  category: String!
+  value: Float!
+}
+
+type En1990QkList {
+  values: [En1990QkEntry!]!
+}

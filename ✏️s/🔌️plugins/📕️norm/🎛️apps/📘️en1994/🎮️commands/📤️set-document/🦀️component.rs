@@ -5,7 +5,7 @@
 //! `None` and would print with no leading keyword at all.
 
 use crate::artifacts::en1994::op::En1994Mutation;
-use crate::artifacts::en1994::Document;
+use crate::artifacts::en1994::En1994Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,7 @@ pub struct SetDocument {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1994Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, En1994Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1994Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_document(payload.document.clone(), "setDocument")
 }
 //#endregion 🔖️Handler
@@ -34,15 +34,15 @@ mod tests {
 
     #[test]
     fn handle_commits_the_payload_document_under_its_action_id() {
-        let projection = Document::default();
+        let projection = En1994Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(
-            &SetDocument { document: Document::default() },
+            &SetDocument { document: En1994Snapshot::default() },
             &DocumentView { projection: &projection, history: &HistoryView::empty() },
             &ConfigView { projection: &config },
         )
         .expect("handle");
-        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: Document::default() }]);
+        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: En1994Snapshot::default() }]);
         assert_eq!(emit.description.as_deref(), Some("setDocument"));
         assert!(emit.config_mutations.is_empty());
     }

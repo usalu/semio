@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 pub use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, StepOrigin, Stock, WorkshopMachine, WorkshopMachinePatch};
+use crate::artifacts::process3d::{Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessStepPatch, StepOrigin, Stock, WorkshopMachine, WorkshopMachinePatch};
 use protocol::{CollectionMutation, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -124,10 +124,10 @@ enum Process3dMutationDsl {
     SetCursor {
         value: Option<usize>,
     },
-    #[dsl(key = "document")]
-    SetDocument {
+    #[dsl(key = "snapshot")]
+    SetSnapshot {
         #[dsl(block)]
-        document: Process3dDocument,
+        snapshot: Process3dSnapshot,
     },
 }
 //#region 🔖️HandcraftedOpCodecs
@@ -181,7 +181,7 @@ fn process3d_mutation_to_dsl(operation: &Process3dMutation) -> Process3dMutation
         Process3dMutation::Machines { collection: CollectionMutation::Patch { id, patch } } => Process3dMutationDsl::MachinesPatch { id: id.clone(), patch: patch.clone() },
         Process3dMutation::SetStock { stock } => Process3dMutationDsl::SetStock { stock: stock.clone() },
         Process3dMutation::SetCursor { resolved_up_to } => Process3dMutationDsl::SetCursor { value: *resolved_up_to },
-        Process3dMutation::SetDocument { document } => Process3dMutationDsl::SetDocument { document: document.clone() },
+        Process3dMutation::SetSnapshot { snapshot } => Process3dMutationDsl::SetSnapshot { snapshot: snapshot.clone() },
     }
 }
 
@@ -197,7 +197,7 @@ fn process3d_mutation_from_dsl(operation: Process3dMutationDsl) -> Process3dMuta
         Process3dMutationDsl::MachinesPatch { id, patch } => Process3dMutation::Machines { collection: CollectionMutation::Patch { id, patch } },
         Process3dMutationDsl::SetStock { stock } => Process3dMutation::SetStock { stock },
         Process3dMutationDsl::SetCursor { value } => Process3dMutation::SetCursor { resolved_up_to: value },
-        Process3dMutationDsl::SetDocument { document } => Process3dMutation::SetDocument { document },
+        Process3dMutationDsl::SetSnapshot { snapshot } => Process3dMutation::SetSnapshot { snapshot },
     }
 }
 
@@ -228,7 +228,8 @@ impl protocol::OpBinary for Process3dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{empty_process3d_projection, Pose, SolidSpec, Workshop};
+    use protocol::Mutation;
+    use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, SolidSpec, Workshop};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -279,8 +280,8 @@ mod tests {
     /// 📜️ A document exercising every `SolidSpec`/`ProcessMeasure` shape, both `origin` states, and a
     /// non-default workshop machine, so the OpText round trip covers the full grammar including the
     /// 3-deep workshop nesting, not just the happy path.
-    fn sample_document() -> Process3dDocument {
-        Process3dDocument {
+    fn sample_document() -> Process3dSnapshot {
+        Process3dSnapshot {
             workshop: Workshop { machines: vec![circular_saw_machine()] },
             stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],
@@ -290,9 +291,9 @@ mod tests {
 
     #[test]
     fn inverse_of_add_is_remove() {
-        let projection = empty_process3d_projection();
+        let snapshot = empty_process3d_snapshot();
         let operation = Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("a") } };
-        let inverse = operation.inverse(&projection);
+        let inverse = operation.inverse(&snapshot);
         assert_eq!(inverse.len(), 1);
         match &inverse[0] {
             Process3dMutation::Steps { collection: CollectionMutation::Remove { id } } => assert_eq!(id, "a"),
@@ -303,17 +304,17 @@ mod tests {
     //#region 🔖️OpTextTests
     #[test]
     fn process3d_op_text_round_trips_steps_add() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_steps_remove() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "cut-1".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "cut-1".into() } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_steps_move() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Move { id: "cut-1".into(), to_index: 2 } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Move { id: "cut-1".into(), to_index: 2 } });
     }
 
     #[test]
@@ -324,72 +325,72 @@ mod tests {
             measure: Some(ProcessMeasure::Drill { radius: 0.03, depth: 0.4, pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } }),
             origin: Some(Some(StepOrigin { machine_id: "tableSaw".into(), capability_id: "crosscut".into() })),
         };
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_steps_patch_clearing_origin() {
         let patch = ProcessStepPatch { label: None, enabled: None, measure: None, origin: Some(None) };
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_steps_patch_empty() {
         let patch = ProcessStepPatch::default();
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_set_stock() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::SetStock { stock: imported_mesh_stock() });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::SetStock { stock: imported_mesh_stock() });
     }
 
     #[test]
     fn process3d_op_text_round_trips_set_cursor_some() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::SetCursor { resolved_up_to: Some(3) });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::SetCursor { resolved_up_to: Some(3) });
     }
 
     #[test]
     fn process3d_op_text_round_trips_set_cursor_none() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::SetCursor { resolved_up_to: None });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::SetCursor { resolved_up_to: None });
     }
 
     #[test]
-    fn process3d_op_text_round_trips_set_document() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::SetDocument { document: sample_document() });
+    fn process3d_op_text_round_trips_set_snapshot() {
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::SetSnapshot { snapshot: sample_document() });
     }
 
     #[test]
     fn process3d_op_text_round_trips_machines_add() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Add { index: 0, item: circular_saw_machine() } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Add { index: 0, item: circular_saw_machine() } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_machines_remove() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Remove { id: "circularSaw".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Remove { id: "circularSaw".into() } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_machines_move() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Move { id: "circularSaw".into(), to_index: 2 } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Move { id: "circularSaw".into(), to_index: 2 } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_machines_patch_full() {
         let patch = WorkshopMachinePatch { label: Some("Big Saw".into()), icon_id: Some("scissors".into()), capabilities: Some(circular_saw_machine().capabilities) };
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Patch { id: "circularSaw".into(), patch } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Patch { id: "circularSaw".into(), patch } });
     }
 
     #[test]
     fn process3d_op_text_round_trips_machines_patch_empty() {
-        store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Patch { id: "circularSaw".into(), patch: WorkshopMachinePatch::default() } });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::Machines { collection: CollectionMutation::Patch { id: "circularSaw".into(), patch: WorkshopMachinePatch::default() } });
     }
 
     #[test]
     fn inverse_of_machines_add_is_remove() {
-        let projection = empty_process3d_projection();
+        let snapshot = empty_process3d_snapshot();
         let operation = Process3dMutation::Machines { collection: CollectionMutation::Add { index: 0, item: circular_saw_machine() } };
-        let inverse = operation.inverse(&projection);
+        let inverse = operation.inverse(&snapshot);
         assert_eq!(inverse.len(), 1);
         match &inverse[0] {
             Process3dMutation::Machines { collection: CollectionMutation::Remove { id } } => assert_eq!(id, "circularSaw"),

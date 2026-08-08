@@ -4,8 +4,8 @@ use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::modes::edit::windows::main::options;
 use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
-use crate::artifacts::flow::engine::{fixture_to_workflow, host_from_fixture};
-use crate::artifacts::flow::FlowFixture;
+use crate::artifacts::flow::engine::{fixture_to_workflow, host_from_snapshot};
+use crate::artifacts::flow::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
@@ -44,13 +44,13 @@ pub fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<Wind
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
-    let host = host_from_fixture(fixture, config, session);
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+    let host = host_from_snapshot(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let fixture_json = serde_json::to_string(fixture).ok();
     let selection = config.selected_node_ids.clone();
-    let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
+    let flow_extras = flow_backed_node_graph_extras(&fixture.to_fixture(), &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,

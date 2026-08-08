@@ -8,6 +8,8 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
+extern crate semio_framework_schema as schema;
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
@@ -30,8 +32,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🌊️flow/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🌊️flow/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🌊️flow/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🌊️flow/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -62,18 +75,25 @@ pub mod artifacts {
                 pub mod inverse;
             }
             #[path = "."]
-            pub mod set_fixture {
-                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📄set-fixture/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📄set-fixture/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/🌊️flow/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🌊️flow/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🌊️flow/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🌊️flow/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🌊️flow/⚙️engine/🦀️component.rs"]

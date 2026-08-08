@@ -1,0 +1,25 @@
+syntax = "proto3";
+package semio.s.norm.iso16757.artifact;
+
+// 🧬️ Iso16757 artifact schema — every field with its state class.
+
+message Iso16757Artifact {
+  // @state persistent
+  string catalogue = 1;
+  // @state persistent
+  string dictionary = 2;
+  // @state persistent
+  string geometry = 3;
+  // @state persistent
+  string selection = 4;
+  // @state persistent
+  string part_number_rule = 5;
+  // @state persistent
+  map<string, string> part_number_inputs = 6;
+  // @state persistent
+  string script_limits = 7;
+  // @state persistent
+  string exchange_process = 8;
+  // @state shared-ui
+  optional uint32 selected_check_index = 9;
+}

@@ -1,0 +1,74 @@
+# 🧬️ En1991 diff schema — sparse field delta.
+
+type En1991Diff {
+  artifact: En1991Artifact @state(class: PERSISTENT)
+  areaM2: Float @state(class: PERSISTENT)
+  category: String @state(class: PERSISTENT)
+  annex: String @state(class: PERSISTENT)
+  selfWeightMaterial: String @state(class: PERSISTENT)
+  selfWeightThicknessM: Float @state(class: PERSISTENT)
+  assumedGKKnM2: Float @state(class: PERSISTENT)
+  fireCurve: String @state(class: PERSISTENT)
+  fireResistanceMin: Float @state(class: PERSISTENT)
+  fireMemberCapacityC: Float @state(class: PERSISTENT)
+  snowZone: Int @state(class: PERSISTENT)
+  snowAltitudeM: Float @state(class: PERSISTENT)
+  enSKKnM2: Float @state(class: PERSISTENT)
+  windZone: Int @state(class: PERSISTENT)
+  enVBMS: Float @state(class: PERSISTENT)
+  deltaTK: Float @state(class: PERSISTENT)
+  constructionActivity: String @state(class: PERSISTENT)
+  accidentalMassT: Float @state(class: PERSISTENT)
+  accidentalSpeedKmH: Float @state(class: PERSISTENT)
+  bridgeLane: Int @state(class: PERSISTENT)
+  bridgeSpanM: Float @state(class: PERSISTENT)
+  bridgeLaneWidthM: Float @state(class: PERSISTENT)
+  bridgeMomentResistanceKnm: Float @state(class: PERSISTENT)
+  craneClass: String @state(class: PERSISTENT)
+  hoistClass: String @state(class: PERSISTENT)
+  hoistingSpeedMS: Float @state(class: PERSISTENT)
+  siloBulkDensityKnM3: Float @state(class: PERSISTENT)
+  siloHeightM: Float @state(class: PERSISTENT)
+  siloHydraulicRadiusM: Float @state(class: PERSISTENT)
+  siloMu: Float @state(class: PERSISTENT)
+  siloK: Float @state(class: PERSISTENT)
+  cS: Float @state(class: PERSISTENT)
+  cD: Float @state(class: PERSISTENT)
+  selectedCheckIndex: Int @state(class: SHARED_UI)
+}
+
+type En1991Artifact {
+  areaM2: Float
+  category: String
+  annex: String
+  selfWeightMaterial: String
+  selfWeightThicknessM: Float
+  assumedGKKnM2: Float
+  fireCurve: String
+  fireResistanceMin: Float
+  fireMemberCapacityC: Float
+  snowZone: Int
+  snowAltitudeM: Float
+  enSKKnM2: Float
+  windZone: Int
+  enVBMS: Float
+  deltaTK: Float
+  constructionActivity: String
+  accidentalMassT: Float
+  accidentalSpeedKmH: Float
+  bridgeLane: Int
+  bridgeSpanM: Float
+  bridgeLaneWidthM: Float
+  bridgeMomentResistanceKnm: Float
+  craneClass: String
+  hoistClass: String
+  hoistingSpeedMS: Float
+  siloBulkDensityKnM3: Float
+  siloHeightM: Float
+  siloHydraulicRadiusM: Float
+  siloMu: Float
+  siloK: Float
+  cS: Float
+  cD: Float
+  selectedCheckIndex: Int
+}

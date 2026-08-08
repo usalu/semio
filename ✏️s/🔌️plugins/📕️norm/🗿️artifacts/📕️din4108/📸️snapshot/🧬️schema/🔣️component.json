@@ -1,0 +1,112 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din4108/snapshot.json",
+  "title": "Din4108Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "category",
+    "layers",
+    "climate",
+    "airtightnessN50",
+    "psiTimesLSum",
+    "rhInt",
+    "catalogId",
+    "materialId",
+    "airtightnessClass",
+    "tIntC",
+    "solarAbsorptance",
+    "irradianceWM2",
+    "moistureMuExterior",
+    "moistureMuInterior",
+    "envelopeAreaM2",
+    "bb2DetailsConform",
+    "applicationType",
+    "declaredApplicationClass"
+  ],
+  "properties": {
+    "category": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Din4108LayerDocument"
+      },
+      "x-semio-state": "persistent"
+    },
+    "climate": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "airtightnessN50": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "psiTimesLSum": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "rhInt": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "catalogId": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "materialId": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "airtightnessClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "tIntC": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "solarAbsorptance": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "irradianceWM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "moistureMuExterior": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "moistureMuInterior": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "envelopeAreaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bb2DetailsConform": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "applicationType": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "declaredApplicationClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    }
+  }
+}

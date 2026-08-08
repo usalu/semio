@@ -1,0 +1,98 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din18599/artifact.json",
+  "title": "Din18599Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "useClass",
+    "heatedAreaM2",
+    "occupants",
+    "hT",
+    "hV",
+    "climate",
+    "internalGainsWM2",
+    "solarGainsKwh",
+    "systemLossesKwh",
+    "renewableKwh",
+    "annualLimitKwh",
+    "energyCarrier",
+    "referenceQPKwh"
+  ],
+  "properties": {
+    "useClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "heatedAreaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "occupants": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "hT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hV": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "climate": {
+      "$ref": "#/$defs/Din18599MonthlyClimate",
+      "x-semio-state": "persistent"
+    },
+    "internalGainsWM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "solarGainsKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "systemLossesKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "renewableKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "annualLimitKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "energyCarrier": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "referenceQPKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

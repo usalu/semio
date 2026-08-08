@@ -1,0 +1,42 @@
+syntax = "proto3";
+package semio.s.gis.gismap.artifact;
+
+// 🧬️ GIS map artifact schema — every field with its state class.
+
+message GisMapArtifact {
+  // @state persistent
+  repeated GisMapFeature positions = 1;
+  // @state persistent
+  repeated GisMapFeature routes = 2;
+  // @state persistent
+  repeated GisMapFeature regions = 3;
+  // @state shared-ui
+  repeated string selected_ids = 4;
+  // @state shared-ui
+  string feature_selection_json = 5;
+  // @state shared-ui
+  map<string, bool> layer_visibility = 6;
+  // @state shared-ui
+  map<string, double> layer_stroke_scale = 7;
+  // @state local-ui
+  string camera_json = 8;
+  // @state local-ui
+  string render_mode = 9;
+  // @state local-ui
+  string vector_style = 10;
+  // @state local-ui
+  string lod_mode = 11;
+  // @state local-ui
+  string hover_json = 12;
+  // @state local-ui
+  string selection_method = 13;
+  // @state local-ui
+  string selection_mode = 14;
+  // @state local-ui
+  string locale = 15;
+}
+
+message GisMapFeature {
+  string id = 1;
+  string data_json = 2;
+}

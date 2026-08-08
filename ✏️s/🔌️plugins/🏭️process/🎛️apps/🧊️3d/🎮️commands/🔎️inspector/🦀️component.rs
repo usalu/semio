@@ -2,7 +2,7 @@
 //! `target`/`field` pair against the stock, a selected step, or a workshop machine.
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dDocument, ProcessMeasure, ProcessStepPatch, SolidSpec, WorkshopMachine, WorkshopMachinePatch};
+use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, ProcessMeasure, ProcessStepPatch, SolidSpec, WorkshopMachine, WorkshopMachinePatch};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -137,7 +137,7 @@ fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, valu
 /// workshop machine), mutates the clone via `apply_stock_patch`/`apply_step_patch`/
 /// `apply_workshop_machine_patch`, then wraps it back into a `SetStock`/`Steps::Patch`/`Machines::Patch`
 /// operation so the store computes the true pre-state inverse.
-fn process3d_inspector_patch_operation(fixture: &Process3dDocument, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dMutation> {
+fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dMutation> {
     if let Some(machine_id) = target.strip_prefix("machine:") {
         let machine = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
         let mut updated = machine.clone();
@@ -178,9 +178,9 @@ pub mod patch_inspector {
         pub text: Option<String>,
     }
 
-    pub fn handle(payload: &PatchInspector, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchInspector, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let value = payload.number.map(|n| json!(n)).or_else(|| payload.text.clone().map(Value::String));
-        match process3d_inspector_patch_operation(doc.projection, &payload.target, &payload.field, value.as_ref()) {
+        match process3d_inspector_patch_operation(doc.snapshot, &payload.target, &payload.field, value.as_ref()) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }

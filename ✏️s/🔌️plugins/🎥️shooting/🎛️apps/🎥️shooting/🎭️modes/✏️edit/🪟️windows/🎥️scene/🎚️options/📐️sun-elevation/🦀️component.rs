@@ -2,15 +2,15 @@
 //! Its command handler lives in `🎮️commands/☀️scene::set_sun_elevation`.
 
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowMeasure {
+pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "shooting.measure.sun-elevation".into(),
         label: Some(labels.measure_sun_elevation.into()),
-        value: fixture.scene.sun.elevation,
+        value: snapshot.scene.sun.elevation,
         min: -10.0,
         max: 90.0,
         step: Some(1.0),
@@ -33,9 +33,9 @@ mod tests {
 
     #[test]
     fn sun_elevation_measure_allows_below_horizon() {
-        let fixture = crate::artifacts::shooting::engine::default_fixture();
+        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
-        match measure(&fixture, labels) {
+        match measure(&snapshot, labels) {
             WindowMeasure::Slider { min, max, .. } => assert_eq!((min, max), (-10.0, 90.0)),
             other => panic!("sun-elevation measure must be a slider, got {other:?}"),
         }

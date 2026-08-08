@@ -1,0 +1,123 @@
+{
+  "$id": "https://semio.tech/schema/s/flow/flow/snapshot.json",
+  "title": "FlowSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "camera",
+    "widgets",
+    "synapses",
+    "layout"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "persistent"
+    },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Widget"
+      },
+      "x-semio-state": "persistent"
+    },
+    "synapses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SynapseSpec"
+      },
+      "x-semio-state": "persistent"
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WidgetLayout"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    }
+  }
+}

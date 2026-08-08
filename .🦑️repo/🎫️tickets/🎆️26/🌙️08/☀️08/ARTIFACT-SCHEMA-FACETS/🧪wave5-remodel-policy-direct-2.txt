@@ -1,0 +1,9 @@
+{
+  "id": "artifact-schema-field-parity-shape-✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🧬️schema/🛰️component.proto-assets",
+  "summary": "\"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🧬️schema/🛰️component.proto\" field \"assets\" disagrees with normative JSON Schema optionality/cardinality",
+  "kind": "artifact-schema/field-parity",
+  "scope": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+  "priority": "high",
+  "reason": "Normative ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🧬️schema/🔣️component.json declares \"assets\" as optional=true, cardinality=map; 🛰️protobuf has optional=false, cardinality=map.",
+  "solution": "Change \"assets\" in ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🧬️schema/🛰️component.proto to match ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=map)."
+}

@@ -8,21 +8,21 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::block3d::Block3dDefinition;
+use crate::artifacts::block3d::Block3dSnapshot;
 
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block3d` DSL — the `ObjectKind` half
 /// of semio_compose_rs's metabolism-kit `Capsule` type.
-pub const BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
+pub const BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️nakagin-capsule/🖼️assets/🗣️nakagin-capsule.dsl.semio");
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block3d` DSL.
 pub const BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
 
-/// 📖️ Parses `.block3d` DSL text into a `Block3dDefinition`.
-pub fn parse_dsl(text: &str) -> Result<Block3dDefinition, store::TextError> {
-    <Block3dDefinition as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.block3d` DSL text into a `Block3dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Block3dSnapshot, store::TextError> {
+    <Block3dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Block3dDefinition` back to `.block3d` DSL text.
-pub fn print_dsl(document: &Block3dDefinition) -> String {
+/// 🖨️ Prints a `Block3dSnapshot` back to `.block3d` DSL text.
+pub fn print_dsl(document: &Block3dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -33,11 +33,11 @@ mod tests {
     use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
     use crate::{BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
-    pub fn nakagin_capsule() -> Block3dDefinition {
-        let mut definition = Block3dDefinition {
+    pub fn nakagin_capsule() -> Block3dSnapshot {
+        let mut definition = Block3dSnapshot {
             object_kind: BlockKindIdentity { id: "Capsule J".into(), name: "Capsule J".into(), label: "Capsule J".into(), ..Default::default() },
             camera3d: BlockCamera3d { position: [10.0, -10.0, 6.0], target: [0.0, 0.0, 1.0], zoom: 1.0 },
-            ..Block3dDefinition::default()
+            ..Block3dSnapshot::default()
         };
         definition.representations.push(BlockRepresentation {
             id: "r0".into(),
@@ -64,19 +64,19 @@ mod tests {
 
     #[test]
     fn block3d_definition_dsl_round_trips() {
-        let empty = Block3dDefinition::default();
-        store::test_support::assert_dsl_round_trip(&empty);
-        store::test_support::assert_dsl_pack_equivalence(&empty);
+        let empty = Block3dSnapshot::default();
+        store::os_store::test_support::assert_dsl_round_trip(&empty);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
         let definition = nakagin_capsule();
-        store::test_support::assert_dsl_round_trip(&definition);
-        store::test_support::assert_dsl_pack_equivalence(&definition);
+        store::os_store::test_support::assert_dsl_round_trip(&definition);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&definition);
     }
 
     #[test]
     fn block3d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT, BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT] {
             let definition = parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            store::test_support::assert_dsl_round_trip(&definition);
+            store::os_store::test_support::assert_dsl_round_trip(&definition);
         }
     }
 }

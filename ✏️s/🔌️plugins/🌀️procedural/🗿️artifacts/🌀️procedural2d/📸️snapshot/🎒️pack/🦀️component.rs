@@ -27,7 +27,7 @@ mod tests {
     use super::*;
     use crate::artifacts::procedural2d::dsl;
     use flow::Widget;
-    use store::test_support;
+    use semio_framework_os_kernel::os_store::test_support;
 
     #[test]
     fn dsl_pack_equivalence_empty_projection() {

@@ -1,6 +1,6 @@
 //! ⚙️ EN 1992 design of concrete structures — headless compute (constitutional: engine).
 
-use crate::artifacts::en1992::{part_1_2::FireRating, part_3::TightnessClass, Document};
+use crate::artifacts::en1992::{part_1_2::FireRating, part_3::TightnessClass, En1992Snapshot};
 use crate::artifacts::en1992::mutations::En1992Mutation;
 use crate::document::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
 
@@ -453,45 +453,53 @@ pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, 
 // #region 🔖️Session
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1992 artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent En1992 artifact engine — owns the artifact; every transition is a mutation.
 pub struct En1992Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1992::schema::En1992Artifact,
+    snapshot: En1992Snapshot,
 }
 
 impl En1992Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: En1992Snapshot) -> Self {
+        let artifact = crate::artifacts::en1992::schema::En1992Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> En1992Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1992Engine {
-    type Projection = Document;
-    type Mutation = En1992Mutation;
-    type Diff = crate::artifacts::en1992::diff::Diff;
+    type Artifact = crate::artifacts::en1992::schema::En1992Artifact;
+    type Snapshot = En1992Snapshot;
+    type Mutation = crate::artifacts::en1992::mutations::En1992Mutation;
+    type Diff = crate::artifacts::en1992::diff::En1992Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = protocol::Mutation::diff(mutation, &self.snapshot);
+        self.snapshot = vcs::apply_mutation(&self.snapshot, mutation);
+        self.artifact = crate::artifacts::en1992::schema::En1992Artifact::from_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        protocol::Mutation::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
 
 pub type Host = NormHost<En1992Family>;
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
     let mut report = if document.use_fem {
         #[cfg(feature = "cross-fem")]
         {
@@ -524,14 +532,14 @@ pub fn evaluate(document: &Document) -> CheckReport {
 pub struct En1992Family;
 
 impl NormFamily for En1992Family {
-    type Document = Document;
+    type Document = En1992Snapshot;
     type Mutation = En1992Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1992
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &En1992Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
@@ -614,7 +622,7 @@ mod tests {
 
     #[test]
     fn evaluate_fem_path() {
-        let doc = Document { use_fem: true, ..Document::default() };
+        let doc = En1992Snapshot { use_fem: true, ..En1992Snapshot::default() };
         let report = evaluate(&doc);
         assert!(!report.checks.is_empty());
         let m_ed = report.checks[0].computed.value / 1_000_000.0;
@@ -623,7 +631,7 @@ mod tests {
 
     #[test]
     fn evaluate_analytical_with_prestress() {
-        let doc = Document { p_kn: 800.0, ..Document::default() };
+        let doc = En1992Snapshot { p_kn: 800.0, ..En1992Snapshot::default() };
         let report = evaluate(&doc);
         assert_eq!(report.checks.len(), 10);
         assert!(report.checks.iter().all(|c| c.status != CheckStatus::NotApplicable));
@@ -631,7 +639,7 @@ mod tests {
 
     #[test]
     fn evaluate_covers_all_parts() {
-        let report = evaluate(&Document::default());
+        let report = evaluate(&En1992Snapshot::default());
         assert_eq!(report.checks.len(), 9);
         let families: Vec<&str> = report.checks.iter().map(|c| c.clause.family.as_str()).collect();
         assert!(families.contains(&"EN 1992-1-1"));
@@ -732,11 +740,11 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1992.document",
         extension: Some("en1992"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1992Snapshot,
         grammar: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1992.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -765,8 +773,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1992::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1992.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {

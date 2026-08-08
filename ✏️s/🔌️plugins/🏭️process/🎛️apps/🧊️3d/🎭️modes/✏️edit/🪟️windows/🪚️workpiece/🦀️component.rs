@@ -5,7 +5,7 @@ use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::modes::edit::windows::workpiece::options;
 use crate::apps::process3d::process3d_action;
 use crate::artifacts::process3d::engine::processed_mesh;
-use crate::artifacts::process3d::{Process3dDocument, SolidSpec};
+use crate::artifacts::process3d::{Process3dSnapshot, SolidSpec};
 use semio_framework_plugin::{
     build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
     WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
@@ -82,7 +82,7 @@ fn process3d_selection_json(cfg: &Process3dConfig, active_utility: &str) -> Stri
 /// 🖼️ A GLB-imported reference mesh (`SolidSpec::ImportedMesh`) has no kernel-side geometry to
 /// tessellate; it renders by pointing the world3d scene straight at `mesh_url`, mirroring `cad`'s
 /// `resolve_object_mesh_url` → `world3d_mesh_id_from_url` bridge.
-fn evaluated_preview_payload(fixture: &Process3dDocument) -> (String, String) {
+fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
     if let SolidSpec::ImportedMesh { mesh_url } = &fixture.stock.solid {
         let mesh_id = world3d_mesh_id_from_url(mesh_url);
         let meshes = json!([{ "id": mesh_id, "url": mesh_url }]);
@@ -121,13 +121,13 @@ fn hash_value<T: Serialize>(value: &T) -> u64 {
     hasher.finish()
 }
 
-fn preview_payload_cached(fixture: &Process3dDocument) -> (String, String) {
+fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {
     evaluated_preview_payload(fixture)
 }
 //#endregion 🔖️PreviewCache
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dDocument, config: &Process3dConfig) -> UiNode {
+pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiNode {
     let (meshes_json, instances_json) = preview_payload_cached(fixture);
     build_world_3d_scene(
         PROCESS_3D_PLAY_SURFACE_MAIN,
@@ -144,7 +144,7 @@ pub fn render(fixture: &Process3dDocument, config: &Process3dConfig) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️Engagement
-pub fn engagement(fixture: &Process3dDocument, config: &Process3dConfig, labels: &crate::apps::process3d::terminology::Process3dLabels) -> WindowEngagement {
+pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::apps::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let active_utility = config.active_utility();
     let len = fixture.steps.len();
     let cursor = fixture.resolved_up_to.unwrap_or(len);
@@ -199,7 +199,7 @@ mod tests {
 
     #[test]
     fn engagement_exposes_no_utility_switch_options() {
-        let doc = Process3dDocument::default();
+        let doc = Process3dSnapshot::default();
         let engagement = engagement(&doc, &Process3dConfig::default(), &crate::apps::process3d::terminology::Process3dLabels::NATIVE_EN);
         assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework utility bar; the engagement must not duplicate it as options");
     }

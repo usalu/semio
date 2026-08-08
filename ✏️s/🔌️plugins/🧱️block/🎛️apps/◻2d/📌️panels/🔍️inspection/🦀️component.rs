@@ -2,7 +2,7 @@
 
 use crate::apps::block2d::block2d_action;
 use crate::apps::block2d::terminology::Block2dLabels;
-use crate::artifacts::block2d::Block2dDefinition;
+use crate::artifacts::block2d::Block2dSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -52,7 +52,7 @@ fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> Ui
     })
 }
 
-pub fn render(definition: &Block2dDefinition, labels: &Block2dLabels) -> UiNode {
+pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "block2d-play-inspector".into(),
         label: labels.summary.into(),

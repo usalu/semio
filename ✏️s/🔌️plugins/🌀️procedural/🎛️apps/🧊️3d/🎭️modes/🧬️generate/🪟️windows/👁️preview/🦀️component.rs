@@ -31,8 +31,7 @@ pub fn definition() -> WindowKindDefinition {
         document_projection_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new(),
-    }
+        capabilities: Vec::new()}
 }
 
 /// 🎚️ Shares the same show-mode + sun measures as the edit-mode 3D preview window.
@@ -50,8 +49,7 @@ pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Pro
             let eval_json = generation.preview_text.clone().unwrap_or_default();
             preview_payload_from_eval(&eval_json, &gen_fixture, cfg)
         }
-        None => ("[]".into(), "[]".into()),
-    };
+        None => ("[]".into(), "[]".into())};
     if meshes_json == "[]" && instances_json == "[]" {
         let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(labels.preview_hint.as_str());
         return render_generation_preview_text(PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW, PROCEDURAL_3D_PLAY_APP_ID, text);

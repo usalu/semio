@@ -15,8 +15,7 @@ pub mod set_lod_mode {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "lod-mode")]
     pub struct SetLodMode {
-        pub value: String,
-    }
+        pub value: String}
 
     pub fn handle(payload: &SetLodMode, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetLodMode { value: payload.value.clone() }]))
@@ -31,8 +30,7 @@ pub mod set_show_mode {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "show-mode")]
     pub struct SetShowMode {
-        pub value: String,
-    }
+        pub value: String}
 
     pub fn handle(payload: &SetShowMode, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetShowMode { value: payload.value.clone() }]))
@@ -48,8 +46,7 @@ pub mod set_camera {
     #[dsl(keyword = "camera")]
     pub struct SetCamera {
         #[dsl(block)]
-        pub camera: Procedural3dPreviewCamera,
-    }
+        pub camera: Procedural3dPreviewCamera}
 
     pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetPreviewCamera { camera: payload.camera.clone() }]))
@@ -64,8 +61,7 @@ pub mod set_active_utility {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "active-utility")]
     pub struct SetActiveUtility {
-        pub utility_id: String,
-    }
+        pub utility_id: String}
 
     /// 🧰️ Host-owned active-utility switch — clears in-progress hover scratch, never emits document
     /// operations.

@@ -1,3 +1,8 @@
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1847:17
+     |
+1847 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
 warning: unused variable: `app`
     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5390:34
      |
@@ -17,4 +22,4 @@ warning: unused variable: `app`
      |                                  ^^^ help: try ignoring the field: `app: _`
 
 warning: `semio-framework-plugin` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 15 suggestions)
-    Finished `dev` profile [unoptimized] target(s) in 0.22s
+    Finished `dev` profile [unoptimized] target(s) in 0.20s

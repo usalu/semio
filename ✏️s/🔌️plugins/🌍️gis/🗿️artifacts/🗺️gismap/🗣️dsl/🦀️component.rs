@@ -8,37 +8,38 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::gismap::GisMapDocument;
+use crate::artifacts::gismap::GisMapSnapshot;
 
 /// 🗺️ The bundled "reuse map" example document, handcrafted in the `.gismap` DSL.
 pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.gismap` DSL text into a `GisMapDocument`.
-pub fn parse_dsl(text: &str) -> Result<GisMapDocument, store::TextError> {
-    <GisMapDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {
+    <GisMapSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `GisMapDocument` back to `.gismap` DSL text.
-pub fn print_dsl(document: &GisMapDocument) -> String {
+/// 🖨️ Prints a `GisMapSnapshot` back to `.gismap` DSL text.
+pub fn print_dsl(document: &GisMapSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
+
+                use super::*;
     use crate::artifacts::gismap::MapFeature;
     use serde_json::json;
 
     #[test]
     fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
         let document = parse_dsl(REUSE_MAP_EXAMPLE_TEXT).expect("parse reuse-map example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn gis_map_document_dsl_round_trips_empty_document() {
-        store::test_support::assert_dsl_round_trip(&GisMapDocument::default());
+        store::os_store::test_support::assert_dsl_round_trip(&GisMapSnapshot::default());
     }
 
     #[test]
@@ -57,7 +58,7 @@ mod tests {
     #[test]
     fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
         let dsl_of = |value: serde_json::Value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null);
-        let document = GisMapDocument {
+        let document = GisMapSnapshot {
             positions: vec![MapFeature {
                 id: "p1".into(),
                 data: dsl_of(json!({
@@ -73,7 +74,7 @@ mod tests {
             routes: vec![MapFeature { id: "r1".into(), data: dsl_of(json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] })) }],
             regions: vec![MapFeature { id: "g1".into(), data: dsl_of(json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] })) }],
         };
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }
 //#endregion 🧪️Tests

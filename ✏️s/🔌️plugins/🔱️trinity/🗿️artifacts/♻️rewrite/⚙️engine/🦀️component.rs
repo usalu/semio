@@ -242,7 +242,7 @@ mod tests {
     use store::DocumentDsl;
 
     fn nakagin_graph() -> Graph {
-        let mut g = Graph::from_fixture(crate::artifacts::jack::GraphFixture::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let mut g = Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         g.recompute_derived();
         g
     }
@@ -306,7 +306,7 @@ mod tests {
 
     #[test]
     fn rewrite_labeled_fixture_reloads() {
-        let mut g = Graph::from_fixture(crate::artifacts::jack::GraphFixture::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let mut g = Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         let rule = Rule {
             name: "label-core".into(),
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
@@ -430,8 +430,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::rewrite::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::rewrite::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::rewrite::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::rewrite::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("rewrite.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -460,8 +460,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::rewrite::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::rewrite::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("rewrite.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -477,34 +477,65 @@ pub fn register_pilot_languages() {
 }
 
 
+
+//#region 🔖️Register
+static SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::rewrite::schema::rewrite_artifact_schema_descriptor());
+}
+
+/// 🗂️ Registers codecs and schema descriptor.
+pub fn register() {
+    register_pilot_languages();
+    register_artifact_schema();
+}
+//#endregion 🔖️Register
+
 //#region 🔖️ArtifactEngine
 pub struct RewriteRuleEngine {
-    projection: crate::artifacts::rewrite::RewriteRuleDocument,
+    artifact: crate::artifacts::rewrite::schema::RewriteArtifact,
+    snapshot: crate::artifacts::rewrite::RewriteSnapshot,
 }
 
 impl RewriteRuleEngine {
-    pub fn new(projection: crate::artifacts::rewrite::RewriteRuleDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::rewrite::RewriteSnapshot) -> Self {
+        Self {
+            artifact: crate::artifacts::rewrite::schema::RewriteArtifact::from_snapshot(snapshot.clone()),
+            snapshot,
+        }
     }
 }
 
 impl protocol::ArtifactEngine for RewriteRuleEngine {
-    type Projection = crate::artifacts::rewrite::RewriteRuleDocument;
+    type Artifact = crate::artifacts::rewrite::schema::RewriteArtifact;
+    type Snapshot = crate::artifacts::rewrite::RewriteSnapshot;
     type Mutation = crate::artifacts::rewrite::mutations::RewriteRuleMutation;
-    type Diff = crate::artifacts::rewrite::diff::RewriteRuleDiff;
+    type Diff = crate::artifacts::rewrite::diff::RewriteDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::rewrite::mutations::apply_rewrite_rule_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::rewrite::mutations::apply_rewrite_rule_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

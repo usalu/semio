@@ -1,0 +1,50 @@
+// 🧬️ EN 1997 snapshot schema.
+syntax = "proto3";
+package semio.s.norm.en1997.snapshot;
+
+message En1997Snapshot {
+  // @state persistent
+  double v_ed_kn = 1;
+  // @state persistent
+  double h_ed_kn = 2;
+  // @state persistent
+  double footing_area_m2 = 3;
+  // @state persistent
+  double phi_deg = 4;
+  // @state persistent
+  double c_kpa = 5;
+  // @state persistent
+  double gamma_kn_m3 = 6;
+  // @state persistent
+  double b_m = 7;
+  // @state persistent
+  double d_f_m = 8;
+  // @state persistent
+  double e_s_mpa = 9;
+  // @state persistent
+  double nu = 10;
+  // @state persistent
+  double design_approach = 11;
+  // @state persistent
+  double annex = 12;
+  // @state persistent
+  double settlement_limit_mm = 13;
+  // @state persistent
+  double n_pile_ed_kn = 14;
+  // @state persistent
+  double alpha_s = 15;
+  // @state persistent
+  double pile_d_m = 16;
+  // @state persistent
+  double q_s_kpa = 17;
+  // @state persistent
+  double pile_l_m = 18;
+  // @state persistent
+  double q_b_kpa = 19;
+  // @state persistent
+  double pile_base_area_m2 = 20;
+  // @state persistent
+  uint32 pile_n_profiles = 21;
+  // @state persistent
+  double z_investigated_m = 22;
+}

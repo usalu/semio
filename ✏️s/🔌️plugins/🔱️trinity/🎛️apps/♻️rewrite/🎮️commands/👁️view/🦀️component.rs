@@ -5,7 +5,7 @@
 use crate::apps::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::Camera;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
-use crate::artifacts::rewrite::RewriteRuleModel;
+use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 
 fn jack_token_at_offset(text: &str, offset: usize) -> Option<String> {
@@ -21,7 +21,7 @@ fn jack_token_at_offset(text: &str, offset: usize) -> Option<String> {
     }
 }
 
-pub(crate) fn set_selection(state: &RewriteRuleModel, ids: &[String], surface_id: &Option<String>, select_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn set_selection(state: &RewriteSnapshot, ids: &[String], surface_id: &Option<String>, select_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut config_mutations = vec![RewriteConfigMutation::SetSelection { node_ids: ids.to_vec() }];
     if let Some(node_id) = ids.first() {
         let fixture_json = crate::apps::rewrite::fixture_json_for_surface(surface_id.as_deref().unwrap_or(""), state);
@@ -33,7 +33,7 @@ pub(crate) fn set_selection(state: &RewriteRuleModel, ids: &[String], surface_id
     Ok(Emit::config(config_mutations))
 }
 
-pub(crate) fn node_graph_hover(state: &RewriteRuleModel, surface_id: &Option<String>, node_id: &Option<String>, hover_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn node_graph_hover(state: &RewriteSnapshot, surface_id: &Option<String>, node_id: &Option<String>, hover_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     match node_id {
         Some(node_id) => {
             let fixture_json = crate::apps::rewrite::fixture_json_for_surface(surface_id.as_deref().unwrap_or(""), state);
@@ -62,7 +62,7 @@ pub(crate) fn graph_pointer_down(node_id: &Option<String>) -> Result<Emit<Rewrit
     Ok(Emit::config(vec![RewriteConfigMutation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }]))
 }
 
-pub(crate) fn text_select(state: &RewriteRuleModel, var: &Option<String>, start: &Option<u64>, select_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn text_select(state: &RewriteSnapshot, var: &Option<String>, start: &Option<u64>, select_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut config_mutations = vec![RewriteConfigMutation::SetSelectEpoch { value: select_epoch + 1 }];
     if let Some(var) = var {
         config_mutations.push(RewriteConfigMutation::SetActiveSelectVar { value: var.clone() });
@@ -74,7 +74,7 @@ pub(crate) fn text_select(state: &RewriteRuleModel, var: &Option<String>, start:
     Ok(Emit::config(config_mutations))
 }
 
-pub(crate) fn text_hover(state: &RewriteRuleModel, var: &Option<String>, offset: &Option<u64>, hover_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn text_hover(state: &RewriteSnapshot, var: &Option<String>, offset: &Option<u64>, hover_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut config_mutations = vec![RewriteConfigMutation::SetHoverEpoch { value: hover_epoch + 1 }];
     if let Some(var) = var {
         config_mutations.push(RewriteConfigMutation::SetActiveHoverVar { value: var.clone() });

@@ -5,8 +5,7 @@ use crate::apps::procedural2d::terminology::Procedural2dLabels;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const PROCEDURAL2D_PLAY_BODY_INSPECTION: &str = "procedural2d.play.inspection";
@@ -19,8 +18,7 @@ pub fn definition() -> PanelTabDefinition {
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
         group: PanelGroup::Details,
         body_key: Some(PROCEDURAL2D_PLAY_BODY_INSPECTION.into()),
-        children: Vec::new(),
-    }
+        children: Vec::new()}
 }
 //#endregion 🔖️Definition
 
@@ -37,16 +35,14 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, labe
                 semio_framework_plugin::ui_text(Label::data(format!("{} {}", labels.show_mode_prefix.as_str(), config.show_mode))),
             ],
             presence: UiPresence::default(),
-            menu: None,
-        }]);
+            menu: None}]);
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         presence: UiPresence::default(),
         id: "procedural2d-play-inspector.selection".into(),
         label: labels.selection.into(),
         default_open: Some(true),
-        fields: vec![ui_inspector_readonly_field("procedural2d-play-inspector.ids", labels.ids, config.selected_ids.join(", "))],
-    }])
+        fields: vec![ui_inspector_readonly_field("procedural2d-play-inspector.ids", labels.ids, config.selected_ids.join(", "))]}])
 }
 //#endregion 🔖️Render
 

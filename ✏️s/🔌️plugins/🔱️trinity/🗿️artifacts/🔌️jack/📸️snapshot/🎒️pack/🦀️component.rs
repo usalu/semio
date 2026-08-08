@@ -1,7 +1,7 @@
 //! 📦️ `trinity.graph` artifact — binary document surface + laws (constitutional: pack).
 //!
 //! 📌️ The `DocumentPack` impl itself lives in `🗣️dsl/🦀️component.rs`, next to the private
-//! `GraphFixtureDsl` mirror it delegates through (same reason the DSL impl lives there too) — this
+//! `JackSnapshotDsl` mirror it delegates through (same reason the DSL impl lives there too) — this
 //! file only holds the public encode/decode entry points, matching the old bundle crate's shape.
 
 
@@ -12,17 +12,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::jack::GraphFixture;
+use crate::artifacts::jack::JackSnapshot;
 use store::{DocumentPack, PackError};
 
-/// 📦️ Encodes a `GraphFixture` to its binary pack form.
-pub fn encode(document: &GraphFixture) -> Vec<u8> {
+/// 📦️ Encodes a `JackSnapshot` to its binary pack form.
+pub fn encode(document: &JackSnapshot) -> Vec<u8> {
     DocumentPack::encode_pack(document)
 }
 
-/// 📖️ Decodes a `GraphFixture` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<GraphFixture, PackError> {
-    <GraphFixture as DocumentPack>::decode_pack(bytes)
+/// 📖️ Decodes a `JackSnapshot` from its binary pack form.
+pub fn decode(bytes: &[u8]) -> Result<JackSnapshot, PackError> {
+    <JackSnapshot as DocumentPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -34,7 +34,7 @@ mod tests {
     #[test]
     fn nakagin_example_pack_round_trips_and_agrees_with_dsl() {
         let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
-        store::test_support::assert_dsl_pack_equivalence(&document);
+        ::store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
     }

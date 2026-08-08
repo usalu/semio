@@ -5,7 +5,7 @@
 //! actively rejects it if it ever starts emitting document operations.
 
 use crate::artifacts::en1991::op::En1991Mutation;
-use crate::artifacts::en1991::Document;
+use crate::artifacts::en1991::En1991Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,7 @@ pub struct SetSelectedCheckIndex {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1991Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, En1991Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1991Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_selected_check_index(payload.index)
 }
 //#endregion 🔖️Handler
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn handle_emits_only_a_config_operation() {
-        let projection = Document::default();
+        let projection = En1991Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(
             &SetSelectedCheckIndex { index: Some(4) },

@@ -17,8 +17,7 @@ pub mod node_graph_edit {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "node-graph-edit")]
     pub struct NodeGraphEdit {
-        pub operations_json: String,
-    }
+        pub operations_json: String}
 
     pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -68,8 +67,7 @@ pub mod move_media_node {
     pub struct MoveMediaNode {
         pub node_id: String,
         pub x: f64,
-        pub y: f64,
-    }
+        pub y: f64}
 
     pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -90,8 +88,7 @@ pub mod connect_media_ports {
         pub source_node_id: String,
         pub source_port_id: String,
         pub target_node_id: String,
-        pub target_port_id: String,
-    }
+        pub target_port_id: String}
 
     pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -126,14 +123,12 @@ pub mod node_graph_viewport {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "node-graph-viewport")]
     pub struct NodeGraphViewport {
-        pub viewport_json: String,
-    }
+        pub viewport_json: String}
 
     pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         match serde_json::from_str::<CameraJson>(&payload.viewport_json) {
             Ok(camera) => Ok(Emit::config(vec![Procedural2dConfigMutation::SetCamera { camera }])),
-            Err(_) => Ok(Emit::default()),
-        }
+            Err(_) => Ok(Emit::default())}
     }
 }
 //#endregion 🔖️NodeGraphViewport
@@ -145,8 +140,7 @@ pub mod node_graph_select {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "node-graph-select")]
     pub struct NodeGraphSelect {
-        pub ids: Vec<String>,
-    }
+        pub ids: Vec<String>}
 
     pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))

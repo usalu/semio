@@ -1,0 +1,82 @@
+syntax = "proto3";
+package semio.s.remodel.remodel.snapshot;
+
+// 🧬️ Remodel snapshot schema.
+
+message RemodelSnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string id = 2;
+  // @state persistent
+  repeated MediaStream streams = 3;
+  // @state persistent
+  map<string, ImageAsset> assets = 4;
+  // @state persistent
+  CalibrationState calibration = 5;
+  // @state persistent
+  ReconstructionParams params = 6;
+  // @state persistent
+  repeated GroundControlPoint gcps = 7;
+  // @state persistent
+  ReconstructionJob job = 8;
+  // @state persistent
+  ReconstructionResults results = 9;
+}
+
+message MediaStream {
+  string _placeholder = 1;
+}
+
+message ImageAsset {
+  string _placeholder = 1;
+}
+
+message CalibrationState {
+  string _placeholder = 1;
+}
+
+message ReconstructionParams {
+  string _placeholder = 1;
+}
+
+message GroundControlPoint {
+  string _placeholder = 1;
+}
+
+message ReconstructionJob {
+  string _placeholder = 1;
+}
+
+message ReconstructionResults {
+  string _placeholder = 1;
+}
+
+message RemodelUiCamera {
+  string _placeholder = 1;
+}
+
+message RemodelUiSelection {
+  string _placeholder = 1;
+}
+
+message RemodelUiLayers {
+  string _placeholder = 1;
+}
+
+message RemodelUiFrameCursor {
+  string _placeholder = 1;
+}
+
+message RemodelMediaStreamList {
+  string _placeholder = 1;
+}
+
+message RemodelGcpList {
+  string _placeholder = 1;
+}
+
+message RemodelArtifact {
+  string _placeholder = 1;
+}
+

@@ -2,7 +2,7 @@
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelProjection};
+use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelSnapshot};
 use semio_framework_plugin::{mesh_from_kind, ConfigView, DocumentView, Emit, Fault, MeshData};
 use serde::{Deserialize, Serialize};
 
@@ -26,7 +26,7 @@ pub mod reset_placeholder_mesh {
     #[dsl(keyword = "reset-placeholder-mesh")]
     pub struct ResetPlaceholderMesh {}
 
-    pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(placeholder_result()) }]))
     }
 }
@@ -40,7 +40,7 @@ pub mod clear_sparse {
     #[dsl(keyword = "clear-sparse")]
     pub struct ClearSparse {}
 
-    pub fn handle(_payload: &ClearSparse, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearSparse, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetSparse { sparse: None }]))
     }
 }
@@ -54,7 +54,7 @@ pub mod clear_dense {
     #[dsl(keyword = "clear-dense")]
     pub struct ClearDense {}
 
-    pub fn handle(_payload: &ClearDense, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearDense, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetDense { dense: None }]))
     }
 }
@@ -68,7 +68,7 @@ pub mod clear_mesh_result {
     #[dsl(keyword = "clear-mesh-result")]
     pub struct ClearMeshResult {}
 
-    pub fn handle(_payload: &ClearMeshResult, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearMeshResult, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) }]))
     }
 }
@@ -82,7 +82,7 @@ pub mod clear_tracks {
     #[dsl(keyword = "clear-tracks")]
     pub struct ClearTracks {}
 
-    pub fn handle(_payload: &ClearTracks, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearTracks, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetTracks { tracks: Vec::new() }]))
     }
 }
@@ -96,7 +96,7 @@ pub mod clear_geo_products {
     #[dsl(keyword = "clear-geo-products")]
     pub struct ClearGeoProducts {}
 
-    pub fn handle(_payload: &ClearGeoProducts, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearGeoProducts, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![RemodelMutation::SetGeoProducts { geo: None }]))
     }
 }
@@ -111,7 +111,7 @@ pub mod clear_result {
     pub struct ClearResult {}
 
     /// 🧹️ Resets all seven `ReconstructionResults` fields in one undoable step.
-    pub fn handle(_payload: &ClearResult, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearResult, _doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![
             RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) },
             RemodelMutation::SetSparse { sparse: None },
@@ -138,18 +138,18 @@ mod tests {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}));
         assert_eq!(result.mutations.len(), 7, "clearResult resets all 7 ReconstructionResults fields");
-        assert_eq!(app.projection().expect("materialize projection").results.mesh.mesh.vertex_count(), 0);
+        assert_eq!(app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count(), 0);
         dispatch(&mut app, RemodelCommand::ResetPlaceholderMesh(reset_placeholder_mesh::ResetPlaceholderMesh {}));
-        assert_eq!(app.projection().expect("materialize projection").results.mesh.source, MeshSource::Placeholder);
-        assert!(app.projection().expect("materialize projection").results.mesh.mesh.vertex_count() > 0);
+        assert_eq!(app.snapshot().expect("materialize projection").results.mesh.source, MeshSource::Placeholder);
+        assert!(app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count() > 0);
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = app();
-        let placeholder_vertex_count = app.projection().expect("materialize projection").results.mesh.mesh.vertex_count();
+        let placeholder_vertex_count = app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count();
         assert!(placeholder_vertex_count > 0, "the seeded placeholder box must have vertices");
-        testkit::assert_undo_redo_round_trip(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}), |app| app.projection().expect("materialize projection").results.mesh.mesh.vertex_count(), placeholder_vertex_count, 0);
+        testkit::assert_undo_redo_round_trip(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}), |app| app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count(), placeholder_vertex_count, 0);
     }
 
     #[test]
@@ -162,7 +162,7 @@ mod tests {
             RemodelCommand::ClearTracks(clear_tracks::ClearTracks {}),
             RemodelCommand::ClearGeoProducts(clear_geo_products::ClearGeoProducts {}),
         ] {
-            assert_eq!(dispatch(&mut app, command).operations.len(), 1);
+            assert_eq!(dispatch(&mut app, command).mutations.len(), 1);
         }
     }
 }

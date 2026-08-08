@@ -1,0 +1,93 @@
+syntax = "proto3";
+package semio.s.block.block3d.artifact;
+
+// 🧬️ Block3d artifact schema — every field with its state class.
+
+message Block3dArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  BlockKindIdentity object_kind = 2;
+  // @state persistent
+  repeated BlockRepresentation representations = 3;
+  // @state persistent
+  repeated Block3dVortexKind vortex_kinds = 4;
+  // @state persistent
+  repeated Block3dVortexTemplate vortices = 5;
+  // @state persistent
+  repeated BlockCompatibilityRule compatibility = 6;
+  // @state persistent
+  repeated BlockAttribute attributes = 7;
+  // @state persistent
+  repeated BlockAuthor authors = 8;
+  // @state persistent
+  BlockCamera3d camera3d = 9;
+  // @state persistent
+  BlockMeta meta = 10;
+  // @state shared-ui
+  repeated string selected_ids = 11;
+  // @state shared-ui
+  optional string active_representation_id = 12;
+  // @state shared-ui
+  repeated string wanted_tags = 13;
+  // @state local-ui
+  string locale = 14;
+  // @state local-ui
+  repeated Block3dWindowView windows = 15;
+  // @state local-ui
+  optional string brush_vortex_kind_id = 16;
+  // @state local-ui
+  double brush_radius = 17;
+  // @state local-ui
+  bool brush_flip = 18;
+  // @state preview
+  optional Block3dBrushPreview brush_preview = 19;
+  // @state local-ui
+  optional BlockCamera3d camera = 20;
+  // @state preview
+  optional string hovered_vortex_full_id = 21;
+}
+
+message BlockKindIdentity {
+  bool _placeholder = 1;
+}
+
+message BlockRepresentation {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexKind {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexTemplate {
+  bool _placeholder = 1;
+}
+
+message BlockCompatibilityRule {
+  bool _placeholder = 1;
+}
+
+message BlockAttribute {
+  bool _placeholder = 1;
+}
+
+message BlockAuthor {
+  bool _placeholder = 1;
+}
+
+message BlockCamera3d {
+  bool _placeholder = 1;
+}
+
+message BlockMeta {
+  bool _placeholder = 1;
+}
+
+message Block3dWindowView {
+  bool _placeholder = 1;
+}
+
+message Block3dBrushPreview {
+  bool _placeholder = 1;
+}

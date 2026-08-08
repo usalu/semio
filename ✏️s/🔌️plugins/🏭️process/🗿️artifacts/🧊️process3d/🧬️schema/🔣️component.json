@@ -1,0 +1,154 @@
+{
+  "$id": "https://semio.tech/schema/s/process/process3d/artifact.json",
+  "title": "Process3dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workshop",
+    "stock",
+    "steps",
+    "activeUtilityId",
+    "selectionMethod",
+    "engagementInput",
+    "cameraPositionX",
+    "cameraPositionY",
+    "cameraPositionZ",
+    "cameraTargetX",
+    "cameraTargetY",
+    "cameraTargetZ",
+    "cameraFov",
+    "sunEnabled",
+    "sunAzimuth",
+    "sunElevation",
+    "sunIntensity",
+    "sunColor",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "workshop": {
+      "$ref": "#/$defs/Process3dWorkshop",
+      "x-semio-state": "persistent"
+    },
+    "stock": {
+      "$ref": "#/$defs/Process3dStock",
+      "x-semio-state": "persistent"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Process3dStep"
+      },
+      "x-semio-state": "persistent"
+    },
+    "resolvedUpTo": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    },
+    "selectedId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedFaceId": {
+      "type": "integer",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPositionX": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPositionY": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPositionZ": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetX": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetY": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetZ": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "cameraFov": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "sunEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "sunAzimuth": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "sunElevation": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "sunIntensity": {
+      "type": "number",
+      "format": "float",
+      "x-semio-state": "local-ui"
+    },
+    "sunColor": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Process3dWorkshop": {
+      "title": "Process3dWorkshop",
+      "type": "object"
+    },
+    "Process3dStock": {
+      "title": "Process3dStock",
+      "type": "object"
+    },
+    "Process3dStep": {
+      "title": "Process3dStep",
+      "type": "object"
+    }
+  }
+}

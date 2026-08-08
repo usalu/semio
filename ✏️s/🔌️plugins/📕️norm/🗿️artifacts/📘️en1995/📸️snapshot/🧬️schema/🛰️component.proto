@@ -1,0 +1,46 @@
+// 🧬️ EN 1995 snapshot schema.
+syntax = "proto3";
+package semio.s.norm.en1995.snapshot;
+
+message En1995Snapshot {
+  // @state persistent
+  double annex = 1;
+  // @state persistent
+  double m_ed_knm = 2;
+  // @state persistent
+  double n_ed_kn = 3;
+  // @state persistent
+  double v_ed_kn = 4;
+  // @state persistent
+  double w_mm3 = 5;
+  // @state persistent
+  double a_mm2 = 6;
+  // @state persistent
+  double b_mm = 7;
+  // @state persistent
+  double h_mm = 8;
+  // @state persistent
+  double f_m_k = 9;
+  // @state persistent
+  double f_c_0_k = 10;
+  // @state persistent
+  double service_class = 11;
+  // @state persistent
+  double load_duration = 12;
+  // @state persistent
+  double m_crit_knm = 13;
+  // @state persistent
+  double f_ed_kn = 14;
+  // @state persistent
+  double a_ef_mm2 = 15;
+  // @state persistent
+  double f_v_k = 16;
+  // @state persistent
+  double fire_duration_min = 17;
+  // @state persistent
+  double section_depth_mm = 18;
+  // @state persistent
+  double a_vert_m_s2 = 19;
+  // @state persistent
+  double n_cycles_bridge = 20;
+}

@@ -1,7 +1,7 @@
 //! ⚙️ EN 1997 app — headless compute (constitutional: engine).
 //! 📚️ Models the classic (pre-2024) Eurocode 7 generation only: EN 1997-1 (general design rules, including piles) + EN 1997-2 (ground investigation and testing); the second-generation EN 1997-3 does not apply here.
 
-use crate::artifacts::en1997::Document;
+use crate::artifacts::en1997::En1997Snapshot;
 use crate::artifacts::en1997::mutations::En1997Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
@@ -300,7 +300,7 @@ fn parse_design_approach(value: &str) -> DesignApproach {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1997Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1997Snapshot) -> CheckReport {
     check_full_geotechnical(
         document.v_ed_kn,
         document.h_ed_kn,
@@ -329,57 +329,65 @@ pub fn evaluate(document: &Document) -> CheckReport {
 // #endregion 🔖️Session
 
 // #region 🔖️Session
-/// 🧩️ EN 1997's `NormFamily` binding — ties this artifact's `Document` to the `evaluate` above for the
+/// 🧩️ EN 1997's `NormFamily` binding — ties this artifact's `En1997Snapshot` to the `evaluate` above for the
 /// headless `NormHost` session every norm app drives.
 pub struct En1997Family;
 
 impl crate::document::NormFamily for En1997Family {
-    type Document = Document;
+    type Document = crate::artifacts::en1997::En1997Snapshot;
     type Mutation = crate::artifacts::en1997::mutations::En1997Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::En1997
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
-        evaluate(document)
+    fn evaluate(document: &Self::Document) -> crate::document::CheckReport {
+        super::evaluate(document)
     }
 }
 
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1997 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent En1997 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct En1997Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1997::schema::En1997Artifact,
+    snapshot: crate::artifacts::en1997::En1997Snapshot,
 }
 
 impl En1997Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::en1997::En1997Snapshot) -> Self {
+        let artifact = crate::artifacts::en1997::schema::En1997Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::en1997::En1997Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1997Engine {
-    type Projection = Document;
-    type Mutation = En1997Mutation;
-    type Diff = crate::artifacts::en1997::diff::Diff;
+    type Artifact = crate::artifacts::en1997::schema::En1997Artifact;
+    type Snapshot = crate::artifacts::en1997::En1997Snapshot;
+    type Mutation = crate::artifacts::en1997::mutations::En1997Mutation;
+    type Diff = crate::artifacts::en1997::diff::En1997Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
@@ -483,7 +491,7 @@ mod tests {
 
     #[test]
     fn evaluate_runs_all_parts() {
-        let report = evaluate(&Document::default());
+        let report = evaluate(&En1997Snapshot::default());
         assert_eq!(report.checks.len(), 5);
     }
 }
@@ -495,7 +503,7 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1997.document",
         extension: Some("en1997"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1997Snapshot,
         grammar: Some(crate::artifacts::en1996::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1996::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1996::pack::COMPONENT_PROTOCOL_SEMIO),

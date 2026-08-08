@@ -1,0 +1,73 @@
+syntax = "proto3";
+package semio.s.process.process3d.diff;
+
+// 🧬️ Process3d diff schema — sparse field delta over the artifact.
+
+message Process3dDiff {
+  // @state persistent
+  optional Process3dArtifact artifact = 1;
+  // @state persistent
+  optional Process3dWorkshop workshop = 2;
+  // @state persistent
+  optional Process3dStock stock = 3;
+  // @state persistent
+  optional Process3dStepsDelta steps = 4;
+  // @state persistent
+  optional uint32 resolved_up_to = 5;
+  // @state shared-ui
+  optional string selected_id = 6;
+  // @state shared-ui
+  optional uint32 selected_face_id = 7;
+  // @state shared-ui
+  optional string active_utility_id = 8;
+  // @state local-ui
+  optional string selection_method = 9;
+  // @state local-ui
+  optional string engagement_input = 10;
+  // @state local-ui
+  optional double camera_position_x = 11;
+  // @state local-ui
+  optional double camera_position_y = 12;
+  // @state local-ui
+  optional double camera_position_z = 13;
+  // @state local-ui
+  optional double camera_target_x = 14;
+  // @state local-ui
+  optional double camera_target_y = 15;
+  // @state local-ui
+  optional double camera_target_z = 16;
+  // @state local-ui
+  optional double camera_fov = 17;
+  // @state local-ui
+  optional bool sun_enabled = 18;
+  // @state local-ui
+  optional double sun_azimuth = 19;
+  // @state local-ui
+  optional double sun_elevation = 20;
+  // @state local-ui
+  optional double sun_intensity = 21;
+  // @state local-ui
+  optional string sun_color = 22;
+  // @state local-ui
+  optional string locale = 23;
+  // @state local-ui
+  optional string contributions_json = 24;
+  // @state preview
+  optional string hovered_id = 25;
+}
+
+message Process3dArtifact {}
+message Process3dWorkshop {}
+message Process3dStock {}
+message Process3dStepsDelta {
+  repeated Process3dStep added = 1;
+  repeated string removed = 2;
+  repeated Process3dStepPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message Process3dStep {}
+message Process3dStepPatchEntry {
+  string id = 1;
+  Process3dStepPatch patch = 2;
+}
+message Process3dStepPatch {}

@@ -17,8 +17,7 @@ pub mod node_graph_edit {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "graph-edit")]
     pub struct NodeGraphEdit {
-        pub operations_json: String,
-    }
+        pub operations_json: String}
 
     pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -68,8 +67,7 @@ pub mod move_media_node {
     pub struct MoveMediaNode {
         pub node_id: String,
         pub x: f64,
-        pub y: f64,
-    }
+        pub y: f64}
 
     pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -111,8 +109,7 @@ pub mod node_graph_viewport {
     #[dsl(keyword = "viewport")]
     pub struct NodeGraphViewport {
         #[dsl(block)]
-        pub camera: CameraJson,
-    }
+        pub camera: CameraJson}
 
     pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetCamera { camera: payload.camera.clone() }]))
@@ -127,8 +124,7 @@ pub mod node_graph_select {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "graph-select")]
     pub struct NodeGraphSelect {
-        pub node_ids: Vec<String>,
-    }
+        pub node_ids: Vec<String>}
 
     pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }]))
@@ -143,8 +139,7 @@ pub mod node_graph_hover {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "graph-hover")]
     pub struct NodeGraphHover {
-        pub widget_id: Option<String>,
-    }
+        pub widget_id: Option<String>}
 
     pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetHover { node_id: payload.widget_id.clone() }]))

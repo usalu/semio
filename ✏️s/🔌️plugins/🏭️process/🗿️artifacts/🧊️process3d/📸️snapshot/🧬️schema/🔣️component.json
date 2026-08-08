@@ -1,0 +1,46 @@
+{
+  "$id": "https://semio.tech/schema/s/process/process3d/snapshot.json",
+  "title": "Process3dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workshop",
+    "stock",
+    "steps"
+  ],
+  "properties": {
+    "workshop": {
+      "$ref": "#/$defs/Process3dWorkshop",
+      "x-semio-state": "persistent"
+    },
+    "stock": {
+      "$ref": "#/$defs/Process3dStock",
+      "x-semio-state": "persistent"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Process3dStep"
+      },
+      "x-semio-state": "persistent"
+    },
+    "resolvedUpTo": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "Process3dWorkshop": {
+      "title": "Process3dWorkshop",
+      "type": "object"
+    },
+    "Process3dStock": {
+      "title": "Process3dStock",
+      "type": "object"
+    },
+    "Process3dStep": {
+      "title": "Process3dStep",
+      "type": "object"
+    }
+  }
+}

@@ -3,7 +3,7 @@
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::terminology::flow_play_labels;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
-use crate::artifacts::flow::FlowFixture;
+use crate::artifacts::flow::FlowSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use crate::playbook::{render_generation_form_body, selected_generation};
 use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
@@ -34,8 +34,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
-    let spec = flow_fixture_to_form_spec(fixture);
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig) -> UiNode {
+    let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
     let generation = config.generation();
     let Some(active) = selected_generation(&generation) else {
         return ui_text(flow_play_labels(config).generation_needed);

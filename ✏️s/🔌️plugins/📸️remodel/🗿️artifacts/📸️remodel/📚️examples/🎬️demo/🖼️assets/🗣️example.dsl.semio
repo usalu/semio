@@ -1,3 +1,17 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio remodel.remodel.dsl v1
+schema=remodel.scene
+id=remodel
+streams=[]
+assets={}
+calibration {
+}
+params {
+}
+gcps=[]
+job {
+}
+results {
+  mesh {
+    source=placeholder
+  }
+}

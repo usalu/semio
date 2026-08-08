@@ -5,16 +5,6 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-//#region 🔖️Helpers
-/// 🎯️ Ephemeral editor selection range (offsets into the jack query text).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct JackEditorSelection {
-    pub start: u64,
-    pub end: u64,
-}
-//#endregion 🔖️Helpers
-
 //#region 🔖️Artifact
 /// 🧬️ Full jack artifact state across persistent, shared-ui and local-ui classes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
@@ -44,6 +34,16 @@ pub struct JackArtifact {
     #[state(local_ui)] pub locale: String,
 }
 //#endregion 🔖️Artifact
+
+//#region 🔖️Helpers
+/// 🎯️ Ephemeral editor selection range (offsets into the jack query text).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JackEditorSelection {
+    pub start: u64,
+    pub end: u64,
+}
+//#endregion 🔖️Helpers
 
 //#region 🔖️Conversions
 impl Default for JackArtifact {

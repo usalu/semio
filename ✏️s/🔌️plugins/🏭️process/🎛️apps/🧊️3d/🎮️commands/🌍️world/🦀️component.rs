@@ -5,7 +5,7 @@ use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::apps::process3d::terminology::{process3d_labels, Process3dLabels};
 use crate::apps::process3d::set_active_utility_effect;
 use crate::artifacts::process3d::engine::{axis_angle_from_up_to, capability_for_measure_kind, insert_step_mutations, next_step_id};
-use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin};
+use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -47,9 +47,9 @@ pub mod world_pointer_down {
         pub position: [f64; 3],
     }
 
-    pub fn handle(payload: &WorldPointerDown, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &WorldPointerDown, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let fixture = doc.snapshot;
+        let config = cfg.snapshot;
         let utility = config.active_utility();
         if utility == "select" {
             return Ok(Emit::default());
@@ -89,9 +89,9 @@ pub mod world_face_drag_end {
         pub face_extent: Option<[f64; 2]>,
     }
 
-    pub fn handle(payload: &WorldFaceDragEnd, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &WorldFaceDragEnd, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let fixture = doc.snapshot;
+        let config = cfg.snapshot;
         if config.active_utility() != "select" {
             return Ok(Emit::default());
         }
@@ -121,7 +121,7 @@ pub mod world_pick {
         pub id: Option<u32>,
     }
 
-    pub fn handle(payload: &WorldPick, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldPick, _doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         if payload.granularity == "face" {
             Ok(Emit::config(vec![Process3dConfigMutation::SetSelectedFaceId { value: payload.id }]))
         } else {

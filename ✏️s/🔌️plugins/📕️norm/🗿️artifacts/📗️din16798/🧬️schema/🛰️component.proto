@@ -1,0 +1,133 @@
+syntax = "proto3";
+package semio.s.norm.din16798.artifact;
+
+// 🧬️ Din16798 artifact schema — every field with its state class.
+
+message Din16798Artifact {
+  // @state persistent
+  string annex = 1;
+  // @state persistent
+  string occupancy = 2;
+  // @state persistent
+  string comfort_category = 3;
+  // @state persistent
+  double t_op_c = 4;
+  // @state persistent
+  double rh_percent = 5;
+  // @state persistent
+  double air_speed_m_s = 6;
+  // @state persistent
+  double theta_rm_c = 7;
+  // @state persistent
+  double co2_ppm = 8;
+  // @state persistent
+  double df_percent = 9;
+  // @state persistent
+  double l_aeq_db = 10;
+  // @state persistent
+  uint32 persons = 11;
+  // @state persistent
+  string ida_class = 12;
+  // @state persistent
+  double ventilation_m3_h = 13;
+  // @state persistent
+  double floor_area_m2 = 14;
+  // @state persistent
+  uint32 bedrooms = 15;
+  // @state persistent
+  double dwelling_ventilation_m3_h = 16;
+  // @state persistent
+  uint32 occupants = 17;
+  // @state persistent
+  double residential_ventilation_m3_h = 18;
+  // @state persistent
+  double sfp_w_m3_s = 19;
+  // @state persistent
+  uint32 sfp_required_class = 20;
+  // @state persistent
+  double heat_recovery_eta = 21;
+  // @state persistent
+  double heat_recovery_eta_min = 22;
+  // @state persistent
+  string system_type = 23;
+  // @state persistent
+  uint32 years_since_inspection = 24;
+  // @state persistent
+  double humidification_required_kg_h = 25;
+  // @state persistent
+  double humidification_provided_kg_h = 26;
+  // @state persistent
+  double fan_q_v_m3_s = 27;
+  // @state persistent
+  double fan_t_run_h = 28;
+  // @state persistent
+  double fan_energy_reference_kwh = 29;
+  // @state persistent
+  double night_setback_k = 30;
+  // @state persistent
+  double hr_m_dot_kg_s = 31;
+  // @state persistent
+  double hr_cp_j_kgk = 32;
+  // @state persistent
+  double hr_delta_t_c = 33;
+  // @state persistent
+  double hr_t_h = 34;
+  // @state persistent
+  double hr_savings_reference_kwh = 35;
+  // @state persistent
+  double n50_h_inv = 36;
+  // @state persistent
+  double volume_m3 = 37;
+  // @state persistent
+  double infiltration_allowance_m3_h = 38;
+  // @state persistent
+  double cellar_area_m2 = 39;
+  // @state persistent
+  double cellar_ventilation_m3_h = 40;
+  // @state persistent
+  double h_tr_w_k = 41;
+  // @state persistent
+  double h_ve_w_k = 42;
+  // @state persistent
+  double theta_e_c = 43;
+  // @state persistent
+  double theta_set_c = 44;
+  // @state persistent
+  double cooling_delta_t_h = 45;
+  // @state persistent
+  double cooling_gains_kwh = 46;
+  // @state persistent
+  double cooling_utilization_factor = 47;
+  // @state persistent
+  double cooling_reference_kwh = 48;
+  // @state persistent
+  string chiller_type = 49;
+  // @state persistent
+  double eer_actual = 50;
+  // @state persistent
+  double q_c_kwh = 51;
+  // @state persistent
+  double generation_reference_kwh = 52;
+  // @state persistent
+  double data_center_supply_c = 53;
+  // @state persistent
+  double h_st_w_k = 54;
+  // @state persistent
+  double theta_st_c = 55;
+  // @state persistent
+  double theta_amb_c = 56;
+  // @state persistent
+  double storage_t_h = 57;
+  // @state persistent
+  double storage_allowance_kwh = 58;
+  // @state persistent
+  double dhw_delivery_c = 59;
+  // @state persistent
+  string duct_class = 60;
+  // @state persistent
+  double duct_test_pressure_pa = 61;
+  // @state persistent
+  double duct_leakage_m3_s_m2 = 62;
+  // @state shared-ui
+  optional uint32 selected_check_index = 63;
+}

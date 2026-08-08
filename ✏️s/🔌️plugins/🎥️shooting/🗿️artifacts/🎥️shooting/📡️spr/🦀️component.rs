@@ -33,12 +33,12 @@ pub fn decode_op(bytes: &[u8]) -> Result<ShootingMutation, protocol::ProtocolErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::shooting::ShootingFixture;
+    use crate::artifacts::shooting::ShootingSnapshot;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = ShootingMutation::SetActiveShot { shot_id: Some("s1".into()) };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -48,11 +48,11 @@ mod tests {
         use protocol::CollectionMutation;
         use store::DocumentCommand;
 
-        let mut store = store::DocumentStore::<ShootingFixture, ShootingMutation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None));
+        let mut store = store::DocumentStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None));
         let asset = crate::artifacts::shooting::ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         store.dispatch(DocumentCommand::Apply { mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: 0, item: asset })], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 //#endregion 🧪️Tests

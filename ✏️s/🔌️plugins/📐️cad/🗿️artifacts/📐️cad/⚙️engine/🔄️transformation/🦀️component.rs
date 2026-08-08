@@ -43,14 +43,68 @@ const ENERGY_TYPOLOGIES: &[&str] = &["energy.energy.hull", "energy.energy.basepl
 //#endregion 🔖️ClassifyRules
 
 //#region 🔖️FaceAnalytics
-/// @emoji 📍️ Face centroid via surface midpoint sampling (premigration `faceCentroid` equivalent).
-pub fn face_centroid_sync(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<Vec3> {
-    semio_s_3d::brep::engine::block_on(kernel.surface_point(face, 0.5, 0.5)).ok()
+fn face_mesh_analytics(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
+    let mesh = semio_s_3d::brep::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
+    let mut area_sum = 0.0;
+    let mut centroid = [0.0, 0.0, 0.0];
+    let mut normal = [0.0, 0.0, 0.0];
+    for triangle in mesh.index.chunks_exact(3) {
+        let i0 = triangle[0] as usize;
+        let i1 = triangle[1] as usize;
+        let i2 = triangle[2] as usize;
+        let p0 = [
+            mesh.position[i0 * 3] as f64,
+            mesh.position[i0 * 3 + 1] as f64,
+            mesh.position[i0 * 3 + 2] as f64,
+        ];
+        let p1 = [
+            mesh.position[i1 * 3] as f64,
+            mesh.position[i1 * 3 + 1] as f64,
+            mesh.position[i1 * 3 + 2] as f64,
+        ];
+        let p2 = [
+            mesh.position[i2 * 3] as f64,
+            mesh.position[i2 * 3 + 1] as f64,
+            mesh.position[i2 * 3 + 2] as f64,
+        ];
+        let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+        let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+        let cross = [
+            e0[1] * e1[2] - e0[2] * e1[1],
+            e0[2] * e1[0] - e0[0] * e1[2],
+            e0[0] * e1[1] - e0[1] * e1[0],
+        ];
+        let area = (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() * 0.5;
+        if area <= 1e-12 {
+            continue;
+        }
+        area_sum += area;
+        for axis in 0..3 {
+            centroid[axis] += area * (p0[axis] + p1[axis] + p2[axis]) / 3.0;
+            normal[axis] += cross[axis];
+        }
+    }
+    if area_sum <= 1e-12 {
+        return None;
+    }
+    let len = (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]).sqrt();
+    if len <= 1e-12 {
+        return None;
+    }
+    Some((
+        [centroid[0] / area_sum, centroid[1] / area_sum, centroid[2] / area_sum],
+        [normal[0] / len, normal[1] / len, normal[2] / len],
+    ))
 }
 
-/// @emoji 🧭️ Face outward normal at the surface midpoint.
+/// @emoji 📍️ Face centroid via tessellated triangle area weighting (premigration `faceCentroid` equivalent).
+pub fn face_centroid_sync(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<Vec3> {
+    face_mesh_analytics(kernel, face).map(|(centroid, _)| centroid)
+}
+
+/// @emoji 🧭️ Face outward normal from tessellated triangle winding.
 pub fn face_normal_sync(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<Vec3> {
-    semio_s_3d::brep::engine::block_on(kernel.surface_normal(face, 0.5, 0.5)).ok()
+    face_mesh_analytics(kernel, face).map(|(_, normal)| normal)
 }
 
 /// @emoji 🗂️ Groups coplanar faces by dominant axis, sign, and quantized centroid (premigration `facePlaneGroupKey`).
@@ -372,17 +426,8 @@ mod tests {
             solid_handle: Some(solid.0.clone()),
             primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: solid.0, kind: "solid".into() }],
         }];
-        let solid = semio_s_3d::brep::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box2");
-        let topology = semio_s_3d::brep::engine::block_on(kernel.deconstruct(&solid)).expect("deconstruct");
-        eprintln!("FACES={} edges={} verts={}", topology.faces.len(), topology.edges.len(), topology.vertices.len());
-        for (i, face) in topology.faces.iter().enumerate() {
-            let n = face_normal_sync(&kernel, face);
-            let c = face_centroid_sync(&kernel, face);
-            eprintln!("FACE {i} normal={n:?} centroid={c:?}");
-        }
         let derived = run_derive_from_geometry(&mut kernel, &source, "energy");
         let typos: Vec<_> = derived.iter().map(|o| o.typology.as_str()).collect();
-        eprintln!("DERIVED_TYPOS={typos:?} count={}", derived.len());
         assert!(derived.iter().any(|object| object.typology == "energy.energy.hull"), "missing hull in {typos:?}");
         assert!(derived.iter().any(|object| object.typology == "energy.energy.roof" || object.typology == "energy.energy.baseplate"), "missing roof/baseplate in {typos:?}");
         assert!(derived.iter().any(|object| object.typology == "energy.energy.externalwall"), "missing wall in {typos:?}");

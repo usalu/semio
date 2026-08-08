@@ -28,8 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         document_projection_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new(),
-    }
+        capabilities: Vec::new()}
 }
 
 /// 🎚️ The LOD chrome measure for this window — collected fresh per frame, never frozen into the manifest.
@@ -44,8 +43,7 @@ pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_jso
             semio_framework_plugin::MeasureSelectItem { id: "procedural3d-measure-lod-medium".into(), value: "medium".into(), label: "Medium".into() },
             semio_framework_plugin::MeasureSelectItem { id: "procedural3d-measure-lod-fine".into(), value: "fine".into(), label: "Fine".into() },
         ],
-        on_change: on_change("setLodMode", None),
-    }]
+        on_change: on_change("setLodMode", None)}]
 }
 //#endregion 🔖️Definition
 

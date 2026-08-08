@@ -2,18 +2,18 @@
 //! Component Model plugin ABI the rest of this crate speaks. Only compiled for `target_arch = "wasm32"`.
 
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 //#region 🔖️Store
-pub type ShootingEnvelope = store::DocumentEnvelope<ShootingFixture, ShootingMutation>;
-pub type ShootingStore = store::DocumentStore<ShootingFixture, ShootingMutation>;
+pub type ShootingEnvelope = store::DocumentEnvelope<ShootingSnapshot, ShootingMutation>;
+pub type ShootingStore = store::DocumentStore<ShootingSnapshot, ShootingMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
     use super::*;
-    use crate::artifacts::shooting::SHOOTING_FIXTURE_SCHEMA;
+    use crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA;
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;
 
@@ -31,7 +31,7 @@ mod wasm_bridge {
                     let envelope: ShootingEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     ShootingStore::new(envelope)
                 }
-                None => ShootingStore::new(store::create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None)),
+                None => ShootingStore::new(store::create_document_envelope(SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -63,8 +63,8 @@ mod tests {
     /// native test — the `wasm_bridge` module itself only builds under `target_arch = "wasm32"`.
     #[test]
     fn shooting_store_type_alias_constructs_from_an_empty_envelope() {
-        let store = ShootingStore::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None));
-        assert!(store.projection().expect("projection").assets.is_empty());
+        let store = ShootingStore::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None));
+        assert!(store.snapshot().expect("snapshot").assets.is_empty());
     }
 }
 //#endregion 🧪️Tests

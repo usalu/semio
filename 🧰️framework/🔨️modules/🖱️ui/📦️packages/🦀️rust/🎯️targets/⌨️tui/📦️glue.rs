@@ -3,4 +3,29 @@
 #[path = "../../../../⌨️tui/🦀️component.rs"]
 mod component;
 
+#[path = "../../../../🧱️elements/☑️Select/⌨️component.rs"]
+pub mod select;
+#[path = "../../../../🧱️elements/✏️Input/⌨️component.rs"]
+pub mod input;
+#[path = "../../../../🧱️elements/➖️Divider/⌨️component.rs"]
+pub mod divider;
+#[path = "../../../../🧱️elements/🏷️Chip/⌨️component.rs"]
+pub mod chip;
+#[path = "../../../../🧱️elements/🏷️Label/⌨️component.rs"]
+pub mod label;
+#[path = "../../../../🧱️elements/📃️List/⌨️component.rs"]
+pub mod list;
+#[path = "../../../../🧱️elements/📊️Table/⌨️component.rs"]
+pub mod table;
+#[path = "../../../../🧱️elements/📑️Tabs/⌨️component.rs"]
+pub mod tabs;
+#[path = "../../../../🧱️elements/🔚️Footer/⌨️component.rs"]
+pub mod footer;
+#[path = "../../../../🧱️elements/🔝️Navbar/⌨️component.rs"]
+pub mod navbar;
+#[path = "../../../../🧱️elements/🪟️Window/⌨️component.rs"]
+pub mod window;
+#[path = "../../../../🧱️elements/🪵️Log/⌨️component.rs"]
+pub mod log;
+
 pub use component::*;

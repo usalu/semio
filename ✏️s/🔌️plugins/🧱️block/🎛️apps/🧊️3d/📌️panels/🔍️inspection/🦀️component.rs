@@ -3,7 +3,7 @@
 
 use crate::apps::block3d::block3d_action;
 use crate::apps::block3d::terminology::Block3dLabels;
-use crate::artifacts::block3d::Block3dDefinition;
+use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -53,7 +53,7 @@ fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> Ui
     })
 }
 
-pub fn render(definition: &Block3dDefinition, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiNode {
+pub fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiNode {
     let representation_select = UiNode::Select(UiSelectNode {
         id: "block3d-play-inspector.representation".into(),
         value: active_representation_id.unwrap_or_default().into(),

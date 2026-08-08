@@ -272,7 +272,7 @@ fn default_true() -> bool {
 }
 
 /// 🧭️ Position + axis-angle rotation applied via the brep kernel's `rotate_sync`/`translate_sync`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Pose {
     #[serde(default)]
@@ -284,6 +284,12 @@ pub struct Pose {
     #[serde(default)]
     #[dsl(angle = "rad")]
     pub angle: f64,
+}
+
+impl Default for Pose {
+    fn default() -> Self {
+        Self { position: [0.0, 0.0, 0.0], axis: default_axis_z(), angle: 0.0 }
+    }
 }
 
 /// 📦️ Primitive solid spec resolvable via `Brep::*_prim_sync`, or a non-parametric imported
@@ -484,82 +490,12 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
 }
 
 /// 🪚️ Process 3d projection: workshop + stock + ordered steps + timeline cursor.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(extension = "process3d", layout = "lines")]
-pub struct Process3dDocument {
-    #[serde(default)]
-    #[dsl(block)]
-    pub workshop: Workshop,
-    #[serde(default)]
-    #[dsl(block)]
-    pub stock: Stock,
-    #[serde(default)]
-    pub steps: Vec<ProcessStep>,
-    /// ⏱️ Number of enabled steps replayed (0..=steps.len()); `None` applies all.
-    #[serde(default)]
-    pub resolved_up_to: Option<usize>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Process3dDocument {
-    const EXTENSION: &'static str = "process3d";
-    fn envelope_id() -> &'static str { "process3d" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
+/// 📸️ Persisted process3d snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
+pub use crate::artifacts::process3d::snapshot::schema::Process3dSnapshot;
 
-impl store::DocumentPack for Process3dDocument {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-pub fn empty_process3d_projection() -> Process3dDocument {
-    Process3dDocument::default()
+/// 🗄️ Empty process3d snapshot (default workshop + stock, no steps).
+pub fn empty_process3d_snapshot() -> Process3dSnapshot {
+    Process3dSnapshot::default()
 }
 //#endregion 🔖️Document
 
@@ -644,8 +580,8 @@ mod tests {
     /// 3 `Vec` levels deep) must round-trip through the DSL text codec — the riskiest new grammar surface.
     #[test]
     fn workshop_dsl_round_trips_through_document() {
-        let document = Process3dDocument { workshop: sample_workshop(), ..Process3dDocument::default() };
-        store::test_support::assert_dsl_round_trip(&document);
+        let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..Process3dSnapshot::default() };
+        store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 
     #[test]
@@ -659,8 +595,8 @@ mod tests {
     #[test]
     fn document_without_workshop_field_deserializes_to_generic_workshop() {
         let legacy_json = r#"{"stock":{"id":"stock","label":"Stock","solid":{"kind":"box","width":1.0,"depth":1.0,"height":1.0},"pose":{"position":[0.0,0.0,0.0],"axis":[0.0,0.0,1.0],"angle":0.0}},"steps":[],"resolvedUpTo":null}"#;
-        let document: Process3dDocument = serde_json::from_str(legacy_json).expect("legacy document json");
-        assert_eq!(document.workshop, Workshop::default());
+        let snapshot: Process3dSnapshot = serde_json::from_str(legacy_json).expect("legacy document json");
+        assert_eq!(snapshot.workshop, Workshop::default());
     }
 
     #[test]

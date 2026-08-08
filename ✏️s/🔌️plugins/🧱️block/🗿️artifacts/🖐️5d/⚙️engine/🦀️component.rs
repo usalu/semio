@@ -1,19 +1,20 @@
-//! ⚙️ Block 5D artifact — headless compute over the `Block5dDefinition` projection (constitutional:
+//! ⚙️ Block 5D artifact — headless compute over the `Block5dSnapshot` projection (constitutional:
 //! engine).
 //!
 //! 🧭️ Placement rule for helpers: anything here takes ONLY document-side types
-//! (`Block5dDefinition`/…). Helpers that also need the 🖐️5d app's view state
+//! (`Block5dSnapshot`/…). Helpers that also need the 🖐️5d app's view state
 //! (`crate::apps::block5d::config::Block5dConfig`) stay at app level — an artifact must never depend on
 //! an app.
 
-use crate::artifacts::block5d::{Block5dDefinition, BLOCK_5D_SCHEMA};
+use crate::artifacts::block5d::{Block5dSnapshot, BLOCK_5D_SCHEMA};
 use serde_json::{json, Value};
 
 //#region 🔖️Register
-/// 🗂️ Registers `Block5dDefinition`'s pack↔dsl codec under `BLOCK_5D_SCHEMA`. Called from the plugin
+/// 🗂️ Registers `Block5dSnapshot`'s pack↔dsl codec under `BLOCK_5D_SCHEMA`. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::block5d::Block5dPlayApp>(BLOCK_5D_SCHEMA);
 }
 
@@ -25,8 +26,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::block5d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::block5d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::block5d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block5d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("block.block5d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -55,8 +56,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::block5d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block5d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("5d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -74,8 +75,8 @@ pub fn register_pilot_languages() {
 //#endregion 🔖️Register
 
 //#region 🔖️DocumentHelpers
-pub fn empty_block5d_definition() -> Block5dDefinition {
-    Block5dDefinition::default()
+pub fn empty_block5d_snapshot() -> Block5dSnapshot {
+    Block5dSnapshot::default()
 }
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
@@ -96,7 +97,7 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 /// 🌉️ Maps this `PartKind` definition into the `s/plugin/puzzle` 5d catalog shape
 /// (`Puzzle5dKindCatalogs`: `parts`/`grips`/`fasteners`/`ropes`), the seam puzzle imports through its
 /// `Kit×Type` media port. Block owns no fastener/rope-kind rows, so those arrays stay empty here.
-pub fn puzzle5d_catalog_fragment(definition: &Block5dDefinition) -> Value {
+pub fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
     let grips: Vec<Value> = definition
         .grips
         .iter()
@@ -159,12 +160,12 @@ mod tests {
 
     #[test]
     fn empty_definition_matches_default() {
-        assert_eq!(empty_block5d_definition(), Block5dDefinition::default());
+        assert_eq!(empty_block5d_snapshot(), Block5dSnapshot::default());
     }
 
     #[test]
     fn puzzle5d_catalog_fragment_maps_grips() {
-        let mut definition = Block5dDefinition { schema: BLOCK_5D_SCHEMA.into(), part_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block5dDefinition::default() };
+        let mut definition = Block5dSnapshot { schema: BLOCK_5D_SCHEMA.into(), part_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block5dSnapshot::default() };
         definition.grips.push(Block5dGripTemplate { id: "g0".into(), grip_kind: "b-l".into(), angle: -1.57, radius_2d: 0.36, position: [4.05, 4.68, 3.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 });
         let fragment = puzzle5d_catalog_fragment(&definition);
         assert_eq!(fragment["parts"][0]["id"], "left");
@@ -184,34 +185,52 @@ mod tests {
 //#endregion 🧪️Tests
 
 
+
+//#region 🔖️ArtifactSchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+static SCHEMA_REGISTRY: OnceLock<Mutex<schema::ArtifactSchemaRegistry>> = OnceLock::new();
+
+/// 🧬️ Registers `block5d` fifteen-leaf artifact schema descriptor once.
+pub fn register_artifact_schema() {
+    let registry = SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    let mut guard = registry.lock().expect("schema registry");
+    guard.register(crate::artifacts::block5d::schema::block5d_artifact_schema_descriptor());
+}
+//#endregion 🔖️ArtifactSchemaRegistry
+
 //#region 🔖️ArtifactEngine
+/// ⚙️ UI-independent block5d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Block5dEngine {
-    projection: crate::artifacts::block5d::Block5dDefinition,
+    artifact: crate::artifacts::block5d::schema::Block5dArtifact,
+    snapshot: Block5dSnapshot,
 }
 
 impl Block5dEngine {
-    pub fn new(projection: crate::artifacts::block5d::Block5dDefinition) -> Self {
-        Self { projection }
+    pub fn new(snapshot: Block5dSnapshot) -> Self {
+        let artifact = crate::artifacts::block5d::schema::Block5dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
 impl protocol::ArtifactEngine for Block5dEngine {
-    type Projection = crate::artifacts::block5d::Block5dDefinition;
+    type Artifact = crate::artifacts::block5d::schema::Block5dArtifact;
+    type Snapshot = Block5dSnapshot;
     type Mutation = crate::artifacts::block5d::mutations::Block5dMutation;
     type Diff = crate::artifacts::block5d::diff::Block5dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
-    }
+    fn artifact(&self) -> &Self::Artifact { &self.artifact }
+    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::block5d::mutations::apply_block5d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::block5d::mutations::apply_block5d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

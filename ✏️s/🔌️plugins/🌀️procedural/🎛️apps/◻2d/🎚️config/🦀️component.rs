@@ -32,8 +32,7 @@ pub struct Procedural2dConfig {
     /// 👁️ Derived generation preview text.
     pub generation_preview_text: Option<String>,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
-}
+    pub locale: String}
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
@@ -45,8 +44,7 @@ impl store::DocumentDsl for Procedural2dConfig {
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
+            Err(_) => text};
         let record = dsl::parse(
             body,
             &Self::__dsl_spec(),
@@ -120,22 +118,19 @@ pub enum Procedural2dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
-        config: Procedural2dConfig,
-    },
+        config: Procedural2dConfig},
     #[dsl(key = "selection")]
     SetSelection { ids: Vec<String> },
     #[dsl(key = "camera")]
     SetCamera {
         #[dsl(block)]
-        camera: CameraJson,
-    },
+        camera: CameraJson},
     #[dsl(key = "show-mode")]
     SetShowMode { value: String },
     #[dsl(key = "generation")]
     SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
     #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
+    SetLocale { value: String }}
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Procedural2dConfigMutation {
@@ -171,8 +166,7 @@ impl protocol::OpBinary for Procedural2dConfigMutation {
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
             what: "op variant",
             offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+            detail: format!("keyword {keyword:?} is not a declared variant")})?;
         let spec = (variants[ordinal].1)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -193,16 +187,14 @@ impl protocol::OpBinary for Procedural2dConfigMutation {
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
             what: "op variant",
             offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len())})?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
             what: "op record",
             offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+            detail: error.to_string()})
     }
 }
 
@@ -223,8 +215,7 @@ impl Mutation<Procedural2dConfig> for Procedural2dConfigMutation {
                 next.selected_generation_id = selected_generation_id.clone();
                 next.generation_preview_text = generation_preview_text.clone();
             }
-            Procedural2dConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
+            Procedural2dConfigMutation::SetLocale { value } => next.locale = value.clone()}
         next
     }
 
@@ -274,13 +265,13 @@ mod tests {
     #[test]
     fn config_op_text_round_trips_every_variant() {
         let config = Procedural2dConfig { selected_ids: vec!["a".into()], locale: "de-DE".into(), ..Procedural2dConfig::default() };
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::Snapshot { config });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetShowMode { value: "generate".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetGeneration { selected_generation_id: None, generation_preview_text: None });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetLocale { value: "en-US".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::Snapshot { config });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetShowMode { value: "generate".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetGeneration { selected_generation_id: None, generation_preview_text: None });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetLocale { value: "en-US".into() });
     }
 }
 //#endregion 🧪️Tests

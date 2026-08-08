@@ -76,8 +76,7 @@ semio_framework_plugin::app_commands! {
         "setContributions" as "contributions" => set_contributions::SetContributions,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
-        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve,
-    }
+        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve}
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
@@ -155,8 +154,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 let bytes = store::DocumentPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
-            _ => Err(MediaError::NotImplemented),
-        }
+            _ => Err(MediaError::NotImplemented)}
     }
 
     /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
@@ -179,8 +177,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 }
                 Ok(Emit::mutations(operations))
             }
-            _ => Err(MediaError::NotImplemented),
-        }
+            _ => Err(MediaError::NotImplemented)}
     }
 
     fn command_id(command: &Procedural3dCommand) -> &'static str {
@@ -198,15 +195,13 @@ impl DocumentApp for Procedural3dPlayApp {
         match action {
             "setActiveExample" => Ok(Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "nodeGraphEdit" => Ok(Procedural3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
-            })),
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into())})),
             "deleteSelection" => Ok(Procedural3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Procedural3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
             "moveMediaNode" => Ok(Procedural3dCommand::MoveMediaNode(move_media_node::MoveMediaNode {
                 node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
                 x: f64_arg(&["x"]).unwrap_or(0.0),
-                y: f64_arg(&["y"]).unwrap_or(0.0),
-            })),
+                y: f64_arg(&["y"]).unwrap_or(0.0)})),
             "addWidget" => Ok(Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
             "patchFlowWidgets" => Ok(Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets {
                 widget_ids: {
@@ -217,8 +212,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     ids
                 },
                 field: str_arg(&["field"]).unwrap_or_default(),
-                value: f64_arg(&["value"]),
-            })),
+                value: f64_arg(&["value"])})),
             "reorganize" => Ok(Procedural3dCommand::Reorganize(reorganize::Reorganize {})),
             "translateSelection" => {
                 let mut node_ids = string_list("nodeIds");
@@ -243,8 +237,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     ax: f64_arg(&["ax"]).unwrap_or(0.0),
                     ay: f64_arg(&["ay"]).unwrap_or(0.0),
                     az: f64_arg(&["az"]).unwrap_or(0.0),
-                    angle: f64_arg(&["angle"]).unwrap_or(0.0),
-                }))
+                    angle: f64_arg(&["angle"]).unwrap_or(0.0)}))
             }
             "scaleSelection" => {
                 let mut node_ids = string_list("nodeIds");
@@ -264,8 +257,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 Ok(Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
-                    value,
-                }))
+                    value}))
             }
             "nodeGraphViewport" => Ok(Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: parse_flow_camera_json(&args) })),
             "setSelection" => Ok(Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: string_list("ids") })),
@@ -289,22 +281,18 @@ impl DocumentApp for Procedural3dPlayApp {
             "setActiveUtility" => Ok(Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_arg(&["utilityId", "utility_id"]).unwrap_or_default() })),
             "setLocale" => Ok(Procedural3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             "setContributions" => Ok(Procedural3dCommand::SetContributions(set_contributions::SetContributions {
-                json: str_arg(&["json", "contributionsJson", "contributions_json"]).or_else(|| args.get("contributions").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
-            })),
+                json: str_arg(&["json", "contributionsJson", "contributions_json"]).or_else(|| args.get("contributions").map(|value| value.to_string())).unwrap_or_else(|| "[]".into())})),
             "flowEvalTick" => Ok(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
             "flowEvalResolve" => Ok(Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
                 node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
-            })),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into())})),
             "flowTessellateResolve" => Ok(Procedural3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve {
                 node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
-            })),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into())})),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
-            ))),
-        }
+            )))}
     }
 
     fn handle(command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -337,8 +325,7 @@ impl DocumentApp for Procedural3dPlayApp {
             document_panel::PROCEDURAL_3D_PLAY_BODY_DOCUMENT => document_panel::render(&document.fixture, &config.selected_node_ids, labels),
             catalogue_panel::PROCEDURAL_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &config.selected_node_ids, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        })
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}")))})
     }
 
     fn window_measures(_doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -482,10 +469,12 @@ pub(crate) mod testkit {
     pub type Procedural3dApp = VcsDocumentApp<Procedural3dPlayApp>;
 
     pub fn app() -> Procedural3dApp {
+        crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
         new_app::<Procedural3dPlayApp>()
     }
 
     pub fn app_with_registry() -> Procedural3dApp {
+        crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
         new_app_with_registry::<Procedural3dPlayApp>(create_procedural3d_app)
     }
 
@@ -536,7 +525,7 @@ mod tests {
     fn every_command_round_trips_through_text_and_binary() {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 

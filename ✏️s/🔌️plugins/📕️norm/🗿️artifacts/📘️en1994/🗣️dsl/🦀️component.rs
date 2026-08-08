@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1994::Document;
+use crate::artifacts::en1994::En1994Snapshot;
 
 /// 🗄️ The composite-bridge-girder example fixture, handcrafted in `en1994`'s DSL (`store::DocumentDsl`):
 /// an EN-annex EN 1994-2 composite bridge girder with a re-entrant deck under an R90 fire rating and a

@@ -40,113 +40,57 @@ pub struct Block3dVortexTemplate {
     pub label: Option<String>,
 }
 
-/// 🏙️ The block-3d projection: a typed single-`ObjectKind`-definition document.
+
+//#region 🔖️WindowView
+/// 🪟 Per-window-instance view state (representation subset, layout, active utility).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-#[dsl(id = "block.block3d", layout = "lines")]
-pub struct Block3dDefinition {
-    pub schema: String,
-    #[dsl(block)]
-    pub object_kind: BlockKindIdentity,
+pub struct Block3dWindowView {
+    pub window_id: String,
     #[serde(default)]
-    #[dsl(table)]
-    pub representations: Vec<BlockRepresentation>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub vortex_kinds: Vec<Block3dVortexKind>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub vortices: Vec<Block3dVortexTemplate>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub compatibility: Vec<BlockCompatibilityRule>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub attributes: Vec<BlockAttribute>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub authors: Vec<BlockAuthor>,
-    #[dsl(block)]
-    #[serde(default)]
-    pub camera3d: BlockCamera3d,
-    #[dsl(block)]
-    #[serde(default)]
-    pub meta: BlockMeta,
+    pub representation_ids: Vec<String>,
+    #[serde(default = "default_arrangement")]
+    pub arrangement: String,
+    #[serde(default = "default_spacing")]
+    pub spacing: f64,
+    #[serde(default = "default_active_utility")]
+    pub active_utility: String,
 }
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Block3dDefinition {
-    const EXTENSION: &'static str = "block3d";
-    fn envelope_id() -> &'static str { "block.block3d" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
+
+fn default_arrangement() -> String {
+    "overlap".into()
+}
+
+fn default_spacing() -> f64 {
+    8.0
+}
+
+fn default_active_utility() -> String {
+    crate::apps::block3d::BLOCK3D_UTILITY_SELECT.into()
+}
+
+impl Block3dWindowView {
+    /// 🪟 Builds a default view record for one window id.
+    pub fn for_window(window_id: impl Into<String>) -> Self {
+        Self { window_id: window_id.into(), representation_ids: Vec::new(), arrangement: default_arrangement(), spacing: default_spacing(), active_utility: default_active_utility() }
     }
 }
 
-impl store::DocumentPack for Block3dDefinition {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+/// 🖌️ Transient brush hover pose in world space (config/preview).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Block3dBrushPreview {
+    #[dsl(coord)]
+    pub position: [f64; 3],
+    #[dsl(dir)]
+    pub direction: [f64; 3],
 }
-//#endregion 🔖️HandcraftedDocumentCodecs
+//#endregion 🔖️WindowView
 
+//#region 🔖️Snapshot
+pub use crate::artifacts::block3d::snapshot::schema::Block3dSnapshot;
+//#endregion 🔖️Snapshot
 
-
-
-impl Default for Block3dDefinition {
-    fn default() -> Self {
-        Self {
-            schema: BLOCK_3D_SCHEMA.to_string(),
-            object_kind: BlockKindIdentity::default(),
-            representations: Vec::new(),
-            vortex_kinds: Vec::new(),
-            vortices: Vec::new(),
-            compatibility: Vec::new(),
-            attributes: Vec::new(),
-            authors: Vec::new(),
-            camera3d: BlockCamera3d::default(),
-            meta: BlockMeta::default(),
-        }
-    }
-}
 // #endregion 🔖️Document
 
 //#region 🔖️ArtifactKind

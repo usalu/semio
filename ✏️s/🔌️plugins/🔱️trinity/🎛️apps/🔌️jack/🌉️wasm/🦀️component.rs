@@ -10,14 +10,14 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct TrinityGraphDocumentVcs {
+    pub struct JackSnapshotVcs {
         store: RefCell<TrinityGraphStore>,
     }
 
     #[wasm_bindgen]
-    impl TrinityGraphDocumentVcs {
+    impl JackSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<TrinityGraphDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<JackSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: TrinityGraphEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -56,4 +56,4 @@ mod wasm_bridge {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub use wasm_bridge::TrinityGraphDocumentVcs;
+pub use wasm_bridge::JackSnapshotVcs;

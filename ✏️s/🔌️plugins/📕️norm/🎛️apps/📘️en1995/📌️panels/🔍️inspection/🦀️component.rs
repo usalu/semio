@@ -38,7 +38,7 @@ mod tests {
     /// renders agree for a document whose report has fewer rows than the index.
     #[test]
     fn an_out_of_range_selected_index_falls_back_to_the_first_check() {
-        let host = NormHost::<En1995Family>::from_document(crate::artifacts::en1995::Document::default());
+        let host = NormHost::<En1995Family>::from_document(crate::artifacts::en1995::En1995Snapshot::default());
         let first = serde_json::to_string(&render(&host, None)).expect("json");
         let clamped = serde_json::to_string(&render(&host, Some(9_999))).expect("json");
         assert_eq!(first, clamped);

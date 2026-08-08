@@ -1,6 +1,6 @@
 //! ⚙️ EN 1993 design of steel structures — headless compute (constitutional: engine).
 
-use crate::artifacts::en1993::Document;
+use crate::artifacts::en1993::En1993Snapshot;
 use crate::artifacts::en1993::mutations::En1993Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity};
 
@@ -710,7 +710,7 @@ fn parse_fatigue_method(value: &str) -> part_1_9::AssessmentMethod {
 }
 
 /// 📋️ Full steel member check across all sixteen EN 1993 parts (1-1 through 6), each reached from `evaluate`.
-pub fn check_full_steel_member(document: &Document) -> CheckReport {
+pub fn check_full_steel_member(document: &En1993Snapshot) -> CheckReport {
     let annex = document.annex;
     let params = AnnexParams { gamma_mf: parse_fatigue_method(&document.fatigue_method).gamma_mf(), ..AnnexParams::for_choice(annex) };
 
@@ -872,59 +872,67 @@ pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_
 // #region 🔖️Session
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1993 artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent En1993 artifact engine — owns the artifact; every transition is a mutation.
 pub struct En1993Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1993::schema::En1993Artifact,
+    snapshot: En1993Snapshot,
 }
 
 impl En1993Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: En1993Snapshot) -> Self {
+        let artifact = crate::artifacts::en1993::schema::En1993Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> En1993Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1993Engine {
-    type Projection = Document;
-    type Mutation = En1993Mutation;
-    type Diff = crate::artifacts::en1993::diff::Diff;
+    type Artifact = crate::artifacts::en1993::schema::En1993Artifact;
+    type Snapshot = En1993Snapshot;
+    type Mutation = crate::artifacts::en1993::mutations::En1993Mutation;
+    type Diff = crate::artifacts::en1993::diff::En1993Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = protocol::Mutation::diff(mutation, &self.snapshot);
+        self.snapshot = vcs::apply_mutation(&self.snapshot, mutation);
+        self.artifact = crate::artifacts::en1993::schema::En1993Artifact::from_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        protocol::Mutation::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
 
 pub type Host = NormHost<En1993Family>;
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1993Snapshot) -> CheckReport {
     check_full_steel_member(document)
 }
 
 pub struct En1993Family;
 
 impl NormFamily for En1993Family {
-    type Document = Document;
+    type Document = En1993Snapshot;
     type Mutation = En1993Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1993
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &En1993Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
@@ -949,13 +957,13 @@ mod tests {
 
     #[test]
     fn full_steel_member_e2e() {
-        let report = check_full_steel_member(&Document::default());
+        let report = check_full_steel_member(&En1993Snapshot::default());
         assert_eq!(report.checks.len(), 25);
     }
 
     #[test]
     fn every_part_reaches_evaluate() {
-        let report = check_full_steel_member(&Document::default());
+        let report = check_full_steel_member(&En1993Snapshot::default());
         let families: std::collections::BTreeSet<&str> = report.checks.iter().map(|c| c.clause.family.as_str()).collect();
         for expected in
             ["EN 1993-1-1", "EN 1993-1-2", "EN 1993-1-3", "EN 1993-1-4", "EN 1993-1-5", "EN 1993-1-6", "EN 1993-1-8", "EN 1993-1-9", "EN 1993-1-10", "EN 1993-1-11", "EN 1993-1-12", "EN 1993-2", "EN 1993-3-1", "EN 1993-4-1", "EN 1993-5", "EN 1993-6"]
@@ -1161,7 +1169,7 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1993.document",
         extension: Some("en1993"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1993Snapshot,
         grammar: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1992::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1992::pack::COMPONENT_PROTOCOL_SEMIO),

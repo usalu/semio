@@ -3,7 +3,7 @@
 use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::{process3d_measure_icon, Process3dLabels};
-use crate::artifacts::process3d::Process3dDocument;
+use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_plugin::{
     Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dDocument, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
+pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
     let stock = &fixture.stock;
     let stock_item = UiTreeItemNode {
         icon_id: Some("box".into()),

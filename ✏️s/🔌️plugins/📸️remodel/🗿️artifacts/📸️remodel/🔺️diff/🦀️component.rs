@@ -1,5 +1,9 @@
-//! 🔺️ Remodel artifact — the durable mutation diff (`Mutation::Diff`) and its `MutationDiff` law.
+//! 🔺️ Remodel artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::remodel::diff::schema::{RemodelDiff, RemodelGcpList, RemodelMediaStreamList};
+use crate::artifacts::remodel::schema::RemodelArtifact;
+use crate::artifacts::remodel::RemodelSnapshot;
+use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -7,125 +11,135 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::remodel::mutations::{apply_remodel_mutation, RemodelMutation};
-use crate::artifacts::remodel::{
-    CalibrationState, CameraTrajectory, DenseCloud, DenseParams, FeatureParams, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams, MatchParams, MediaStream, MeshParams, MotionParams, MotionTrackSummary, QcReportSnapshot,
-    ReconstructionJob, RemodelMesh, RemodelProjection, SfmParams, SparseCloud,
-};
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
-
-//#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum RemodelDiff {
-    #[default]
-    Empty,
-    SetStreams {
-        streams: Vec<MediaStream>,
-    },
-    SetAsset {
-        key: String,
-        #[serde(default)]
-        value: Option<ImageAsset>,
-    },
-    SetCalibration {
-        calibration: CalibrationState,
-    },
-    SetGcps {
-        gcps: Vec<GroundControlPoint>,
-    },
-    SetIngestParams {
-        params: IngestParams,
-    },
-    SetFeatureParams {
-        params: FeatureParams,
-    },
-    SetMatchParams {
-        params: MatchParams,
-    },
-    SetSfmParams {
-        params: SfmParams,
-    },
-    SetDenseParams {
-        params: DenseParams,
-    },
-    SetMeshParams {
-        params: MeshParams,
-    },
-    SetMotionParams {
-        params: MotionParams,
-    },
-    SetGeoParams {
-        params: GeoParams,
-    },
-    SetJob {
-        job: ReconstructionJob,
-    },
-    SetSparse {
-        #[serde(default)]
-        sparse: Option<SparseCloud>,
-    },
-    SetDense {
-        #[serde(default)]
-        dense: Option<DenseCloud>,
-    },
-    SetMeshResult {
-        mesh: Box<RemodelMesh>,
-    },
-    SetTrajectory {
-        #[serde(default)]
-        trajectory: Option<CameraTrajectory>,
-    },
-    SetTracks {
-        tracks: Vec<MotionTrackSummary>,
-    },
-    SetGeoProducts {
-        #[serde(default)]
-        geo: Option<GeoProducts>,
-    },
-    SetQc {
-        #[serde(default)]
-        qc: Option<QcReportSnapshot>,
-    },
+//#region 🔖️Apply
+impl RemodelDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &RemodelArtifact) -> RemodelArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(list) = &self.streams {
+            next.streams = list.values.clone();
+        }
+        if let Some(assets) = &self.assets {
+            next.assets = assets.clone();
+        }
+        if let Some(calibration) = &self.calibration {
+            next.calibration = calibration.clone();
+        }
+        if let Some(params) = &self.params {
+            next.params = params.clone();
+        }
+        if let Some(list) = &self.gcps {
+            next.gcps = list.values.clone();
+        }
+        if let Some(job) = &self.job {
+            next.job = job.clone();
+        }
+        if let Some(results) = &self.results {
+            next.results = results.clone();
+        }
+        if let Some(value) = &self.selection {
+            next.selection = value.clone();
+        }
+        if let Some(value) = &self.active_utility_id {
+            next.active_utility_id = value.clone();
+        }
+        if let Some(value) = &self.report_table {
+            next.report_table = value.clone();
+        }
+        if let Some(value) = &self.frame_cursor {
+            next.frame_cursor = value.clone();
+        }
+        if let Some(value) = &self.camera {
+            next.camera = value.clone();
+        }
+        if let Some(value) = &self.layers {
+            next.layers = value.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        next
+    }
 }
 
-impl MutationDiff<RemodelProjection> for RemodelDiff {
-    fn apply(&self, projection: &RemodelProjection) -> RemodelProjection {
-        let operation = match self {
-            RemodelDiff::Empty => return projection.clone(),
-            RemodelDiff::SetStreams { streams } => RemodelMutation::SetStreams { streams: streams.clone() },
-            RemodelDiff::SetAsset { key, value } => RemodelMutation::SetAsset { key: key.clone(), value: value.clone() },
-            RemodelDiff::SetCalibration { calibration } => RemodelMutation::SetCalibration { calibration: calibration.clone() },
-            RemodelDiff::SetGcps { gcps } => RemodelMutation::SetGcps { gcps: gcps.clone() },
-            RemodelDiff::SetIngestParams { params } => RemodelMutation::SetIngestParams { params: params.clone() },
-            RemodelDiff::SetFeatureParams { params } => RemodelMutation::SetFeatureParams { params: params.clone() },
-            RemodelDiff::SetMatchParams { params } => RemodelMutation::SetMatchParams { params: params.clone() },
-            RemodelDiff::SetSfmParams { params } => RemodelMutation::SetSfmParams { params: params.clone() },
-            RemodelDiff::SetDenseParams { params } => RemodelMutation::SetDenseParams { params: params.clone() },
-            RemodelDiff::SetMeshParams { params } => RemodelMutation::SetMeshParams { params: params.clone() },
-            RemodelDiff::SetMotionParams { params } => RemodelMutation::SetMotionParams { params: params.clone() },
-            RemodelDiff::SetGeoParams { params } => RemodelMutation::SetGeoParams { params: params.clone() },
-            RemodelDiff::SetJob { job } => RemodelMutation::SetJob { job: job.clone() },
-            RemodelDiff::SetSparse { sparse } => RemodelMutation::SetSparse { sparse: sparse.clone() },
-            RemodelDiff::SetDense { dense } => RemodelMutation::SetDense { dense: dense.clone() },
-            RemodelDiff::SetMeshResult { mesh } => RemodelMutation::SetMeshResult { mesh: mesh.clone() },
-            RemodelDiff::SetTrajectory { trajectory } => RemodelMutation::SetTrajectory { trajectory: trajectory.clone() },
-            RemodelDiff::SetTracks { tracks } => RemodelMutation::SetTracks { tracks: tracks.clone() },
-            RemodelDiff::SetGeoProducts { geo } => RemodelMutation::SetGeoProducts { geo: geo.clone() },
-            RemodelDiff::SetQc { qc } => RemodelMutation::SetQc { qc: qc.clone() },
-        };
-        apply_remodel_mutation(projection, &operation)
+impl MutationDiff<RemodelSnapshot> for RemodelDiff {
+    fn apply(&self, snapshot: &RemodelSnapshot) -> RemodelSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(list) = &self.streams {
+            next.streams = list.values.clone();
+        }
+        if let Some(assets) = &self.assets {
+            next.assets = assets.clone();
+        }
+        if let Some(calibration) = &self.calibration {
+            next.calibration = calibration.clone();
+        }
+        if let Some(params) = &self.params {
+            next.params = params.clone();
+        }
+        if let Some(list) = &self.gcps {
+            next.gcps = list.values.clone();
+        }
+        if let Some(job) = &self.job {
+            next.job = job.clone();
+        }
+        if let Some(results) = &self.results {
+            next.results = results.clone();
+        }
+        next
     }
 
     fn absorb(&mut self, other: Self) {
-        if !matches!(other, RemodelDiff::Empty) {
+        if other.artifact.is_some() {
             *self = other;
+            return;
         }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(id);
+        take!(streams);
+        take!(assets);
+        take!(calibration);
+        take!(params);
+        take!(gcps);
+        take!(job);
+        take!(results);
+        take!(selection);
+        take!(active_utility_id);
+        take!(report_table);
+        take!(frame_cursor);
+        take!(camera);
+        take!(layers);
+        take!(locale);
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔖️Apply
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -133,19 +147,19 @@ mod tests {
     use super::*;
     use crate::artifacts::remodel::default_remodel_scene;
 
-    /// 🫙️ `Empty` is the identity diff, and `absorb` is last-writer-wins over any non-`Empty` value —
-    /// the two laws that are the diff node's own (every other diff behaviour is exercised through
-    /// `Mutation::diff` in the `🔧️op` node's tests).
     #[test]
-    fn empty_diff_is_the_identity_and_absorb_is_last_writer_wins() {
+    fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
         let scene = default_remodel_scene();
-        assert_eq!(RemodelDiff::Empty.apply(&scene), scene);
+        assert_eq!(RemodelDiff::default().apply(&scene), scene);
 
-        let mut diff = RemodelDiff::Empty;
-        diff.absorb(RemodelDiff::SetGcps { gcps: Vec::new() });
-        assert!(matches!(diff, RemodelDiff::SetGcps { .. }));
-        diff.absorb(RemodelDiff::Empty);
-        assert!(matches!(diff, RemodelDiff::SetGcps { .. }), "absorbing Empty never clobbers a real diff");
+        let mut diff = RemodelDiff::default();
+        diff.absorb(RemodelDiff {
+            gcps: Some(RemodelGcpList { values: Vec::new() }),
+            ..Default::default()
+        });
+        assert!(diff.gcps.is_some());
+        diff.absorb(RemodelDiff::default());
+        assert!(diff.gcps.is_some(), "absorbing empty never clobbers a real entry");
     }
 }
 //#endregion 🧪️Tests

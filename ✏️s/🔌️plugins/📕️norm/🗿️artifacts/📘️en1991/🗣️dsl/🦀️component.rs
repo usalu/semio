@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1991::Document;
+use crate::artifacts::en1991::En1991Snapshot;
 
 /// 🏬️ The retail-hydrocarbon-fire example fixture, handcrafted in `en1991`'s DSL
 /// (`store::DocumentDsl`): a retail unit (imposed category D) evaluated under the EN annex with a

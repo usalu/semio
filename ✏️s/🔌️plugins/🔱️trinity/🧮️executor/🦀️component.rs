@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use crate::artifacts::jack::mutations::{apply_trinity_graph_mutations, TrinityGraphMutation};
-use crate::artifacts::jack::{port_key, Camera, Edge, EntityRef, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
+use crate::artifacts::jack::{port_key, Camera, Edge, EntityRef, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -243,7 +243,7 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     QueryResult::table(columns, rows)
 }
 
-fn emit_set_operation(fixture: &GraphFixture, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
+fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
     let node = fixture.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
         "name" => {
@@ -264,7 +264,7 @@ fn emit_set_operation(fixture: &GraphFixture, node_id: &str, prop: &str, value: 
     }
 }
 
-fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
+fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
     let left_id = format!("{}-{}", left.var, fixture.nodes.len());
     let mut operations = Vec::new();
@@ -300,10 +300,12 @@ fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<V
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
+    use crate::lexer::{lex, tokenize, TokenClass};
 
     fn mini_graph() -> Graph {
-        let fixture = GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
+        let fixture = JackSnapshot {
+            schema: JackSnapshot::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
@@ -449,8 +451,8 @@ mod tests {
     #[test]
     fn format_is_idempotent() {
         let source = "MATCH (a:Piece)--[r:Connection]->(b:Piece) RETURN a.name, b.name";
-        let once = format(source).unwrap();
-        let twice = format(&once).unwrap();
+        let once = format_source(source).unwrap();
+        let twice = format_source(&once).unwrap();
         assert_eq!(once, twice);
         assert!(once.contains("MATCH"));
         assert!(once.contains('\n'));

@@ -27,8 +27,7 @@ fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &Camera
         sun_json: previous.sun_json.clone(),
         active_utility_id: previous.active_utility_id.clone(),
         locale: previous.locale.clone(),
-        contributions_json: previous.contributions_json.clone(),
-    }
+        contributions_json: previous.contributions_json.clone()}
 }
 
 //#region 🔖️SetActiveExample
@@ -38,8 +37,7 @@ pub mod set_active_example {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "active-example")]
     pub struct SetActiveExample {
-        pub example_id: String,
-    }
+        pub example_id: String}
 
     pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         session.set_eval_json(String::new());

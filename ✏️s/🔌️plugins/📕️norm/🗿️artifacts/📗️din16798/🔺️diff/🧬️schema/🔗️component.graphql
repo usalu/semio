@@ -1,0 +1,134 @@
+# 🧬️ Din16798 diff schema — sparse field delta.
+
+type Din16798Diff {
+  artifact: Din @state(class: PERSISTENT)
+  annex: String @state(class: PERSISTENT)
+  occupancy: String @state(class: PERSISTENT)
+  comfortCategory: String @state(class: PERSISTENT)
+  tOpC: Float @state(class: PERSISTENT)
+  rhPercent: Float @state(class: PERSISTENT)
+  airSpeedMS: Float @state(class: PERSISTENT)
+  thetaRmC: Float @state(class: PERSISTENT)
+  co2Ppm: Float @state(class: PERSISTENT)
+  dfPercent: Float @state(class: PERSISTENT)
+  lAeqDb: Float @state(class: PERSISTENT)
+  persons: Int @state(class: PERSISTENT)
+  idaClass: String @state(class: PERSISTENT)
+  ventilationM3H: Float @state(class: PERSISTENT)
+  floorAreaM2: Float @state(class: PERSISTENT)
+  bedrooms: Int @state(class: PERSISTENT)
+  dwellingVentilationM3H: Float @state(class: PERSISTENT)
+  occupants: Int @state(class: PERSISTENT)
+  residentialVentilationM3H: Float @state(class: PERSISTENT)
+  sfpWM3S: Float @state(class: PERSISTENT)
+  sfpRequiredClass: Int @state(class: PERSISTENT)
+  heatRecoveryEta: Float @state(class: PERSISTENT)
+  heatRecoveryEtaMin: Float @state(class: PERSISTENT)
+  systemType: String @state(class: PERSISTENT)
+  yearsSinceInspection: Int @state(class: PERSISTENT)
+  humidificationRequiredKgH: Float @state(class: PERSISTENT)
+  humidificationProvidedKgH: Float @state(class: PERSISTENT)
+  fanQVM3S: Float @state(class: PERSISTENT)
+  fanTRunH: Float @state(class: PERSISTENT)
+  fanEnergyReferenceKwh: Float @state(class: PERSISTENT)
+  nightSetbackK: Float @state(class: PERSISTENT)
+  hrMDotKgS: Float @state(class: PERSISTENT)
+  hrCpJKgk: Float @state(class: PERSISTENT)
+  hrDeltaTC: Float @state(class: PERSISTENT)
+  hrTH: Float @state(class: PERSISTENT)
+  hrSavingsReferenceKwh: Float @state(class: PERSISTENT)
+  n50HInv: Float @state(class: PERSISTENT)
+  volumeM3: Float @state(class: PERSISTENT)
+  infiltrationAllowanceM3H: Float @state(class: PERSISTENT)
+  cellarAreaM2: Float @state(class: PERSISTENT)
+  cellarVentilationM3H: Float @state(class: PERSISTENT)
+  hTrWK: Float @state(class: PERSISTENT)
+  hVeWK: Float @state(class: PERSISTENT)
+  thetaEC: Float @state(class: PERSISTENT)
+  thetaSetC: Float @state(class: PERSISTENT)
+  coolingDeltaTH: Float @state(class: PERSISTENT)
+  coolingGainsKwh: Float @state(class: PERSISTENT)
+  coolingUtilizationFactor: Float @state(class: PERSISTENT)
+  coolingReferenceKwh: Float @state(class: PERSISTENT)
+  chillerType: String @state(class: PERSISTENT)
+  eerActual: Float @state(class: PERSISTENT)
+  qCKwh: Float @state(class: PERSISTENT)
+  generationReferenceKwh: Float @state(class: PERSISTENT)
+  dataCenterSupplyC: Float @state(class: PERSISTENT)
+  hStWK: Float @state(class: PERSISTENT)
+  thetaStC: Float @state(class: PERSISTENT)
+  thetaAmbC: Float @state(class: PERSISTENT)
+  storageTH: Float @state(class: PERSISTENT)
+  storageAllowanceKwh: Float @state(class: PERSISTENT)
+  dhwDeliveryC: Float @state(class: PERSISTENT)
+  ductClass: String @state(class: PERSISTENT)
+  ductTestPressurePa: Float @state(class: PERSISTENT)
+  ductLeakageM3SM2: Float @state(class: PERSISTENT)
+  selectedCheckIndex: Int @state(class: SHARED_UI)
+}
+
+type Din16798Artifact {
+  annex: String
+  occupancy: String
+  comfortCategory: String
+  tOpC: Float
+  rhPercent: Float
+  airSpeedMS: Float
+  thetaRmC: Float
+  co2Ppm: Float
+  dfPercent: Float
+  lAeqDb: Float
+  persons: Int
+  idaClass: String
+  ventilationM3H: Float
+  floorAreaM2: Float
+  bedrooms: Int
+  dwellingVentilationM3H: Float
+  occupants: Int
+  residentialVentilationM3H: Float
+  sfpWM3S: Float
+  sfpRequiredClass: Int
+  heatRecoveryEta: Float
+  heatRecoveryEtaMin: Float
+  systemType: String
+  yearsSinceInspection: Int
+  humidificationRequiredKgH: Float
+  humidificationProvidedKgH: Float
+  fanQVM3S: Float
+  fanTRunH: Float
+  fanEnergyReferenceKwh: Float
+  nightSetbackK: Float
+  hrMDotKgS: Float
+  hrCpJKgk: Float
+  hrDeltaTC: Float
+  hrTH: Float
+  hrSavingsReferenceKwh: Float
+  n50HInv: Float
+  volumeM3: Float
+  infiltrationAllowanceM3H: Float
+  cellarAreaM2: Float
+  cellarVentilationM3H: Float
+  hTrWK: Float
+  hVeWK: Float
+  thetaEC: Float
+  thetaSetC: Float
+  coolingDeltaTH: Float
+  coolingGainsKwh: Float
+  coolingUtilizationFactor: Float
+  coolingReferenceKwh: Float
+  chillerType: String
+  eerActual: Float
+  qCKwh: Float
+  generationReferenceKwh: Float
+  dataCenterSupplyC: Float
+  hStWK: Float
+  thetaStC: Float
+  thetaAmbC: Float
+  storageTH: Float
+  storageAllowanceKwh: Float
+  dhwDeliveryC: Float
+  ductClass: String
+  ductTestPressurePa: Float
+  ductLeakageM3SM2: Float
+  selectedCheckIndex: Int
+}

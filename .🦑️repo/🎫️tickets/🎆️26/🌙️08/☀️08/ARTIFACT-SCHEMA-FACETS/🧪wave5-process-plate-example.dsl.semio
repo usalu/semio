@@ -1,0 +1,47 @@
+semio process.process3d.dsl v1
+resolved-up-to=2
+workshop {
+  machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
+  rules {
+  }
+  blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
+  rules {
+  }
+  bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
+  rules {
+  }
+  cylinder-attach radius=radius length=length ] ]
+}
+stock {
+  id=plate label=Plate
+  pose {
+    position=@0,0,0 axis=^0,0,0 angle=0rad
+  }
+  box width=1m depth=1m height=0.05m
+}
+steps=[ id=d1 label=Drill enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+drill radius=0.02m depth=0.3m
+pose {
+  position=@0,0,0 axis=^0,0,0 angle=0rad
+}
+id=d2 label=Drill enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+drill radius=0.02m depth=0.3m
+pose {
+  position=@0,0,0 axis=^0,0,0 angle=0rad
+}
+id=d3 label=Drill enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+drill radius=0.02m depth=0.3m
+pose {
+  position=@0,0,0 axis=^0,0,0 angle=0rad
+}
+]
+

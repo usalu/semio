@@ -2,7 +2,7 @@
 //! kind; the full node-kind editing surface lives in the document/inspection panels).
 
 use crate::apps::block2d::terminology::Block2dLabels;
-use crate::artifacts::block2d::Block2dDefinition;
+use crate::artifacts::block2d::Block2dSnapshot;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block2dDefinition, labels: &Block2dLabels) -> UiNode {
+pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label }))),
         ui_text(Label::data(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str()))),

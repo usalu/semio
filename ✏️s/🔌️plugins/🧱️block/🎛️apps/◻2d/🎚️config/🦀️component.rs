@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "block2dcfg")]
+#[dsl(id = "block2d.config")]
 #[dsl(layout = "lines")]
 pub struct Block2dConfig {
     /// 👁️ Multi-selected row ids in the document tree — was `Block2dPlayApp::selected_ids`.

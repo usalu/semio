@@ -63,8 +63,7 @@ semio_framework_plugin::app_commands! {
         "canvasWheel" as "canvas-wheel" => canvas_wheel::CanvasWheel,
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
-        "setLocale" as "locale" => set_locale::SetLocale,
-    }
+        "setLocale" as "locale" => set_locale::SetLocale}
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
@@ -121,26 +120,22 @@ impl DocumentApp for Procedural2dPlayApp {
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         match action {
             "nodeGraphEdit" => Ok(Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
-            })),
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into())})),
             "moveMediaNode" => Ok(Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode {
                 node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
                 x: f64_arg(&["x"]).unwrap_or(0.0),
-                y: f64_arg(&["y"]).unwrap_or(0.0),
-            })),
+                y: f64_arg(&["y"]).unwrap_or(0.0)})),
             "addWidget" => Ok(Procedural2dCommand::AddWidget(add_widget::AddWidget {
                 kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()),
                 neuron_kind: str_arg(&["neuronKind", "neuron_kind"]),
                 x: f64_arg(&["x"]),
-                y: f64_arg(&["y"]),
-            })),
+                y: f64_arg(&["y"])})),
             "removeWidget" => Ok(Procedural2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
             "connectMediaPorts" => Ok(Procedural2dCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
                 source_node_id: str_arg(&["sourceNodeId", "source_node_id"]).unwrap_or_default(),
                 source_port_id: str_arg(&["sourcePortId", "source_port_id"]).unwrap_or_default(),
                 target_node_id: str_arg(&["targetNodeId", "target_node_id"]).unwrap_or_default(),
-                target_port_id: str_arg(&["targetPortId", "target_port_id"]).unwrap_or_default(),
-            })),
+                target_port_id: str_arg(&["targetPortId", "target_port_id"]).unwrap_or_default()})),
             "reorganize" => Ok(Procedural2dCommand::Reorganize(reorganize::Reorganize {})),
             "addGeneration" => Ok(Procedural2dCommand::AddGeneration(add_generation::AddGeneration {})),
             "removeGeneration" => Ok(Procedural2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
@@ -150,8 +145,7 @@ impl DocumentApp for Procedural2dPlayApp {
                 Ok(Procedural2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
-                    value,
-                }))
+                    value}))
             }
             "nodeGraphViewport" => {
                 let viewport_json = str_arg(&["viewportJson", "viewport_json"])
@@ -166,8 +160,7 @@ impl DocumentApp for Procedural2dPlayApp {
             "setShowMode" => Ok(Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
             "generate" => Ok(Procedural2dCommand::Generate(enter_generate::Generate {})),
             "setEvalOutputs" => Ok(Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs {
-                outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into()),
-            })),
+                outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into())})),
             "canvasPointerDown" => Ok(Procedural2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
             "canvasPointerMove" => Ok(Procedural2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {})),
             "canvasPointerUp" => Ok(Procedural2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})),
@@ -178,8 +171,7 @@ impl DocumentApp for Procedural2dPlayApp {
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
-            ))),
-        }
+            )))}
     }
 
     fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -213,8 +205,7 @@ impl DocumentApp for Procedural2dPlayApp {
             document_panel::PROCEDURAL2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             catalogue_panel::PROCEDURAL2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        })
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}")))})
     }
 
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
@@ -248,11 +239,9 @@ impl DocumentApp for Procedural2dPlayApp {
                 let bytes = store::DocumentPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
-                    payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                    payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) }})
             }
-            _ => Err(semio_framework_plugin::MediaError::NotImplemented),
-        }
+            _ => Err(semio_framework_plugin::MediaError::NotImplemented)}
     }
 
     /// 🎞️ `"params:in"`: a generic Data×Value JSON object `{widgetId: number}` — patches matching
@@ -358,10 +347,12 @@ pub(crate) mod testkit {
     pub type Procedural2dApp = VcsDocumentApp<Procedural2dPlayApp>;
 
     pub fn app() -> Procedural2dApp {
+        crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
         new_app::<Procedural2dPlayApp>()
     }
 
     pub fn app_with_registry() -> Procedural2dApp {
+        crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
         new_app_with_registry::<Procedural2dPlayApp>(create_procedural2d_app)
     }
 
@@ -399,7 +390,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -587,24 +578,21 @@ mod tests {
             .iter()
             .find_map(|widget| match widget {
                 Widget::InputSlider { id, .. } => Some(id.clone()),
-                _ => None,
-            })
+                _ => None})
             .expect("just-added input slider");
         let media = semio_framework_plugin::Media {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-            payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
-        };
+            payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() }};
         app.import_media("params:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import params");
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
-            _ => None,
-        });
+            _ => None});
         assert_eq!(value, Some(42.0));
     }
 
     #[test]
     fn media_ports_declare_params_in_and_drawing_out() {
-        let ports = DocumentApp::media_ports(&Procedural2dPlayApp::default());
+        let ports = <Procedural2dPlayApp as DocumentApp>::media_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         let params_in = ports.iter().find(|port| port.id == "params:in").expect("params:in declared");

@@ -2,11 +2,11 @@
 
 use crate::apps::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::apps::block3d::terminology::Block3dLabels;
-use crate::artifacts::block3d::Block3dDefinition;
+use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
-pub fn measure(definition: &Block3dDefinition, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
+pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);
     let visible_set: std::collections::HashSet<&str> = if view.representation_ids.is_empty() {
         definition.representations.iter().map(|r| r.id.as_str()).collect()

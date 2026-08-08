@@ -1,0 +1,104 @@
+// 🧬️ EN 1998 snapshot schema.
+syntax = "proto3";
+package semio.s.norm.en1998.snapshot;
+
+message En1998Snapshot {
+  // @state persistent
+  uint32 seismic_zone = 1;
+  // @state persistent
+  double ground_type = 2;
+  // @state persistent
+  double importance_class = 3;
+  // @state persistent
+  double structural_system = 4;
+  // @state persistent
+  double t1_s = 5;
+  // @state persistent
+  double mass_t = 6;
+  // @state persistent
+  double v_rd_kn = 7;
+  // @state persistent
+  double drift_mm = 8;
+  // @state persistent
+  double height_m = 9;
+  // @state persistent
+  bool multiple_resisting_systems = 10;
+  // @state persistent
+  double annex = 11;
+  // @state persistent
+  double en_a_gr = 12;
+  // @state persistent
+  double en_ground_type = 13;
+  // @state persistent
+  double en_spectrum_type = 14;
+  // @state persistent
+  double period_ratio = 15;
+  // @state persistent
+  double bridge_v_rd_kn = 16;
+  // @state persistent
+  double bearing_d_ed_mm = 17;
+  // @state persistent
+  double bearing_d_rd_mm = 18;
+  // @state persistent
+  double retrofit_knowledge_level = 19;
+  // @state persistent
+  double retrofit_limit_state = 20;
+  // @state persistent
+  double retrofit_e_d_kn = 21;
+  // @state persistent
+  double retrofit_r_k_kn = 22;
+  // @state persistent
+  double retrofit_gamma_el = 23;
+  // @state persistent
+  double silo_height_m = 24;
+  // @state persistent
+  double silo_radius_m = 25;
+  // @state persistent
+  double silo_n_rd_kn = 26;
+  // @state persistent
+  double silo_v_ed_kn = 27;
+  // @state persistent
+  double silo_v_rd_kn = 28;
+  // @state persistent
+  double silo_q_nominal = 29;
+  // @state persistent
+  double tank_height_m = 30;
+  // @state persistent
+  double tank_radius_m = 31;
+  // @state persistent
+  double tank_mass_t = 32;
+  // @state persistent
+  double tank_v_rd_kn = 33;
+  // @state persistent
+  double tower_m_ed_knm = 34;
+  // @state persistent
+  double tower_m_rd_knm = 35;
+  // @state persistent
+  bool tower_is_chimney = 36;
+  // @state persistent
+  double tower_q_nominal = 37;
+  // @state persistent
+  double tower_mass_t = 38;
+  // @state persistent
+  double foundation_area_m2 = 39;
+  // @state persistent
+  double foundation_p_rd_kpa = 40;
+  // @state persistent
+  double foundation_h_ed_kn = 41;
+  // @state persistent
+  double foundation_h_rd_kn = 42;
+  // @state persistent
+  double k_foundation = 43;
+  // @state persistent
+  double k_soil = 44;
+  // @state persistent
+  double wall_height_m = 45;
+  // @state persistent
+  double wall_phi_deg = 46;
+  // @state persistent
+  double wall_soil_gamma_kn_m3 = 47;
+  // @state persistent
+  double wall_r = 48;
+  // @state persistent
+  double wall_h_rd_kn = 49;
+}

@@ -2,7 +2,7 @@
 //! ground control point observations planted on it.
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelFrameCursor};
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 /// GCP observation planted on it, as point markers. Keypoint circles/match lines/track polylines are a
 /// documented gap: those live only in the reconstruction engine's in-progress runtime scratch and are
 /// never distilled into durable document state, so there is nothing to render for them.
-fn frames_layers_json(scene: &RemodelProjection, cursor: &RemodelFrameCursor) -> String {
+fn frames_layers_json(scene: &RemodelSnapshot, cursor: &RemodelFrameCursor) -> String {
     let mut layers: Vec<Value> = Vec::new();
     let Some(stream_id) = &cursor.stream_id else { return "[]".into() };
     let Some(stream) = scene.streams.iter().find(|stream| &stream.id == stream_id) else { return "[]".into() };
@@ -66,7 +66,7 @@ fn frames_layers_json(scene: &RemodelProjection, cursor: &RemodelFrameCursor) ->
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(scene: &RemodelProjection, config: &RemodelConfig) -> UiNode {
+pub fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
     let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor) };
     build_canvas_2d_scene(REMODEL_PLAY_SURFACE_FRAMES, crate::apps::remodel::REMODEL_PLAY_APP_ID, scene_2d)
 }

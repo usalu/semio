@@ -3,8 +3,7 @@
 //! Wire codecs live in `📡️spr` (DSL mirror); this facet keeps grammar + re-exports.
 
 pub use crate::artifacts::procedural2d::mutations::{
-    apply_procedural2d_mutation, inverse_procedural2d_mutation, procedural2d_fixture_operations, Procedural2dMutation,
-};
+    apply_procedural2d_mutation, inverse_procedural2d_mutation, procedural2d_fixture_operations, Procedural2dMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

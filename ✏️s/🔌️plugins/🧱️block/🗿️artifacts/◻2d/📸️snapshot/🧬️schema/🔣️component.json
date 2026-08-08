@@ -1,0 +1,122 @@
+{
+  "$id": "https://semio.tech/schema/s/block/block2d/snapshot.json",
+  "title": "Block2dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "nodeKind",
+    "presentation",
+    "handleKinds",
+    "handles",
+    "compatibility",
+    "attributes",
+    "authors",
+    "camera2d",
+    "meta"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "nodeKind": {
+      "$ref": "#/$defs/BlockKindIdentity",
+      "x-semio-state": "persistent"
+    },
+    "presentation": {
+      "$ref": "#/$defs/Block2dPresentation",
+      "x-semio-state": "persistent"
+    },
+    "handleKinds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Block2dHandleKind"
+      },
+      "x-semio-state": "persistent"
+    },
+    "handles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Block2dHandleTemplate"
+      },
+      "x-semio-state": "persistent"
+    },
+    "compatibility": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BlockCompatibilityRule"
+      },
+      "x-semio-state": "persistent"
+    },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BlockAttribute"
+      },
+      "x-semio-state": "persistent"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BlockAuthor"
+      },
+      "x-semio-state": "persistent"
+    },
+    "camera2d": {
+      "$ref": "#/$defs/BlockCamera2d",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/BlockMeta",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "BlockKindIdentity": {
+      "title": "BlockKindIdentity",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block2dPresentation": {
+      "title": "Block2dPresentation",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block2dHandleKind": {
+      "title": "Block2dHandleKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block2dHandleTemplate": {
+      "title": "Block2dHandleTemplate",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCompatibilityRule": {
+      "title": "BlockCompatibilityRule",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAttribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAuthor": {
+      "title": "BlockAuthor",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCamera2d": {
+      "title": "BlockCamera2d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockMeta": {
+      "title": "BlockMeta",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

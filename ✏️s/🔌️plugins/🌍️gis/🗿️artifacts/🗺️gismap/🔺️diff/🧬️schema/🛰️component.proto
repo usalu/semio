@@ -1,0 +1,72 @@
+syntax = "proto3";
+package semio.s.gis.gismap.diff;
+
+// 🧬️ GIS map diff schema — sparse field delta.
+
+message GisMapDiff {
+  // @state persistent
+  optional GisMapArtifact artifact = 1;
+  // @state persistent
+  optional GisMapFeaturesDelta positions = 2;
+  // @state persistent
+  optional GisMapFeaturesDelta routes = 3;
+  // @state persistent
+  optional GisMapFeaturesDelta regions = 4;
+  // @state shared-ui
+  optional GisMapStringList selected_ids = 5;
+  // @state shared-ui
+  optional string feature_selection_json = 6;
+  // @state shared-ui
+  optional GisMapBoolMapDelta layer_visibility = 7;
+  // @state shared-ui
+  optional GisMapNumberMapDelta layer_stroke_scale = 8;
+  // @state local-ui
+  optional string camera_json = 9;
+  // @state local-ui
+  optional string render_mode = 10;
+  // @state local-ui
+  optional string vector_style = 11;
+  // @state local-ui
+  optional string lod_mode = 12;
+  // @state local-ui
+  optional string hover_json = 13;
+  // @state local-ui
+  optional string selection_method = 14;
+  // @state local-ui
+  optional string selection_mode = 15;
+  // @state local-ui
+  optional string locale = 16;
+}
+
+message GisMapArtifact {
+  repeated GisMapFeature positions = 1;
+  repeated GisMapFeature routes = 2;
+  repeated GisMapFeature regions = 3;
+  repeated string selected_ids = 4;
+  string feature_selection_json = 5;
+  map<string, bool> layer_visibility = 6;
+  map<string, double> layer_stroke_scale = 7;
+  string camera_json = 8;
+  string render_mode = 9;
+  string vector_style = 10;
+  string lod_mode = 11;
+  string hover_json = 12;
+  string selection_method = 13;
+  string selection_mode = 14;
+  string locale = 15;
+}
+
+message GisMapFeature { string id = 1; string data_json = 2; }
+message GisMapStringList { repeated string values = 1; }
+message GisMapBoolMapDelta { map<string, BoolValue> entries = 1; }
+message GisMapNumberMapDelta { map<string, DoubleValue> entries = 1; }
+message BoolValue { optional bool value = 1; }
+message DoubleValue { optional double value = 1; }
+message GisMapFeaturesDelta {
+  repeated GisMapFeature added = 1;
+  repeated string removed = 2;
+  repeated GisMapFeaturePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message GisMapFeaturePatchEntry { string id = 1; GisMapFeaturePatch patch = 2; }
+message GisMapFeaturePatch { optional string data_json = 1; }

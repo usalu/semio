@@ -3,7 +3,7 @@
 
 use crate::apps::block2d::terminology::Block2dLabels;
 use crate::apps::block2d::block2d_action;
-use crate::artifacts::block2d::Block2dDefinition;
+use crate::artifacts::block2d::Block2dSnapshot;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 
 //#region 🔖️Constants
@@ -27,7 +27,7 @@ fn play_action(action: &str, args: Option<serde_json::Value>) -> semio_framework
     block2d_action(action, args)
 }
 
-pub fn render(definition: &Block2dDefinition, selected: &[String], labels: &Block2dLabels) -> UiNode {
+pub fn render(definition: &Block2dSnapshot, selected: &[String], labels: &Block2dLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("block2d-play-document");
     let handle_kind_items: Vec<UiTreeItemNode> = definition
         .handle_kinds

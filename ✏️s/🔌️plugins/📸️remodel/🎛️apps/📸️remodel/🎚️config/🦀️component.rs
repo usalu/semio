@@ -70,7 +70,7 @@ pub struct RemodelFrameCursor {
 /// and `🎮️commands/📥️ingest` for how.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "remodelcfg")]
+#[dsl(id = "remodel.config", extension = "remodelcfg")]
 #[dsl(layout = "lines")]
 pub struct RemodelConfig {
     #[dsl(block)]
@@ -382,15 +382,15 @@ mod tests {
     #[test]
     fn config_mutations_roundtrip_through_op_text() {
         let config = RemodelConfig::default();
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::Snapshot { config });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetCamera { camera: RemodelWorldCamera::default() });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetSelection { mode: "rectangle".into(), ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetLayerVisibility { layer: "gcps".into(), visible: false });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetFrameCursor { stream_id: None, frame_index: 0 });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetReportTable { table: "tracks".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetActiveUtility { utility_id: "gcpPlace".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::Snapshot { config });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetCamera { camera: RemodelWorldCamera::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetSelection { mode: "rectangle".into(), ids: vec!["a".into(), "b".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetLayerVisibility { layer: "gcps".into(), visible: false });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetFrameCursor { stream_id: None, frame_index: 0 });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetReportTable { table: "tracks".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetActiveUtility { utility_id: "gcpPlace".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,129 @@
+syntax = "proto3";
+package semio.s.trinity.jack.diff;
+
+// 🧬️ Jack diff schema — sparse field delta.
+
+message JackDiff {
+  // @state persistent
+  optional JackArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string name = 3;
+  // @state persistent
+  optional string manifest_id = 4;
+  // @state persistent
+  optional Manifest manifest = 5;
+  // @state persistent
+  optional Camera camera = 6;
+  // @state persistent
+  optional JackNodesDelta nodes = 7;
+  // @state persistent
+  optional JackEdgesDelta edges = 8;
+  // @state persistent
+  optional string root_node_id = 9;
+  // @state shared-ui
+  optional JackStringList selected_node_ids = 10;
+  // @state shared-ui
+  optional string active_fixture_id = 11;
+  // @state shared-ui
+  optional string jack_query = 12;
+  // @state shared-ui
+  optional map<string, string> lod_mode_by_window = 13;
+  // @state local-ui
+  optional Camera viewport_camera = 14;
+  // @state local-ui
+  optional string jack_result_json = 15;
+  // @state local-ui
+  optional string editor_engagement_input = 16;
+  // @state local-ui
+  optional string graph_engagement_input = 17;
+  // @state local-ui
+  optional string results_engagement_input = 18;
+  // @state local-ui
+  optional int64 reorganize_epoch = 19;
+  // @state local-ui
+  optional JackEditorSelection editor_selection = 20;
+  // @state local-ui
+  optional int64 revision = 21;
+  // @state local-ui
+  optional string locale = 22;
+}
+
+message JackStringList {
+  repeated string values = 1;
+}
+
+message JackNodesDelta {
+  repeated Node added = 1;
+  repeated string removed = 2;
+  repeated JackNodePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message JackNodePatchEntry {
+  string id = 1;
+  JackNodePatch patch = 2;
+}
+
+message JackNodePatch {
+  optional string name = 1;
+  optional double x = 2;
+  optional double y = 3;
+  optional double width = 4;
+  optional double height = 5;
+}
+
+message JackEdgesDelta {
+  repeated Edge added = 1;
+  repeated string removed = 2;
+  repeated JackEdgePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message JackEdgePatchEntry {
+  string id = 1;
+  JackEdgePatch patch = 2;
+}
+
+message JackEdgePatch {
+  optional string key = 1;
+  optional string value_json = 2;
+}
+
+message JackArtifact {
+  string schema = 1;
+  string name = 2;
+}
+
+message JackEditorSelection {
+  int64 start = 1;
+  int64 end = 2;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message Node {
+  string id = 1;
+  string kind = 2;
+  string name = 3;
+}
+
+message Edge {
+  string id = 1;
+  string kind = 2;
+  string source = 3;
+  string target = 4;
+}
+
+message Manifest {
+  repeated ManifestKind node_kinds = 1;
+}
+
+message ManifestKind {
+  string name = 1;
+}

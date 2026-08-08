@@ -6,7 +6,7 @@ use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
 use store::DocumentDsl;
-use trinity::artifacts::jack::{Graph, GraphFixture, PropertyValue};
+use trinity::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
 use trinity::executor::run; use trinity::ast::QueryResult;
 
 //#region ⚠️ Errors
@@ -37,7 +37,7 @@ fn run_main() -> Result<(), TrinityJackShellError> {
     let args: Vec<String> = env::args().collect();
     let fixture_path = args.get(1).map_or("trinity/example/🔱️nakagin-capsule-tower.trinity", String::as_str);
     let text = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
-    let fixture = GraphFixture::parse_dsl(&text).map_err(|source| TrinityJackShellError::Dsl { path: fixture_path.to_string(), source })?;
+    let fixture = JackSnapshot::parse_dsl(&text).map_err(|source| TrinityJackShellError::Dsl { path: fixture_path.to_string(), source })?;
     let mut graph = Graph::from_fixture(fixture)?;
     graph.recompute_derived();
     println!("[DEBUG] trinity jack shell loaded {} nodes, {} edges from {fixture_path}", graph.nodes.len(), graph.edges.len());
@@ -95,11 +95,11 @@ fn format_cell(value: &PropertyValue) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trinity::artifacts::jack::{Camera, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
+    use trinity::artifacts::jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
 
     fn mini_json() -> String {
-        let fixture = GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
+        let fixture = JackSnapshot {
+            schema: JackSnapshot::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),

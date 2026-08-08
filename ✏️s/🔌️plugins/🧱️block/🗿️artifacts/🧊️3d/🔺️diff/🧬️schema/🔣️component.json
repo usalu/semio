@@ -1,0 +1,559 @@
+{
+  "$id": "https://semio.tech/schema/s/block/block3d/diff.json",
+  "title": "Block3dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Block3dArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "objectKind": {
+      "$ref": "#/$defs/BlockKindIdentity",
+      "x-semio-state": "persistent"
+    },
+    "representations": {
+      "$ref": "#/$defs/Block3dRepresentationsDelta",
+      "x-semio-state": "persistent"
+    },
+    "vortexKinds": {
+      "$ref": "#/$defs/Block3dVortexKindsDelta",
+      "x-semio-state": "persistent"
+    },
+    "vortices": {
+      "$ref": "#/$defs/Block3dVorticesDelta",
+      "x-semio-state": "persistent"
+    },
+    "compatibility": {
+      "$ref": "#/$defs/Block3dCompatibilityDelta",
+      "x-semio-state": "persistent"
+    },
+    "attributes": {
+      "$ref": "#/$defs/Block3dAttributesDelta",
+      "x-semio-state": "persistent"
+    },
+    "authors": {
+      "$ref": "#/$defs/Block3dAuthorList",
+      "x-semio-state": "persistent"
+    },
+    "camera3d": {
+      "$ref": "#/$defs/BlockCamera3d",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/BlockMeta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/Block3dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeRepresentationId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    },
+    "wantedTags": {
+      "$ref": "#/$defs/Block3dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "windows": {
+      "$ref": "#/$defs/Block3dWindowsList",
+      "x-semio-state": "local-ui"
+    },
+    "brushVortexKindId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "local-ui"
+    },
+    "brushRadius": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "brushFlip": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "brushPreview": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/Block3dBrushPreview"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "camera": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/BlockCamera3d"
+        }
+      ],
+      "x-semio-state": "local-ui"
+    },
+    "hoveredVortexFullId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "BlockKindIdentity": {
+      "title": "BlockKindIdentity",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockRepresentation": {
+      "title": "BlockRepresentation",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dVortexKind": {
+      "title": "Block3dVortexKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dVortexTemplate": {
+      "title": "Block3dVortexTemplate",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCompatibilityRule": {
+      "title": "BlockCompatibilityRule",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAttribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAuthor": {
+      "title": "BlockAuthor",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCamera3d": {
+      "title": "BlockCamera3d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockMeta": {
+      "title": "BlockMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dWindowView": {
+      "title": "Block3dWindowView",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dBrushPreview": {
+      "title": "Block3dBrushPreview",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dStringList": {
+      "title": "Block3dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block3dAuthorList": {
+      "title": "Block3dAuthorList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAuthor"
+          }
+        }
+      }
+    },
+    "Block3dRepresentationsDelta": {
+      "title": "Block3dRepresentationsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockRepresentation"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dRepresentationsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block3dRepresentationsPatchEntry": {
+      "title": "Block3dRepresentationsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block3dRepresentationsPatch"
+        }
+      }
+    },
+    "Block3dRepresentationsPatch": {
+      "title": "Block3dRepresentationsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockRepresentation"
+        }
+      }
+    },
+    "Block3dVortexKindsDelta": {
+      "title": "Block3dVortexKindsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dVortexKind"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dVortexKindsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block3dVortexKindsPatchEntry": {
+      "title": "Block3dVortexKindsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block3dVortexKindsPatch"
+        }
+      }
+    },
+    "Block3dVortexKindsPatch": {
+      "title": "Block3dVortexKindsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Block3dVortexKind"
+        }
+      }
+    },
+    "Block3dVorticesDelta": {
+      "title": "Block3dVorticesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dVortexTemplate"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dVorticesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block3dVorticesPatchEntry": {
+      "title": "Block3dVorticesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block3dVorticesPatch"
+        }
+      }
+    },
+    "Block3dVorticesPatch": {
+      "title": "Block3dVorticesPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Block3dVortexTemplate"
+        }
+      }
+    },
+    "Block3dCompatibilityDelta": {
+      "title": "Block3dCompatibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockCompatibilityRule"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dCompatibilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block3dCompatibilityPatchEntry": {
+      "title": "Block3dCompatibilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block3dCompatibilityPatch"
+        }
+      }
+    },
+    "Block3dCompatibilityPatch": {
+      "title": "Block3dCompatibilityPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockCompatibilityRule"
+        }
+      }
+    },
+    "Block3dAttributesDelta": {
+      "title": "Block3dAttributesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttribute"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dAttributesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Block3dAttributesPatchEntry": {
+      "title": "Block3dAttributesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Block3dAttributesPatch"
+        }
+      }
+    },
+    "Block3dAttributesPatch": {
+      "title": "Block3dAttributesPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/BlockAttribute"
+        }
+      }
+    },
+    "Block3dWindowsList": {
+      "title": "Block3dWindowsList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block3dWindowView"
+          }
+        }
+      }
+    }
+  }
+}

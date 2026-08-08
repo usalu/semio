@@ -14,8 +14,7 @@ pub mod set_selection {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "set-selection")]
     pub struct SetSelection {
-        pub ids: Vec<String>,
-    }
+        pub ids: Vec<String>}
 
     pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
@@ -30,8 +29,7 @@ pub mod select_node {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "select-node")]
     pub struct SelectNode {
-        pub ids: Vec<String>,
-    }
+        pub ids: Vec<String>}
 
     pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))

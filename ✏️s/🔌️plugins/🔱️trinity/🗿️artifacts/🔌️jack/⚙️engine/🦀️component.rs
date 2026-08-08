@@ -5,10 +5,10 @@
 //! `apply_rule` — not here. This file holds the one document-level pure helper the old bundle crate's
 //! `⚙️engine` module also held.
 
-use crate::artifacts::jack::{empty_trinity_graph_fixture, GraphFixture};
+use crate::artifacts::jack::{empty_trinity_graph_fixture, JackSnapshot};
 
 /// 📦️ An empty trinity graph fixture — the app's zero-state initial document.
-pub fn empty_jack_document() -> GraphFixture {
+pub fn empty_jack_document() -> JackSnapshot {
     empty_trinity_graph_fixture()
 }
 
@@ -35,8 +35,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::jack::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::jack::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::jack::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::jack::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("jack.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -65,8 +65,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::jack::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::jack::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("jack.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -82,34 +82,65 @@ pub fn register_pilot_languages() {
 }
 
 
+
+//#region 🔖️Register
+static SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::jack::schema::jack_artifact_schema_descriptor());
+}
+
+/// 🗂️ Registers codecs and schema descriptor.
+pub fn register() {
+    register_pilot_languages();
+    register_artifact_schema();
+}
+//#endregion 🔖️Register
+
 //#region 🔖️ArtifactEngine
 pub struct TrinityGraphEngine {
-    projection: crate::artifacts::jack::TrinityGraphDocument,
+    artifact: crate::artifacts::jack::schema::JackArtifact,
+    snapshot: crate::artifacts::jack::JackSnapshot,
 }
 
 impl TrinityGraphEngine {
-    pub fn new(projection: crate::artifacts::jack::TrinityGraphDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::jack::JackSnapshot) -> Self {
+        Self {
+            artifact: crate::artifacts::jack::schema::JackArtifact::from_snapshot(snapshot.clone()),
+            snapshot,
+        }
     }
 }
 
 impl protocol::ArtifactEngine for TrinityGraphEngine {
-    type Projection = crate::artifacts::jack::TrinityGraphDocument;
+    type Artifact = crate::artifacts::jack::schema::JackArtifact;
+    type Snapshot = crate::artifacts::jack::JackSnapshot;
     type Mutation = crate::artifacts::jack::mutations::TrinityGraphMutation;
-    type Diff = crate::artifacts::jack::diff::TrinityGraphDiff;
+    type Diff = crate::artifacts::jack::diff::JackDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::jack::mutations::apply_trinity_graph_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::jack::mutations::apply_trinity_graph_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

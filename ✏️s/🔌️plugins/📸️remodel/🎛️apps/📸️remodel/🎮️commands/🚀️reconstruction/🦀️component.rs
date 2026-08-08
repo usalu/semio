@@ -12,7 +12,7 @@
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::engine::{build_engine_params, build_qc_snapshot, camera_pose_preview, decode_still_image, next_remodel_id, raster_to_png_asset, reconstruction as remodel_engine, watertight_snapshot};
 use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{CameraPosePreview, CameraTrajectory, GeoProducts, ImageAsset, MeshSource, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelProjection, SparseCloud};
+use crate::artifacts::remodel::{CameraPosePreview, CameraTrajectory, GeoProducts, ImageAsset, MeshSource, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelSnapshot, SparseCloud};
 use base64::Engine as _;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -32,8 +32,8 @@ const REMODEL_MAX_RECONSTRUCTION_TICKS: u32 = 200_000;
 /// stream's already-persisted frames into it, then loops `advance()` in-process until `Done`/`Failed`
 /// and returns exactly one `Emit` carrying only the FINAL state — one call, one `Emit`, one undo step;
 /// no coalesce key needed. Shared by all three rows in this group.
-pub fn run_whole_pipeline(doc: &DocumentView<'_, RemodelProjection>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-    let scene = doc.projection;
+pub fn run_whole_pipeline(doc: &DocumentView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    let scene = doc.snapshot;
     let engine_params = build_engine_params(&scene.params);
     let mut engine = remodel_engine::ReconstructionEngine::new(&engine_params);
     let mut pushed = 0u32;
@@ -150,7 +150,7 @@ pub mod run_reconstruction {
     #[dsl(keyword = "run-reconstruction")]
     pub struct RunReconstruction {}
 
-    pub fn handle(_payload: &RunReconstruction, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &RunReconstruction, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         run_whole_pipeline(doc)
     }
 }
@@ -168,7 +168,7 @@ pub mod retry_stage {
 
     /// 🔁️ A retry is a fresh whole run (see the module doc comment): resuming at `payload.stage` would
     /// need the mid-pipeline engine state the pure-trait pivot removed, so the stage name is accepted and ignored.
-    pub fn handle(_payload: &RetryStage, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &RetryStage, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         run_whole_pipeline(doc)
     }
 }
@@ -185,7 +185,7 @@ pub mod run_stage {
     }
 
     /// ▶️ Same body as `retry_stage` — see the module doc comment.
-    pub fn handle(_payload: &RunStage, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(_payload: &RunStage, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         run_whole_pipeline(doc)
     }
 }
@@ -208,8 +208,8 @@ mod tests {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
         let run = dispatch(&mut app, RemodelCommand::RunReconstruction(super::run_reconstruction::RunReconstruction {}));
-        assert!(!run.operations.is_empty(), "a completed run publishes at least the final SetJob");
-        let scene = app.projection().expect("projection");
+        assert!(!run.mutations.is_empty(), "a completed run publishes at least the final SetJob");
+        let scene = app.snapshot().expect("projection");
         assert!(scene.job.stage == ReconstructionStage::Done || scene.job.stage == ReconstructionStage::Failed, "a synchronous run always ends terminal");
         if scene.job.stage == ReconstructionStage::Done {
             assert_eq!(scene.job.progress_0_1, 1.0);
@@ -226,10 +226,10 @@ mod tests {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
         dispatch(&mut app, RemodelCommand::RunReconstruction(super::run_reconstruction::RunReconstruction {}));
-        let first_job_id = app.projection().expect("projection").job.id;
+        let first_job_id = app.snapshot().expect("projection").job.id;
 
         dispatch(&mut app, RemodelCommand::RetryStage(super::retry_stage::RetryStage { stage: "extracting-features".into() }));
-        let scene = app.projection().expect("projection");
+        let scene = app.snapshot().expect("projection");
         assert!(scene.job.stage == ReconstructionStage::Done || scene.job.stage == ReconstructionStage::Failed);
         assert_ne!(scene.job.id, first_job_id, "retryStage must start a new job");
     }
@@ -241,12 +241,12 @@ mod tests {
     fn full_run_collapses_into_a_single_undo_step() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
-        let before_job = app.projection().expect("projection").job;
+        let before_job = app.snapshot().expect("projection").job;
         dispatch(&mut app, RemodelCommand::RunReconstruction(super::run_reconstruction::RunReconstruction {}));
-        assert_ne!(app.projection().expect("projection").job, before_job, "run must have changed the job");
+        assert_ne!(app.snapshot().expect("projection").job, before_job, "run must have changed the job");
 
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").job, before_job, "one undo must fully revert the run");
+        assert_eq!(app.snapshot().expect("projection").job, before_job, "one undo must fully revert the run");
     }
 }
 //#endregion 🧪️Tests

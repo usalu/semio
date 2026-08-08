@@ -1,0 +1,220 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gismap/diff.json",
+  "title": "GisMapDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "GisMapArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "positions": {
+      "$ref": "#/$defs/GisMapFeaturesDelta",
+      "x-semio-state": "persistent"
+    },
+    "routes": {
+      "$ref": "#/$defs/GisMapFeaturesDelta",
+      "x-semio-state": "persistent"
+    },
+    "regions": {
+      "$ref": "#/$defs/GisMapFeaturesDelta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/GisMapStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "featureSelectionJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "shared-ui"
+    },
+    "layerVisibility": {
+      "$ref": "#/$defs/GisMapBoolMapDelta",
+      "x-semio-state": "shared-ui"
+    },
+    "layerStrokeScale": {
+      "$ref": "#/$defs/GisMapNumberMapDelta",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "renderMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "vectorStyle": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoverJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "GisMapFeature": {
+      "title": "GisMapFeature",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "GisMapStringList": {
+      "title": "GisMapStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GisMapBoolMapDelta": {
+      "title": "GisMapBoolMapDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "GisMapNumberMapDelta": {
+      "title": "GisMapNumberMapDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number",
+                "format": "double"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "GisMapFeaturesDelta": {
+      "title": "GisMapFeaturesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GisMapFeature"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GisMapFeaturePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GisMapFeaturePatchEntry": {
+      "title": "GisMapFeaturePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/GisMapFeaturePatch"
+        }
+      }
+    },
+    "GisMapFeaturePatch": {
+      "title": "GisMapFeaturePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

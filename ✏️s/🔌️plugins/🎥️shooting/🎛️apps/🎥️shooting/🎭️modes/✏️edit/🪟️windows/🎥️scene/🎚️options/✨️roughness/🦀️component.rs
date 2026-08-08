@@ -2,15 +2,15 @@
 //! Its command handler lives in `🎮️commands/☀️scene::set_material_roughness`.
 
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowMeasure {
+pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "shooting.measure.roughness".into(),
         label: Some(labels.measure_roughness.into()),
-        value: fixture.scene.material.roughness,
+        value: snapshot.scene.material.roughness,
         min: 0.0,
         max: 1.0,
         step: Some(0.05),
@@ -33,9 +33,9 @@ mod tests {
 
     #[test]
     fn roughness_measure_matches_the_fixture_default() {
-        let fixture = crate::artifacts::shooting::engine::default_fixture();
+        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
-        match measure(&fixture, labels) {
+        match measure(&snapshot, labels) {
             WindowMeasure::Slider { value, .. } => assert_eq!(value, 1.0),
             other => panic!("roughness measure must be a slider, got {other:?}"),
         }

@@ -2,12 +2,12 @@
 //! Its command handler lives in `🎮️commands/☀️scene::toggle_sun`.
 
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowMeasure {
-    WindowMeasure::Toggle { id: "shooting.measure.sun-enabled".into(), icon_id: "sun".into(), label: Some(labels.measure_sun.into()), pressed: fixture.scene.sun.enabled, text: None, on_change: crate::apps::shooting::shooting_action("toggleSun", None) }
+pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
+    WindowMeasure::Toggle { id: "shooting.measure.sun-enabled".into(), icon_id: "sun".into(), label: Some(labels.measure_sun.into()), pressed: snapshot.scene.sun.enabled, text: None, on_change: crate::apps::shooting::shooting_action("toggleSun", None) }
 }
 //#endregion 🔖️Measure
 
@@ -20,9 +20,9 @@ mod tests {
 
     #[test]
     fn sun_enabled_measure_mirrors_the_fixture_default_off() {
-        let fixture = crate::artifacts::shooting::engine::default_fixture();
+        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
-        match measure(&fixture, labels) {
+        match measure(&snapshot, labels) {
             WindowMeasure::Toggle { pressed, .. } => assert!(!pressed),
             other => panic!("sun-enabled measure must be a toggle, got {other:?}"),
         }

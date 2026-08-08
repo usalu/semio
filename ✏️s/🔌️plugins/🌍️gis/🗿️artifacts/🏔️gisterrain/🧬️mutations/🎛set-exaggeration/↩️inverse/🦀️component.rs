@@ -1,6 +1,6 @@
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
-use crate::artifacts::gisterrain::mutations::Gis3dTerrainMutation;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
 
-pub fn inverse(base: &Gis3dTerrainDocument, mutation: &Gis3dTerrainMutation) -> Vec<Gis3dTerrainMutation> {
-    <Gis3dTerrainMutation as protocol::Mutation<Gis3dTerrainDocument>>::inverse(mutation, base)
+pub fn inverse(base: &GisTerrainSnapshot, mutation: &GisTerrainMutation) -> Vec<GisTerrainMutation> {
+    <GisTerrainMutation as protocol::Mutation<GisTerrainSnapshot>>::inverse(mutation, base)
 }

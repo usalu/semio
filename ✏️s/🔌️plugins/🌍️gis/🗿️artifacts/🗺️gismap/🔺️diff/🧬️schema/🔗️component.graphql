@@ -1,0 +1,55 @@
+# 🧬️ GIS map diff schema — sparse field delta.
+
+type GisMapDiff {
+  artifact: GisMapArtifact @state(class: PERSISTENT)
+  positions: GisMapFeaturesDelta @state(class: PERSISTENT)
+  routes: GisMapFeaturesDelta @state(class: PERSISTENT)
+  regions: GisMapFeaturesDelta @state(class: PERSISTENT)
+  selectedIds: GisMapStringList @state(class: SHARED_UI)
+  featureSelectionJson: String @state(class: SHARED_UI)
+  layerVisibility: GisMapBoolMapDelta @state(class: SHARED_UI)
+  layerStrokeScale: GisMapNumberMapDelta @state(class: SHARED_UI)
+  cameraJson: String @state(class: LOCAL_UI)
+  renderMode: String @state(class: LOCAL_UI)
+  vectorStyle: String @state(class: LOCAL_UI)
+  lodMode: String @state(class: LOCAL_UI)
+  hoverJson: String @state(class: LOCAL_UI)
+  selectionMethod: String @state(class: LOCAL_UI)
+  selectionMode: String @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type GisMapArtifact {
+  positions: [GisMapFeature!]!
+  routes: [GisMapFeature!]!
+  regions: [GisMapFeature!]!
+  selectedIds: [String!]!
+  featureSelectionJson: String!
+  layerVisibility: [GisMapBoolEntry!]!
+  layerStrokeScale: [GisMapNumberEntry!]!
+  cameraJson: String!
+  renderMode: String!
+  vectorStyle: String!
+  lodMode: String!
+  hoverJson: String!
+  selectionMethod: String!
+  selectionMode: String!
+  locale: String!
+}
+
+type GisMapFeature { id: String! data: String! }
+type GisMapBoolEntry { key: String! value: Boolean! }
+type GisMapNumberEntry { key: String! value: Float! }
+type GisMapStringList { values: [String!]! }
+type GisMapBoolMapDelta { entries: [GisMapBoolDiffEntry!]! }
+type GisMapNumberMapDelta { entries: [GisMapNumberDiffEntry!]! }
+type GisMapBoolDiffEntry { key: String! value: Boolean }
+type GisMapNumberDiffEntry { key: String! value: Float }
+type GisMapFeaturesDelta {
+  added: [GisMapFeature!]!
+  removed: [String!]!
+  patched: [GisMapFeaturePatchEntry!]!
+  reordered: [String!]
+}
+type GisMapFeaturePatchEntry { id: String! patch: GisMapFeaturePatch! }
+type GisMapFeaturePatch { data: String }

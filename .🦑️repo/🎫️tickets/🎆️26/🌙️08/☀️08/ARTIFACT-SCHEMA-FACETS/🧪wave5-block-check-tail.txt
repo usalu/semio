@@ -1,0 +1,5 @@
+827 +     artifacts::block5d::engine::register();
+    |
+
+warning: `semio-s-plugin-block` (lib) generated 60 warnings (run `cargo fix --lib -p semio-s-plugin-block` to apply 60 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 10.53s

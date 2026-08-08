@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Procedural3dDiff
 /// 🧬️ Procedural3dDiff facet type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.procedural.procedural3d")]
 
@@ -30,8 +30,7 @@ pub struct Procedural3dDiff {
     #[state(preview)] pub generation_preview_text: Option<Option<String>>,
     #[state(shared_ui)] pub active_utility_id: Option<String>,
     #[state(local_ui)] pub locale: Option<String>,
-    #[state(local_ui)] pub contributions_json: Option<String>,
-}
+    #[state(local_ui)] pub contributions_json: Option<String>}
 //#endregion 🔖️Procedural3dDiff
 
 //#region 🔖️Helpers
@@ -39,6 +38,5 @@ pub struct Procedural3dDiff {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Procedural3dStringList {
-    pub values: Vec<String>,
-}
+    pub values: Vec<String>}
 //#endregion 🔖️Helpers

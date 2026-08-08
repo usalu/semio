@@ -4,7 +4,7 @@
 pub mod set_selection {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
-    use crate::artifacts::block3d::Block3dDefinition;
+    use crate::artifacts::block3d::Block3dSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Block3dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -22,7 +22,7 @@ pub mod set_selection {
 pub mod select_vortex {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
-    use crate::artifacts::block3d::Block3dDefinition;
+    use crate::artifacts::block3d::Block3dSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -33,10 +33,10 @@ pub mod select_vortex {
         pub merge: bool,
     }
 
-    pub fn handle(payload: &SelectVortex, _doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectVortex, _doc: &DocumentView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         let local = payload.full_id.split_once(':').map_or(payload.full_id.as_str(), |(_, tail)| tail);
         let id = format!("vortex:{local}");
-        let mut ids = if payload.merge { cfg.projection.selected_ids.clone() } else { Vec::new() };
+        let mut ids = if payload.merge { cfg.snapshot.selected_ids.clone() } else { Vec::new() };
         if !ids.contains(&id) {
             ids.push(id);
         }
@@ -47,7 +47,7 @@ pub mod select_vortex {
 pub mod hover_vortex {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
-    use crate::artifacts::block3d::Block3dDefinition;
+    use crate::artifacts::block3d::Block3dSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -58,7 +58,7 @@ pub mod hover_vortex {
         pub full_id: Option<String>,
     }
 
-    pub fn handle(payload: &HoverVortex, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+    pub fn handle(payload: &HoverVortex, _doc: &DocumentView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Block3dConfigMutation::SetHoveredVortexFullId { full_id: payload.full_id.clone() }]))
     }
 }

@@ -3,8 +3,7 @@
 use crate::apps::procedural3d::config::Procedural3dConfig;
 use crate::artifacts::procedural3d::dsl::{
     PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT, PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT, PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT, PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT, PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT,
-    PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT,
-};
+    PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT};
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
@@ -34,8 +33,7 @@ use std::sync::Mutex;
 #[serde(rename_all = "camelCase")]
 struct ProgramContributionEntry {
     plugin_id: String,
-    contribution: Contribution,
-}
+    contribution: Contribution}
 
 /// 🔌️ Installs or refreshes contributed `flow.extension` manifests when the host pushes a new catalogue.
 pub fn sync_flow_extension_contributions(contributions_json: &str) {
@@ -76,8 +74,7 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: None,
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::One,
-        },
+            multiplicity: semio_framework::PortMultiplicity::One},
         semio_framework_plugin::MediaPortSpec {
             id: "geometry:out".into(),
             label: "Geometry".into(),
@@ -85,8 +82,7 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
             kind_id: Some("3d.mesh".into()),
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::Many,
-        },
+            multiplicity: semio_framework::PortMultiplicity::Many},
     ])
 }
 //#endregion 🔖️Io
@@ -129,8 +125,7 @@ pub fn example_snapshot(example_id: &str) -> Option<Procedural3dSnapshot> {
         PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE => Some(PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT),
         PROCEDURAL_EXAMPLE_RECTANGLE_WIRE => Some(PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT),
         PROCEDURAL_EXAMPLE_BOX_SHELL => Some(PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT),
-        _ => None,
-    };
+        _ => None};
     dsl.and_then(|text| Procedural3dSnapshot::parse_dsl(text).ok())
 }
 
@@ -152,8 +147,7 @@ pub fn preview_tolerance(lod_mode: &str) -> f64 {
     match lod_mode {
         "coarse" => 0.15,
         "fine" => 0.02,
-        _ => 0.05,
-    }
+        _ => 0.05}
 }
 
 pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
@@ -169,8 +163,7 @@ pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) ->
         "wireframe" => (true, "mesh"),
         "points" => (false, "mesh"),
         "shaded+edges" => (true, "mesh"),
-        _ => (false, "mesh"),
-    };
+        _ => (false, "mesh")};
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(active_utility));
         object.insert("gumballActive".into(), json!(!cfg.selected_node_ids.is_empty()));
@@ -195,8 +188,7 @@ fn merge_status_json(computing: Option<String>, preview_status: Option<String>) 
         }
         (Some(c), None) => Some(c),
         (None, Some(p)) => Some(p),
-        (None, None) => None,
-    }
+        (None, None) => None}
 }
 
 /// 👁️ Merges the session's live "still computing" flag with a fresh `preview_status_json` result.
@@ -319,8 +311,7 @@ fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
 fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
     let show_mode = match show_mode {
         "solid" | "shaded" | "shaded+edges" | "wireframe" | "points" => show_mode,
-        _ => "shaded",
-    };
+        _ => "shaded"};
     match show_mode {
         "wireframe" => {
             data.positions.clear();
@@ -335,8 +326,7 @@ fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &
             data.edge_positions.clear();
             data
         }
-        _ => data,
-    }
+        _ => data}
 }
 
 pub fn preview_status_json(eval_json: &str, fixture: &FlowFixture) -> Option<String> {
@@ -430,8 +420,7 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
                 extension_id: "brep".into(),
                 capability: "tessellate".into(),
                 request_json: json!({ "handle": handle, "tolerance": tolerance, "nodeHash": node_hash }).to_string(),
-                response_action: "flowTessellateResolve".into(),
-            });
+                response_action: "flowTessellateResolve".into()});
         }
     }
     effects
@@ -487,8 +476,7 @@ pub fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &FlowFix
                     "scale": [1.0, 1.0, 1.0],
                     "label": id,
                     "selected": selected,
-                    "hovered": hovered,
-                }));
+                    "hovered": hovered}));
             }
         }
     }
@@ -545,8 +533,7 @@ pub fn gumball_xform_kind(operation: &str) -> &'static str {
     match operation {
         "rotate" => "brep.xform.rotate",
         "scale" => "brep.xform.scale",
-        _ => "brep.xform.translate",
-    }
+        _ => "brep.xform.translate"}
 }
 
 /// 🪪️ Deterministic id for the transform neuron generated by dragging `source_id`'s gumball for `operation`.
@@ -578,16 +565,14 @@ pub fn gumball_translate_params_json(offset: [f64; 3]) -> String {
 pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
     json!({
         "axis": { "$schema": "vector", "x": axis[0], "y": axis[1], "z": axis[2] },
-        "angle": { "$schema": "number", "value": angle },
-    })
+        "angle": { "$schema": "number", "value": angle }})
     .to_string()
 }
 
 pub fn gumball_scale_params_json(factor: f64) -> String {
     json!({
         "factor": { "$schema": "number", "value": factor },
-        "center": { "$schema": "point", "x": 0.0, "y": 0.0, "z": 0.0 },
-    })
+        "center": { "$schema": "point", "x": 0.0, "y": 0.0, "z": 0.0 }})
     .to_string()
 }
 
@@ -650,6 +635,24 @@ pub fn register() {
 }
 //#endregion 🔖️DocumentHelpers
 
+
+/// 🔗 Registers in-process flow extension operators so eval + tessellate share one brep kernel.
+/// Safe to call repeatedly; installers are registered once and the host registry is rebuilt.
+pub fn ensure_linked_flow_extensions() {
+    use std::sync::Once;
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        flow::register_linked_flow_extension_installer("brep", semio_s_plugin_flow_extension_brep::register);
+        flow::register_linked_flow_extension_installer("math", semio_s_plugin_flow_extension_math::register);
+        flow::register_linked_flow_extension_installer("primitive", semio_s_plugin_flow_extension_primitive::register);
+        flow::register_linked_flow_extension_installer("logic", semio_s_plugin_flow_extension_logic::register);
+        flow::register_linked_flow_extension_installer("dictionary", semio_s_plugin_flow_extension_dictionary::register);
+        flow::register_linked_flow_extension_installer("list", semio_s_plugin_flow_extension_list::register);
+        flow::register_linked_flow_extension_installer("text", semio_s_plugin_flow_extension_text::register);
+        flow::sync_host_flow_extension_contributions("[]");
+    });
+}
+
 //#region 🧪️TestSupport
 /// 🧵️ `tessellate_geometry` (flow core brep geometry session) (and the flow-eval neuron kernel cache it sits behind)
 /// is a process-wide cache shared by every test in this ONE merged crate — before the crate
@@ -663,7 +666,8 @@ pub fn register() {
 pub(crate) mod test_support {
     use std::sync::{Mutex, MutexGuard};
 
-    
+    static TEST_SERIAL: Mutex<()> = Mutex::new(());
+
     pub fn lock() -> MutexGuard<'static, ()> {
         TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
@@ -679,21 +683,6 @@ mod tests {
 
     fn test_serial() -> MutexGuard<'static, ()> {
         test_support::lock()
-    }
-
-    fn ensure_linked_flow_extensions() {
-        use std::sync::Once;
-        static ONCE: Once = Once::new();
-        ONCE.call_once(|| {
-            flow::register_linked_flow_extension_installer("brep", semio_s_plugin_flow_extension_brep::register);
-            flow::register_linked_flow_extension_installer("math", semio_s_plugin_flow_extension_math::register);
-            flow::register_linked_flow_extension_installer("primitive", semio_s_plugin_flow_extension_primitive::register);
-            flow::register_linked_flow_extension_installer("logic", semio_s_plugin_flow_extension_logic::register);
-            flow::register_linked_flow_extension_installer("dictionary", semio_s_plugin_flow_extension_dictionary::register);
-            flow::register_linked_flow_extension_installer("list", semio_s_plugin_flow_extension_list::register);
-            flow::register_linked_flow_extension_installer("text", semio_s_plugin_flow_extension_text::register);
-            flow::sync_host_flow_extension_contributions("[]");
-        });
     }
 
     fn preview_payload_from_evaluated_fixture(fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
@@ -730,8 +719,7 @@ mod tests {
             up: Vec3::new(0.0, 0.0, 1.0),
             fov_y: config.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
             near: 0.1,
-            far: 1000.0,
-        };
+            far: 1000.0};
         let view_proj = camera.view_proj(0.6);
         let planes = frustum_planes(view_proj);
         let mut visible = 0usize;
@@ -870,8 +858,7 @@ pub fn register_pilot_languages() {
         grammar_path: Some(crate::artifacts::procedural3d::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural3d.document"),
-    });
+        hooks: dsl::passthrough_hooks("procedural.procedural3d.document")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural.procedural3d.op",
         extension: None,
@@ -880,8 +867,7 @@ pub fn register_pilot_languages() {
         grammar_path: Some(crate::artifacts::procedural3d::op::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural3d.op"),
-    });
+        hooks: dsl::passthrough_hooks("procedural.procedural3d.op")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural.procedural3d.diff",
         extension: None,
@@ -890,8 +876,7 @@ pub fn register_pilot_languages() {
         grammar_path: Some(crate::artifacts::procedural3d::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("procedural.procedural3d.diff"),
-    });
+        hooks: dsl::passthrough_hooks("procedural.procedural3d.diff")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural3d.pack",
         extension: None,
@@ -900,8 +885,7 @@ pub fn register_pilot_languages() {
         grammar_path: None,
         protocol: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural3d.pack"),
-    });
+        hooks: dsl::passthrough_hooks("procedural3d.pack")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural3d.spr",
         extension: None,
@@ -910,16 +894,14 @@ pub fn register_pilot_languages() {
         grammar_path: None,
         protocol: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural3d.spr"),
-    });
+        hooks: dsl::passthrough_hooks("procedural3d.spr")});
 }
 
 
 //#region 🔖️ArtifactEngine
 pub struct Procedural3dEngine {
     artifact: crate::artifacts::procedural3d::schema::Procedural3dArtifact,
-    snapshot: crate::artifacts::procedural3d::Procedural3dSnapshot,
-}
+    snapshot: crate::artifacts::procedural3d::Procedural3dSnapshot}
 
 impl Procedural3dEngine {
     pub fn new(snapshot: crate::artifacts::procedural3d::Procedural3dSnapshot) -> Self {

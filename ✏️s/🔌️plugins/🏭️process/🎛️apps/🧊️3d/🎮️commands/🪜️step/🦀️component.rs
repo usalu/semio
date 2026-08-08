@@ -2,7 +2,7 @@
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::engine::{capability_for_measure_kind, find_capability, insert_step_mutations, measure_for_capability, next_step_id, remove_step_mutations, validate_capability, validation_context_for_stock};
-use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Process3dDocument, ProcessStep, ProcessStepPatch, StepOrigin};
+use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, ProcessStepPatch, StepOrigin};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,8 +21,8 @@ pub mod add_step {
         pub position: Option<[f64; 3]>,
     }
 
-    pub fn handle(payload: &AddStep, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.projection;
+    pub fn handle(payload: &AddStep, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let fixture = doc.snapshot;
         let resolved = if let (Some(machine_id), Some(capability_id)) = (payload.machine_id.as_deref(), payload.capability_id.as_deref()) {
             find_capability(&fixture.workshop, machine_id, capability_id).map(|(machine, capability)| (machine.clone(), capability.clone()))
         } else {
@@ -58,9 +58,9 @@ pub mod remove_step {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let fixture = doc.snapshot;
+        let config = cfg.snapshot;
         match remove_step_mutations(fixture, &payload.id) {
             Some(operations) => {
                 let mut config_mutations = Vec::new();
@@ -83,9 +83,9 @@ pub mod remove_selected_step {
     #[dsl(keyword = "remove-selected-step")]
     pub struct RemoveSelectedStep {}
 
-    pub fn handle(_payload: &RemoveSelectedStep, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.projection;
-        match cfg.projection.selected_id.clone() {
+    pub fn handle(_payload: &RemoveSelectedStep, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let fixture = doc.snapshot;
+        match cfg.snapshot.selected_id.clone() {
             Some(id) => match remove_step_mutations(fixture, &id) {
                 Some(operations) => Ok(Emit { document_mutations: operations, config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }], ..Default::default() }),
                 None => Ok(Emit::default()),
@@ -107,8 +107,8 @@ pub mod move_step {
         pub index: usize,
     }
 
-    pub fn handle(payload: &MoveStep, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        if doc.projection.steps.iter().any(|step| step.id == payload.id) {
+    pub fn handle(payload: &MoveStep, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        if doc.snapshot.steps.iter().any(|step| step.id == payload.id) {
             Ok(Emit::mutations(vec![Process3dMutation::Steps { collection: CollectionMutation::Move { id: payload.id.clone(), to_index: payload.index } }]))
         } else {
             Ok(Emit::default())
@@ -128,8 +128,8 @@ pub mod update_step {
         pub step: ProcessStep,
     }
 
-    pub fn handle(payload: &UpdateStep, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        if doc.projection.steps.iter().any(|existing| existing.id == payload.step.id) {
+    pub fn handle(payload: &UpdateStep, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        if doc.snapshot.steps.iter().any(|existing| existing.id == payload.step.id) {
             let patch = ProcessStepPatch { label: Some(payload.step.label.clone()), enabled: Some(payload.step.enabled), measure: Some(payload.step.measure.clone()), origin: Some(payload.step.origin.clone()) };
             Ok(Emit::mutations(vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: payload.step.id.clone(), patch } }]))
         } else {
@@ -150,8 +150,8 @@ pub mod set_step_enabled {
         pub enabled: bool,
     }
 
-    pub fn handle(payload: &SetStepEnabled, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        if doc.projection.steps.iter().any(|step| step.id == payload.id) {
+    pub fn handle(payload: &SetStepEnabled, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        if doc.snapshot.steps.iter().any(|step| step.id == payload.id) {
             let patch = ProcessStepPatch { enabled: Some(payload.enabled), ..Default::default() };
             Ok(Emit::mutations(vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: payload.id.clone(), patch } }]))
         } else {

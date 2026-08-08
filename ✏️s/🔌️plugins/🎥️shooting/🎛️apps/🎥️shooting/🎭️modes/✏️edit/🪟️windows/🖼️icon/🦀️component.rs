@@ -5,7 +5,7 @@ use crate::apps::shooting::modes::edit::windows::icon::options;
 use crate::apps::shooting::terminology::ShootingLabels;
 use crate::apps::shooting::SHOOTING_PLAY_APP_ID;
 use crate::artifacts::shooting::engine::shooting_icon_render_request_json;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{build_icon_render_scene, IconRenderScene, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -37,12 +37,12 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -> Vec<WindowMeasure> {
-    vec![options::shot::measure(fixture, labels), options::format::measure(fixture, labels), options::shape::measure(fixture, labels)]
+pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
+    vec![options::shot::measure(snapshot, labels), options::format::measure(snapshot, labels), options::shape::measure(snapshot, labels)]
 }
 
-pub fn engagement(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowEngagement {
-    let shot = crate::artifacts::shooting::engine::active_shot(fixture);
+pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
+    let shot = crate::artifacts::shooting::engine::active_shot(snapshot);
     WindowEngagement {
         session_active: Some(true),
         options: None,
@@ -65,9 +65,9 @@ pub fn engagement(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowE
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &ShootingFixture, cfg: &ShootingConfig) -> UiNode {
-    let (request_json, footer) = match (crate::artifacts::shooting::engine::active_shot(fixture), crate::artifacts::shooting::engine::active_asset(fixture)) {
-        (Some(shot), Some(asset)) => (shooting_icon_render_request_json(fixture, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
+    let (request_json, footer) = match (crate::artifacts::shooting::engine::active_shot(snapshot), crate::artifacts::shooting::engine::active_asset(snapshot)) {
+        (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
     };
     build_icon_render_scene(SHOOTING_PLAY_SURFACE_ICON, SHOOTING_PLAY_APP_ID, IconRenderScene { request_json, footer, frame_json: None })

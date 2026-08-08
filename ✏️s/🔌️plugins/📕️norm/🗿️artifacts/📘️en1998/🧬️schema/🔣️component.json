@@ -1,0 +1,304 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1998/artifact.json",
+  "title": "En1998Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "seismicZone",
+    "groundType",
+    "importanceClass",
+    "structuralSystem",
+    "t1S",
+    "massT",
+    "vRdKn",
+    "driftMm",
+    "heightM",
+    "multipleResistingSystems",
+    "annex",
+    "enAGr",
+    "enGroundType",
+    "enSpectrumType",
+    "periodRatio",
+    "bridgeVRdKn",
+    "bearingDEdMm",
+    "bearingDRdMm",
+    "retrofitKnowledgeLevel",
+    "retrofitLimitState",
+    "retrofitEDKn",
+    "retrofitRKKn",
+    "retrofitGammaEl",
+    "siloHeightM",
+    "siloRadiusM",
+    "siloNRdKn",
+    "siloVEdKn",
+    "siloVRdKn",
+    "siloQNominal",
+    "tankHeightM",
+    "tankRadiusM",
+    "tankMassT",
+    "tankVRdKn",
+    "towerMEdKnm",
+    "towerMRdKnm",
+    "towerIsChimney",
+    "towerQNominal",
+    "towerMassT",
+    "foundationAreaM2",
+    "foundationPRdKpa",
+    "foundationHEdKn",
+    "foundationHRdKn",
+    "kFoundation",
+    "kSoil",
+    "wallHeightM",
+    "wallPhiDeg",
+    "wallSoilGammaKnM3",
+    "wallR",
+    "wallHRdKn"
+  ],
+  "properties": {
+    "seismicZone": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    },
+    "groundType": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "importanceClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "structuralSystem": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "t1S": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "massT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vRdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "driftMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "heightM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "multipleResistingSystems": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "enAGr": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "enGroundType": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "enSpectrumType": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "periodRatio": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeVRdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bearingDEdMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bearingDRdMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "retrofitKnowledgeLevel": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "retrofitLimitState": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "retrofitEDKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "retrofitRKKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "retrofitGammaEl": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloHeightM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloRadiusM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloNRdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloVEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloVRdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "siloQNominal": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tankHeightM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tankRadiusM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tankMassT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tankVRdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "towerMEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "towerMRdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "towerIsChimney": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "towerQNominal": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "towerMassT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "foundationAreaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "foundationPRdKpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "foundationHEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "foundationHRdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "kFoundation": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "kSoil": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wallHeightM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wallPhiDeg": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wallSoilGammaKnM3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wallR": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wallHRdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

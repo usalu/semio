@@ -1,7 +1,7 @@
 //! 🌳️ Trinity jack query AST.
 
 use serde::{Deserialize, Serialize};
-use crate::artifacts::jack::{GraphFixture, PropertyValue};
+use crate::artifacts::jack::{JackSnapshot, PropertyValue};
 
 /// 🌳️ Jack query abstract syntax tree.
 #[derive(Clone, Debug, PartialEq)]
@@ -77,7 +77,7 @@ pub struct QueryResult {
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub graph_fixture: Option<GraphFixture>,
+    pub graph_fixture: Option<JackSnapshot>,
 }
 
 impl QueryResult {
@@ -85,7 +85,7 @@ impl QueryResult {
         Self { kind: QueryResultKind::Table, columns, rows, graph_fixture: None }
     }
 
-    pub fn graph(columns: Vec<String>, graph_fixture: GraphFixture) -> Self {
+    pub fn graph(columns: Vec<String>, graph_fixture: JackSnapshot) -> Self {
         Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture: Some(graph_fixture) }
     }
 }

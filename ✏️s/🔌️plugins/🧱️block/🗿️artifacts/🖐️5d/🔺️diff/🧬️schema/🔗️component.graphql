@@ -1,0 +1,134 @@
+# 🧬️ Block5d diff schema — sparse field delta.
+
+type Block5dDiff {
+  artifact: Block5dArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  partKind: BlockKindIdentity @state(class: PERSISTENT)
+  part2d: Block5dPart2d @state(class: PERSISTENT)
+  part3d: Block5dPart3d @state(class: PERSISTENT)
+  representations: Block5dRepresentationsDelta @state(class: PERSISTENT)
+  gripKinds: Block5dGripKindsDelta @state(class: PERSISTENT)
+  grips: Block5dGripsDelta @state(class: PERSISTENT)
+  compatibility: Block5dCompatibilityDelta @state(class: PERSISTENT)
+  attributes: Block5dAttributesDelta @state(class: PERSISTENT)
+  authors: Block5dAuthorList @state(class: PERSISTENT)
+  camera2d: BlockCamera2d @state(class: PERSISTENT)
+  camera3d: BlockCamera3d @state(class: PERSISTENT)
+  meta: BlockMeta @state(class: PERSISTENT)
+  selectedIds: Block5dStringList @state(class: SHARED_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type BlockKindIdentity { _placeholder: Boolean }
+
+type Block5dPart2d { _placeholder: Boolean }
+
+type Block5dPart3d { _placeholder: Boolean }
+
+type BlockRepresentation { _placeholder: Boolean }
+
+type Block5dGripKind { _placeholder: Boolean }
+
+type Block5dGripTemplate { _placeholder: Boolean }
+
+type BlockCompatibilityRule { _placeholder: Boolean }
+
+type BlockAttribute { _placeholder: Boolean }
+
+type BlockAuthor { _placeholder: Boolean }
+
+type BlockCamera2d { _placeholder: Boolean }
+
+type BlockCamera3d { _placeholder: Boolean }
+
+type BlockMeta { _placeholder: Boolean }
+
+type Block5dStringList {
+  values: [String!]!
+}
+
+type Block5dAuthorList {
+  values: [BlockAuthor!]!
+}
+
+type Block5dRepresentationsDelta {
+  added: [BlockRepresentation!]!
+  removed: [String!]!
+  patched: [Block5dRepresentationsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block5dRepresentationsPatchEntry {
+  id: String!
+  patch: Block5dRepresentationsPatch!
+}
+
+type Block5dRepresentationsPatch {
+  replacement: BlockRepresentation
+}
+
+type Block5dGripKindsDelta {
+  added: [Block5dGripKind!]!
+  removed: [String!]!
+  patched: [Block5dGripKindsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block5dGripKindsPatchEntry {
+  id: String!
+  patch: Block5dGripKindsPatch!
+}
+
+type Block5dGripKindsPatch {
+  replacement: Block5dGripKind
+}
+
+type Block5dGripsDelta {
+  added: [Block5dGripTemplate!]!
+  removed: [String!]!
+  patched: [Block5dGripsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block5dGripsPatchEntry {
+  id: String!
+  patch: Block5dGripsPatch!
+}
+
+type Block5dGripsPatch {
+  replacement: Block5dGripTemplate
+}
+
+type Block5dCompatibilityDelta {
+  added: [BlockCompatibilityRule!]!
+  removed: [String!]!
+  patched: [Block5dCompatibilityPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block5dCompatibilityPatchEntry {
+  id: String!
+  patch: Block5dCompatibilityPatch!
+}
+
+type Block5dCompatibilityPatch {
+  replacement: BlockCompatibilityRule
+}
+
+type Block5dAttributesDelta {
+  added: [BlockAttribute!]!
+  removed: [String!]!
+  patched: [Block5dAttributesPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block5dAttributesPatchEntry {
+  id: String!
+  patch: Block5dAttributesPatch!
+}
+
+type Block5dAttributesPatch {
+  replacement: BlockAttribute
+}
+
+type Block5dArtifact { schema: String! }

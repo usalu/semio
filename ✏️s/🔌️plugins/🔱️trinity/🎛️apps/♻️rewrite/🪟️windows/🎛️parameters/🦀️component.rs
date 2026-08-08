@@ -2,7 +2,7 @@
 
 use crate::apps::rewrite::terminology::TrinityRewriteLabels;
 use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
-use crate::artifacts::rewrite::RewriteRuleModel;
+use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::artifacts::jack::PropertyValue;
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, UiFieldNode, UiNode, UiPresence, UiSectionNode};
 
@@ -20,7 +20,7 @@ impl ParameterKindLabel for crate::artifacts::rewrite::engine::ParameterSpec {
     }
 }
 
-pub(crate) fn render(state: &RewriteRuleModel, labels: &TrinityRewriteLabels) -> UiNode {
+pub(crate) fn render(state: &RewriteSnapshot, labels: &TrinityRewriteLabels) -> UiNode {
     let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
         return ui_text(Label::data("Invalid RHS"));
     };

@@ -8,21 +8,21 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1997::Document;
+use crate::artifacts::en1997::En1997Snapshot;
 
 /// 📄️ The `default` example document, handcrafted in the `.en1997` DSL — a shallow footing +
 /// pile worked example (bearing, sliding, settlement, pile axial, ground investigation depth)
 /// under the DE national annex, DA1-C1 design approach.
 pub const EN1997_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.en1997` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
-    <Document as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.en1997` DSL text into a `En1997Snapshot`.
+pub fn parse_dsl(text: &str) -> Result<En1997Snapshot, store::TextError> {
+    <En1997Snapshot as store::En1997SnapshotDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Document` back to `.en1997` DSL text.
-pub fn print_dsl(document: &Document) -> String {
-    store::DocumentDsl::print_dsl(document)
+/// 🖨️ Prints a `En1997Snapshot` back to `.en1997` DSL text.
+pub fn print_dsl(document: &En1997Snapshot) -> String {
+    store::En1997SnapshotDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&Document::default());
+        store::test_support::assert_dsl_round_trip(&En1997Snapshot::default());
     }
 
     #[test]

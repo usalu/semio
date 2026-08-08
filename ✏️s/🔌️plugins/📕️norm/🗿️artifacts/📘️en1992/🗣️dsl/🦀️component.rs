@@ -1,6 +1,6 @@
 //! 📜️ EN 1992 design of concrete structures — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::en1992::Document;
+use crate::artifacts::en1992::En1992Snapshot;
 
 /// 💧️ The liquid-retaining-fem-anchor example fixture, handcrafted in `en1992`'s DSL
 /// (`store::DocumentDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section

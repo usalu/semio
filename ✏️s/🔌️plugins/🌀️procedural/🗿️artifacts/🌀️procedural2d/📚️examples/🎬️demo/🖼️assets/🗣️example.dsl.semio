@@ -1,3 +1,23 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio procedural.procedural2d.dsl v1
+schema=flow.fixture
+camera {
+  x=0 y=0 zoom=1
+}
+widgets {
+  input-slider id=slider value=3 min=0 max=10 step=0.1
+  neuron id=rect neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]
+  params [key:TEXT value:BLOCK] {
+  }
+  output-preview id=preview expanded=[ ]
+  preview [key:TEXT value:BLOCK] {
+  }
+}
+layout={
+  preview=x=240 y=-40 rect=x=120 y=-40 slider=x=40 y=-40
+}
+synapses [id:TEXT wire:WIRE] {
+  s1 slider@number->rect@a
+  s2 rect@sum->preview
+}
+generations [id:TEXT name:TEXT values:MAP] {
+}

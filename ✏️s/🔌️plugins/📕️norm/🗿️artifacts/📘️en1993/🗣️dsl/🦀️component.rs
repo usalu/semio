@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1993::Document;
+use crate::artifacts::en1993::En1993Snapshot;
 
 /// 🔩️ The high-strength-connection example fixture, handcrafted in `en1993`'s DSL
 /// (`store::DocumentDsl`): an S460 high-strength steel member and bolted/welded connection

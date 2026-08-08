@@ -6,7 +6,7 @@
 //! `app_commands!` invocation.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
+use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,12 +16,11 @@ pub mod set_locale {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "locale")]
     pub struct SetLocale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

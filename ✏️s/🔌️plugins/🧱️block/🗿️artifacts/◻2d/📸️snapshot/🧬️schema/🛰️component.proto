@@ -1,0 +1,63 @@
+syntax = "proto3";
+package semio.s.block.block2d.snapshot;
+
+// 🧬️ Block2d snapshot schema — persistent fields only.
+
+message Block2dSnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  BlockKindIdentity node_kind = 2;
+  // @state persistent
+  Block2dPresentation presentation = 3;
+  // @state persistent
+  repeated Block2dHandleKind handle_kinds = 4;
+  // @state persistent
+  repeated Block2dHandleTemplate handles = 5;
+  // @state persistent
+  repeated BlockCompatibilityRule compatibility = 6;
+  // @state persistent
+  repeated BlockAttribute attributes = 7;
+  // @state persistent
+  repeated BlockAuthor authors = 8;
+  // @state persistent
+  BlockCamera2d camera2d = 9;
+  // @state persistent
+  BlockMeta meta = 10;
+}
+
+message BlockKindIdentity {
+  bool _placeholder = 1;
+}
+
+message Block2dPresentation {
+  bool _placeholder = 1;
+}
+
+message Block2dHandleKind {
+  bool _placeholder = 1;
+}
+
+message Block2dHandleTemplate {
+  bool _placeholder = 1;
+}
+
+message BlockCompatibilityRule {
+  bool _placeholder = 1;
+}
+
+message BlockAttribute {
+  bool _placeholder = 1;
+}
+
+message BlockAuthor {
+  bool _placeholder = 1;
+}
+
+message BlockCamera2d {
+  bool _placeholder = 1;
+}
+
+message BlockMeta {
+  bool _placeholder = 1;
+}

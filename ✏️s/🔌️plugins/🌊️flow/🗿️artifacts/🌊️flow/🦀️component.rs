@@ -1,16 +1,14 @@
 //! 🌊️ Flow artifact — the document entity this plugin's apps edit.
 //!
-//! Unlike most artifacts, `FlowFixture`'s fields, `Widget`/`SynapseSpec` variants and the
-//! `FLOW_DOCUMENT_SCHEMA` constant are NOT owned here — they live in the shared flow kernel crate
-//! ([`flow`], `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core`) because multiple apps compile
-//! against the same flow domain model. This component re-exports the app-facing surface so every sibling
-//! taxonomy node (`🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`) names one artifact-owned
-//! symbol instead of reaching into the kernel path directly.
+//! The persisted snapshot type is [`FlowSnapshot`] (this plugin). The framework crate
+//! `semio-framework-os-flow` still owns a separate `flow::FlowFixture` used by `FlowHost` and by
+//! other plugins (e.g. procedural) that embed a flow graph; conversions live on `FlowSnapshot`.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️Types
-pub use flow::{FlowFixture, FLOW_DOCUMENT_SCHEMA};
+pub use crate::artifacts::flow::snapshot::schema::FlowSnapshot;
+pub use flow::FLOW_DOCUMENT_SCHEMA;
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind
@@ -24,7 +22,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         component_kind: "flow".into(),
         dimension: "graph".into(),
         media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Flow },
+        media_type: MediaType {
+            class: MediaClass::Computation,
+            form: MediaForm::Flow,
+        },
         schema: "flow.document".into(),
         export_formats: vec![],
         import_formats: vec![],
@@ -47,8 +48,8 @@ mod tests {
     }
 
     #[test]
-    fn default_fixture_has_widgets() {
-        assert!(!FlowFixture::default().widgets.is_empty());
+    fn default_snapshot_has_widgets() {
+        assert!(!FlowSnapshot::default().widgets.is_empty());
     }
 }
 //#endregion 🧪️Tests

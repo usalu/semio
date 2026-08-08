@@ -1,0 +1,122 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1995/diff.json",
+  "title": "En1995Diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "En1995Artifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "mEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wMm3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fMK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fC0K": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "serviceClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "loadDuration": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "mCritKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aEfMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fVK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireDurationMin": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "sectionDepthMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aVertMS2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nCyclesBridge": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

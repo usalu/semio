@@ -12,11 +12,11 @@ pub use crate::artifacts::en1992::mutations::En1992Mutation;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1992::Document;
+    use crate::artifacts::en1992::En1992Snapshot;
 
     #[test]
     fn set_document_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&En1992Mutation::SetDocument { document: Document::default() });
+        store::test_support::assert_op_line_round_trip(&En1992Mutation::SetSnapshot { snapshot: Document::default() });
     }
 }
 //#endregion 🧪️Tests

@@ -31,7 +31,7 @@ mod tests {
     fn op_binary_round_trips_and_agrees_with_text() {
         let scene = default_remodel_scene();
         let operation = RemodelMutation::SetFeatureParams { params: scene.params.feature };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -43,11 +43,11 @@ mod tests {
         let initial = default_remodel_scene();
         let envelope = store::create_document_envelope("test/v1", "test", initial, None);
         let mut store = store::DocumentStore::new(envelope);
-        let mut feature_params = store.projection().expect("initial projection").params.feature;
+        let mut feature_params = store.snapshot().expect("initial projection").params.feature;
         feature_params.target_count = 12345;
         store.dispatch(store::DocumentCommand::Apply { mutations: vec![RemodelMutation::SetFeatureParams { params: feature_params }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 //#endregion 🧪️Tests

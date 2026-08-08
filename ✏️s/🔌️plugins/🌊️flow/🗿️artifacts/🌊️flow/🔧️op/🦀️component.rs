@@ -10,15 +10,17 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::FlowFixture;
-    use protocol::MutationDiff;
+    use crate::artifacts::flow::FlowSnapshot;
+    use protocol::{Mutation, MutationDiff};
 
     #[test]
     fn set_layout_inverse_restores_base() {
-        let base = FlowFixture::default();
+        let base = FlowSnapshot::default();
         let mutation = FlowMutation::SetLayout { entries: Vec::new() };
         let forward = mutation.diff(&base).apply(&base);
-        let restored = mutation.inverse(&base).iter().fold(forward, |projection, inverse| inverse.diff(&projection).apply(&projection));
+        let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| {
+            inverse.diff(&snapshot).apply(&snapshot)
+        });
         assert_eq!(restored, base);
     }
 }

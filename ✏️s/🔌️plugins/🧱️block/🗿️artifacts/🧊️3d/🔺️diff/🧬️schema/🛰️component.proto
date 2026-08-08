@@ -1,0 +1,191 @@
+syntax = "proto3";
+package semio.s.block.block3d.diff;
+
+// 🧬️ Block3d diff schema — sparse field delta.
+
+message Block3dDiff {
+  // @state persistent
+  optional Block3dArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional BlockKindIdentity object_kind = 3;
+  // @state persistent
+  optional Block3dRepresentationsDelta representations = 4;
+  // @state persistent
+  optional Block3dVortexKindsDelta vortex_kinds = 5;
+  // @state persistent
+  optional Block3dVorticesDelta vortices = 6;
+  // @state persistent
+  optional Block3dCompatibilityDelta compatibility = 7;
+  // @state persistent
+  optional Block3dAttributesDelta attributes = 8;
+  // @state persistent
+  optional Block3dAuthorList authors = 9;
+  // @state persistent
+  optional BlockCamera3d camera3d = 10;
+  // @state persistent
+  optional BlockMeta meta = 11;
+  // @state shared-ui
+  optional Block3dStringList selected_ids = 12;
+  // @state shared-ui
+  optional string active_representation_id = 13;
+  // @state shared-ui
+  optional Block3dStringList wanted_tags = 14;
+  // @state local-ui
+  optional string locale = 15;
+  // @state local-ui
+  optional Block3dWindowsList windows = 16;
+  // @state local-ui
+  optional string brush_vortex_kind_id = 17;
+  // @state local-ui
+  optional double brush_radius = 18;
+  // @state local-ui
+  optional bool brush_flip = 19;
+  // @state preview
+  optional Block3dBrushPreview brush_preview = 20;
+  // @state local-ui
+  optional BlockCamera3d camera = 21;
+  // @state preview
+  optional string hovered_vortex_full_id = 22;
+}
+
+message BlockKindIdentity {
+  bool _placeholder = 1;
+}
+
+message BlockRepresentation {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexKind {
+  bool _placeholder = 1;
+}
+
+message Block3dVortexTemplate {
+  bool _placeholder = 1;
+}
+
+message BlockCompatibilityRule {
+  bool _placeholder = 1;
+}
+
+message BlockAttribute {
+  bool _placeholder = 1;
+}
+
+message BlockAuthor {
+  bool _placeholder = 1;
+}
+
+message BlockCamera3d {
+  bool _placeholder = 1;
+}
+
+message BlockMeta {
+  bool _placeholder = 1;
+}
+
+message Block3dWindowView {
+  bool _placeholder = 1;
+}
+
+message Block3dBrushPreview {
+  bool _placeholder = 1;
+}
+
+message Block3dStringList {
+  repeated string values = 1;
+}
+
+message Block3dAuthorList {
+  repeated BlockAuthor values = 1;
+}
+
+message Block3dRepresentationsDelta {
+  repeated BlockRepresentation added = 1;
+  repeated string removed = 2;
+  repeated Block3dRepresentationsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block3dRepresentationsPatchEntry {
+  string id = 1;
+  Block3dRepresentationsPatch patch = 2;
+}
+
+message Block3dRepresentationsPatch {
+  optional BlockRepresentation replacement = 1;
+}
+
+message Block3dVortexKindsDelta {
+  repeated Block3dVortexKind added = 1;
+  repeated string removed = 2;
+  repeated Block3dVortexKindsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block3dVortexKindsPatchEntry {
+  string id = 1;
+  Block3dVortexKindsPatch patch = 2;
+}
+
+message Block3dVortexKindsPatch {
+  optional Block3dVortexKind replacement = 1;
+}
+
+message Block3dVorticesDelta {
+  repeated Block3dVortexTemplate added = 1;
+  repeated string removed = 2;
+  repeated Block3dVorticesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block3dVorticesPatchEntry {
+  string id = 1;
+  Block3dVorticesPatch patch = 2;
+}
+
+message Block3dVorticesPatch {
+  optional Block3dVortexTemplate replacement = 1;
+}
+
+message Block3dCompatibilityDelta {
+  repeated BlockCompatibilityRule added = 1;
+  repeated string removed = 2;
+  repeated Block3dCompatibilityPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block3dCompatibilityPatchEntry {
+  string id = 1;
+  Block3dCompatibilityPatch patch = 2;
+}
+
+message Block3dCompatibilityPatch {
+  optional BlockCompatibilityRule replacement = 1;
+}
+
+message Block3dAttributesDelta {
+  repeated BlockAttribute added = 1;
+  repeated string removed = 2;
+  repeated Block3dAttributesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block3dAttributesPatchEntry {
+  string id = 1;
+  Block3dAttributesPatch patch = 2;
+}
+
+message Block3dAttributesPatch {
+  optional BlockAttribute replacement = 1;
+}
+
+message Block3dWindowsList {
+  repeated Block3dWindowView values = 1;
+}
+
+message Block3dArtifact {
+  string schema = 1;
+}

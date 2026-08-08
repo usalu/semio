@@ -1,0 +1,54 @@
+// 🧬️ EN 1997 diff schema.
+syntax = "proto3";
+package semio.s.norm.en1997.diff;
+
+message En1997Diff {
+  // @state persistent
+  En1997Artifact artifact = 1;
+  // @state persistent
+  optional double v_ed_kn = 2;
+  // @state persistent
+  optional double h_ed_kn = 3;
+  // @state persistent
+  optional double footing_area_m2 = 4;
+  // @state persistent
+  optional double phi_deg = 5;
+  // @state persistent
+  optional double c_kpa = 6;
+  // @state persistent
+  optional double gamma_kn_m3 = 7;
+  // @state persistent
+  optional double b_m = 8;
+  // @state persistent
+  optional double d_f_m = 9;
+  // @state persistent
+  optional double e_s_mpa = 10;
+  // @state persistent
+  optional double nu = 11;
+  // @state persistent
+  optional double design_approach = 12;
+  // @state persistent
+  optional double annex = 13;
+  // @state persistent
+  optional double settlement_limit_mm = 14;
+  // @state persistent
+  optional double n_pile_ed_kn = 15;
+  // @state persistent
+  optional double alpha_s = 16;
+  // @state persistent
+  optional double pile_d_m = 17;
+  // @state persistent
+  optional double q_s_kpa = 18;
+  // @state persistent
+  optional double pile_l_m = 19;
+  // @state persistent
+  optional double q_b_kpa = 20;
+  // @state persistent
+  optional double pile_base_area_m2 = 21;
+  // @state persistent
+  optional uint32 pile_n_profiles = 22;
+  // @state persistent
+  optional double z_investigated_m = 23;
+  // @state shared-ui
+  optional uint32 selected_check_index = 24;
+}

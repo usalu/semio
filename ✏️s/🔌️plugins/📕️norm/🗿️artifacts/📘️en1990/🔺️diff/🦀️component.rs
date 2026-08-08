@@ -1,54 +1,79 @@
-//! 🔺️ EN 1990 artifact — the operation diff and its `MutationDiff` law.
-//!
-//! 📌️ Every norm artifact's sole mutation is a whole-document replace, so its diff is
-//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentMutation<D>`
-//! names as its `En1990Mutation::Diff`, with the `MutationDiff` impl (apply = "take the replacement,
-//! otherwise keep the projection"; absorb = "the later replacement wins") living beside it in
-//! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
-//! binding for this artifact and proves the law against this artifact's own `Document`.
-
+//! 🔺️ En1990 artifact — sparse field diff runtime.
 
 //#region 📖️SemioGrammar
-/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::en1990::Document;
+use crate::artifacts::en1990::schema::En1990Artifact;
+use crate::artifacts::en1990::En1990Snapshot;
+use protocol::MutationDiff;
 
-//#region 🔖️Types
-/// 🔺️ This artifact's concrete operation diff.
-pub type Diff = crate::document::DocumentDiff<Document>;
-//#endregion 🔖️Types
-
-//#region 🧪️Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::artifacts::en1990::op::En1990Mutation;
-    use protocol::{Mutation as _, MutationDiff};
-
-    #[test]
-    fn set_document_diff_replaces_the_whole_projection() {
-        let base = Document::default();
-        let mutation = En1990Mutation::SetDocument { document: Document::default() };
-        let diff: Diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base), Document::default());
-    }
-
-    #[test]
-    fn an_empty_diff_keeps_the_projection() {
-        let base = Document::default();
-        assert_eq!(Diff::default().apply(&base), base);
-    }
-
-    #[test]
-    fn absorb_keeps_the_later_replacement() {
-        let base = Document::default();
-        let mut diff = Diff::default();
-        diff.absorb(Diff { document: Some(Document::default()) });
-        assert_eq!(diff.apply(&base), Document::default());
+//#region 🔖️Apply
+impl En1990Diff {
+    pub fn apply_to_artifact(&self, artifact: &En1990Artifact) -> En1990Artifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(value) = self.g_k { next.g_k = value; }
+        if let Some(list) = &self.q_k { next.q_k = list.values.clone(); }
+        if let Some(value) = self.resistance_kn { next.resistance_kn = value; }
+        if let Some(value) = self.consequence_class { next.consequence_class = value; }
+        if let Some(value) = self.annex { next.annex = value; }
+        if let Some(value) = self.seismic_a_ed_kn { next.seismic_a_ed_kn = value; }
+        if let Some(value) = &self.selected_check_index {
+            next.selected_check_index = *value;
+        }
+        next
     }
 }
-//#endregion 🧪️Tests
+
+impl MutationDiff<En1990Snapshot> for En1990Diff {
+    fn apply(&self, snapshot: &En1990Snapshot) -> En1990Snapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(value) = self.g_k { next.g_k = value; }
+        if let Some(list) = &self.q_k { next.q_k = list.values.clone(); }
+        if let Some(value) = self.resistance_kn { next.resistance_kn = value; }
+        if let Some(value) = self.consequence_class { next.consequence_class = value; }
+        if let Some(value) = self.annex { next.annex = value; }
+        if let Some(value) = self.seismic_a_ed_kn { next.seismic_a_ed_kn = value; }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(g_k);
+        take!(q_k);
+        take!(resistance_kn);
+        take!(consequence_class);
+        take!(annex);
+        take!(seismic_a_ed_kn);
+        take!(selected_check_index);
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+pub fn diff_set_snapshot(snapshot: &En1990Snapshot) -> En1990Diff {
+    En1990Diff {
+        artifact: Some(Box::new(En1990Artifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Helpers

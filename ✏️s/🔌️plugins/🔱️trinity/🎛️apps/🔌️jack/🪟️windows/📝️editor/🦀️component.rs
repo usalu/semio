@@ -1,12 +1,12 @@
 //! 📝️ Trinity Jack app — Jack Query editor window (text editor render with tokens/diagnostics/completions).
 
 use crate::apps::jack::config::JackConfig;
-use crate::artifacts::jack::GraphFixture;
+use crate::artifacts::jack::JackSnapshot;
 use crate::core;
 use semio_framework_plugin::{build_text_editor_scene, text_identifier_occurrences_json, TextEditorScene, UiNode};
 use serde_json::json;
 
-pub(crate) fn render(surface_id: &str, controller_id: &str, fixture: &GraphFixture, cfg: &JackConfig) -> UiNode {
+pub(crate) fn render(surface_id: &str, controller_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiNode {
     let query = &cfg.jack_query;
     let graph = crate::apps::jack::graph_from_fixture_or_default(fixture);
     let cursor = cfg.editor_selection.as_ref().map_or(0, |selection| selection.end as usize);

@@ -4,8 +4,8 @@ use crate::apps::flow::commands::extension::FLOW_AUTOMATIONS;
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::flow_action;
 use crate::apps::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
-use crate::artifacts::flow::engine::{flow_widget_descriptor, flow_widget_drag_json, host_from_fixture};
-use crate::artifacts::flow::FlowFixture;
+use crate::artifacts::flow::engine::{flow_widget_descriptor, flow_widget_drag_json, host_from_snapshot};
+use crate::artifacts::flow::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{
     tree_item_with_action, tree_item_with_action_draggable, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -30,8 +30,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> UiNode {
-    let host = host_from_fixture(fixture, config, session);
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> UiNode {
+    let host = host_from_snapshot(fixture, config, session);
     let sections: Vec<Value> = host.catalogue_json().ok().and_then(|raw| serde_json::from_str(&raw).ok()).unwrap_or_default();
     let tree_sections: Vec<UiTreeSectionNode> = sections
         .iter()

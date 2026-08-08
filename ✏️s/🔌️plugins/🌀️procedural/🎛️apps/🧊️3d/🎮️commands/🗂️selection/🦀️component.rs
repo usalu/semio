@@ -16,8 +16,7 @@ pub mod set_selection {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "set-selection")]
     pub struct SetSelection {
-        pub node_ids: Vec<String>,
-    }
+        pub node_ids: Vec<String>}
 
     pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }]))
@@ -32,8 +31,7 @@ pub mod select_node {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "select-node")]
     pub struct SelectNode {
-        pub node_ids: Vec<String>,
-    }
+        pub node_ids: Vec<String>}
 
     pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }]))
@@ -48,8 +46,7 @@ pub mod set_hover {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "set-hover")]
     pub struct SetHover {
-        pub object_id: Option<String>,
-    }
+        pub object_id: Option<String>}
 
     pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetHover { node_id: payload.object_id.clone() }]))
@@ -79,8 +76,7 @@ pub mod world_select {
     #[dsl(keyword = "world-select")]
     pub struct WorldSelect {
         pub ids: Vec<String>,
-        pub merge: String,
-    }
+        pub merge: String}
 
     pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let mapped: Vec<String> = payload.ids.iter().map(|id| widget_id_from_instance_id(id).to_string()).collect();
@@ -97,8 +93,7 @@ pub mod world_hover {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "world-hover")]
     pub struct WorldHover {
-        pub id: Option<String>,
-    }
+        pub id: Option<String>}
 
     pub fn handle(payload: &WorldHover, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let resolved = payload.id.as_deref().map(|id| widget_id_from_instance_id(id).to_string());
@@ -114,8 +109,7 @@ pub mod set_selection_method {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "selection-method")]
     pub struct SetSelectionMethod {
-        pub method: String,
-    }
+        pub method: String}
 
     pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural3dConfigMutation::SetSelectionMethod { method: payload.method.clone() }]))

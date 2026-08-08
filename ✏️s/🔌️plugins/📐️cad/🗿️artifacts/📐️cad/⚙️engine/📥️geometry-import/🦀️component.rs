@@ -276,13 +276,41 @@ pub fn tessellate_object_mesh_from_fixture(kernel: &mut dyn BrepKernel, object: 
     tessellate_geometry_handle(kernel, &handle_id, &kind)
 }
 
+fn triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
+    let i0 = mesh.indices[triangle_index * 3] as usize;
+    let i1 = mesh.indices[triangle_index * 3 + 1] as usize;
+    let i2 = mesh.indices[triangle_index * 3 + 2] as usize;
+    let p0 = [mesh.positions[i0 * 3], mesh.positions[i0 * 3 + 1], mesh.positions[i0 * 3 + 2]];
+    let p1 = [mesh.positions[i1 * 3], mesh.positions[i1 * 3 + 1], mesh.positions[i1 * 3 + 2]];
+    let p2 = [mesh.positions[i2 * 3], mesh.positions[i2 * 3 + 1], mesh.positions[i2 * 3 + 2]];
+    let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+    let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+    let cross = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+    0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt()
+}
+
+/// 🧹 Drops zero-area triangles left by edge-first fan tessellation (duplicate/collinear samples).
+fn strip_degenerate_triangles(mesh: MeshData) -> MeshData {
+    if mesh.indices.len() < 3 {
+        return mesh;
+    }
+    let mut indices = Vec::with_capacity(mesh.indices.len());
+    for triangle_index in 0..(mesh.indices.len() / 3) {
+        if triangle_area(&mesh, triangle_index) > 1e-10 {
+            let base = triangle_index * 3;
+            indices.extend_from_slice(&mesh.indices[base..base + 3]);
+        }
+    }
+    MeshData { indices, ..mesh }
+}
+
 pub fn tessellate_geometry_handle(kernel: &mut dyn BrepKernel, handle_id: &str, kind: &str) -> Option<MeshData> {
     let handle = GeometryHandle(handle_id.into());
     if kind == "curve" {
         return curve_mesh_from_wire(kernel, &handle);
     }
     if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
-        let data = mesh_data_from_mesh_transfer(&mesh);
+        let data = strip_degenerate_triangles(mesh_data_from_mesh_transfer(&mesh));
         if data.indices.len() < 3 {
             return None;
         }
@@ -465,14 +493,9 @@ mod tests {
         assert!(mesh.positions.len() > 12);
         assert!(mesh.edge_positions.len() >= 6);
         assert_eq!(mesh.edge_positions.len() % 6, 0);
-        let mut degenerate = Vec::new();
         for triangle_index in 0..mesh.triangle_count() {
-            let area = mesh_triangle_area(&mesh, triangle_index);
-            if area <= 1e-10 {
-                degenerate.push((triangle_index, area));
-            }
+            assert!(mesh_triangle_area(&mesh, triangle_index) > 1e-10, "triangle {triangle_index} is degenerate");
         }
-        assert!(degenerate.is_empty(), "degenerate triangles={degenerate:?} tri_count={} positions={} edges={}", mesh.triangle_count(), mesh.positions.len(), mesh.edge_positions.len());
     }
 
     #[test]

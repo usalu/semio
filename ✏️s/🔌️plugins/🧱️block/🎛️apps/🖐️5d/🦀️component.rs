@@ -16,7 +16,7 @@ use crate::apps::block5d::modes::edit::windows::{board, world};
 use crate::apps::block5d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::block5d::terminology::block5d_labels;
 use crate::artifacts::block5d::op::Block5dMutation;
-use crate::artifacts::block5d::{artifact_kind, Block5dDefinition, BLOCK_5D_SCHEMA};
+use crate::artifacts::block5d::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
@@ -42,7 +42,7 @@ semio_framework_plugin::app_commands! {
     /// every action `create_block5d_app` declares. Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break. Every id/key pair here is IDENTICAL (the pre-migration
     /// `#[dsl(key)]` already used the camelCase action id, not kebab-case) — preserved verbatim.
-    pub enum Block5dCommand for Block5dDefinition, Block5dMutation, Block5dConfig, Block5dConfigMutation {
+    pub enum Block5dCommand for Block5dSnapshot, Block5dMutation, Block5dConfig, Block5dConfigMutation {
         "patchPartKind" as "patchPartKind" => patch_part_kind::PatchPartKind,
         "addGripKind" as "addGripKind" => add_grip_kind::AddGripKind,
         "removeGripKind" as "removeGripKind" => remove_grip_kind::RemoveGripKind,
@@ -62,7 +62,7 @@ semio_framework_plugin::app_commands! {
 pub struct Block5dPlayApp;
 
 impl DocumentApp for Block5dPlayApp {
-    type Projection = Block5dDefinition;
+    type Snapshot = Block5dSnapshot;
     type Mutation = Block5dMutation;
     type Config = Block5dConfig;
     type ConfigMutation = Block5dConfigMutation;
@@ -74,8 +74,8 @@ impl DocumentApp for Block5dPlayApp {
     const APP_ID: &'static str = BLOCK5D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
 
-    fn initial_projection() -> Block5dDefinition {
-        crate::artifacts::block5d::engine::empty_block5d_definition()
+    fn initial_snapshot() -> Block5dSnapshot {
+        crate::artifacts::block5d::engine::empty_block5d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -113,17 +113,17 @@ impl DocumentApp for Block5dPlayApp {
         }
     }
 
-    fn handle(command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block5dCommand, doc: &DocumentView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
-        let labels = block5d_labels(&cfg.projection.locale);
+    fn render(body_key: &str, doc: &DocumentView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
+        let labels = block5d_labels(&cfg.snapshot.locale);
         match body_key {
-            board::BLOCK5D_BODY_BOARD => board::render(doc.projection, labels),
-            world::BLOCK5D_BODY_WORLD => world::render(doc.projection, labels),
-            document_panel::BLOCK5D_BODY_DOCUMENT => document_panel::render(doc.projection, &cfg.projection.selected_ids, labels),
-            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.projection, labels),
+            board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels),
+            world::BLOCK5D_BODY_WORLD => world::render(doc.snapshot, labels),
+            document_panel::BLOCK5D_BODY_DOCUMENT => document_panel::render(doc.snapshot, &cfg.snapshot.selected_ids, labels),
+            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -133,7 +133,7 @@ impl DocumentApp for Block5dPlayApp {
     /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in
     /// `crate::artifacts::block5d::engine::block5d_io`. Falls through to the default whole-document
     /// pack export for every other port (`"document:out"`).
-    fn export_media(port: &str, doc: &DocumentView<'_, Block5dDefinition>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -143,10 +143,10 @@ impl DocumentApp for Block5dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
-            let bytes = store::DocumentPack::encode_pack(doc.projection);
+            let bytes = store::DocumentPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block5d::engine::puzzle5d_catalog_fragment(doc.projection);
+        let fragment = crate::artifacts::block5d::engine::puzzle5d_catalog_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
             assert!(printed.starts_with(command.command_id()), "row {} printed {printed:?}", command.command_id());
         }
@@ -289,7 +289,7 @@ mod tests {
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Block5dPlayApp>(create_block5d_app);
-        assert!(Block5dPlayApp.command_from_action("noSuchAction", None).is_err());
+        assert!(Block5dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
 
@@ -326,18 +326,18 @@ mod tests {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
         testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {}));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.grips.len(), 1);
         let grip_id = projection.grips[0].id.clone();
         testkit::dispatch(&mut app, Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: grip_id }));
-        assert_eq!(app.projection().expect("projection").grips.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").grips.len(), 0);
     }
 
     #[test]
     fn set_active_example_loads_forest_left_fixture() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.part_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(projection.grips.len(), 1);
     }
@@ -346,11 +346,11 @@ mod tests {
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
-        assert_eq!(app.projection().expect("projection").grip_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").grip_kinds.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 0);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").grip_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 1);
     }
 
     #[test]
@@ -380,7 +380,7 @@ mod tests {
     #[test]
     fn command_from_action_bridges_set_active_example() {
         let app = Block5dPlayApp;
-        assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest"));
+        assert!(matches!(Block5dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest"));
     }
 
     /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document

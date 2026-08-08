@@ -1,0 +1,34 @@
+# 🧬️ GIS map artifact schema — every field with its state class.
+
+type GisMapArtifact {
+  positions: [GisMapFeature!]! @state(class: PERSISTENT)
+  routes: [GisMapFeature!]! @state(class: PERSISTENT)
+  regions: [GisMapFeature!]! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  featureSelectionJson: String! @state(class: SHARED_UI)
+  layerVisibility: [GisMapBoolEntry!]! @state(class: SHARED_UI)
+  layerStrokeScale: [GisMapNumberEntry!]! @state(class: SHARED_UI)
+  cameraJson: String! @state(class: LOCAL_UI)
+  renderMode: String! @state(class: LOCAL_UI)
+  vectorStyle: String! @state(class: LOCAL_UI)
+  lodMode: String! @state(class: LOCAL_UI)
+  hoverJson: String! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  selectionMode: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type GisMapFeature {
+  id: String!
+  data: String!
+}
+
+type GisMapBoolEntry {
+  key: String!
+  value: Boolean!
+}
+
+type GisMapNumberEntry {
+  key: String!
+  value: Float!
+}

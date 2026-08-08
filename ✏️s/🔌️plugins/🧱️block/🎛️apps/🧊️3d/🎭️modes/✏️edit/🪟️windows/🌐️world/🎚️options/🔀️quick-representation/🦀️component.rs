@@ -2,11 +2,11 @@
 
 use crate::apps::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::apps::block3d::terminology::Block3dLabels;
-use crate::artifacts::block3d::Block3dDefinition;
+use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::json;
 
-pub fn measure(definition: &Block3dDefinition, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
+pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);
     let mut quick_items = vec![MeasureSelectItem { id: "all".into(), value: String::new(), label: labels.show_all.as_str().to_string() }];
     quick_items.extend(definition.representations.iter().map(|representation| MeasureSelectItem { id: representation.id.clone(), value: representation.id.clone(), label: representation.name.clone() }));

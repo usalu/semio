@@ -3,7 +3,7 @@
 
 use crate::apps::jack::config::JackConfigMutation;
 use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::GraphFixture;
+use crate::artifacts::jack::JackSnapshot;
 use crate::core;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::json;
@@ -11,7 +11,7 @@ use store::DocumentDsl;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
 /// failure yields an error result and no operations (no document mutation).
-pub(crate) fn run_jack_query(fixture: &GraphFixture, query: &str) -> (String, Vec<TrinityGraphMutation>) {
+pub(crate) fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Vec<TrinityGraphMutation>) {
     let graph = match crate::artifacts::jack::Graph::from_fixture(fixture.clone()) {
         Ok(graph) => graph,
         Err(error) => return (error_result_json(&error.to_string()), Vec::new()),
@@ -20,7 +20,7 @@ pub(crate) fn run_jack_query(fixture: &GraphFixture, query: &str) -> (String, Ve
         Ok(parsed) => parsed,
         Err(error) => return (error_result_json(&error), Vec::new()),
     };
-    match core::execute(&graph, &parsed) {
+    match crate::executor::execute(&graph, &parsed) {
         Ok((result, operations)) => (serde_json::to_string(&result).unwrap_or_default(), operations),
         Err(error) => (error_result_json(&error), Vec::new()),
     }
@@ -30,7 +30,7 @@ fn error_result_json(message: &str) -> String {
     json!({ "error": message }).to_string()
 }
 
-pub(crate) fn run_query(fixture: &GraphFixture, query: &Option<String>, current_query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     let resolved = query.as_deref().filter(|value| !value.trim().is_empty()).map_or_else(|| current_query.to_string(), str::to_string);
     let (result_json, operations) = run_jack_query(fixture, &resolved);
     Ok(Emit {
@@ -40,7 +40,7 @@ pub(crate) fn run_query(fixture: &GraphFixture, query: &Option<String>, current_
     })
 }
 
-pub(crate) fn load_example_query(fixture: &GraphFixture, query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+pub(crate) fn load_example_query(fixture: &JackSnapshot, query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     let (result_json, operations) = run_jack_query(fixture, query);
     Ok(Emit { document_mutations: operations, config_mutations: vec![JackConfigMutation::SetQuery { value: query.to_string() }, JackConfigMutation::SetResult { value: result_json }], ..Default::default() })
 }
@@ -61,7 +61,7 @@ pub(crate) fn preset_query(preset_id: &str) -> &'static str {
 }
 
 pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
-    match fixture_dsl_for_preset(example_id).and_then(|dsl| GraphFixture::parse_dsl(dsl).ok()) {
+    match fixture_dsl_for_preset(example_id).and_then(|dsl| JackSnapshot::parse_dsl(dsl).ok()) {
         Some(next) => {
             let query = preset_query(example_id).to_string();
             let (result_json, _) = run_jack_query(&next, &query);

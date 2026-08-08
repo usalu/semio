@@ -1,8 +1,8 @@
 //! 🏔️ GIS 3D play app command — vertical exaggeration, the terrain's one editable document property.
 
 use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
-use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
+use crate::artifacts::gisterrain::op::GisTerrainMutation;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +20,8 @@ pub mod set_exaggeration {
         pub exaggeration: f64,
     }
 
-    pub fn handle(payload: &SetExaggeration, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
-        Ok(Emit::amend(vec![Gis3dTerrainMutation::SetExaggeration { exaggeration: payload.exaggeration }], GIS3D_EXAGGERATION_COALESCE_KEY))
+    pub fn handle(payload: &SetExaggeration, _doc: &DocumentView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+        Ok(Emit::amend(vec![GisTerrainMutation::SetExaggeration { exaggeration: payload.exaggeration }], GIS3D_EXAGGERATION_COALESCE_KEY))
     }
 }
 //#endregion 🔖️SetExaggeration
@@ -37,7 +37,7 @@ mod tests {
     #[test]
     fn seeds_exaggeration_from_the_terrain_fixture() {
         let app = app();
-        assert_eq!(app.projection().expect("projection").exaggeration, 1.5);
+        assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5);
     }
 
     /// 🧪️ A slider drag is many `setExaggeration` ticks sharing one coalesce key: they fold into ONE
@@ -48,9 +48,9 @@ mod tests {
         for value in [2.0, 2.5, 3.0] {
             dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: value }));
         }
-        assert_eq!(app.projection().expect("projection").exaggeration, 3.0);
+        assert_eq!(app.snapshot().expect("projection").exaggeration, 3.0);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").exaggeration, 1.5, "one coalesced edit: undo restores the fixture exaggeration");
+        assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5, "one coalesced edit: undo restores the fixture exaggeration");
     }
 
     #[test]

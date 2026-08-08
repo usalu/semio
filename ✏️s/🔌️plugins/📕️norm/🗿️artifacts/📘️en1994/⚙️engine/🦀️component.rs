@@ -1,6 +1,6 @@
 //! ⚙️ EN 1994 design of composite steel and concrete structures — headless compute (constitutional: engine).
 
-use crate::artifacts::en1994::Document;
+use crate::artifacts::en1994::En1994Snapshot;
 use crate::artifacts::en1994::mutations::En1994Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, QuantityKind};
 
@@ -247,45 +247,53 @@ pub fn check_full_composite(
 // #region 🔖️Session
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1994 artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent En1994 artifact engine — owns the artifact; every transition is a mutation.
 pub struct En1994Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1994::schema::En1994Artifact,
+    snapshot: En1994Snapshot,
 }
 
 impl En1994Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: En1994Snapshot) -> Self {
+        let artifact = crate::artifacts::en1994::schema::En1994Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> En1994Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1994Engine {
-    type Projection = Document;
-    type Mutation = En1994Mutation;
-    type Diff = crate::artifacts::en1994::diff::Diff;
+    type Artifact = crate::artifacts::en1994::schema::En1994Artifact;
+    type Snapshot = En1994Snapshot;
+    type Mutation = crate::artifacts::en1994::mutations::En1994Mutation;
+    type Diff = crate::artifacts::en1994::diff::En1994Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = protocol::Mutation::diff(mutation, &self.snapshot);
+        self.snapshot = vcs::apply_mutation(&self.snapshot, mutation);
+        self.artifact = crate::artifacts::en1994::schema::En1994Artifact::from_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        protocol::Mutation::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
 
 pub type Host = NormHost<En1994Family>;
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
     check_full_composite(
         document.m_ed_knm,
         document.v_ed_kn,
@@ -315,14 +323,14 @@ pub fn evaluate(document: &Document) -> CheckReport {
 pub struct En1994Family;
 
 impl NormFamily for En1994Family {
-    type Document = Document;
+    type Document = En1994Snapshot;
     type Mutation = En1994Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1994
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &En1994Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
@@ -432,7 +440,7 @@ mod tests {
 
     #[test]
     fn evaluate_runs_all_parts() {
-        let report = evaluate(&Document::default());
+        let report = evaluate(&En1994Snapshot::default());
         assert_eq!(report.checks.len(), 7);
     }
 }
@@ -443,7 +451,7 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1994.document",
         extension: Some("en1994"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1994Snapshot,
         grammar: Some(crate::artifacts::en1993::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1993::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1993::pack::COMPONENT_PROTOCOL_SEMIO),

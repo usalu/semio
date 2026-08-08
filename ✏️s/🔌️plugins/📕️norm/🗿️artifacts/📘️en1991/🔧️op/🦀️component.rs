@@ -2,7 +2,7 @@
 //!
 //! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
 //! (`crate::document::SetDocumentMutation<D>`) so this slot only needs to bind that generic operation to
-//! `crate::artifacts::en1991::Document`.
+//! `crate::artifacts::en1991::En1991Snapshot`.
 
 
 //#region 📖️SemioGrammar
@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1991::Document;
+use crate::artifacts::en1991::En1991Snapshot;
 
 pub use crate::artifacts::en1991::mutations::En1991Mutation;
 

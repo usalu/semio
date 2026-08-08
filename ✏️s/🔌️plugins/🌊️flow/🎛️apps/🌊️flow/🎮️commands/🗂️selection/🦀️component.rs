@@ -6,7 +6,7 @@
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{focus_selection_camera, host_operations, sync_host_selection_domains, widget_id};
-use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
+use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,15 +16,14 @@ pub mod delete_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let nodes = config.selected_node_ids.clone();
         let edges = config.selected_edge_ids.clone();
         let handles = config.selected_handle_ids.clone();
-        let operations = host_operations(doc.projection, config, session, |host| {
+        let operations = host_operations(doc.snapshot, config, session, |host| {
             sync_host_selection_domains(host, &nodes, &edges, &handles);
             if !host.has_selection() {
                 return false;
@@ -45,12 +44,11 @@ pub mod select_all {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "select-all")]
     pub struct SelectAll {}
 
-    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        let config = cfg.projection;
-        let ids: Vec<String> = doc.projection.widgets.iter().map(widget_id).map(str::to_string).collect();
+    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        let config = cfg.snapshot;
+        let ids: Vec<String> = doc.snapshot.widgets.iter().map(widget_id).map(str::to_string).collect();
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: ids, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]))
     }
 }
@@ -61,11 +59,10 @@ pub mod focus_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "focus-selection")]
     pub struct FocusSelection {}
 
-    pub fn handle(_payload: &FocusSelection, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        match focus_selection_camera(doc.projection, cfg.projection, session) {
+    pub fn handle(_payload: &FocusSelection, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        match focus_selection_camera(doc.snapshot, cfg.snapshot, session) {
             Some(camera) => Ok(Emit::config(vec![FlowConfigMutation::SetCamera { camera }])),
             None => Ok(Emit::default()),
         }
@@ -78,14 +75,13 @@ pub mod set_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-selection")]
     pub struct SetSelection {
         pub ids: Vec<String>,
         pub edge_ids: Vec<String>,
         pub handle_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: payload.ids.clone(), edge_ids: payload.edge_ids.clone(), handle_ids: payload.handle_ids.clone() }]))
     }
 }
@@ -96,12 +92,11 @@ pub mod select_node {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "select-node")]
     pub struct SelectNode {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.node_id.clone()], edge_ids: Vec::new(), handle_ids: Vec::new() }]))
     }
 }
@@ -112,12 +107,11 @@ pub mod node_graph_select {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "node-graph-select")]
     pub struct NodeGraphSelect {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: payload.node_ids.clone(), edge_ids: Vec::new(), handle_ids: Vec::new() }]))
     }
 }
@@ -128,10 +122,9 @@ pub mod clear_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "clear-selection")]
     pub struct ClearSelection {}
 
-    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() }]))
     }
 }
@@ -143,11 +136,10 @@ pub mod graph_pointer_down {
 
     /// 🖱️ A bare pointer-down on empty canvas — drops the NODE selection only.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "graph-pointer-down")]
     pub struct GraphPointerDown {}
 
-    pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]))
     }
 }
@@ -158,16 +150,15 @@ pub mod context_menu_at {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "context-menu-at")]
     pub struct ContextMenuAt {
         pub id: String,
     }
 
-    pub fn handle(payload: &ContextMenuAt, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &ContextMenuAt, _doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         if payload.id.is_empty() {
             return Ok(Emit::default());
         }
-        let config = cfg.projection;
+        let config = cfg.snapshot;
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.id.clone()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]))
     }
 }
@@ -184,7 +175,7 @@ mod tests {
     fn selection_is_config_state_and_emits_no_document_mutations() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::SetSelection(set_selection::SetSelection { ids: vec!["slider".into()], edge_ids: Vec::new(), handle_ids: Vec::new() }));
-        assert!(result.document_mutations.is_empty(), "selection must not produce document operations");
+        assert!(result.mutations.is_empty(), "selection must not produce document operations");
     }
 
     #[test]
@@ -202,11 +193,11 @@ mod tests {
     #[test]
     fn delete_selection_action_removes_selected_synapses() {
         let mut app = flow_app_with_registry();
-        let before = app.projection().expect("projection").synapses.len();
+        let before = app.snapshot().expect("snapshot").synapses.len();
         dispatch_with_registry(&mut app, FlowCommand::SetSelection(set_selection::SetSelection { ids: Vec::new(), edge_ids: vec!["s1".into()], handle_ids: Vec::new() }));
         let result = dispatch_with_registry(&mut app, FlowCommand::DeleteSelection(delete_selection::DeleteSelection {}));
-        let after = app.projection().expect("projection");
-        assert!(!result.document_mutations.is_empty(), "deleteSelection must emit operations for an edge");
+        let after = app.snapshot().expect("snapshot");
+        assert!(!result.mutations.is_empty(), "deleteSelection must emit operations for an edge");
         assert!(!after.synapses.iter().any(|synapse| synapse.id == "s1"), "synapse s1 must be removed");
         assert_eq!(after.synapses.len(), before - 1);
     }
@@ -215,7 +206,7 @@ mod tests {
     fn context_menu_at_with_a_blank_id_is_a_no_operation() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: String::new() }));
-        assert!(result.document_mutations.is_empty());
+        assert!(result.mutations.is_empty());
         assert!(!render(&mut app, FLOW_PLAY_BODY_MAIN).contains(r#""selection":["#), "a blank id must leave the selection untouched (and empty)");
     }
 }

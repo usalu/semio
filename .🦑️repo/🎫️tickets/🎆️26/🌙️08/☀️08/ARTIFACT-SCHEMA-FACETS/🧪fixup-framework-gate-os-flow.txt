@@ -1,3 +1,8 @@
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+447 -     Codec(#[from] neural_engine::EvalError),
 447 +     Codec(#[from] EvalError),
     |
 
@@ -15,6 +20,6 @@ note: but type `FlowExtensionRegistryState` is only usable at visibility `pub(se
    = note: `#[warn(private_interfaces)]` on by default
 
 warning: `semio-framework-os-flow` (lib) generated 129 warnings (run `cargo fix --lib -p semio-framework-os-flow` to apply 126 suggestions)
-    Finished `dev` profile [unoptimized] target(s) in 15.06s
+    Finished `dev` profile [unoptimized] target(s) in 0.56s
 warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
 note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

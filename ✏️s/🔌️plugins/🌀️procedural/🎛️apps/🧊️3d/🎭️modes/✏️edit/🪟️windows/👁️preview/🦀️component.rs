@@ -28,8 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         document_projection_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new(),
-    }
+        capabilities: Vec::new()}
 }
 
 /// 👁️ Preview shading mode for the world-3d window.
@@ -45,8 +44,7 @@ pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Optio
             MeasureSelectItem { id: "procedural3d-measure-show-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
             MeasureSelectItem { id: "procedural3d-measure-show-points".into(), value: "points".into(), label: "Points".into() },
         ],
-        on_change: procedural_action("setShowMode", None),
-    }
+        on_change: procedural_action("setShowMode", None)}
 }
 
 /// 🎚️ Shared preview-window chrome measures (show-mode toggle + sun group) — reused by both preview
@@ -69,8 +67,7 @@ pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, sess
             "evalLen": eval_json.len(),
             "meshesLen": meshes_json.len(),
             "instancesLen": instances_json.len(),
-            "evalHead": eval_json.chars().take(240).collect::<String>(),
-        });
+            "evalHead": eval_json.chars().take(240).collect::<String>()});
         Some(match base {
             Some(existing) => match serde_json::from_str::<serde_json::Value>(&existing) {
                 Ok(mut value) => {
@@ -79,10 +76,8 @@ pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, sess
                     }
                     value.to_string()
                 }
-                _ => debug_value.to_string(),
-            },
-            None => debug_value.to_string(),
-        })
+                _ => debug_value.to_string()},
+            None => debug_value.to_string()})
     };
     build_world_3d_scene(
         PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,

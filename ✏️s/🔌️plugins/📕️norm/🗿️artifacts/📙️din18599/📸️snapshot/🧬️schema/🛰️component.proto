@@ -1,0 +1,31 @@
+syntax = "proto3";
+package semio.s.norm.din18599.snapshot;
+
+message Din18599Snapshot {
+  // @state persistent
+  string use_class = 1;
+  // @state persistent
+  double heated_area_m2 = 2;
+  // @state persistent
+  uint32 occupants = 3;
+  // @state persistent
+  double h_t = 4;
+  // @state persistent
+  double h_v = 5;
+  // @state persistent
+  string climate = 6;
+  // @state persistent
+  double internal_gains_w_m2 = 7;
+  // @state persistent
+  double solar_gains_kwh = 8;
+  // @state persistent
+  double system_losses_kwh = 9;
+  // @state persistent
+  double renewable_kwh = 10;
+  // @state persistent
+  double annual_limit_kwh = 11;
+  // @state persistent
+  string energy_carrier = 12;
+  // @state persistent
+  double reference_q_p_kwh = 13;
+}

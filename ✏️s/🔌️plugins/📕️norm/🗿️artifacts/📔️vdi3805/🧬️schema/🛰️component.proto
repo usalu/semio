@@ -1,0 +1,27 @@
+syntax = "proto3";
+package semio.s.norm.vdi3805.artifact;
+
+// 🧬️ Vdi3805 artifact schema — every field with its state class.
+
+message Vdi3805Artifact {
+  // @state persistent
+  string manufacturer_file = 1;
+  // @state persistent
+  string catalog = 2;
+  // @state persistent
+  map<string, string> edition_profile = 3;
+  // @state persistent
+  string correction_as_of = 4;
+  // @state persistent
+  bool strict_mode = 5;
+  // @state persistent
+  string index = 6;
+  // @state persistent
+  map<string, string> geometry = 7;
+  // @state persistent
+  map<string, string> curves = 8;
+  // @state persistent
+  string limits = 9;
+  // @state shared-ui
+  optional uint32 selected_check_index = 10;
+}

@@ -3,7 +3,7 @@
 pub mod patch_node_kind {
     use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
     use crate::artifacts::block2d::op::Block2dMutation;
-    use crate::artifacts::block2d::Block2dDefinition;
+    use crate::artifacts::block2d::Block2dSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -14,8 +14,8 @@ pub mod patch_node_kind {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchNodeKind, doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-        let mut node_kind = doc.projection.node_kind.clone();
+    pub fn handle(payload: &PatchNodeKind, doc: &DocumentView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+        let mut node_kind = doc.snapshot.node_kind.clone();
         match payload.field.as_str() {
             "name" => node_kind.name = payload.value.clone(),
             "label" => node_kind.label = payload.value.clone(),

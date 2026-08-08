@@ -1,0 +1,215 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1992/snapshot.json",
+  "title": "En1992Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "annex",
+    "mEdKnm",
+    "vEdKn",
+    "fCk",
+    "bMm",
+    "dMm",
+    "aSMm2",
+    "fYk",
+    "rhoL",
+    "nEdKn",
+    "pKn",
+    "aCMm2",
+    "useFem",
+    "spanM",
+    "udlKnM",
+    "fireRating",
+    "providedAxisDistanceMm",
+    "bridgeSigmaCMpa",
+    "bridgeDeltaSigmaSMpa",
+    "tightnessClass",
+    "hdOverH",
+    "liquidSigmaSMpa",
+    "liquidRhoPEff",
+    "liquidFCtEffMpa",
+    "liquidESMpa",
+    "liquidSRMaxMm",
+    "anchorHEfMm",
+    "anchorCracked",
+    "anchorFUkMpa",
+    "anchorFYkMpa",
+    "anchorASMm2",
+    "anchorDMm",
+    "anchorC1Mm",
+    "anchorNEdKn",
+    "anchorVEdKn"
+  ],
+  "properties": {
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "mEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fCk": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "dMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aSMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fYk": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "rhoL": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "pKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aCMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "useFem": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "spanM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "udlKnM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireRating": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "providedAxisDistanceMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeSigmaCMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "bridgeDeltaSigmaSMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tightnessClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "hdOverH": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "liquidSigmaSMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "liquidRhoPEff": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "liquidFCtEffMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "liquidESMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "liquidSRMaxMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorHEfMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorCracked": {
+      "type": "boolean",
+      "x-semio-state": "persistent"
+    },
+    "anchorFUkMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorFYkMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorASMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorDMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorC1Mm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorNEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "anchorVEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    }
+  }
+}

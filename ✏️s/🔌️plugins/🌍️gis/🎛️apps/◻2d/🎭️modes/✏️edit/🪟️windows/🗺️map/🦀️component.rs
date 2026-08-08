@@ -4,7 +4,7 @@ use crate::apps::gis2d::config::Gis2dConfig;
 use crate::apps::gis2d::terminology::Gis2dPlayLabels;
 use crate::apps::gis2d::{GIS2D_PLAY_APP_ID, GIS_MAP_LAYER_IDS};
 use crate::artifacts::gismap::engine::gis_map_descriptor_json;
-use crate::artifacts::gismap::GisMapDocument;
+use crate::artifacts::gismap::GisMapSnapshot;
 use framework_surface::tiled_map::clamp_map_layer_weight;
 use semio_framework_plugin::{build_tiled_map_scene, LocalizedLabel, SurfaceKind, TiledMapScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
@@ -82,7 +82,7 @@ fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     scene.vector_tile_url_template = format!("{base}/vt/{{z}}/{{x}}/{{y}}.pbf");
 }
 
-pub fn render(document: &GisMapDocument, cfg: &Gis2dConfig) -> UiNode {
+pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
     let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();

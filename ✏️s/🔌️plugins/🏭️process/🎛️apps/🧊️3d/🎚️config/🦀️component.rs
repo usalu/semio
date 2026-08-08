@@ -22,6 +22,7 @@ pub const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "process3dcfg")]
+#[dsl(id = "process3d.config")]
 #[dsl(layout = "lines")]
 pub struct Process3dConfig {
     /// 👁️ Was `Process3dRuntime::selected_id`.
@@ -338,7 +339,7 @@ mod tests {
     fn process3d_config_dsl_and_pack_round_trip() {
         use store::DocumentPack;
         let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(3), sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
-        store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_round_trip(&config);
         let bytes = config.encode_pack();
         assert_eq!(Process3dConfig::decode_pack(&bytes).expect("decode"), config);
     }
@@ -370,18 +371,18 @@ mod tests {
     #[test]
     fn process3d_config_op_text_round_trips_every_variant() {
         let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(2), active_utility_id: "cut".into(), ..Process3dConfig::default() };
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::Snapshot { config: Box::new(config) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: Some("stock".into()) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: None });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetHoveredId { value: Some("step-0".into()) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: Some(3) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: None });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetEngagementInput { value: "cut".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetActiveUtility { utility_id: "cut".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetContributions { json: "[]".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::Snapshot { config: Box::new(config) });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: Some("stock".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: None });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetHoveredId { value: Some("step-0".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: Some(3) });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: None });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetEngagementInput { value: "cut".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetActiveUtility { utility_id: "cut".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetContributions { json: "[]".into() });
     }
 
     #[test]

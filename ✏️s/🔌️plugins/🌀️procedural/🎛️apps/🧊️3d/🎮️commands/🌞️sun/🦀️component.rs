@@ -32,8 +32,7 @@ pub mod set_sun_azimuth {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "sun-azimuth")]
     pub struct SetSunAzimuth {
-        pub value: f64,
-    }
+        pub value: f64}
 
     pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let mut sun = cfg.snapshot.sun();
@@ -50,8 +49,7 @@ pub mod set_sun_elevation {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "sun-elevation")]
     pub struct SetSunElevation {
-        pub value: f64,
-    }
+        pub value: f64}
 
     pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let mut sun = cfg.snapshot.sun();
@@ -68,8 +66,7 @@ pub mod set_sun_intensity {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "sun-intensity")]
     pub struct SetSunIntensity {
-        pub value: f64,
-    }
+        pub value: f64}
 
     pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let mut sun = cfg.snapshot.sun();

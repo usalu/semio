@@ -67,6 +67,7 @@ semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️produc
 # 🔌️ `PortMultiplicity` isn't re-exported by `semio-framework-plugin` (WORKFLOWS-END-TO-END-TYPED-PORTS
 # port recipe) — a direct dependency on the core crate is the minimal fix, mirroring `shooting`.
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 serde.workspace = true
 serde_json.workspace = true
 

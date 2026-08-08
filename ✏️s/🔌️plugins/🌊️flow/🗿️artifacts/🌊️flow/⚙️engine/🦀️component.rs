@@ -1,4 +1,4 @@
-//! ⚙️ Flow artifact — headless compute over the `FlowFixture` projection (constitutional: engine).
+//! ⚙️ Flow artifact — headless compute over the `FlowSnapshot` projection (constitutional: engine).
 //!
 //! Everything here is pure over `flow` types (`FlowHost`, `Widget`, `DagFixture`) plus the app's
 //! view `FlowConfig`, and takes no label (`FlowPlayLabels`) parameter — labels are app chrome. The rule
@@ -8,7 +8,7 @@
 
 use crate::apps::flow::config::FlowConfig;
 use crate::artifacts::flow::op::FlowMutation;
-use crate::artifacts::flow::FlowFixture;
+use crate::artifacts::flow::FlowSnapshot;
 use flow::{
     dag::{DagDrawLod, DagFixture},
     flow_fixture_operations, flow_host_with_session,
@@ -30,12 +30,25 @@ pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 //#endregion 🔖️Constants
 
 //#region 🔖️Register
-/// 🗂️ Registers `FlowFixture`'s pack↔dsl codec under `FLOW_DOCUMENT_SCHEMA` so `framework/sync`'s folder
+/// 🗂️ Registers `FlowSnapshot`'s pack↔dsl codec under `FLOW_DOCUMENT_SCHEMA` so `framework/sync`'s folder
 /// endpoints and any other schema-string-keyed caller can print/parse flow documents. Called from the
 /// plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::flow::FlowPlayApp>(crate::artifacts::flow::FLOW_DOCUMENT_SCHEMA);
+}
+
+static FLOW_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 🧬️ Registers this artifact's fifteen schema leaves with the framework table.
+pub fn register_artifact_schema() {
+    let registry = FLOW_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::flow::schema::flow_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -46,8 +59,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::flow::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::flow::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("flow.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -76,8 +89,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::flow::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::flow::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("flow.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -119,8 +132,8 @@ pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowConfig) {
 
 /// 🏗️ Rebuilds the stateful `FlowHost` from the document projection + view config + eval session — the
 /// single entry point every command handler and every window renderer goes through.
-pub fn host_from_fixture(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> FlowHost {
-    let mut host = flow_host_with_session(fixture, session);
+pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> FlowHost {
+    let mut host = flow_host_with_session(&fixture.to_fixture(), session);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
     host
@@ -128,12 +141,23 @@ pub fn host_from_fixture(fixture: &FlowFixture, config: &FlowConfig, session: &F
 
 /// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowMutation`s —
 /// returns an empty vec when `mutate` reports "nothing changed".
-pub fn host_operations(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
-    let mut host = host_from_fixture(fixture, config, session);
+/// 🌉️ Diffs two snapshots into plugin `FlowMutation`s via the framework host bridge.
+pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
+    flow::flow_fixture_operations(&before.to_fixture(), &after.to_fixture())
+        .into_iter()
+        .map(crate::artifacts::flow::mutations::from_framework_mutation)
+        .collect()
+}
+
+pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
+    let mut host = host_from_snapshot(snapshot, config, session);
     if !mutate(&mut host) {
         return Vec::new();
     }
-    flow_fixture_operations(fixture, &host.fixture)
+    flow::flow_fixture_operations(&snapshot.to_fixture(), &host.fixture)
+        .into_iter()
+        .map(crate::artifacts::flow::mutations::from_framework_mutation)
+        .collect()
 }
 
 /// 🧵️ The `HostEffect` that arms/continues the off-main-thread `flowEvalTick` chain.
@@ -157,11 +181,11 @@ pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges:
 }
 
 /// 🔍️ The camera that frames the current node selection, or `None` when nothing is selected.
-pub fn focus_selection_camera(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> Option<CameraJson> {
+pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> Option<CameraJson> {
     if config.selected_node_ids.is_empty() {
         return None;
     }
-    let mut host = host_from_fixture(fixture, config, session);
+    let mut host = host_from_snapshot(fixture, config, session);
     host.dag.set_viewport(1280, 800, 1.0);
     host.dag.set_selection(&config.selected_node_ids);
     host.focus_selection_camera(1.2)
@@ -289,15 +313,63 @@ mod tests {
     }
 
     #[test]
-    fn host_from_fixture_deletes_edge_selected_by_synapse_domain() {
+    fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
         let config = FlowConfig::default();
-        let fixture = FlowFixture::default();
+        let fixture = FlowSnapshot::default();
         let session = FlowEvalSession::new();
-        let mut host = host_from_fixture(&fixture, &config, &session);
+        let mut host = host_from_snapshot(&fixture, &config, &session);
         sync_host_selection_domains(&mut host, &[], &["s1".into()], &[]);
-        assert!(host.has_selection(), "s1 must resolve through host_from_fixture edge map");
+        assert!(host.has_selection(), "s1 must resolve through host_from_snapshot edge map");
         host.delete_selection().expect("deleteSelection");
         assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔹ArtifactEngine
+/// ⚙️ Stateful artifact engine owning the full `FlowArtifact` plus cached snapshot.
+pub struct FlowEngine {
+    artifact: crate::artifacts::flow::schema::FlowArtifact,
+    snapshot: crate::artifacts::flow::FlowSnapshot,
+}
+
+impl FlowEngine {
+    /// Seeds the engine from a persisted snapshot.
+    pub fn new(snapshot: crate::artifacts::flow::FlowSnapshot) -> Self {
+        let artifact = crate::artifacts::flow::schema::FlowArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+
+    /// Consumes the engine and returns its persisted snapshot.
+    pub fn into_snapshot(self) -> crate::artifacts::flow::FlowSnapshot {
+        self.snapshot
+    }
+}
+
+impl protocol::ArtifactEngine for FlowEngine {
+    type Artifact = crate::artifacts::flow::schema::FlowArtifact;
+    type Snapshot = crate::artifacts::flow::FlowSnapshot;
+    type Mutation = crate::artifacts::flow::mutations::FlowMutation;
+    type Diff = crate::artifacts::flow::diff::FlowDiff;
+
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
+    }
+}
+//#endregion 🔹ArtifactEngine

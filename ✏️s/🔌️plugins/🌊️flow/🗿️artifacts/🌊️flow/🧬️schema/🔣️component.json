@@ -1,0 +1,211 @@
+{
+  "$id": "https://semio.tech/schema/s/flow/flow/artifact.json",
+  "title": "FlowArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "camera",
+    "widgets",
+    "synapses",
+    "layout",
+    "selectedNodeIds",
+    "selectedEdgeIds",
+    "selectedHandleIds",
+    "previewOffNodeIds",
+    "lodMode",
+    "proximityDistance",
+    "gridVisible",
+    "gridSnapEnabled",
+    "gridFactor",
+    "catalogueSectionsJson",
+    "automationEnabledJson",
+    "contributionsJson",
+    "generationJson",
+    "locale"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "persistent"
+    },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Widget"
+      },
+      "x-semio-state": "persistent"
+    },
+    "synapses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SynapseSpec"
+      },
+      "x-semio-state": "persistent"
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WidgetLayout"
+      },
+      "x-semio-state": "persistent"
+    },
+    "selectedNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedEdgeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedHandleIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "previewOffNodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "proximityDistance": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "gridVisible": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "catalogueSectionsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "automationEnabledJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "generationJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    }
+  }
+}

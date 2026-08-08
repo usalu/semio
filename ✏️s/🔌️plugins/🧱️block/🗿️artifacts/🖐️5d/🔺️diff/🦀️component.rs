@@ -1,6 +1,11 @@
-//! 🔺️ Block 5D artifact — the operation diff and its `MutationDiff` law, plus the id-keyed collection
-//! diff plumbing shared with `🔧️op`'s `backwards()` (split out of the old constitutional `op` crate).
+//! 🔺️ Block 5D artifact — sparse field-delta diff codec and apply/absorb.
 
+pub use super::schema::*;
+
+use crate::artifacts::block5d::schema::Block5dArtifact;
+use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dSnapshot};
+use crate::{BlockAttribute, BlockCompatibilityRule, BlockRepresentation};
+use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -8,170 +13,179 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-use crate::artifacts::block5d::{Block5dDefinition, Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
-use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
-
-// #region 🔖️Collections
-pub(crate) trait Block5dHasId {
-    fn id(&self) -> &str;
-}
-impl Block5dHasId for BlockRepresentation {
-    fn id(&self) -> &str {
-        &self.id
+//#region 🔖️Apply
+fn apply_identified_delta<T: Clone>(
+    items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)],
+    reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str,
+) -> Vec<T> {
+    let mut next = items.to_vec();
+    for id in removed { next.retain(|item| id_of(item) != id); }
+    for item in added {
+        if let Some(pos) = next.iter().position(|entry| id_of(entry) == id_of(item)) { next[pos] = item.clone(); }
+        else { next.push(item.clone()); }
     }
-}
-impl Block5dHasId for Block5dGripKind {
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-impl Block5dHasId for Block5dGripTemplate {
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-impl Block5dHasId for BlockCompatibilityRule {
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-impl Block5dHasId for BlockAttribute {
-    fn id(&self) -> &str {
-        &self.key
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Block5dCollectionDiff<T> {
-    pub removed: Vec<String>,
-    pub set: Vec<(usize, T)>,
-}
-
-/// 🧩️ Manual (not derived) `Default` — `#[derive(Default)]` on a generic struct bounds every type
-/// parameter by `Default`, even though `Vec<(usize, T)>` never needs it.
-impl<T> Default for Block5dCollectionDiff<T> {
-    fn default() -> Self {
-        Self { removed: Vec::new(), set: Vec::new() }
-    }
-}
-
-fn apply_block5d_collection_diff<T: Block5dHasId + Clone>(items: &mut Vec<T>, removed: &[String], set: &[(usize, T)]) {
-    for id in removed {
-        items.retain(|item| item.id() != id);
-    }
-    for (index, item) in set {
-        if let Some(pos) = items.iter().position(|entry| entry.id() == item.id()) {
-            items[pos] = item.clone();
-        } else {
-            items.insert((*index).min(items.len()), item.clone());
+    for (id, replacement) in patched {
+        if let (Some(pos), Some(value)) = (next.iter().position(|entry| id_of(entry) == id), replacement) {
+            next[pos] = value.clone();
         }
+    }
+    if let Some(order) = reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|item| (id_of(&item).to_string(), item)).collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order { if let Some(item) = by_id.remove(id) { ordered.push(item); } }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
+}
+
+macro_rules! apply_delta {
+    ($items:expr, $delta:expr, $id:expr) => {{
+        let patched: Vec<_> = $delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
+        apply_identified_delta($items, &$delta.removed, &$delta.added, &patched, &$delta.reordered, $id)
+    }};
+}
+
+impl Block5dDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &Block5dArtifact) -> Block5dArtifact {
+        if let Some(replacement) = &self.artifact { return (**replacement).clone(); }
+        let mut next = artifact.clone();
+        if let Some(v) = &self.schema { next.schema = v.clone(); }
+        if let Some(v) = &self.part_kind { next.part_kind = v.clone(); }
+        if let Some(v) = &self.part_2d { next.part_2d = v.clone(); }
+        if let Some(v) = &self.part_3d { next.part_3d = v.clone(); }
+        if let Some(d) = &self.representations { next.representations = apply_delta!(&next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
+        if let Some(d) = &self.grip_kinds { next.grip_kinds = apply_delta!(&next.grip_kinds, d, |i: &Block5dGripKind| i.id.as_str()); }
+        if let Some(d) = &self.grips { next.grips = apply_delta!(&next.grips, d, |i: &Block5dGripTemplate| i.id.as_str()); }
+        if let Some(d) = &self.compatibility { next.compatibility = apply_delta!(&next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
+        if let Some(d) = &self.attributes { next.attributes = apply_delta!(&next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
+        if let Some(list) = &self.authors { next.authors = list.values.clone(); }
+        if let Some(v) = &self.camera2d { next.camera2d = v.clone(); }
+        if let Some(v) = &self.camera3d { next.camera3d = v.clone(); }
+        if let Some(v) = &self.meta { next.meta = v.clone(); }
+        if let Some(list) = &self.selected_ids { next.selected_ids = list.values.clone(); }
+        if let Some(v) = &self.locale { next.locale = v.clone(); }
+        next
     }
 }
 
-/// 🔍️ Reused by `🔧️op`'s `Mutation::inverse` to look up a row's pre-operation state.
-pub(crate) fn block5d_index_of<T: Block5dHasId>(items: &[T], id: &str) -> Option<usize> {
-    items.iter().position(|item| item.id() == id)
-}
-// #endregion 🔖️Collections
-
-// #region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Block5dDiff {
-    pub document: Option<Block5dDefinition>,
-    pub part_kind: Option<BlockKindIdentity>,
-    pub part_2d: Option<Block5dPart2d>,
-    pub part_3d: Option<Block5dPart3d>,
-    pub representations: Block5dCollectionDiff<BlockRepresentation>,
-    pub grip_kinds: Block5dCollectionDiff<Block5dGripKind>,
-    pub grips: Block5dCollectionDiff<Block5dGripTemplate>,
-    pub compatibility: Block5dCollectionDiff<BlockCompatibilityRule>,
-    pub attributes: Block5dCollectionDiff<BlockAttribute>,
-    pub authors: Option<Vec<BlockAuthor>>,
-    pub camera2d: Option<BlockCamera2d>,
-    pub camera3d: Option<BlockCamera3d>,
-    pub meta: Option<BlockMeta>,
-}
-
-fn block5d_diff_absorb(diff: &mut Block5dDiff, other: Block5dDiff) {
-    if other.document.is_some() {
-        *diff = Block5dDiff { document: other.document, ..Default::default() };
-        return;
-    }
-    if other.part_kind.is_some() {
-        diff.part_kind = other.part_kind;
-    }
-    if other.part_2d.is_some() {
-        diff.part_2d = other.part_2d;
-    }
-    if other.part_3d.is_some() {
-        diff.part_3d = other.part_3d;
-    }
-    diff.representations.removed.extend(other.representations.removed);
-    diff.representations.set.extend(other.representations.set);
-    diff.grip_kinds.removed.extend(other.grip_kinds.removed);
-    diff.grip_kinds.set.extend(other.grip_kinds.set);
-    diff.grips.removed.extend(other.grips.removed);
-    diff.grips.set.extend(other.grips.set);
-    diff.compatibility.removed.extend(other.compatibility.removed);
-    diff.compatibility.set.extend(other.compatibility.set);
-    diff.attributes.removed.extend(other.attributes.removed);
-    diff.attributes.set.extend(other.attributes.set);
-    if other.authors.is_some() {
-        diff.authors = other.authors;
-    }
-    if other.camera2d.is_some() {
-        diff.camera2d = other.camera2d;
-    }
-    if other.camera3d.is_some() {
-        diff.camera3d = other.camera3d;
-    }
-    if other.meta.is_some() {
-        diff.meta = other.meta;
-    }
-}
-
-impl MutationDiff<Block5dDefinition> for Block5dDiff {
-    fn apply(&self, projection: &Block5dDefinition) -> Block5dDefinition {
-        if let Some(document) = &self.document {
-            return document.clone();
-        }
-        let mut next = projection.clone();
-        if let Some(part_kind) = &self.part_kind {
-            next.part_kind = part_kind.clone();
-        }
-        if let Some(part_2d) = &self.part_2d {
-            next.part_2d = part_2d.clone();
-        }
-        if let Some(part_3d) = &self.part_3d {
-            next.part_3d = part_3d.clone();
-        }
-        apply_block5d_collection_diff(&mut next.representations, &self.representations.removed, &self.representations.set);
-        apply_block5d_collection_diff(&mut next.grip_kinds, &self.grip_kinds.removed, &self.grip_kinds.set);
-        apply_block5d_collection_diff(&mut next.grips, &self.grips.removed, &self.grips.set);
-        apply_block5d_collection_diff(&mut next.compatibility, &self.compatibility.removed, &self.compatibility.set);
-        apply_block5d_collection_diff(&mut next.attributes, &self.attributes.removed, &self.attributes.set);
-        if let Some(authors) = &self.authors {
-            next.authors = authors.clone();
-        }
-        if let Some(camera2d) = &self.camera2d {
-            next.camera2d = camera2d.clone();
-        }
-        if let Some(camera3d) = &self.camera3d {
-            next.camera3d = camera3d.clone();
-        }
-        if let Some(meta) = &self.meta {
-            next.meta = meta.clone();
-        }
+impl MutationDiff<Block5dSnapshot> for Block5dDiff {
+    fn apply(&self, snapshot: &Block5dSnapshot) -> Block5dSnapshot {
+        if let Some(replacement) = &self.artifact { return replacement.to_snapshot(); }
+        let mut next = snapshot.clone();
+        if let Some(v) = &self.schema { next.schema = v.clone(); }
+        if let Some(v) = &self.part_kind { next.part_kind = v.clone(); }
+        if let Some(v) = &self.part_2d { next.part_2d = v.clone(); }
+        if let Some(v) = &self.part_3d { next.part_3d = v.clone(); }
+        if let Some(d) = &self.representations { next.representations = apply_delta!(&next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
+        if let Some(d) = &self.grip_kinds { next.grip_kinds = apply_delta!(&next.grip_kinds, d, |i: &Block5dGripKind| i.id.as_str()); }
+        if let Some(d) = &self.grips { next.grips = apply_delta!(&next.grips, d, |i: &Block5dGripTemplate| i.id.as_str()); }
+        if let Some(d) = &self.compatibility { next.compatibility = apply_delta!(&next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
+        if let Some(d) = &self.attributes { next.attributes = apply_delta!(&next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
+        if let Some(list) = &self.authors { next.authors = list.values.clone(); }
+        if let Some(v) = &self.camera2d { next.camera2d = v.clone(); }
+        if let Some(v) = &self.camera3d { next.camera3d = v.clone(); }
+        if let Some(v) = &self.meta { next.meta = v.clone(); }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        block5d_diff_absorb(self, other);
+        if other.artifact.is_some() { *self = other; return; }
+        macro_rules! take { ($f:ident) => { if other.$f.is_some() { self.$f = other.$f; } }; }
+        take!(schema); take!(part_kind); take!(part_2d); take!(part_3d); take!(authors);
+        take!(camera2d); take!(camera3d); take!(meta); take!(selected_ids); take!(locale);
+        fn absorb_col<D>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
+            if let Some(src) = incoming {
+                match target { Some(dst) => merge(dst, src), None => *target = Some(src) }
+            }
+        }
+        macro_rules! merge_delta {
+            ($field:ident) => {
+                absorb_col(&mut self.$field, other.$field, |dst, src| {
+                    dst.removed.extend(src.removed); dst.added.extend(src.added); dst.patched.extend(src.patched);
+                    if src.reordered.is_some() { dst.reordered = src.reordered; }
+                });
+            };
+        }
+        merge_delta!(representations); merge_delta!(grip_kinds); merge_delta!(grips);
+        merge_delta!(compatibility); merge_delta!(attributes);
     }
 }
-// #endregion 🔖️Diff
+//#endregion 🔖️Apply
+
+//#region 🔖️DiffHelpers
+pub(crate) trait Block5dHasId { fn id(&self) -> &str; }
+impl Block5dHasId for BlockRepresentation { fn id(&self) -> &str { &self.id } }
+impl Block5dHasId for Block5dGripKind { fn id(&self) -> &str { &self.id } }
+impl Block5dHasId for Block5dGripTemplate { fn id(&self) -> &str { &self.id } }
+impl Block5dHasId for BlockCompatibilityRule { fn id(&self) -> &str { &self.id } }
+impl Block5dHasId for BlockAttribute { fn id(&self) -> &str { &self.key } }
+pub(crate) fn block5d_index_of<T: Block5dHasId>(items: &[T], id: &str) -> Option<usize> {
+    items.iter().position(|item| item.id() == id)
+}
+
+pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &Block5dSnapshot) -> Block5dDiff {
+    let mut delta = Block5dRepresentationsDelta { added: vec![item.clone()], ..Default::default() };
+    if block5d_index_of(&base.representations, &item.id).is_none() {
+        let mut order: Vec<_> = base.representations.iter().map(|e| e.id.clone()).collect();
+        order.insert(index.min(order.len()), item.id.clone());
+        delta.reordered = Some(order);
+    }
+    Block5dDiff { representations: Some(delta), ..Default::default() }
+}
+pub fn diff_remove_representation(id: String) -> Block5dDiff {
+    Block5dDiff { representations: Some(Block5dRepresentationsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
+}
+pub fn diff_set_grip_kind(index: usize, item: Block5dGripKind, base: &Block5dSnapshot) -> Block5dDiff {
+    let mut delta = Block5dGripKindsDelta { added: vec![item.clone()], ..Default::default() };
+    if block5d_index_of(&base.grip_kinds, &item.id).is_none() {
+        let mut order: Vec<_> = base.grip_kinds.iter().map(|e| e.id.clone()).collect();
+        order.insert(index.min(order.len()), item.id.clone());
+        delta.reordered = Some(order);
+    }
+    Block5dDiff { grip_kinds: Some(delta), ..Default::default() }
+}
+pub fn diff_remove_grip_kind(id: String) -> Block5dDiff {
+    Block5dDiff { grip_kinds: Some(Block5dGripKindsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
+}
+pub fn diff_set_grip(index: usize, item: Block5dGripTemplate, base: &Block5dSnapshot) -> Block5dDiff {
+    let mut delta = Block5dGripsDelta { added: vec![item.clone()], ..Default::default() };
+    if block5d_index_of(&base.grips, &item.id).is_none() {
+        let mut order: Vec<_> = base.grips.iter().map(|e| e.id.clone()).collect();
+        order.insert(index.min(order.len()), item.id.clone());
+        delta.reordered = Some(order);
+    }
+    Block5dDiff { grips: Some(delta), ..Default::default() }
+}
+pub fn diff_remove_grip(id: String) -> Block5dDiff {
+    Block5dDiff { grips: Some(Block5dGripsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
+}
+pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, base: &Block5dSnapshot) -> Block5dDiff {
+    let mut delta = Block5dCompatibilityDelta { added: vec![rule.clone()], ..Default::default() };
+    if block5d_index_of(&base.compatibility, &rule.id).is_none() {
+        let mut order: Vec<_> = base.compatibility.iter().map(|e| e.id.clone()).collect();
+        order.insert(index.min(order.len()), rule.id.clone());
+        delta.reordered = Some(order);
+    }
+    Block5dDiff { compatibility: Some(delta), ..Default::default() }
+}
+pub fn diff_remove_compatibility_rule(id: String) -> Block5dDiff {
+    Block5dDiff { compatibility: Some(Block5dCompatibilityDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
+}
+pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block5dSnapshot) -> Block5dDiff {
+    let mut delta = Block5dAttributesDelta { added: vec![attribute.clone()], ..Default::default() };
+    if block5d_index_of(&base.attributes, &attribute.key).is_none() {
+        let mut order: Vec<_> = base.attributes.iter().map(|e| e.key.clone()).collect();
+        order.insert(index.min(order.len()), attribute.key.clone());
+        delta.reordered = Some(order);
+    }
+    Block5dDiff { attributes: Some(delta), ..Default::default() }
+}
+pub fn diff_remove_attribute(key: String) -> Block5dDiff {
+    Block5dDiff { attributes: Some(Block5dAttributesDelta { removed: vec![key], ..Default::default() }), ..Default::default() }
+}
+pub fn diff_set_snapshot(snapshot: Block5dSnapshot) -> Block5dDiff {
+    Block5dDiff { artifact: Some(Box::new(Block5dArtifact::from_snapshot(snapshot))), ..Default::default() }
+}
+//#endregion 🔖️DiffHelpers

@@ -1,0 +1,205 @@
+syntax = "proto3";
+package semio.s.shooting.shooting.diff;
+
+// 🧬️ Shooting diff schema — sparse field delta over the artifact.
+
+message ShootingDiff {
+  // @state persistent
+  optional ShootingArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional ShootingAssetsDelta assets = 3;
+  // @state persistent
+  optional ShootingSavedCamerasDelta saved_cameras = 4;
+  // @state persistent
+  optional ShootingSceneLighting scene = 5;
+  // @state persistent
+  optional ShootingShotsDelta shots = 6;
+  // @state persistent
+  optional string active_shot_id = 7;
+  // @state persistent
+  optional string active_asset_id = 8;
+  // @state shared-ui
+  optional ShootingStringList selected_shot_ids = 9;
+  // @state shared-ui
+  optional ShootingStringList selected_asset_ids = 10;
+  // @state shared-ui
+  optional string active_utility_id = 11;
+  // @state local-ui
+  optional string default_shot_format = 12;
+  // @state local-ui
+  optional string default_shot_shape = 13;
+  // @state local-ui
+  optional string default_asset_format = 14;
+  // @state local-ui
+  optional string selection_method = 15;
+  // @state local-ui
+  optional bool center_model = 16;
+  // @state local-ui
+  optional uint32 fit_revision = 17;
+  // @state local-ui
+  optional string camera_draft_label = 18;
+  // @state local-ui
+  optional ShootingCamera camera = 19;
+  // @state local-ui
+  optional string locale = 20;
+  // @state preview
+  optional string hovered_asset_id = 21;
+}
+
+message ShootingStringList {
+  repeated string values = 1;
+}
+
+message ShootingAssetsDelta {
+  repeated ShootingAsset added = 1;
+  repeated string removed = 2;
+  repeated ShootingAssetPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message ShootingShotsDelta {
+  repeated ShootingShot added = 1;
+  repeated string removed = 2;
+  repeated ShootingShotPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message ShootingSavedCamerasDelta {
+  repeated ShootingSavedCamera added = 1;
+  repeated string removed = 2;
+  repeated ShootingSavedCameraPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message ShootingAssetPatchEntry {
+  string id = 1;
+  ShootingAssetPatch patch = 2;
+}
+
+message ShootingShotPatchEntry {
+  string id = 1;
+  ShootingShotPatch patch = 2;
+}
+
+message ShootingSavedCameraPatchEntry {
+  string id = 1;
+  ShootingSavedCameraPatch patch = 2;
+}
+
+message ShootingAssetPatch {
+  optional string name = 1;
+  optional string url = 2;
+  repeated double origin = 3;
+  repeated double orientation = 4;
+  repeated double scale = 5;
+}
+
+message ShootingShotPatch {
+  optional string label = 1;
+  optional uint32 width = 2;
+  optional uint32 height = 3;
+  optional string format = 4;
+  optional string shape = 5;
+}
+
+message ShootingSavedCameraPatch {
+  optional string label = 1;
+  optional ShootingCamera camera = 2;
+}
+
+message ShootingArtifact {
+  string schema = 1;
+  repeated ShootingAsset assets = 2;
+  repeated ShootingSavedCamera saved_cameras = 3;
+  ShootingSceneLighting scene = 4;
+  repeated ShootingShot shots = 5;
+  string active_shot_id = 6;
+  string active_asset_id = 7;
+  repeated string selected_shot_ids = 8;
+  repeated string selected_asset_ids = 9;
+  string active_utility_id = 10;
+  string default_shot_format = 11;
+  string default_shot_shape = 12;
+  string default_asset_format = 13;
+  string selection_method = 14;
+  bool center_model = 15;
+  uint32 fit_revision = 16;
+  string camera_draft_label = 17;
+  ShootingCamera camera = 18;
+  string locale = 19;
+  optional string hovered_asset_id = 20;
+}
+
+message ShootingCamera {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+  double fov = 4;
+  repeated double up = 5;
+  optional string projection = 6;
+}
+
+message ShootingSavedCamera {
+  string id = 1;
+  string label = 2;
+  ShootingCamera camera = 3;
+}
+
+message ShootingAsset {
+  string id = 1;
+  string name = 2;
+  string url = 3;
+  string format = 4;
+  repeated double origin = 5;
+  repeated double orientation = 6;
+  repeated double scale = 7;
+}
+
+message ShootingShot {
+  string id = 1;
+  string label = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  string format = 5;
+  string shape = 6;
+  optional string background = 7;
+  optional string camera_id = 8;
+}
+
+message ShootingSun {
+  bool enabled = 1;
+  double azimuth = 2;
+  double elevation = 3;
+  double intensity = 4;
+  string color = 5;
+}
+
+message ShootingAmbient {
+  double intensity = 1;
+  string color = 2;
+}
+
+message ShootingShadow {
+  bool enabled = 1;
+  double opacity = 2;
+  double softness = 3;
+}
+
+message ShootingMaterial {
+  string color = 1;
+  double metalness = 2;
+  double roughness = 3;
+  string emissive = 4;
+  double emissive_intensity = 5;
+}
+
+message ShootingSceneLighting {
+  string background = 1;
+  ShootingSun sun = 2;
+  ShootingAmbient ambient = 3;
+  ShootingShadow shadow = 4;
+  ShootingMaterial material = 5;
+  optional string emblem_base64 = 6;
+}

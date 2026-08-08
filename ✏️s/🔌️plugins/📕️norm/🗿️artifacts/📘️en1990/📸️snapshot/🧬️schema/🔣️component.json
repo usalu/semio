@@ -1,0 +1,67 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1990/snapshot.json",
+  "title": "En1990Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gK",
+    "qK",
+    "resistanceKn",
+    "consequenceClass",
+    "annex",
+    "seismicAEdKn"
+  ],
+  "properties": {
+    "gK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "qK": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990QkEntry"
+      },
+      "x-semio-state": "persistent"
+    },
+    "resistanceKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "consequenceClass": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "seismicAEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "En1990QkEntry": {
+      "title": "En1990QkEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "value"
+      ],
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

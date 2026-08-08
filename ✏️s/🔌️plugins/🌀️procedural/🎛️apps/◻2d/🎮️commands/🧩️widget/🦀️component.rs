@@ -19,15 +19,13 @@ pub mod add_widget {
         pub kind: String,
         pub neuron_kind: Option<String>,
         pub x: Option<f64>,
-        pub y: Option<f64>,
-    }
+        pub y: Option<f64>}
 
     pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
         let descriptor = match payload.kind.as_str() {
             "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
-            other => json!({ "kind": other }).to_string(),
-        };
+            other => json!({ "kind": other }).to_string()};
         let mut host = host_from_fixture(fixture);
         let baseline = host.fixture.clone();
         if let Ok(id) = host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)) {
@@ -46,8 +44,7 @@ pub mod remove_widget {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "remove-widget")]
     pub struct RemoveWidget {
-        pub widget_id: String,
-    }
+        pub widget_id: String}
 
     pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;

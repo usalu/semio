@@ -1,7 +1,7 @@
-//! 📄️ Shooting play app panel — the document tree: shots and assets of the current fixture.
+//! 📄️ Shooting play app panel — the document tree: shots and assets of the current snapshot.
 
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -16,13 +16,13 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &ShootingFixture, labels: &ShootingLabels) -> UiNode {
-    let shot_items: Vec<semio_framework_plugin::UiTreeItemNode> = fixture
+pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> UiNode {
+    let shot_items: Vec<semio_framework_plugin::UiTreeItemNode> = snapshot
         .shots
         .iter()
         .map(|shot| crate::apps::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::apps::shooting::shooting_action("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] })))))
         .collect();
-    let asset_items: Vec<semio_framework_plugin::UiTreeItemNode> = fixture
+    let asset_items: Vec<semio_framework_plugin::UiTreeItemNode> = snapshot
         .assets
         .iter()
         .map(|asset| crate::apps::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", crate::apps::shooting::shooting_action("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] })))))

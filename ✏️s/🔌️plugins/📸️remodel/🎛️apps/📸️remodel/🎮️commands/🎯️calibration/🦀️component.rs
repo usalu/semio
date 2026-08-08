@@ -3,7 +3,7 @@
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::engine::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{CameraCalibration, GcpObservation, GroundControlPoint, RemodelProjection};
+use crate::artifacts::remodel::{CameraCalibration, GcpObservation, GroundControlPoint, RemodelSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +30,7 @@ pub mod edit_calibration {
         pub locked: bool,
     }
 
-    pub fn handle(payload: &EditCalibration, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &EditCalibration, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let entry = CameraCalibration {
             id: payload.camera_id.clone(),
             label: payload.label.clone(),
@@ -44,7 +44,7 @@ pub mod edit_calibration {
             rms_reprojection_px: None,
             locked: payload.locked,
         };
-        let mut calibration = doc.projection.calibration.clone();
+        let mut calibration = doc.snapshot.calibration.clone();
         match calibration.cameras.iter_mut().find(|camera| camera.id == payload.camera_id) {
             Some(existing) => *existing = entry,
             None => calibration.cameras.push(entry),
@@ -67,8 +67,8 @@ pub mod calibrate_cameras {
     /// for every camera id referenced by a stream that has no calibration entry yet. A documented
     /// simplification standing in for a real Zhang/checkerboard calibration pass (no calibration target
     /// detection is wired into this program).
-    pub fn handle(_payload: &CalibrateCameras, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let scene = doc.projection;
+    pub fn handle(_payload: &CalibrateCameras, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        let scene = doc.snapshot;
         let mut calibration = scene.calibration.clone();
         for stream in &scene.streams {
             let Some(camera_id) = &stream.camera_id else { continue };
@@ -111,9 +111,9 @@ pub mod add_gcp {
         pub world_z: f64,
     }
 
-    pub fn handle(payload: &AddGcp, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &AddGcp, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let id = next_remodel_id("gcp");
-        let mut gcps = doc.projection.gcps.clone();
+        let mut gcps = doc.snapshot.gcps.clone();
         gcps.push(GroundControlPoint { id, name: payload.name.clone(), world_position: [payload.world_x, payload.world_y, payload.world_z], observations: Vec::new() });
         Ok(Emit::mutations(vec![RemodelMutation::SetGcps { gcps }]))
     }
@@ -130,8 +130,8 @@ pub mod remove_gcp {
         pub gcp_id: String,
     }
 
-    pub fn handle(payload: &RemoveGcp, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let gcps: Vec<GroundControlPoint> = doc.projection.gcps.iter().filter(|gcp| gcp.id != payload.gcp_id).cloned().collect();
+    pub fn handle(payload: &RemoveGcp, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        let gcps: Vec<GroundControlPoint> = doc.snapshot.gcps.iter().filter(|gcp| gcp.id != payload.gcp_id).cloned().collect();
         Ok(Emit::mutations(vec![RemodelMutation::SetGcps { gcps }]))
     }
 }
@@ -151,8 +151,8 @@ pub mod place_gcp_observation {
         pub pixel_y: f32,
     }
 
-    pub fn handle(payload: &PlaceGcpObservation, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let mut gcps = doc.projection.gcps.clone();
+    pub fn handle(payload: &PlaceGcpObservation, doc: &DocumentView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        let mut gcps = doc.snapshot.gcps.clone();
         let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == payload.gcp_id) else { return Ok(Emit::default()) };
         gcp.observations.push(GcpObservation { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index, pixel: [payload.pixel_x, payload.pixel_y] });
         Ok(Emit::mutations(vec![RemodelMutation::SetGcps { gcps }]))
@@ -189,9 +189,9 @@ mod tests {
             })
         };
         dispatch(&mut app, payload(1000.0));
-        assert_eq!(app.projection().expect("projection").calibration.cameras.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").calibration.cameras.len(), 1);
         dispatch(&mut app, payload(2000.0));
-        let cameras = app.projection().expect("projection").calibration.cameras;
+        let cameras = app.snapshot().expect("projection").calibration.cameras;
         assert_eq!(cameras.len(), 1, "the same camera id is updated in place, never duplicated");
         assert_eq!(cameras[0].fx, 2000.0);
     }
@@ -200,11 +200,11 @@ mod tests {
     fn gcps_are_added_observed_and_removed() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }));
-        let gcp_id = app.projection().expect("projection").gcps[0].id.clone();
+        let gcp_id = app.snapshot().expect("projection").gcps[0].id.clone();
         dispatch(&mut app, RemodelCommand::PlaceGcpObservation(place_gcp_observation::PlaceGcpObservation { gcp_id: gcp_id.clone(), stream_id: "stream-1".into(), frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 }));
-        assert_eq!(app.projection().expect("projection").gcps[0].observations.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").gcps[0].observations.len(), 1);
         dispatch(&mut app, RemodelCommand::RemoveGcp(remove_gcp::RemoveGcp { gcp_id }));
-        assert!(app.projection().expect("projection").gcps.is_empty());
+        assert!(app.snapshot().expect("projection").gcps.is_empty());
     }
 
     /// 🎯️ `calibrateCameras` only derives intrinsics for stream-referenced cameras that have a decoded
@@ -214,7 +214,7 @@ mod tests {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddStream(crate::apps::remodel::commands::ingest::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() }));
         dispatch(&mut app, RemodelCommand::CalibrateCameras(calibrate_cameras::CalibrateCameras {}));
-        assert!(app.projection().expect("projection").calibration.cameras.is_empty());
+        assert!(app.snapshot().expect("projection").calibration.cameras.is_empty());
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,109 @@
+# 🧬️ Flow diff schema — sparse field delta.
+
+type FlowDiff {
+  artifact: FlowArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  camera: CameraJson @state(class: PERSISTENT)
+  widgets: FlowWidgetsDelta @state(class: PERSISTENT)
+  synapses: FlowSynapsesDelta @state(class: PERSISTENT)
+  layout: FlowLayoutMapDelta @state(class: PERSISTENT)
+  selectedNodeIds: FlowStringList @state(class: SHARED_UI)
+  selectedEdgeIds: FlowStringList @state(class: SHARED_UI)
+  selectedHandleIds: FlowStringList @state(class: SHARED_UI)
+  previewOffNodeIds: FlowStringList @state(class: SHARED_UI)
+  lodMode: String @state(class: LOCAL_UI)
+  proximityDistance: Float @state(class: LOCAL_UI)
+  gridVisible: Boolean @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean @state(class: LOCAL_UI)
+  gridFactor: Float @state(class: LOCAL_UI)
+  catalogueSectionsJson: String @state(class: LOCAL_UI)
+  automationEnabledJson: String @state(class: LOCAL_UI)
+  contributionsJson: String @state(class: LOCAL_UI)
+  generationJson: String @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type FlowArtifact {
+  schema: String!
+  camera: CameraJson!
+  widgets: [Widget!]!
+  synapses: [SynapseSpec!]!
+  layout: [WidgetLayoutEntry!]!
+  selectedNodeIds: [String!]!
+  selectedEdgeIds: [String!]!
+  selectedHandleIds: [String!]!
+  previewOffNodeIds: [String!]!
+  lodMode: String!
+  proximityDistance: Float!
+  gridVisible: Boolean!
+  gridSnapEnabled: Boolean!
+  gridFactor: Float!
+  catalogueSectionsJson: String!
+  automationEnabledJson: String!
+  contributionsJson: String!
+  generationJson: String!
+  locale: String!
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+
+type WidgetLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+
+scalar Widget
+
+type FlowStringList {
+  values: [String!]!
+}
+
+type FlowWidgetPatchEntry {
+  id: String!
+  patch: Widget!
+}
+
+type FlowWidgetsDelta {
+  added: [Widget!]!
+  removed: [String!]!
+  patched: [FlowWidgetPatchEntry!]!
+  reordered: [String!]
+}
+
+type FlowSynapsePatchEntry {
+  id: String!
+  patch: SynapseSpec!
+}
+
+type FlowSynapsesDelta {
+  added: [SynapseSpec!]!
+  removed: [String!]!
+  patched: [FlowSynapsePatchEntry!]!
+  reordered: [String!]
+}
+
+type FlowLayoutMapDelta {
+  entries: [FlowLayoutNullableEntry!]!
+}
+
+type FlowLayoutNullableEntry {
+  key: String!
+  value: WidgetLayout
+}

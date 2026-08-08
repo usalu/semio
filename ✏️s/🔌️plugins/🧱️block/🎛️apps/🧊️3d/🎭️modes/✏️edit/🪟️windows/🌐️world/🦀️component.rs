@@ -6,7 +6,7 @@ use crate::apps::block3d::modes::edit::windows::world::options::{arrangement, br
 use crate::apps::block3d::terminology::Block3dLabels;
 use crate::apps::block3d::world::{world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json, visible_representations};
 use crate::apps::block3d::{BLOCK3D_PLAY_APP_ID, BLOCK3D_PLAY_SURFACE_ID};
-use crate::artifacts::block3d::Block3dDefinition;
+use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(definition: &Block3dDefinition, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> Vec<WindowMeasure> {
     vec![
         representations::measure(definition, config, window_id, labels),
         quick_representation::measure(definition, config, window_id, labels),
@@ -49,7 +49,7 @@ pub fn window_measures(definition: &Block3dDefinition, config: &Block3dConfig, w
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block3dDefinition, config: &Block3dConfig, window_id: &str) -> UiNode {
+pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str) -> UiNode {
     let view = block3d_window_view(config, window_id);
     let visible = visible_representations(definition, &view);
     let scene = world3d_scene_extended(

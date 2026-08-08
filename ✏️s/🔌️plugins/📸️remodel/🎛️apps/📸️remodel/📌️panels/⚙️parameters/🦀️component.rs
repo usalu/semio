@@ -2,7 +2,7 @@
 //! happens via the per-group `setXParams` command-palette actions' typed arg forms, not inline fields).
 
 use crate::apps::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants
@@ -17,7 +17,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelProjection, labels: &RemodelLabels) -> UiNode {
+pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     let p = &scene.params;
     ui_stack_vertical(vec![
         ui_text(Label::data(format!(

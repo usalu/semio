@@ -8,21 +8,21 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::block5d::Block5dDefinition;
+use crate::artifacts::block5d::Block5dSnapshot;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block5d` DSL —
 /// the `PartKind` slice of `s/plugin/puzzle/app/5d/example/🧩️concrete-forest.puzzle5d`.
 pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block5d` DSL.
-pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
+pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️nakagin-capsule/🖼️assets/🗣️nakagin-capsule.dsl.semio");
 
-/// 📖️ Parses `.block5d` DSL text into a `Block5dDefinition`.
-pub fn parse_dsl(text: &str) -> Result<Block5dDefinition, store::TextError> {
-    <Block5dDefinition as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.block5d` DSL text into a `Block5dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Block5dSnapshot, store::TextError> {
+    <Block5dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Block5dDefinition` back to `.block5d` DSL text.
-pub fn print_dsl(document: &Block5dDefinition) -> String {
+/// 🖨️ Prints a `Block5dSnapshot` back to `.block5d` DSL text.
+pub fn print_dsl(document: &Block5dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -33,14 +33,14 @@ mod tests {
     use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
     use crate::{BlockCamera2d, BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
-    pub fn hexagonal_cut_concrete_forest_left() -> Block5dDefinition {
-        let mut definition = Block5dDefinition {
+    pub fn hexagonal_cut_concrete_forest_left() -> Block5dSnapshot {
+        let mut definition = Block5dSnapshot {
             part_kind: BlockKindIdentity { id: "Hexagonal Cut Concrete Forest Left".into(), name: "Hexagonal Cut Concrete Forest Left".into(), label: "Hexagonal Cut Concrete Forest Left".into(), ..Default::default() },
             part_2d: Block5dPart2d { shape: Some("circle".into()), radius: Some(20.0), ..Default::default() },
             part_3d: Block5dPart3d { orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None },
             camera2d: BlockCamera2d { x: 230.7, y: 93.5, zoom: 2.0 },
             camera3d: BlockCamera3d { position: [30.0, -30.0, 20.0], target: [7.0, 0.0, 3.0], zoom: 3.0 },
-            ..Block5dDefinition::default()
+            ..Block5dSnapshot::default()
         };
         definition.representations.push(BlockRepresentation {
             id: "r0".into(),
@@ -58,19 +58,19 @@ mod tests {
 
     #[test]
     fn block5d_definition_dsl_round_trips() {
-        let empty = Block5dDefinition::default();
-        store::test_support::assert_dsl_round_trip(&empty);
-        store::test_support::assert_dsl_pack_equivalence(&empty);
+        let empty = Block5dSnapshot::default();
+        store::os_store::test_support::assert_dsl_round_trip(&empty);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
         let definition = hexagonal_cut_concrete_forest_left();
-        store::test_support::assert_dsl_round_trip(&definition);
-        store::test_support::assert_dsl_pack_equivalence(&definition);
+        store::os_store::test_support::assert_dsl_round_trip(&definition);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&definition);
     }
 
     #[test]
     fn block5d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT, BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT] {
             let definition = parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            store::test_support::assert_dsl_round_trip(&definition);
+            store::os_store::test_support::assert_dsl_round_trip(&definition);
         }
     }
 }

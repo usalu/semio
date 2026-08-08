@@ -15,6 +15,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as pack;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
@@ -32,8 +33,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/📸️remodel/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/📸️remodel/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/📸️remodel/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs"]
@@ -245,8 +257,14 @@ pub mod artifacts {
             }
         }
 
-        #[path = "../../🗿️artifacts/📸️remodel/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/📸️remodel/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+
+            #[path = "../../🗿️artifacts/📸️remodel/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/📸️remodel/📡️spr/🦀️component.rs"]
         pub mod spr;
 

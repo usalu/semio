@@ -1,8 +1,8 @@
 //! 🛤️ Remodel mutation — `SetTrajectory` apply.
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Mutation
-pub fn apply(next: &mut RemodelProjection, trajectory: &Option<crate::artifacts::remodel::CameraTrajectory>) {
+pub fn apply(next: &mut RemodelSnapshot, trajectory: &Option<crate::artifacts::remodel::CameraTrajectory>) {
     next.results.trajectory = trajectory.clone();
 }
 //#endregion 🔖️Mutation

@@ -1,6 +1,6 @@
 //! 🧱 Process3d mutation — `SetStock`.
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dDocument, Stock};
+use crate::artifacts::process3d::{Process3dSnapshot, Stock};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -15,7 +15,7 @@ pub fn set_stock(stock: Stock) -> Process3dMutation {
     Process3dMutation::SetStock { stock }
 }
 
-pub fn apply(doc: &mut Process3dDocument, stock: &Stock) {
+pub fn apply(doc: &mut Process3dSnapshot, stock: &Stock) {
     doc.stock = stock.clone();
 }
 //#endregion 🔖️Mutation

@@ -15,7 +15,7 @@ use crate::apps::shooting::modes::edit::windows::scene as scene_window;
 use crate::apps::shooting::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::shooting::terminology::shooting_play_labels;
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingFixture, SHOOTING_FIXTURE_SCHEMA};
+use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
@@ -59,8 +59,8 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
-    pub enum ShootingCommand for ShootingFixture, ShootingMutation, ShootingConfig, ShootingConfigMutation {
-        "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
+    pub enum ShootingCommand for ShootingSnapshot, ShootingMutation, ShootingConfig, ShootingConfigMutation {
+        "setSnapshotJson" as "snapshot-json" => set_snapshot_json::SetSnapshotJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setActiveShot" as "active-shot" => set_active_shot::SetActiveShot,
         "setActiveAsset" as "active-asset" => set_active_asset::SetActiveAsset,
@@ -81,7 +81,7 @@ semio_framework_plugin::app_commands! {
         "addShot" as "add-shot" => add_shot::AddShot,
         "addAsset" as "add-asset" => add_asset::AddAsset,
         "importAsset" as "import-asset" => import_asset::ImportAsset,
-        "resetFixture" as "reset-fixture" => reset_fixture::ResetFixture,
+        "resetFixture" as "reset-snapshot" => reset_snapshot::ResetSnapshot,
         "translateSelection" as "translate-selection" => translate_selection::TranslateSelection,
         "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
         "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
@@ -112,7 +112,7 @@ semio_framework_plugin::app_commands! {
 use asset::{add_asset, import_asset, import_asset_request, patch_assets, set_active_asset};
 use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label, set_shot_camera};
 use export::export_shots;
-use fixture::{load_request, reset_fixture, save_download, set_active_example, set_fixture_json};
+use fixture::{load_request, reset_snapshot, save_download, set_active_example, set_snapshot_json};
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use locale::set_locale;
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
@@ -127,7 +127,7 @@ use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_a
 pub struct ShootingPlayApp;
 
 impl DocumentApp for ShootingPlayApp {
-    type Projection = ShootingFixture;
+    type Snapshot = ShootingSnapshot;
     type Mutation = ShootingMutation;
     type Config = ShootingConfig;
     type ConfigMutation = ShootingConfigMutation;
@@ -137,10 +137,10 @@ impl DocumentApp for ShootingPlayApp {
     type Command = ShootingCommand;
 
     const APP_ID: &'static str = SHOOTING_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = SHOOTING_FIXTURE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> ShootingFixture {
-        crate::artifacts::shooting::engine::default_fixture()
+    fn initial_snapshot() -> ShootingSnapshot {
+        crate::artifacts::shooting::engine::default_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -148,23 +148,23 @@ impl DocumentApp for ShootingPlayApp {
     }
 
     /// 🎞️ `photos:out` (see `crate::artifacts::shooting::engine::shooting_photo_media`) plus the
-    /// inherited `document:out` default (the pack of `doc.projection`, replicated inline — overriding
+    /// inherited `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new
     /// one).
-    fn export_media(port: &str, doc: &DocumentView<'_, ShootingFixture>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, ShootingSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "photos:out" => crate::artifacts::shooting::engine::shooting_photo_media(doc.projection),
+            "photos:out" => crate::artifacts::shooting::engine::shooting_photo_media(doc.snapshot),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = store::DocumentPack::encode_pack(doc.projection);
+                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(projection: ShootingFixture) -> Option<ShootingMutation> {
-        Some(ShootingMutation::SetFixture { fixture: projection })
+    fn whole_document_operation(snapshot: ShootingSnapshot) -> Option<ShootingMutation> {
+        Some(ShootingMutation::SetSnapshot { snapshot })
     }
 
     /// 🏷️ Maps each `ShootingCommand` variant back to the action id it was declared under in
@@ -187,7 +187,7 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn handle(command: &ShootingCommand, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &ShootingCommand, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -218,27 +218,27 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
-        let fixture = doc.projection;
-        let labels = shooting_play_labels(cfg.projection);
+    fn render(body_key: &str, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
+        let snapshot = doc.snapshot;
+        let labels = shooting_play_labels(cfg.snapshot);
         match body_key {
-            SHOOTING_PLAY_BODY_SCENE => scene_window::render(fixture, cfg.projection),
-            SHOOTING_PLAY_BODY_ICON => icon_window::render(fixture, cfg.projection),
-            SHOOTING_PLAY_BODY_DOCUMENT => document_panel::render(fixture, labels),
+            SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot),
+            SHOOTING_PLAY_BODY_ICON => icon_window::render(snapshot, cfg.snapshot),
+            SHOOTING_PLAY_BODY_DOCUMENT => document_panel::render(snapshot, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            SHOOTING_PLAY_BODY_INSPECTION => inspection_panel::render(fixture, cfg.projection, labels),
+            SHOOTING_PLAY_BODY_INSPECTION => inspection_panel::render(snapshot, cfg.snapshot, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
-        let labels = shooting_play_labels(cfg.projection);
-        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.projection, cfg.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.projection, labels))])
+    fn window_engagements(doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
+        let labels = shooting_play_labels(cfg.snapshot);
+        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.snapshot, cfg.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.snapshot, labels))])
     }
 
-    fn window_measures(doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = shooting_play_labels(cfg.projection);
-        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::window_measures(doc.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::window_measures(doc.projection, labels))])
+    fn window_measures(doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = shooting_play_labels(cfg.snapshot);
+        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::window_measures(doc.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::window_measures(doc.snapshot, labels))])
     }
 }
 //#endregion 🔖️ShootingPlayApp
@@ -279,7 +279,7 @@ pub fn create_shooting_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))
             .mutation("setActiveAsset", LocalizedLabel::native("Set Active Asset", "Aktives Objekt festlegen"))
@@ -348,7 +348,7 @@ pub fn create_shooting_app() -> App {
             .config(ShootingPlayApp::config_spec())
             .io(crate::artifacts::shooting::engine::shooting_io()),
     )
-    .example(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol"), crate::artifacts::shooting::engine::default_fixture_json(), "camera")
+    .example(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol"), crate::artifacts::shooting::engine::default_snapshot_json(), "camera")
     .workflow("shooting", "Shooting", "icon")
 }
 //#endregion 🔖️Manifest
@@ -412,7 +412,7 @@ mod tests {
     #[test]
     fn command_ids_are_unique_across_every_row() {
         let app = ShootingPlayApp;
-        let ids: Vec<&str> = every_command().iter().map(|command| app.command_id(command)).collect();
+        let ids: Vec<&str> = every_command().iter().map(|command| ShootingPlayApp::command_id(command)).collect();
         let mut sorted = ids.clone();
         sorted.sort_unstable();
         sorted.dedup();
@@ -424,14 +424,14 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<ShootingCommand> {
         vec![
-            ShootingCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{\"schema\":\"shooting.fixture\"}".into() }),
+            ShootingCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{\"schema\":\"shooting.shooting\"}".into() }),
             ShootingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "base-icon".into() }),
             ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s1".into()) }),
             ShootingCommand::SetActiveAsset(set_active_asset::SetActiveAsset { asset_id: Some("a1".into()) }),
@@ -452,7 +452,7 @@ mod tests {
             ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "rectangle".into() }),
             ShootingCommand::AddAsset(add_asset::AddAsset { format: "glb".into() }),
             ShootingCommand::ImportAsset(import_asset::ImportAsset { payload: "data:model/gltf-binary;base64,AAA=".into(), name: Some("Imported".into()) }),
-            ShootingCommand::ResetFixture(reset_fixture::ResetFixture {}),
+            ShootingCommand::ResetSnapshot(reset_snapshot::ResetSnapshot {}),
             ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 }),
             ShootingCommand::RotateSelection(rotate_selection::RotateSelection { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 }),
             ShootingCommand::ScaleSelection(scale_selection::ScaleSelection { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 }),
@@ -553,7 +553,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = shooting_app();
-        testkit::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.projection().expect("projection").shots.len(), 2, 3);
+        testkit::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3);
     }
 
     /// 🎥️ `SetCamera` is config-only — dragging the viewport camera through several ticks must never
@@ -585,8 +585,8 @@ mod tests {
             ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Renamed By A".into() }),
             ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["base".into()], dx: 5.0, dy: 6.0, dz: 7.0 }),
             |app| {
-                let projection = app.projection().expect("projection");
-                (crate::artifacts::shooting::engine::active_shot(&projection).unwrap().label.clone(), projection.assets[0].origin)
+                let snapshot = app.snapshot().expect("snapshot");
+                (crate::artifacts::shooting::engine::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
             },
         );
     }
@@ -594,7 +594,7 @@ mod tests {
     #[test]
     fn ingest_operations_is_idempotent_for_shooting() {
         testkit::assert_ingest_idempotent::<ShootingPlayApp, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
-            crate::artifacts::shooting::engine::active_shot(&app.projection().expect("projection")).unwrap().label.clone()
+            crate::artifacts::shooting::engine::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
         });
     }
 
@@ -611,15 +611,15 @@ mod tests {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {}));
         match &result.requested_effects[0] {
-            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "setFixtureJson"),
+            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "setSnapshotJson"),
             other => panic!("expected RequestFileOpen, got {other:?}"),
         }
         let result = dispatch(&mut app, ShootingCommand::SaveDownload(save_download::SaveDownload {}));
         match &result.requested_effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
-                assert_eq!(filename, "shooting.fixture.ops");
-                let round_trip: ShootingFixture = serde_json::from_str(data).unwrap();
-                assert_eq!(round_trip.schema, SHOOTING_FIXTURE_SCHEMA);
+                assert_eq!(filename, "shooting.shooting.ops");
+                let round_trip: ShootingSnapshot = serde_json::from_str(data).unwrap();
+                assert_eq!(round_trip.schema, SHOOTING_DOCUMENT_SCHEMA);
             }
             other => panic!("expected DownloadMediaExport, got {other:?}"),
         }

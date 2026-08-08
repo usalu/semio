@@ -9,8 +9,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::block5d::diff::{block5d_index_of, Block5dDiff};
-use crate::artifacts::block5d::{Block5dDefinition, Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
+use crate::artifacts::block5d::diff::*;
+use crate::artifacts::block5d::{Block5dSnapshot, Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// 🧮️ Block-5d operation: id-keyed table edits plus scalar part_kind/part_2d/part_3d/camera2d/
 /// camera3d/meta, each with a true inverse computed from the pre-operation projection, and a
 /// whole-document replace for example loads.
-// 🧯️ `large_enum_variant`: `SetDocument`'s whole-document payload makes it far larger than the other
+// 🧯️ `large_enum_variant`: `SetSnapshot`'s whole-document payload makes it far larger than the other
 // scalar/id-keyed variants, but boxing it would require the `#[derive(dsl::DslEnum)]` field-shape
 // machinery to see through `Box<T>`, which is unverified — same accepted tradeoff as gis's
 // `Gis2dConfigMutation`/💡️reasoning's `ReplaceDocument`.
@@ -99,10 +99,10 @@ pub enum Block5dMutation {
         #[dsl(block)]
         meta: BlockMeta,
     },
-    #[dsl(key = "setDocument")]
-    SetDocument {
+    #[dsl(key = "setSnapshot")]
+    SetSnapshot {
         #[dsl(block)]
-        document: Block5dDefinition,
+        snapshot: Block5dSnapshot,
     },
 }
 
@@ -110,39 +110,37 @@ pub enum Block5dMutation {
 
 
 
-fn block5d_mutation_diff(operation: &Block5dMutation) -> Block5dDiff {
-    let mut diff = Block5dDiff::default();
+fn block5d_mutation_diff(operation: &Block5dMutation, base: &Block5dSnapshot) -> Block5dDiff {
     match operation {
-        Block5dMutation::SetPartKind { part_kind } => diff.part_kind = Some(part_kind.clone()),
-        Block5dMutation::SetPart2d { part_2d } => diff.part_2d = Some(part_2d.clone()),
-        Block5dMutation::SetPart3d { part_3d } => diff.part_3d = Some(part_3d.clone()),
-        Block5dMutation::SetRepresentation { index, representation } => diff.representations.set.push((*index, representation.clone())),
-        Block5dMutation::RemoveRepresentation { id } => diff.representations.removed.push(id.clone()),
-        Block5dMutation::SetGripKind { index, grip_kind } => diff.grip_kinds.set.push((*index, grip_kind.clone())),
-        Block5dMutation::RemoveGripKind { id } => diff.grip_kinds.removed.push(id.clone()),
-        Block5dMutation::SetGrip { index, grip } => diff.grips.set.push((*index, grip.clone())),
-        Block5dMutation::RemoveGrip { id } => diff.grips.removed.push(id.clone()),
-        Block5dMutation::SetCompatibilityRule { index, rule } => diff.compatibility.set.push((*index, rule.clone())),
-        Block5dMutation::RemoveCompatibilityRule { id } => diff.compatibility.removed.push(id.clone()),
-        Block5dMutation::SetAttribute { index, attribute } => diff.attributes.set.push((*index, attribute.clone())),
-        Block5dMutation::RemoveAttribute { key } => diff.attributes.removed.push(key.clone()),
-        Block5dMutation::SetAuthors { authors } => diff.authors = Some(authors.clone()),
-        Block5dMutation::SetCamera2d { camera2d } => diff.camera2d = Some(camera2d.clone()),
-        Block5dMutation::SetCamera3d { camera3d } => diff.camera3d = Some(camera3d.clone()),
-        Block5dMutation::SetMeta { meta } => diff.meta = Some(meta.clone()),
-        Block5dMutation::SetDocument { document } => diff.document = Some(document.clone()),
+        Block5dMutation::SetPartKind { part_kind } => Block5dDiff { part_kind: Some(part_kind.clone()), ..Default::default() },
+        Block5dMutation::SetPart2d { part_2d } => Block5dDiff { part_2d: Some(part_2d.clone()), ..Default::default() },
+        Block5dMutation::SetPart3d { part_3d } => Block5dDiff { part_3d: Some(part_3d.clone()), ..Default::default() },
+        Block5dMutation::SetRepresentation { index, representation } => diff_set_representation(*index, representation.clone(), base),
+        Block5dMutation::RemoveRepresentation { id } => diff_remove_representation(id.clone()),
+        Block5dMutation::SetGripKind { index, grip_kind } => diff_set_grip_kind(*index, grip_kind.clone(), base),
+        Block5dMutation::RemoveGripKind { id } => diff_remove_grip_kind(id.clone()),
+        Block5dMutation::SetGrip { index, grip } => diff_set_grip(*index, grip.clone(), base),
+        Block5dMutation::RemoveGrip { id } => diff_remove_grip(id.clone()),
+        Block5dMutation::SetCompatibilityRule { index, rule } => diff_set_compatibility_rule(*index, rule.clone(), base),
+        Block5dMutation::RemoveCompatibilityRule { id } => diff_remove_compatibility_rule(id.clone()),
+        Block5dMutation::SetAttribute { index, attribute } => diff_set_attribute(*index, attribute.clone(), base),
+        Block5dMutation::RemoveAttribute { key } => diff_remove_attribute(key.clone()),
+        Block5dMutation::SetAuthors { authors } => Block5dDiff { authors: Some(Block5dAuthorList { values: authors.clone() }), ..Default::default() },
+        Block5dMutation::SetCamera2d { camera2d } => Block5dDiff { camera2d: Some(camera2d.clone()), ..Default::default() },
+        Block5dMutation::SetCamera3d { camera3d } => Block5dDiff { camera3d: Some(camera3d.clone()), ..Default::default() },
+        Block5dMutation::SetMeta { meta } => Block5dDiff { meta: Some(meta.clone()), ..Default::default() },
+        Block5dMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot.clone()),
     }
-    diff
 }
 
-impl Mutation<Block5dDefinition> for Block5dMutation {
+impl Mutation<Block5dSnapshot> for Block5dMutation {
     type Diff = Block5dDiff;
 
-    fn diff(&self, _projection: &Block5dDefinition) -> Block5dDiff {
-        block5d_mutation_diff(self)
+    fn diff(&self, projection: &Block5dSnapshot) -> Block5dDiff {
+        block5d_mutation_diff(self, projection)
     }
 
-    fn inverse(&self, projection: &Block5dDefinition) -> Vec<Self> {
+    fn inverse(&self, projection: &Block5dSnapshot) -> Vec<Self> {
         match self {
             Block5dMutation::SetPartKind { .. } => vec![Block5dMutation::SetPartKind { part_kind: projection.part_kind.clone() }],
             Block5dMutation::SetPart2d { .. } => vec![Block5dMutation::SetPart2d { part_2d: projection.part_2d.clone() }],
@@ -178,25 +176,25 @@ impl Mutation<Block5dDefinition> for Block5dMutation {
             Block5dMutation::SetCamera2d { .. } => vec![Block5dMutation::SetCamera2d { camera2d: projection.camera2d.clone() }],
             Block5dMutation::SetCamera3d { .. } => vec![Block5dMutation::SetCamera3d { camera3d: projection.camera3d.clone() }],
             Block5dMutation::SetMeta { .. } => vec![Block5dMutation::SetMeta { meta: projection.meta.clone() }],
-            Block5dMutation::SetDocument { .. } => vec![Block5dMutation::SetDocument { document: projection.clone() }],
+            Block5dMutation::SetSnapshot { .. } => vec![Block5dMutation::SetSnapshot { snapshot: projection.clone() }],
         }
     }
 }
 
-pub type Block5dEnvelope = store::DocumentEnvelope<Block5dDefinition, Block5dMutation>;
-pub type Block5dStore = store::DocumentStore<Block5dDefinition, Block5dMutation>;
+pub type Block5dEnvelope = store::DocumentEnvelope<Block5dSnapshot, Block5dMutation>;
+pub type Block5dStore = store::DocumentStore<Block5dSnapshot, Block5dMutation>;
 // #endregion 🔖️Operation
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::engine::empty_block5d_definition;
+    use crate::artifacts::block5d::engine::empty_block5d_snapshot;
     use protocol::MutationDiff;
 
     #[test]
     fn set_grip_then_remove_round_trips_through_true_inverse() {
-        let mut projection = empty_block5d_definition();
+        let mut projection = empty_block5d_snapshot();
         let set = Block5dMutation::SetGrip { index: 0, grip: Block5dGripTemplate { id: "g0".into(), grip_kind: "b-l".into(), angle: -0.1, radius_2d: 3.0, position: [4.05, 4.68, 3.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 } };
         let inverse = set.inverse(&projection);
         projection = set.diff(&projection).apply(&projection);
@@ -205,16 +203,16 @@ mod tests {
         for operation in &inverse {
             projection = operation.diff(&projection).apply(&projection);
         }
-        assert_eq!(projection, empty_block5d_definition());
+        assert_eq!(projection, empty_block5d_snapshot());
     }
 }
 //#endregion 🧪️Tests
 
 
-pub fn apply_block5d_mutation(projection: &mut Block5dDefinition, mutation: &Block5dMutation) {
+pub fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) {
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_block5d_mutation(projection: &Block5dDefinition, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
+pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
     mutation.inverse(projection)
 }

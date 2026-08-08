@@ -1,0 +1,124 @@
+syntax = "proto3";
+package semio.s.flow.flow.diff;
+
+// 🧬️ Flow diff schema — sparse field delta.
+
+message FlowDiff {
+  // @state persistent
+  optional FlowArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional CameraJson camera = 3;
+  // @state persistent
+  optional FlowWidgetsDelta widgets = 4;
+  // @state persistent
+  optional FlowSynapsesDelta synapses = 5;
+  // @state persistent
+  optional FlowLayoutMapDelta layout = 6;
+  // @state shared-ui
+  optional FlowStringList selected_node_ids = 7;
+  // @state shared-ui
+  optional FlowStringList selected_edge_ids = 8;
+  // @state shared-ui
+  optional FlowStringList selected_handle_ids = 9;
+  // @state shared-ui
+  optional FlowStringList preview_off_node_ids = 10;
+  // @state local-ui
+  optional string lod_mode = 11;
+  // @state local-ui
+  optional double proximity_distance = 12;
+  // @state local-ui
+  optional bool grid_visible = 13;
+  // @state local-ui
+  optional bool grid_snap_enabled = 14;
+  // @state local-ui
+  optional double grid_factor = 15;
+  // @state local-ui
+  optional string catalogue_sections_json = 16;
+  // @state local-ui
+  optional string automation_enabled_json = 17;
+  // @state local-ui
+  optional string contributions_json = 18;
+  // @state local-ui
+  optional string generation_json = 19;
+  // @state local-ui
+  optional string locale = 20;
+}
+
+message FlowArtifact {
+  string schema = 1;
+  CameraJson camera = 2;
+  repeated Widget widgets = 3;
+  repeated SynapseSpec synapses = 4;
+  map<string, WidgetLayout> layout = 5;
+  repeated string selected_node_ids = 6;
+  repeated string selected_edge_ids = 7;
+  repeated string selected_handle_ids = 8;
+  repeated string preview_off_node_ids = 9;
+  string lod_mode = 10;
+  double proximity_distance = 11;
+  bool grid_visible = 12;
+  bool grid_snap_enabled = 13;
+  double grid_factor = 14;
+  string catalogue_sections_json = 15;
+  string automation_enabled_json = 16;
+  string contributions_json = 17;
+  string generation_json = 18;
+  string locale = 19;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+
+message Widget {
+  string json = 1;
+}
+
+message FlowStringList {
+  repeated string values = 1;
+}
+
+message FlowWidgetPatchEntry {
+  string id = 1;
+  Widget patch = 2;
+}
+
+message FlowWidgetsDelta {
+  repeated Widget added = 1;
+  repeated string removed = 2;
+  repeated FlowWidgetPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message FlowSynapsePatchEntry {
+  string id = 1;
+  SynapseSpec patch = 2;
+}
+
+message FlowSynapsesDelta {
+  repeated SynapseSpec added = 1;
+  repeated string removed = 2;
+  repeated FlowSynapsePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message FlowLayoutMapDelta {
+  map<string, WidgetLayout> entries = 1;
+}

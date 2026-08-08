@@ -29,8 +29,7 @@ pub fn definition() -> WindowKindDefinition {
         document_projection_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new(),
-    }
+        capabilities: Vec::new()}
 }
 //#endregion 🔖️Definition
 
@@ -63,8 +62,7 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, sess
                     "x": x,
                     "y": y,
                     "width": 96.0,
-                    "height": 48.0,
-                }));
+                    "height": 48.0}));
             }
         }
     }

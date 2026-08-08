@@ -11,8 +11,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Procedural3dSnapshotVcs {
-    store: RefCell<Procedural3dStore>,
-}
+    store: RefCell<Procedural3dStore>}
 
 #[wasm_bindgen]
 impl Procedural3dSnapshotVcs {
@@ -23,8 +22,7 @@ impl Procedural3dSnapshotVcs {
                 let envelope: Procedural3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Procedural3dStore::new(envelope)
             }
-            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)),
-        };
+            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None))};
         Ok(Self { store: RefCell::new(store) })
     }
 

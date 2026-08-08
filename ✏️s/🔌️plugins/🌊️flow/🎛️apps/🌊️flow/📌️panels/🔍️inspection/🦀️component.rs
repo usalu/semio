@@ -3,7 +3,7 @@
 use crate::apps::flow::flow_action;
 use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::artifacts::flow::engine::{widget_id, widget_kind_label};
-use crate::artifacts::flow::FlowFixture;
+use crate::artifacts::flow::FlowSnapshot;
 use flow::Widget;
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode,
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
+pub fn render(fixture: &FlowSnapshot, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
     if selected.is_empty() {
         return placeholder_tree("flow-play-inspector.empty", ui_text(labels.no_selection));
     }

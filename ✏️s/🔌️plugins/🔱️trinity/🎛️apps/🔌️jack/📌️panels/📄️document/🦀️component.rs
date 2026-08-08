@@ -2,11 +2,11 @@
 
 use crate::apps::jack::config::JackConfig;
 use crate::apps::jack::terminology::TrinityJackLabels;
-use crate::artifacts::jack::GraphFixture;
+use crate::artifacts::jack::JackSnapshot;
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelTreeBuilder, UiNode, UiTreeItemNode};
 use serde_json::json;
 
-pub(crate) fn render(fixture: &GraphFixture, cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
+pub(crate) fn render(fixture: &JackSnapshot, cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
     let jack_action = crate::apps::jack::jack_action;
     let builder = PanelTreeBuilder::new("trinity-document");
     let node_items: Vec<UiTreeItemNode> = fixture

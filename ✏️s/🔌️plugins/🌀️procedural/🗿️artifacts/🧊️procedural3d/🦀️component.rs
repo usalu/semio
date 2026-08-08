@@ -19,8 +19,7 @@ pub fn widget_id(widget: &Widget) -> &str {
         | Widget::OutputPreview { id, .. }
         | Widget::OutputAction { id, .. }
         | Widget::OutputExport { id, .. }
-        | Widget::Cluster { id, .. } => id,
-    }
+        | Widget::Cluster { id, .. } => id}
 }
 //#endregion 🔖️Helpers
 
@@ -38,8 +37,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
         schema: "procedural.3d".into(),
         export_formats: vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl],
-        import_formats: vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl],
-    }
+        import_formats: vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl]}
 }
 //#endregion 🔖️ArtifactKind
 

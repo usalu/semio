@@ -3,7 +3,7 @@
 
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -29,8 +29,8 @@ pub mod translate_selection {
         pub dz: f64,
     }
 
-    pub fn handle(payload: &TranslateSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.projection.selected_asset_ids);
+    pub fn handle(payload: &TranslateSelection, _doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.snapshot.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
@@ -54,8 +54,8 @@ pub mod rotate_selection {
         pub angle: f64,
     }
 
-    pub fn handle(payload: &RotateSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.projection.selected_asset_ids);
+    pub fn handle(payload: &RotateSelection, _doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.snapshot.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
@@ -78,8 +78,8 @@ pub mod scale_selection {
         pub sz: f64,
     }
 
-    pub fn handle(payload: &ScaleSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.projection.selected_asset_ids);
+    pub fn handle(payload: &ScaleSelection, _doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.snapshot.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
@@ -100,13 +100,13 @@ mod tests {
     #[test]
     fn gumball_transform_drag_coalesces_into_one_edit() {
         let mut app = shooting_app();
-        let asset_id = app.projection().expect("projection").assets[0].id.clone();
+        let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
         for dx in [1.0, 2.0, 3.0] {
             dispatch(&mut app, ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec![asset_id.clone()], dx, dy: 0.0, dz: 0.0 }));
         }
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        let restored = app.projection().expect("projection");
-        let original = crate::artifacts::shooting::engine::default_fixture().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
+        let restored = app.snapshot().expect("snapshot");
+        let original = crate::artifacts::shooting::engine::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
         assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");
     }
 

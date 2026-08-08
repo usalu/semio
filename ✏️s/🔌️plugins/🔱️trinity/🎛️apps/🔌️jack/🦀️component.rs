@@ -9,7 +9,7 @@
 
 use crate::apps::jack::config::{JackConfig, JackConfigMutation};
 use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::{GraphFixture, Node, PortDirection, TRINITY_GRAPH_SCHEMA};
+use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
@@ -36,21 +36,21 @@ const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = "trinity-jack-graph";
 const TRINITY_JACK_PLAY_WINDOW_EDITOR: &str = "trinity-jack-editor";
 const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = "trinity-jack-results";
 
-pub(crate) const NAKAGIN_FIXTURE_DSL: &str = include_str!("📚️examples/🎬️demo-session/🖼️assets/🎮️demo.cmd.semio");
-pub(crate) const BRANCH_FIXTURE_DSL: &str = include_str!("📚️examples/🎬️demo-session/🖼️assets/🎮️demo.cmd.semio");
+pub(crate) const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub(crate) const BRANCH_FIXTURE_DSL: &str = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
 /// 📦️ The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
-pub(crate) fn default_fixture() -> GraphFixture {
-    GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| crate::artifacts::jack::empty_trinity_graph_fixture())
+pub(crate) fn default_fixture() -> JackSnapshot {
+    JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| crate::artifacts::jack::empty_trinity_graph_fixture())
 }
 
 /// 🌱️ Seeds the initial config with the default query and its result table so the Results window is
 /// populated on load.
-fn seeded_jack_config(fixture: &GraphFixture) -> JackConfig {
+fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
     let (result_json, _) = crate::apps::jack::commands::query::run_jack_query(fixture, TRINITY_JACK_DEFAULT_QUERY);
     JackConfig { camera: fixture.camera.clone(), active_fixture_id: "nakagin".into(), jack_query: TRINITY_JACK_DEFAULT_QUERY.into(), jack_result_json: result_json, ..JackConfig::default() }
 }
@@ -59,7 +59,7 @@ pub(crate) fn jack_action(action: &str, args: Option<serde_json::Value>) -> Acti
     semio_framework_plugin::ActionFactory::new(TRINITY_JACK_PLAY_CONTROLLER_ID).action(action, args)
 }
 
-pub(crate) fn graph_from_fixture_or_default(fixture: &GraphFixture) -> crate::artifacts::jack::Graph {
+pub(crate) fn graph_from_fixture_or_default(fixture: &JackSnapshot) -> crate::artifacts::jack::Graph {
     crate::artifacts::jack::Graph::from_fixture(fixture.clone()).unwrap_or_else(|_| crate::artifacts::jack::Graph::from_fixture(default_fixture()).expect("nakagin graph"))
 }
 
@@ -69,7 +69,7 @@ pub(crate) fn split_endpoint(endpoint: &str) -> (String, String) {
     crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
-pub(crate) fn fixture_to_workflow(fixture: &GraphFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, NodeGraphViewport) {
+pub(crate) fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, NodeGraphViewport) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture.nodes.iter().map(node_to_workflow_record).collect();
     let edges: Vec<NodeGraphEdgeRecord> = fixture
         .edges
@@ -252,12 +252,12 @@ impl protocol::OpBinary for TrinityJackCommand {
 //#endregion 🔖️TrinityJackCommand
 
 //#region 🔖️TrinityJackPlayApp
-/// 🔱️ Trinity Jack play app — a jack-query editor over a live {@link GraphFixture} projection.
+/// 🔱️ Trinity Jack play app — a jack-query editor over a live {@link JackSnapshot} projection.
 #[derive(Default)]
 pub struct TrinityJackPlayApp;
 
 impl DocumentApp for TrinityJackPlayApp {
-    type Projection = GraphFixture;
+    type Snapshot = JackSnapshot;
     type Mutation = TrinityGraphMutation;
     type Config = JackConfig;
     type ConfigMutation = JackConfigMutation;
@@ -269,28 +269,28 @@ impl DocumentApp for TrinityJackPlayApp {
     const APP_ID: &'static str = TRINITY_JACK_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
-    fn initial_projection() -> GraphFixture {
+    fn initial_snapshot() -> JackSnapshot {
         default_fixture()
     }
 
     fn initial_config() -> JackConfig {
-        seeded_jack_config(&self.initial_projection())
+        seeded_jack_config(&Self::initial_snapshot())
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(jack_io())
     }
 
-    fn whole_document_operation(projection: GraphFixture) -> Option<TrinityGraphMutation> {
-        Some(TrinityGraphMutation::SetFixture { fixture: projection })
+    fn whole_document_operation(snapshot: JackSnapshot) -> Option<TrinityGraphMutation> {
+        Some(TrinityGraphMutation::SetFixture { fixture: snapshot })
     }
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
-    /// nodes, in addition to the implicit `"document:out"` — both encode the same `GraphFixture` pack.
-    fn export_media(port: &str, doc: &DocumentView<'_, GraphFixture>) -> Result<Media, MediaError> {
+    /// nodes, in addition to the implicit `"document:out"` — both encode the same `JackSnapshot` pack.
+    fn export_media(port: &str, doc: &DocumentView<'_, JackSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" | "document:out" => {
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -323,9 +323,9 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn handle(command: &TrinityJackCommand, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    fn handle(command: &TrinityJackCommand, doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
+        let fixture = doc.snapshot;
+        let config = cfg.snapshot;
         match command {
             TrinityJackCommand::SetFixtureJson { json } => crate::apps::jack::commands::fixture::set_fixture_json(json),
             TrinityJackCommand::DeleteSelection => crate::apps::jack::commands::fixture::delete_selection(fixture, &config.selected_node_ids),
@@ -349,30 +349,30 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
-        let fixture = doc.projection;
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::jack::terminology::TrinityJackLabels>(&cfg.projection.locale);
+    fn render(body_key: &str, doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
+        let fixture = doc.snapshot;
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::jack::terminology::TrinityJackLabels>(&cfg.snapshot.locale);
         match body_key {
-            TRINITY_JACK_PLAY_BODY_GRAPH => crate::apps::jack::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_WINDOW_GRAPH, fixture, cfg.projection),
-            TRINITY_JACK_PLAY_BODY_EDITOR => crate::apps::jack::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, fixture, cfg.projection),
-            TRINITY_JACK_PLAY_BODY_RESULTS => crate::apps::jack::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, cfg.projection),
-            TRINITY_JACK_PLAY_BODY_DOCUMENT => crate::apps::jack::panels::document::render(fixture, cfg.projection, labels),
-            TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::apps::jack::panels::catalogue::render(cfg.projection, labels),
-            TRINITY_JACK_PLAY_BODY_INSPECTION => crate::apps::jack::panels::inspection::render(fixture, cfg.projection, labels),
+            TRINITY_JACK_PLAY_BODY_GRAPH => crate::apps::jack::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_WINDOW_GRAPH, fixture, cfg.snapshot),
+            TRINITY_JACK_PLAY_BODY_EDITOR => crate::apps::jack::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, fixture, cfg.snapshot),
+            TRINITY_JACK_PLAY_BODY_RESULTS => crate::apps::jack::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, cfg.snapshot),
+            TRINITY_JACK_PLAY_BODY_DOCUMENT => crate::apps::jack::panels::document::render(fixture, cfg.snapshot, labels),
+            TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::apps::jack::panels::catalogue::render(cfg.snapshot, labels),
+            TRINITY_JACK_PLAY_BODY_INSPECTION => crate::apps::jack::panels::inspection::render(fixture, cfg.snapshot, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn window_measures(_doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let mode = cfg.projection.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(crate::apps::jack::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
+    fn window_measures(_doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let mode = cfg.snapshot.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(crate::apps::jack::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![crate::apps::jack::windows::graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_action)])])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = cfg.projection.locale.starts_with("de");
-        let selected = cfg.projection.selected_node_ids.clone();
+        let is_de = cfg.snapshot.locale.starts_with("de");
+        let selected = cfg.snapshot.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let mut menu = Menu::of(registry).action("runQuery").action("reorganize").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));
         // 🩹️ `Direct`, not `ViaNodeGraphEdit`: jack's own `TrinityJackCommand::DeleteSelection` is a
@@ -549,7 +549,7 @@ mod tests {
     }
 
     fn node_id_at(app: &VcsDocumentApp<TrinityJackPlayApp>, index: usize) -> String {
-        app.projection().expect("projection").nodes[index].id.clone()
+        app.snapshot().expect("projection").nodes[index].id.clone()
     }
 
     #[test]
@@ -574,7 +574,7 @@ mod tests {
         app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).expect("render");
         let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).expect("run");
         assert!(!result.mutations.is_empty(), "a SET query emits operations");
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("projection");
         assert!(serde_json::to_string(&projection).unwrap().contains("ran-label"));
     }
 
@@ -669,7 +669,7 @@ mod tests {
         app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
         let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).expect("delete");
         assert!(!result.mutations.is_empty());
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("projection");
         assert!(!projection.nodes.iter().any(|node| node.id == node_id));
     }
 

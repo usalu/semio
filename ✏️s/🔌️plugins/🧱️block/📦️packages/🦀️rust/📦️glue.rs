@@ -8,6 +8,8 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
+extern crate semio_framework_schema as schema;
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
@@ -33,8 +35,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/◻2d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/◻2d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/◻2d/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -174,20 +187,25 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/◻2d/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/◻2d/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/◻2d/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/◻2d/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/◻2d/⚙️engine/🦀️component.rs"]
@@ -200,8 +218,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🧊️3d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🧊️3d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -351,20 +380,25 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🧊️3d/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🧊️3d/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🧊️3d/⚙️engine/🦀️component.rs"]
@@ -377,8 +411,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🖐️5d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🖐️5d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -558,20 +603,25 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🖐️5d/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🖐️5d/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🖐️5d/⚙️engine/🦀️component.rs"]

@@ -5,7 +5,7 @@ use crate::apps::shooting::modes::edit::windows::scene::options;
 use crate::apps::shooting::terminology::ShootingLabels;
 use crate::apps::shooting::SHOOTING_PLAY_APP_ID;
 use crate::artifacts::shooting::engine::is_transparent_shooting_background;
-use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingFixture, ShootingShot};
+use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingSnapshot, ShootingShot};
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
     WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, World3dScene, WorldSunConfig,
@@ -43,20 +43,20 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     vec![
         options::center_model::measure(labels),
-        options::sun_enabled::measure(fixture, labels),
-        options::sun_azimuth::measure(fixture, labels),
-        options::sun_elevation::measure(fixture, labels),
-        options::sun_intensity::measure(fixture, labels),
-        options::ambient::measure(fixture, labels),
-        options::shadow::measure(fixture, labels),
-        options::roughness::measure(fixture, labels),
+        options::sun_enabled::measure(snapshot, labels),
+        options::sun_azimuth::measure(snapshot, labels),
+        options::sun_elevation::measure(snapshot, labels),
+        options::sun_intensity::measure(snapshot, labels),
+        options::ambient::measure(snapshot, labels),
+        options::shadow::measure(snapshot, labels),
+        options::roughness::measure(snapshot, labels),
     ]
 }
 
-pub fn engagement(fixture: &ShootingFixture, config: &ShootingConfig, labels: &ShootingLabels) -> WindowEngagement {
+pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: &ShootingLabels) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(true),
         options: None,
@@ -72,9 +72,9 @@ pub fn engagement(fixture: &ShootingFixture, config: &ShootingConfig, labels: &S
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "shooting.status.model".into(), text: format!("{} assets · {} shots", fixture.assets.len(), fixture.shots.len()) }]),
+        status: Some(vec![WindowEngagementStatus { id: "shooting.status.model".into(), text: format!("{} assets · {} shots", snapshot.assets.len(), snapshot.shots.len()) }]),
         possible_engagements: Some(
-            fixture
+            snapshot
                 .saved_cameras
                 .iter()
                 .map(|saved| WindowEngagementPossible {
@@ -112,9 +112,9 @@ fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
     }
 }
 
-fn collect_mesh_urls(fixture: &ShootingFixture) -> Vec<String> {
+fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
     let mut urls = HashSet::new();
-    for asset in &fixture.assets {
+    for asset in &snapshot.assets {
         if let Some(url) = resolve_asset_mesh_url(asset) {
             urls.insert(url);
         }
@@ -122,12 +122,12 @@ fn collect_mesh_urls(fixture: &ShootingFixture) -> Vec<String> {
     urls.into_iter().collect()
 }
 
-fn world_instances_json(fixture: &ShootingFixture, cfg: &ShootingConfig) -> String {
-    let instances: Vec<Value> = fixture
+fn world_instances_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
+    let instances: Vec<Value> = snapshot
         .assets
         .iter()
         .map(|asset| {
-            let active = fixture.active_asset_id == asset.id || (fixture.active_asset_id.is_empty() && fixture.assets.first().map(|entry| &entry.id) == Some(&asset.id));
+            let active = snapshot.active_asset_id == asset.id || (snapshot.active_asset_id.is_empty() && snapshot.assets.first().map(|entry| &entry.id) == Some(&asset.id));
             let selected = cfg.selected_asset_ids.contains(&asset.id) || active;
             let hovered = cfg.hovered_asset_id.as_deref() == Some(asset.id.as_str());
             let mesh_id = resolve_asset_mesh_url(asset).map_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into(), |url| world3d_mesh_id_from_url(&url));
@@ -151,12 +151,12 @@ fn world_instances_json(fixture: &ShootingFixture, cfg: &ShootingConfig) -> Stri
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_meshes_json(fixture: &ShootingFixture) -> String {
-    world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(fixture))
+fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
+    world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(snapshot))
 }
 
-fn selection_centroid(fixture: &ShootingFixture, selected_ids: &[String]) -> Option<[f64; 3]> {
-    let selected: Vec<&ShootingAsset> = fixture.assets.iter().filter(|asset| selected_ids.contains(&asset.id)).collect();
+fn selection_centroid(snapshot: &ShootingSnapshot, selected_ids: &[String]) -> Option<[f64; 3]> {
+    let selected: Vec<&ShootingAsset> = snapshot.assets.iter().filter(|asset| selected_ids.contains(&asset.id)).collect();
     if selected.is_empty() {
         return None;
     }
@@ -165,24 +165,24 @@ fn selection_centroid(fixture: &ShootingFixture, selected_ids: &[String]) -> Opt
     Some([sum[0] / count, sum[1] / count, sum[2] / count])
 }
 
-fn world_selection_json(fixture: &ShootingFixture, cfg: &ShootingConfig) -> String {
+fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(&cfg.selection_method, &cfg.selected_asset_ids, cfg.hovered_asset_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
         object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
         object.insert("transformMode".into(), json!(cfg.active_utility_id));
-        object.insert("activeObjectId".into(), json!(fixture.active_asset_id));
+        object.insert("activeObjectId".into(), json!(snapshot.active_asset_id));
         object.insert("gumballActive".into(), json!(!cfg.selected_asset_ids.is_empty()));
-        if let Some(target) = selection_centroid(fixture, &cfg.selected_asset_ids) {
+        if let Some(target) = selection_centroid(snapshot, &cfg.selected_asset_ids) {
             object.insert("gumballTarget".into(), json!(target));
         }
     }
     value.to_string()
 }
 
-fn shooting_environment_json(fixture: &ShootingFixture) -> String {
-    let scene = &fixture.scene;
+fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
+    let scene = &snapshot.scene;
     let mut value = json!({
         "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color },
         "sun": { "enabled": scene.sun.enabled, "azimuth": scene.sun.azimuth, "elevation": scene.sun.elevation, "intensity": scene.sun.intensity, "color": scene.sun.color },
@@ -205,15 +205,15 @@ fn shooting_fit_json(cfg: &ShootingConfig) -> String {
     json!({ "enabled": cfg.center_model, "revision": cfg.fit_revision, "padding": 1.25 }).to_string()
 }
 
-pub fn render(fixture: &ShootingFixture, cfg: &ShootingConfig) -> UiNode {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
     build_world_3d_scene(
         SHOOTING_PLAY_SURFACE_SCENE,
         SHOOTING_PLAY_APP_ID,
         World3dScene {
-            environment_json: Some(shooting_environment_json(fixture)),
-            frame_json: crate::artifacts::shooting::engine::active_shot(fixture).map(shooting_frame_json),
+            environment_json: Some(shooting_environment_json(snapshot)),
+            frame_json: crate::artifacts::shooting::engine::active_shot(snapshot).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
-            ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(fixture), world_instances_json(fixture, cfg), world_selection_json(fixture, cfg), &WorldSunConfig::default())
+            ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot, cfg), world_selection_json(snapshot, cfg), &WorldSunConfig::default())
         },
     )
 }

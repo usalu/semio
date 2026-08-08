@@ -1,0 +1,6 @@
+# 🧬️ GIS terrain snapshot schema — persistent fields only.
+
+type GisTerrainSnapshot {
+  exaggeration: Float! @state(class: PERSISTENT)
+  importedFeaturesJson: String! @state(class: PERSISTENT)
+}

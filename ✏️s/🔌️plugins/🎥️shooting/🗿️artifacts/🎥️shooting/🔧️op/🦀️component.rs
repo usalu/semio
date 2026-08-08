@@ -11,11 +11,11 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingFixture, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShot, ShootingShotPatch};
+use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingSnapshot, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShot, ShootingShotPatch};
 use protocol::CollectionMutation;
 
 //#region 🔖️OpText
-/// 🌿️ `ShootingFixture`'s three collections (`assets`/`shots`/`saved_cameras`) are `Vec<T>` of a
+/// 🌿️ `ShootingSnapshot`'s three collections (`assets`/`shots`/`saved_cameras`) are `Vec<T>` of a
 /// plain `#[derive(dsl::DslRecord)]` struct, but `#[dsl(statements, block)]` needs its element type
 /// to implement `dsl::DslVariants` (enum-only) — these one-variant newtype-tuple wrappers close
 /// that gap without duplicating any field: the newtype-tuple codegen delegates entirely to the
@@ -42,12 +42,12 @@ enum ShootingSavedCameraNode {
     SavedCamera(ShootingSavedCamera),
 }
 
-/// 📄️ Op-local mirror of `ShootingFixture` for `SetFixture`'s `#[dsl(block)]` payload — reuses the
+/// 📄️ Op-local mirror of `ShootingSnapshot` for `SetSnapshot`'s `#[dsl(block)]` payload — reuses the
 /// derive-generated shape, independent of the artifact's own fixture DSL mirror.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(extension = "shooting")]
 #[dsl(layout = "lines")]
-struct ShootingFixtureDsl {
+struct ShootingSnapshotDsl {
     schema: String,
     active_shot_id: String,
     active_asset_id: String,
@@ -62,7 +62,7 @@ struct ShootingFixtureDsl {
 }
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for ShootingFixtureDsl {
+impl store::DocumentDsl for ShootingSnapshotDsl {
     const EXTENSION: &'static str = "shooting";
     fn envelope_id() -> &'static str { "shooting" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -88,7 +88,7 @@ impl store::DocumentDsl for ShootingFixtureDsl {
     }
 }
 
-impl store::DocumentPack for ShootingFixtureDsl {
+impl store::DocumentPack for ShootingSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -118,20 +118,20 @@ impl store::DocumentPack for ShootingFixtureDsl {
 
 
 
-fn shooting_fixture_to_dsl(fixture: &ShootingFixture) -> ShootingFixtureDsl {
-    ShootingFixtureDsl {
-        schema: fixture.schema.clone(),
-        active_shot_id: fixture.active_shot_id.clone(),
-        active_asset_id: fixture.active_asset_id.clone(),
-        scene: fixture.scene.clone(),
-        assets: fixture.assets.clone(),
-        shots: fixture.shots.clone(),
-        saved_cameras: fixture.saved_cameras.clone(),
+fn shooting_snapshot_to_dsl(snapshot: &ShootingSnapshot) -> ShootingSnapshotDsl {
+    ShootingSnapshotDsl {
+        schema: snapshot.schema.clone(),
+        active_shot_id: snapshot.active_shot_id.clone(),
+        active_asset_id: snapshot.active_asset_id.clone(),
+        scene: snapshot.scene.clone(),
+        assets: snapshot.assets.clone(),
+        shots: snapshot.shots.clone(),
+        saved_cameras: snapshot.saved_cameras.clone(),
     }
 }
 
-fn shooting_fixture_from_dsl(dsl_fixture: ShootingFixtureDsl) -> ShootingFixture {
-    ShootingFixture {
+fn shooting_snapshot_from_dsl(dsl_fixture: ShootingSnapshotDsl) -> ShootingSnapshot {
+    ShootingSnapshot {
         schema: dsl_fixture.schema,
         assets: dsl_fixture.assets,
         saved_cameras: dsl_fixture.saved_cameras,
@@ -247,9 +247,9 @@ enum ShootingMutationDsl {
         sz: f64,
     },
     #[dsl(key = "fixture")]
-    SetFixture {
+    SetSnapshot {
         #[dsl(block)]
-        fixture: ShootingFixtureDsl,
+        snapshot: ShootingSnapshotDsl,
     },
 }
 //#region 🔖️HandcraftedOpCodecs
@@ -318,7 +318,7 @@ fn shooting_mutation_to_dsl(operation: &ShootingMutation) -> ShootingMutationDsl
         ShootingMutation::TranslateAssets { asset_ids, dx, dy, dz } => ShootingMutationDsl::TranslateAssets { asset_ids: asset_ids.clone(), dx: *dx, dy: *dy, dz: *dz },
         ShootingMutation::RotateAssets { asset_ids, ax, ay, az, angle } => ShootingMutationDsl::RotateAssets { asset_ids: asset_ids.clone(), ax: *ax, ay: *ay, az: *az, angle: *angle },
         ShootingMutation::ScaleAssets { asset_ids, sx, sy, sz } => ShootingMutationDsl::ScaleAssets { asset_ids: asset_ids.clone(), sx: *sx, sy: *sy, sz: *sz },
-        ShootingMutation::SetFixture { fixture } => ShootingMutationDsl::SetFixture { fixture: shooting_fixture_to_dsl(fixture) },
+        ShootingMutation::SetSnapshot { snapshot } => ShootingMutationDsl::SetSnapshot { snapshot: shooting_snapshot_to_dsl(snapshot) },
     }
 }
 
@@ -352,7 +352,7 @@ fn shooting_mutation_from_dsl(dsl_op: ShootingMutationDsl) -> ShootingMutation {
         ShootingMutationDsl::TranslateAssets { asset_ids, dx, dy, dz } => ShootingMutation::TranslateAssets { asset_ids, dx, dy, dz },
         ShootingMutationDsl::RotateAssets { asset_ids, ax, ay, az, angle } => ShootingMutation::RotateAssets { asset_ids, ax, ay, az, angle },
         ShootingMutationDsl::ScaleAssets { asset_ids, sx, sy, sz } => ShootingMutation::ScaleAssets { asset_ids, sx, sy, sz },
-        ShootingMutationDsl::SetFixture { fixture } => ShootingMutation::SetFixture { fixture: shooting_fixture_from_dsl(fixture) },
+        ShootingMutationDsl::SetSnapshot { snapshot } => ShootingMutation::SetSnapshot { snapshot: shooting_snapshot_from_dsl(snapshot) },
     }
 }
 

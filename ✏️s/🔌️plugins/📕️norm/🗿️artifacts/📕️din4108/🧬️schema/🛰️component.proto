@@ -1,0 +1,45 @@
+syntax = "proto3";
+package semio.s.norm.din4108.artifact;
+
+// 🧬️ Din4108 artifact schema — every field with its state class.
+
+message Din4108Artifact {
+  // @state persistent
+  string category = 1;
+  // @state persistent
+  repeated string layers = 2;
+  // @state persistent
+  string climate = 3;
+  // @state persistent
+  double airtightness_n50 = 4;
+  // @state persistent
+  double psi_times_l_sum = 5;
+  // @state persistent
+  double rh_int = 6;
+  // @state persistent
+  string catalog_id = 7;
+  // @state persistent
+  string material_id = 8;
+  // @state persistent
+  string airtightness_class = 9;
+  // @state persistent
+  double t_int_c = 10;
+  // @state persistent
+  double solar_absorptance = 11;
+  // @state persistent
+  double irradiance_w_m2 = 12;
+  // @state persistent
+  double moisture_mu_exterior = 13;
+  // @state persistent
+  double moisture_mu_interior = 14;
+  // @state persistent
+  double envelope_area_m2 = 15;
+  // @state persistent
+  bool bb2_details_conform = 16;
+  // @state persistent
+  string application_type = 17;
+  // @state persistent
+  string declared_application_class = 18;
+  // @state shared-ui
+  optional uint32 selected_check_index = 19;
+}

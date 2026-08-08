@@ -1,0 +1,153 @@
+syntax = "proto3";
+package semio.s.norm.en1993.snapshot;
+
+message En1993Snapshot {
+  // @state persistent
+  string annex = 1;
+  // @state persistent
+  double n_ed_kn = 2;
+  // @state persistent
+  double m_ed_knm = 3;
+  // @state persistent
+  double v_ed_kn = 4;
+  // @state persistent
+  double a_mm2 = 5;
+  // @state persistent
+  double a_v_mm2 = 6;
+  // @state persistent
+  double w_pl_mm3 = 7;
+  // @state persistent
+  double f_y_mpa = 8;
+  // @state persistent
+  double f_u_mpa = 9;
+  // @state persistent
+  double chi = 10;
+  // @state persistent
+  double a_net_mm2 = 11;
+  // @state persistent
+  double tension_n_ed_kn = 12;
+  // @state persistent
+  double fire_thickness_mm = 13;
+  // @state persistent
+  string fire_rating = 14;
+  // @state persistent
+  double fire_massivity = 15;
+  // @state persistent
+  double fire_mu_0 = 16;
+  // @state persistent
+  double fire_design_temperature_c = 17;
+  // @state persistent
+  double cf_b_bar_mm = 18;
+  // @state persistent
+  double cf_t_mm = 19;
+  // @state persistent
+  double cf_k_sigma = 20;
+  // @state persistent
+  double cf_psi = 21;
+  // @state persistent
+  double cf_n_ed_kn = 22;
+  // @state persistent
+  double cf_gross_resistance_kn = 23;
+  // @state persistent
+  double stainless_m_ed_knm = 24;
+  // @state persistent
+  double stainless_w_pl_mm3 = 25;
+  // @state persistent
+  double stainless_f_y_mpa = 26;
+  // @state persistent
+  double plated_lambda_p = 27;
+  // @state persistent
+  double plated_sigma_ed_mpa = 28;
+  // @state persistent
+  double silo_t_mm = 29;
+  // @state persistent
+  double silo_r_mm = 30;
+  // @state persistent
+  double shell_sigma_x_ed_mpa = 31;
+  // @state persistent
+  double silo_k = 32;
+  // @state persistent
+  double silo_gamma_kn_m3 = 33;
+  // @state persistent
+  double silo_depth_m = 34;
+  // @state persistent
+  double bolt_f_ed_kn = 35;
+  // @state persistent
+  uint32 bolt_n_bolts = 36;
+  // @state persistent
+  double bolt_a_s_mm2 = 37;
+  // @state persistent
+  double bolt_e1_mm = 38;
+  // @state persistent
+  double bolt_e2_mm = 39;
+  // @state persistent
+  double bolt_d0_mm = 40;
+  // @state persistent
+  double bolt_d_mm = 41;
+  // @state persistent
+  double bolt_t_mm = 42;
+  // @state persistent
+  double bolt_f_u_mpa = 43;
+  // @state persistent
+  double bolt_f_ub_mpa = 44;
+  // @state persistent
+  double weld_a_mm = 45;
+  // @state persistent
+  double weld_l_mm = 46;
+  // @state persistent
+  double weld_f_u_mpa = 47;
+  // @state persistent
+  string weld_steel_grade = 48;
+  // @state persistent
+  double weld_f_ed_kn = 49;
+  // @state persistent
+  double delta_sigma_mpa = 50;
+  // @state persistent
+  uint32 fatigue_category = 51;
+  // @state persistent
+  string fatigue_method = 52;
+  // @state persistent
+  string t10_steel_subgrade = 53;
+  // @state persistent
+  double t10_actual_thickness_mm = 54;
+  // @state persistent
+  double t10_t_ed_c = 55;
+  // @state persistent
+  double tension_component_f_uk_kn = 56;
+  // @state persistent
+  double tension_component_f_k_kn = 57;
+  // @state persistent
+  double tension_component_n_ed_kn = 58;
+  // @state persistent
+  double hss_w_el_mm3 = 59;
+  // @state persistent
+  double hss_f_y_mpa = 60;
+  // @state persistent
+  uint32 hss_section_class = 61;
+  // @state persistent
+  double hss_m_ed_knm = 62;
+  // @state persistent
+  double bridge_lambda = 63;
+  // @state persistent
+  double bridge_phi_2 = 64;
+  // @state persistent
+  double bridge_delta_sigma_p_mpa = 65;
+  // @state persistent
+  double tower_wind_factor = 66;
+  // @state persistent
+  double tower_n_ed_kn = 67;
+  // @state persistent
+  double pile_sigma_mpa = 68;
+  // @state persistent
+  double pile_k_red = 69;
+  // @state persistent
+  double pile_n_ed_kn = 70;
+  // @state persistent
+  double crane_f_z_ed_kn = 71;
+  // @state persistent
+  double crane_wheel_contact_length_mm = 72;
+  // @state persistent
+  double crane_dispersion_mm = 73;
+  // @state persistent
+  double crane_t_w_mm = 74;
+}

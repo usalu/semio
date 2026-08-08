@@ -1,0 +1,68 @@
+syntax = "proto3";
+package semio.s.flow.flow.artifact;
+
+// 🧬️ Flow artifact schema — every field with its state class.
+
+message FlowArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  CameraJson camera = 2;
+  // @state persistent
+  repeated Widget widgets = 3;
+  // @state persistent
+  repeated SynapseSpec synapses = 4;
+  // @state persistent
+  map<string, WidgetLayout> layout = 5;
+  // @state shared-ui
+  repeated string selected_node_ids = 6;
+  // @state shared-ui
+  repeated string selected_edge_ids = 7;
+  // @state shared-ui
+  repeated string selected_handle_ids = 8;
+  // @state shared-ui
+  repeated string preview_off_node_ids = 9;
+  // @state local-ui
+  string lod_mode = 10;
+  // @state local-ui
+  double proximity_distance = 11;
+  // @state local-ui
+  bool grid_visible = 12;
+  // @state local-ui
+  bool grid_snap_enabled = 13;
+  // @state local-ui
+  double grid_factor = 14;
+  // @state local-ui
+  string catalogue_sections_json = 15;
+  // @state local-ui
+  string automation_enabled_json = 16;
+  // @state local-ui
+  string contributions_json = 17;
+  // @state local-ui
+  string generation_json = 18;
+  // @state local-ui
+  string locale = 19;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+
+message Widget {
+  string json = 1;
+}

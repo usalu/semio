@@ -3,7 +3,7 @@
 //! `world.rs` precedent — this lives at app level rather than in the artifact's `⚙️engine`).
 
 use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::{port_key, Graph, GraphFixture, Node, PortDirection};
+use crate::artifacts::jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
 use crate::artifacts::rewrite::engine::{ApplyRuleResult, Rule};
 use crate::ast::QueryResult;
 use crate::executor::execute;
@@ -223,7 +223,7 @@ fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
         .collect();
     let edges: Vec<serde_json::Value> = graph.edges.values().map(|edge| serde_json::json!({ "source": edge.source, "target": edge.target })).collect();
     serde_json::json!({
-        "schema": GraphFixture::SCHEMA,
+        "schema": JackSnapshot::SCHEMA,
         "nodes": nodes,
         "edges": edges,
     })
@@ -251,7 +251,7 @@ fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &se
     Ok(())
 }
 
-fn force_layout_reposition_operations(fixture: &GraphFixture) -> Result<Vec<TrinityGraphMutation>, TrinityRewriteError> {
+fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Vec<TrinityGraphMutation>, TrinityRewriteError> {
     let mut graph = Graph::from_fixture(fixture.clone())?;
     apply_force_layout_to_trinity_graph(&mut graph)?;
     let next = graph.to_fixture();
@@ -297,7 +297,7 @@ impl TrinityBridge {
     pub fn from_graph(graph: &Graph) -> Self {
         let fixture = graph.to_fixture();
         let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture));
-        let graph = Graph::from_fixture(store.projection().expect("projection")).expect("graph");
+        let graph = Graph::from_fixture(store.snapshot().expect("projection")).expect("graph");
         let mut host = Self {
             graph,
             store,
@@ -324,7 +324,7 @@ impl TrinityBridge {
     }
 
     fn refresh_graph_from_store(&mut self) -> Result<(), TrinityRewriteError> {
-        self.graph = Graph::from_fixture(self.store.projection()?)?;
+        self.graph = Graph::from_fixture(self.store.snapshot()?)?;
         Ok(())
     }
 
@@ -351,7 +351,7 @@ impl TrinityBridge {
 
     pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewriteError> {
         use store::DocumentCommand;
-        self.store.dispatch(DocumentCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from)
+        self.store.dispatch(DocumentCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from).map(|_| ())
     }
 
     pub fn store_generation(&self) -> u64 {
@@ -404,7 +404,7 @@ impl TrinityBridge {
     }
 
     pub fn reorganize(&mut self) {
-        match force_layout_reposition_operations(&self.store.projection().unwrap_or_else(|_| self.graph.to_fixture())) {
+        match force_layout_reposition_operations(&self.store.snapshot().unwrap_or_else(|_| self.graph.to_fixture())) {
             Ok(operations) if !operations.is_empty() => {
                 if let Err(err) = self.dispatch(operations) {
                     eprintln!("[DEBUG] trinity reorganize dispatch failed: {err}");
@@ -543,7 +543,7 @@ impl TrinityBridge {
     }
 
     fn commit_drag_positions(&mut self) -> Result<(), TrinityRewriteError> {
-        let projection = self.store.projection()?;
+        let projection = self.store.snapshot()?;
         let mut operations = Vec::new();
         for (nid, widget_id) in &self.node_id_map {
             let Some(engine_node) = self.engine.nodes.get(nid) else {
@@ -756,10 +756,10 @@ mod wasm_session {
     impl TrinitySession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            let dsl = include_str!("../📚️examples/🎬️demo-session/🖼️assets/🎮️demo.cmd.semio");
-            let host = GraphFixture::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
+            let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            let host = JackSnapshot::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
                 let empty =
-                    GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+                    JackSnapshot { schema: JackSnapshot::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
                 TrinityBridge::from_graph(&Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
             });
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
@@ -966,8 +966,8 @@ mod tests {
     use store::DocumentDsl;
 
     fn nakagin_graph() -> Graph {
-        let dsl = include_str!("../📚️examples/🎬️demo-session/🖼️assets/🎮️demo.cmd.semio");
-        let mut g = Graph::from_fixture(GraphFixture::parse_dsl(dsl).unwrap()).unwrap();
+        let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+        let mut g = Graph::from_fixture(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap();
         g.recompute_derived();
         g
     }

@@ -1,7 +1,7 @@
-use crate::artifacts::flow::FlowFixture;
 use crate::artifacts::flow::mutations::FlowMutation;
+use crate::artifacts::flow::FlowSnapshot;
 use protocol::Mutation;
 
-pub fn inverse(base: &FlowFixture, mutation: &FlowMutation) -> Vec<FlowMutation> {
-    <FlowMutation as Mutation<FlowFixture>>::inverse(mutation, base)
+pub fn inverse(base: &FlowSnapshot, mutation: &FlowMutation) -> Vec<FlowMutation> {
+    <FlowMutation as Mutation<FlowSnapshot>>::inverse(mutation, base)
 }

@@ -1,0 +1,406 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/jack/diff.json",
+  "title": "JackDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "JackArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "name": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "manifestId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "manifest": {
+      "$ref": "#/$defs/Manifest",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "$ref": "#/$defs/JackNodesDelta",
+      "x-semio-state": "persistent"
+    },
+    "edges": {
+      "$ref": "#/$defs/JackEdgesDelta",
+      "x-semio-state": "persistent"
+    },
+    "rootNodeId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "selectedNodeIds": {
+      "$ref": "#/$defs/JackStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeFixtureId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "jackQuery": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "viewportCamera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "local-ui"
+    },
+    "jackResultJson": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "editorEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "graphEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "resultsEngagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "reorganizeEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "editorSelection": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/JackEditorSelection"
+        }
+      ],
+      "x-semio-state": "local-ui"
+    },
+    "revision": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "JackStringList": {
+      "title": "JackStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "JackNodesDelta": {
+      "title": "JackNodesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Node"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JackNodePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "JackNodePatchEntry": {
+      "title": "JackNodePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/JackNodePatch"
+        }
+      }
+    },
+    "JackNodePatch": {
+      "title": "JackNodePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "width": {
+          "type": "number",
+          "format": "double"
+        },
+        "height": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "JackEdgesDelta": {
+      "title": "JackEdgesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JackEdgePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "JackEdgePatchEntry": {
+      "title": "JackEdgePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/JackEdgePatch"
+        }
+      }
+    },
+    "JackEdgePatch": {
+      "title": "JackEdgePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "valueJson": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "JackEditorSelection": {
+      "title": "JackEditorSelection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Node": {
+      "title": "Node",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Edge": {
+      "title": "Edge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "Manifest": {
+      "title": "Manifest",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeKinds"
+      ],
+      "properties": {
+        "nodeKinds": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

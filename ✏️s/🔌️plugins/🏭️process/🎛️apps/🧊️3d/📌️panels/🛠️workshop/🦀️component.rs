@@ -6,7 +6,7 @@ use crate::apps::process3d::iconed_tree_item_with_action;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::Process3dLabels;
 use crate::artifacts::process3d::engine::installed_catalogs;
-use crate::artifacts::process3d::Process3dDocument;
+use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode};
 use serde_json::json;
 
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dDocument, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
+pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
     let mut builder = PanelTreeBuilder::new("process3d-play-workshop");
     let machine_items: Vec<UiTreeItemNode> = fixture
         .workshop
@@ -87,7 +87,7 @@ mod tests {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         assert!(!result.mutations.is_empty(), "adding an uninstalled catalog machine must emit an operation");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         assert!(document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"), "chopSaw should now be in the workshop");
         let rendered = testkit::render(&mut app, inspection::PROCESS_3D_PLAY_BODY_INSPECTION);
         assert!(!rendered.contains("No selection"), "expected the newly added machine to be selected: {rendered}");
@@ -97,10 +97,10 @@ mod tests {
     fn add_workshop_machine_action_is_idempotent_when_already_installed() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
-        let count_after_first = app.projection().expect("projection").workshop.machines.len();
+        let count_after_first = app.snapshot().expect("snapshot").workshop.machines.len();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         assert!(result.mutations.is_empty(), "adding an already-installed machine must be a no-op");
-        assert_eq!(app.projection().expect("projection").workshop.machines.len(), count_after_first);
+        assert_eq!(app.snapshot().expect("snapshot").workshop.machines.len(), count_after_first);
     }
 
     #[test]
@@ -109,7 +109,7 @@ mod tests {
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         let result = testkit::dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "chopSaw".into() }));
         assert!(!result.mutations.is_empty());
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         assert!(!document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"));
         let rendered = testkit::render(&mut app, inspection::PROCESS_3D_PLAY_BODY_INSPECTION);
         assert!(rendered.contains("No selection"), "removing the selected machine must clear the selection: {rendered}");
@@ -135,7 +135,7 @@ mod tests {
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "machine:circularSaw".into(), field: "crosscut.bladeDiameter".into(), number: Some(0.4), text: None }));
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
         assert!(!result.mutations.is_empty());
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         let last = document.steps.last().expect("inserted step");
         let ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius, .. }, .. } = &last.measure else {
             panic!("expected a cylinder cut tool, got {:?}", last.measure);

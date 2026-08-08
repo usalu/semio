@@ -1,0 +1,50 @@
+// 🧬️ EN 1995 diff schema.
+syntax = "proto3";
+package semio.s.norm.en1995.diff;
+
+message En1995Diff {
+  // @state persistent
+  En1995Artifact artifact = 1;
+  // @state persistent
+  optional double annex = 2;
+  // @state persistent
+  optional double m_ed_knm = 3;
+  // @state persistent
+  optional double n_ed_kn = 4;
+  // @state persistent
+  optional double v_ed_kn = 5;
+  // @state persistent
+  optional double w_mm3 = 6;
+  // @state persistent
+  optional double a_mm2 = 7;
+  // @state persistent
+  optional double b_mm = 8;
+  // @state persistent
+  optional double h_mm = 9;
+  // @state persistent
+  optional double f_m_k = 10;
+  // @state persistent
+  optional double f_c_0_k = 11;
+  // @state persistent
+  optional double service_class = 12;
+  // @state persistent
+  optional double load_duration = 13;
+  // @state persistent
+  optional double m_crit_knm = 14;
+  // @state persistent
+  optional double f_ed_kn = 15;
+  // @state persistent
+  optional double a_ef_mm2 = 16;
+  // @state persistent
+  optional double f_v_k = 17;
+  // @state persistent
+  optional double fire_duration_min = 18;
+  // @state persistent
+  optional double section_depth_mm = 19;
+  // @state persistent
+  optional double a_vert_m_s2 = 20;
+  // @state persistent
+  optional double n_cycles_bridge = 21;
+  // @state shared-ui
+  optional uint32 selected_check_index = 22;
+}

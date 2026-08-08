@@ -6,14 +6,14 @@
 //! actions with distinct wire keywords, and share one helper rather than duplicating the body.
 
 use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
-use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
+use crate::artifacts::gisterrain::op::GisTerrainMutation;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SelectionHelpers
 /// 👁️ The shared body of `setSelection`/`worldSelect`: replace the selected pin id set.
-fn select_ids(ids: &[String]) -> Emit<Gis3dTerrainMutation, Gis3dConfigMutation> {
+fn select_ids(ids: &[String]) -> Emit<GisTerrainMutation, Gis3dConfigMutation> {
     Emit::config(vec![Gis3dConfigMutation::SetSelection { ids: ids.to_vec() }])
 }
 //#endregion 🔖️SelectionHelpers
@@ -28,7 +28,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(select_ids(&payload.ids))
     }
 }
@@ -44,7 +44,7 @@ pub mod world_select {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(select_ids(&payload.ids))
     }
 }
@@ -64,7 +64,7 @@ mod tests {
     fn selection_is_config_state_and_emits_no_operations() {
         let mut app = app();
         let selection = dispatch(&mut app, Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: vec![PIN.into()] }));
-        assert!(selection.operations.is_empty(), "selection is ephemeral config state");
+        assert!(selection.mutations.is_empty(), "selection is ephemeral config state");
     }
 
     /// 🗂️ Both rows must emit the identical config operation. Probes the emitted payload rather than
@@ -74,9 +74,9 @@ mod tests {
     fn both_rows_write_the_same_selection() {
         let document = crate::artifacts::gisterrain::engine::default_terrain_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
+        let doc = DocumentView { snapshot: &document, history: &history };
         let config = Gis3dConfig::default();
-        let cfg = ConfigView { projection: &config };
+        let cfg = ConfigView { snapshot: &config };
 
         let via_set = set_selection::handle(&set_selection::SetSelection { ids: vec![PIN.into()] }, &doc, &cfg).expect("setSelection");
         let via_world = world_select::handle(&world_select::WorldSelect { ids: vec![PIN.into()] }, &doc, &cfg).expect("worldSelect");

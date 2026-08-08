@@ -19,7 +19,7 @@ use crate::apps::process3d::modes::edit::windows::workpiece;
 use crate::apps::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use crate::apps::process3d::terminology::process3d_labels;
 use crate::artifacts::process3d::op::Process3dMutation;
-use crate::artifacts::process3d::Process3dDocument;
+use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
@@ -75,8 +75,8 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`) and the `dsl` wire keyword (the kebab `#[dsl(key = ..)]` the codec uses) — copied
     /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match. **Row order is the binary
     /// variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Process3dCommand for Process3dDocument, Process3dMutation, Process3dConfig, Process3dConfigMutation {
-        "setDocument" as "document" => set_document::SetDocument,
+    pub enum Process3dCommand for Process3dSnapshot, Process3dMutation, Process3dConfig, Process3dConfigMutation {
+        "setSnapshot" as "document" => set_snapshot::SetSnapshot,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addStep" as "add-step" => add_step::AddStep,
         "addWorkshopMachine" as "add-workshop-machine" => add_workshop_machine::AddWorkshopMachine,
@@ -119,7 +119,7 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use camera::set_camera;
 use cursor::{set_cursor, step_cursor, step_cursor_back, step_cursor_forward};
-use document::{set_active_example, set_document};
+use document::{set_active_example, set_snapshot};
 use engagement::{engagement_abort, engagement_input, engagement_submit};
 use inspector::patch_inspector;
 use locale::set_locale;
@@ -141,7 +141,7 @@ use world::{world_face_drag_end, world_pick, world_pointer_down};
 pub struct Process3dPlayApp;
 
 impl DocumentApp for Process3dPlayApp {
-    type Projection = Process3dDocument;
+    type Snapshot = Process3dSnapshot;
     type Mutation = Process3dMutation;
     type Config = Process3dConfig;
     type ConfigMutation = Process3dConfigMutation;
@@ -154,7 +154,7 @@ impl DocumentApp for Process3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
-    fn initial_projection() -> Process3dDocument {
+    fn initial_snapshot() -> Process3dSnapshot {
         crate::artifacts::process3d::engine::default_document()
     }
 
@@ -164,11 +164,11 @@ impl DocumentApp for Process3dPlayApp {
 
     //#region 🔖️Media
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
-    /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding `export_media`
+    /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, Process3dDocument>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::artifacts::process3d::engine::export_process3d_model(doc.projection, "step") {
+            "brep:out" => match crate::artifacts::process3d::engine::export_process3d_model(doc.snapshot, "step") {
                 Some(export) => {
                     let text = match export.data {
                         Value::String(text) => text,
@@ -180,21 +180,21 @@ impl DocumentApp for Process3dPlayApp {
             },
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(semio_framework_plugin::Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(projection: Process3dDocument) -> Option<Process3dMutation> {
-        Some(Process3dMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: Process3dSnapshot) -> Option<Process3dMutation> {
+        Some(Process3dMutation::SetSnapshot { snapshot })
     }
 
     /// 📥️ `geometry:in` (best-effort STEP-text import) plus the inherited `document:in` default (base64
     /// pack via `whole_document_operation`, replicated inline — overriding `import_media` shadows the
     /// trait's provided body for every port).
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &DocumentView<'_, Process3dDocument>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &DocumentView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -209,7 +209,7 @@ impl DocumentApp for Process3dPlayApp {
                 use base64::Engine;
                 let data_url = format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(json.as_bytes()));
                 match crate::artifacts::process3d::engine::import_process3d_model("geometry-in.step", &data_url) {
-                    Some(document) => Ok(Emit::mutations(vec![Process3dMutation::SetDocument { document }])),
+                    Some(snapshot) => Ok(Emit::mutations(vec![Process3dMutation::SetSnapshot { snapshot }])),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
                 }
             }
@@ -218,8 +218,8 @@ impl DocumentApp for Process3dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <Process3dDocument as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(projection) {
+                let snapshot = <Process3dSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -235,7 +235,7 @@ impl DocumentApp for Process3dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Process3dCommand, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -245,26 +245,26 @@ impl DocumentApp for Process3dPlayApp {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
-        crate::artifacts::process3d::engine::sync_process_machine_contributions(&cfg.projection.contributions_json);
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
+        crate::artifacts::process3d::engine::sync_process_machine_contributions(&cfg.snapshot.contributions_json);
+        let config = cfg.snapshot;
         let labels = process3d_labels(config);
         match body_key {
-            PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc.projection, config),
-            PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.projection, config, labels),
-            PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.projection, labels),
-            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.projection, config, labels),
-            PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc.projection, config, labels),
+            PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc.snapshot, config),
+            PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, config, labels),
+            PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.snapshot, labels),
+            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, config, labels),
+            PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc.snapshot, config, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
-        HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.projection, cfg.projection, process3d_labels(cfg.projection)))])
+    fn window_engagements(doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+        HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, process3d_labels(cfg.snapshot)))])
     }
 
-    fn window_measures(_doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.projection))])
+    fn window_measures(_doc: &DocumentView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
     }
 }
 //#endregion 🔖️Process3dPlayApp
@@ -308,7 +308,7 @@ pub fn create_process3d_app() -> App {
             .shell_action("exportModel", LocalizedLabel::native("Export Model", "Modell exportieren"))
             .shell_action("loadModelRequest", LocalizedLabel::native("Load Model…", "Modell laden…"))
             // 🔧️ Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
-            .action_with(internal_action("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
+            .action_with(internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
             .action_with(internal_action("addWorkshopMachine", LocalizedLabel::native("Add Machine", "Maschine hinzufügen"), ActionKind::Mutation))
             .action_with(internal_action("removeWorkshopMachine", LocalizedLabel::native("Remove Machine", "Maschine entfernen"), ActionKind::Mutation))
             .action_with(internal_action("updateWorkshopMachine", LocalizedLabel::native("Update Machine", "Maschine aktualisieren"), ActionKind::Mutation))
@@ -404,13 +404,99 @@ pub(crate) mod testkit {
     pub type Process3dApp = VcsDocumentApp<Process3dPlayApp>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+
+    /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
+    fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
+        use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
+        use semio_framework::{Contribution, ProgramContributionEntry};
+        fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
+            CapabilityParameter { id: id.into(), label: label.into(), value }
+        }
+        let wood_machines = vec![
+            WorkshopMachine {
+                id: "circularSaw".into(),
+                label: "Circular Saw".into(),
+                icon_id: "scissors".into(),
+                catalog_id: None,
+                capabilities: vec![Capability {
+                    id: "crosscut".into(),
+                    label: "Crosscut".into(),
+                    icon_id: "scissors".into(),
+                    recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                    parameters: vec![param("bladeDiameter", "Blade Diameter", 0.184), param("kerf", "Kerf", 0.002), param("maxCutDepth", "Max Cut Depth", 0.065)],
+                    rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }],
+                }],
+            },
+            WorkshopMachine {
+                id: "tableSaw".into(),
+                label: "Table Saw".into(),
+                icon_id: "scissors".into(),
+                catalog_id: None,
+                capabilities: vec![Capability {
+                    id: "rip".into(),
+                    label: "Rip".into(),
+                    icon_id: "scissors".into(),
+                    recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                    parameters: vec![param("bladeDiameter", "Blade Diameter", 0.315), param("kerf", "Kerf", 0.0032), param("maxCutDepth", "Max Cut Depth", 0.102), param("fenceWidth", "Fence Width", 0.8)],
+                    rules: vec![
+                        CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 },
+                        CapabilityRule::Max { quantity: StockQuantity::Width, parameter: "fenceWidth".into(), margin: 0.0 },
+                    ],
+                }],
+            },
+        ];
+        let metal_machines = vec![WorkshopMachine {
+            id: "chopSaw".into(),
+            label: "Chop Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "crosscut".into(),
+                label: "Crosscut".into(),
+                icon_id: "scissors".into(),
+                recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                parameters: vec![param("bladeDiameter", "Blade Diameter", 0.35), param("kerf", "Kerf", 0.002), param("maxCutDepth", "Max Cut Depth", 0.12)],
+                rules: vec![],
+            }],
+        }];
+        let entries = vec![
+            ProgramContributionEntry {
+                plugin_id: "process-wood".into(),
+                contribution: Contribution::ProcessMachines {
+                    app_id: "process3d-play".into(),
+                    module_id: "wood".into(),
+                    label: "Wood".into(),
+                    icon_id: "beam".into(),
+                    machines_json: serde_json::to_string(&wood_machines).unwrap(),
+                },
+            },
+            ProgramContributionEntry {
+                plugin_id: "process-metal".into(),
+                contribution: Contribution::ProcessMachines {
+                    app_id: "process3d-play".into(),
+                    module_id: "metal".into(),
+                    label: "Metal".into(),
+                    icon_id: "wrench".into(),
+                    machines_json: serde_json::to_string(&metal_machines).unwrap(),
+                },
+            },
+        ];
+        let json = serde_json::to_string(&entries).unwrap();
+        crate::artifacts::process3d::engine::sync_process_machine_contributions(&json);
+        let _ = app;
+    }
+
     pub fn app() -> Process3dApp {
-        new_app::<Process3dPlayApp>()
+        let mut app = new_app::<Process3dPlayApp>();
+        seed_domain_catalog_contributions(&mut app);
+        app
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn app_with_registry() -> Process3dApp {
-        new_app_with_registry::<Process3dPlayApp>(create_process3d_app)
+        let mut app = new_app_with_registry::<Process3dPlayApp>(create_process3d_app);
+        seed_domain_catalog_contributions(&mut app);
+        app
     }
 
     pub fn dispatch(app: &mut Process3dApp, command: Process3dCommand) -> InvocationResult {
@@ -452,7 +538,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -464,7 +550,7 @@ mod tests {
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_wire_key = |id: &str| -> &'static str {
             match id {
-                "setDocument" => "document",
+                "setSnapshot" => "document",
                 "setActiveExample" => "active-example",
                 "addStep" => "add-step",
                 "addWorkshopMachine" => "add-workshop-machine",
@@ -513,7 +599,7 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<Process3dCommand> {
         vec![
-            Process3dCommand::SetDocument(set_document::SetDocument { document: crate::artifacts::process3d::empty_process3d_projection() }),
+            Process3dCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::process3d::empty_process3d_snapshot() }),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
             Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) }),
             Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() }),
@@ -602,7 +688,7 @@ mod tests {
     #[test]
     fn undo_after_add_step_restores_previous_step_count() {
         let mut app = app();
-        testkit::assert_undo_redo_round_trip(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }), |app| app.projection().expect("projection").steps.len(), 4, 5);
+        testkit::assert_undo_redo_round_trip(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }), |app| app.snapshot().expect("snapshot").steps.len(), 4, 5);
     }
 
     #[test]
@@ -611,7 +697,7 @@ mod tests {
         testkit::assert_undo_redo_round_trip(
             &mut app,
             Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }),
-            |app| app.projection().expect("projection").workshop.machines.len(),
+            |app| app.snapshot().expect("snapshot").workshop.machines.len(),
             7,
             8,
         );
@@ -622,7 +708,7 @@ mod tests {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }));
         assert!(!result.mutations.is_empty(), "the setStock arg form must materialize into document operations");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         assert!(matches!(document.stock.solid, crate::artifacts::process3d::SolidSpec::Cylinder { .. }), "setStock kind=cylinder must swap the stock solid");
         assert!(document.steps.is_empty(), "swapping stock resets the step timeline");
     }
@@ -643,7 +729,7 @@ mod tests {
         set_utility(&mut app, "cut");
         let result = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }));
         assert!(!result.mutations.is_empty(), "worldPointerDown must read the position the renderer actually sends");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         let last = document.steps.last().expect("inserted step");
         assert_eq!(step_pose(last), [1.0, 2.0, 3.0]);
     }
@@ -666,7 +752,7 @@ mod tests {
         dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 0.0, 0.0] }));
         set_utility(&mut app, "cut");
         dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [2.0, 0.0, 0.0] }));
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         let last_two: Vec<&crate::artifacts::process3d::ProcessStep> = document.steps.iter().rev().take(2).collect();
         assert_ne!(step_pose(last_two[0]), step_pose(last_two[1]), "repeated clicks at different points must produce distinct step poses");
     }
@@ -675,10 +761,10 @@ mod tests {
     fn world_face_drag_end_cut_reduces_volume_end_to_end() {
         let mut app = app();
         dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "box".into() }));
-        let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.projection().expect("projection")).expect("stock volume");
+        let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
         assert!(!result.mutations.is_empty());
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         assert_eq!(document.steps.len(), 1);
         assert!(matches!(document.steps[0].measure, crate::artifacts::process3d::ProcessMeasure::Cut { .. }));
         let new_volume = crate::artifacts::process3d::engine::processed_volume(&document).expect("volume after cut");
@@ -689,10 +775,10 @@ mod tests {
     fn world_face_drag_end_attach_increases_volume_end_to_end() {
         let mut app = app();
         dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "box".into() }));
-        let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.projection().expect("projection")).expect("stock volume");
+        let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
         assert!(!result.mutations.is_empty());
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("snapshot");
         assert_eq!(document.steps.len(), 1);
         assert!(matches!(document.steps[0].measure, crate::artifacts::process3d::ProcessMeasure::Attach { .. }));
         let new_volume = crate::artifacts::process3d::engine::processed_volume(&document).expect("volume after attach");
@@ -758,8 +844,8 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::engine::default_document();
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
-        let media = app.export_media("brep:out", &doc).expect("export brep:out");
+        let doc = DocumentView { snapshot: &document, history: &history };
+        let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Brep);
         match media.payload {
@@ -776,8 +862,8 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::engine::default_document();
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
-        assert!(matches!(app.export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
+        let doc = DocumentView { snapshot: &document, history: &history };
+        assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
     }
 
     #[test]
@@ -785,9 +871,9 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::engine::default_document();
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
+        let doc = DocumentView { snapshot: &document, history: &history };
         let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
-        assert!(matches!(app.import_media("geometry:in", &media, &doc), Err(MediaError::Payload(port, _)) if port == "geometry:in"));
+        assert!(matches!(Process3dPlayApp::import_media("geometry:in", &media, &doc), Err(MediaError::Payload(port, _)) if port == "geometry:in"));
     }
     //#endregion 🔖️MediaTests
 }

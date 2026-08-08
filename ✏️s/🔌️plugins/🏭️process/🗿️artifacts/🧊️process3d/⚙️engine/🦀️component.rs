@@ -3,7 +3,7 @@
 
 use base64::Engine;
 use crate::artifacts::process3d::{
-    Capability, MachineCatalog, MeasureKind, MeasureRecipe, Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine,
+    Capability, MachineCatalog, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine,
 };
 use semio_s_3d::brep::kernel::{Brep, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use semio_s_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
@@ -26,10 +26,11 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 /// 🔌️ Registers this app's document exporters/import handlers and codec with the OS runtime — the
 /// `setup` hook `📦️glue.rs`'s `semio_plugin!{}` invocation calls.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-        let document: Process3dDocument = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-        processed_mesh(&document).ok_or_else(|| "process3d: kernel replay failed".to_string())
+        let snapshot: Process3dSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+        processed_mesh(&snapshot).ok_or_else(|| "process3d: kernel replay failed".to_string())
     }
 
     fn process3d_document_from_mesh(_mesh: &MeshData) -> Result<Value, String> {
@@ -48,12 +49,12 @@ pub fn register() {
 //#region 🔖️ExampleFixtures
 pub use crate::artifacts::process3d::dsl::{PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
-pub fn default_document() -> Process3dDocument {
-    Process3dDocument::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
+pub fn default_document() -> Process3dSnapshot {
+    Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
 }
 
-pub fn plate_document() -> Process3dDocument {
-    Process3dDocument::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
+pub fn plate_document() -> Process3dSnapshot {
+    Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 //#endregion 🔖️ExampleFixtures
 
@@ -165,7 +166,13 @@ pub fn sync_process_machine_contributions(contributions_json: &str) {
 }
 
 fn builtin_installed_catalogs() -> Vec<Box<dyn MachineCatalog>> {
-    vec![Box::new(GenericCatalog)]
+    vec![
+        Box::new(GenericCatalog),
+        crate::artifacts::process3d::engine::wood::catalog(),
+        crate::artifacts::process3d::engine::concrete::catalog(),
+        crate::artifacts::process3d::engine::metal::catalog(),
+        crate::artifacts::process3d::engine::robotic::catalog(),
+    ]
 }
 
 /// 📦️ The built-in generic catalog — wraps `crate::artifacts::process3d::generic_machines()`, the same
@@ -453,7 +460,7 @@ fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure)
 }
 
 /// 🧠️ Replays enabled steps up to the cursor, reusing the longest memoized prefix.
-fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dDocument) -> Option<GeometryHandle> {
+fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dSnapshot) -> Option<GeometryHandle> {
     let stock_signature = hash_value(&doc.stock);
     if stock_signature != session.stock_signature {
         session.tables.memo.clear();
@@ -504,7 +511,7 @@ fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dDocument) ->
     Some(handle)
 }
 
-pub fn processed_mesh(doc: &Process3dDocument) -> Option<MeshData> {
+pub fn processed_mesh(doc: &Process3dSnapshot) -> Option<MeshData> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, doc)?;
     let mesh = {
@@ -516,7 +523,7 @@ pub fn processed_mesh(doc: &Process3dDocument) -> Option<MeshData> {
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
 
-pub fn processed_volume(doc: &Process3dDocument) -> Option<f64> {
+pub fn processed_volume(doc: &Process3dSnapshot) -> Option<f64> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, doc)?;
     let volume = {
@@ -540,7 +547,7 @@ pub struct Process3dModelExport {
 /// `SolidExporter` trait objects (real B-Rep, exact where the format allows it); GLB goes through
 /// the mesh tessellation bridge (`processed_mesh` → `GlbExporter`), matching how it is already
 /// rendered/exported elsewhere in this app.
-pub fn export_process3d_model(fixture: &Process3dDocument, format: &str) -> Option<Process3dModelExport> {
+pub fn export_process3d_model(fixture: &Process3dSnapshot, format: &str) -> Option<Process3dModelExport> {
     if format == "glb" {
         let mesh = processed_mesh(fixture)?;
         let bytes = semio_framework_plugin::GlbExporter.export(&mesh).ok()?;
@@ -581,9 +588,9 @@ fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
 /// reusable as a Cut/Drill/Attach operand); GLB is decoded once (via the mesh tessellation bridge,
 /// `GlbImporter`) purely to validate it, then kept as `SolidSpec::ImportedMesh` referencing the
 /// original data url directly — it carries no exact B-Rep, so it is never re-imported into the kernel.
-pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dDocument> {
+pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSnapshot> {
     let bytes = process3d_bytes_from_data_url(data_url)?;
-    let mut fixture = Process3dDocument::default();
+    let mut fixture = Process3dSnapshot::default();
     if name.ends_with(".glb") {
         semio_framework_plugin::GlbImporter.import(&bytes).ok()?;
         fixture.stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: SolidSpec::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
@@ -612,15 +619,15 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dDoc
 /// needs: inserting a step at the resolved-up-to cursor (and advancing it), and removing a step by id
 /// (and pulling the cursor back if it sat past the removed step). Shared by the `🎮️commands/🪜️step` and
 /// `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an immutable
-/// `&Process3dDocument` keeps every handler free of manual mutation, since the VCS store applies them.
-pub fn insert_step_mutations(fixture: &Process3dDocument, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
+/// `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
+pub fn insert_step_mutations(fixture: &Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
     use protocol::CollectionMutation;
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
     vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: cursor, item: step } }, Process3dMutation::SetCursor { resolved_up_to: Some(cursor + 1) }]
 }
 
-pub fn remove_step_mutations(fixture: &Process3dDocument, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
+pub fn remove_step_mutations(fixture: &Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
     use crate::artifacts::process3d::op::Process3dMutation;
     use protocol::CollectionMutation;
     let index = fixture.steps.iter().position(|step| step.id == id)?;
@@ -639,7 +646,7 @@ pub fn remove_step_mutations(fixture: &Process3dDocument, id: &str) -> Option<Ve
 mod tests {
     use super::*;
 
-    fn session_volume(session: &mut ProcessKernelReplay, fixture: &Process3dDocument) -> f64 {
+    fn session_volume(session: &mut ProcessKernelReplay, fixture: &Process3dSnapshot) -> f64 {
         let handle = replay_process(session, fixture).expect("replayed handle");
         semio_s_3d::brep::engine::block_on(session.kernel().lock().expect("kernel lock").volume(&handle)).expect("replayed volume")
     }
@@ -691,36 +698,40 @@ mod tests {
 
     #[test]
     fn drill_reduces_volume_below_stock() {
-        let mut session = ProcessKernelReplay::new();
-        let mut fixture = Process3dDocument::default();
+        let mut fixture = Process3dSnapshot::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = session_volume(&mut session, &fixture);
+        let stock_volume = processed_volume(&fixture).expect("stock volume");
         fixture.steps.push(ProcessStep {
             id: "drill-1".into(),
             label: "Drill".into(),
             enabled: true,
             origin: None,
-            measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose { position: [0.0, 0.0, 0.5], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
+            measure: ProcessMeasure::Cut {
+                tool: SolidSpec::Box { width: 0.4, depth: 0.4, height: 1.2 },
+                pose: Pose { position: [0.3, 0.3, -0.1], axis: [0.0, 0.0, 1.0], angle: 0.0 },
+            },
         });
-        let drilled_volume = session_volume(&mut session, &fixture);
+        let drilled_volume = processed_volume(&fixture).expect("drilled volume");
         assert!(drilled_volume < stock_volume, "drilled volume {drilled_volume} should be less than stock volume {stock_volume}");
     }
 
     #[test]
     fn attach_increases_volume_above_stock() {
         for _ in 0..32 {
-            let mut session = ProcessKernelReplay::new();
-            let mut fixture = Process3dDocument::default();
+            let mut fixture = Process3dSnapshot::default();
             fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-            let stock_volume = session_volume(&mut session, &fixture);
+            let stock_volume = processed_volume(&fixture).expect("stock volume");
             fixture.steps.push(ProcessStep {
                 id: "attach-1".into(),
                 label: "Attach".into(),
                 enabled: true,
                 origin: None,
-                measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.3 }, pose: Pose { position: [1.0, 0.0, 0.5], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
+                measure: ProcessMeasure::Attach {
+                    component: SolidSpec::Box { width: 0.4, depth: 0.4, height: 0.4 },
+                    pose: Pose { position: [0.3, 0.3, 1.0], axis: [0.0, 0.0, 1.0], angle: 0.0 },
+                },
             });
-            let attached_volume = session_volume(&mut session, &fixture);
+            let attached_volume = processed_volume(&fixture).expect("attached volume");
             assert!(attached_volume > stock_volume, "attached volume {attached_volume} should exceed stock volume {stock_volume}");
         }
     }
@@ -728,7 +739,7 @@ mod tests {
     #[test]
     fn disabled_step_is_skipped_on_replay() {
         let mut session = ProcessKernelReplay::new();
-        let mut fixture = Process3dDocument::default();
+        let mut fixture = Process3dSnapshot::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
         let stock_volume = session_volume(&mut session, &fixture);
         fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: false, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() } });
@@ -739,7 +750,7 @@ mod tests {
     #[test]
     fn cursor_zero_yields_stock_volume() {
         let mut session = ProcessKernelReplay::new();
-        let mut fixture = Process3dDocument::default();
+        let mut fixture = Process3dSnapshot::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
         let stock_volume = session_volume(&mut session, &fixture);
         fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() } });
@@ -815,8 +826,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::process3d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::process3d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::process3d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::process3d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("process.process3d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -845,8 +856,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::process3d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::process3d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("process3d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -861,39 +872,61 @@ pub fn register_pilot_languages() {
     });
 }
 
+
+static SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> = std::sync::OnceLock::new();
+
+/// 🧬️ Registers the fifteen handcrafted schema leaves for `s.process.process3d`.
+pub fn register_artifact_schema() {
+    let registry = SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor());
+}
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Process3dEngine {
-    projection: crate::artifacts::process3d::Process3dDocument,
+    artifact: crate::artifacts::process3d::schema::Process3dArtifact,
+    snapshot: crate::artifacts::process3d::Process3dSnapshot,
 }
 
 impl Process3dEngine {
-    pub fn new(projection: crate::artifacts::process3d::Process3dDocument) -> Self {
-        Self { projection }
+    /// 🌱 Seeds the engine from a persisted snapshot.
+    pub fn new(snapshot: crate::artifacts::process3d::Process3dSnapshot) -> Self {
+        let artifact = crate::artifacts::process3d::schema::Process3dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::process3d::Process3dDocument {
-        self.projection
+    /// 📸️ Consumes the engine and returns its persisted snapshot.
+    pub fn into_snapshot(self) -> crate::artifacts::process3d::Process3dSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Process3dEngine {
-    type Projection = crate::artifacts::process3d::Process3dDocument;
+    type Artifact = crate::artifacts::process3d::schema::Process3dArtifact;
+    type Snapshot = crate::artifacts::process3d::Process3dSnapshot;
     type Mutation = crate::artifacts::process3d::mutations::Process3dMutation;
     type Diff = crate::artifacts::process3d::diff::Process3dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = <Self::Diff as protocol::MutationDiff<Self::Projection>>::apply(&diff, &self.projection);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

@@ -9,8 +9,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::block3d::diff::{block3d_index_of, Block3dDiff};
-use crate::artifacts::block3d::{Block3dDefinition, Block3dVortexKind, Block3dVortexTemplate};
+use crate::artifacts::block3d::diff::*;
+use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// 🧮️ Block-3d operation: id-keyed table edits plus scalar object_kind/camera3d/meta, each with a
 /// true inverse computed from the pre-operation projection, and a whole-document replace for example
 /// loads.
-// 🧯️ `large_enum_variant`: `SetDocument`'s whole-document payload makes it far larger than the other
+// 🧯️ `large_enum_variant`: `SetSnapshot`'s whole-document payload makes it far larger than the other
 // scalar/id-keyed variants, but boxing it would require the `#[derive(dsl::DslEnum)]` field-shape
 // machinery to see through `Box<T>`, which is unverified — same accepted tradeoff as gis's
 // `Gis2dConfigMutation`/💡️reasoning's `ReplaceDocument`.
@@ -84,10 +84,10 @@ pub enum Block3dMutation {
         #[dsl(block)]
         meta: BlockMeta,
     },
-    #[dsl(key = "setDocument")]
-    SetDocument {
+    #[dsl(key = "setSnapshot")]
+    SetSnapshot {
         #[dsl(block)]
-        document: Block3dDefinition,
+        snapshot: Block3dSnapshot,
     },
 }
 
@@ -95,36 +95,34 @@ pub enum Block3dMutation {
 
 
 
-fn block3d_mutation_diff(operation: &Block3dMutation) -> Block3dDiff {
-    let mut diff = Block3dDiff::default();
+fn block3d_mutation_diff(operation: &Block3dMutation, base: &Block3dSnapshot) -> Block3dDiff {
     match operation {
-        Block3dMutation::SetObjectKind { object_kind } => diff.object_kind = Some(object_kind.clone()),
-        Block3dMutation::SetRepresentation { index, representation } => diff.representations.set.push((*index, representation.clone())),
-        Block3dMutation::RemoveRepresentation { id } => diff.representations.removed.push(id.clone()),
-        Block3dMutation::SetVortexKind { index, vortex_kind } => diff.vortex_kinds.set.push((*index, vortex_kind.clone())),
-        Block3dMutation::RemoveVortexKind { id } => diff.vortex_kinds.removed.push(id.clone()),
-        Block3dMutation::SetVortex { index, vortex } => diff.vortices.set.push((*index, vortex.clone())),
-        Block3dMutation::RemoveVortex { id } => diff.vortices.removed.push(id.clone()),
-        Block3dMutation::SetCompatibilityRule { index, rule } => diff.compatibility.set.push((*index, rule.clone())),
-        Block3dMutation::RemoveCompatibilityRule { id } => diff.compatibility.removed.push(id.clone()),
-        Block3dMutation::SetAttribute { index, attribute } => diff.attributes.set.push((*index, attribute.clone())),
-        Block3dMutation::RemoveAttribute { key } => diff.attributes.removed.push(key.clone()),
-        Block3dMutation::SetAuthors { authors } => diff.authors = Some(authors.clone()),
-        Block3dMutation::SetCamera3d { camera3d } => diff.camera3d = Some(camera3d.clone()),
-        Block3dMutation::SetMeta { meta } => diff.meta = Some(meta.clone()),
-        Block3dMutation::SetDocument { document } => diff.document = Some(document.clone()),
+        Block3dMutation::SetObjectKind { object_kind } => Block3dDiff { object_kind: Some(object_kind.clone()), ..Default::default() },
+        Block3dMutation::SetRepresentation { index, representation } => diff_set_representation(*index, representation.clone(), base),
+        Block3dMutation::RemoveRepresentation { id } => diff_remove_representation(id.clone()),
+        Block3dMutation::SetVortexKind { index, vortex_kind } => diff_set_vortex_kind(*index, vortex_kind.clone(), base),
+        Block3dMutation::RemoveVortexKind { id } => diff_remove_vortex_kind(id.clone()),
+        Block3dMutation::SetVortex { index, vortex } => diff_set_vortex(*index, vortex.clone(), base),
+        Block3dMutation::RemoveVortex { id } => diff_remove_vortex(id.clone()),
+        Block3dMutation::SetCompatibilityRule { index, rule } => diff_set_compatibility_rule(*index, rule.clone(), base),
+        Block3dMutation::RemoveCompatibilityRule { id } => diff_remove_compatibility_rule(id.clone()),
+        Block3dMutation::SetAttribute { index, attribute } => diff_set_attribute(*index, attribute.clone(), base),
+        Block3dMutation::RemoveAttribute { key } => diff_remove_attribute(key.clone()),
+        Block3dMutation::SetAuthors { authors } => Block3dDiff { authors: Some(Block3dAuthorList { values: authors.clone() }), ..Default::default() },
+        Block3dMutation::SetCamera3d { camera3d } => Block3dDiff { camera3d: Some(camera3d.clone()), ..Default::default() },
+        Block3dMutation::SetMeta { meta } => Block3dDiff { meta: Some(meta.clone()), ..Default::default() },
+        Block3dMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot.clone()),
     }
-    diff
 }
 
-impl Mutation<Block3dDefinition> for Block3dMutation {
+impl Mutation<Block3dSnapshot> for Block3dMutation {
     type Diff = Block3dDiff;
 
-    fn diff(&self, _projection: &Block3dDefinition) -> Block3dDiff {
-        block3d_mutation_diff(self)
+    fn diff(&self, projection: &Block3dSnapshot) -> Block3dDiff {
+        block3d_mutation_diff(self, projection)
     }
 
-    fn inverse(&self, projection: &Block3dDefinition) -> Vec<Self> {
+    fn inverse(&self, projection: &Block3dSnapshot) -> Vec<Self> {
         match self {
             Block3dMutation::SetObjectKind { .. } => vec![Block3dMutation::SetObjectKind { object_kind: projection.object_kind.clone() }],
             Block3dMutation::SetRepresentation { representation, .. } => match block3d_index_of(&projection.representations, &representation.id) {
@@ -157,25 +155,25 @@ impl Mutation<Block3dDefinition> for Block3dMutation {
             Block3dMutation::SetAuthors { .. } => vec![Block3dMutation::SetAuthors { authors: projection.authors.clone() }],
             Block3dMutation::SetCamera3d { .. } => vec![Block3dMutation::SetCamera3d { camera3d: projection.camera3d.clone() }],
             Block3dMutation::SetMeta { .. } => vec![Block3dMutation::SetMeta { meta: projection.meta.clone() }],
-            Block3dMutation::SetDocument { .. } => vec![Block3dMutation::SetDocument { document: projection.clone() }],
+            Block3dMutation::SetSnapshot { .. } => vec![Block3dMutation::SetSnapshot { snapshot: projection.clone() }],
         }
     }
 }
 
-pub type Block3dEnvelope = store::DocumentEnvelope<Block3dDefinition, Block3dMutation>;
-pub type Block3dStore = store::DocumentStore<Block3dDefinition, Block3dMutation>;
+pub type Block3dEnvelope = store::DocumentEnvelope<Block3dSnapshot, Block3dMutation>;
+pub type Block3dStore = store::DocumentStore<Block3dSnapshot, Block3dMutation>;
 // #endregion 🔖️Operation
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block3d::engine::empty_block3d_definition;
+    use crate::artifacts::block3d::engine::empty_block3d_snapshot;
     use protocol::MutationDiff;
 
     #[test]
     fn set_vortex_then_remove_round_trips_through_true_inverse() {
-        let mut projection = empty_block3d_definition();
+        let mut projection = empty_block3d_snapshot();
         let set = Block3dMutation::SetVortex { index: 0, vortex: Block3dVortexTemplate { id: "v0".into(), vortex_kind: "door".into(), position: [1.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None } };
         let inverse = set.inverse(&projection);
         projection = set.diff(&projection).apply(&projection);
@@ -184,16 +182,16 @@ mod tests {
         for operation in &inverse {
             projection = operation.diff(&projection).apply(&projection);
         }
-        assert_eq!(projection, empty_block3d_definition());
+        assert_eq!(projection, empty_block3d_snapshot());
     }
 }
 //#endregion 🧪️Tests
 
 
-pub fn apply_block3d_mutation(projection: &mut Block3dDefinition, mutation: &Block3dMutation) {
+pub fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) {
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_block3d_mutation(projection: &Block3dDefinition, mutation: &Block3dMutation) -> Vec<Block3dMutation> {
+pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Vec<Block3dMutation> {
     mutation.inverse(projection)
 }

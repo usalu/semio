@@ -1,7 +1,7 @@
 dialect protocol
 protocol shooting.spr
 version 1
-schema shooting.fixture.mutation
+schema shooting.shooting.mutation
 start record
 framing record
 record shooting.shooting-add-layer tag 1

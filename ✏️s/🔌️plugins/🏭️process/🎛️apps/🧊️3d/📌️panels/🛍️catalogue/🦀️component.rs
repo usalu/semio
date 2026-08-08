@@ -4,7 +4,7 @@ use crate::apps::process3d::iconed_tree_item_with_action;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::Process3dLabels;
 use crate::artifacts::process3d::engine::{installed_catalogs, validate_capability, validation_context_for_stock, validation_reason};
-use crate::artifacts::process3d::{Process3dDocument, WorkshopMachine};
+use crate::artifacts::process3d::{Process3dSnapshot, WorkshopMachine};
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
 
@@ -35,7 +35,7 @@ fn catalog_label(catalog_id: &str) -> String {
 /// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
 /// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
 /// reason) any capability the current stock doesn't satisfy.
-pub fn render(fixture: &Process3dDocument, labels: &Process3dLabels) -> UiNode {
+pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
     let ctx = validation_context_for_stock(&fixture.stock);
     let mut builder = PanelTreeBuilder::new("process3d-play-catalogue");
     let mut sections: Vec<(Option<&str>, Vec<&WorkshopMachine>)> = Vec::new();

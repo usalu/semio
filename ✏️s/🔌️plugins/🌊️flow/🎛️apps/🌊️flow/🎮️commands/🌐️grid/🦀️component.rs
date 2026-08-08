@@ -6,7 +6,7 @@
 //! dispatch sends).
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
+use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,13 +16,12 @@ pub mod set_grid_visible {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-grid-visible")]
     pub struct SetGridVisible {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetGridVisible, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        Ok(Emit::config(vec![FlowConfigMutation::SetGridVisible { value: payload.pressed.unwrap_or(!cfg.projection.grid_visible) }]))
+    pub fn handle(payload: &SetGridVisible, _doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FlowConfigMutation::SetGridVisible { value: payload.pressed.unwrap_or(!cfg.snapshot.grid_visible) }]))
     }
 }
 //#endregion 🔖️SetGridVisible
@@ -32,13 +31,12 @@ pub mod set_grid_snap_enabled {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-grid-snap-enabled")]
     pub struct SetGridSnapEnabled {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetGridSnapEnabled, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        Ok(Emit::config(vec![FlowConfigMutation::SetGridSnapEnabled { value: payload.pressed.unwrap_or(!cfg.projection.grid_snap_enabled) }]))
+    pub fn handle(payload: &SetGridSnapEnabled, _doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FlowConfigMutation::SetGridSnapEnabled { value: payload.pressed.unwrap_or(!cfg.snapshot.grid_snap_enabled) }]))
     }
 }
 //#endregion 🔖️SetGridSnapEnabled
@@ -48,14 +46,13 @@ pub mod set_grid_factor {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-grid-factor")]
     pub struct SetGridFactor {
         pub value: f64,
     }
 
     /// 🔳️ Clamped to the slider's own `0.5..=50.0` range so a scripted dispatch can't desynchronize the
     /// control from the config.
-    pub fn handle(payload: &SetGridFactor, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &SetGridFactor, _doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::config(vec![FlowConfigMutation::SetGridFactor { value: payload.value.clamp(0.5, 50.0) }]))
     }
 }

@@ -3,7 +3,7 @@
 
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingFixture, ShootingScenePatch};
+use crate::artifacts::shooting::{ShootingSnapshot, ShootingScenePatch};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(payload.value), ..Default::default() } }]))
     }
 }
@@ -33,7 +33,7 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::PatchScene { patch: ShootingScenePatch { sun_elevation: Some(payload.value), ..Default::default() } }]))
     }
 }
@@ -49,7 +49,7 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::PatchScene { patch: ShootingScenePatch { sun_intensity: Some(payload.value), ..Default::default() } }]))
     }
 }
@@ -65,7 +65,7 @@ pub mod set_ambient_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetAmbientIntensity, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAmbientIntensity, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::PatchScene { patch: ShootingScenePatch { ambient_intensity: Some(payload.value), ..Default::default() } }]))
     }
 }
@@ -81,7 +81,7 @@ pub mod set_material_roughness {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetMaterialRoughness, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetMaterialRoughness, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::PatchScene { patch: ShootingScenePatch { material_roughness: Some(payload.value), ..Default::default() } }]))
     }
 }
@@ -97,7 +97,7 @@ pub mod set_shadow_enabled {
         pub value: bool,
     }
 
-    pub fn handle(payload: &SetShadowEnabled, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetShadowEnabled, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(payload.value), ..Default::default() } }]))
     }
 }
@@ -113,7 +113,7 @@ pub mod toggle_sun {
         pub value: bool,
     }
 
-    pub fn handle(payload: &ToggleSun, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ToggleSun, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(payload.value), ..Default::default() } }]))
     }
 }
@@ -131,17 +131,17 @@ mod tests {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
         dispatch(&mut app, ShootingCommand::SetShadowEnabled(set_shadow_enabled::SetShadowEnabled { value: false }));
-        let projection = app.projection().expect("projection");
-        assert_eq!(projection.scene.sun.azimuth, 90.0);
-        assert!(!projection.scene.shadow.enabled);
+        let snapshot = app.snapshot().expect("snapshot");
+        assert_eq!(snapshot.scene.sun.azimuth, 90.0);
+        assert!(!snapshot.scene.shadow.enabled);
     }
 
     #[test]
     fn toggle_sun_round_trips_through_ops_and_defaults_off() {
         let mut app = shooting_app();
-        assert!(!app.projection().expect("projection").scene.sun.enabled);
+        assert!(!app.snapshot().expect("snapshot").scene.sun.enabled);
         dispatch(&mut app, ShootingCommand::ToggleSun(toggle_sun::ToggleSun { value: true }));
-        assert!(app.projection().expect("projection").scene.sun.enabled);
+        assert!(app.snapshot().expect("snapshot").scene.sun.enabled);
     }
 }
 //#endregion 🧪️Tests

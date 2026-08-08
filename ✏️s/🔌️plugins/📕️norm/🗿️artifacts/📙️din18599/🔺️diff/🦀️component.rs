@@ -1,54 +1,100 @@
-//! 🔺️ DIN V 18599 artifact — the operation diff and its `MutationDiff` law.
-//!
-//! 📌️ Every norm artifact's sole mutation is a whole-document replace, so its diff is
-//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentMutation<D>`
-//! names as its `Din18599Mutation::Diff`, with the `MutationDiff` impl (apply = "take the replacement,
-//! otherwise keep the projection"; absorb = "the later replacement wins") living beside it in
-//! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
-//! binding for this artifact and proves the law against this artifact's own `Document`.
-
+//! 🔺️ Din18599 artifact — sparse field diff runtime.
 
 //#region 📖️SemioGrammar
-/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::din18599::Document;
+use crate::artifacts::din18599::schema::Din18599Artifact;
+use crate::artifacts::din18599::Din18599Snapshot;
+use protocol::MutationDiff;
 
-//#region 🔖️Types
-/// 🔺️ This artifact's concrete operation diff.
-pub type Diff = crate::document::DocumentDiff<Document>;
-//#endregion 🔖️Types
-
-//#region 🧪️Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::artifacts::din18599::op::Din18599Mutation;
-    use protocol::{Mutation as _, MutationDiff};
-
-    #[test]
-    fn set_document_diff_replaces_the_whole_projection() {
-        let base = Document::default();
-        let mutation = Din18599Mutation::SetDocument { document: Document::default() };
-        let diff: Diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base), Document::default());
-    }
-
-    #[test]
-    fn an_empty_diff_keeps_the_projection() {
-        let base = Document::default();
-        assert_eq!(Diff::default().apply(&base), base);
-    }
-
-    #[test]
-    fn absorb_keeps_the_later_replacement() {
-        let base = Document::default();
-        let mut diff = Diff::default();
-        diff.absorb(Diff { document: Some(Document::default()) });
-        assert_eq!(diff.apply(&base), Document::default());
+//#region 🔖️Apply
+impl Din18599Diff {
+    pub fn apply_to_artifact(&self, artifact: &Din18599Artifact) -> Din18599Artifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(value) = self.use_class { next.use_class = value; }
+        if let Some(value) = self.heated_area_m2 { next.heated_area_m2 = value; }
+        if let Some(value) = self.occupants { next.occupants = value; }
+        if let Some(value) = self.h_t { next.h_t = value; }
+        if let Some(value) = self.h_v { next.h_v = value; }
+        if let Some(value) = self.climate { next.climate = value; }
+        if let Some(value) = self.internal_gains_w_m2 { next.internal_gains_w_m2 = value; }
+        if let Some(value) = self.solar_gains_kwh { next.solar_gains_kwh = value; }
+        if let Some(value) = self.system_losses_kwh { next.system_losses_kwh = value; }
+        if let Some(value) = self.renewable_kwh { next.renewable_kwh = value; }
+        if let Some(value) = self.annual_limit_kwh { next.annual_limit_kwh = value; }
+        if let Some(value) = &self.energy_carrier { next.energy_carrier = value.clone(); }
+        if let Some(value) = self.reference_q_p_kwh { next.reference_q_p_kwh = value; }
+        if let Some(value) = &self.selected_check_index {
+            next.selected_check_index = *value;
+        }
+        next
     }
 }
-//#endregion 🧪️Tests
+
+impl MutationDiff<Din18599Snapshot> for Din18599Diff {
+    fn apply(&self, snapshot: &Din18599Snapshot) -> Din18599Snapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(value) = self.use_class { next.use_class = value; }
+        if let Some(value) = self.heated_area_m2 { next.heated_area_m2 = value; }
+        if let Some(value) = self.occupants { next.occupants = value; }
+        if let Some(value) = self.h_t { next.h_t = value; }
+        if let Some(value) = self.h_v { next.h_v = value; }
+        if let Some(value) = self.climate { next.climate = value; }
+        if let Some(value) = self.internal_gains_w_m2 { next.internal_gains_w_m2 = value; }
+        if let Some(value) = self.solar_gains_kwh { next.solar_gains_kwh = value; }
+        if let Some(value) = self.system_losses_kwh { next.system_losses_kwh = value; }
+        if let Some(value) = self.renewable_kwh { next.renewable_kwh = value; }
+        if let Some(value) = self.annual_limit_kwh { next.annual_limit_kwh = value; }
+        if let Some(value) = &self.energy_carrier { next.energy_carrier = value.clone(); }
+        if let Some(value) = self.reference_q_p_kwh { next.reference_q_p_kwh = value; }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(use_class);
+        take!(heated_area_m2);
+        take!(occupants);
+        take!(h_t);
+        take!(h_v);
+        take!(climate);
+        take!(internal_gains_w_m2);
+        take!(solar_gains_kwh);
+        take!(system_losses_kwh);
+        take!(renewable_kwh);
+        take!(annual_limit_kwh);
+        take!(energy_carrier);
+        take!(reference_q_p_kwh);
+        take!(selected_check_index);
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+pub fn diff_set_snapshot(snapshot: &Din18599Snapshot) -> Din18599Diff {
+    Din18599Diff {
+        artifact: Some(Box::new(Din18599Artifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Helpers

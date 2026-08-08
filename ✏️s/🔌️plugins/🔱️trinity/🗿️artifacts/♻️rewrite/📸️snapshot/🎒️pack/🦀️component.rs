@@ -8,17 +8,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::rewrite::RewriteRuleModel;
+use crate::artifacts::rewrite::RewriteSnapshot;
 use store::PackError;
 
-/// 📦️ Encodes a `RewriteRuleModel` to its binary pack form.
-pub fn encode(document: &RewriteRuleModel) -> Vec<u8> {
+/// 📦️ Encodes a `RewriteSnapshot` to its binary pack form.
+pub fn encode(document: &RewriteSnapshot) -> Vec<u8> {
     store::DocumentPack::encode_pack(document)
 }
 
-/// 📖️ Decodes a `RewriteRuleModel` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<RewriteRuleModel, PackError> {
-    <RewriteRuleModel as store::DocumentPack>::decode_pack(bytes)
+/// 📖️ Decodes a `RewriteSnapshot` from its binary pack form.
+pub fn decode(bytes: &[u8]) -> Result<RewriteSnapshot, PackError> {
+    <RewriteSnapshot as store::DocumentPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -28,15 +28,15 @@ mod tests {
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
     use std::collections::BTreeMap;
-    use store::test_support::assert_dsl_pack_equivalence;
+    use ::store::os_store::test_support::assert_dsl_pack_equivalence;
 
-    fn sample_rule_state() -> RewriteRuleModel {
+    fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint::from((10.5, -20.25)));
-        RewriteRuleModel {
+        RewriteSnapshot {
             before_fixture_json: "{\"schema\":\"trinity.graph\",\"name\":\"x \\\"quoted\\\"\\nline\"}".to_string(),
             lhs_json: r#"{"pattern":{"leftVar":"a","leftKind":"Piece"}}"#.to_string(),
             rhs_json: r#"{"set":[{"var":"a","prop":"label","value":"$label"}]}"#.to_string(),

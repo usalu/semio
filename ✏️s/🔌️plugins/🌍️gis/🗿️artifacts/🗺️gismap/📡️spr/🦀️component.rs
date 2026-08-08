@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch};
+use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, MapFeaturePatch};
 use protocol::{CollectionMutation, OpBinary};
 
 //#region 🔖️OpTextMirror
@@ -77,9 +77,9 @@ enum GisMapOperationDsl {
         #[dsl(block)]
         patch: MapFeaturePatch,
     },
-    SetDocument {
+    SetSnapshot {
         #[dsl(block)]
-        document: GisMapDocument,
+        snapshot: GisMapSnapshot,
     },
 }
 //#region 🔖️HandcraftedOpCodecs
@@ -135,7 +135,7 @@ fn gis_map_operation_to_dsl(operation: &GisMapMutation) -> GisMapOperationDsl {
         GisMapMutation::Regions(CollectionMutation::Remove { id }) => GisMapOperationDsl::RemoveRegion { id: id.clone() },
         GisMapMutation::Regions(CollectionMutation::Move { id, to_index: to }) => GisMapOperationDsl::MoveRegion { id: id.clone(), to_index: *to },
         GisMapMutation::Regions(CollectionMutation::Patch { id, patch }) => GisMapOperationDsl::PatchRegion { id: id.clone(), patch: patch.clone() },
-        GisMapMutation::SetDocument { document } => GisMapOperationDsl::SetDocument { document: document.clone() },
+        GisMapMutation::SetSnapshot { snapshot } => GisMapOperationDsl::SetSnapshot { snapshot: snapshot.clone() },
     }
 }
 
@@ -153,7 +153,7 @@ fn gis_map_operation_from_dsl(operation: GisMapOperationDsl) -> GisMapMutation {
         GisMapOperationDsl::RemoveRegion { id } => GisMapMutation::Regions(CollectionMutation::Remove { id }),
         GisMapOperationDsl::MoveRegion { id, to_index } => GisMapMutation::Regions(CollectionMutation::Move { id, to_index: to_index }),
         GisMapOperationDsl::PatchRegion { id, patch } => GisMapMutation::Regions(CollectionMutation::Patch { id, patch }),
-        GisMapOperationDsl::SetDocument { document } => GisMapMutation::SetDocument { document },
+        GisMapOperationDsl::SetSnapshot { snapshot } => GisMapMutation::SetSnapshot { snapshot },
     }
 }
 
@@ -196,7 +196,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<GisMapMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::engine::{default_document, empty_gis_map_projection};
+    use crate::artifacts::gismap::engine::{default_document, empty_gis_map_snapshot};
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;
 
@@ -211,39 +211,39 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: sample_patch_feature() });
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
     fn gis_map_positions_op_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: sample_patch_feature() }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Remove { id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Move { id: "p1".into(), to_index: 3 }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "label": "Home" }))) } }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: sample_patch_feature() }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Remove { id: "p1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Move { id: "p1".into(), to_index: 3 }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "label": "Home" }))) } }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Positions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
     }
 
     #[test]
     fn gis_map_routes_op_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Add { index: 0, item: sample_patch_feature() }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Remove { id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Move { id: "p1".into(), to_index: 1 }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "reuse" }))) } }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Add { index: 0, item: sample_patch_feature() }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Remove { id: "p1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Move { id: "p1".into(), to_index: 1 }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Routes(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "reuse" }))) } }));
     }
 
     #[test]
     fn gis_map_regions_op_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Add { index: 0, item: sample_patch_feature() }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Remove { id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Move { id: "p1".into(), to_index: 2 }));
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "boundary" }))) } }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Add { index: 0, item: sample_patch_feature() }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Remove { id: "p1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Move { id: "p1".into(), to_index: 2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::Regions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "boundary" }))) } }));
     }
 
     #[test]
-    fn gis_map_set_document_op_line_round_trips() {
-        store::test_support::assert_op_line_round_trip(&GisMapMutation::SetDocument { document: default_document() });
+    fn gis_map_set_snapshot_op_line_round_trips() {
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetSnapshot { snapshot: default_document() });
     }
 
     /// 🧷️ Pins the exact pre-migration bytes for the rows whose shape the taxonomy split could have
@@ -261,12 +261,12 @@ mod tests {
 
     #[test]
     fn gis_map_document_text_round_trips_through_store() {
-        let initial = empty_gis_map_projection();
+        let initial = empty_gis_map_snapshot();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
         let mut store = store::DocumentStore::new(envelope);
         store.dispatch(store::DocumentCommand::Apply { mutations: vec![GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: sample_patch_feature() })], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        store::os_store::test_support::assert_document_text_round_trip(&store);
+        store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 //#endregion 🧪️Tests

@@ -126,7 +126,7 @@ impl dsl::DslField for PackedU8 {
 
 //#region 🔖️Domain
 /// 🖼️ One embedded pixel asset (video frame, ortho tile, texture) referenced by id from
-/// `RemodelProjection::assets`, `MediaStream.frames`, `RemodelMesh.texture_asset_id`, or
+/// `RemodelSnapshot::assets`, `MediaStream.frames`, `RemodelMesh.texture_asset_id`, or
 /// `GeoProducts.{dsm,dtm,ortho}_asset_id`. Sampled video frames use `image/jpeg` (~10x smaller than
 /// PNG for photographic content); PNG stays reserved for exports/textures/rasters that need
 /// lossless round trips.
@@ -191,7 +191,7 @@ pub struct FrameRef {
 }
 
 /// 🎞️ One imported media source (an image sequence or a video), decoded into `FrameRef`s pointing at
-/// `RemodelProjection::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
+/// `RemodelSnapshot::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MediaStream {
@@ -802,7 +802,7 @@ impl dsl::DslField for RemodelMesh {
 
 /// 🌉️ `Box<T>` is a `#[fundamental]` std type, so implementing the foreign `dsl::DslField` trait for
 /// `Box<RemodelMesh>` (a local type parameter) here is coherence-legal — needed because
-/// `RemodelMutation::SetMeshResult`/`RemodelDiff::SetMeshResult` carry `mesh: Box<RemodelMesh>`
+/// `RemodelMutation::SetMeshResult`/`RemodelMutation::SetMeshResult` carry `mesh: Box<RemodelMesh>`
 /// (boxed only to shrink the enum's overall size; `RemodelMesh` itself is a plain record, not a
 /// `DslEnum`, so the derive's `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't
 /// apply — this is the ordinary boxed-scalar case instead).
@@ -917,99 +917,13 @@ pub struct ReconstructionResults {
     pub qc: Option<QcReportSnapshot>,
 }
 
-/// 🗂️ Top-level remodel project document — only persistent, undoable reconstruction state. Ephemeral
-/// viewport state (camera/selection/cursors), algorithm scratch (descriptors, match graphs, depth
-/// maps, TSDF volumes), and the active utility (host-owned `view_state.active_utility_id`) all live in
-/// the plugin runtime, never in this document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[dsl(extension = "remodel")]
-#[serde(rename_all = "camelCase")]
-pub struct RemodelProjection {
-    pub schema: String,
-    pub id: String,
-    #[serde(default)]
-    #[dsl(table)]
-    pub streams: Vec<MediaStream>,
-    #[serde(default)]
-    pub assets: BTreeMap<String, ImageAsset>,
-    #[serde(default)]
-    #[dsl(block)]
-    pub calibration: CalibrationState,
-    #[serde(default)]
-    #[dsl(block)]
-    pub params: ReconstructionParams,
-    #[serde(default)]
-    #[dsl(table)]
-    pub gcps: Vec<GroundControlPoint>,
-    #[serde(default)]
-    #[dsl(block)]
-    pub job: ReconstructionJob,
-    #[serde(default)]
-    #[dsl(block)]
-    pub results: ReconstructionResults,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for RemodelProjection {
-    const EXTENSION: &'static str = "remodel";
-    fn envelope_id() -> &'static str { "remodel" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for RemodelProjection {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
+/// 📸️ Persisted remodel snapshot — re-exported from `📸️snapshot/🧬️schema`.
+pub use crate::artifacts::remodel::snapshot::schema::RemodelSnapshot;
 
 /// 🌱️ An empty scene seeded with a placeholder box mesh, so the 3D editor/preview always has
 /// something to render before any media has been imported/reconstructed.
-pub fn default_remodel_scene() -> RemodelProjection {
-    RemodelProjection {
+pub fn default_remodel_scene() -> RemodelSnapshot {
+    RemodelSnapshot {
         schema: REMODEL_DOCUMENT_SCHEMA.into(),
         id: "remodel".into(),
         streams: Vec::new(),
@@ -1033,7 +947,7 @@ mod tests {
     /// pre-existing `populated_scene_roundtrips_through_json`) actually walk the full document shape
     /// instead of just `default_remodel_scene()`'s mostly-empty surface. Duplicated verbatim into every
     /// taxonomy node that needs it (`🗣️dsl`, `🔧️op`, `🎒️pack`) since it is a private test-only builder.
-    fn populated_scene_fixture() -> RemodelProjection {
+    fn populated_scene_fixture() -> RemodelSnapshot {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -1138,7 +1052,7 @@ mod tests {
     fn scene_roundtrips_through_json() {
         let scene = default_remodel_scene();
         let json = serde_json::to_string(&scene).expect("serialize");
-        let parsed: RemodelProjection = serde_json::from_str(&json).expect("deserialize");
+        let parsed: RemodelSnapshot = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(parsed, scene);
     }
 
@@ -1146,7 +1060,7 @@ mod tests {
     fn populated_scene_roundtrips_through_json() {
         let scene = populated_scene_fixture();
         let json = serde_json::to_string(&scene).expect("serialize");
-        let parsed: RemodelProjection = serde_json::from_str(&json).expect("deserialize");
+        let parsed: RemodelSnapshot = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(parsed, scene);
     }
 

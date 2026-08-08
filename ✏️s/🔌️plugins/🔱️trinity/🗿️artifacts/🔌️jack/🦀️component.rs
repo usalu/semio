@@ -132,29 +132,10 @@ impl Default for Camera {
     }
 }
 
-/// 📦️ `trinity.graph` fixture document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GraphFixture {
-    pub schema: String,
-    pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub manifest_id: Option<String>,
-    #[serde(default)]
-    pub manifest: Manifest,
-    /// 🌱️ Seed-only initial viewport framing for curated examples — consumed once into an app's
-    /// runtime camera when a fixture is first loaded, never written back to by any operation.
-    pub camera: Camera,
-    pub nodes: Vec<Node>,
-    pub edges: Vec<Edge>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub root_node_id: Option<String>,
-}
+/// 📸️ Persisted jack snapshot — defined in `snapshot::schema`.
+pub use super::snapshot::schema::JackSnapshot;
 
-/// 📄️ Document projection for the trinity graph artifact.
-pub type TrinityGraphDocument = GraphFixture;
-
-impl GraphFixture {
+impl JackSnapshot {
     pub const SCHEMA: &'static str = "trinity.graph";
 
     pub fn validate_schema(&self) -> Result<(), TrinityRamError> {
@@ -199,7 +180,7 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn from_fixture(mut fixture: GraphFixture) -> Result<Self, TrinityRamError> {
+    pub fn from_fixture(mut fixture: JackSnapshot) -> Result<Self, TrinityRamError> {
         fixture.validate_schema()?;
         fixture.resolve_manifest()?;
         if let Some(id) = fixture.manifest_id.as_deref() {
@@ -218,9 +199,9 @@ impl Graph {
         Ok(Self { name: fixture.name, manifest: fixture.manifest, camera: fixture.camera, nodes, edges, root_node_id: fixture.root_node_id })
     }
 
-    pub fn to_fixture(&self) -> GraphFixture {
-        GraphFixture {
-            schema: GraphFixture::SCHEMA.to_string(),
+    pub fn to_fixture(&self) -> JackSnapshot {
+        JackSnapshot {
+            schema: JackSnapshot::SCHEMA.to_string(),
             name: self.name.clone(),
             manifest_id: Some("nakagin".into()),
             manifest: self.manifest.clone(),
@@ -232,7 +213,7 @@ impl Graph {
     }
 
     pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
-        Self::from_fixture(GraphFixture::from_json(json)?)
+        Self::from_fixture(JackSnapshot::from_json(json)?)
     }
 
     pub fn fixture_json(&self) -> Result<String, TrinityRamError> {
@@ -240,11 +221,11 @@ impl Graph {
     }
 
     /// 🧩️ Build a `trinity.graph` fixture containing only the given node and edge ids.
-    pub fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> GraphFixture {
+    pub fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> JackSnapshot {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
         let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
-        GraphFixture { schema: GraphFixture::SCHEMA.to_string(), name: format!("{} subgraph", self.name), manifest_id: Some("nakagin".into()), manifest: self.manifest.clone(), camera: self.camera.clone(), nodes, edges, root_node_id }
+        JackSnapshot { schema: JackSnapshot::SCHEMA.to_string(), name: format!("{} subgraph", self.name), manifest_id: Some("nakagin".into()), manifest: self.manifest.clone(), camera: self.camera.clone(), nodes, edges, root_node_id }
     }
 
     pub fn node(&self, id: &str) -> Option<&Node> {
@@ -370,7 +351,7 @@ impl Graph {
 }
 
 /// 🛡️ Validates trinity fixture instances against a compile-time graph manifest.
-fn validate_trinity_fixture(gm: &GraphManifest, fixture: &GraphFixture) -> Result<(), TrinityRamError> {
+fn validate_trinity_fixture(gm: &GraphManifest, fixture: &JackSnapshot) -> Result<(), TrinityRamError> {
     let validator = ManifestValidator::new(gm);
     for node in &fixture.nodes {
         validator.validate_node_kind(&node.kind)?;
@@ -423,10 +404,10 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
     format!("{node_id}@{port_id}")
 }
 
-pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixture::SCHEMA;
+pub const TRINITY_GRAPH_SCHEMA: &str = JackSnapshot::SCHEMA;
 
-pub fn empty_trinity_graph_fixture() -> GraphFixture {
-    GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "trinity".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: Vec::new(), edges: Vec::new(), root_node_id: None }
+pub fn empty_trinity_graph_fixture() -> JackSnapshot {
+    JackSnapshot { schema: JackSnapshot::SCHEMA.into(), name: "trinity".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: Vec::new(), edges: Vec::new(), root_node_id: None }
 }
 
 /// 🎯️ `ArtifactKindSpec` identity shared by every `jack`-family app that mounts this artifact.
@@ -453,9 +434,9 @@ mod tests {
     use crate::artifacts::jack::op::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation, TrinityGraphMutation};
     use store::DocumentCommand;
 
-    fn mini_fixture() -> GraphFixture {
-        GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
+    fn mini_fixture() -> JackSnapshot {
+        JackSnapshot {
+            schema: JackSnapshot::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
@@ -541,7 +522,7 @@ mod tests {
     fn fixture_round_trip() {
         let fixture = mini_fixture();
         let json = fixture.to_json().unwrap();
-        let back = GraphFixture::from_json(&json).unwrap();
+        let back = JackSnapshot::from_json(&json).unwrap();
         assert_eq!(back.nodes.len(), 2);
         assert_eq!(back.edges.len(), 1);
     }
@@ -556,8 +537,8 @@ mod tests {
 
     #[test]
     fn derived_flat_position_covers_disconnected_components() {
-        let fixture = GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
+        let fixture = JackSnapshot {
+            schema: JackSnapshot::SCHEMA.into(),
             name: "disconnected".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
@@ -653,9 +634,9 @@ mod tests {
         let fixture = mini_fixture();
         let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture));
         dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::CreateNode { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, ports: vec![] }]).expect("create");
-        assert_eq!(store.projection().expect("projection").nodes.len(), 3);
+        assert_eq!(store.snapshot().expect("projection").nodes.len(), 3);
         store.dispatch(DocumentCommand::Undo).expect("undo");
-        assert_eq!(store.projection().expect("projection").nodes.len(), 2);
+        assert_eq!(store.snapshot().expect("projection").nodes.len(), 2);
     }
 
     #[test]
@@ -692,7 +673,7 @@ mod tests {
             ],
         )
         .expect("batch create edge");
-        let projection = store.projection().expect("projection");
+        let projection = store.snapshot().expect("projection");
         assert_eq!(projection.nodes.len(), 11);
         assert_eq!(projection.edges.len(), 2);
     }
@@ -714,20 +695,20 @@ mod tests {
     #[test]
     fn from_json_rejects_wrong_schema() {
         let json = r#"{"schema":"bogus","name":"x","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
-        let err = GraphFixture::from_json(json).expect_err("schema mismatch");
+        let err = JackSnapshot::from_json(json).expect_err("schema mismatch");
         assert!(err.to_string().contains("expected schema trinity.graph"));
     }
 
     #[test]
     fn resolve_manifest_errors_when_missing_and_empty() {
-        let mut fixture = GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "x".into(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+        let mut fixture = JackSnapshot { schema: JackSnapshot::SCHEMA.into(), name: "x".into(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
         let err = fixture.resolve_manifest().expect_err("missing manifest");
         assert!(matches!(err, TrinityRamError::ManifestMissing));
     }
 
     #[test]
     fn resolve_manifest_errors_on_unknown_id() {
-        let mut fixture = GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "x".into(), manifest_id: Some("nope".into()), manifest: Manifest::default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+        let mut fixture = JackSnapshot { schema: JackSnapshot::SCHEMA.into(), name: "x".into(), manifest_id: Some("nope".into()), manifest: Manifest::default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
         let err = fixture.resolve_manifest().expect_err("unknown manifest id");
         assert!(err.to_string().contains("unknown manifest id nope"));
     }
@@ -821,8 +802,8 @@ mod tests {
 
     #[test]
     fn derived_flat_position_handles_cycles_without_looping() {
-        let fixture = GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
+        let fixture = JackSnapshot {
+            schema: JackSnapshot::SCHEMA.into(),
             name: "cycle".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),

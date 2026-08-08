@@ -1,0 +1,15 @@
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5421:34
+     |
+5421 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: `semio-framework-plugin` (lib) generated 16 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 15 suggestions)
+    Checking semio-s-plugin-norm v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust)
+error: couldn't read `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/././../../🗿️artifacts/📕️din4108/🎒️pack/🦀️component.rs`: No such file or directory (os error 2)
+  --> ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs:74:9
+   |
+74 |         pub mod pack;
+   |         ^^^^^^^^^^^^^
+
+error: could not compile `semio-s-plugin-norm` (lib) due to 1 previous error

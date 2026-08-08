@@ -8,22 +8,22 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::en1996::Document;
+use crate::artifacts::en1996::En1996Snapshot;
 
-/// 🗄️ The load-bearing-wall example fixture, handcrafted in `en1996`'s DSL (`store::DocumentDsl`):
+/// 🗄️ The load-bearing-wall example fixture, handcrafted in `en1996`'s DSL (`store::En1996SnapshotDsl`):
 /// an EN-annex masonry class 2 wall check under a transient design situation, distinct from
-/// `Document::default()`'s DE-annex/persistent values so the grammar's non-default branches
+/// `En1996Snapshot::default()`'s DE-annex/persistent values so the grammar's non-default branches
 /// (annex, masonry class, design situation, exposure, mortar) are exercised too.
 pub const EN1996_LOADBEARING_WALL_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️loadbearing-wall/🖼️assets/🗣️loadbearing-wall.dsl.semio");
 
-/// 📖️ Parses `.en1996` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
-    <Document as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.en1996` DSL text into a `En1996Snapshot`.
+pub fn parse_dsl(text: &str) -> Result<En1996Snapshot, store::TextError> {
+    <En1996Snapshot as store::En1996SnapshotDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Document` back to `.en1996` DSL text.
-pub fn print_dsl(document: &Document) -> String {
-    store::DocumentDsl::print_dsl(document)
+/// 🖨️ Prints a `En1996Snapshot` back to `.en1996` DSL text.
+pub fn print_dsl(document: &En1996Snapshot) -> String {
+    store::En1996SnapshotDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&Document::default());
+        store::test_support::assert_dsl_round_trip(&En1996Snapshot::default());
     }
 
     #[test]

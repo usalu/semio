@@ -1,0 +1,179 @@
+syntax = "proto3";
+package semio.s.block.block5d.diff;
+
+// 🧬️ Block5d diff schema — sparse field delta.
+
+message Block5dDiff {
+  // @state persistent
+  optional Block5dArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional BlockKindIdentity part_kind = 3;
+  // @state persistent
+  optional Block5dPart2d part2d = 4;
+  // @state persistent
+  optional Block5dPart3d part3d = 5;
+  // @state persistent
+  optional Block5dRepresentationsDelta representations = 6;
+  // @state persistent
+  optional Block5dGripKindsDelta grip_kinds = 7;
+  // @state persistent
+  optional Block5dGripsDelta grips = 8;
+  // @state persistent
+  optional Block5dCompatibilityDelta compatibility = 9;
+  // @state persistent
+  optional Block5dAttributesDelta attributes = 10;
+  // @state persistent
+  optional Block5dAuthorList authors = 11;
+  // @state persistent
+  optional BlockCamera2d camera2d = 12;
+  // @state persistent
+  optional BlockCamera3d camera3d = 13;
+  // @state persistent
+  optional BlockMeta meta = 14;
+  // @state shared-ui
+  optional Block5dStringList selected_ids = 15;
+  // @state local-ui
+  optional string locale = 16;
+}
+
+message BlockKindIdentity {
+  bool _placeholder = 1;
+}
+
+message Block5dPart2d {
+  bool _placeholder = 1;
+}
+
+message Block5dPart3d {
+  bool _placeholder = 1;
+}
+
+message BlockRepresentation {
+  bool _placeholder = 1;
+}
+
+message Block5dGripKind {
+  bool _placeholder = 1;
+}
+
+message Block5dGripTemplate {
+  bool _placeholder = 1;
+}
+
+message BlockCompatibilityRule {
+  bool _placeholder = 1;
+}
+
+message BlockAttribute {
+  bool _placeholder = 1;
+}
+
+message BlockAuthor {
+  bool _placeholder = 1;
+}
+
+message BlockCamera2d {
+  bool _placeholder = 1;
+}
+
+message BlockCamera3d {
+  bool _placeholder = 1;
+}
+
+message BlockMeta {
+  bool _placeholder = 1;
+}
+
+message Block5dStringList {
+  repeated string values = 1;
+}
+
+message Block5dAuthorList {
+  repeated BlockAuthor values = 1;
+}
+
+message Block5dRepresentationsDelta {
+  repeated BlockRepresentation added = 1;
+  repeated string removed = 2;
+  repeated Block5dRepresentationsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block5dRepresentationsPatchEntry {
+  string id = 1;
+  Block5dRepresentationsPatch patch = 2;
+}
+
+message Block5dRepresentationsPatch {
+  optional BlockRepresentation replacement = 1;
+}
+
+message Block5dGripKindsDelta {
+  repeated Block5dGripKind added = 1;
+  repeated string removed = 2;
+  repeated Block5dGripKindsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block5dGripKindsPatchEntry {
+  string id = 1;
+  Block5dGripKindsPatch patch = 2;
+}
+
+message Block5dGripKindsPatch {
+  optional Block5dGripKind replacement = 1;
+}
+
+message Block5dGripsDelta {
+  repeated Block5dGripTemplate added = 1;
+  repeated string removed = 2;
+  repeated Block5dGripsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block5dGripsPatchEntry {
+  string id = 1;
+  Block5dGripsPatch patch = 2;
+}
+
+message Block5dGripsPatch {
+  optional Block5dGripTemplate replacement = 1;
+}
+
+message Block5dCompatibilityDelta {
+  repeated BlockCompatibilityRule added = 1;
+  repeated string removed = 2;
+  repeated Block5dCompatibilityPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block5dCompatibilityPatchEntry {
+  string id = 1;
+  Block5dCompatibilityPatch patch = 2;
+}
+
+message Block5dCompatibilityPatch {
+  optional BlockCompatibilityRule replacement = 1;
+}
+
+message Block5dAttributesDelta {
+  repeated BlockAttribute added = 1;
+  repeated string removed = 2;
+  repeated Block5dAttributesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block5dAttributesPatchEntry {
+  string id = 1;
+  Block5dAttributesPatch patch = 2;
+}
+
+message Block5dAttributesPatch {
+  optional BlockAttribute replacement = 1;
+}
+
+message Block5dArtifact {
+  string schema = 1;
+}

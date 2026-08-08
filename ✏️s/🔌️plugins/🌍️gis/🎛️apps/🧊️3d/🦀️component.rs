@@ -11,8 +11,8 @@ use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::apps::gis3d::modes::view as view_mode;
 use crate::apps::gis3d::modes::view::windows::terrain;
 use crate::artifacts::gisterrain::engine::{default_terrain_document, gis3d_io, gis3d_map_in_port, gis3d_scene_media, gis3d_scene_out_port};
-use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
-use crate::artifacts::gisterrain::{mesh_artifact_kind, Gis3dTerrainDocument, GIS_3D_TERRAIN_SCHEMA};
+use crate::artifacts::gisterrain::op::GisTerrainMutation;
+use crate::artifacts::gisterrain::{mesh_artifact_kind, GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ui_text, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
@@ -29,7 +29,7 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `Gis3dPlayApp::Command` — the SOLE dispatch surface for gis3d's own behavior, covering every
     /// action `create_gis3d_app` declares. Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.
-    pub enum Gis3dCommand for Gis3dTerrainDocument, Gis3dTerrainMutation, Gis3dConfig, Gis3dConfigMutation {
+    pub enum Gis3dCommand for GisTerrainSnapshot, GisTerrainMutation, Gis3dConfig, Gis3dConfigMutation {
         "setExaggeration" as "exaggeration" => set_exaggeration::SetExaggeration,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setSelection" as "selection" => set_selection::SetSelection,
@@ -52,8 +52,8 @@ use view::set_camera;
 pub struct Gis3dPlayApp;
 
 impl DocumentApp for Gis3dPlayApp {
-    type Projection = Gis3dTerrainDocument;
-    type Mutation = Gis3dTerrainMutation;
+    type Snapshot = GisTerrainSnapshot;
+    type Mutation = GisTerrainMutation;
     type Config = Gis3dConfig;
     type ConfigMutation = Gis3dConfigMutation;
     type Draft = NoDraft;
@@ -64,7 +64,7 @@ impl DocumentApp for Gis3dPlayApp {
     const APP_ID: &'static str = GIS3D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
-    fn initial_projection() -> Gis3dTerrainDocument {
+    fn initial_snapshot() -> GisTerrainSnapshot {
         default_terrain_document()
     }
 
@@ -74,19 +74,19 @@ impl DocumentApp for Gis3dPlayApp {
         Some(gis3d_io())
     }
 
-    fn whole_document_operation(projection: Gis3dTerrainDocument) -> Option<Gis3dTerrainMutation> {
-        Some(Gis3dTerrainMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: GisTerrainSnapshot) -> Option<GisTerrainMutation> {
+        Some(GisTerrainMutation::SetSnapshot { snapshot })
     }
 
     /// 🎞️ `scene:out` (see `crate::artifacts::gisterrain::engine::gis3d_scene_media`) plus the inherited
-    /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding
+    /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "scene:out" => Ok(gis3d_scene_media(doc.projection)),
+            "scene:out" => Ok(gis3d_scene_media(doc.snapshot)),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -94,24 +94,24 @@ impl DocumentApp for Gis3dPlayApp {
     }
 
     /// 🎞️ `map:in` writes the incoming `2d.map` descriptor JSON verbatim into
-    /// `Gis3dTerrainDocument::imported_features_json` (rendered as an extra pin layer, see the
+    /// `GisTerrainSnapshot::imported_features_json` (rendered as an extra pin layer, see the
     /// 🏔️terrain window) plus the inherited `document:in` default (replicated inline for the same
     /// reason as `export_media`).
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "map:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "map:in only accepts a Structured JSON payload".into()));
                 };
-                Ok(Emit::mutations(vec![Gis3dTerrainMutation::SetImportedFeatures { features_json: json.clone() }]))
+                Ok(Emit::mutations(vec![GisTerrainMutation::SetImportedFeatures { features_json: json.clone() }]))
             }
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <Gis3dTerrainDocument as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(projection) {
+                let snapshot = <GisTerrainSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -160,7 +160,7 @@ impl DocumentApp for Gis3dPlayApp {
         }
     }
 
-    fn handle(command: &Gis3dCommand, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Gis3dCommand, doc: &DocumentView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -170,9 +170,9 @@ impl DocumentApp for Gis3dPlayApp {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
         match body_key {
-            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.projection, cfg.projection),
+            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -241,6 +241,7 @@ pub(crate) mod testkit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use semio_framework_plugin::DocumentApp;
     use super::*;
     use crate::apps::gis3d::testkit::{app, app_with_registry, dispatch, render};
     use serde_json::json;
@@ -276,7 +277,7 @@ mod tests {
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
         for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
-            store::test_support::assert_op_text_binary_equivalence(command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(command);
             let printed = protocol::OpText::print_op(command);
             assert!(printed == *keyword || printed.starts_with(&format!("{keyword} ")), "row {} printed {printed:?}, expected the {keyword:?} wire keyword", command.command_id());
         }
@@ -310,15 +311,15 @@ mod tests {
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Gis3dPlayApp>(create_gis3d_app);
-        assert!(Gis3dPlayApp.command_from_action("noSuchAction", None).is_err());
+        assert!(Gis3dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
 
     #[test]
     fn command_from_action_reads_the_nested_camera_object_and_both_id_key_spellings() {
         let app = Gis3dPlayApp;
-        let camera = app.command_from_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).expect("setCamera");
+        let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).expect("setCamera");
         assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
-        let selection = app.command_from_action("worldSelect", Some(&json!({ "selectedIds": ["p1"] }))).expect("worldSelect");
+        let selection = Gis3dPlayApp::command_from_action("worldSelect", Some(&json!({ "selectedIds": ["p1"] }))).expect("worldSelect");
         assert!(matches!(selection, Gis3dCommand::WorldSelect(ref payload) if payload.ids == vec!["p1".to_string()]));
     }
     //#endregion 🔖️CommandSurface
@@ -344,9 +345,9 @@ mod tests {
     #[test]
     fn view_actions_emit_no_ops_under_registry_kind_discipline() {
         let mut app = app_with_registry();
-        assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).operations.is_empty());
-        assert!(dispatch(&mut app, Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: vec!["p1".into()] })).operations.is_empty());
-        assert_eq!(dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).operations.len(), 1);
+        assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).mutations.is_empty());
+        assert!(dispatch(&mut app, Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: vec!["p1".into()] })).mutations.is_empty());
+        assert_eq!(dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).mutations.len(), 1);
     }
     //#endregion 🔖️Manifest
 
@@ -354,10 +355,10 @@ mod tests {
     #[test]
     fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
         let app = app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
-        let media = Gis3dPlayApp.export_media("scene:out", &doc).expect("scene:out export");
+        let doc = DocumentView { snapshot: &document, history: &history };
+        let media = Gis3dPlayApp::export_media("scene:out", &doc).expect("scene:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "3d.mesh");
         assert!(json.contains("exaggeration"));
@@ -366,19 +367,19 @@ mod tests {
     #[test]
     fn import_media_map_in_writes_the_imported_features_operation() {
         let app = app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
+        let doc = DocumentView { snapshot: &document, history: &history };
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
-        let emit = Gis3dPlayApp.import_media("map:in", &media, &doc).expect("map:in import");
-        assert_eq!(emit.document_mutations, vec![Gis3dTerrainMutation::SetImportedFeatures { features_json: incoming }]);
+        let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
+        assert_eq!(emit.document_mutations, vec![GisTerrainMutation::SetImportedFeatures { features_json: incoming }]);
     }
 
     #[test]
     fn media_ports_declare_map_in_and_scene_out() {
         let app = Gis3dPlayApp;
-        let ports = app.media_ports();
+        let ports = Gis3dPlayApp::media_ports();
         assert!(ports.iter().any(|port| port.id == "map:in"));
         assert!(ports.iter().any(|port| port.id == "scene:out"));
     }

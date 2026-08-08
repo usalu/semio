@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Procedural2dDiff
 /// 🧬️ Procedural2dDiff facet type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.procedural.procedural2d")]
 
@@ -22,8 +22,7 @@ pub struct Procedural2dDiff {
     #[state(local_ui)] pub show_mode: Option<String>,
     #[state(shared_ui)] pub selected_generation_id: Option<Option<String>>,
     #[state(preview)] pub generation_preview_text: Option<Option<String>>,
-    #[state(local_ui)] pub locale: Option<String>,
-}
+    #[state(local_ui)] pub locale: Option<String>}
 //#endregion 🔖️Procedural2dDiff
 
 //#region 🔖️Helpers
@@ -31,6 +30,5 @@ pub struct Procedural2dDiff {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Procedural2dStringList {
-    pub values: Vec<String>,
-}
+    pub values: Vec<String>}
 //#endregion 🔖️Helpers

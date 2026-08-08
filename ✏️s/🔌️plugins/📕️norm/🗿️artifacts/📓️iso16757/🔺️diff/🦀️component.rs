@@ -1,54 +1,85 @@
-//! 🔺️ ISO 16757 artifact — the operation diff and its `MutationDiff` law.
-//!
-//! 📌️ Every norm artifact's sole mutation is a whole-document replace, so its diff is
-//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentMutation<D>`
-//! names as its `Iso16757Mutation::Diff`, with the `MutationDiff` impl (apply = "take the replacement,
-//! otherwise keep the projection"; absorb = "the later replacement wins") living beside it in
-//! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
-//! binding for this artifact and proves the law against this artifact's own `Document`.
-
+//! 🔺️ Iso16757 artifact — sparse field diff runtime.
 
 //#region 📖️SemioGrammar
-/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::iso16757::Document;
+use crate::artifacts::iso16757::schema::Iso16757Artifact;
+use crate::artifacts::iso16757::Iso16757Snapshot;
+use protocol::MutationDiff;
 
-//#region 🔖️Types
-/// 🔺️ This artifact's concrete operation diff.
-pub type Diff = crate::document::DocumentDiff<Document>;
-//#endregion 🔖️Types
-
-//#region 🧪️Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::artifacts::iso16757::op::Iso16757Mutation;
-    use protocol::{Mutation as _, MutationDiff};
-
-    #[test]
-    fn set_document_diff_replaces_the_whole_projection() {
-        let base = Document::default();
-        let mutation = Iso16757Mutation::SetDocument { document: Document::default() };
-        let diff: Diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base), Document::default());
-    }
-
-    #[test]
-    fn an_empty_diff_keeps_the_projection() {
-        let base = Document::default();
-        assert_eq!(Diff::default().apply(&base), base);
-    }
-
-    #[test]
-    fn absorb_keeps_the_later_replacement() {
-        let base = Document::default();
-        let mut diff = Diff::default();
-        diff.absorb(Diff { document: Some(Document::default()) });
-        assert_eq!(diff.apply(&base), Document::default());
+//#region 🔖️Apply
+impl Iso16757Diff {
+    pub fn apply_to_artifact(&self, artifact: &Iso16757Artifact) -> Iso16757Artifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(value) = self.catalogue { next.catalogue = value; }
+        if let Some(value) = self.dictionary { next.dictionary = value; }
+        if let Some(value) = self.geometry { next.geometry = value; }
+        if let Some(value) = self.selection { next.selection = value; }
+        if let Some(value) = self.part_number_rule { next.part_number_rule = value; }
+        if let Some(value) = self.part_number_inputs { next.part_number_inputs = value; }
+        if let Some(value) = self.script_limits { next.script_limits = value; }
+        if let Some(value) = self.exchange_process { next.exchange_process = value; }
+        if let Some(value) = &self.selected_check_index {
+            next.selected_check_index = *value;
+        }
+        next
     }
 }
-//#endregion 🧪️Tests
+
+impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
+    fn apply(&self, snapshot: &Iso16757Snapshot) -> Iso16757Snapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(value) = self.catalogue { next.catalogue = value; }
+        if let Some(value) = self.dictionary { next.dictionary = value; }
+        if let Some(value) = self.geometry { next.geometry = value; }
+        if let Some(value) = self.selection { next.selection = value; }
+        if let Some(value) = self.part_number_rule { next.part_number_rule = value; }
+        if let Some(value) = self.part_number_inputs { next.part_number_inputs = value; }
+        if let Some(value) = self.script_limits { next.script_limits = value; }
+        if let Some(value) = self.exchange_process { next.exchange_process = value; }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(catalogue);
+        take!(dictionary);
+        take!(geometry);
+        take!(selection);
+        take!(part_number_rule);
+        take!(part_number_inputs);
+        take!(script_limits);
+        take!(exchange_process);
+        take!(selected_check_index);
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+pub fn diff_set_snapshot(snapshot: &Iso16757Snapshot) -> Iso16757Diff {
+    Iso16757Diff {
+        artifact: Some(Box::new(Iso16757Artifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Helpers

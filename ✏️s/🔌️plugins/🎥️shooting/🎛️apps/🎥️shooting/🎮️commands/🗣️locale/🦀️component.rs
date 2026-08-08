@@ -2,7 +2,7 @@
 
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

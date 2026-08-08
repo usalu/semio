@@ -1,0 +1,237 @@
+syntax = "proto3";
+package semio.s.norm.en1993.diff;
+
+message En1993Diff {
+  // @state persistent
+  optional En1993Artifact artifact = 1;
+  // @state persistent
+  optional string annex = 2;
+  // @state persistent
+  optional double n_ed_kn = 3;
+  // @state persistent
+  optional double m_ed_knm = 4;
+  // @state persistent
+  optional double v_ed_kn = 5;
+  // @state persistent
+  optional double a_mm2 = 6;
+  // @state persistent
+  optional double a_v_mm2 = 7;
+  // @state persistent
+  optional double w_pl_mm3 = 8;
+  // @state persistent
+  optional double f_y_mpa = 9;
+  // @state persistent
+  optional double f_u_mpa = 10;
+  // @state persistent
+  optional double chi = 11;
+  // @state persistent
+  optional double a_net_mm2 = 12;
+  // @state persistent
+  optional double tension_n_ed_kn = 13;
+  // @state persistent
+  optional double fire_thickness_mm = 14;
+  // @state persistent
+  optional string fire_rating = 15;
+  // @state persistent
+  optional double fire_massivity = 16;
+  // @state persistent
+  optional double fire_mu_0 = 17;
+  // @state persistent
+  optional double fire_design_temperature_c = 18;
+  // @state persistent
+  optional double cf_b_bar_mm = 19;
+  // @state persistent
+  optional double cf_t_mm = 20;
+  // @state persistent
+  optional double cf_k_sigma = 21;
+  // @state persistent
+  optional double cf_psi = 22;
+  // @state persistent
+  optional double cf_n_ed_kn = 23;
+  // @state persistent
+  optional double cf_gross_resistance_kn = 24;
+  // @state persistent
+  optional double stainless_m_ed_knm = 25;
+  // @state persistent
+  optional double stainless_w_pl_mm3 = 26;
+  // @state persistent
+  optional double stainless_f_y_mpa = 27;
+  // @state persistent
+  optional double plated_lambda_p = 28;
+  // @state persistent
+  optional double plated_sigma_ed_mpa = 29;
+  // @state persistent
+  optional double silo_t_mm = 30;
+  // @state persistent
+  optional double silo_r_mm = 31;
+  // @state persistent
+  optional double shell_sigma_x_ed_mpa = 32;
+  // @state persistent
+  optional double silo_k = 33;
+  // @state persistent
+  optional double silo_gamma_kn_m3 = 34;
+  // @state persistent
+  optional double silo_depth_m = 35;
+  // @state persistent
+  optional double bolt_f_ed_kn = 36;
+  // @state persistent
+  optional uint32 bolt_n_bolts = 37;
+  // @state persistent
+  optional double bolt_a_s_mm2 = 38;
+  // @state persistent
+  optional double bolt_e1_mm = 39;
+  // @state persistent
+  optional double bolt_e2_mm = 40;
+  // @state persistent
+  optional double bolt_d0_mm = 41;
+  // @state persistent
+  optional double bolt_d_mm = 42;
+  // @state persistent
+  optional double bolt_t_mm = 43;
+  // @state persistent
+  optional double bolt_f_u_mpa = 44;
+  // @state persistent
+  optional double bolt_f_ub_mpa = 45;
+  // @state persistent
+  optional double weld_a_mm = 46;
+  // @state persistent
+  optional double weld_l_mm = 47;
+  // @state persistent
+  optional double weld_f_u_mpa = 48;
+  // @state persistent
+  optional string weld_steel_grade = 49;
+  // @state persistent
+  optional double weld_f_ed_kn = 50;
+  // @state persistent
+  optional double delta_sigma_mpa = 51;
+  // @state persistent
+  optional uint32 fatigue_category = 52;
+  // @state persistent
+  optional string fatigue_method = 53;
+  // @state persistent
+  optional string t10_steel_subgrade = 54;
+  // @state persistent
+  optional double t10_actual_thickness_mm = 55;
+  // @state persistent
+  optional double t10_t_ed_c = 56;
+  // @state persistent
+  optional double tension_component_f_uk_kn = 57;
+  // @state persistent
+  optional double tension_component_f_k_kn = 58;
+  // @state persistent
+  optional double tension_component_n_ed_kn = 59;
+  // @state persistent
+  optional double hss_w_el_mm3 = 60;
+  // @state persistent
+  optional double hss_f_y_mpa = 61;
+  // @state persistent
+  optional uint32 hss_section_class = 62;
+  // @state persistent
+  optional double hss_m_ed_knm = 63;
+  // @state persistent
+  optional double bridge_lambda = 64;
+  // @state persistent
+  optional double bridge_phi_2 = 65;
+  // @state persistent
+  optional double bridge_delta_sigma_p_mpa = 66;
+  // @state persistent
+  optional double tower_wind_factor = 67;
+  // @state persistent
+  optional double tower_n_ed_kn = 68;
+  // @state persistent
+  optional double pile_sigma_mpa = 69;
+  // @state persistent
+  optional double pile_k_red = 70;
+  // @state persistent
+  optional double pile_n_ed_kn = 71;
+  // @state persistent
+  optional double crane_f_z_ed_kn = 72;
+  // @state persistent
+  optional double crane_wheel_contact_length_mm = 73;
+  // @state persistent
+  optional double crane_dispersion_mm = 74;
+  // @state persistent
+  optional double crane_t_w_mm = 75;
+  // @state shared-ui
+  optional uint32 selected_check_index = 76;
+}
+
+message En1993Artifact {
+  string annex = 1;
+  double n_ed_kn = 2;
+  double m_ed_knm = 3;
+  double v_ed_kn = 4;
+  double a_mm2 = 5;
+  double a_v_mm2 = 6;
+  double w_pl_mm3 = 7;
+  double f_y_mpa = 8;
+  double f_u_mpa = 9;
+  double chi = 10;
+  double a_net_mm2 = 11;
+  double tension_n_ed_kn = 12;
+  double fire_thickness_mm = 13;
+  string fire_rating = 14;
+  double fire_massivity = 15;
+  double fire_mu_0 = 16;
+  double fire_design_temperature_c = 17;
+  double cf_b_bar_mm = 18;
+  double cf_t_mm = 19;
+  double cf_k_sigma = 20;
+  double cf_psi = 21;
+  double cf_n_ed_kn = 22;
+  double cf_gross_resistance_kn = 23;
+  double stainless_m_ed_knm = 24;
+  double stainless_w_pl_mm3 = 25;
+  double stainless_f_y_mpa = 26;
+  double plated_lambda_p = 27;
+  double plated_sigma_ed_mpa = 28;
+  double silo_t_mm = 29;
+  double silo_r_mm = 30;
+  double shell_sigma_x_ed_mpa = 31;
+  double silo_k = 32;
+  double silo_gamma_kn_m3 = 33;
+  double silo_depth_m = 34;
+  double bolt_f_ed_kn = 35;
+  uint32 bolt_n_bolts = 36;
+  double bolt_a_s_mm2 = 37;
+  double bolt_e1_mm = 38;
+  double bolt_e2_mm = 39;
+  double bolt_d0_mm = 40;
+  double bolt_d_mm = 41;
+  double bolt_t_mm = 42;
+  double bolt_f_u_mpa = 43;
+  double bolt_f_ub_mpa = 44;
+  double weld_a_mm = 45;
+  double weld_l_mm = 46;
+  double weld_f_u_mpa = 47;
+  string weld_steel_grade = 48;
+  double weld_f_ed_kn = 49;
+  double delta_sigma_mpa = 50;
+  uint32 fatigue_category = 51;
+  string fatigue_method = 52;
+  string t10_steel_subgrade = 53;
+  double t10_actual_thickness_mm = 54;
+  double t10_t_ed_c = 55;
+  double tension_component_f_uk_kn = 56;
+  double tension_component_f_k_kn = 57;
+  double tension_component_n_ed_kn = 58;
+  double hss_w_el_mm3 = 59;
+  double hss_f_y_mpa = 60;
+  uint32 hss_section_class = 61;
+  double hss_m_ed_knm = 62;
+  double bridge_lambda = 63;
+  double bridge_phi_2 = 64;
+  double bridge_delta_sigma_p_mpa = 65;
+  double tower_wind_factor = 66;
+  double tower_n_ed_kn = 67;
+  double pile_sigma_mpa = 68;
+  double pile_k_red = 69;
+  double pile_n_ed_kn = 70;
+  double crane_f_z_ed_kn = 71;
+  double crane_wheel_contact_length_mm = 72;
+  double crane_dispersion_mm = 73;
+  double crane_t_w_mm = 74;
+  optional uint32 selected_check_index = 75;
+}
+
+message En1993StringList { repeated string values = 1; }

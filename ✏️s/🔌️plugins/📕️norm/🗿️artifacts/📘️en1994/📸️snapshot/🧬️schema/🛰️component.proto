@@ -1,0 +1,49 @@
+syntax = "proto3";
+package semio.s.norm.en1994.snapshot;
+
+message En1994Snapshot {
+  // @state persistent
+  string annex = 1;
+  // @state persistent
+  double m_ed_knm = 2;
+  // @state persistent
+  double v_ed_kn = 3;
+  // @state persistent
+  double m_pla = 4;
+  // @state persistent
+  double m_pl_rd = 5;
+  // @state persistent
+  double eta = 6;
+  // @state persistent
+  double v_l_rd = 7;
+  // @state persistent
+  double insulation_thickness_mm = 8;
+  // @state persistent
+  string fire_rating = 9;
+  // @state persistent
+  string deck_type = 10;
+  // @state persistent
+  double delta_sigma_mpa = 11;
+  // @state persistent
+  string fatigue_detail = 12;
+  // @state persistent
+  double d_mm = 13;
+  // @state persistent
+  double h_sc_mm = 14;
+  // @state persistent
+  double f_ck_mpa = 15;
+  // @state persistent
+  double f_u_mpa = 16;
+  // @state persistent
+  double e_cm_mpa = 17;
+  // @state persistent
+  double v_ed_per_stud_kn = 18;
+  // @state persistent
+  double span_m = 19;
+  // @state persistent
+  double f_y_mpa = 20;
+  // @state persistent
+  double n_cycles_stud = 21;
+  // @state persistent
+  double delta_tau_stud_mpa = 22;
+}

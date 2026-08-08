@@ -1,16 +1,17 @@
-//! 🌐️ Block 3D play app — world-scene compute that needs both the document (`Block3dDefinition`) and
+//! 🌐️ Block 3D play app — world-scene compute that needs both the document (`Block3dSnapshot`) and
 //! this app's view state (`Block3dConfig`/`Block3dWindowView`). Kept out of
 //! `crate::artifacts::block3d::engine` on purpose: an artifact must never depend on an app, and every
 //! function here takes at least one app-only type.
 
-use crate::apps::block3d::config::{block3d_window_view, Block3dBrushPreview, Block3dConfig, Block3dWindowView};
-use crate::artifacts::block3d::{Block3dDefinition, Block3dVortexKind};
+use crate::apps::block3d::config::{block3d_window_view, Block3dConfig};
+use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
+use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 use serde_json::json;
 
 //#region 🔖️Visibility
-pub fn visible_representations<'a>(definition: &'a Block3dDefinition, view: &Block3dWindowView) -> Vec<&'a BlockRepresentation> {
+pub fn visible_representations<'a>(definition: &'a Block3dSnapshot, view: &Block3dWindowView) -> Vec<&'a BlockRepresentation> {
     if view.representation_ids.is_empty() {
         return definition.representations.iter().collect();
     }
@@ -27,14 +28,14 @@ pub fn arrangement_offset(arrangement: &str, index: usize, spacing: f64) -> [f64
     }
 }
 
-pub fn instance_offset_for_representation(definition: &Block3dDefinition, view: &Block3dWindowView, representation_id: &str) -> [f64; 3] {
+pub fn instance_offset_for_representation(definition: &Block3dSnapshot, view: &Block3dWindowView, representation_id: &str) -> [f64; 3] {
     let visible = visible_representations(definition, view);
     visible.iter().position(|representation| representation.id == representation_id).map_or([0.0, 0.0, 0.0], |index| arrangement_offset(&view.arrangement, index, view.spacing))
 }
 //#endregion 🔖️Visibility
 
 //#region 🔖️Scene
-pub fn effective_camera<'a>(definition: &'a Block3dDefinition, config: &'a Block3dConfig) -> &'a crate::BlockCamera3d {
+pub fn effective_camera<'a>(definition: &'a Block3dSnapshot, config: &'a Block3dConfig) -> &'a crate::BlockCamera3d {
     config.camera.as_ref().unwrap_or(&definition.camera3d)
 }
 
@@ -42,7 +43,7 @@ pub fn representation_mesh_id(representation: &BlockRepresentation) -> String {
     representation.mesh_url.as_deref().map_or_else(|| format!("block3d-rep-{}", representation.id), world3d_mesh_id_from_url)
 }
 
-pub fn world_meshes_json(_definition: &Block3dDefinition, visible: &[&BlockRepresentation]) -> String {
+pub fn world_meshes_json(_definition: &Block3dSnapshot, visible: &[&BlockRepresentation]) -> String {
     let meshes: Vec<serde_json::Value> = visible
         .iter()
         .filter_map(|representation| {
@@ -53,7 +54,7 @@ pub fn world_meshes_json(_definition: &Block3dDefinition, visible: &[&BlockRepre
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_instances_json(definition: &Block3dDefinition, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
+pub fn world_instances_json(definition: &Block3dSnapshot, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
     let label = if definition.object_kind.label.is_empty() { definition.object_kind.name.clone() } else { definition.object_kind.label.clone() };
     let instances: Vec<serde_json::Value> = visible
         .iter()
@@ -75,7 +76,7 @@ pub fn world_instances_json(definition: &Block3dDefinition, visible: &[&BlockRep
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn vortex_kind_color(definition: &Block3dDefinition, vortex_kind_id: &str) -> String {
+fn vortex_kind_color(definition: &Block3dSnapshot, vortex_kind_id: &str) -> String {
     definition.vortex_kinds.iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
 }
 
@@ -83,7 +84,7 @@ pub fn block3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
     format!("{object_id}:{vortex_id}")
 }
 
-pub fn world_vortices_json(definition: &Block3dDefinition, config: &Block3dConfig, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
+pub fn world_vortices_json(definition: &Block3dSnapshot, config: &Block3dConfig, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
     let mut records = Vec::new();
     for (index, representation) in visible.iter().enumerate() {
         let offset = arrangement_offset(&view.arrangement, index, view.spacing);
@@ -115,7 +116,7 @@ pub fn world_vortices_json(definition: &Block3dDefinition, config: &Block3dConfi
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_camera_json(definition: &Block3dDefinition, config: &Block3dConfig) -> String {
+pub fn world_camera_json(definition: &Block3dSnapshot, config: &Block3dConfig) -> String {
     let camera = effective_camera(definition, config);
     world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &WorldProjectionConfig::default())
 }
@@ -150,7 +151,7 @@ pub fn default_vortex_kind() -> Block3dVortexKind {
     Block3dVortexKind { id: "vortex-kind-0".into(), name: "connector".into(), label: "Connector".into(), color: "#60a5fa".into(), default_cable_kind: "cable.link".into() }
 }
 
-pub fn resolve_brush_vortex_kind_id(definition: &Block3dDefinition, config: &Block3dConfig) -> String {
+pub fn resolve_brush_vortex_kind_id(definition: &Block3dSnapshot, config: &Block3dConfig) -> String {
     config.brush_vortex_kind_id.clone().or_else(|| definition.vortex_kinds.first().map(|kind| kind.id.clone())).unwrap_or_else(|| "vortex-kind-0".into())
 }
 //#endregion 🔖️Brush

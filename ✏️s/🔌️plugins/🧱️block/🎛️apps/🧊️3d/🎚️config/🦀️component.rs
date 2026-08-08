@@ -4,54 +4,11 @@
 //! exactly like document content, with a true `backwards` per operation. Nothing here is document
 //! state — the object kind's identity/representations/vortices live in `crate::artifacts::block3d`.
 
+use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
 use crate::BlockCamera3d;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️WindowView
-/// 🪟️ Per-window-instance view state (representation subset, layout, active utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct Block3dWindowView {
-    pub window_id: String,
-    #[serde(default)]
-    pub representation_ids: Vec<String>,
-    #[serde(default = "default_arrangement")]
-    pub arrangement: String,
-    #[serde(default = "default_spacing")]
-    pub spacing: f64,
-    #[serde(default = "default_active_utility")]
-    pub active_utility: String,
-}
-
-fn default_arrangement() -> String {
-    "overlap".into()
-}
-
-fn default_spacing() -> f64 {
-    8.0
-}
-
-fn default_active_utility() -> String {
-    crate::apps::block3d::BLOCK3D_UTILITY_SELECT.into()
-}
-
-impl Block3dWindowView {
-    pub fn for_window(window_id: impl Into<String>) -> Self {
-        Self { window_id: window_id.into(), representation_ids: Vec::new(), arrangement: default_arrangement(), spacing: default_spacing(), active_utility: default_active_utility() }
-    }
-}
-
-/// 🖌️ Transient brush hover pose in world space (config-only).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct Block3dBrushPreview {
-    #[dsl(coord)]
-    pub position: [f64; 3],
-    #[dsl(dir)]
-    pub direction: [f64; 3],
-}
-//#endregion 🔖️WindowView
 
 //#region 🔖️Config
 /// 🧮️ `Block3dPlayApp`'s real `DocumentApp::Config` — B1 pure-trait conversion. Absorbs every former
@@ -61,6 +18,7 @@ pub struct Block3dBrushPreview {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "block3dcfg")]
+#[dsl(id = "block3d.config")]
 #[dsl(layout = "lines")]
 pub struct Block3dConfig {
     /// 👁️ Multi-selected row ids in the document tree — was `Block3dPlayApp::selected_ids`.

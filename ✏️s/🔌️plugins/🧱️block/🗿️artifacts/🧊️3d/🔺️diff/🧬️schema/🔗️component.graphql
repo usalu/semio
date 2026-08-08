@@ -1,0 +1,142 @@
+# 🧬️ Block3d diff schema — sparse field delta.
+
+type Block3dDiff {
+  artifact: Block3dArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  objectKind: BlockKindIdentity @state(class: PERSISTENT)
+  representations: Block3dRepresentationsDelta @state(class: PERSISTENT)
+  vortexKinds: Block3dVortexKindsDelta @state(class: PERSISTENT)
+  vortices: Block3dVorticesDelta @state(class: PERSISTENT)
+  compatibility: Block3dCompatibilityDelta @state(class: PERSISTENT)
+  attributes: Block3dAttributesDelta @state(class: PERSISTENT)
+  authors: Block3dAuthorList @state(class: PERSISTENT)
+  camera3d: BlockCamera3d @state(class: PERSISTENT)
+  meta: BlockMeta @state(class: PERSISTENT)
+  selectedIds: Block3dStringList @state(class: SHARED_UI)
+  activeRepresentationId: String @state(class: SHARED_UI)
+  wantedTags: Block3dStringList @state(class: SHARED_UI)
+  locale: String @state(class: LOCAL_UI)
+  windows: Block3dWindowsList @state(class: LOCAL_UI)
+  brushVortexKindId: String @state(class: LOCAL_UI)
+  brushRadius: Float @state(class: LOCAL_UI)
+  brushFlip: Boolean @state(class: LOCAL_UI)
+  brushPreview: Block3dBrushPreview @state(class: PREVIEW)
+  camera: BlockCamera3d @state(class: LOCAL_UI)
+  hoveredVortexFullId: String @state(class: PREVIEW)
+}
+
+type BlockKindIdentity { _placeholder: Boolean }
+
+type BlockRepresentation { _placeholder: Boolean }
+
+type Block3dVortexKind { _placeholder: Boolean }
+
+type Block3dVortexTemplate { _placeholder: Boolean }
+
+type BlockCompatibilityRule { _placeholder: Boolean }
+
+type BlockAttribute { _placeholder: Boolean }
+
+type BlockAuthor { _placeholder: Boolean }
+
+type BlockCamera3d { _placeholder: Boolean }
+
+type BlockMeta { _placeholder: Boolean }
+
+type Block3dWindowView { _placeholder: Boolean }
+
+type Block3dBrushPreview { _placeholder: Boolean }
+
+type Block3dStringList {
+  values: [String!]!
+}
+
+type Block3dAuthorList {
+  values: [BlockAuthor!]!
+}
+
+type Block3dRepresentationsDelta {
+  added: [BlockRepresentation!]!
+  removed: [String!]!
+  patched: [Block3dRepresentationsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block3dRepresentationsPatchEntry {
+  id: String!
+  patch: Block3dRepresentationsPatch!
+}
+
+type Block3dRepresentationsPatch {
+  replacement: BlockRepresentation
+}
+
+type Block3dVortexKindsDelta {
+  added: [Block3dVortexKind!]!
+  removed: [String!]!
+  patched: [Block3dVortexKindsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block3dVortexKindsPatchEntry {
+  id: String!
+  patch: Block3dVortexKindsPatch!
+}
+
+type Block3dVortexKindsPatch {
+  replacement: Block3dVortexKind
+}
+
+type Block3dVorticesDelta {
+  added: [Block3dVortexTemplate!]!
+  removed: [String!]!
+  patched: [Block3dVorticesPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block3dVorticesPatchEntry {
+  id: String!
+  patch: Block3dVorticesPatch!
+}
+
+type Block3dVorticesPatch {
+  replacement: Block3dVortexTemplate
+}
+
+type Block3dCompatibilityDelta {
+  added: [BlockCompatibilityRule!]!
+  removed: [String!]!
+  patched: [Block3dCompatibilityPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block3dCompatibilityPatchEntry {
+  id: String!
+  patch: Block3dCompatibilityPatch!
+}
+
+type Block3dCompatibilityPatch {
+  replacement: BlockCompatibilityRule
+}
+
+type Block3dAttributesDelta {
+  added: [BlockAttribute!]!
+  removed: [String!]!
+  patched: [Block3dAttributesPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block3dAttributesPatchEntry {
+  id: String!
+  patch: Block3dAttributesPatch!
+}
+
+type Block3dAttributesPatch {
+  replacement: BlockAttribute
+}
+
+type Block3dWindowsList {
+  values: [Block3dWindowView!]!
+}
+
+type Block3dArtifact { schema: String! }

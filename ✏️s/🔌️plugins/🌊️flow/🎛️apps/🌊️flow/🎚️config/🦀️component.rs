@@ -30,6 +30,7 @@ use std::collections::HashMap;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "flowcfg")]
+#[dsl(id = "flow.config")]
 #[dsl(layout = "lines")]
 pub struct FlowConfig {
     /// 👁️ Selected widget ids.
@@ -165,6 +166,10 @@ impl FlowConfig {
 
 store::impl_whole_record_config!(FlowConfig);
 //#endregion 🔖️Config
+
+fn default_contributions_json() -> String {
+    "[]".into()
+}
 
 //#region 🔖️ConfigMutations
 /// 🧮️ [`FlowConfig`]'s operation enum — one variant per settled interaction, plus a generic `Snapshot`
@@ -363,25 +368,25 @@ mod tests {
             generation_json: "{\"generations\":[]}".into(),
             locale: "de-DE".into(),
         };
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
     fn flow_config_operation_text_binary_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { selected_node_ids: vec!["n1".into()], locale: "de-DE".into(), ..FlowConfig::default() } });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetSelection { node_ids: vec!["n1".into(), "n2".into()], edge_ids: vec!["e1".into()], handle_ids: vec!["h1".into()] });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetPreviewOff { node_ids: vec!["n1".into()] });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLodMode { value: "micro".into() });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetProximityDistance { value: 48.0 });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGridVisible { value: true });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGridSnapEnabled { value: false });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGridFactor { value: 10.0 });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCatalogueSections { sections_json: "[]".into() });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetAutomationEnabled { json: "{\"auto-layout\":true}".into() });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGeneration { json: "{\"generations\":[]}".into() });
-        store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { selected_node_ids: vec!["n1".into()], locale: "de-DE".into(), ..FlowConfig::default() } });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetSelection { node_ids: vec!["n1".into(), "n2".into()], edge_ids: vec!["e1".into()], handle_ids: vec!["h1".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetPreviewOff { node_ids: vec!["n1".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLodMode { value: "micro".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetProximityDistance { value: 48.0 });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGridVisible { value: true });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGridSnapEnabled { value: false });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGridFactor { value: 10.0 });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCatalogueSections { sections_json: "[]".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetAutomationEnabled { json: "{\"auto-layout\":true}".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGeneration { json: "{\"generations\":[]}".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     #[test]

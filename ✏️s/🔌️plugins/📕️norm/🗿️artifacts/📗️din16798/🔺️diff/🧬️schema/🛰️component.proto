@@ -1,0 +1,201 @@
+syntax = "proto3";
+package semio.s.norm.din16798.diff;
+
+message Din16798Diff {
+  // @state persistent
+  optional Din16798Artifact artifact = 1;
+  // @state persistent
+  optional string annex = 2;
+  // @state persistent
+  optional string occupancy = 3;
+  // @state persistent
+  optional string comfort_category = 4;
+  // @state persistent
+  optional double t_op_c = 5;
+  // @state persistent
+  optional double rh_percent = 6;
+  // @state persistent
+  optional double air_speed_m_s = 7;
+  // @state persistent
+  optional double theta_rm_c = 8;
+  // @state persistent
+  optional double co2_ppm = 9;
+  // @state persistent
+  optional double df_percent = 10;
+  // @state persistent
+  optional double l_aeq_db = 11;
+  // @state persistent
+  optional uint32 persons = 12;
+  // @state persistent
+  optional string ida_class = 13;
+  // @state persistent
+  optional double ventilation_m3_h = 14;
+  // @state persistent
+  optional double floor_area_m2 = 15;
+  // @state persistent
+  optional uint32 bedrooms = 16;
+  // @state persistent
+  optional double dwelling_ventilation_m3_h = 17;
+  // @state persistent
+  optional uint32 occupants = 18;
+  // @state persistent
+  optional double residential_ventilation_m3_h = 19;
+  // @state persistent
+  optional double sfp_w_m3_s = 20;
+  // @state persistent
+  optional uint32 sfp_required_class = 21;
+  // @state persistent
+  optional double heat_recovery_eta = 22;
+  // @state persistent
+  optional double heat_recovery_eta_min = 23;
+  // @state persistent
+  optional string system_type = 24;
+  // @state persistent
+  optional uint32 years_since_inspection = 25;
+  // @state persistent
+  optional double humidification_required_kg_h = 26;
+  // @state persistent
+  optional double humidification_provided_kg_h = 27;
+  // @state persistent
+  optional double fan_q_v_m3_s = 28;
+  // @state persistent
+  optional double fan_t_run_h = 29;
+  // @state persistent
+  optional double fan_energy_reference_kwh = 30;
+  // @state persistent
+  optional double night_setback_k = 31;
+  // @state persistent
+  optional double hr_m_dot_kg_s = 32;
+  // @state persistent
+  optional double hr_cp_j_kgk = 33;
+  // @state persistent
+  optional double hr_delta_t_c = 34;
+  // @state persistent
+  optional double hr_t_h = 35;
+  // @state persistent
+  optional double hr_savings_reference_kwh = 36;
+  // @state persistent
+  optional double n50_h_inv = 37;
+  // @state persistent
+  optional double volume_m3 = 38;
+  // @state persistent
+  optional double infiltration_allowance_m3_h = 39;
+  // @state persistent
+  optional double cellar_area_m2 = 40;
+  // @state persistent
+  optional double cellar_ventilation_m3_h = 41;
+  // @state persistent
+  optional double h_tr_w_k = 42;
+  // @state persistent
+  optional double h_ve_w_k = 43;
+  // @state persistent
+  optional double theta_e_c = 44;
+  // @state persistent
+  optional double theta_set_c = 45;
+  // @state persistent
+  optional double cooling_delta_t_h = 46;
+  // @state persistent
+  optional double cooling_gains_kwh = 47;
+  // @state persistent
+  optional double cooling_utilization_factor = 48;
+  // @state persistent
+  optional double cooling_reference_kwh = 49;
+  // @state persistent
+  optional string chiller_type = 50;
+  // @state persistent
+  optional double eer_actual = 51;
+  // @state persistent
+  optional double q_c_kwh = 52;
+  // @state persistent
+  optional double generation_reference_kwh = 53;
+  // @state persistent
+  optional double data_center_supply_c = 54;
+  // @state persistent
+  optional double h_st_w_k = 55;
+  // @state persistent
+  optional double theta_st_c = 56;
+  // @state persistent
+  optional double theta_amb_c = 57;
+  // @state persistent
+  optional double storage_t_h = 58;
+  // @state persistent
+  optional double storage_allowance_kwh = 59;
+  // @state persistent
+  optional double dhw_delivery_c = 60;
+  // @state persistent
+  optional string duct_class = 61;
+  // @state persistent
+  optional double duct_test_pressure_pa = 62;
+  // @state persistent
+  optional double duct_leakage_m3_s_m2 = 63;
+  // @state shared-ui
+  optional uint32 selected_check_index = 64;
+}
+
+message Din16798Artifact {
+  string annex = 1;
+  string occupancy = 2;
+  string comfort_category = 3;
+  double t_op_c = 4;
+  double rh_percent = 5;
+  double air_speed_m_s = 6;
+  double theta_rm_c = 7;
+  double co2_ppm = 8;
+  double df_percent = 9;
+  double l_aeq_db = 10;
+  uint32 persons = 11;
+  string ida_class = 12;
+  double ventilation_m3_h = 13;
+  double floor_area_m2 = 14;
+  uint32 bedrooms = 15;
+  double dwelling_ventilation_m3_h = 16;
+  uint32 occupants = 17;
+  double residential_ventilation_m3_h = 18;
+  double sfp_w_m3_s = 19;
+  uint32 sfp_required_class = 20;
+  double heat_recovery_eta = 21;
+  double heat_recovery_eta_min = 22;
+  string system_type = 23;
+  uint32 years_since_inspection = 24;
+  double humidification_required_kg_h = 25;
+  double humidification_provided_kg_h = 26;
+  double fan_q_v_m3_s = 27;
+  double fan_t_run_h = 28;
+  double fan_energy_reference_kwh = 29;
+  double night_setback_k = 30;
+  double hr_m_dot_kg_s = 31;
+  double hr_cp_j_kgk = 32;
+  double hr_delta_t_c = 33;
+  double hr_t_h = 34;
+  double hr_savings_reference_kwh = 35;
+  double n50_h_inv = 36;
+  double volume_m3 = 37;
+  double infiltration_allowance_m3_h = 38;
+  double cellar_area_m2 = 39;
+  double cellar_ventilation_m3_h = 40;
+  double h_tr_w_k = 41;
+  double h_ve_w_k = 42;
+  double theta_e_c = 43;
+  double theta_set_c = 44;
+  double cooling_delta_t_h = 45;
+  double cooling_gains_kwh = 46;
+  double cooling_utilization_factor = 47;
+  double cooling_reference_kwh = 48;
+  string chiller_type = 49;
+  double eer_actual = 50;
+  double q_c_kwh = 51;
+  double generation_reference_kwh = 52;
+  double data_center_supply_c = 53;
+  double h_st_w_k = 54;
+  double theta_st_c = 55;
+  double theta_amb_c = 56;
+  double storage_t_h = 57;
+  double storage_allowance_kwh = 58;
+  double dhw_delivery_c = 59;
+  string duct_class = 60;
+  double duct_test_pressure_pa = 61;
+  double duct_leakage_m3_s_m2 = 62;
+  optional uint32 selected_check_index = 63;
+}
+
+message Din16798StringList { repeated string values = 1; }

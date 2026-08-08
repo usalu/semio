@@ -1,19 +1,16 @@
-//! 🎥️ Shooting artifact — the document entity this plugin's app edits: the real icon-studio fixture
+//! 🎥️ Shooting artifact — the document entity this plugin's app edits: the real icon-studio snapshot
 //! (assets, shots, saved cameras, scene lighting).
 //!
-//! `store::DocumentDsl`/`store::DocumentPack` for [`ShootingFixture`] are implemented directly here
-//! (rather than being re-exported from a shared kernel crate — this plugin has none) via the private
-//! [`ShootingFixtureDsl`] mirror below: `ShootingFixture`'s `assets: Vec<ShootingAsset>` (etc.) can't
-//! carry `#[dsl(statements, block)]` directly (that needs `Vec<T: DslVariants>`, an enum bound;
-//! `ShootingAsset` is a plain record), so this document-shaped twin swaps each collection's element type
-//! for its wrapper node and converts at the boundary — same idiom as `imperative::ImperativeDocumentDsl`.
+//! `ShootingSnapshot` lives in `📸️snapshot/🧬️schema` and is re-exported here. Domain records and
+//! patch types stay in this root component.
 
 use dsl::DslRecord;
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
 use serde::{Deserialize, Serialize};
 
-pub const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
+pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.shooting";
+pub use crate::artifacts::shooting::snapshot::schema::ShootingSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -213,26 +210,8 @@ pub struct ShootingSceneLighting {
     pub emblem_base64: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ShootingFixture {
-    pub schema: String,
-    #[serde(default)]
-    pub assets: Vec<ShootingAsset>,
-    #[serde(default)]
-    pub saved_cameras: Vec<ShootingSavedCamera>,
-    #[serde(default)]
-    pub scene: ShootingSceneLighting,
-    #[serde(default)]
-    pub shots: Vec<ShootingShot>,
-    #[serde(default)]
-    pub active_shot_id: String,
-    #[serde(default)]
-    pub active_asset_id: String,
-}
-
-pub fn empty_shooting_fixture() -> ShootingFixture {
-    ShootingFixture { schema: SHOOTING_FIXTURE_SCHEMA.into(), assets: Vec::new(), saved_cameras: Vec::new(), scene: ShootingSceneLighting::default(), shots: Vec::new(), active_shot_id: String::new(), active_asset_id: String::new() }
+pub fn empty_shooting_snapshot() -> ShootingSnapshot {
+    ShootingSnapshot::default()
 }
 
 /// 🧮️ Resolves an asset's scale, defaulting an absent `scale` to identity `[1, 1, 1]`.
@@ -259,8 +238,8 @@ pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
 /// 🎯️ Resolves the effective camera for `shot`: the saved camera it references, or `fallback` — the
 /// app's session-only live camera (never a document field; see `ShootingConfig::camera` in the app's
 /// `🦀️config.rs`) when the shot has no saved camera of its own.
-pub fn shooting_resolve_shot_camera(fixture: &ShootingFixture, shot: &ShootingShot, fallback: &ShootingCamera) -> ShootingCamera {
-    shot.camera_id.as_ref().and_then(|camera_id| fixture.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map_or_else(|| fallback.clone(), |entry| entry.camera.clone())
+pub fn shooting_resolve_shot_camera(snapshot: &ShootingSnapshot, shot: &ShootingShot, fallback: &ShootingCamera) -> ShootingCamera {
+    shot.camera_id.as_ref().and_then(|camera_id| snapshot.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map_or_else(|| fallback.clone(), |entry| entry.camera.clone())
 }
 //#endregion 🔖️Domain
 
@@ -408,138 +387,7 @@ pub struct ShootingScenePatch {
 }
 //#endregion 🔖️CollectionSupport
 
-//#region 🔖️Dsl
-/// 📄️ Local mirror of `ShootingFixture` — the real struct's `assets: Vec<ShootingAsset>` (etc.)
-/// can't carry `#[dsl(statements, block)]` directly (that needs `Vec<T: DslVariants>`, an enum
-/// bound; `ShootingAsset` is a plain record), so this document-shaped twin swaps each collection's
-/// element type for its `*Node` wrapper and `ShootingFixture`'s own `DocumentDsl` impl converts at
-/// the boundary — same idiom as `imperative::ImperativeDocumentDsl`.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-#[dsl(extension = "shooting")]
-#[dsl(layout = "lines")]
-struct ShootingFixtureDsl {
-    schema: String,
-    active_shot_id: String,
-    active_asset_id: String,
-    #[dsl(block)]
-    scene: ShootingSceneLighting,
-    #[dsl(table)]
-    assets: Vec<ShootingAsset>,
-    #[dsl(table)]
-    shots: Vec<ShootingShot>,
-    #[dsl(table)]
-    saved_cameras: Vec<ShootingSavedCamera>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for ShootingFixtureDsl {
-    const EXTENSION: &'static str = "shooting";
-    fn envelope_id() -> &'static str { "shooting" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::DocumentPack for ShootingFixtureDsl {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-fn shooting_fixture_to_dsl(fixture: &ShootingFixture) -> ShootingFixtureDsl {
-    ShootingFixtureDsl {
-        schema: fixture.schema.clone(),
-        active_shot_id: fixture.active_shot_id.clone(),
-        active_asset_id: fixture.active_asset_id.clone(),
-        scene: fixture.scene.clone(),
-        assets: fixture.assets.clone(),
-        shots: fixture.shots.clone(),
-        saved_cameras: fixture.saved_cameras.clone(),
-    }
-}
-
-fn shooting_fixture_from_dsl(dsl_fixture: ShootingFixtureDsl) -> ShootingFixture {
-    ShootingFixture {
-        schema: dsl_fixture.schema,
-        assets: dsl_fixture.assets,
-        saved_cameras: dsl_fixture.saved_cameras,
-        scene: dsl_fixture.scene,
-        shots: dsl_fixture.shots,
-        active_shot_id: dsl_fixture.active_shot_id,
-        active_asset_id: dsl_fixture.active_asset_id,
-    }
-}
-
-impl store::DocumentDsl for ShootingFixture {
-    const EXTENSION: &'static str = "shooting";
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <ShootingFixtureDsl as store::DocumentDsl>::parse_dsl(text)?;
-        Ok(shooting_fixture_from_dsl(parsed))
-    }
-
-    fn print_dsl(&self) -> String {
-        <ShootingFixtureDsl as store::DocumentDsl>::print_dsl(&shooting_fixture_to_dsl(self))
-    }
-}
-
-/// 📦️ Hand-written `store::DocumentPack` mirror of the `DocumentDsl` impl above — `ShootingFixture`
-/// itself doesn't derive `dsl::DslDocument` (see `ShootingFixtureDsl`'s doc comment), so it doesn't
-/// pick up the blanket derive-emitted `DocumentPack` impl either; this converts through the same
-/// `ShootingFixtureDsl` mirror, which does derive it.
-impl store::DocumentPack for ShootingFixture {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <ShootingFixtureDsl as store::DocumentPack>::encode_pack_with(&shooting_fixture_to_dsl(self), options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <ShootingFixtureDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
-        Ok(shooting_fixture_from_dsl(parsed))
-    }
-}
-//#endregion 🔖️Dsl
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -547,19 +395,19 @@ mod tests {
     use super::*;
 
     /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("shooting.scene") is deliberately NOT
-    /// `SHOOTING_FIXTURE_SCHEMA` ("shooting.fixture") — the former names the artifact kind in the OS
+    /// `SHOOTING_DOCUMENT_SCHEMA` ("shooting.shooting") — the former names the artifact kind in the OS
     /// media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
     /// merge them.
     #[test]
     fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "shooting.scene");
-        assert_eq!(SHOOTING_FIXTURE_SCHEMA, "shooting.fixture");
+        assert_eq!(SHOOTING_DOCUMENT_SCHEMA, "shooting.shooting");
     }
 
     #[test]
-    fn empty_fixture_has_no_entities() {
-        let fixture = empty_shooting_fixture();
-        assert!(fixture.assets.is_empty() && fixture.shots.is_empty() && fixture.saved_cameras.is_empty());
+    fn empty_snapshot_has_no_entities() {
+        let snapshot = empty_shooting_snapshot();
+        assert!(snapshot.assets.is_empty() && snapshot.shots.is_empty() && snapshot.saved_cameras.is_empty());
     }
 }
 //#endregion 🧪️Tests

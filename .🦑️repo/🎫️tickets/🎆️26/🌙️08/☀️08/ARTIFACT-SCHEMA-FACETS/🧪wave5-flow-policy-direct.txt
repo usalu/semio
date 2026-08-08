@@ -1,0 +1,507 @@
+[
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-schema",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"schema\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"schema\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-camera",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"camera\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"camera\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=CameraJson)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-widgets",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"widgets\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"widgets\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=Widget)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-synapses",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"synapses\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"synapses\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=SynapseSpec)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-layout",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"layout\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=map).",
+    "solution": "Add field \"layout\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=map, scalar=WidgetLayout)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-selectedNodeIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"selectedNodeIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"selectedNodeIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-selectedEdgeIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"selectedEdgeIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"selectedEdgeIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-selectedHandleIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"selectedHandleIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"selectedHandleIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-previewOffNodeIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"previewOffNodeIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"previewOffNodeIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-lodMode",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"lodMode\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"lodMode\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-proximityDistance",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"proximityDistance\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"proximityDistance\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=float64)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-gridVisible",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"gridVisible\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"gridVisible\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=bool)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-gridSnapEnabled",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"gridSnapEnabled\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"gridSnapEnabled\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=bool)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-gridFactor",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"gridFactor\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"gridFactor\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=float64)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-catalogueSectionsJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"catalogueSectionsJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"catalogueSectionsJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-automationEnabledJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"automationEnabledJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"automationEnabledJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-contributionsJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"contributionsJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"contributionsJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-generationJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"generationJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"generationJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-locale",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" is missing field \"locale\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"locale\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-x",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" declares extra field \"x\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"x\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-y",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" declares extra field \"y\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"y\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts-zoom",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" declares extra field \"zoom\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"zoom\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-schema",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" is missing field \"schema\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"schema\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-camera",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" is missing field \"camera\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=scalar).",
+    "solution": "Add field \"camera\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json (optional=false, cardinality=scalar, scalar=CameraJson)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-widgets",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" is missing field \"widgets\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"widgets\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=Widget)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-synapses",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" is missing field \"synapses\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=list).",
+    "solution": "Add field \"synapses\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json (optional=false, cardinality=list, scalar=SynapseSpec)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-layout",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" is missing field \"layout\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=false, cardinality=map).",
+    "solution": "Add field \"layout\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json (optional=false, cardinality=map, scalar=WidgetLayout)."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-x",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" declares extra field \"x\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"x\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-y",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" declares extra field \"y\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"y\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts-zoom",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" declares extra field \"zoom\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"zoom\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-artifact",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"artifact\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"artifact\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowArtifact)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-schema",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"schema\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"schema\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-camera",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"camera\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"camera\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=CameraJson)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-widgets",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"widgets\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"widgets\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowWidgetsDelta)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-synapses",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"synapses\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"synapses\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowSynapsesDelta)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-layout",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"layout\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"layout\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowLayoutMapDelta)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-selectedNodeIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"selectedNodeIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"selectedNodeIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowStringList)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-selectedEdgeIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"selectedEdgeIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"selectedEdgeIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowStringList)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-selectedHandleIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"selectedHandleIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"selectedHandleIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowStringList)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-previewOffNodeIds",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"previewOffNodeIds\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"previewOffNodeIds\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=FlowStringList)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-lodMode",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"lodMode\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"lodMode\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-proximityDistance",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"proximityDistance\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"proximityDistance\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=float64)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-gridVisible",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"gridVisible\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"gridVisible\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=bool)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-gridSnapEnabled",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"gridSnapEnabled\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"gridSnapEnabled\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=bool)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-gridFactor",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"gridFactor\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"gridFactor\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=float64)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-catalogueSectionsJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"catalogueSectionsJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"catalogueSectionsJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-automationEnabledJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"automationEnabledJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"automationEnabledJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-contributionsJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"contributionsJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"contributionsJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-generationJson",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"generationJson\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"generationJson\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-missing-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-locale",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" is missing field \"locale\" present in normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Field parity requires identical canonical fields across all five leaves; JSON Schema is normative (optional=true, cardinality=scalar).",
+    "solution": "Add field \"locale\" to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts matching ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json (optional=true, cardinality=scalar, scalar=string)."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-x",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" declares extra field \"x\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"x\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-y",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" declares extra field \"y\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"y\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-field-parity-extra-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts-zoom",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" declares extra field \"zoom\" absent from normative JSON Schema",
+    "kind": "artifact-schema/field-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "JSON Schema at ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json is normative; extra fields in other formats break cross-format identity.",
+    "solution": "Remove \"zoom\" from ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts, or add it to ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🔣️component.json if it is a real artifact field."
+  },
+  {
+    "id": "artifact-schema-type-name-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts\" declares CameraJson but §10 expects FlowArtifact",
+    "kind": "artifact-schema/type-name-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Type-name parity requires FlowArtifact in all five leaves of 🧬️schema (prefix Flow from §10).",
+    "solution": "Rename the top-level type in ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🟦️component.ts to FlowArtifact."
+  },
+  {
+    "id": "artifact-schema-type-name-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts\" declares CameraJson but §10 expects FlowSnapshot",
+    "kind": "artifact-schema/type-name-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Type-name parity requires FlowSnapshot in all five leaves of 📸️snapshot/🧬️schema (prefix Flow from §10).",
+    "solution": "Rename the top-level type in ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📸️snapshot/🧬️schema/🟦️component.ts to FlowSnapshot."
+  },
+  {
+    "id": "artifact-schema-type-name-✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts",
+    "summary": "\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts\" declares CameraJson but §10 expects FlowDiff",
+    "kind": "artifact-schema/type-name-parity",
+    "scope": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+    "priority": "high",
+    "reason": "Type-name parity requires FlowDiff in all five leaves of 🔺️diff/🧬️schema (prefix Flow from §10).",
+    "solution": "Rename the top-level type in ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🧬️schema/🟦️component.ts to FlowDiff."
+  }
+]
+flow breach count 56

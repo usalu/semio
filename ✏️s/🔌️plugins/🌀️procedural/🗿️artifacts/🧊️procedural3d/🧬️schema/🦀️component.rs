@@ -28,8 +28,7 @@ pub struct Procedural3dArtifact {
     #[state(preview)] pub generation_preview_text: Option<String>,
     #[state(shared_ui)] pub active_utility_id: String,
     #[state(local_ui)] pub locale: String,
-    #[state(local_ui)] pub contributions_json: String,
-}
+    #[state(local_ui)] pub contributions_json: String}
 //#endregion 🔖️Procedural3dArtifact
 
 //#region 🔖️PreviewCamera
@@ -43,8 +42,7 @@ pub struct Procedural3dPreviewCamera {
     pub target_x: f64,
     pub target_y: f64,
     pub target_z: f64,
-    pub fov: f64,
-}
+    pub fov: f64}
 
 impl Default for Procedural3dPreviewCamera {
     fn default() -> Self {
@@ -55,8 +53,7 @@ impl Default for Procedural3dPreviewCamera {
             target_x: 0.0,
             target_y: 0.0,
             target_z: 0.0,
-            fov: 45.0,
-        }
+            fov: 45.0}
     }
 }
 //#endregion 🔖️PreviewCamera
@@ -78,8 +75,7 @@ impl Default for Procedural3dArtifact {
             generation_preview_text: None,
             active_utility_id: "move".into(),
             locale: "en-US".into(),
-            contributions_json: "[]".into(),
-        }
+            contributions_json: "[]".into()}
     }
 }
 
@@ -88,8 +84,7 @@ impl Procedural3dArtifact {
     pub fn to_snapshot(&self) -> Procedural3dSnapshot {
         Procedural3dSnapshot {
             fixture: self.fixture.clone(),
-            generation: self.generation.clone(),
-        }
+            generation: self.generation.clone()}
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
@@ -118,22 +113,18 @@ pub fn procedural3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
             typescript: include_str!("🟦️component.ts"),
             graphql: include_str!("🔗️component.graphql"),
             json_schema: include_str!("🔣️component.json"),
-            proto: include_str!("🛰️component.proto"),
-        },
+            proto: include_str!("🛰️component.proto")},
         snapshot: schema::FacetLeaves {
             rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
             typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
             graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
             json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
-            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
-        },
+            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto")},
         diff: schema::FacetLeaves {
             rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
             typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
             graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
             json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
-            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
-        },
-    }
+            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto")}}
 }
 //#endregion 🔖️Descriptor

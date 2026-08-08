@@ -1,7 +1,7 @@
 //! 🌐️ Trinity Jack app — Nakagin Graph window (node-graph render + LOD control).
 
 use crate::apps::jack::config::JackConfig;
-use crate::artifacts::jack::GraphFixture;
+use crate::artifacts::jack::JackSnapshot;
 use semio_framework_plugin::{build_node_graph_scene, ActionDescriptor, MeasureSelectItem, NodeGraphScene, NodeGraphViewport, UiNode, WindowMeasure};
 use serde_json::json;
 
@@ -30,7 +30,7 @@ pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> 
     }
 }
 
-pub(crate) fn render(surface_id: &str, controller_id: &str, window_id: &str, fixture: &GraphFixture, cfg: &JackConfig) -> UiNode {
+pub(crate) fn render(surface_id: &str, controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiNode {
     let (nodes, edges, _) = crate::apps::jack::fixture_to_workflow(fixture);
     let viewport = NodeGraphViewport { x: cfg.camera.x, y: cfg.camera.y, zoom: cfg.camera.zoom };
     let selection = cfg.selected_node_ids.clone();

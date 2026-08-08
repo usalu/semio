@@ -1,0 +1,52 @@
+// 🧬️ EN 1996 artifact schema.
+syntax = "proto3";
+package semio.s.norm.en1996.artifact;
+
+message En1996Artifact {
+  // @state persistent
+  double m_ed_knm = 1;
+  // @state persistent
+  double n_ed_kn = 2;
+  // @state persistent
+  double v_ed_kn = 3;
+  // @state persistent
+  double h_ed_kn = 4;
+  // @state persistent
+  double z_mm3 = 5;
+  // @state persistent
+  double area_mm2 = 6;
+  // @state persistent
+  double shear_area_mm2 = 7;
+  // @state persistent
+  double f_k_mpa = 8;
+  // @state persistent
+  double f_vk_mpa = 9;
+  // @state persistent
+  double annex = 10;
+  // @state persistent
+  double masonry_class = 11;
+  // @state persistent
+  double design_situation = 12;
+  // @state persistent
+  double mu = 13;
+  // @state persistent
+  double wall_thickness_mm = 14;
+  // @state persistent
+  uint32 fire_resistance_min = 15;
+  // @state persistent
+  double unit = 16;
+  // @state persistent
+  double exposure = 17;
+  // @state persistent
+  double mortar = 18;
+  // @state persistent
+  double bed_joint_thickness_mm = 19;
+  // @state persistent
+  uint32 storeys = 20;
+  // @state persistent
+  double h_ef_mm = 21;
+  // @state persistent
+  double t_ef_mm = 22;
+  // @state shared-ui
+  optional uint32 selected_check_index = 23;
+}

@@ -1,142 +1,18 @@
-//! 🌍️ EN 1997 app — document entities (constitutional: general).
+//! 🌍️ EN 1997 artifact root — snapshot re-export and facet modules.
 
-use crate::document::AnnexChoice;
-use serde::{Deserialize, Serialize};
 
-// #region 🔖️Types
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(id = "norm.en1997", layout = "lines")]
-pub struct Document {
-    #[dsl(unit = "kN")]
-    pub v_ed_kn: f64,
-    #[dsl(unit = "kN")]
-    pub h_ed_kn: f64,
-    #[dsl(unit = "m2")]
-    pub footing_area_m2: f64,
-    pub phi_deg: f64,
-    #[dsl(unit = "kPa")]
-    pub c_kpa: f64,
-    pub gamma_kn_m3: f64,
-    #[dsl(unit = "m")]
-    pub b_m: f64,
-    #[dsl(unit = "m")]
-    pub d_f_m: f64,
-    #[dsl(unit = "MPa")]
-    pub e_s_mpa: f64,
-    pub nu: f64,
-    pub design_approach: String,
-    pub annex: AnnexChoice,
-    #[dsl(unit = "mm")]
-    pub settlement_limit_mm: f64,
-    #[dsl(unit = "kN")]
-    pub n_pile_ed_kn: f64,
-    pub alpha_s: f64,
-    #[dsl(unit = "m")]
-    pub pile_d_m: f64,
-    #[dsl(unit = "kPa")]
-    pub q_s_kpa: f64,
-    #[dsl(unit = "m")]
-    pub pile_l_m: f64,
-    #[dsl(unit = "kPa")]
-    pub q_b_kpa: f64,
-    #[dsl(unit = "m2")]
-    pub pile_base_area_m2: f64,
-    pub pile_n_profiles: u32,
-    #[dsl(unit = "m")]
-    pub z_investigated_m: f64,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Document {
-    const EXTENSION: &'static str = "en1997";
-    fn envelope_id() -> &'static str { "norm.en1997" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
+pub use crate::artifacts::en1997::snapshot::schema::En1997Snapshot;
+
+#[path = "./🧬️schema/🦀️component.rs"]
+pub mod schema;
+
+pub mod snapshot {
+    #[path = "./📸️snapshot/🧬️schema/🦀️component.rs"]
+    pub mod schema;
+    #[path = "./📸️snapshot/🎒️pack/🦀️component.rs"]
+    pub mod pack;
 }
 
-impl store::DocumentPack for Document {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-impl Default for Document {
-    fn default() -> Self {
-        Self {
-            v_ed_kn: 500.0,
-            h_ed_kn: 80.0,
-            footing_area_m2: 2.0,
-            phi_deg: 30.0,
-            c_kpa: 0.0,
-            gamma_kn_m3: 18.0,
-            b_m: 2.0,
-            d_f_m: 1.5,
-            e_s_mpa: 30_000.0,
-            nu: 0.3,
-            design_approach: "da1str".into(),
-            annex: AnnexChoice::De,
-            settlement_limit_mm: 25.0,
-            n_pile_ed_kn: 800.0,
-            alpha_s: 0.7,
-            pile_d_m: 0.6,
-            q_s_kpa: 80.0,
-            pile_l_m: 12.0,
-            q_b_kpa: 2500.0,
-            pile_base_area_m2: 0.28,
-            pile_n_profiles: 1,
-            z_investigated_m: 8.0,
-        }
-    }
-}
-// #endregion 🔖️Types
-
-// `)` so the
-/// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("en1997", "EN 1997")
 }
-//#endregion 🔖️ArtifactKind

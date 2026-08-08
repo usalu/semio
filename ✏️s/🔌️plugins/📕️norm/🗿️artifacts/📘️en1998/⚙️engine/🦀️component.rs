@@ -1,6 +1,6 @@
 //! ⚙️ EN 1998 app — headless compute (constitutional: engine).
 
-use crate::artifacts::en1998::Document;
+use crate::artifacts::en1998::En1998Snapshot;
 use crate::artifacts::en1998::mutations::En1998Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
@@ -543,7 +543,7 @@ pub fn check_building_seismic(
 }
 
 /// 📋️ Full seismic check across EN 1998 parts 1 through 6.
-pub fn check_full_seismic(document: &Document) -> CheckReport {
+pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
     let zone = parse_seismic_zone(document.seismic_zone);
     let ground = parse_ground_type(&document.ground_type);
     let importance = parse_importance(&document.importance_class);
@@ -700,63 +700,71 @@ fn parse_retrofit_limit_state(value: &str) -> part_3::RetrofitLimitState {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1998Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1998Snapshot) -> CheckReport {
     check_full_seismic(document)
 }
 // #endregion 🔖️Session
 
 // #region 🔖️Session
-/// 🧩️ EN 1998's `NormFamily` binding — ties this artifact's `Document` to the `evaluate` above for the
+/// 🧩️ EN 1998's `NormFamily` binding — ties this artifact's `En1998Snapshot` to the `evaluate` above for the
 /// headless `NormHost` session every norm app drives.
 pub struct En1998Family;
 
 impl crate::document::NormFamily for En1998Family {
-    type Document = Document;
+    type Document = crate::artifacts::en1998::En1998Snapshot;
     type Mutation = crate::artifacts::en1998::mutations::En1998Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::En1998
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
-        evaluate(document)
+    fn evaluate(document: &Self::Document) -> crate::document::CheckReport {
+        super::evaluate(document)
     }
 }
 
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1998 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent En1998 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct En1998Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1998::schema::En1998Artifact,
+    snapshot: crate::artifacts::en1998::En1998Snapshot,
 }
 
 impl En1998Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::en1998::En1998Snapshot) -> Self {
+        let artifact = crate::artifacts::en1998::schema::En1998Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::en1998::En1998Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1998Engine {
-    type Projection = Document;
-    type Mutation = En1998Mutation;
-    type Diff = crate::artifacts::en1998::diff::Diff;
+    type Artifact = crate::artifacts::en1998::schema::En1998Artifact;
+    type Snapshot = crate::artifacts::en1998::En1998Snapshot;
+    type Mutation = crate::artifacts::en1998::mutations::En1998Mutation;
+    type Diff = crate::artifacts::en1998::diff::En1998Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
@@ -843,13 +851,13 @@ mod tests {
 
     #[test]
     fn full_seismic_e2e() {
-        let report = check_full_seismic(&Document::default());
+        let report = check_full_seismic(&En1998Snapshot::default());
         assert_eq!(report.checks.len(), 12);
     }
 
     #[test]
     fn full_seismic_en_annex_e2e() {
-        let document = Document { annex: "en".into(), ..Document::default() };
+        let document = En1998Snapshot { annex: "en".into(), ..En1998Snapshot::default() };
         let report = check_full_seismic(&document);
         assert_eq!(report.checks.len(), 12);
     }
@@ -941,7 +949,7 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1998.document",
         extension: Some("en1998"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1998Snapshot,
         grammar: Some(crate::artifacts::en1997::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1997::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1997::pack::COMPONENT_PROTOCOL_SEMIO),

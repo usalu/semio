@@ -6,10 +6,10 @@
 //! before-fixture mutation flows through the single LWW `RewriteRuleMutation::SetState`. The
 //! `TrinityRewriteCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 
-use crate::artifacts::jack::{Camera, GraphFixture, Node, PropertyValue};
+use crate::artifacts::jack::{Camera, JackSnapshot, Node, PropertyValue};
 use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
-use crate::artifacts::rewrite::{LayoutPoint, RewriteRuleModel, REWRITE_RULE_SCHEMA};
+use crate::artifacts::rewrite::{LayoutPoint, RewriteSnapshot, REWRITE_RULE_SCHEMA};
 use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigMutation};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
@@ -45,7 +45,7 @@ const TRINITY_REWRITE_PLAY_WINDOW_JACK: &str = "trinity-rewrite-jack";
 const TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS: &str = "trinity-rewrite-parameters";
 const TRINITY_REWRITE_PLAY_RULE_NAME: &str = "label-core";
 
-const NAKAGIN_FIXTURE_DSL: &str = include_str!("📚️examples/🎬️demo-session/🖼️assets/🎮️demo.cmd.semio");
+const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 const DEFAULT_LHS_JSON: &str = r#"{
   "pattern": {
@@ -71,10 +71,10 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
-/// 📦️ JSON text of the bundled Nakagin fixture — `RewriteRuleModel`'s own `_json` fields keep their
+/// 📦️ JSON text of the bundled Nakagin fixture — `RewriteSnapshot`'s own `_json` fields keep their
 /// JSON contract, so the `.trinity` DSL source is parsed once and re-serialized here.
 fn nakagin_fixture_json() -> String {
-    GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).expect("bundled nakagin fixture parses").to_json().expect("fixture serializes")
+    JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).expect("bundled nakagin fixture parses").to_json().expect("fixture serializes")
 }
 
 pub(crate) fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, PropertyValue> {
@@ -84,15 +84,15 @@ pub(crate) fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, Pro
     rhs.parameters.iter().map(|param| (param.name.clone(), param.default.clone())).collect()
 }
 
-pub(crate) fn default_rule_state() -> RewriteRuleModel {
-    let mut state = RewriteRuleModel { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
+pub(crate) fn default_rule_state() -> RewriteSnapshot {
+    let mut state = RewriteSnapshot { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
     state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
     state
 }
 
-/// 🌱️ Reads `RewriteRuleModel.before_fixture_json`'s seed-only `camera` field once — the one place a
+/// 🌱️ Reads `RewriteSnapshot.before_fixture_json`'s seed-only `camera` field once — the one place a
 /// before-fixture's initial framing is consumed into the app's live config camera.
-pub(crate) fn seed_before_pane_camera(state: &RewriteRuleModel) -> Camera {
+pub(crate) fn seed_before_pane_camera(state: &RewriteSnapshot) -> Camera {
     parse_fixture_json(&state.before_fixture_json).map(|fixture| fixture.camera).unwrap_or_default()
 }
 
@@ -100,17 +100,17 @@ pub(crate) fn rewrite_action(action: &str, args: Option<serde_json::Value>) -> s
     semio_framework_plugin::ActionFactory::new(TRINITY_REWRITE_PLAY_CONTROLLER_ID).action(action, args)
 }
 
-pub(crate) fn parse_fixture_json(json: &str) -> Option<GraphFixture> {
-    GraphFixture::from_json(json).ok()
+pub(crate) fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
+    JackSnapshot::from_json(json).ok()
 }
 
-fn build_rule_from_state(state: &RewriteRuleModel) -> Result<crate::artifacts::rewrite::engine::Rule, String> {
+fn build_rule_from_state(state: &RewriteSnapshot) -> Result<crate::artifacts::rewrite::engine::Rule, String> {
     let lhs: crate::artifacts::rewrite::engine::Lhs = serde_json::from_str(&state.lhs_json).map_err(|e| e.to_string())?;
     let rhs: Rhs = serde_json::from_str(&state.rhs_json).map_err(|e| e.to_string())?;
     Ok(crate::artifacts::rewrite::engine::Rule { name: TRINITY_REWRITE_PLAY_RULE_NAME.into(), lhs, rhs })
 }
 
-pub(crate) fn compiled_jack_query(state: &RewriteRuleModel) -> String {
+pub(crate) fn compiled_jack_query(state: &RewriteSnapshot) -> String {
     let rule_json = match build_rule_from_state(state) {
         Ok(rule) => serde_json::to_string(&rule).unwrap_or_default(),
         Err(_) => return String::new(),
@@ -123,7 +123,7 @@ pub(crate) fn compiled_jack_query(state: &RewriteRuleModel) -> String {
         .unwrap_or_else(|| build_rule_from_state(state).map(|rule| crate::artifacts::rewrite::engine::build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
 }
 
-fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteRuleModel) -> String {
+fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteSnapshot) -> String {
     let Ok(mut graph) = crate::artifacts::jack::Graph::load_json(before_json) else {
         return before_json.into();
     };
@@ -139,7 +139,7 @@ fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteRuleModel) -> Stri
 
 /// ♻️ Pure computation of the rule-applied result graph — reused both by the `After` window's render
 /// and by `DocumentApp::export_media`'s `"graph:out"` port.
-pub(crate) fn after_fixture_json(state: &RewriteRuleModel) -> String {
+pub(crate) fn after_fixture_json(state: &RewriteSnapshot) -> String {
     apply_rewrite_to_fixture(&state.before_fixture_json, state)
 }
 
@@ -150,7 +150,7 @@ pub(crate) fn sync_select_var_from_node(fixture_json: &str, node_id: &str) -> Op
 }
 
 /// 🧭️ Resolves which fixture backs a given rewrite graph surface (Before/After/LHS/RHS), for hover/select var lookup.
-pub(crate) fn fixture_json_for_surface(surface_id: &str, state: &RewriteRuleModel) -> String {
+pub(crate) fn fixture_json_for_surface(surface_id: &str, state: &RewriteSnapshot) -> String {
     if surface_id == TRINITY_REWRITE_PLAY_SURFACE_AFTER {
         after_fixture_json(state)
     } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_LHS {
@@ -167,15 +167,15 @@ fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_lay
     Node { id: id.into(), name: name.into(), kind: kind.into(), x, y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
 }
 
-fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::engine::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> GraphFixture {
+fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::engine::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
     let mut nodes = vec![semantic_rule_node("lhs-match", "rewrite.match", &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind), 0.0, 0.0, rule_layout)];
     let mut edges = Vec::new();
     if let Some(where_clause) = lhs.where_clause.as_deref().filter(|value| !value.trim().is_empty()) {
         nodes.push(semantic_rule_node("lhs-where", "rewrite.where", where_clause, 220.0, 80.0, rule_layout));
         edges.push(crate::artifacts::jack::Edge { id: "lhs-match-where".into(), kind: "rewrite.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
-    GraphFixture {
-        schema: GraphFixture::SCHEMA.into(),
+    JackSnapshot {
+        schema: JackSnapshot::SCHEMA.into(),
         name: "lhs".into(),
         manifest_id: Some("nakagin".into()),
         manifest: crate::artifacts::jack::Manifest::nakagin_default(),
@@ -186,7 +186,7 @@ fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::engine::Lhs, rule
     }
 }
 
-fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> GraphFixture {
+fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
     let mut nodes = Vec::new();
     let edges = Vec::new();
     let mut y = 0.0;
@@ -222,8 +222,8 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
     if nodes.is_empty() {
         nodes.push(semantic_rule_node("rhs-empty", "rewrite.create", "result:Piece", 0.0, 0.0, rule_layout));
     }
-    GraphFixture {
-        schema: GraphFixture::SCHEMA.into(),
+    JackSnapshot {
+        schema: JackSnapshot::SCHEMA.into(),
         name: "rhs".into(),
         manifest_id: Some("nakagin".into()),
         manifest: crate::artifacts::jack::Manifest::nakagin_default(),
@@ -252,7 +252,7 @@ fn node_id_for_var(fixture_json: &str, var: &str) -> Option<String> {
     if var.is_empty() {
         return None;
     }
-    let fixture = GraphFixture::from_json(fixture_json).ok()?;
+    let fixture = JackSnapshot::from_json(fixture_json).ok()?;
     fixture.nodes.iter().find(|node| node.name.starts_with(&format!("{var}:")) || node.name == var || var_from_node_name(&node.name).as_deref() == Some(var)).map(|node| node.id.clone())
 }
 
@@ -338,7 +338,7 @@ fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMea
 }
 
 pub(crate) fn render_rule_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, hover_node_id: &str, editable: bool, camera_override: Option<&Camera>) -> UiNode {
-    let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
+    let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
     let (nodes, edges, fixture_viewport) = crate::apps::jack::fixture_to_workflow(&fixture);
     let viewport = camera_override.map_or(fixture_viewport, |camera| NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom });
     let hover = graph_hover(fixture_json, &cfg.active_hover_var, hover_node_id);
@@ -474,12 +474,12 @@ impl protocol::OpBinary for TrinityRewriteCommand {
 //#endregion 🔖️TrinityRewriteCommand
 
 //#region 🔖️TrinityRewritePlayApp
-/// ♻️ Trinity Rewrite play app — a parametric-rewrite editor over a {@link RewriteRuleModel} projection.
+/// ♻️ Trinity Rewrite play app — a parametric-rewrite editor over a {@link RewriteSnapshot} projection.
 #[derive(Default)]
 pub struct TrinityRewritePlayApp;
 
 impl DocumentApp for TrinityRewritePlayApp {
-    type Projection = RewriteRuleModel;
+    type Snapshot = RewriteSnapshot;
     type Mutation = RewriteRuleMutation;
     type Config = RewriteConfig;
     type ConfigMutation = RewriteConfigMutation;
@@ -491,12 +491,12 @@ impl DocumentApp for TrinityRewritePlayApp {
     const APP_ID: &'static str = TRINITY_REWRITE_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    fn initial_projection() -> RewriteRuleModel {
+    fn initial_snapshot() -> RewriteSnapshot {
         default_rule_state()
     }
 
     fn initial_config() -> RewriteConfig {
-        let projection = self.initial_projection();
+        let projection = Self::initial_snapshot();
         RewriteConfig { before_pane_camera: seed_before_pane_camera(&projection), ..RewriteConfig::default() }
     }
 
@@ -504,23 +504,23 @@ impl DocumentApp for TrinityRewritePlayApp {
         Some(rewrite_io())
     }
 
-    fn whole_document_operation(projection: RewriteRuleModel) -> Option<RewriteRuleMutation> {
-        Some(RewriteRuleMutation::SetState { state: projection })
+    fn whole_document_operation(snapshot: RewriteSnapshot) -> Option<RewriteRuleMutation> {
+        Some(RewriteRuleMutation::SetState { state: snapshot })
     }
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
     /// working graph. `"document:in"` reimplements the default `DocumentApp::import_media` body for
     /// the rule document itself.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteRuleModel>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteSnapshot>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "graph:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "graph:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let fixture = <GraphFixture as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let fixture = <JackSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let fixture_json = fixture.to_json().map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let mut next = doc.projection.clone();
+                let mut next = doc.snapshot.clone();
                 next.before_fixture_json = fixture_json;
                 Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
             }
@@ -529,7 +529,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <RewriteRuleModel as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let projection = <RewriteSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -540,17 +540,17 @@ impl DocumentApp for TrinityRewritePlayApp {
     }
 
     /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"document:out"`.
-    fn export_media(port: &str, doc: &DocumentView<'_, RewriteRuleModel>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, RewriteSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
-                let fixture_json = after_fixture_json(doc.projection);
-                let fixture = GraphFixture::from_json(&fixture_json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let fixture_json = after_fixture_json(doc.snapshot);
+                let fixture = JackSnapshot::from_json(&fixture_json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let bytes = DocumentPack::encode_pack(&fixture);
                 Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -580,9 +580,9 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
-        let state = doc.projection;
-        let config = cfg.projection;
+    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
+        let state = doc.snapshot;
+        let config = cfg.snapshot;
         match command {
             TrinityRewriteCommand::NodeGraphEdit { surface_id, operations_json } => crate::apps::rewrite::commands::rule::node_graph_edit(state, &config.selected_node_ids, surface_id, operations_json),
             TrinityRewriteCommand::SetLhsJson { value } => crate::apps::rewrite::commands::rule::set_lhs_json(state, value),
@@ -603,9 +603,9 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
-        let state = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
+        let state = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::rewrite::terminology::TrinityRewriteLabels>(&config.locale);
         match body_key {
             TRINITY_REWRITE_PLAY_BODY_BEFORE => crate::apps::rewrite::windows::before::render(state, config),
@@ -621,8 +621,8 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn window_measures(_doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
+    fn window_measures(_doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.snapshot;
         let mode_for = |window_id: &str| config.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([
             (TRINITY_REWRITE_PLAY_WINDOW_BEFORE.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, mode_for(TRINITY_REWRITE_PLAY_WINDOW_BEFORE))]),
@@ -632,11 +632,11 @@ impl DocumentApp for TrinityRewritePlayApp {
         ])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = cfg.projection.locale.starts_with("de");
-        let selected = cfg.projection.selected_node_ids.clone();
+        let is_de = cfg.snapshot.locale.starts_with("de");
+        let selected = cfg.snapshot.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
 
         // 🩹️ `nodeGraphEdit` folds into the `transform` group alongside `patchNodes` (both are
@@ -847,10 +847,10 @@ mod tests {
     #[test]
     fn set_viewport_writes_before_pane_config_camera_without_document_mutations() {
         let mut app = new_app();
-        let before_state = app.projection().unwrap();
+        let before_state = app.snapshot().unwrap();
         let result = app.dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: serde_json::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local")).expect("viewport");
         assert!(result.mutations.is_empty(), "camera is a config-only command, no document operations");
-        assert_eq!(app.projection().unwrap(), before_state, "document is untouched by a viewport pan");
+        assert_eq!(app.snapshot().unwrap(), before_state, "document is untouched by a viewport pan");
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&before).unwrap().contains("2.5"), "render reads the live config camera");
     }
@@ -884,22 +884,22 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityRewriteCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).expect("set parameter");
         assert_eq!(result.mutations.len(), 1, "a parameter edit is a single SetState operation");
-        assert_eq!(app.projection().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("changed".into())));
+        assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("changed".into())));
         app.handle_action("undo", None, &meta("local")).expect("undo");
-        assert_eq!(app.projection().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
+        assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
     }
 
     #[test]
     fn add_and_delete_rhs_set_clause() {
         let mut app = new_app();
         app.dispatch_typed(TrinityRewriteCommand::AddRuleClause { kind: "set".into() }, &meta("local")).expect("add clause");
-        let rhs: Rhs = serde_json::from_str(&app.projection().unwrap().rhs_json).unwrap();
+        let rhs: Rhs = serde_json::from_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 2);
         app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["rhs-set-1".into()], surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_RHS.into()) }, &meta("local")).expect("select");
         let result =
             app.dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: serde_json::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local")).expect("delete selection");
         assert!(!result.mutations.is_empty());
-        let rhs: Rhs = serde_json::from_str(&app.projection().unwrap().rhs_json).unwrap();
+        let rhs: Rhs = serde_json::from_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 1);
     }
 
@@ -956,14 +956,14 @@ mod tests {
     #[test]
     fn set_lhs_json_undo_redo_round_trip() {
         let mut app = new_app();
-        let original = app.projection().unwrap().lhs_json;
+        let original = app.snapshot().unwrap().lhs_json;
         let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
         app.dispatch_typed(TrinityRewriteCommand::SetLhsJson { value: next_lhs.into() }, &meta("local")).expect("set lhs");
-        assert_eq!(app.projection().unwrap().lhs_json, next_lhs);
+        assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
         app.handle_action("undo", None, &meta("local")).expect("undo");
-        assert_eq!(app.projection().unwrap().lhs_json, original);
+        assert_eq!(app.snapshot().unwrap().lhs_json, original);
         app.handle_action("redo", None, &meta("local")).expect("redo");
-        assert_eq!(app.projection().unwrap().lhs_json, next_lhs);
+        assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
     }
 
     #[test]
@@ -972,8 +972,8 @@ mod tests {
         let graph_out = app.export_media("graph:out").expect("graph:out export");
         let MediaPayload::Structured { json, .. } = graph_out.payload else { panic!("structured payload") };
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
-        let fixture = <GraphFixture as DocumentPack>::decode_pack(&bytes).expect("decode pack");
-        let expected = GraphFixture::from_json(&after_fixture_json(&app.projection().unwrap())).unwrap();
+        let fixture = <JackSnapshot as DocumentPack>::decode_pack(&bytes).expect("decode pack");
+        let expected = JackSnapshot::from_json(&after_fixture_json(&app.snapshot().unwrap())).unwrap();
         assert_eq!(fixture.nodes.len(), expected.nodes.len());
     }
 

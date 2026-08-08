@@ -26,7 +26,7 @@ pub fn decode(bytes: &[u8]) -> Result<Procedural3dSnapshot, PackError> {
 mod tests {
     use super::*;
     use crate::artifacts::procedural3d::dsl;
-    use store::test_support;
+    use semio_framework_os_kernel::os_store::test_support;
 
     #[test]
     fn dsl_pack_equivalence_empty_projection() {

@@ -3,7 +3,7 @@
 
 use crate::apps::block3d::block3d_action;
 use crate::apps::block3d::terminology::Block3dLabels;
-use crate::artifacts::block3d::Block3dDefinition;
+use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 
 //#region 🔖️Constants
@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block3dDefinition, selected: &[String], labels: &Block3dLabels) -> UiNode {
+pub fn render(definition: &Block3dSnapshot, selected: &[String], labels: &Block3dLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("block3d-play-document");
     let representation_items: Vec<UiTreeItemNode> = definition
         .representations

@@ -15,8 +15,7 @@ pub mod set_eval_outputs {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "set-eval-outputs")]
     pub struct SetEvalOutputs {
-        pub outputs_json: String,
-    }
+        pub outputs_json: String}
 
     pub fn handle(payload: &SetEvalOutputs, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         session.set_eval_json(payload.outputs_json.clone());
@@ -42,15 +41,13 @@ pub mod flow_eval_tick {
             let request_json = serde_json::json!({
                 "operatorId": pending.operator_id,
                 "inputJson": pending.input_json,
-                "nodeHash": pending.node_hash,
-            })
+                "nodeHash": pending.node_hash})
             .to_string();
             effects.push(semio_framework::kernel::HostEffect::InvokeExtension {
                 extension_id: pending.extension_id,
                 capability: "evaluate".into(),
                 request_json,
-                response_action: "flowEvalResolve".into(),
-            });
+                response_action: "flowEvalResolve".into()});
         }
         Ok(Emit { effects, ..Default::default() })
     }

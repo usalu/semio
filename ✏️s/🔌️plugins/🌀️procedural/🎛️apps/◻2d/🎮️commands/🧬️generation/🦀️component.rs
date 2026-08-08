@@ -74,8 +74,7 @@ pub mod remove_generation {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "remove-generation")]
     pub struct RemoveGeneration {
-        pub id: String,
-    }
+        pub id: String}
 
     pub fn handle(payload: &RemoveGeneration, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))
@@ -91,8 +90,7 @@ pub mod rename_generation {
     #[dsl(keyword = "rename-generation")]
     pub struct RenameGeneration {
         pub id: String,
-        pub name: String,
-    }
+        pub name: String}
 
     pub fn handle(payload: &RenameGeneration, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc, cfg, session))
@@ -109,8 +107,7 @@ pub mod update_generation_values {
     pub struct UpdateGenerationValues {
         pub generation_id: Option<String>,
         pub question_id: String,
-        pub value: dsl::DslValue,
-    }
+        pub value: dsl::DslValue}
 
     pub fn handle(payload: &UpdateGenerationValues, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
@@ -126,8 +123,7 @@ pub mod select_generation {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "select-generation")]
     pub struct SelectGeneration {
-        pub id: Option<String>,
-    }
+        pub id: Option<String>}
 
     pub fn handle(payload: &SelectGeneration, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(handle_generation("selectGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))

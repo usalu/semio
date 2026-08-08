@@ -3,15 +3,15 @@
 //! operations with a true inverse (every mutation flows through the single LWW `SetState`).
 
 use crate::apps::rewrite::config::RewriteConfigMutation;
-use crate::artifacts::jack::{Graph, GraphFixture, PropertyValue};
+use crate::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
 use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
-use crate::artifacts::rewrite::RewriteRuleModel;
+use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::Value;
 
-fn parse_fixture_json(json: &str) -> Option<GraphFixture> {
-    GraphFixture::from_json(json).ok()
+fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
+    JackSnapshot::from_json(json).ok()
 }
 
 fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::artifacts::rewrite::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
@@ -65,7 +65,7 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     }
 }
 
-pub(crate) fn delete_rule_clause(state: &mut RewriteRuleModel, node_id: &str) -> bool {
+pub(crate) fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
@@ -104,7 +104,7 @@ pub(crate) fn delete_rule_clause(state: &mut RewriteRuleModel, node_id: &str) ->
 }
 
 /// ➕️ Appends a default instance of `clause_kind` to the rule (rewrite.where/create/merge/set/delete/parameter).
-fn add_rule_clause(state: &mut RewriteRuleModel, clause_kind: &str) -> bool {
+fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
     let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::engine::Lhs>(&state.lhs_json) else {
         return false;
     };
@@ -154,7 +154,7 @@ fn add_rule_clause(state: &mut RewriteRuleModel, clause_kind: &str) -> bool {
 
 /// 🖊️ Applies node-graph editor operations (drag layout / delete-selection) to `state` in place,
 /// returning `(document_changed, should_clear_selection)`.
-fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteRuleModel, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> (bool, bool) {
+fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> (bool, bool) {
     let mut changed = false;
     let mut clear_selection = false;
     for operation in operations {
@@ -213,7 +213,7 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteRuleModel, select
 }
 
 fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
-    let mut fixture = GraphFixture::from_json(fixture_json).ok()?;
+    let mut fixture = JackSnapshot::from_json(fixture_json).ok()?;
     for node in fixture.nodes.iter_mut() {
         if !node_ids.iter().any(|id| id == &node.id) {
             continue;
@@ -227,7 +227,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
-pub(crate) fn node_graph_edit(state: &RewriteRuleModel, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn node_graph_edit(state: &RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
     let mut next = state.clone();
     let (changed, clear_selection) = apply_rewrite_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);
@@ -238,7 +238,7 @@ pub(crate) fn node_graph_edit(state: &RewriteRuleModel, selected_node_ids: &[Str
     Ok(Emit { document_mutations: vec![RewriteRuleMutation::SetState { state: next }], config_mutations, ..Default::default() })
 }
 
-pub(crate) fn set_lhs_json(state: &RewriteRuleModel, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn set_lhs_json(state: &RewriteSnapshot, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     next.lhs_json = value.to_string();
     if &next == state {
@@ -248,7 +248,7 @@ pub(crate) fn set_lhs_json(state: &RewriteRuleModel, value: &str) -> Result<Emit
     }
 }
 
-pub(crate) fn set_rhs_json(state: &RewriteRuleModel, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn set_rhs_json(state: &RewriteSnapshot, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     next.rhs_json = value.to_string();
     next.parameter_bindings = crate::apps::rewrite::default_parameter_bindings(&next.rhs_json);
@@ -259,7 +259,7 @@ pub(crate) fn set_rhs_json(state: &RewriteRuleModel, value: &str) -> Result<Emit
     }
 }
 
-pub(crate) fn set_parameter(state: &RewriteRuleModel, name: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn set_parameter(state: &RewriteSnapshot, name: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     if name.is_empty() {
         return Ok(Emit::default());
     }
@@ -286,7 +286,7 @@ pub(crate) fn set_parameter(state: &RewriteRuleModel, name: &str, value: &str) -
     }
 }
 
-pub(crate) fn add_rule_clause_command(state: &RewriteRuleModel, kind: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn add_rule_clause_command(state: &RewriteSnapshot, kind: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     if add_rule_clause(&mut next, kind) {
         Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
@@ -295,7 +295,7 @@ pub(crate) fn add_rule_clause_command(state: &RewriteRuleModel, kind: &str) -> R
     }
 }
 
-pub(crate) fn reset_rule(state: &RewriteRuleModel) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn reset_rule(state: &RewriteSnapshot) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let next = crate::apps::rewrite::default_rule_state();
     let camera = crate::apps::rewrite::seed_before_pane_camera(&next);
     let config_mutations = vec![RewriteConfigMutation::SetBeforePaneCamera { camera }];
@@ -306,7 +306,7 @@ pub(crate) fn reset_rule(state: &RewriteRuleModel) -> Result<Emit<RewriteRuleMut
     }
 }
 
-pub(crate) fn patch_nodes(state: &RewriteRuleModel, node_ids: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn patch_nodes(state: &RewriteSnapshot, node_ids: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let trimmed = value.trim();
     if node_ids.is_empty() || field.is_empty() || trimmed.is_empty() {
         return Ok(Emit::default());

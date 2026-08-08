@@ -1,6 +1,6 @@
-//! ⚡️ Gis3dTerrain artifact — OpText/OpBinary codecs + grammar for `Gis3dTerrainMutation`.
+//! ⚡️ Gis3dTerrain artifact — OpText/OpBinary codecs + grammar for `GisTerrainMutation`.
 
-pub use crate::artifacts::gisterrain::mutations::{apply_gis_3d_terrain_mutation, inverse_gis_3d_terrain_mutation, Gis3dTerrainMutation};
+pub use crate::artifacts::gisterrain::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️HandcraftedOpCodecs
-impl protocol::OpText for Gis3dTerrainMutation {
+impl protocol::OpText for GisTerrainMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -33,7 +33,7 @@ impl protocol::OpText for Gis3dTerrainMutation {
     }
 }
 
-impl protocol::OpBinary for Gis3dTerrainMutation {
+impl protocol::OpBinary for GisTerrainMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

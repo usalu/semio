@@ -15,8 +15,7 @@ pub mod set_locale {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "locale")]
     pub struct SetLocale {
-        pub value: String,
-    }
+        pub value: String}
 
     pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetLocale { value: payload.value.clone() }]))

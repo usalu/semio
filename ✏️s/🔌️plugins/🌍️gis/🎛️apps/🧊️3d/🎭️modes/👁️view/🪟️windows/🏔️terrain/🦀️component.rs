@@ -7,7 +7,7 @@
 use crate::apps::gis3d::config::Gis3dConfig;
 use crate::apps::gis3d::GIS3D_PLAY_APP_ID;
 use crate::artifacts::gisterrain::engine::parse_descriptor;
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use framework_surface::terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson};
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
@@ -60,7 +60,7 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(document: &Gis3dTerrainDocument, cfg: &Gis3dConfig) -> UiNode {
+pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
     let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
         cfg.camera_json.clone(),

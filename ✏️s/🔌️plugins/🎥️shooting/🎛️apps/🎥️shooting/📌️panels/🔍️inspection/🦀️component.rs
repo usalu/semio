@@ -3,7 +3,7 @@
 
 use crate::apps::shooting::config::ShootingConfig;
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::{ShootingAsset, ShootingFixture, ShootingShot, SHOOTING_FIXTURE_SCHEMA};
+use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode,
     UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -162,27 +162,27 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
     }
 }
 
-pub fn render(fixture: &ShootingFixture, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
     if !cfg.selected_shot_ids.is_empty() {
         let shot_id = &cfg.selected_shot_ids[0];
-        if let Some(shot) = fixture.shots.iter().find(|entry| &entry.id == shot_id) {
+        if let Some(shot) = snapshot.shots.iter().find(|entry| &entry.id == shot_id) {
             return ui_inspector_groups_to_tree(&[shot_inspector_group(shot, labels)]);
         }
     }
     if !cfg.selected_asset_ids.is_empty() {
         let asset_id = &cfg.selected_asset_ids[0];
-        if let Some(asset) = fixture.assets.iter().find(|entry| &entry.id == asset_id) {
+        if let Some(asset) = snapshot.assets.iter().find(|entry| &entry.id == asset_id) {
             return ui_inspector_groups_to_tree(&[asset_inspector_group(asset, labels)]);
         }
     }
-    if let Some(shot) = crate::artifacts::shooting::engine::active_shot(fixture) {
+    if let Some(shot) = crate::artifacts::shooting::engine::active_shot(snapshot) {
         return ui_inspector_groups_to_tree(&[shot_inspector_group(shot, labels)]);
     }
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
         id: "shooting-play-inspector.empty".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
         default_open: Some(true),
-        children: vec![ui_text(Label::data(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}"))), ui_text(Label::data(format!("Shots: {}", fixture.shots.len()))), ui_text(Label::data(format!("Assets: {}", fixture.assets.len())))],
+        children: vec![ui_text(Label::data(format!("Schema: {SHOOTING_DOCUMENT_SCHEMA}"))), ui_text(Label::data(format!("Shots: {}", snapshot.shots.len()))), ui_text(Label::data(format!("Assets: {}", snapshot.assets.len())))],
         presence: UiPresence::default(),
         menu: None,
     }])

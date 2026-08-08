@@ -1,0 +1,145 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1996/artifact.json",
+  "title": "En1996Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mEdKnm",
+    "nEdKn",
+    "vEdKn",
+    "hEdKn",
+    "zMm3",
+    "areaMm2",
+    "shearAreaMm2",
+    "fKMpa",
+    "fVkMpa",
+    "annex",
+    "masonryClass",
+    "designSituation",
+    "mu",
+    "wallThicknessMm",
+    "fireResistanceMin",
+    "unit",
+    "exposure",
+    "mortar",
+    "bedJointThicknessMm",
+    "storeys",
+    "hEfMm",
+    "tEfMm"
+  ],
+  "properties": {
+    "mEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "zMm3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "areaMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "shearAreaMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fKMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fVkMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "masonryClass": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "designSituation": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "mu": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wallThicknessMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireResistanceMin": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    },
+    "unit": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "exposure": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "mortar": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "bedJointThicknessMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "storeys": {
+      "type": "integer",
+      "x-semio-state": "persistent"
+    },
+    "hEfMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "tEfMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

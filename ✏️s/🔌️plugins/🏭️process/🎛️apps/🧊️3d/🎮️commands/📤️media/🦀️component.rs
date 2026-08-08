@@ -2,7 +2,7 @@
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::engine::{export_process3d_model, import_process3d_model};
-use crate::artifacts::process3d::{op::Process3dMutation, Process3dDocument};
+use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,8 @@ pub mod export_model {
         pub format: String,
     }
 
-    pub fn handle(payload: &ExportModel, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        match export_process3d_model(doc.projection, &payload.format) {
+    pub fn handle(payload: &ExportModel, doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        match export_process3d_model(doc.snapshot, &payload.format) {
             Some(export) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
                 filename: export.filename,
                 mime_type: export.mime_type,
@@ -43,7 +43,7 @@ pub mod load_model_request {
     #[dsl(keyword = "load-model-request")]
     pub struct LoadModelRequest {}
 
-    pub fn handle(_payload: &LoadModelRequest, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &LoadModelRequest, _doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }))
     }
 }
@@ -60,9 +60,9 @@ pub mod import_model_file {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportModelFile, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportModelFile, _doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         match import_process3d_model(&payload.name.to_ascii_lowercase(), &payload.payload) {
-            Some(document) => Ok(Emit { document_mutations: vec![Process3dMutation::SetDocument { document }], config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }], ..Default::default() }),
+            Some(snapshot) => Ok(Emit { document_mutations: vec![Process3dMutation::SetSnapshot { snapshot }], config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }

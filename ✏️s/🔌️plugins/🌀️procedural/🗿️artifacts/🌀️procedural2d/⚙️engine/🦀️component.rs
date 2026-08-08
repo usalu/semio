@@ -31,8 +31,7 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: None,
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::One,
-        },
+            multiplicity: semio_framework::PortMultiplicity::One},
         semio_framework_plugin::MediaPortSpec {
             id: "drawing:out".into(),
             label: "Drawing".into(),
@@ -40,8 +39,7 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
             kind_id: Some("2d.drawing".into()),
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::Many,
-        },
+            multiplicity: semio_framework::PortMultiplicity::Many},
     ])
 }
 //#endregion 🔖️Io
@@ -175,8 +173,7 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<Value
                 "opacity": node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0),
                 "blendMode": "normal",
                 "visible": true,
-                "needsKernel": false,
-            })
+                "needsKernel": false})
         })
         .collect()
 }
@@ -299,8 +296,7 @@ pub fn register_pilot_languages() {
         grammar_path: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural2d.document"),
-    });
+        hooks: dsl::passthrough_hooks("procedural.procedural2d.document")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural.procedural2d.op",
         extension: None,
@@ -309,8 +305,7 @@ pub fn register_pilot_languages() {
         grammar_path: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural2d.op"),
-    });
+        hooks: dsl::passthrough_hooks("procedural.procedural2d.op")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural.procedural2d.diff",
         extension: None,
@@ -319,8 +314,7 @@ pub fn register_pilot_languages() {
         grammar_path: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("procedural.procedural2d.diff"),
-    });
+        hooks: dsl::passthrough_hooks("procedural.procedural2d.diff")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural2d.pack",
         extension: None,
@@ -329,8 +323,7 @@ pub fn register_pilot_languages() {
         grammar_path: None,
         protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural2d.pack"),
-    });
+        hooks: dsl::passthrough_hooks("procedural2d.pack")});
     dsl::register_language(dsl::LanguageSpec {
         id: "procedural2d.spr",
         extension: None,
@@ -339,16 +332,14 @@ pub fn register_pilot_languages() {
         grammar_path: None,
         protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural2d.spr"),
-    });
+        hooks: dsl::passthrough_hooks("procedural2d.spr")});
 }
 
 
 //#region 🔖️ArtifactEngine
 pub struct Procedural2dEngine {
     artifact: crate::artifacts::procedural2d::schema::Procedural2dArtifact,
-    snapshot: crate::artifacts::procedural2d::Procedural2dSnapshot,
-}
+    snapshot: crate::artifacts::procedural2d::Procedural2dSnapshot}
 
 impl Procedural2dEngine {
     pub fn new(snapshot: crate::artifacts::procedural2d::Procedural2dSnapshot) -> Self {

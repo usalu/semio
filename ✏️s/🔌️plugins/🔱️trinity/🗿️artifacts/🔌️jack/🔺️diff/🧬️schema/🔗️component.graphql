@@ -1,0 +1,109 @@
+# 🧬️ Jack diff schema — sparse field delta.
+
+type JackDiff {
+  artifact: JackArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  name: String @state(class: PERSISTENT)
+  manifestId: String @state(class: PERSISTENT)
+  manifest: Manifest @state(class: PERSISTENT)
+  camera: Camera @state(class: PERSISTENT)
+  nodes: JackNodesDelta @state(class: PERSISTENT)
+  edges: JackEdgesDelta @state(class: PERSISTENT)
+  rootNodeId: String @state(class: PERSISTENT)
+  selectedNodeIds: JackStringList @state(class: SHARED_UI)
+  activeFixtureId: String @state(class: SHARED_UI)
+  jackQuery: String @state(class: SHARED_UI)
+  lodModeByWindow: [StringOptEntry!] @state(class: SHARED_UI)
+  viewportCamera: Camera @state(class: LOCAL_UI)
+  jackResultJson: String @state(class: LOCAL_UI)
+  editorEngagementInput: String @state(class: LOCAL_UI)
+  graphEngagementInput: String @state(class: LOCAL_UI)
+  resultsEngagementInput: String @state(class: LOCAL_UI)
+  reorganizeEpoch: Int @state(class: LOCAL_UI)
+  editorSelection: JackEditorSelection @state(class: LOCAL_UI)
+  revision: Int @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type JackStringList {
+  values: [String!]!
+}
+
+type JackNodesDelta {
+  added: [Node!]!
+  removed: [String!]!
+  patched: [JackNodePatchEntry!]!
+  reordered: [String!]
+}
+
+type JackNodePatchEntry {
+  id: String!
+  patch: JackNodePatch!
+}
+
+type JackNodePatch {
+  name: String
+  x: Float
+  y: Float
+  width: Float
+  height: Float
+}
+
+type JackEdgesDelta {
+  added: [Edge!]!
+  removed: [String!]!
+  patched: [JackEdgePatchEntry!]!
+  reordered: [String!]
+}
+
+type JackEdgePatchEntry {
+  id: String!
+  patch: JackEdgePatch!
+}
+
+type JackEdgePatch {
+  key: String
+  valueJson: String
+}
+
+type StringOptEntry {
+  key: String!
+  value: String
+}
+
+type JackArtifact {
+  schema: String!
+  name: String!
+}
+
+type JackEditorSelection {
+  start: Int!
+  end: Int!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type Node {
+  id: String!
+  kind: String!
+  name: String!
+}
+
+type Edge {
+  id: String!
+  kind: String!
+  source: String!
+  target: String!
+}
+
+type Manifest {
+  nodeKinds: [ManifestKind!]!
+}
+
+type ManifestKind {
+  name: String!
+}

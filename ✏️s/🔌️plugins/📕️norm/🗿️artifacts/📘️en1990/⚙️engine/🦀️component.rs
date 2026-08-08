@@ -1,7 +1,7 @@
 //! ⚙️ EN 1990 basis of structural design — headless compute: combinations, partial factors, reliability
 //! (constitutional: engine).
 
-use crate::artifacts::en1990::{Document, QkEntry};
+use crate::artifacts::en1990::{En1990Snapshot, En1990QkEntry};
 use crate::artifacts::en1990::mutations::En1990Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, NormFamily, NormFamilyId, NormHost, Quantity};
 
@@ -414,9 +414,9 @@ pub fn check_design_basis(annex: &dyn NationalAnnex, actions: &ActionSet, resist
 }
 
 // #region 🔖️Session
-/// 🔁️ Convert a `Document`'s `q_k` entries into the plain `(category, value)` pairs `ActionSet` expects.
-fn action_set_from_document(document: &Document) -> ActionSet {
-    ActionSet { g_k: document.g_k, q_k: document.q_k.iter().map(|entry: &QkEntry| (entry.category.clone(), entry.value)).collect() }
+/// 🔁️ Convert a `En1990Snapshot`'s `q_k` entries into the plain `(category, value)` pairs `ActionSet` expects.
+fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {
+    ActionSet { g_k: document.g_k, q_k: document.q_k.iter().map(|entry: &En1990QkEntry| (entry.category.clone(), entry.value)).collect() }
 }
 
 /// 🧮️ Seismic combination per EN 1990 Eq. 6.12b: ΣG_k + A_Ed + Σψ_2·Q_k.
@@ -434,7 +434,7 @@ pub fn check_seismic_situation(annex: &dyn NationalAnnex, actions: &ActionSet, s
     CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), "seismic design situation", annex.choice())
 }
 
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1990Snapshot) -> CheckReport {
     let actions = action_set_from_document(document);
     let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
     let mut report = CheckReport::default();
@@ -447,38 +447,46 @@ pub fn evaluate(document: &Document) -> CheckReport {
 
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1990 artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent En1990 artifact engine — owns the artifact; every transition is a mutation.
 pub struct En1990Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1990::schema::En1990Artifact,
+    snapshot: En1990Snapshot,
 }
 
 impl En1990Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: En1990Snapshot) -> Self {
+        let artifact = crate::artifacts::en1990::schema::En1990Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> En1990Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1990Engine {
-    type Projection = Document;
-    type Mutation = En1990Mutation;
-    type Diff = crate::artifacts::en1990::diff::Diff;
+    type Artifact = crate::artifacts::en1990::schema::En1990Artifact;
+    type Snapshot = En1990Snapshot;
+    type Mutation = crate::artifacts::en1990::mutations::En1990Mutation;
+    type Diff = crate::artifacts::en1990::diff::En1990Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = protocol::Mutation::diff(mutation, &self.snapshot);
+        self.snapshot = vcs::apply_mutation(&self.snapshot, mutation);
+        self.artifact = crate::artifacts::en1990::schema::En1990Artifact::from_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        protocol::Mutation::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
@@ -488,14 +496,14 @@ pub type Host = NormHost<En1990Family>;
 pub struct En1990Family;
 
 impl NormFamily for En1990Family {
-    type Document = Document;
+    type Document = En1990Snapshot;
     type Mutation = En1990Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1990
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
+    fn evaluate(document: &En1990Snapshot) -> CheckReport {
         evaluate(document)
     }
 }
@@ -629,7 +637,7 @@ mod tests {
 
     #[test]
     fn evaluate_accidental_situation_numeric() {
-        let doc = Document::default();
+        let doc = En1990Snapshot::default();
         let actions = action_set_from_document(&doc);
         let accidental_ed = combination_uls(&NaDe, DesignSituation::Accidental, CombinationRule::Uls610a, &actions, 0);
         assert!((accidental_ed - 168.0).abs() < 1e-9);
@@ -642,7 +650,7 @@ mod tests {
 
     #[test]
     fn evaluate_seismic_situation_numeric() {
-        let doc = Document::default();
+        let doc = En1990Snapshot::default();
         let report = evaluate(&doc);
         let seismic = report.checks.iter().find(|c| c.clause.section == "6.12b").expect("seismic 6.12b check present");
         assert!((seismic.computed.value / 1000.0 - 155.0).abs() < 1e-9);
@@ -665,11 +673,11 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1990.document",
         extension: Some("en1990"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1990Snapshot,
         grammar: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::en1990::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1990::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1990.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -698,8 +706,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::en1990::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1990::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("en1990.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {

@@ -1,0 +1,55 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gisterrain/diff.json",
+  "title": "GisTerrainDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "GisTerrainArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "exaggeration": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "importedFeaturesJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/GisTerrainStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "GisTerrainStringList": {
+      "title": "GisTerrainStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

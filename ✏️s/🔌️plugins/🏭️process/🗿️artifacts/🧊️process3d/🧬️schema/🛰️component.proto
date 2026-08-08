@@ -1,0 +1,59 @@
+syntax = "proto3";
+package semio.s.process.process3d.artifact;
+
+// 🧬️ Process3d artifact schema — every field with its state class.
+
+message Process3dArtifact {
+  // @state persistent
+  Process3dWorkshop workshop = 1;
+  // @state persistent
+  Process3dStock stock = 2;
+  // @state persistent
+  repeated Process3dStep steps = 3;
+  // @state persistent
+  optional uint32 resolved_up_to = 4;
+  // @state shared-ui
+  optional string selected_id = 5;
+  // @state shared-ui
+  optional uint32 selected_face_id = 6;
+  // @state shared-ui
+  string active_utility_id = 7;
+  // @state local-ui
+  string selection_method = 8;
+  // @state local-ui
+  string engagement_input = 9;
+  // @state local-ui
+  double camera_position_x = 10;
+  // @state local-ui
+  double camera_position_y = 11;
+  // @state local-ui
+  double camera_position_z = 12;
+  // @state local-ui
+  double camera_target_x = 13;
+  // @state local-ui
+  double camera_target_y = 14;
+  // @state local-ui
+  double camera_target_z = 15;
+  // @state local-ui
+  double camera_fov = 16;
+  // @state local-ui
+  bool sun_enabled = 17;
+  // @state local-ui
+  double sun_azimuth = 18;
+  // @state local-ui
+  double sun_elevation = 19;
+  // @state local-ui
+  double sun_intensity = 20;
+  // @state local-ui
+  string sun_color = 21;
+  // @state local-ui
+  string locale = 22;
+  // @state local-ui
+  string contributions_json = 23;
+  // @state preview
+  optional string hovered_id = 24;
+}
+
+message Process3dWorkshop {}
+message Process3dStock {}
+message Process3dStep {}

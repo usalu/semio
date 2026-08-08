@@ -2,7 +2,7 @@
 
 use crate::apps::block5d::block5d_action;
 use crate::apps::block5d::terminology::Block5dLabels;
-use crate::artifacts::block5d::Block5dDefinition;
+use crate::artifacts::block5d::Block5dSnapshot;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 
 //#region 🔖️Constants
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block5dDefinition, selected: &[String], labels: &Block5dLabels) -> UiNode {
+pub fn render(definition: &Block5dSnapshot, selected: &[String], labels: &Block5dLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("block5d-play-document");
     let grip_kind_items: Vec<UiTreeItemNode> = definition
         .grip_kinds

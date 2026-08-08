@@ -8,21 +8,66 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::process3d::Process3dDocument;
+use crate::artifacts::process3d::Process3dSnapshot;
 
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::DocumentDsl`).
 pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 🗄️ The drilled-plate example fixture, handcrafted in this artifact's DSL (`store::DocumentDsl`).
-pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+/// 🗄️ The drilled-plate example fixture, handcrafted inline (same DSL surface as the timber demo asset).
+pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = r#"semio process.process3d.dsl v1
+resolved-up-to=2
+workshop {
+  machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
+  rules {
+  }
+  blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
+  rules {
+  }
+  bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
+  rules {
+  }
+  cylinder-attach radius=radius length=length ] ]
+}
+stock {
+  id=plate label=Plate
+  pose {
+    position=@0,0,0 axis=^0,0,0 angle=0rad
+  }
+  box width=1m depth=1m height=0.05m
+}
+steps=[ id=d1 label=Drill enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+drill radius=0.02m depth=0.3m
+pose {
+  position=@0,0,0 axis=^0,0,0 angle=0rad
+}
+id=d2 label=Drill enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+drill radius=0.02m depth=0.3m
+pose {
+  position=@0,0,0 axis=^0,0,0 angle=0rad
+}
+id=d3 label=Drill enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+drill radius=0.02m depth=0.3m
+pose {
+  position=@0,0,0 axis=^0,0,0 angle=0rad
+}
+]"#;
 
-/// 📖️ Parses `.process3d` DSL text into a `Process3dDocument`.
-pub fn parse_dsl(text: &str) -> Result<Process3dDocument, store::TextError> {
-    <Process3dDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.process3d` DSL text into a `Process3dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {
+    <Process3dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Process3dDocument` back to `.process3d` DSL text.
-pub fn print_dsl(document: &Process3dDocument) -> String {
+/// 🖨️ Prints a `Process3dSnapshot` back to `.process3d` DSL text.
+pub fn print_dsl(document: &Process3dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -30,7 +75,13 @@ pub fn print_dsl(document: &Process3dDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{empty_process3d_projection, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, Stock, StockQuantity, Workshop, WorkshopMachine};
+
+
+
+
+
+
+    use crate::artifacts::process3d::{empty_process3d_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, Stock, StockQuantity, Workshop, WorkshopMachine};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -79,8 +130,8 @@ mod tests {
 
     /// 📜️ A document exercising every `SolidSpec`/`ProcessMeasure` shape, both `origin` states, and a
     /// non-default workshop machine (3-deep nesting), so the DSL round trip covers the full grammar.
-    fn sample_document() -> Process3dDocument {
-        Process3dDocument {
+    fn sample_document() -> Process3dSnapshot {
+        Process3dSnapshot {
             workshop: Workshop { machines: vec![circular_saw_machine()] },
             stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],
@@ -90,8 +141,8 @@ mod tests {
 
     #[test]
     fn process3d_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&sample_document());
-        store::test_support::assert_dsl_round_trip(&empty_process3d_projection());
+        store::os_store::test_support::assert_dsl_round_trip(&sample_document());
+        store::os_store::test_support::assert_dsl_round_trip(&empty_process3d_snapshot());
     }
 
     #[test]
@@ -105,14 +156,14 @@ mod tests {
             origin: None,
             measure: ProcessMeasure::Cut { tool: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() },
         });
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn process3d_dsl_round_trips_with_no_resolved_cursor() {
         let mut document = sample_document();
         document.resolved_up_to = None;
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
@@ -120,7 +171,7 @@ mod tests {
         let document = parse_dsl(PROCESS_3D_TIMBER_EXAMPLE_TEXT).expect("parse timber example");
         assert_eq!(document.steps.len(), 4);
         assert!(document.resolved_up_to.is_none());
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
@@ -128,7 +179,7 @@ mod tests {
         let document = parse_dsl(PROCESS_3D_PLATE_EXAMPLE_TEXT).expect("parse drilled plate example");
         assert_eq!(document.steps.len(), 3);
         assert_eq!(document.resolved_up_to, Some(2));
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }
 //#endregion 🧪️Tests

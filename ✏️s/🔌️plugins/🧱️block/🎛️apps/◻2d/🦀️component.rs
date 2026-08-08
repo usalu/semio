@@ -18,7 +18,7 @@ use crate::apps::block2d::modes::edit::windows::board;
 use crate::apps::block2d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::block2d::terminology::block2d_labels;
 use crate::artifacts::block2d::op::Block2dMutation;
-use crate::artifacts::block2d::{artifact_kind, Block2dDefinition, BLOCK_2D_SCHEMA};
+use crate::artifacts::block2d::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
@@ -45,7 +45,7 @@ semio_framework_plugin::app_commands! {
     /// is safe, reordering is a wire-format break. Every id/key pair here is IDENTICAL (the pre-migration
     /// `#[dsl(key)]` already used the camelCase action id, not kebab-case) — preserved verbatim, not
     /// "fixed" to kebab, so the wire format stays byte-identical.
-    pub enum Block2dCommand for Block2dDefinition, Block2dMutation, Block2dConfig, Block2dConfigMutation {
+    pub enum Block2dCommand for Block2dSnapshot, Block2dMutation, Block2dConfig, Block2dConfigMutation {
         "patchNodeKind" as "patchNodeKind" => patch_node_kind::PatchNodeKind,
         "addHandleKind" as "addHandleKind" => add_handle_kind::AddHandleKind,
         "removeHandleKind" as "removeHandleKind" => remove_handle_kind::RemoveHandleKind,
@@ -67,7 +67,7 @@ semio_framework_plugin::app_commands! {
 pub struct Block2dPlayApp;
 
 impl DocumentApp for Block2dPlayApp {
-    type Projection = Block2dDefinition;
+    type Snapshot = Block2dSnapshot;
     type Mutation = Block2dMutation;
     type Config = Block2dConfig;
     type ConfigMutation = Block2dConfigMutation;
@@ -79,8 +79,8 @@ impl DocumentApp for Block2dPlayApp {
     const APP_ID: &'static str = BLOCK2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;
 
-    fn initial_projection() -> Block2dDefinition {
-        crate::artifacts::block2d::engine::empty_block2d_definition()
+    fn initial_snapshot() -> Block2dSnapshot {
+        crate::artifacts::block2d::engine::empty_block2d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -120,16 +120,16 @@ impl DocumentApp for Block2dPlayApp {
         }
     }
 
-    fn handle(command: &Block2dCommand, doc: &DocumentView<'_, Block2dDefinition>, cfg: &ConfigView<'_, Block2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block2dCommand, doc: &DocumentView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Block2dDefinition>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
-        let labels = block2d_labels(&cfg.projection.locale);
+    fn render(body_key: &str, doc: &DocumentView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
+        let labels = block2d_labels(&cfg.snapshot.locale);
         match body_key {
-            board::BLOCK2D_BODY_BOARD => board::render(doc.projection, labels),
-            document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.projection, &cfg.projection.selected_ids, labels),
-            inspection_panel::BLOCK2D_BODY_INSPECTOR => inspection_panel::render(doc.projection, labels),
+            board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels),
+            document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.snapshot, &cfg.snapshot.selected_ids, labels),
+            inspection_panel::BLOCK2D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -139,7 +139,7 @@ impl DocumentApp for Block2dPlayApp {
     /// `kindCompatibility`) as a `kit.catalog`-schema `Media` value for the `"catalog:out"` port
     /// declared in `crate::artifacts::block2d::engine::block2d_io`. Falls through to the default
     /// whole-document pack export for every other port (`"document:out"`).
-    fn export_media(port: &str, doc: &DocumentView<'_, Block2dDefinition>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -149,10 +149,10 @@ impl DocumentApp for Block2dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
-            let bytes = store::DocumentPack::encode_pack(doc.projection);
+            let bytes = store::DocumentPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block2d::engine::puzzle2d_manifest_fragment(doc.projection);
+        let fragment = crate::artifacts::block2d::engine::puzzle2d_manifest_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -278,7 +278,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
             assert!(printed.starts_with(command.command_id()), "row {} printed {printed:?}", command.command_id());
         }
@@ -300,7 +300,7 @@ mod tests {
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Block2dPlayApp>(create_block2d_app);
-        assert!(Block2dPlayApp.command_from_action("noSuchAction", None).is_err());
+        assert!(Block2dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
 
@@ -334,27 +334,27 @@ mod tests {
     fn add_handle_kind_then_add_handle_then_remove_round_trips() {
         let mut app: Block2dApp = new_app();
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
-        assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
         testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {}));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.handles.len(), 1);
         let handle_id = projection.handles[0].id.clone();
         testkit::dispatch(&mut app, Block2dCommand::RemoveHandle(remove_handle::RemoveHandle { id: handle_id }));
-        assert_eq!(app.projection().expect("projection").handles.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").handles.len(), 0);
     }
 
     #[test]
     fn patch_node_kind_updates_name() {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "Renamed".into() }));
-        assert_eq!(app.projection().expect("projection").node_kind.name, "Renamed");
+        assert_eq!(app.snapshot().expect("snapshot").node_kind.name, "Renamed");
     }
 
     #[test]
     fn set_active_example_loads_left_fixture() {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: example::BLOCK2D_EXAMPLE_LEFT.into() }));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.node_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(projection.handles.len(), 11);
     }
@@ -363,11 +363,11 @@ mod tests {
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
-        assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").handle_kinds.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 0);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
     }
 
     #[test]
@@ -397,7 +397,7 @@ mod tests {
     #[test]
     fn command_from_action_bridges_set_active_example() {
         let app = Block2dPlayApp;
-        assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "left" }))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
+        assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "left" }))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
     }
 
     /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document

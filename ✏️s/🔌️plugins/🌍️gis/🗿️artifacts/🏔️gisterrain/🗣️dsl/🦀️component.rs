@@ -8,40 +8,42 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
 
 /// 🏔️ The bundled "reuse terrain" example document, handcrafted in the `.gisterrain` DSL.
 pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.gisterrain` DSL text into a `Gis3dTerrainDocument`.
-pub fn parse_dsl(text: &str) -> Result<Gis3dTerrainDocument, store::TextError> {
-    <Gis3dTerrainDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.gisterrain` DSL text into a `GisTerrainSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, store::TextError> {
+    <GisTerrainSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Gis3dTerrainDocument` back to `.gisterrain` DSL text.
-pub fn print_dsl(document: &Gis3dTerrainDocument) -> String {
+/// 🖨️ Prints a `GisTerrainSnapshot` back to `.gisterrain` DSL text.
+pub fn print_dsl(document: &GisTerrainSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
+
+    
+            use super::*;
 
     #[test]
     fn gis3d_terrain_document_dsl_round_trips_bundled_reuse_example() {
         let document = parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).expect("parse reuse-terrain example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
-        store::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 2.75, imported_features_json: String::new() });
+        store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 2.75, imported_features_json: String::new() });
     }
 
     #[test]
     fn gis3d_terrain_document_dsl_round_trips_imported_features_json() {
-        store::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 1.0, imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into() });
+        store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into() });
     }
 
     #[test]

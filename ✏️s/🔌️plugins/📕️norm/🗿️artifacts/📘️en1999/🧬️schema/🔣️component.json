@@ -1,0 +1,175 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1999/artifact.json",
+  "title": "En1999Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "nEdKn",
+    "mEdKnm",
+    "aMm2",
+    "wElMm3",
+    "alloy",
+    "chi",
+    "iTMm4",
+    "lCrMm",
+    "thetaC",
+    "deltaSigmaEd",
+    "deltaSigmaC",
+    "fatigueM",
+    "nCycles",
+    "vWeldEdKn",
+    "weldThroatMm",
+    "weldLengthMm",
+    "betaW",
+    "sheetBMm",
+    "sheetTMm",
+    "sheetKSigma",
+    "sheetWElMm3",
+    "sheetMEdKnm",
+    "shellTMm",
+    "shellRMm",
+    "sigmaEdShellMpa",
+    "annex"
+  ],
+  "properties": {
+    "nEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "mEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "aMm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "wElMm3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "alloy": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "chi": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "iTMm4": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "lCrMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "thetaC": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "deltaSigmaEd": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "deltaSigmaC": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fatigueM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nCycles": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vWeldEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "weldThroatMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "weldLengthMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "betaW": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "sheetBMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "sheetTMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "sheetKSigma": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "sheetWElMm3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "sheetMEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "shellTMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "shellRMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "sigmaEdShellMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

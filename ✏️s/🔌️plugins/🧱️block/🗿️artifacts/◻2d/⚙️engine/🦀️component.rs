@@ -1,18 +1,19 @@
-//! ⚙️ Block 2D artifact — headless compute over the `Block2dDefinition` projection (constitutional:
+//! ⚙️ Block 2D artifact — headless compute over the `Block2dSnapshot` projection (constitutional:
 //! engine).
 //!
-//! 🧭️ Placement rule for helpers: anything here takes ONLY document-side types (`Block2dDefinition`/
+//! 🧭️ Placement rule for helpers: anything here takes ONLY document-side types (`Block2dSnapshot`/
 //! its nested records). Helpers that also need the ◻2d app's view state (`crate::apps::block2d::config::
 //! Block2dConfig`) stay at app level — an artifact must never depend on an app.
 
-use crate::artifacts::block2d::{Block2dDefinition, BLOCK_2D_SCHEMA};
+use crate::artifacts::block2d::{Block2dSnapshot, BLOCK_2D_SCHEMA};
 use serde_json::{json, Value};
 
 //#region 🔖️Register
-/// 🗂️ Registers `Block2dDefinition`'s pack↔dsl codec under `BLOCK_2D_SCHEMA`. Called from the plugin
+/// 🗂️ Registers `Block2dSnapshot`'s pack↔dsl codec under `BLOCK_2D_SCHEMA`. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::block2d::Block2dPlayApp>(BLOCK_2D_SCHEMA);
 }
 
@@ -24,8 +25,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::block2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block2d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("block.block2d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -54,8 +55,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::block2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block2d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("2d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -73,8 +74,8 @@ pub fn register_pilot_languages() {
 //#endregion 🔖️Register
 
 //#region 🔖️DocumentHelpers
-pub fn empty_block2d_definition() -> Block2dDefinition {
-    Block2dDefinition::default()
+pub fn empty_block2d_snapshot() -> Block2dSnapshot {
+    Block2dSnapshot::default()
 }
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
@@ -98,7 +99,7 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 /// its `Kit×Type` media port. Block owns no wire/edge-kind rows (`AGENTS.md`: referenced by
 /// `default_wire_kind` only), so those arrays stay empty here — a merge keeps the puzzle manifest's
 /// existing rows.
-pub fn puzzle2d_manifest_fragment(definition: &Block2dDefinition) -> Value {
+pub fn puzzle2d_manifest_fragment(definition: &Block2dSnapshot) -> Value {
     let port_kinds: Vec<Value> = definition.handle_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "presentation": { "color": kind.color, "defaultWireKind": kind.default_wire_kind } })).collect();
     let handles: Vec<Value> = definition.handles.iter().map(|handle| json!({ "handleKind": handle.handle_kind, "angle": handle.angle, "radius": handle.radius })).collect();
     let node_kind = json!({
@@ -155,7 +156,7 @@ mod tests {
 
     #[test]
     fn empty_definition_matches_default() {
-        assert_eq!(empty_block2d_definition(), Block2dDefinition::default());
+        assert_eq!(empty_block2d_snapshot(), Block2dSnapshot::default());
     }
 
     #[test]
@@ -167,7 +168,7 @@ mod tests {
 
     #[test]
     fn puzzle2d_manifest_fragment_maps_kind_identity_and_handles() {
-        let mut definition = Block2dDefinition { schema: BLOCK_2D_SCHEMA.into(), node_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block2dDefinition::default() };
+        let mut definition = Block2dSnapshot { schema: BLOCK_2D_SCHEMA.into(), node_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block2dSnapshot::default() };
         definition.handle_kinds.push(Block2dHandleKind { id: "b-l".into(), name: "b-l".into(), label: "b-l".into(), color: "hsl(206 52% 48%)".into(), default_wire_kind: "cable.link".into() });
         definition.handles.push(Block2dHandleTemplate { id: "h0".into(), handle_kind: "b-l".into(), angle: -1.57, radius: 0.36 });
         let fragment = puzzle2d_manifest_fragment(&definition);
@@ -189,34 +190,52 @@ mod tests {
 //#endregion 🧪️Tests
 
 
+
+//#region 🔖️ArtifactSchemaRegistry
+use std::sync::{Mutex, OnceLock};
+
+static SCHEMA_REGISTRY: OnceLock<Mutex<schema::ArtifactSchemaRegistry>> = OnceLock::new();
+
+/// 🧬️ Registers `block2d` fifteen-leaf artifact schema descriptor once.
+pub fn register_artifact_schema() {
+    let registry = SCHEMA_REGISTRY.get_or_init(|| Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    let mut guard = registry.lock().expect("schema registry");
+    guard.register(crate::artifacts::block2d::schema::block2d_artifact_schema_descriptor());
+}
+//#endregion 🔖️ArtifactSchemaRegistry
+
 //#region 🔖️ArtifactEngine
+/// ⚙️ UI-independent block2d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Block2dEngine {
-    projection: crate::artifacts::block2d::Block2dDefinition,
+    artifact: crate::artifacts::block2d::schema::Block2dArtifact,
+    snapshot: Block2dSnapshot,
 }
 
 impl Block2dEngine {
-    pub fn new(projection: crate::artifacts::block2d::Block2dDefinition) -> Self {
-        Self { projection }
+    pub fn new(snapshot: Block2dSnapshot) -> Self {
+        let artifact = crate::artifacts::block2d::schema::Block2dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
 impl protocol::ArtifactEngine for Block2dEngine {
-    type Projection = crate::artifacts::block2d::Block2dDefinition;
+    type Artifact = crate::artifacts::block2d::schema::Block2dArtifact;
+    type Snapshot = Block2dSnapshot;
     type Mutation = crate::artifacts::block2d::mutations::Block2dMutation;
     type Diff = crate::artifacts::block2d::diff::Block2dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
-    }
+    fn artifact(&self) -> &Self::Artifact { &self.artifact }
+    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::block2d::mutations::apply_block2d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::block2d::mutations::apply_block2d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

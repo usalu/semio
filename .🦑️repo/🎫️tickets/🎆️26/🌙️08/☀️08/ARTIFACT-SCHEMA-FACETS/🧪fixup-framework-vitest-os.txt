@@ -1,0 +1,63 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript
+
+ ❯ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts (4 tests | 1 failed) 8ms
+     × decodes the Rust-generated binary wire fixtures byte-identically 4ms
+ ❯ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts (4 tests | 1 failed) 10ms
+     × decodes the Rust-generated binary wire fixtures byte-identically 5ms
+ ❯ |@semio-tech/framework-os| ../../🟦️component.ts (98 tests | 2 failed) 23ms
+     × matches the Rust plan_workflow across shared fixtures decoded via wasm 7ms
+     × hello() encodes channel_version/app_id/actor/config and returns the single Welcome reply 3ms
+ ❯ |@semio-tech/framework-os| ../../🟦️component.ts (98 tests | 2 failed) 30ms
+     × matches the Rust plan_workflow across shared fixtures decoded via wasm 10ms
+     × hello() encodes channel_version/app_id/actor/config and returns the single Welcome reply 4ms
+
+ Test Files  4 failed (4)
+      Tests  6 failed | 198 passed (204)
+   Start at  21:10:06
+   Duration  351ms (transform 312ms, setup 0ms, import 393ms, tests 80ms, environment 0ms)
+
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > decodes the Rust-generated binary wire fixtures byte-identically
+ FAIL  |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > decodes the Rust-generated binary wire fixtures byte-identically
+Error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust/🧫️fixtures/📡️wire/📦️client-hello.bin'
+ ❯ loadClient ../../ð¦ï¸backbone-worker.ts:770:38
+ ❯ ../../ð¦ï¸backbone-worker.ts:786:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+Error: Cannot find module 'file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%A6%80%EF%B8%8Frust/pkg/semio_framework_os.js' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts
+ ❯ ../../ð¦ï¸component.ts:2303:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > hello() encodes channel_version/app_id/actor/config and returns the single Welcome reply
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > hello() encodes channel_version/app_id/actor/config and returns the single Welcome reply
+AssertionError: expected [ { Hello: { …(4) } } ] to deeply equal [ { Hello: { …(4) } } ]
+
+- Expected
++ Received
+
+@@ -1,11 +1,11 @@
+  [
+    {
+      "Hello": {
+        "actor": "actor-1",
+        "app_id": "app.demo",
+-       "channel_version": 3,
++       "channel_version": 4,
+        "config": [
+          1,
+          4,
+          101,
+          100,
+
+ ❯ ../../ð¦ï¸component.ts:2549:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+

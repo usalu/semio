@@ -3,7 +3,7 @@
 pub mod patch_object_kind {
     use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
     use crate::artifacts::block3d::op::Block3dMutation;
-    use crate::artifacts::block3d::Block3dDefinition;
+    use crate::artifacts::block3d::Block3dSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -14,8 +14,8 @@ pub mod patch_object_kind {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchObjectKind, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-        let mut object_kind = doc.projection.object_kind.clone();
+    pub fn handle(payload: &PatchObjectKind, doc: &DocumentView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        let mut object_kind = doc.snapshot.object_kind.clone();
         match payload.field.as_str() {
             "name" => object_kind.name = payload.value.clone(),
             "label" => object_kind.label = payload.value.clone(),

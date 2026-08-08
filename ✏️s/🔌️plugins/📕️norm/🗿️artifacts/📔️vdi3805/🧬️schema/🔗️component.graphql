@@ -1,0 +1,16 @@
+# 🧬️ Vdi3805 artifact schema — every field with its state class.
+
+type Vdi3805Artifact {
+  manufacturerFile: String! @state(class: PERSISTENT)
+  catalog: String! @state(class: PERSISTENT)
+  editionProfile: [Vdi3805StringMapEntry!]! @state(class: PERSISTENT)
+  correctionAsOf: String! @state(class: PERSISTENT)
+  strictMode: Boolean! @state(class: PERSISTENT)
+  index: String! @state(class: PERSISTENT)
+  geometry: [Vdi3805StringMapEntry!]! @state(class: PERSISTENT)
+  curves: [Vdi3805StringMapEntry!]! @state(class: PERSISTENT)
+  limits: String! @state(class: PERSISTENT)
+  selectedCheckIndex: Int @state(class: SHARED_UI)
+}
+
+type Vdi3805StringMapEntry { key: String! value: String! }

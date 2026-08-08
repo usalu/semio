@@ -5,7 +5,7 @@
 use crate::apps::gis2d::config::{layer_visible, Gis2dConfig, Gis2dConfigMutation};
 use crate::apps::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::GisMapDocument;
+use crate::artifacts::gismap::GisMapSnapshot;
 use framework_surface::tiled_map::clamp_map_layer_weight;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,8 @@ pub mod toggle_layer_visibility {
         pub layer_id: String,
     }
 
-    pub fn handle(payload: &ToggleLayerVisibility, _doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        let visible = !layer_visible(cfg.projection, &payload.layer_id);
+    pub fn handle(payload: &ToggleLayerVisibility, _doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let visible = !layer_visible(cfg.snapshot, &payload.layer_id);
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLayerVisibility { layer_id: payload.layer_id.clone(), visible }]))
     }
 }
@@ -35,8 +35,8 @@ pub mod fit_world {
     #[dsl(keyword = "fit-world")]
     pub struct FitWorld {}
 
-    pub fn handle(_payload: &FitWorld, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        let mut host = map_host_from(doc.projection, cfg.projection);
+    pub fn handle(_payload: &FitWorld, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let mut host = map_host_from(doc.snapshot, cfg.snapshot);
         host.fit_world_camera();
         Ok(Emit::config(vec![Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() }]))
     }
@@ -53,7 +53,7 @@ pub mod set_camera {
         pub camera_json: String,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetCamera { camera_json: payload.camera_json.clone() }]))
     }
 }
@@ -69,7 +69,7 @@ pub mod set_render_mode {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetRenderMode, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetRenderMode, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetRenderMode { value: payload.value.clone() }]))
     }
 }
@@ -85,7 +85,7 @@ pub mod set_vector_style {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetVectorStyle, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetVectorStyle, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetVectorStyle { value: payload.value.clone() }]))
     }
 }
@@ -101,7 +101,7 @@ pub mod set_lod_mode {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLodMode, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLodMode, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLodMode { value: payload.value.clone() }]))
     }
 }
@@ -117,7 +117,7 @@ pub mod set_hover {
         pub hover_json: String,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetHover { value_json: payload.hover_json.clone() }]))
     }
 }
@@ -134,7 +134,7 @@ pub mod set_layer_stroke_scale {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetLayerStrokeScale, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLayerStrokeScale, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLayerStrokeScale { layer_id: payload.layer_id.clone(), value: clamp_map_layer_weight(payload.value) }]))
     }
 }
@@ -162,9 +162,9 @@ mod tests {
     fn view_actions_emit_no_ops_under_registry_kind_discipline() {
         let mut app = app_with_registry();
         let render_mode = dispatch(&mut app, Gis2dCommand::SetRenderMode(set_render_mode::SetRenderMode { value: "vector".into() }));
-        assert!(render_mode.operations.is_empty(), "render mode is ephemeral config state");
+        assert!(render_mode.mutations.is_empty(), "render mode is ephemeral config state");
         let fit = dispatch(&mut app, Gis2dCommand::FitWorld(fit_world::FitWorld {}));
-        assert!(fit.operations.is_empty(), "framing the world only moves the config camera");
+        assert!(fit.mutations.is_empty(), "framing the world only moves the config camera");
     }
 
     #[test]

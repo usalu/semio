@@ -1,0 +1,56 @@
+syntax = "proto3";
+package semio.s.remodel.remodel.diff;
+
+// 🧬️ Remodel diff schema.
+
+message RemodelDiff {
+  // @state persistent
+  optional RemodelArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string id = 3;
+  // @state persistent
+  optional RemodelMediaStreamList streams = 4;
+  // @state persistent
+  optional map<string, ImageAsset> assets = 5;
+  // @state persistent
+  optional CalibrationState calibration = 6;
+  // @state persistent
+  optional ReconstructionParams params = 7;
+  // @state persistent
+  optional RemodelGcpList gcps = 8;
+  // @state persistent
+  optional ReconstructionJob job = 9;
+  // @state persistent
+  optional ReconstructionResults results = 10;
+  // @state shared-ui
+  optional RemodelUiSelection selection = 11;
+  // @state shared-ui
+  optional string active_utility_id = 12;
+  // @state shared-ui
+  optional string report_table = 13;
+  // @state shared-ui
+  optional RemodelUiFrameCursor frame_cursor = 14;
+  // @state local-ui
+  optional RemodelUiCamera camera = 15;
+  // @state local-ui
+  optional RemodelUiLayers layers = 16;
+  // @state local-ui
+  optional string locale = 17;
+}
+
+message RemodelArtifact { string _placeholder = 1; }
+message MediaStream { string _placeholder = 1; }
+message ImageAsset { string _placeholder = 1; }
+message CalibrationState { string _placeholder = 1; }
+message ReconstructionParams { string _placeholder = 1; }
+message GroundControlPoint { string _placeholder = 1; }
+message ReconstructionJob { string _placeholder = 1; }
+message ReconstructionResults { string _placeholder = 1; }
+message RemodelMediaStreamList { string _placeholder = 1; }
+message RemodelGcpList { string _placeholder = 1; }
+message RemodelUiCamera { string _placeholder = 1; }
+message RemodelUiSelection { string _placeholder = 1; }
+message RemodelUiLayers { string _placeholder = 1; }
+message RemodelUiFrameCursor { string _placeholder = 1; }

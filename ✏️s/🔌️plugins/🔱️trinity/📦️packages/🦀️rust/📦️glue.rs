@@ -13,6 +13,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
 // 📌️ Command-group handler functions (`🎮️commands/<group>/component.rs`) are decomposed out of a
 // single `DocumentApp::handle` match, one function per command — the uniform `Result<Emit<_, _>,
 // Fault>` signature is dictated by the dispatch call site (some commands in the same group DO fail;
@@ -40,11 +41,18 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "../../🗿️artifacts/🔌️jack/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
         #[path = "."]
         pub mod diff {
             #[path = "../../🗿️artifacts/🔌️jack/🔺️diff/🦀️component.rs"]
             mod component;
             pub use component::*;
+
+            #[path = "../../🗿️artifacts/🔌️jack/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
         }
 
         #[path = "."]
@@ -160,10 +168,11 @@ pub mod artifacts {
         }
 
         #[path = "."]
-        pub mod pack {
-            #[path = "../../🗿️artifacts/🔌️jack/🎒️pack/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🔌️jack/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🔌️jack/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
         }
 
         #[path = "."]
@@ -187,11 +196,18 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "../../🗿️artifacts/♻️rewrite/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
         #[path = "."]
         pub mod diff {
             #[path = "../../🗿️artifacts/♻️rewrite/🔺️diff/🦀️component.rs"]
             mod component;
             pub use component::*;
+
+            #[path = "../../🗿️artifacts/♻️rewrite/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
         }
 
         #[path = "."]
@@ -227,10 +243,11 @@ pub mod artifacts {
         }
 
         #[path = "."]
-        pub mod pack {
-            #[path = "../../🗿️artifacts/♻️rewrite/🎒️pack/🦀️component.rs"]
-            mod component;
-            pub use component::*;
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/♻️rewrite/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/♻️rewrite/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
         }
 
         #[path = "."]
@@ -471,6 +488,8 @@ pub mod apps {
 /// `FolderEndpoint::Pack` (and any other schema-string-keyed caller) can print/parse them without
 /// depending on the artifacts' concrete `Projection`/`Mutation` types.
 fn register_trinity_exports() {
+    artifacts::jack::engine::register();
+    artifacts::rewrite::engine::register();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::jack::TrinityJackPlayApp>(artifacts::jack::TRINITY_GRAPH_SCHEMA);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::rewrite::TrinityRewritePlayApp>(artifacts::rewrite::REWRITE_RULE_SCHEMA);
 }

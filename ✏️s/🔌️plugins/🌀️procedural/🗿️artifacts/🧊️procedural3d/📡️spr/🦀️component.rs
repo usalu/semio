@@ -10,8 +10,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::procedural3d::dsl::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
-};
+    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use flow::playbook::GenerationMutation;
 use protocol::OpBinary;
@@ -22,51 +21,38 @@ enum Procedural3dOperationDsl {
     SetWidget {
         index: usize,
         #[dsl(statements)]
-        widget: Box<WidgetDsl>,
-    },
+        widget: Box<WidgetDsl>},
     RemoveWidget {
-        id: String,
-    },
+        id: String},
     SetSynapse {
         index: usize,
         #[dsl(block)]
-        synapse: SynapseSpecDsl,
-    },
+        synapse: SynapseSpecDsl},
     RemoveSynapse {
-        id: String,
-    },
+        id: String},
     SetLayout {
         id: String,
         #[dsl(block)]
-        layout: WidgetLayoutDsl,
-    },
+        layout: WidgetLayoutDsl},
     RemoveLayout {
-        id: String,
-    },
+        id: String},
     SetCamera {
         #[dsl(block)]
-        camera: CameraJsonDsl,
-    },
+        camera: CameraJsonDsl},
     SetSchema {
-        schema: String,
-    },
+        schema: String},
     GenerationAdd {
         #[dsl(block)]
-        generation: FormGenerationDsl,
-    },
+        generation: FormGenerationDsl},
     GenerationRemove {
-        id: String,
-    },
+        id: String},
     GenerationRename {
         id: String,
-        name: String,
-    },
+        name: String},
     GenerationUpdateValues {
         id: String,
         question_id: String,
-        value: dsl::DslValue,
-    },
-}
+        value: dsl::DslValue}}
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Procedural3dOperationDsl {
@@ -138,8 +124,7 @@ fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Resul
         Procedural3dOperationDsl::GenerationAdd { generation } => Procedural3dMutation::Generation(GenerationMutation::Add { generation: form_generation_from_dsl(generation) }),
         Procedural3dOperationDsl::GenerationRemove { id } => Procedural3dMutation::Generation(GenerationMutation::Remove { id }),
         Procedural3dOperationDsl::GenerationRename { id, name } => Procedural3dMutation::Generation(GenerationMutation::Rename { id, name }),
-        Procedural3dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural3dMutation::Generation(GenerationMutation::UpdateValues { id, question_id, value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null) }),
-    })
+        Procedural3dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural3dMutation::Generation(GenerationMutation::UpdateValues { id, question_id, value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null) })})
 }
 
 /// ⚡️ `Procedural3dMutation`'s compact single-line op encoding — derive-engine grammar via
@@ -166,8 +151,7 @@ impl OpBinary for Procedural3dMutation {
         procedural3d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed {
             what: "procedural3d mutation",
             offset: 0,
-            detail: error.to_string(),
-        })
+            detail: error.to_string()})
     }
 }
 //#endregion 🔖️OpTextMirror
@@ -189,7 +173,8 @@ mod tests {
     use crate::artifacts::procedural3d::{Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
     use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use flow::playbook::GenerationMutation;
-    use store::{create_document_envelope, test_support, DocumentCommand};
+    use semio_framework_os_kernel::os_store::test_support;
+    use store::{create_document_envelope, DocumentCommand};
 
     #[test]
     fn op_text_round_trip_set_widget() {

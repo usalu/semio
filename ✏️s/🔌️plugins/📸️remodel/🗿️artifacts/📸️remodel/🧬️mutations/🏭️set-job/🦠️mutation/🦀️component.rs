@@ -1,8 +1,8 @@
 //! 🏭️ Remodel mutation — `SetJob` apply.
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Mutation
-pub fn apply(next: &mut RemodelProjection, job: &crate::artifacts::remodel::ReconstructionJob) {
+pub fn apply(next: &mut RemodelSnapshot, job: &crate::artifacts::remodel::ReconstructionJob) {
     next.job = job.clone();
 }
 //#endregion 🔖️Mutation

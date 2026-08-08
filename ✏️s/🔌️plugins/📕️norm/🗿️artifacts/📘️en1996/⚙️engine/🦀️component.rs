@@ -1,11 +1,11 @@
 //! ⚙️ EN 1996 app — headless compute (constitutional: engine).
 //!
-//! 🔀️ `MasonryClass`/`part_2::ExposureClass`/`part_2::MortarClass` are Document field types, so they
+//! 🔀️ `MasonryClass`/`part_2::ExposureClass`/`part_2::MortarClass` are En1996Snapshot field types, so they
 //! live in the sibling `en1996` (rs) crate per the entity-schema mapping rule; this crate's own
 //! `part_2` submodule holds only the pure-compute functions that were originally interleaved with
 //! those entity enums, re-importing the types from `crate::artifacts::en1996::part_2`.
 
-use crate::artifacts::en1996::{Document, MasonryClass};
+use crate::artifacts::en1996::{En1996Snapshot, MasonryClass};
 use crate::artifacts::en1996::mutations::En1996Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, Quantity};
 use serde::{Deserialize, Serialize};
@@ -132,7 +132,7 @@ pub mod part_1_2 {
 // #endregion 🔖️Part1_2
 
 // #region 🔖️Part2
-/// 🧱️ EN 1996-2 selection of materials & execution: exposure-class durability admissibility and bed-joint execution checks. `ExposureClass`/`MortarClass` live in `crate::artifacts::en1996::part_2` (Document field types); this submodule holds only the compute functions.
+/// 🧱️ EN 1996-2 selection of materials & execution: exposure-class durability admissibility and bed-joint execution checks. `ExposureClass`/`MortarClass` live in `crate::artifacts::en1996::part_2` (En1996Snapshot field types); this submodule holds only the compute functions.
 pub mod part_2 {
     use super::*;
     use crate::artifacts::en1996::part_2::{ExposureClass, MortarClass};
@@ -241,15 +241,15 @@ fn parse_masonry_unit(value: &str) -> MasonryUnit {
 }
 
 /// ⚖️ Derive the resolved γ_M annex parameters from a document's annex/class/situation inputs. Moved
-/// here (from an inherent `Document::annex_params()` method in the pre-split monolith) because it
+/// here (from an inherent `En1996Snapshot::annex_params()` method in the pre-split monolith) because it
 /// constructs the compute-layer `AnnexParams`, which cannot be an inherent impl on the foreign
-/// `crate::artifacts::en1996::Document` type across the crate boundary (Rust's orphan rule).
-pub fn annex_params(document: &Document) -> AnnexParams {
+/// `crate::artifacts::en1996::En1996Snapshot` type across the crate boundary (Rust's orphan rule).
+pub fn annex_params(document: &En1996Snapshot) -> AnnexParams {
     AnnexParams { annex: document.annex, masonry_class: document.masonry_class, accidental: document.design_situation == DesignSituation::Accidental }
 }
 
 /// 📋️ Full EN 1996 check across flexure, compression, shear, sliding (part 1-1), fire wall (part 1-2), exposure/bed-joint (part 2), and the simplified method (part 3).
-pub fn check_full_masonry(document: &Document) -> CheckReport {
+pub fn check_full_masonry(document: &En1996Snapshot) -> CheckReport {
     let g_m = annex_params(document).gamma_m();
     let f_d = part_1_1::design_strength_mpa(document.f_k_mpa, g_m);
     let f_vd = part_1_1::shear_design_strength_mpa(document.f_vk_mpa, g_m);
@@ -274,62 +274,70 @@ pub fn check_full_masonry(document: &Document) -> CheckReport {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1996Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub fn evaluate(document: &Document) -> CheckReport {
+pub fn evaluate(document: &En1996Snapshot) -> CheckReport {
     check_full_masonry(document)
 }
 
 // #region 🔖️Session
-/// 🧩️ EN 1996's `NormFamily` binding — ties this artifact's `Document` to the `evaluate` above for the
+/// 🧩️ EN 1996's `NormFamily` binding — ties this artifact's `En1996Snapshot` to the `evaluate` above for the
 /// headless `NormHost` session every norm app drives.
 pub struct En1996Family;
 
 impl crate::document::NormFamily for En1996Family {
-    type Document = Document;
+    type Document = crate::artifacts::en1996::En1996Snapshot;
     type Mutation = crate::artifacts::en1996::mutations::En1996Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::En1996
     }
 
-    fn evaluate(document: &Document) -> CheckReport {
-        evaluate(document)
+    fn evaluate(document: &Self::Document) -> crate::document::CheckReport {
+        super::evaluate(document)
     }
 }
 
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent En1996 artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent En1996 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct En1996Engine {
-    projection: Document,
+    artifact: crate::artifacts::en1996::schema::En1996Artifact,
+    snapshot: crate::artifacts::en1996::En1996Snapshot,
 }
 
 impl En1996Engine {
-    pub fn new(projection: Document) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::en1996::En1996Snapshot) -> Self {
+        let artifact = crate::artifacts::en1996::schema::En1996Artifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> Document {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::en1996::En1996Snapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for En1996Engine {
-    type Projection = Document;
-    type Mutation = En1996Mutation;
-    type Diff = crate::artifacts::en1996::diff::Diff;
+    type Artifact = crate::artifacts::en1996::schema::En1996Artifact;
+    type Snapshot = crate::artifacts::en1996::En1996Snapshot;
+    type Mutation = crate::artifacts::en1996::mutations::En1996Mutation;
+    type Diff = crate::artifacts::en1996::diff::En1996Diff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = protocol::Mutation::diff(mutation, &self.projection);
-        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        protocol::Mutation::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
@@ -422,13 +430,13 @@ mod tests {
 
     #[test]
     fn full_masonry_worked_example() {
-        let report = check_full_masonry(&Document::default());
+        let report = check_full_masonry(&En1996Snapshot::default());
         assert_eq!(report.checks.len(), 8);
     }
 
     #[test]
     fn evaluate_runs_all_parts() {
-        let report = evaluate(&Document::default());
+        let report = evaluate(&En1996Snapshot::default());
         assert_eq!(report.checks.len(), 8);
     }
 }
@@ -440,7 +448,7 @@ pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "en1996.document",
         extension: Some("en1996"),
-        role: dsl::LanguageRole::Document,
+        role: dsl::LanguageRole::En1996Snapshot,
         grammar: Some(crate::artifacts::en1995::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1995::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1995::pack::COMPONENT_PROTOCOL_SEMIO),

@@ -1,0 +1,181 @@
+# 🧬️ Shooting diff schema — sparse field delta over the artifact.
+
+type ShootingDiff {
+  artifact: ShootingArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  assets: ShootingAssetsDelta @state(class: PERSISTENT)
+  savedCameras: ShootingSavedCamerasDelta @state(class: PERSISTENT)
+  scene: ShootingSceneLighting @state(class: PERSISTENT)
+  shots: ShootingShotsDelta @state(class: PERSISTENT)
+  activeShotId: String @state(class: PERSISTENT)
+  activeAssetId: String @state(class: PERSISTENT)
+  selectedShotIds: ShootingStringList @state(class: SHARED_UI)
+  selectedAssetIds: ShootingStringList @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  defaultShotFormat: String @state(class: LOCAL_UI)
+  defaultShotShape: String @state(class: LOCAL_UI)
+  defaultAssetFormat: String @state(class: LOCAL_UI)
+  selectionMethod: String @state(class: LOCAL_UI)
+  centerModel: Boolean @state(class: LOCAL_UI)
+  fitRevision: Int @state(class: LOCAL_UI)
+  cameraDraftLabel: String @state(class: LOCAL_UI)
+  camera: ShootingCamera @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  hoveredAssetId: String @state(class: PREVIEW)
+}
+
+type ShootingStringList {
+  values: [String!]!
+}
+
+type ShootingAssetsDelta {
+  added: [ShootingAsset!]!
+  removed: [String!]!
+  patched: [ShootingAssetPatchEntry!]!
+  reordered: [String!]
+}
+
+type ShootingShotsDelta {
+  added: [ShootingShot!]!
+  removed: [String!]!
+  patched: [ShootingShotPatchEntry!]!
+  reordered: [String!]
+}
+
+type ShootingSavedCamerasDelta {
+  added: [ShootingSavedCamera!]!
+  removed: [String!]!
+  patched: [ShootingSavedCameraPatchEntry!]!
+  reordered: [String!]
+}
+
+type ShootingAssetPatchEntry {
+  id: String!
+  patch: ShootingAssetPatch!
+}
+
+type ShootingShotPatchEntry {
+  id: String!
+  patch: ShootingShotPatch!
+}
+
+type ShootingSavedCameraPatchEntry {
+  id: String!
+  patch: ShootingSavedCameraPatch!
+}
+
+type ShootingAssetPatch {
+  name: String
+  url: String
+  origin: [Float!]
+  orientation: [Float!]
+  scale: [Float!]
+}
+
+type ShootingShotPatch {
+  label: String
+  width: Int
+  height: Int
+  format: String
+  shape: String
+}
+
+type ShootingSavedCameraPatch {
+  label: String
+  camera: ShootingCamera
+}
+
+type ShootingArtifact {
+  schema: String!
+  assets: [ShootingAsset!]!
+  savedCameras: [ShootingSavedCamera!]!
+  scene: ShootingSceneLighting!
+  shots: [ShootingShot!]!
+  activeShotId: String!
+  activeAssetId: String!
+  selectedShotIds: [String!]!
+  selectedAssetIds: [String!]!
+  activeUtilityId: String!
+  defaultShotFormat: String!
+  defaultShotShape: String!
+  defaultAssetFormat: String!
+  selectionMethod: String!
+  centerModel: Boolean!
+  fitRevision: Int!
+  cameraDraftLabel: String!
+  camera: ShootingCamera!
+  locale: String!
+  hoveredAssetId: String
+}
+
+type ShootingCamera {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+  fov: Float!
+  up: [Float!]
+  projection: String
+}
+
+type ShootingSavedCamera {
+  id: String!
+  label: String!
+  camera: ShootingCamera!
+}
+
+type ShootingAsset {
+  id: String!
+  name: String!
+  url: String!
+  format: String!
+  origin: [Float!]!
+  orientation: [Float!]
+  scale: [Float!]
+}
+
+type ShootingShot {
+  id: String!
+  label: String!
+  width: Int!
+  height: Int!
+  format: String!
+  shape: String!
+  background: String
+  cameraId: String
+}
+
+type ShootingSun {
+  enabled: Boolean!
+  azimuth: Float!
+  elevation: Float!
+  intensity: Float!
+  color: String!
+}
+
+type ShootingAmbient {
+  intensity: Float!
+  color: String!
+}
+
+type ShootingShadow {
+  enabled: Boolean!
+  opacity: Float!
+  softness: Float!
+}
+
+type ShootingMaterial {
+  color: String!
+  metalness: Float!
+  roughness: Float!
+  emissive: String!
+  emissiveIntensity: Float!
+}
+
+type ShootingSceneLighting {
+  background: String!
+  sun: ShootingSun!
+  ambient: ShootingAmbient!
+  shadow: ShootingShadow!
+  material: ShootingMaterial!
+  emblemBase64: String
+}

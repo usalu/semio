@@ -1,0 +1,431 @@
+{
+  "$id": "https://semio.tech/schema/s/flow/flow/diff.json",
+  "title": "FlowDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "$ref": "#/$defs/FlowArtifact",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "persistent"
+    },
+    "widgets": {
+      "$ref": "#/$defs/FlowWidgetsDelta",
+      "x-semio-state": "persistent"
+    },
+    "synapses": {
+      "$ref": "#/$defs/FlowSynapsesDelta",
+      "x-semio-state": "persistent"
+    },
+    "layout": {
+      "$ref": "#/$defs/FlowLayoutMapDelta",
+      "x-semio-state": "persistent"
+    },
+    "selectedNodeIds": {
+      "$ref": "#/$defs/FlowStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedEdgeIds": {
+      "$ref": "#/$defs/FlowStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedHandleIds": {
+      "$ref": "#/$defs/FlowStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "previewOffNodeIds": {
+      "$ref": "#/$defs/FlowStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "proximityDistance": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "gridVisible": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "catalogueSectionsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "automationEnabledJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "generationJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    },
+    "FlowArtifact": {
+      "title": "FlowArtifact",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout",
+        "selectedNodeIds",
+        "selectedEdgeIds",
+        "selectedHandleIds",
+        "previewOffNodeIds",
+        "lodMode",
+        "proximityDistance",
+        "gridVisible",
+        "gridSnapEnabled",
+        "gridFactor",
+        "catalogueSectionsJson",
+        "automationEnabledJson",
+        "contributionsJson",
+        "generationJson",
+        "locale"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Widget"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/WidgetLayout"
+          }
+        },
+        "selectedNodeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selectedEdgeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selectedHandleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "previewOffNodeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lodMode": {
+          "type": "string"
+        },
+        "proximityDistance": {
+          "type": "number",
+          "format": "double"
+        },
+        "gridVisible": {
+          "type": "boolean"
+        },
+        "gridSnapEnabled": {
+          "type": "boolean"
+        },
+        "gridFactor": {
+          "type": "number",
+          "format": "double"
+        },
+        "catalogueSectionsJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "automationEnabledJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "contributionsJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "generationJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "locale": {
+          "type": "string"
+        }
+      }
+    },
+    "FlowStringList": {
+      "title": "FlowStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "FlowWidgetsDelta": {
+      "title": "FlowWidgetsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Widget"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowWidgetPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "FlowWidgetPatchEntry": {
+      "title": "FlowWidgetPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Widget"
+        }
+      }
+    },
+    "FlowSynapsesDelta": {
+      "title": "FlowSynapsesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowSynapsePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "FlowSynapsePatchEntry": {
+      "title": "FlowSynapsePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SynapseSpec"
+        }
+      }
+    },
+    "FlowLayoutMapDelta": {
+      "title": "FlowLayoutMapDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/WidgetLayout"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

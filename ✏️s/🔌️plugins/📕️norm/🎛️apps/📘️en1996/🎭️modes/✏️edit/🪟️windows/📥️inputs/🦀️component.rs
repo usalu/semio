@@ -1,6 +1,6 @@
 //! 📥️ EN 1996 play app — the inputs window: the raw compliance document, rendered as JSON.
 
-use crate::artifacts::en1996::Document;
+use crate::artifacts::en1996::En1996Snapshot;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -16,7 +16,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Document) -> UiNode {
+pub fn render(document: &En1996Snapshot) -> UiNode {
     crate::app_surface::render_document_json(document)
 }
 //#endregion 🔖️Render

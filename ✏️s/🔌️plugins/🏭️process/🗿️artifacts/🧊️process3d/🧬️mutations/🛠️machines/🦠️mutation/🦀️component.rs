@@ -1,6 +1,6 @@
 //! 🛠️ Process3d mutation — `Machines` collection edit.
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dDocument, WorkshopMachine, WorkshopMachinePatch};
+use crate::artifacts::process3d::{Process3dSnapshot, WorkshopMachine, WorkshopMachinePatch};
 use protocol::{apply_collection_mutation, CollectionMutation};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ pub fn machines(collection: CollectionMutation<String, WorkshopMachine, Workshop
     Process3dMutation::Machines { collection }
 }
 
-pub fn apply(doc: &mut Process3dDocument, collection: &CollectionMutation<String, WorkshopMachine, WorkshopMachinePatch>) {
+pub fn apply(doc: &mut Process3dSnapshot, collection: &CollectionMutation<String, WorkshopMachine, WorkshopMachinePatch>) {
     apply_collection_mutation(&mut doc.workshop.machines, collection);
 }
 //#endregion 🔖️Mutation

@@ -1,7 +1,3 @@
-//! ⚡️ GIS map artifact — the mutation enum, its `Mutation` law and the store aliases
-//! (constitutional: op).
-
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
@@ -9,72 +5,78 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::gismap::diff::GisMapDiff;
-use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch};
-use protocol::{collection_diff_from_mutation, inverse_collection_mutation, CollectionMutation, Mutation};
+use crate::artifacts::gismap::diff::{diff_set_snapshot, features_delta_from_collection_mutation, GisMapDiff};
+use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, MapFeaturePatch};
+use protocol::{inverse_collection_mutation, CollectionMutation, Mutation};
 use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
 
-//#region 🔖️Operation
-/// 🗺️ Typed, invertible map operation. `Positions`/`Routes`/`Regions` are id-keyed collection operations for
-/// granular convergence; `SetDocument` replaces the whole map (example import / reset).
+//#region 🔹Operation
+/// 🗺️ Typed, invertible map operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum GisMapMutation {
     Positions(CollectionMutation<String, MapFeature, MapFeaturePatch>),
     Routes(CollectionMutation<String, MapFeature, MapFeaturePatch>),
     Regions(CollectionMutation<String, MapFeature, MapFeaturePatch>),
-    SetDocument { document: GisMapDocument },
+    SetSnapshot { snapshot: GisMapSnapshot },
 }
 
-impl Mutation<GisMapDocument> for GisMapMutation {
+impl Mutation<GisMapSnapshot> for GisMapMutation {
     type Diff = GisMapDiff;
 
-    fn diff(&self, projection: &GisMapDocument) -> GisMapDiff {
+    fn diff(&self, snapshot: &GisMapSnapshot) -> GisMapDiff {
         match self {
-            GisMapMutation::Positions(operation) => GisMapDiff { positions: Some(collection_diff_from_mutation(&projection.positions, operation)), ..Default::default() },
-            GisMapMutation::Routes(operation) => GisMapDiff { routes: Some(collection_diff_from_mutation(&projection.routes, operation)), ..Default::default() },
-            GisMapMutation::Regions(operation) => GisMapDiff { regions: Some(collection_diff_from_mutation(&projection.regions, operation)), ..Default::default() },
-            GisMapMutation::SetDocument { document } => GisMapDiff { document: Some(document.clone()), ..Default::default() },
+            GisMapMutation::Positions(operation) => GisMapDiff {
+                positions: Some(features_delta_from_collection_mutation(&snapshot.positions, operation)),
+                ..Default::default()
+            },
+            GisMapMutation::Routes(operation) => GisMapDiff {
+                routes: Some(features_delta_from_collection_mutation(&snapshot.routes, operation)),
+                ..Default::default()
+            },
+            GisMapMutation::Regions(operation) => GisMapDiff {
+                regions: Some(features_delta_from_collection_mutation(&snapshot.regions, operation)),
+                ..Default::default()
+            },
+            GisMapMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
         }
     }
 
-    fn inverse(&self, projection: &GisMapDocument) -> Vec<Self> {
+    fn inverse(&self, snapshot: &GisMapSnapshot) -> Vec<Self> {
         match self {
-            GisMapMutation::Positions(operation) => vec![GisMapMutation::Positions(inverse_collection_mutation(&projection.positions, operation))],
-            GisMapMutation::Routes(operation) => vec![GisMapMutation::Routes(inverse_collection_mutation(&projection.routes, operation))],
-            GisMapMutation::Regions(operation) => vec![GisMapMutation::Regions(inverse_collection_mutation(&projection.regions, operation))],
-            GisMapMutation::SetDocument { .. } => vec![GisMapMutation::SetDocument { document: projection.clone() }],
+            GisMapMutation::Positions(operation) => vec![GisMapMutation::Positions(inverse_collection_mutation(&snapshot.positions, operation))],
+            GisMapMutation::Routes(operation) => vec![GisMapMutation::Routes(inverse_collection_mutation(&snapshot.routes, operation))],
+            GisMapMutation::Regions(operation) => vec![GisMapMutation::Regions(inverse_collection_mutation(&snapshot.regions, operation))],
+            GisMapMutation::SetSnapshot { .. } => vec![GisMapMutation::SetSnapshot { snapshot: snapshot.clone() }],
         }
     }
 }
 
-pub type GisMapEnvelope = DocumentEnvelope<GisMapDocument, GisMapMutation>;
-pub type GisMapStore = DocumentStore<GisMapDocument, GisMapMutation>;
-//#endregion 🔖️Operation
+pub type GisMapEnvelope = DocumentEnvelope<GisMapSnapshot, GisMapMutation>;
+pub type GisMapStore = DocumentStore<GisMapSnapshot, GisMapMutation>;
+//#endregion 🔹Operation
 
-//#region 🧪️Tests
+//#region 🔹Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::engine::{empty_gis_map_projection, gis_map_descriptor_json, gis_map_document_from_descriptor_json};
+    use crate::artifacts::gismap::engine::{empty_gis_map_snapshot, gis_map_descriptor_json, gis_map_document_from_descriptor_json};
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;
     use store::{create_document_envelope, DocumentCommand};
 
-    fn round_trip(document: &GisMapDocument, operation: &GisMapMutation) -> GisMapDocument {
+    fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
         let forward = vcs::apply_mutation(document, operation);
         let backwards = operation.inverse(document);
         let mut restored = forward.clone();
         for back in &backwards {
             restored = vcs::apply_mutation(&restored, back);
         }
-        assert_eq!(&restored, document, "backwards() must exactly restore the pre-operation document");
+        assert_eq!(&restored, document, "inverse must exactly restore the pre-operation document");
         forward
     }
 
-    /// 🧬️ `MapFeature::data`/`MapFeaturePatch::data` are `dsl::DslValue` (see `crate::artifacts::gismap`'s
-    /// doc comment) — this bridges a `serde_json::json!` literal into one for test-fixture ergonomics.
     fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
         dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
     }
@@ -85,7 +87,7 @@ mod tests {
 
     #[test]
     fn positions_add_patch_remove_round_trip() {
-        let document = GisMapDocument::default();
+        let document = GisMapSnapshot::default();
         let added = round_trip(&document, &GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: feature("p1") }));
         assert_eq!(added.positions.len(), 1);
         let patched = round_trip(&added, &GisMapMutation::Positions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "id": "p1", "label": "Home" }))) } }));
@@ -106,18 +108,17 @@ mod tests {
 
     #[test]
     fn gis_map_document_vcs_replays_operations() {
-        let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None));
+        let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: feature("p1") })], description: None }).expect("apply");
-        assert_eq!(store.projection().expect("projection").positions.len(), 1);
+        assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     }
 }
-//#endregion 🧪️Tests
+//#endregion 🔹Tests
 
-
-pub fn apply_gis_map_mutation(projection: &mut GisMapDocument, mutation: &GisMapMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) {
+    *snapshot = vcs::apply_mutation(snapshot, mutation);
 }
 
-pub fn inverse_gis_map_mutation(projection: &GisMapDocument, mutation: &GisMapMutation) -> Vec<GisMapMutation> {
-    mutation.inverse(projection)
+pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Vec<GisMapMutation> {
+    mutation.inverse(snapshot)
 }

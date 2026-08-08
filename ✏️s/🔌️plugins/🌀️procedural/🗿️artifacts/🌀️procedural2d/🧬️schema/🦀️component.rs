@@ -21,8 +21,7 @@ pub struct Procedural2dArtifact {
     #[state(local_ui)] pub show_mode: String,
     #[state(shared_ui)] pub selected_generation_id: Option<String>,
     #[state(preview)] pub generation_preview_text: Option<String>,
-    #[state(local_ui)] pub locale: String,
-}
+    #[state(local_ui)] pub locale: String}
 //#endregion 🔖️Procedural2dArtifact
 
 impl Default for Procedural2dArtifact {
@@ -35,8 +34,7 @@ impl Default for Procedural2dArtifact {
             show_mode: "preview".into(),
             selected_generation_id: None,
             generation_preview_text: None,
-            locale: "en-US".into(),
-        }
+            locale: "en-US".into()}
     }
 }
 
@@ -45,8 +43,7 @@ impl Procedural2dArtifact {
     pub fn to_snapshot(&self) -> Procedural2dSnapshot {
         Procedural2dSnapshot {
             fixture: self.fixture.clone(),
-            generation: self.generation.clone(),
-        }
+            generation: self.generation.clone()}
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
@@ -75,22 +72,18 @@ pub fn procedural2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
             typescript: include_str!("🟦️component.ts"),
             graphql: include_str!("🔗️component.graphql"),
             json_schema: include_str!("🔣️component.json"),
-            proto: include_str!("🛰️component.proto"),
-        },
+            proto: include_str!("🛰️component.proto")},
         snapshot: schema::FacetLeaves {
             rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
             typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
             graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
             json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
-            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
-        },
+            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto")},
         diff: schema::FacetLeaves {
             rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
             typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
             graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
             json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
-            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
-        },
-    }
+            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto")}}
 }
 //#endregion 🔖️Descriptor

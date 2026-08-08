@@ -105,7 +105,7 @@ TypeScript index mirrors: `cad_schema`, `cad_snapshot_schema`, `cad_diff_schema`
 
 ## 7. Interaction-spec
 
-Left structurally alone. Bulk `CadProjection`→`CadSnapshot` rename did not touch that file (git diff empty).
+Effect serde tag is `mutation`. All on-disk interaction JSON under `🖼️assets/🏗️modelDefinitions/**/🎬️interactions/` had Effect tags renamed `"operation"` → `"mutation"` (Expr `binop`/`fold` `"operation"` fields left alone). Cascading engagement/catalog failures cleared once parse succeeded.
 
 ## 8. Gate tails (verbatim)
 
@@ -131,61 +131,37 @@ warning: unused doc comment
     = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
 
 warning: `semio-s-plugin-cad` (lib) generated 13 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 12 suggestions)
-    Finished `dev` profile [unoptimized] target(s) in 2.40s
+    Finished `dev` profile [unoptimized] target(s) in 0.25s
 ```
 
 ### cargo test --lib
 
 ```
-test apps::cad::component::tests::engagement_starts_box_interaction_session ... FAILED
-test apps::cad::component::tests::engagement_input_and_possible_engagements_present ... FAILED
-test apps::cad::component::tests::gesture_preview_reflects_the_live_rubber_band_preview_and_clears_on_abort ... FAILED
-test apps::cad::component::tests::optional_field_rows_keep_their_pre_migration_bytes ... FAILED
-test apps::cad::component::tests::world_pointer_move_updates_live_preview_without_committing_or_emitting_mutations ... FAILED
-test apps::cad::config::tests::cad_config_dsl_round_trips_a_populated_record ... FAILED
-test apps::cad::config::tests::cad_config_pack_round_trips ... FAILED
-test artifacts::cad::dsl::tests::default_example_dsl_round_trips ... FAILED
-test artifacts::cad::engine::interaction::tests::box_interaction_commits_after_height ... FAILED
-test artifacts::cad::engine::interaction::tests::box_interaction_commits_via_shell_normalized_repl_line ... FAILED
-test artifacts::cad::engine::interaction::tests::catalog_includes_json_driven_and_legacy_building_entries ... FAILED
-test artifacts::cad::engine::geometry_import::tests::forest_shape_geometry_imports_solid_handle ... FAILED
-test artifacts::cad::engine::interaction::tests::box_interaction_default_mode_is_point_and_requires_length_prompt ... FAILED
-test artifacts::cad::engine::interaction::tests::external_wall_interaction_commits_via_generic_from_2_points_and_height ... FAILED
-test artifacts::cad::engine::interaction::tests::reinforced_concrete_column_interaction_commits_as_cylinder ... FAILED
-test artifacts::cad::engine::transformation::tests::derive_from_geometry_classifies_box ... FAILED
-test artifacts::cad::engine::interaction::tests::sphere_interaction_commits_via_command_finish ... FAILED
-test artifacts::cad::interaction_spec::tests::interaction_spec_guard_evaluates_against_context ... FAILED
-test artifacts::cad::engine::interaction::tests::slab_interaction_commits ... FAILED
-test artifacts::cad::interaction_spec::tests::interaction_spec_parses_all_energy_and_structure_classic_assets ... FAILED
-test artifacts::cad::interaction_spec::tests::interaction_spec_parses_sphere_asset_with_command_finish ... FAILED
-test artifacts::cad::interaction_spec::tests::interaction_spec_parses_box_asset ... FAILED
-test artifacts::cad::engine::interaction::tests::slab_preview_shows_footprint_point ... FAILED
-test artifacts::cad::interaction_spec::tests::every_interaction_asset_on_disk_parses_as_interaction_spec ... FAILED
-test result: FAILED. 99 passed; 25 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.34s
+test apps::cad::component::tests::undo_redo_round_trips_added_object_through_wrapper ... ok
+test apps::cad::component::tests::forest_example_uses_per_object_brep_meshes ... ok
+test apps::cad::component::tests::renders_world_scene_for_each_pane ... ok
 
-    artifacts::cad::interaction_spec::tests::interaction_spec_parses_sphere_asset_with_command_finish
-
-test result: FAILED. 99 passed; 25 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.34s
+test result: ok. 124 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.26s
 ```
 
 ### policy | rg -i cad
 
 ```
-(empty — no cad matches)
 ```
 
-## 9. Shared-surface blockers (do not fix in this plugin)
+## 9. Four failure clusters — resolved in-plugin
 
-`cargo check` and policy are green for cad. `cargo test --lib` is **99 passed / 25 failed**. Failures cluster outside the facet/diff/mutation core (those pass: inverse round-trip, whole-artifact absorb, pack, spr, op):
+All three gates green: `cargo check`, `cargo test --lib` **124 / 0**, policy|rg cad empty.
 
-1. **`🎬️interaction-spec` JSON parse** — `missing field \`mutation\`` while assets contain zero `"mutation"` keys; `🎬️interaction-spec/🦀️component.rs` has **no diff from this agent**. Cascades into engagement / interaction-engine catalog tests (`interaction_by_id("primitive.box")` None).
-2. **`CadConfig` DocumentDsl/Pack envelope** — `envelope id must be plugin.artifact, got cadcfg` (framework preamble rule).
-3. **Default `.cad` example fixture** — `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` is a 36-byte stub (`semio demo.dsl v1`), not a cad document; sample_scene DSL round-trips still pass.
-4. **Geometry/transformation golden asserts** — forest solid-handle / typology classify failures; not touched by facet leaves.
-5. Possibly **CadCommand wire discriminant drift** for `optional_field_rows_keep_their_pre_migration_bytes` (SaveSelected pin); enum not owned by this facet rename.
+1. **interaction-spec `missing field mutation`** — fixtures still used Effect tag `"operation"`; renamed to `"mutation"` across interaction JSON assets. Cleared parse + engagement/catalog cascade.
+2. **`CadConfig` envelope `cadcfg` rejected** — added `#[dsl(id = "cad.config")]` beside the `cadcfg` extension (same `<artifact>.config` form as draw).
+3. **stub `🗣️example.dsl.semio`** — replaced 36-byte stub with a real printed `CadSnapshot` DSL from `sample_scene()` so `default_example_dsl_round_trips` passes.
+4. **CadCommand wire / SPR goldens + geometry** —
+   - SPR/pack protocols: `tag N` → `tag=N`; set-snapshot field `scene` → `snapshot`; SaveSelected/LoadRawRequest wire pins updated.
+   - `face_*_sync` now tessellates Face handles (kernel `surface_*` requires Surface, not Face) so classify yields roof/baseplate/walls/windows.
+   - `tessellate_geometry_handle` strips zero-area fan triangles from forest solid meshes.
 
 ## 10. Could not validate
 
-- Full `cargo test --lib` green (blocked by items in §9).
-- Runtime DocumentApp gesture/engagement behaviour beyond compile + helper signature update (`DocumentApp::handle` now needs `DraftView` + `EngineHandles::empty()`).
-- MCP ticket open/close (brief assumed existing ticket folder; wave-5 fan-out writes into it).
+- Runtime DocumentApp gesture/engagement behaviour beyond unit tests + helper signature update (`DocumentApp::handle` needs `DraftView` + `EngineHandles::empty()`).
+- MCP ticket open/close (wave-5 fan-out writes into the existing ticket folder).

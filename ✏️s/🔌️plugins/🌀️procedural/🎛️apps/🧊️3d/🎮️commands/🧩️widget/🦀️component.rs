@@ -41,8 +41,7 @@ pub mod remove_widget {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "remove-widget")]
     pub struct RemoveWidget {
-        pub widget_id: String,
-    }
+        pub widget_id: String}
 
     pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -69,8 +68,7 @@ pub mod add_widget {
     pub struct AddWidget {
         pub kind: String,
         pub x: Option<f64>,
-        pub y: Option<f64>,
-    }
+        pub y: Option<f64>}
 
     pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -105,8 +103,7 @@ pub mod patch_flow_widgets {
     pub struct PatchFlowWidgets {
         pub widget_ids: Vec<String>,
         pub field: String,
-        pub value: Option<f64>,
-    }
+        pub value: Option<f64>}
 
     pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -150,8 +147,7 @@ mod tests {
         dispatch(&mut app, Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == "height" => Some(*value),
-            _ => None,
-        });
+            _ => None});
         assert_eq!(value, Some(9.5));
     }
 

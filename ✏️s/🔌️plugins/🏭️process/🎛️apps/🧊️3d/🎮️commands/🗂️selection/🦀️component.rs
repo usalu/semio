@@ -1,7 +1,7 @@
 //! 🗂️ Process 3d play app commands — object selection/hover (config-only, ephemeral view state).
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::{op::Process3dMutation, Process3dDocument};
+use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,7 @@ pub mod set_selection {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Process3dConfigMutation::SetSelectedId { value: payload.id.clone() }]))
     }
 }
@@ -31,7 +31,7 @@ pub mod set_hover {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Process3dConfigMutation::SetHoveredId { value: payload.id.clone() }]))
     }
 }

@@ -20,8 +20,7 @@ pub struct Procedural3dPreviewCamera {
     #[dsl(coord)]
     pub target: [f64; 3],
     #[serde(default = "default_preview_fov")]
-    pub fov: f64,
-}
+    pub fov: f64}
 
 impl Default for Procedural3dPreviewCamera {
     fn default() -> Self {
@@ -101,8 +100,7 @@ pub struct Procedural3dConfig {
     pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `flow.extension` hot-swap installs.
     #[serde(default = "default_contributions_json")]
-    pub contributions_json: String,
-}
+    pub contributions_json: String}
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
@@ -114,8 +112,7 @@ impl store::DocumentDsl for Procedural3dConfig {
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
+            Err(_) => text};
         let record = dsl::parse(
             body,
             &Self::__dsl_spec(),
@@ -182,8 +179,7 @@ impl Default for Procedural3dConfig {
             generation_preview_text: None,
             active_utility_id: "move".into(),
             locale: "en-US".into(),
-            contributions_json: default_contributions_json(),
-        }
+            contributions_json: default_contributions_json()}
     }
 }
 
@@ -209,8 +205,7 @@ pub enum Procedural3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
-        config: Procedural3dConfig,
-    },
+        config: Procedural3dConfig},
     #[dsl(key = "selection")]
     SetSelection { node_ids: Vec<String> },
     #[dsl(key = "hover")]
@@ -224,13 +219,11 @@ pub enum Procedural3dConfigMutation {
     #[dsl(key = "camera")]
     SetCamera {
         #[dsl(block)]
-        camera: CameraJson,
-    },
+        camera: CameraJson},
     #[dsl(key = "preview-camera")]
     SetPreviewCamera {
         #[dsl(block)]
-        camera: Procedural3dPreviewCamera,
-    },
+        camera: Procedural3dPreviewCamera},
     #[dsl(key = "sun")]
     SetSun { json: String },
     #[dsl(key = "generation")]
@@ -240,8 +233,7 @@ pub enum Procedural3dConfigMutation {
     #[dsl(key = "locale")]
     SetLocale { value: String },
     #[dsl(key = "contributions")]
-    SetContributions { json: String },
-}
+    SetContributions { json: String }}
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Procedural3dConfigMutation {
@@ -277,8 +269,7 @@ impl protocol::OpBinary for Procedural3dConfigMutation {
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
             what: "op variant",
             offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+            detail: format!("keyword {keyword:?} is not a declared variant")})?;
         let spec = (variants[ordinal].1)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -299,16 +290,14 @@ impl protocol::OpBinary for Procedural3dConfigMutation {
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
             what: "op variant",
             offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len())})?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
             what: "op record",
             offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+            detail: error.to_string()})
     }
 }
 
@@ -426,18 +415,18 @@ mod tests {
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetSelection { node_ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetHover { node_id: None });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetSelectionMethod { method: "lasso".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLodMode { value: "coarse".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetShowMode { value: "wireframe".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetPreviewCamera { camera: Procedural3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetSun { json: "{}".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetActiveUtility { utility_id: "scale".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::Snapshot { config: Procedural3dConfig::default() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetSelection { node_ids: vec!["a".into()] });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetHover { node_id: None });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetSelectionMethod { method: "lasso".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLodMode { value: "coarse".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetShowMode { value: "wireframe".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetPreviewCamera { camera: Procedural3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetSun { json: "{}".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetActiveUtility { utility_id: "scale".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLocale { value: "de-DE".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::Snapshot { config: Procedural3dConfig::default() });
     }
 }
 //#endregion 🧪️Tests

@@ -21,7 +21,7 @@ use crate::apps::block3d::modes::edit::windows::world;
 use crate::apps::block3d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::block3d::terminology::block3d_labels;
 use crate::artifacts::block3d::op::Block3dMutation;
-use crate::artifacts::block3d::{artifact_kind, Block3dDefinition, BLOCK_3D_SCHEMA};
+use crate::artifacts::block3d::{artifact_kind, Block3dSnapshot, BLOCK_3D_SCHEMA};
 use crate::BlockCamera3d;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
@@ -80,7 +80,7 @@ semio_framework_plugin::app_commands! {
     /// is safe, reordering is a wire-format break. Every id/key pair is IDENTICAL EXCEPT the three
     /// `worldSurface*` rows (`HoverSurface`/`LeaveSurface`/`PlaceVortex`), whose manifest action id and
     /// `#[dsl(key)]` wire keyword genuinely diverge pre-migration — preserved verbatim.
-    pub enum Block3dCommand for Block3dDefinition, Block3dMutation, Block3dConfig, Block3dConfigMutation {
+    pub enum Block3dCommand for Block3dSnapshot, Block3dMutation, Block3dConfig, Block3dConfigMutation {
         "patchObjectKind" as "patchObjectKind" => patch_object_kind::PatchObjectKind,
         "addRepresentation" as "addRepresentation" => add_representation::AddRepresentation,
         "removeRepresentation" as "removeRepresentation" => remove_representation::RemoveRepresentation,
@@ -118,7 +118,7 @@ semio_framework_plugin::app_commands! {
 pub struct Block3dPlayApp;
 
 impl DocumentApp for Block3dPlayApp {
-    type Projection = Block3dDefinition;
+    type Snapshot = Block3dSnapshot;
     type Mutation = Block3dMutation;
     type Config = Block3dConfig;
     type ConfigMutation = Block3dConfigMutation;
@@ -130,8 +130,8 @@ impl DocumentApp for Block3dPlayApp {
     const APP_ID: &'static str = BLOCK3D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
-    fn initial_projection() -> Block3dDefinition {
-        crate::artifacts::block3d::engine::empty_block3d_definition()
+    fn initial_snapshot() -> Block3dSnapshot {
+        crate::artifacts::block3d::engine::empty_block3d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -224,25 +224,25 @@ impl DocumentApp for Block3dPlayApp {
         }
     }
 
-    fn handle(command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block3dCommand, doc: &DocumentView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
-        let labels = block3d_labels(cfg.projection);
+    fn window_measures(doc: &DocumentView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+        let labels = block3d_labels(cfg.snapshot);
         let mut measures = HashMap::new();
-        measures.insert(BLOCK3D_DEFAULT_WINDOW_ID.into(), world::window_measures(doc.projection, cfg.projection, BLOCK3D_DEFAULT_WINDOW_ID, labels));
+        measures.insert(BLOCK3D_DEFAULT_WINDOW_ID.into(), world::window_measures(doc.snapshot, cfg.snapshot, BLOCK3D_DEFAULT_WINDOW_ID, labels));
         measures
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> UiNode {
-        let labels = block3d_labels(cfg.projection);
-        let active_representation_id = cfg.projection.active_representation_id.as_deref();
+    fn render(body_key: &str, doc: &DocumentView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> UiNode {
+        let labels = block3d_labels(cfg.snapshot);
+        let active_representation_id = cfg.snapshot.active_representation_id.as_deref();
         let (base_body, window_id) = block3d_resolve_world_body(body_key);
         match base_body {
-            world::BLOCK3D_BODY_WORLD => world::render(doc.projection, cfg.projection, &window_id),
-            document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.projection, &cfg.projection.selected_ids, labels),
-            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.projection, active_representation_id, labels),
+            world::BLOCK3D_BODY_WORLD => world::render(doc.snapshot, cfg.snapshot, &window_id),
+            document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.snapshot, &cfg.snapshot.selected_ids, labels),
+            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -254,7 +254,7 @@ impl DocumentApp for Block3dPlayApp {
     /// thread `ConfigView` through yet — see `Block3dConfig::wanted_tags`'s doc — so this always
     /// resolves the active representation with an empty (all-tags) filter until that lands. Falls
     /// through to the default whole-document pack export for every other port (`"document:out"`).
-    fn export_media(port: &str, doc: &DocumentView<'_, Block3dDefinition>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -264,10 +264,10 @@ impl DocumentApp for Block3dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
-            let bytes = store::DocumentPack::encode_pack(doc.projection);
+            let bytes = store::DocumentPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block3d::engine::puzzle3d_catalog_fragment(doc.projection, &[]);
+        let fragment = crate::artifacts::block3d::engine::puzzle3d_catalog_fragment(doc.snapshot, &[]);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -430,7 +430,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -446,7 +446,7 @@ mod tests {
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Block3dPlayApp>(create_block3d_app);
-        assert!(Block3dPlayApp.command_from_action("noSuchAction", None).is_err());
+        assert!(Block3dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
 
@@ -479,7 +479,7 @@ mod tests {
     fn add_representation_then_set_active_then_render_world_shows_mesh() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
-        let representation_id = app.projection().expect("projection").representations[0].id.clone();
+        let representation_id = app.snapshot().expect("snapshot").representations[0].id.clone();
         testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some(representation_id) }));
         let json = testkit::render(&mut app, world::BLOCK3D_BODY_WORLD);
         assert!(json.contains("\"type\":\"componentScene\""), "world body must render a 3d scene");
@@ -490,18 +490,18 @@ mod tests {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
         testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {}));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.vortices.len(), 1);
         let vortex_id = projection.vortices[0].id.clone();
         testkit::dispatch(&mut app, Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: vortex_id }));
-        assert_eq!(app.projection().expect("projection").vortices.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").vortices.len(), 0);
     }
 
     #[test]
     fn set_active_example_loads_capsule_fixture() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.object_kind.id, "Capsule J");
         assert_eq!(projection.representations.len(), 2);
     }
@@ -510,11 +510,11 @@ mod tests {
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
-        assert_eq!(app.projection().expect("projection").vortex_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").vortex_kinds.len(), 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").vortex_kinds.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").vortex_kinds.len(), 0);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").vortex_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").vortex_kinds.len(), 1);
     }
 
     #[test]
@@ -548,7 +548,7 @@ mod tests {
             &mut app,
             Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }),
         );
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert!(!projection.vortex_kinds.is_empty());
         assert_eq!(projection.vortices.len(), 2);
     }
@@ -556,7 +556,7 @@ mod tests {
     #[test]
     fn command_from_action_bridges_set_active_example() {
         let app = Block3dPlayApp;
-        assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule"));
+        assert!(matches!(Block3dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule"));
     }
     //#endregion 🔖️Behavior
 

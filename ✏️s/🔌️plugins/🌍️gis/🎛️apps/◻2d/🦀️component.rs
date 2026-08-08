@@ -14,7 +14,7 @@ use crate::apps::gis2d::panels::{catalogue as catalogue_panel, document as docum
 use crate::apps::gis2d::terminology::gis2d_labels;
 use crate::artifacts::gismap::engine::{gis2d_features_in_port, gis2d_io, gis2d_map_media, gis2d_map_out_port, gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{artifact_kind, GisMapDocument, GIS_MAP_SCHEMA};
+use crate::artifacts::gismap::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UiTreeItemNode, WindowMeasure,
@@ -62,7 +62,7 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `Gis2dPlayApp::Command` — the SOLE dispatch surface for gis2d's own behavior, covering every
     /// action `create_gis2d_app` declares. Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.
-    pub enum Gis2dCommand for GisMapDocument, GisMapMutation, Gis2dConfig, Gis2dConfigMutation {
+    pub enum Gis2dCommand for GisMapSnapshot, GisMapMutation, Gis2dConfig, Gis2dConfigMutation {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "patchPositions" as "patch-positions" => patch_positions::PatchPositions,
         "patchRoutes" as "patch-routes" => patch_routes::PatchRoutes,
@@ -136,7 +136,7 @@ fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry
 }
 
 impl DocumentApp for Gis2dPlayApp {
-    type Projection = GisMapDocument;
+    type Snapshot = GisMapSnapshot;
     type Mutation = GisMapMutation;
     type Config = Gis2dConfig;
     type ConfigMutation = Gis2dConfigMutation;
@@ -148,7 +148,7 @@ impl DocumentApp for Gis2dPlayApp {
     const APP_ID: &'static str = GIS2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
-    fn initial_projection() -> GisMapDocument {
+    fn initial_snapshot() -> GisMapSnapshot {
         crate::artifacts::gismap::engine::default_document()
     }
 
@@ -158,19 +158,19 @@ impl DocumentApp for Gis2dPlayApp {
         Some(gis2d_io())
     }
 
-    fn whole_document_operation(projection: GisMapDocument) -> Option<GisMapMutation> {
-        Some(GisMapMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: GisMapSnapshot) -> Option<GisMapMutation> {
+        Some(GisMapMutation::SetSnapshot { snapshot })
     }
 
     /// 🎞️ `map:out` (see `crate::artifacts::gismap::engine::gis2d_map_media`) plus the inherited
-    /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding
+    /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, GisMapDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, GisMapSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "map:out" => Ok(gis2d_map_media(doc.projection)),
+            "map:out" => Ok(gis2d_map_media(doc.snapshot)),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -181,14 +181,14 @@ impl DocumentApp for Gis2dPlayApp {
     /// add/patch/remove operations against every collection (a generic vector-features sink — not
     /// pinned to `2d.map`, so a `draw`/another `gis2d`'s producer both work) plus the inherited
     /// `document:in` default (replicated inline for the same reason as `export_media`).
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, GisMapDocument>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, GisMapSnapshot>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "features:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "features:in only accepts a Structured JSON payload".into()));
                 };
                 let incoming = gis_map_document_from_descriptor_json(json);
-                let document = doc.projection;
+                let document = doc.snapshot;
                 let mut operations = positions_operations(&document.positions, &incoming.positions);
                 operations.extend(routes_operations(&document.routes, &incoming.routes));
                 operations.extend(regions_operations(&document.regions, &incoming.regions));
@@ -199,8 +199,8 @@ impl DocumentApp for Gis2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <GisMapDocument as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(projection) {
+                let snapshot = <GisMapSnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -295,7 +295,7 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn handle(command: &Gis2dCommand, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Gis2dCommand, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -305,11 +305,11 @@ impl DocumentApp for Gis2dPlayApp {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
+        let config = cfg.snapshot;
         let labels = gis2d_labels(config);
         match body_key {
-            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.projection, config),
+            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config),
             document_panel::GIS2D_PLAY_BODY_DOCUMENT => document_panel::render(config, labels),
             catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(config, labels),
@@ -317,18 +317,18 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn window_measures(_doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
+    fn window_measures(_doc: &DocumentView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.snapshot;
         HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(config)))])
     }
 
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
-        _doc: &DocumentView<'_, GisMapDocument>,
+        _doc: &DocumentView<'_, GisMapSnapshot>,
         cfg: &ConfigView<'_, Gis2dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        gis2d_context_menu_items(registry, request.surface.as_ref(), &cfg.projection.selected_ids)
+        gis2d_context_menu_items(registry, request.surface.as_ref(), &cfg.snapshot.selected_ids)
     }
 }
 //#endregion 🔖️Gis2dPlayApp
@@ -352,7 +352,7 @@ pub fn create_gis2d_app() -> App {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Mutation actions — flow through the document store with true inverses. `setActiveExample`
-            // replaces document content via `SetDocument` operations, so it is a Mutation, not a View action.
+            // replaces document content via `SetSnapshot` operations, so it is a Mutation, not a View action.
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
@@ -452,6 +452,7 @@ pub(crate) mod testkit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use semio_framework_plugin::DocumentApp;
     use super::*;
     use crate::apps::gis2d::testkit::{app, app_with_registry, render};
     use protocol::CollectionMutation;
@@ -530,7 +531,7 @@ mod tests {
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
         for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
-            store::test_support::assert_op_text_binary_equivalence(command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(command);
             let printed = protocol::OpText::print_op(command);
             assert!(printed == *keyword || printed.starts_with(&format!("{keyword} ")), "row {} printed {printed:?}, expected the {keyword:?} wire keyword", command.command_id());
         }
@@ -563,7 +564,7 @@ mod tests {
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Gis2dPlayApp>(create_gis2d_app);
-        assert!(Gis2dPlayApp.command_from_action("noSuchAction", None).is_err());
+        assert!(Gis2dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
 
@@ -592,10 +593,10 @@ mod tests {
     #[test]
     fn export_media_map_out_produces_a_2d_map_structured_payload() {
         let app = app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
-        let media = Gis2dPlayApp.export_media("map:out", &doc).expect("map:out export");
+        let doc = DocumentView { snapshot: &document, history: &history };
+        let media = Gis2dPlayApp::export_media("map:out", &doc).expect("map:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.map");
         assert!(json.contains("positions"));
@@ -604,19 +605,19 @@ mod tests {
     #[test]
     fn import_media_features_in_adds_new_positions_as_operations() {
         let app = app();
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &document, history: &history };
+        let doc = DocumentView { snapshot: &document, history: &history };
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming } };
-        let emit = Gis2dPlayApp.import_media("features:in", &media, &doc).expect("features:in import");
-        assert!(emit.document_mutations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Add { id, .. }) if id == "imported-1")));
+        let emit = Gis2dPlayApp::import_media("features:in", &media, &doc).expect("features:in import");
+        assert!(emit.document_mutations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Add { item, .. }) if item.id == "imported-1")));
     }
 
     #[test]
     fn media_ports_declare_features_in_and_map_out() {
         let app = Gis2dPlayApp;
-        let ports = app.media_ports();
+        let ports = Gis2dPlayApp::media_ports();
         assert!(ports.iter().any(|port| port.id == "features:in"));
         assert!(ports.iter().any(|port| port.id == "map:out"));
     }

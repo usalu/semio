@@ -9,8 +9,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::block2d::diff::{block2d_index_of, Block2dDiff};
-use crate::artifacts::block2d::{Block2dDefinition, Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation};
+use crate::artifacts::block2d::diff::{
+    block2d_index_of, diff_remove_attribute, diff_remove_compatibility_rule, diff_remove_handle,
+    diff_remove_handle_kind, diff_set_attribute, diff_set_compatibility_rule, diff_set_handle,
+    diff_set_handle_kind, diff_set_snapshot, Block2dAuthorList, Block2dDiff,
+};
+use crate::artifacts::block2d::{Block2dSnapshot, Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -19,7 +23,7 @@ use serde::{Deserialize, Serialize};
 /// 🧮️ Block-2d operation: id-keyed table edits plus scalar node_kind/presentation/camera2d/meta, each
 /// with a true inverse computed from the pre-operation projection, and a whole-document replace for
 /// example loads.
-// 🧯️ `large_enum_variant`: `SetDocument`'s whole-document payload makes it far larger than the other
+// 🧯️ `large_enum_variant`: `SetSnapshot`'s whole-document payload makes it far larger than the other
 // scalar/id-keyed variants, but boxing it would require the `#[derive(dsl::DslEnum)]` field-shape
 // machinery to see through `Box<T>`, which is unverified — same accepted tradeoff as gis's
 // `Gis2dConfigMutation`/💡️reasoning's `ReplaceDocument`.
@@ -82,10 +86,10 @@ pub enum Block2dMutation {
         meta: BlockMeta,
     },
     /// 🌍️ Replaces the whole document (example import / reset).
-    #[dsl(key = "setDocument")]
-    SetDocument {
+    #[dsl(key = "setSnapshot")]
+    SetSnapshot {
         #[dsl(block)]
-        document: Block2dDefinition,
+        snapshot: Block2dSnapshot,
     },
 }
 
@@ -93,35 +97,33 @@ pub enum Block2dMutation {
 
 
 
-fn block2d_mutation_diff(operation: &Block2dMutation) -> Block2dDiff {
-    let mut diff = Block2dDiff::default();
+fn block2d_mutation_diff(operation: &Block2dMutation, base: &Block2dSnapshot) -> Block2dDiff {
     match operation {
-        Block2dMutation::SetNodeKind { node_kind } => diff.node_kind = Some(node_kind.clone()),
-        Block2dMutation::SetPresentation { presentation } => diff.presentation = Some(presentation.clone()),
-        Block2dMutation::SetHandleKind { index, handle_kind } => diff.handle_kinds.set.push((*index, handle_kind.clone())),
-        Block2dMutation::RemoveHandleKind { id } => diff.handle_kinds.removed.push(id.clone()),
-        Block2dMutation::SetHandle { index, handle } => diff.handles.set.push((*index, handle.clone())),
-        Block2dMutation::RemoveHandle { id } => diff.handles.removed.push(id.clone()),
-        Block2dMutation::SetCompatibilityRule { index, rule } => diff.compatibility.set.push((*index, rule.clone())),
-        Block2dMutation::RemoveCompatibilityRule { id } => diff.compatibility.removed.push(id.clone()),
-        Block2dMutation::SetAttribute { index, attribute } => diff.attributes.set.push((*index, attribute.clone())),
-        Block2dMutation::RemoveAttribute { key } => diff.attributes.removed.push(key.clone()),
-        Block2dMutation::SetAuthors { authors } => diff.authors = Some(authors.clone()),
-        Block2dMutation::SetCamera2d { camera2d } => diff.camera2d = Some(camera2d.clone()),
-        Block2dMutation::SetMeta { meta } => diff.meta = Some(meta.clone()),
-        Block2dMutation::SetDocument { document } => diff.document = Some(document.clone()),
+        Block2dMutation::SetNodeKind { node_kind } => Block2dDiff { node_kind: Some(node_kind.clone()), ..Default::default() },
+        Block2dMutation::SetPresentation { presentation } => Block2dDiff { presentation: Some(presentation.clone()), ..Default::default() },
+        Block2dMutation::SetHandleKind { index, handle_kind } => diff_set_handle_kind(*index, handle_kind.clone(), base),
+        Block2dMutation::RemoveHandleKind { id } => diff_remove_handle_kind(id.clone()),
+        Block2dMutation::SetHandle { index, handle } => diff_set_handle(*index, handle.clone(), base),
+        Block2dMutation::RemoveHandle { id } => diff_remove_handle(id.clone()),
+        Block2dMutation::SetCompatibilityRule { index, rule } => diff_set_compatibility_rule(*index, rule.clone(), base),
+        Block2dMutation::RemoveCompatibilityRule { id } => diff_remove_compatibility_rule(id.clone()),
+        Block2dMutation::SetAttribute { index, attribute } => diff_set_attribute(*index, attribute.clone(), base),
+        Block2dMutation::RemoveAttribute { key } => diff_remove_attribute(key.clone()),
+        Block2dMutation::SetAuthors { authors } => Block2dDiff { authors: Some(Block2dAuthorList { values: authors.clone() }), ..Default::default() },
+        Block2dMutation::SetCamera2d { camera2d } => Block2dDiff { camera2d: Some(camera2d.clone()), ..Default::default() },
+        Block2dMutation::SetMeta { meta } => Block2dDiff { meta: Some(meta.clone()), ..Default::default() },
+        Block2dMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot.clone()),
     }
-    diff
 }
 
-impl Mutation<Block2dDefinition> for Block2dMutation {
+impl Mutation<Block2dSnapshot> for Block2dMutation {
     type Diff = Block2dDiff;
 
-    fn diff(&self, _projection: &Block2dDefinition) -> Block2dDiff {
-        block2d_mutation_diff(self)
+    fn diff(&self, projection: &Block2dSnapshot) -> Block2dDiff {
+        block2d_mutation_diff(self, projection)
     }
 
-    fn inverse(&self, projection: &Block2dDefinition) -> Vec<Self> {
+    fn inverse(&self, projection: &Block2dSnapshot) -> Vec<Self> {
         match self {
             Block2dMutation::SetNodeKind { .. } => vec![Block2dMutation::SetNodeKind { node_kind: projection.node_kind.clone() }],
             Block2dMutation::SetPresentation { .. } => vec![Block2dMutation::SetPresentation { presentation: projection.presentation.clone() }],
@@ -148,25 +150,25 @@ impl Mutation<Block2dDefinition> for Block2dMutation {
             Block2dMutation::SetAuthors { .. } => vec![Block2dMutation::SetAuthors { authors: projection.authors.clone() }],
             Block2dMutation::SetCamera2d { .. } => vec![Block2dMutation::SetCamera2d { camera2d: projection.camera2d.clone() }],
             Block2dMutation::SetMeta { .. } => vec![Block2dMutation::SetMeta { meta: projection.meta.clone() }],
-            Block2dMutation::SetDocument { .. } => vec![Block2dMutation::SetDocument { document: projection.clone() }],
+            Block2dMutation::SetSnapshot { .. } => vec![Block2dMutation::SetSnapshot { snapshot: projection.clone() }],
         }
     }
 }
 
-pub type Block2dEnvelope = store::DocumentEnvelope<Block2dDefinition, Block2dMutation>;
-pub type Block2dStore = store::DocumentStore<Block2dDefinition, Block2dMutation>;
+pub type Block2dEnvelope = store::DocumentEnvelope<Block2dSnapshot, Block2dMutation>;
+pub type Block2dStore = store::DocumentStore<Block2dSnapshot, Block2dMutation>;
 // #endregion 🔖️Operation
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block2d::engine::empty_block2d_definition;
+    use crate::artifacts::block2d::engine::empty_block2d_snapshot;
     use protocol::MutationDiff;
 
     #[test]
     fn set_handle_then_remove_round_trips_through_true_inverse() {
-        let mut projection = empty_block2d_definition();
+        let mut projection = empty_block2d_snapshot();
         let set = Block2dMutation::SetHandle { index: 0, handle: Block2dHandleTemplate { id: "h0".into(), handle_kind: "b-l".into(), angle: 0.5, radius: 0.36 } };
         let inverse = set.inverse(&projection);
         projection = set.diff(&projection).apply(&projection);
@@ -175,25 +177,25 @@ mod tests {
         for operation in &inverse {
             projection = operation.diff(&projection).apply(&projection);
         }
-        assert_eq!(projection, empty_block2d_definition());
+        assert_eq!(projection, empty_block2d_snapshot());
     }
 
     #[test]
-    fn diff_absorb_collapses_to_latest_set_document() {
+    fn diff_absorb_collapses_to_latest_set_snapshot() {
         let mut diff = Block2dDiff::default();
         diff.absorb(Block2dDiff { node_kind: Some(BlockKindIdentity::default()), ..Default::default() });
-        diff.absorb(Block2dDiff { document: Some(empty_block2d_definition()), ..Default::default() });
-        assert!(diff.document.is_some());
+        diff.absorb(Block2dDiff { artifact: Some(Box::new(crate::artifacts::block2d::schema::Block2dArtifact::from_snapshot(empty_block2d_snapshot()))), ..Default::default() });
+        assert!(diff.artifact.is_some());
         assert!(diff.node_kind.is_none());
     }
 }
 //#endregion 🧪️Tests
 
 
-pub fn apply_block2d_mutation(projection: &mut Block2dDefinition, mutation: &Block2dMutation) {
+pub fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) {
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_block2d_mutation(projection: &Block2dDefinition, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
+pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
     mutation.inverse(projection)
 }

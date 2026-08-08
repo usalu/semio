@@ -9,6 +9,8 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
+extern crate semio_framework_schema as schema;
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -31,8 +33,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🧊️process3d/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🧊️process3d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🧊️process3d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🧊️process3d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -82,12 +95,12 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
 
@@ -95,8 +108,13 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/🧊️process3d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🧊️process3d/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🧊️process3d/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🧊️process3d/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🧊️process3d/📡️spr/🦀️component.rs"]
         pub mod spr;
 
@@ -105,6 +123,15 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs"]
             mod component;
             pub use component::*;
+
+            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🪵️wood/🦀️component.rs"]
+            pub mod wood;
+            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🧱️concrete/🦀️component.rs"]
+            pub mod concrete;
+            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🔩️metal/🦀️component.rs"]
+            pub mod metal;
+            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🤖️robotic/🦀️component.rs"]
+            pub mod robotic;
         }
     }
 }

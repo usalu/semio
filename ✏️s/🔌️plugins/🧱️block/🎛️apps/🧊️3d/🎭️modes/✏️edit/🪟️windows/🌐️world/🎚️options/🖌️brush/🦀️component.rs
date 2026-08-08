@@ -4,10 +4,10 @@ use crate::apps::block3d::config::Block3dConfig;
 use crate::apps::block3d::terminology::Block3dLabels;
 use crate::apps::block3d::world::resolve_brush_vortex_kind_id;
 use crate::apps::block3d::BLOCK3D_UTILITY_SURFACE_BRUSH;
-use crate::artifacts::block3d::Block3dDefinition;
+use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
-pub fn measure(definition: &Block3dDefinition, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {
+pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "block3d-brush-options".into(),
         label: labels.brush.as_str().to_string(),

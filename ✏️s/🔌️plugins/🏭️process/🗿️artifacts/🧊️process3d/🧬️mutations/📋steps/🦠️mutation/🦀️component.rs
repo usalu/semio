@@ -1,6 +1,6 @@
 //! 📋 Process3d mutation — `Steps` collection edit.
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dDocument, ProcessStep, ProcessStepPatch};
+use crate::artifacts::process3d::{Process3dSnapshot, ProcessStep, ProcessStepPatch};
 use protocol::{apply_collection_mutation, CollectionMutation};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ pub fn steps(collection: CollectionMutation<String, ProcessStep, ProcessStepPatc
     Process3dMutation::Steps { collection }
 }
 
-pub fn apply(doc: &mut Process3dDocument, collection: &CollectionMutation<String, ProcessStep, ProcessStepPatch>) {
+pub fn apply(doc: &mut Process3dSnapshot, collection: &CollectionMutation<String, ProcessStep, ProcessStepPatch>) {
     apply_collection_mutation(&mut doc.steps, collection);
 }
 //#endregion 🔖️Mutation

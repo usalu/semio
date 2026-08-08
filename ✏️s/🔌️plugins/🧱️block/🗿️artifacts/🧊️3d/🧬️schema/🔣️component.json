@@ -1,0 +1,195 @@
+{
+  "$id": "https://semio.tech/schema/s/block/block3d/artifact.json",
+  "title": "Block3dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "objectKind",
+    "representations",
+    "vortexKinds",
+    "vortices",
+    "compatibility",
+    "attributes",
+    "authors",
+    "camera3d",
+    "meta",
+    "selectedIds",
+    "wantedTags",
+    "locale",
+    "windows",
+    "brushRadius",
+    "brushFlip"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "objectKind": {
+      "$ref": "#/$defs/BlockKindIdentity",
+      "x-semio-state": "persistent"
+    },
+    "representations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BlockRepresentation"
+      },
+      "x-semio-state": "persistent"
+    },
+    "vortexKinds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Block3dVortexKind"
+      },
+      "x-semio-state": "persistent"
+    },
+    "vortices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Block3dVortexTemplate"
+      },
+      "x-semio-state": "persistent"
+    },
+    "compatibility": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BlockCompatibilityRule"
+      },
+      "x-semio-state": "persistent"
+    },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BlockAttribute"
+      },
+      "x-semio-state": "persistent"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BlockAuthor"
+      },
+      "x-semio-state": "persistent"
+    },
+    "camera3d": {
+      "$ref": "#/$defs/BlockCamera3d",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/BlockMeta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activeRepresentationId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "wantedTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "windows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Block3dWindowView"
+      },
+      "x-semio-state": "local-ui"
+    },
+    "brushVortexKindId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "brushRadius": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "brushFlip": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "brushPreview": {
+      "$ref": "#/$defs/Block3dBrushPreview",
+      "x-semio-state": "preview"
+    },
+    "camera": {
+      "$ref": "#/$defs/BlockCamera3d",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredVortexFullId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "BlockKindIdentity": {
+      "title": "BlockKindIdentity",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockRepresentation": {
+      "title": "BlockRepresentation",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dVortexKind": {
+      "title": "Block3dVortexKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dVortexTemplate": {
+      "title": "Block3dVortexTemplate",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCompatibilityRule": {
+      "title": "BlockCompatibilityRule",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAttribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockAuthor": {
+      "title": "BlockAuthor",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockCamera3d": {
+      "title": "BlockCamera3d",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BlockMeta": {
+      "title": "BlockMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dWindowView": {
+      "title": "Block3dWindowView",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Block3dBrushPreview": {
+      "title": "Block3dBrushPreview",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

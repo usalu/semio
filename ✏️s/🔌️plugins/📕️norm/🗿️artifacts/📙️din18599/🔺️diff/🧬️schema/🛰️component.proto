@@ -1,0 +1,54 @@
+syntax = "proto3";
+package semio.s.norm.din18599.diff;
+
+message Din18599Diff {
+  // @state persistent
+  optional Din18599Artifact artifact = 1;
+  // @state persistent
+  optional string use_class = 2;
+  // @state persistent
+  optional double heated_area_m2 = 3;
+  // @state persistent
+  optional uint32 occupants = 4;
+  // @state persistent
+  optional double h_t = 5;
+  // @state persistent
+  optional double h_v = 6;
+  // @state persistent
+  optional string climate = 7;
+  // @state persistent
+  optional double internal_gains_w_m2 = 8;
+  // @state persistent
+  optional double solar_gains_kwh = 9;
+  // @state persistent
+  optional double system_losses_kwh = 10;
+  // @state persistent
+  optional double renewable_kwh = 11;
+  // @state persistent
+  optional double annual_limit_kwh = 12;
+  // @state persistent
+  optional string energy_carrier = 13;
+  // @state persistent
+  optional double reference_q_p_kwh = 14;
+  // @state shared-ui
+  optional uint32 selected_check_index = 15;
+}
+
+message Din18599Artifact {
+  string use_class = 1;
+  double heated_area_m2 = 2;
+  uint32 occupants = 3;
+  double h_t = 4;
+  double h_v = 5;
+  string climate = 6;
+  double internal_gains_w_m2 = 7;
+  double solar_gains_kwh = 8;
+  double system_losses_kwh = 9;
+  double renewable_kwh = 10;
+  double annual_limit_kwh = 11;
+  string energy_carrier = 12;
+  double reference_q_p_kwh = 13;
+  optional uint32 selected_check_index = 14;
+}
+
+message Din18599StringList { repeated string values = 1; }

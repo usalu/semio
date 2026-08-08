@@ -2,7 +2,7 @@
 
 use crate::apps::jack::config::JackConfig;
 use crate::apps::jack::terminology::TrinityJackLabels;
-use crate::artifacts::jack::{GraphFixture, Node, PropertyValue};
+use crate::artifacts::jack::{JackSnapshot, Node, PropertyValue};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -17,13 +17,13 @@ fn flat_position_uv(node: &Node) -> (String, String) {
     (format_axis("u"), format_axis("v"))
 }
 
-fn fixture_with_derived(fixture: &GraphFixture) -> Option<GraphFixture> {
+fn fixture_with_derived(fixture: &JackSnapshot) -> Option<JackSnapshot> {
     let mut graph = crate::artifacts::jack::Graph::from_fixture(fixture.clone()).ok()?;
     graph.recompute_derived();
     Some(graph.to_fixture())
 }
 
-pub(crate) fn render(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &TrinityJackLabels) -> UiNode {
+pub(crate) fn render(fixture: &JackSnapshot, cfg: &JackConfig, term_labels: &TrinityJackLabels) -> UiNode {
     let jack_action = crate::apps::jack::jack_action;
     if cfg.selected_node_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {

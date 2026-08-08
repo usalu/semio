@@ -21,7 +21,8 @@ use serde::{Deserialize, Serialize};
 /// reads (`resolve_labels`/the transform-gumball utility) — see `crate::apps::shooting::render`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "shootingcfg")]
+#[dsl(extension = "shooting.config")]
+#[dsl(id = "shooting.config")]
 #[dsl(layout = "lines")]
 pub struct ShootingConfig {
     /// 🖼️ Mirrors `addShot`'s `format` `ActionArgDef` default (`"png"`).
@@ -316,23 +317,23 @@ mod tests {
             locale: "de-DE".into(),
             ..ShootingConfig::default()
         };
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
     fn shooting_config_operation_text_binary_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::Snapshot { config: ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "de-DE".into(), ..ShootingConfig::default() } });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelection { shot_ids: vec!["s1".into()], asset_ids: vec!["a1".into(), "a2".into()] });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: Some("a1".into()) });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: None });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelectionMethod { method: "rectangle".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCenterModel { value: true });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetFitRevision { value: 4 });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCameraDraftLabel { value: "Hero".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetActiveUtility { utility_id: "rotate".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetDefaults { shot_format: "svg".into(), shot_shape: "ellipse".into(), asset_format: "glb".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::Snapshot { config: ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "de-DE".into(), ..ShootingConfig::default() } });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelection { shot_ids: vec!["s1".into()], asset_ids: vec!["a1".into(), "a2".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: Some("a1".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelectionMethod { method: "rectangle".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCenterModel { value: true });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetFitRevision { value: 4 });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCameraDraftLabel { value: "Hero".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetActiveUtility { utility_id: "rotate".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetDefaults { shot_format: "svg".into(), shot_shape: "ellipse".into(), asset_format: "glb".into() });
     }
 
     #[test]

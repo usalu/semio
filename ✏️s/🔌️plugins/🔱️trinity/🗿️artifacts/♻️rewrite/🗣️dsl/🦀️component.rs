@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::rewrite::RewriteRuleModel;
+use crate::artifacts::rewrite::RewriteSnapshot;
 use store::DocumentDsl;
 
 /// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewrite` DSL — mirrors the
@@ -16,13 +16,13 @@ use store::DocumentDsl;
 /// bundled `🔱️nakagin-capsule-tower.trinity` before-fixture.
 pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.rewrite` DSL text into a `RewriteRuleModel`.
-pub fn parse_dsl(text: &str) -> Result<RewriteRuleModel, store::TextError> {
-    <RewriteRuleModel as DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.rewrite` DSL text into a `RewriteSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<RewriteSnapshot, store::TextError> {
+    <RewriteSnapshot as DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `RewriteRuleModel` back to `.rewrite` DSL text.
-pub fn print_dsl(document: &RewriteRuleModel) -> String {
+/// 🖨️ Prints a `RewriteSnapshot` back to `.rewrite` DSL text.
+pub fn print_dsl(document: &RewriteSnapshot) -> String {
     DocumentDsl::print_dsl(document)
 }
 
@@ -33,15 +33,15 @@ mod tests {
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
     use std::collections::BTreeMap;
-    use store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
+    use ::store::os_store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
 
-    fn sample_rule_state() -> RewriteRuleModel {
+    fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint::from((10.5, -20.25)));
-        RewriteRuleModel {
+        RewriteSnapshot {
             before_fixture_json: "{\"schema\":\"trinity.graph\",\"name\":\"x \\\"quoted\\\"\\nline\"}".to_string(),
             lhs_json: r#"{"pattern":{"leftVar":"a","leftKind":"Piece"}}"#.to_string(),
             rhs_json: r#"{"set":[{"var":"a","prop":"label","value":"$label"}]}"#.to_string(),
@@ -64,38 +64,38 @@ mod tests {
 
     #[test]
     fn rewrite_rule_state_parse_dsl_errors_on_unknown_keyword() {
-        let err = RewriteRuleModel::parse_dsl("bogus line").unwrap_err();
+        let err = RewriteSnapshot::parse_dsl("bogus line").unwrap_err();
         assert!(err.message.contains("expected"));
     }
 
     #[test]
     fn rewrite_rule_state_parse_dsl_errors_on_malformed_binding() {
-        assert!(RewriteRuleModel::parse_dsl("binding onlykey").is_err());
+        assert!(RewriteSnapshot::parse_dsl("binding onlykey").is_err());
     }
 
     #[test]
     fn rewrite_rule_state_parse_dsl_errors_on_malformed_layout() {
-        assert!(RewriteRuleModel::parse_dsl("layout a").is_err());
-        assert!(RewriteRuleModel::parse_dsl("layout a notanumber 2").is_err());
-        assert!(RewriteRuleModel::parse_dsl("layout a 1 notanumber").is_err());
+        assert!(RewriteSnapshot::parse_dsl("layout a").is_err());
+        assert!(RewriteSnapshot::parse_dsl("layout a notanumber 2").is_err());
+        assert!(RewriteSnapshot::parse_dsl("layout a 1 notanumber").is_err());
     }
 
     #[test]
     fn rewrite_rule_state_parse_dsl_valid_binding_and_layout_lines() {
-        let mut original = RewriteRuleModel { before_fixture_json: "{}".into(), lhs_json: "{}".into(), rhs_json: "{}".into(), ..Default::default() };
+        let mut original = RewriteSnapshot { before_fixture_json: "{}".into(), lhs_json: "{}".into(), rhs_json: "{}".into(), ..Default::default() };
         original.parameter_bindings.insert("label".to_string(), PropertyValue::String("hi".into()));
         original.rule_layout.insert("a".to_string(), LayoutPoint { x: 1.0, y: 2.0 });
-        let state = RewriteRuleModel::parse_dsl(&original.print_dsl()).unwrap();
+        let state = RewriteSnapshot::parse_dsl(&original.print_dsl()).unwrap();
         assert_eq!(state.parameter_bindings.get("label"), Some(&PropertyValue::String("hi".into())));
         assert_eq!(state.rule_layout.get("a"), Some(&LayoutPoint { x: 1.0, y: 2.0 }));
     }
 
     #[test]
     fn rewrite_rule_state_parse_dsl_errors_on_malformed_quoted_blob() {
-        assert!(RewriteRuleModel::parse_dsl("before nope").is_err());
-        assert!(RewriteRuleModel::parse_dsl("before \"abc").is_err());
-        assert!(RewriteRuleModel::parse_dsl("before \"ok\" trailing").is_err());
-        assert!(RewriteRuleModel::parse_dsl(r#"before "a\"#).is_err());
+        assert!(RewriteSnapshot::parse_dsl("before nope").is_err());
+        assert!(RewriteSnapshot::parse_dsl("before \"abc").is_err());
+        assert!(RewriteSnapshot::parse_dsl("before \"ok\" trailing").is_err());
+        assert!(RewriteSnapshot::parse_dsl(r#"before "a\"#).is_err());
     }
 
     #[test]

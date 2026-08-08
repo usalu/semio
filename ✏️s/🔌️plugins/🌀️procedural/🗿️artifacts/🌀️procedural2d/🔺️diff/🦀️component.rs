@@ -21,22 +21,19 @@ pub use super::schema::*;
 #[serde(rename_all = "camelCase")]
 pub struct WidgetsDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(usize, Widget)>,
-}
+    pub set: Vec<(usize, Widget)>}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SynapsesDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(usize, SynapseSpec)>,
-}
+    pub set: Vec<(usize, SynapseSpec)>}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayoutDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(String, WidgetLayout)>,
-}
+    pub set: Vec<(String, WidgetLayout)>}
 
 pub(crate) fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
     for id in &diff.removed {
@@ -247,8 +244,7 @@ mod tests {
                 set: vec![
                     (0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }),
                     (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() }),
-                ],
-            },
+                ]},
             SynapsesDiff::default(),
             LayoutDiff::default(),
             None,

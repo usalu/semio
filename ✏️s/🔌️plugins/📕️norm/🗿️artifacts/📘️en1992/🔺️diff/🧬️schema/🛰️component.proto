@@ -1,0 +1,120 @@
+syntax = "proto3";
+package semio.s.norm.en1992.diff;
+
+message En1992Diff {
+  // @state persistent
+  optional En1992Artifact artifact = 1;
+  // @state persistent
+  optional string annex = 2;
+  // @state persistent
+  optional double m_ed_knm = 3;
+  // @state persistent
+  optional double v_ed_kn = 4;
+  // @state persistent
+  optional double f_ck = 5;
+  // @state persistent
+  optional double b_mm = 6;
+  // @state persistent
+  optional double d_mm = 7;
+  // @state persistent
+  optional double a_s_mm2 = 8;
+  // @state persistent
+  optional double f_yk = 9;
+  // @state persistent
+  optional double rho_l = 10;
+  // @state persistent
+  optional double n_ed_kn = 11;
+  // @state persistent
+  optional double p_kn = 12;
+  // @state persistent
+  optional double a_c_mm2 = 13;
+  // @state persistent
+  optional bool use_fem = 14;
+  // @state persistent
+  optional double span_m = 15;
+  // @state persistent
+  optional double udl_kn_m = 16;
+  // @state persistent
+  optional string fire_rating = 17;
+  // @state persistent
+  optional double provided_axis_distance_mm = 18;
+  // @state persistent
+  optional double bridge_sigma_c_mpa = 19;
+  // @state persistent
+  optional double bridge_delta_sigma_s_mpa = 20;
+  // @state persistent
+  optional string tightness_class = 21;
+  // @state persistent
+  optional double hd_over_h = 22;
+  // @state persistent
+  optional double liquid_sigma_s_mpa = 23;
+  // @state persistent
+  optional double liquid_rho_p_eff = 24;
+  // @state persistent
+  optional double liquid_f_ct_eff_mpa = 25;
+  // @state persistent
+  optional double liquid_e_s_mpa = 26;
+  // @state persistent
+  optional double liquid_s_r_max_mm = 27;
+  // @state persistent
+  optional double anchor_h_ef_mm = 28;
+  // @state persistent
+  optional bool anchor_cracked = 29;
+  // @state persistent
+  optional double anchor_f_uk_mpa = 30;
+  // @state persistent
+  optional double anchor_f_yk_mpa = 31;
+  // @state persistent
+  optional double anchor_a_s_mm2 = 32;
+  // @state persistent
+  optional double anchor_d_mm = 33;
+  // @state persistent
+  optional double anchor_c1_mm = 34;
+  // @state persistent
+  optional double anchor_n_ed_kn = 35;
+  // @state persistent
+  optional double anchor_v_ed_kn = 36;
+  // @state shared-ui
+  optional uint32 selected_check_index = 37;
+}
+
+message En1992Artifact {
+  string annex = 1;
+  double m_ed_knm = 2;
+  double v_ed_kn = 3;
+  double f_ck = 4;
+  double b_mm = 5;
+  double d_mm = 6;
+  double a_s_mm2 = 7;
+  double f_yk = 8;
+  double rho_l = 9;
+  double n_ed_kn = 10;
+  double p_kn = 11;
+  double a_c_mm2 = 12;
+  bool use_fem = 13;
+  double span_m = 14;
+  double udl_kn_m = 15;
+  string fire_rating = 16;
+  double provided_axis_distance_mm = 17;
+  double bridge_sigma_c_mpa = 18;
+  double bridge_delta_sigma_s_mpa = 19;
+  string tightness_class = 20;
+  double hd_over_h = 21;
+  double liquid_sigma_s_mpa = 22;
+  double liquid_rho_p_eff = 23;
+  double liquid_f_ct_eff_mpa = 24;
+  double liquid_e_s_mpa = 25;
+  double liquid_s_r_max_mm = 26;
+  double anchor_h_ef_mm = 27;
+  bool anchor_cracked = 28;
+  double anchor_f_uk_mpa = 29;
+  double anchor_f_yk_mpa = 30;
+  double anchor_a_s_mm2 = 31;
+  double anchor_d_mm = 32;
+  double anchor_c1_mm = 33;
+  double anchor_n_ed_kn = 34;
+  double anchor_v_ed_kn = 35;
+  optional uint32 selected_check_index = 36;
+}
+
+message En1992StringList { repeated string values = 1; }

@@ -1,0 +1,47 @@
+# 🧬️ Block3d artifact schema — every field with its state class.
+
+type Block3dArtifact {
+  schema: String! @state(class: PERSISTENT)
+  objectKind: BlockKindIdentity! @state(class: PERSISTENT)
+  representations: [BlockRepresentation!]! @state(class: PERSISTENT)
+  vortexKinds: [Block3dVortexKind!]! @state(class: PERSISTENT)
+  vortices: [Block3dVortexTemplate!]! @state(class: PERSISTENT)
+  compatibility: [BlockCompatibilityRule!]! @state(class: PERSISTENT)
+  attributes: [BlockAttribute!]! @state(class: PERSISTENT)
+  authors: [BlockAuthor!]! @state(class: PERSISTENT)
+  camera3d: BlockCamera3d! @state(class: PERSISTENT)
+  meta: BlockMeta! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activeRepresentationId: String @state(class: SHARED_UI)
+  wantedTags: [String!]! @state(class: SHARED_UI)
+  locale: String! @state(class: LOCAL_UI)
+  windows: [Block3dWindowView!]! @state(class: LOCAL_UI)
+  brushVortexKindId: String @state(class: LOCAL_UI)
+  brushRadius: Float! @state(class: LOCAL_UI)
+  brushFlip: Boolean! @state(class: LOCAL_UI)
+  brushPreview: Block3dBrushPreview @state(class: PREVIEW)
+  camera: BlockCamera3d @state(class: LOCAL_UI)
+  hoveredVortexFullId: String @state(class: PREVIEW)
+}
+
+type BlockKindIdentity { _placeholder: Boolean }
+
+type BlockRepresentation { _placeholder: Boolean }
+
+type Block3dVortexKind { _placeholder: Boolean }
+
+type Block3dVortexTemplate { _placeholder: Boolean }
+
+type BlockCompatibilityRule { _placeholder: Boolean }
+
+type BlockAttribute { _placeholder: Boolean }
+
+type BlockAuthor { _placeholder: Boolean }
+
+type BlockCamera3d { _placeholder: Boolean }
+
+type BlockMeta { _placeholder: Boolean }
+
+type Block3dWindowView { _placeholder: Boolean }
+
+type Block3dBrushPreview { _placeholder: Boolean }

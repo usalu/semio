@@ -1,4 +1,4 @@
-//! 🗂️ GIS 2D play app — the raw wasm-bindgen JS binding surface for `GisMapDocument`'s VCS store.
+//! 🗂️ GIS 2D play app — the raw wasm-bindgen JS binding surface for `GisMapSnapshot`'s VCS store.
 //!
 //! Independent of the `App`/`DocumentApp` plugin-registry path (`create_gis2d_app`/`Gis2dPlayApp`),
 //! this exposes the document store directly for callers that talk to the compiled wasm module without
@@ -7,27 +7,27 @@
 //#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    use crate::artifacts::gismap::engine::empty_gis_map_projection;
+    use crate::artifacts::gismap::engine::empty_gis_map_snapshot;
     use crate::artifacts::gismap::op::{GisMapEnvelope, GisMapStore};
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct GisMapDocumentVcs {
+    pub struct GisMapSnapshotVcs {
         store: RefCell<GisMapStore>,
     }
 
     #[wasm_bindgen]
-    impl GisMapDocumentVcs {
+    impl GisMapSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<GisMapDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<GisMapSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: GisMapEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     GisMapStore::new(envelope)
                 }
-                None => GisMapStore::new(store::create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None)),
+                None => GisMapStore::new(store::create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }

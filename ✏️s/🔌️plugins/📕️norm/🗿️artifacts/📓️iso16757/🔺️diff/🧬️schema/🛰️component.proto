@@ -1,0 +1,39 @@
+syntax = "proto3";
+package semio.s.norm.iso16757.diff;
+
+message Iso16757Diff {
+  // @state persistent
+  optional Iso16757Artifact artifact = 1;
+  // @state persistent
+  optional string catalogue = 2;
+  // @state persistent
+  optional string dictionary = 3;
+  // @state persistent
+  optional string geometry = 4;
+  // @state persistent
+  optional string selection = 5;
+  // @state persistent
+  optional string part_number_rule = 6;
+  // @state persistent
+  optional map<string, string> part_number_inputs = 7;
+  // @state persistent
+  optional string script_limits = 8;
+  // @state persistent
+  optional string exchange_process = 9;
+  // @state shared-ui
+  optional uint32 selected_check_index = 10;
+}
+
+message Iso16757Artifact {
+  string catalogue = 1;
+  string dictionary = 2;
+  string geometry = 3;
+  string selection = 4;
+  string part_number_rule = 5;
+  map<string, string> part_number_inputs = 6;
+  string script_limits = 7;
+  string exchange_process = 8;
+  optional uint32 selected_check_index = 9;
+}
+
+message Iso16757StringList { repeated string values = 1; }

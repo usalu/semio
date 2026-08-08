@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain.snapshot;
+
+// 🧬️ GIS terrain snapshot schema — persistent fields only.
+
+message GisTerrainSnapshot {
+  // @state persistent
+  double exaggeration = 1;
+  // @state persistent
+  string imported_features_json = 2;
+}

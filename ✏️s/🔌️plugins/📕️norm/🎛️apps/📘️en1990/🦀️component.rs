@@ -12,7 +12,7 @@ use crate::apps::en1990::modes::edit::windows::{inputs, results};
 use crate::apps::en1990::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::en1990::engine::En1990Family;
 use crate::artifacts::en1990::op::En1990Mutation;
-use crate::artifacts::en1990::Document;
+use crate::artifacts::en1990::En1990Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
@@ -47,7 +47,7 @@ semio_framework_plugin::app_commands! {
 pub struct En1990PlayApp;
 
 impl DocumentApp for En1990PlayApp {
-    type Projection = Document;
+    type Projection = En1990Snapshot;
     type Mutation = En1990Mutation;
     type Config = NormConfig;
     type ConfigMutation = NormConfigMutation;
@@ -63,8 +63,8 @@ impl DocumentApp for En1990PlayApp {
         CONFIG_SCHEMA
     }
 
-    fn initial_projection() -> Document {
-        Document::default()
+    fn initial_projection() -> En1990Snapshot {
+        En1990Snapshot::default()
     }
 
     fn io() -> Option<AppIo> {
@@ -75,11 +75,11 @@ impl DocumentApp for En1990PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &En1990Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<En1990Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &En1990Command, doc: &DocumentView<'_, En1990Snapshot>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<En1990Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, En1990Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
         let host = NormHost::<En1990Family>::from_document(doc.projection.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.projection),
@@ -95,13 +95,13 @@ impl DocumentApp for En1990PlayApp {
     /// 🎞️ `"report:out"`/`"document:out"` — see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
-    fn export_media(port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, En1990Snapshot>) -> Result<Media, MediaError> {
         crate::app_surface::export_media::<En1990Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.projection)
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<En1990Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media::<Document>(port, media)
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, En1990Snapshot>) -> Result<Emit<En1990Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
+        crate::app_surface::import_media::<En1990Snapshot>(port, media)
     }
     //#endregion 🔖️MediaPorts
 }
@@ -128,7 +128,7 @@ pub fn create_en1990_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&Document::default()).expect("default document serializes"), "file")
+    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&En1990Snapshot::default()).expect("default document serializes"), "file")
     .workflow(VARIANT, LABEL, "compliance")
 }
 //#endregion 🔖️Manifest
@@ -172,7 +172,7 @@ mod tests {
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<En1990Command> {
         vec![
-            En1990Command::SetDocument(set_document::SetDocument { document: Document::default() }),
+            En1990Command::SetDocument(set_document::SetDocument { document: En1990Snapshot::default() }),
             En1990Command::Evaluate(evaluate::Evaluate {}),
             En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         ]
@@ -257,7 +257,7 @@ mod tests {
     #[test]
     fn set_document_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1990Command::SetDocument(set_document::SetDocument { document: Document::default() }));
+        testkit::dispatch(&mut app, En1990Command::SetDocument(set_document::SetDocument { document: En1990Snapshot::default() }));
         let host = NormHost::<En1990Family>::from_document(app.projection().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
@@ -292,10 +292,10 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1990Command::SetDocument(set_document::SetDocument { document: Document::default() }));
+        testkit::dispatch(&mut app, En1990Command::SetDocument(set_document::SetDocument { document: En1990Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection"), Document::default());
+        assert_eq!(app.projection().expect("projection"), En1990Snapshot::default());
     }
 
     /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.

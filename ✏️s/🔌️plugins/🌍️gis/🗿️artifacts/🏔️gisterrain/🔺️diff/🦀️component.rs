@@ -1,7 +1,3 @@
-//! 🔺️ GIS terrain artifact — the operation diff and its `MutationDiff` law (split out of the old
-//! constitutional `op` crate).
-
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
@@ -9,71 +5,115 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
+pub use super::schema::*;
 
-//#region 🔖️Diff
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Gis3dTerrainDiff {
-    pub document: Option<Gis3dTerrainDocument>,
-    pub exaggeration: Option<f64>,
-    pub imported_features_json: Option<String>,
+use crate::artifacts::gisterrain::schema::GisTerrainArtifact;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use protocol::MutationDiff;
+
+//#region 🔹Apply
+impl GisTerrainDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> GisTerrainArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(value) = self.exaggeration {
+            next.exaggeration = value;
+        }
+        if let Some(value) = &self.imported_features_json {
+            next.imported_features_json = value.clone();
+        }
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
+        }
+        if let Some(value) = &self.camera_json {
+            next.camera_json = value.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        next
+    }
 }
 
-impl MutationDiff<Gis3dTerrainDocument> for Gis3dTerrainDiff {
-    fn apply(&self, projection: &Gis3dTerrainDocument) -> Gis3dTerrainDocument {
-        if let Some(document) = &self.document {
-            return document.clone();
+impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
+    fn apply(&self, snapshot: &GisTerrainSnapshot) -> GisTerrainSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
         }
-        let mut next = projection.clone();
-        if let Some(exaggeration) = self.exaggeration {
-            next.exaggeration = exaggeration;
+        let mut next = snapshot.clone();
+        if let Some(value) = self.exaggeration {
+            next.exaggeration = value;
         }
-        if let Some(imported_features_json) = &self.imported_features_json {
-            next.imported_features_json = imported_features_json.clone();
+        if let Some(value) = &self.imported_features_json {
+            next.imported_features_json = value.clone();
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.document.is_some() {
-            *self = Gis3dTerrainDiff { document: other.document, ..Default::default() };
+        if other.artifact.is_some() {
+            *self = other;
             return;
         }
-        if other.exaggeration.is_some() {
-            self.exaggeration = other.exaggeration;
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
         }
-        if other.imported_features_json.is_some() {
-            self.imported_features_json = other.imported_features_json;
-        }
+        take!(exaggeration);
+        take!(imported_features_json);
+        take!(selected_ids);
+        take!(camera_json);
+        take!(locale);
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔹Apply
 
-//#region 🧪️Tests
+//#region 🔹Helpers
+/// ⚡️ Diff helpers used by mutations.
+pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
+    GisTerrainDiff { exaggeration: Some(exaggeration), ..Default::default() }
+}
+
+pub fn diff_imported_features_json(features_json: String) -> GisTerrainDiff {
+    GisTerrainDiff { imported_features_json: Some(features_json), ..Default::default() }
+}
+
+pub fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
+    GisTerrainDiff {
+        artifact: Some(Box::new(GisTerrainArtifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔹Helpers
+
+//#region 🔹Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn field_diffs_absorb_last_writer_wins_and_apply_onto_the_projection() {
-        let base = Gis3dTerrainDocument { exaggeration: 1.0, imported_features_json: String::new() };
-        let mut diff = Gis3dTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
-        diff.absorb(Gis3dTerrainDiff { exaggeration: Some(3.0), imported_features_json: Some("null".into()), ..Default::default() });
+    fn field_diffs_absorb_last_writer_wins_and_apply_onto_the_snapshot() {
+        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new() };
+        let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
+        diff.absorb(GisTerrainDiff { exaggeration: Some(3.0), imported_features_json: Some("null".into()), ..Default::default() });
         let next = diff.apply(&base);
         assert_eq!(next.exaggeration, 3.0);
         assert_eq!(next.imported_features_json, "null");
     }
 
     #[test]
-    fn a_whole_document_diff_wins_over_every_field_diff() {
-        let base = Gis3dTerrainDocument { exaggeration: 1.0, imported_features_json: String::new() };
-        let replacement = Gis3dTerrainDocument { exaggeration: 9.0, imported_features_json: "{}".into() };
-        let mut diff = Gis3dTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
-        diff.absorb(Gis3dTerrainDiff { document: Some(replacement.clone()), ..Default::default() });
+    fn a_whole_artifact_diff_wins_over_every_field_diff() {
+        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new() };
+        let replacement = GisTerrainSnapshot { exaggeration: 9.0, imported_features_json: "{}".into() };
+        let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
+        diff.absorb(diff_set_snapshot(&replacement));
         assert_eq!(diff.apply(&base), replacement);
     }
 }
-//#endregion 🧪️Tests
+//#endregion 🔹Tests

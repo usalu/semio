@@ -31,7 +31,7 @@ pub struct RewriteSnapshot {
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for RewriteSnapshot {
     const EXTENSION: &'static str = "rewrite";
-    fn envelope_id() -> &'static str { "rewrite" }
+    fn envelope_id() -> &'static str { "trinity.rewrite" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,

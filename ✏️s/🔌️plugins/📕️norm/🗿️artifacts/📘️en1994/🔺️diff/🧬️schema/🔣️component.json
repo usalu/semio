@@ -1,0 +1,133 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1994/diff.json",
+  "title": "En1994Diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "En1994Artifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "mEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "mPla": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "mPlRd": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "eta": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vLRd": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "insulationThicknessMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fireRating": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "deckType": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "deltaSigmaMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fatigueDetail": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "dMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "hScMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fCkMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fUMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "eCmMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "vEdPerStudKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "spanM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "fYMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "nCyclesStud": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "deltaTauStudMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    }
+  }
+}

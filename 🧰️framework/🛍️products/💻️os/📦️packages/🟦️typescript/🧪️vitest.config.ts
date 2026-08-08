@@ -11,16 +11,16 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-os": resolve(root, "📦️index.ts"),
+      "@semio-tech/framework-os": resolve(root, "🟦️glue.ts"),
     },
   },
   test: {
     name: "@semio-tech/framework-os",
     mode: "test",
     environment: "node",
-    include: ["📦️index.ts", "🟦️backbone-worker.ts"],
-    coverage: { include: ["📦️index.ts", "🟦️backbone-worker.ts"] },
-    includeSource: ["📦️index.ts", "🟦️backbone-worker.ts"],
+    include: ["../../🟦️component.ts", "../../🟦️backbone-worker.ts"],
+    coverage: { include: ["../../🟦️component.ts", "../../🟦️backbone-worker.ts"] },
+    includeSource: ["../../🟦️component.ts", "../../🟦️backbone-worker.ts"],
     passWithNoTests: false,
   },
 });

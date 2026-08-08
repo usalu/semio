@@ -33,23 +33,23 @@ pub fn decode_op(bytes: &[u8]) -> Result<FlowMutation, protocol::ProtocolError> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::FlowFixture;
+    use crate::artifacts::flow::FlowSnapshot;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = FlowMutation::SetLayout { entries: Vec::new() };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
     fn flow_document_text_round_trips_store_with_applied_operation() {
-        let envelope = store::create_document_envelope::<FlowFixture, FlowMutation>("flow.fixture", "doc-text-test", FlowFixture::default(), None);
+        let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.fixture", "doc-text-test", FlowSnapshot::default(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
         doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![FlowMutation::SetLayout { entries: Vec::new() }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&doc_store);
-        store::test_support::assert_document_pack_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_text_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 }
 //#endregion 🧪️Tests

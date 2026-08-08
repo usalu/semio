@@ -1,0 +1,14 @@
+# 🧬️ Iso16757 snapshot schema — persistent fields only.
+
+type Iso16757Snapshot {
+  catalogue: String! @state(class: PERSISTENT)
+  dictionary: String! @state(class: PERSISTENT)
+  geometry: String! @state(class: PERSISTENT)
+  selection: String! @state(class: PERSISTENT)
+  partNumberRule: String! @state(class: PERSISTENT)
+  partNumberInputs: [Iso16757StringMapEntry!]! @state(class: PERSISTENT)
+  scriptLimits: String! @state(class: PERSISTENT)
+  exchangeProcess: String! @state(class: PERSISTENT)
+}
+
+type Iso16757StringMapEntry { key: String! value: String! }

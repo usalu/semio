@@ -3,7 +3,7 @@
 
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::GisMapDocument;
+use crate::artifacts::gismap::GisMapSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

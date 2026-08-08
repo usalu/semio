@@ -16,7 +16,7 @@ use crate::apps::flow::modes::generate::windows::{form, generations, preview};
 use crate::apps::flow::modes::{edit, generate};
 use crate::apps::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
-use crate::artifacts::flow::{op::FlowMutation, FlowFixture, FLOW_DOCUMENT_SCHEMA};
+use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession, Widget};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel,
@@ -57,7 +57,7 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break.**
-    pub enum FlowCommand for FlowFixture, FlowMutation, FlowConfig, FlowConfigMutation, ctx = FlowEvalSession {
+    pub enum FlowCommand for FlowSnapshot, FlowMutation, FlowConfig, FlowConfigMutation, ctx = FlowEvalSession {
         "addWidget" as "add-widget" => add_widget::AddWidget,
         "removeWidget" as "remove-widget" => remove_widget::RemoveWidget,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
@@ -123,7 +123,7 @@ use widget::{add_widget, move_media_node, patch_flow_widgets, remove_widget, ren
 
 //#region 🔖️ContextMenu
 /// 🖱️ On-demand flow node-graph context menu from surface hit-test and selection snapshot.
-fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowFixture, config: &FlowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
+fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot, config: &FlowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, Menu};
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
@@ -207,7 +207,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowFixture, 
 pub struct FlowPlayApp;
 
 impl DocumentApp for FlowPlayApp {
-    type Projection = FlowFixture;
+    type Snapshot = FlowSnapshot;
     type Mutation = FlowMutation;
     type Config = FlowConfig;
     type ConfigMutation = FlowConfigMutation;
@@ -219,8 +219,8 @@ impl DocumentApp for FlowPlayApp {
     const APP_ID: &'static str = FLOW_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> FlowFixture {
-        FlowFixture::default()
+    fn initial_snapshot() -> FlowSnapshot {
+        FlowSnapshot::default()
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -230,20 +230,20 @@ impl DocumentApp for FlowPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
-    fn pending_effects(doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
-        with_process_flow_eval_session(|session| eval::evaluate_result(doc.projection, cfg.projection, session).effects)
+    fn pending_effects(doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
+        with_process_flow_eval_session(|session| eval::evaluate_result(doc.snapshot, cfg.snapshot, session).effects)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
+        let fixture = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = flow_play_labels(config);
         with_process_flow_eval_session(|session| match body_key {
             FLOW_PLAY_BODY_MAIN => main::render(fixture, config, session),
@@ -258,15 +258,15 @@ impl DocumentApp for FlowPlayApp {
         })
     }
 
-    fn window_measures(_doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
+    fn window_measures(_doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.snapshot;
         HashMap::from([(main::FLOW_PLAY_WINDOW_MAIN.to_string(), main::window_measures(config, flow_play_labels(config)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let config = cfg.projection;
+    fn context_menu(request: &ContextMenuRequest, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let config = cfg.snapshot;
         let is_de = config.locale.starts_with("de");
-        flow_context_menu_items(registry, doc.projection, config, flow_play_labels(config), is_de, request.surface.as_ref())
+        flow_context_menu_items(registry, doc.snapshot, config, flow_play_labels(config), is_de, request.surface.as_ref())
     }
 }
 //#endregion 🔖️FlowPlayApp
@@ -372,7 +372,7 @@ pub(crate) mod testkit {
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
             for (plugin_id, manifest) in [
-                ("flow-extension-core", semio_s_plugin_flow_extension_core::extension_manifest_json()),
+                ("flow-extension-primitive", semio_s_plugin_flow_extension_primitive::extension_manifest_json()),
                 ("flow-extension-math", semio_s_plugin_flow_extension_math::extension_manifest_json()),
                 ("flow-extension-text", semio_s_plugin_flow_extension_text::extension_manifest_json()),
                 ("flow-extension-logic", semio_s_plugin_flow_extension_logic::extension_manifest_json()),
@@ -446,7 +446,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -475,13 +475,14 @@ mod tests {
                 "add-widget kind=neuron neuron-kind=math.add",
                 "010002086d6174682e616464066e6575726f6e02000601010600",
             ),
-            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: None }), "set-grid-visible", "01170000"),
-            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }), "set-grid-visible pressed=true", "011700010002"),
+            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: None }), "set-grid-visible", "01180000"),
+            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }), "set-grid-visible pressed=true", "011800010002"),
         ];
         for (command, text, hex) in cases {
-            assert_eq!(protocol::OpText::print_op(&command), text);
-            assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            let encoded = protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
+            assert_eq!(protocol::OpText::print_op(&command), text, "text for {command:?}");
+            assert_eq!(encoded, hex, "hex for {command:?}");
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -499,13 +500,14 @@ mod tests {
             FlowCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
             FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "n1".into(), value: "renamed".into() }),
             FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                mutations: vec![
-                    node_graph::FlowNodeGraphEditOp::SetFixture { fixture_json: "{}".into() },
+                operations: vec![
+                    node_graph::FlowNodeGraphEditOp::SetSnapshot { snapshot_json: "{}".into() },
                     node_graph::FlowNodeGraphEditOp::DeleteSelection,
                     node_graph::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
                 ],
             }),
-            FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { mutations: vec![node_graph::FlowNodeGraphEditOp::DeleteSelection] }),
+            FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit {
+                operations: vec![node_graph::FlowNodeGraphEditOp::DeleteSelection] }),
             FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
             FlowCommand::Evaluate(evaluate::Evaluate {}),
             FlowCommand::SelectAll(select_all::SelectAll {}),
@@ -561,8 +563,8 @@ mod tests {
     #[test]
     fn undo_restores_fixture_after_add_widget() {
         let mut app = flow_app();
-        let before = app.projection().expect("projection").widgets.len();
-        assert_undo_redo_round_trip(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }), |app| app.projection().expect("projection").widgets.len(), before, before + 1);
+        let before = app.snapshot().expect("snapshot").widgets.len();
+        assert_undo_redo_round_trip(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }), |app| app.snapshot().expect("snapshot").widgets.len(), before, before + 1);
     }
 
     #[test]
@@ -594,8 +596,8 @@ mod tests {
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
 
-        let projection_a = instance_a.projection().expect("projection a");
-        let projection_b = instance_b.projection().expect("projection b");
+        let projection_a = instance_a.snapshot().expect("snapshot a");
+        let projection_b = instance_b.snapshot().expect("snapshot b");
         assert!(projection_a.widgets.iter().any(|widget| widget_id(widget) == "input"), "A keeps its rename");
         assert!(projection_a.widgets.iter().any(|widget| matches!(widget, Widget::InputNote { .. })), "A absorbs B's note");
         assert_eq!(projection_a.widgets.len(), projection_b.widgets.len(), "both instances converge to the same widget set");

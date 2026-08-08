@@ -1,3 +1,8 @@
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+773 -     type Snapshot = crate::artifacts::cad::CadSnapshot;
 773 +     type Snapshot = CadSnapshot;
     |
 
@@ -17,4 +22,4 @@ warning: unused doc comment
     = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
 
 warning: `semio-s-plugin-cad` (lib) generated 13 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 12 suggestions)
-    Finished `dev` profile [unoptimized] target(s) in 2.40s
+    Finished `dev` profile [unoptimized] target(s) in 0.25s

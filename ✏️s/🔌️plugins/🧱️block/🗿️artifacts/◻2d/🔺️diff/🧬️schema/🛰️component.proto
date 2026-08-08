@@ -1,0 +1,145 @@
+syntax = "proto3";
+package semio.s.block.block2d.diff;
+
+// 🧬️ Block2d diff schema — sparse field delta.
+
+message Block2dDiff {
+  // @state persistent
+  optional Block2dArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional BlockKindIdentity node_kind = 3;
+  // @state persistent
+  optional Block2dPresentation presentation = 4;
+  // @state persistent
+  optional Block2dHandleKindsDelta handle_kinds = 5;
+  // @state persistent
+  optional Block2dHandlesDelta handles = 6;
+  // @state persistent
+  optional Block2dCompatibilityDelta compatibility = 7;
+  // @state persistent
+  optional Block2dAttributesDelta attributes = 8;
+  // @state persistent
+  optional Block2dAuthorList authors = 9;
+  // @state persistent
+  optional BlockCamera2d camera2d = 10;
+  // @state persistent
+  optional BlockMeta meta = 11;
+  // @state shared-ui
+  optional Block2dStringList selected_ids = 12;
+  // @state local-ui
+  optional string locale = 13;
+}
+
+message BlockKindIdentity {
+  bool _placeholder = 1;
+}
+
+message Block2dPresentation {
+  bool _placeholder = 1;
+}
+
+message Block2dHandleKind {
+  bool _placeholder = 1;
+}
+
+message Block2dHandleTemplate {
+  bool _placeholder = 1;
+}
+
+message BlockCompatibilityRule {
+  bool _placeholder = 1;
+}
+
+message BlockAttribute {
+  bool _placeholder = 1;
+}
+
+message BlockAuthor {
+  bool _placeholder = 1;
+}
+
+message BlockCamera2d {
+  bool _placeholder = 1;
+}
+
+message BlockMeta {
+  bool _placeholder = 1;
+}
+
+message Block2dStringList {
+  repeated string values = 1;
+}
+
+message Block2dAuthorList {
+  repeated BlockAuthor values = 1;
+}
+
+message Block2dHandleKindsDelta {
+  repeated Block2dHandleKind added = 1;
+  repeated string removed = 2;
+  repeated Block2dHandleKindsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block2dHandleKindsPatchEntry {
+  string id = 1;
+  Block2dHandleKindsPatch patch = 2;
+}
+
+message Block2dHandleKindsPatch {
+  optional Block2dHandleKind replacement = 1;
+}
+
+message Block2dHandlesDelta {
+  repeated Block2dHandleTemplate added = 1;
+  repeated string removed = 2;
+  repeated Block2dHandlesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block2dHandlesPatchEntry {
+  string id = 1;
+  Block2dHandlesPatch patch = 2;
+}
+
+message Block2dHandlesPatch {
+  optional Block2dHandleTemplate replacement = 1;
+}
+
+message Block2dCompatibilityDelta {
+  repeated BlockCompatibilityRule added = 1;
+  repeated string removed = 2;
+  repeated Block2dCompatibilityPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block2dCompatibilityPatchEntry {
+  string id = 1;
+  Block2dCompatibilityPatch patch = 2;
+}
+
+message Block2dCompatibilityPatch {
+  optional BlockCompatibilityRule replacement = 1;
+}
+
+message Block2dAttributesDelta {
+  repeated BlockAttribute added = 1;
+  repeated string removed = 2;
+  repeated Block2dAttributesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Block2dAttributesPatchEntry {
+  string id = 1;
+  Block2dAttributesPatch patch = 2;
+}
+
+message Block2dAttributesPatch {
+  optional BlockAttribute replacement = 1;
+}
+
+message Block2dArtifact {
+  string schema = 1;
+}

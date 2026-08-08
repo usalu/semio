@@ -208,7 +208,7 @@ pub fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, St
     Ok(tokens)
 }
 
-fn lex(input: &str) -> Result<Vec<Token>, String> {
+pub fn lex(input: &str) -> Result<Vec<Token>, String> {
     lex_spanned(input, false).map(|spanned| spanned.into_iter().map(|row| row.token).collect())
 }
 

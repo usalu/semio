@@ -1,8 +1,8 @@
 //! 📍️ Remodel mutation — `SetGcps` apply.
-use crate::artifacts::remodel::RemodelProjection;
+use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Mutation
-pub fn apply(next: &mut RemodelProjection, gcps: &Vec<crate::artifacts::remodel::GroundControlPoint>) {
+pub fn apply(next: &mut RemodelSnapshot, gcps: &Vec<crate::artifacts::remodel::GroundControlPoint>) {
     next.gcps = gcps.clone();
 }
 //#endregion 🔖️Mutation

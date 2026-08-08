@@ -19,7 +19,7 @@ pub struct JackEditorSelection {
 /// LOD mode, a completion-request revision counter, and the BCP-47 locale tag.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "jackcfg")]
+#[dsl(extension = "trinity.jackcfg")]
 #[dsl(layout = "lines")]
 pub struct JackConfig {
     pub selected_node_ids: Vec<String>,
@@ -277,6 +277,7 @@ impl protocol::Mutation<JackConfig> for JackConfigMutation {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use protocol::Mutation;
     use super::*;
 
     #[test]
@@ -296,25 +297,25 @@ mod tests {
             ..JackConfig::default()
         };
         config.lod_mode_by_window.insert("trinity-jack-graph".into(), "compact".into());
-        store::test_support::assert_dsl_round_trip(&config);
-        store::test_support::assert_dsl_pack_equivalence(&config);
+        ::store::os_store::test_support::assert_dsl_round_trip(&config);
+        ::store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
     fn jack_config_operation_backwards_restores_prior_snapshot() {
         let base = JackConfig::default();
         let operation = JackConfigMutation::SetSelection { node_ids: vec!["n1".into()] };
-        let next = protocol::Mutation::diff(&operation, &base);
+        let next = operation.diff(&base);
         assert_eq!(next.selected_node_ids, vec!["n1".to_string()]);
-        let backwards = protocol::Mutation::backwards(&operation, &base);
-        let restored = protocol::Mutation::diff(&backwards[0], &next);
+        let backwards = operation.inverse(&base);
+        let restored = backwards[0].diff(&next);
         assert_eq!(restored, base);
     }
 
     #[test]
     fn jack_config_operation_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() });
-        store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() });
+        ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
     }
 }
 //#endregion 🧪️Tests

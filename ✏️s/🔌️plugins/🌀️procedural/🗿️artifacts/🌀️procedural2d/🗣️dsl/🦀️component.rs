@@ -44,8 +44,7 @@ pub struct ValueDsl {
     decimal: Option<f64>,
     text: Option<String>,
     #[dsl(key = "dict")]
-    dictionary: Option<Vec<DictEntryDsl>>,
-}
+    dictionary: Option<Vec<DictEntryDsl>>}
 
 /// 🗝️ One `Dictionary`/`Value::Dictionary` entry — a `Vec` of `(key, value)` records rather than a
 /// bare `Shape::Map` (`{ key=value }`): a `Shape::Map` key is a bare identifier, but real `Dictionary`
@@ -54,8 +53,7 @@ pub struct ValueDsl {
 pub struct DictEntryDsl {
     key: String,
     #[dsl(block)]
-    value: ValueDsl,
-}
+    value: ValueDsl}
 
 fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
     let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
@@ -65,8 +63,7 @@ fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
         NeuralValue::Atom(Atom::Integer(i)) => dsl_value.integer = Some(*i),
         NeuralValue::Atom(Atom::Decimal(d)) => dsl_value.decimal = Some(*d),
         NeuralValue::Atom(Atom::String(s)) => dsl_value.text = Some(s.clone()),
-        NeuralValue::Dictionary(dict) => dsl_value.dictionary = Some(dictionary_to_value_dsl_entries(dict)),
-    }
+        NeuralValue::Dictionary(dict) => dsl_value.dictionary = Some(dictionary_to_value_dsl_entries(dict))}
     dsl_value
 }
 
@@ -88,8 +85,7 @@ fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
     }
     match &dsl_value.dictionary {
         Some(entries) => NeuralValue::Dictionary(value_dsl_entries_to_dictionary(entries)),
-        None => NeuralValue::Atom(Atom::Null),
-    }
+        None => NeuralValue::Atom(Atom::Null)}
 }
 
 pub fn dictionary_to_value_dsl_entries(dict: &Dictionary) -> Vec<DictEntryDsl> {
@@ -105,8 +101,7 @@ pub fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictionary {
 pub struct CameraJsonDsl {
     x: f64,
     y: f64,
-    zoom: f64,
-}
+    zoom: f64}
 
 pub fn camera_to_dsl(camera: &CameraJson) -> CameraJsonDsl {
     CameraJsonDsl { x: camera.x, y: camera.y, zoom: camera.zoom }
@@ -120,8 +115,7 @@ pub fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct WidgetLayoutDsl {
     x: f64,
-    y: f64,
-}
+    y: f64}
 
 pub fn layout_to_dsl(layout: &WidgetLayout) -> WidgetLayoutDsl {
     WidgetLayoutDsl { x: layout.x, y: layout.y }
@@ -136,8 +130,7 @@ pub fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct SynapseSpecDsl {
     id: String,
-    wire: dsl::Wire,
-}
+    wire: dsl::Wire}
 
 pub fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
     SynapseSpecDsl {
@@ -146,9 +139,7 @@ pub fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
             from: dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) },
             edge: Some((true, dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) })),
             edge_label: dsl::WireEdgeLabel::default(),
-            properties: dsl::DslValue::Object(Vec::new()),
-        }),
-    }
+            properties: dsl::DslValue::Object(Vec::new())})}
 }
 
 pub fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
@@ -168,49 +159,39 @@ pub enum WidgetDsl {
         input_ports: Vec<String>,
         output_ports: Vec<String>,
         #[dsl(table)]
-        params: Vec<DictEntryDsl>,
-    },
+        params: Vec<DictEntryDsl>},
     InputSlider {
         id: String,
         value: f64,
         min: f64,
         max: f64,
-        step: f64,
-    },
+        step: f64},
     InputNote {
         id: String,
-        text: String,
-    },
+        text: String},
     InputImage {
         id: String,
-        src: String,
-    },
+        src: String},
     Variable {
         id: String,
         name: String,
-        schema: String,
-    },
+        schema: String},
     OutputPreview {
         id: String,
         #[dsl(table)]
         preview: Vec<DictEntryDsl>,
-        expanded: Vec<String>,
-    },
+        expanded: Vec<String>},
     OutputAction {
         id: String,
-        action: String,
-    },
+        action: String},
     OutputExport {
         id: String,
-        format: String,
-    },
+        format: String},
     Cluster {
         id: String,
         name: String,
         tree: dsl::DslValue,
-        flow: dsl::DslValue,
-    },
-}
+        flow: dsl::DslValue}}
 
 pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
     match widget {
@@ -224,8 +205,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_value_dsl_entries(preview), expanded: expanded.iter().cloned().collect() },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
-        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) },
-    }
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) }}
 }
 
 pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
@@ -242,9 +222,7 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
             id,
             name,
             tree: dsl::from_dsl_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree: {error}"), store::TextSpan::at(1, 1)))?,
-            flow: dsl::from_dsl_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?,
-        },
-    })
+            flow: dsl::from_dsl_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?}})
 }
 
 /// 🧬️ Local twin of `flow::playbook::FormGeneration`.
@@ -252,8 +230,7 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
 pub struct FormGenerationDsl {
     id: String,
     name: String,
-    values: BTreeMap<String, dsl::DslValue>,
-}
+    values: BTreeMap<String, dsl::DslValue>}
 
 pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
     FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))).collect() }
@@ -280,8 +257,7 @@ struct Procedural2dSnapshotDsl {
     selected_generation_id: Option<String>,
     preview_text: Option<String>,
     #[dsl(table)]
-    generations: Vec<FormGenerationDsl>,
-}
+    generations: Vec<FormGenerationDsl>}
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for Procedural2dSnapshotDsl {
@@ -290,8 +266,7 @@ impl store::DocumentDsl for Procedural2dSnapshotDsl {
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
+            Err(_) => text};
         let record = dsl::parse(
             body,
             &Self::__dsl_spec(),
@@ -351,8 +326,7 @@ fn procedural2d_document_to_dsl(document: &Procedural2dSnapshot) -> Procedural2d
         layout: fixture.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
         selected_generation_id: generation.selected_generation_id.clone(),
         preview_text: generation.preview_text.clone(),
-        generations: generation.generations.iter().map(form_generation_to_dsl).collect(),
-    }
+        generations: generation.generations.iter().map(form_generation_to_dsl).collect()}
 }
 
 fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Result<Procedural2dSnapshot, store::TextError> {
@@ -361,8 +335,7 @@ fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Result<Pro
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Procedural2dSnapshot {
         fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
-        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
-    })
+        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }})
 }
 
 /// 📜️ `.procedural2d` textual document — derive-engine grammar via `Procedural2dSnapshotDsl`.
@@ -408,7 +381,8 @@ pub fn print_dsl(document: &Procedural2dSnapshot) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA;
-    use store::{test_support, DocumentDsl};
+    use semio_framework_os_kernel::os_store::test_support;
+    use store::{DocumentDsl};
 
     //#region 🔖️DslTests
     #[test]

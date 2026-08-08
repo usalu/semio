@@ -2,7 +2,7 @@
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::{
     CalibrationState, CameraTrajectory, DenseCloud, DenseParams, FeatureParams, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams, MatchParams, MediaStream, MeshParams, MotionParams, MotionTrackSummary, QcReportSnapshot,
-    ReconstructionJob, RemodelMesh, RemodelProjection, SfmParams, SparseCloud,
+    ReconstructionJob, RemodelMesh, RemodelSnapshot, SfmParams, SparseCloud,
 };
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -102,14 +102,14 @@ pub enum RemodelMutation {
 }
 
 /// @emoji ▶️ Applies one mutation, returning the next projection.
-pub fn apply_remodel_mutation(scene: &RemodelProjection, mutation: &RemodelMutation) -> RemodelProjection {
+pub fn apply_remodel_mutation(scene: &RemodelSnapshot, mutation: &RemodelMutation) -> RemodelSnapshot {
     let mut next = scene.clone();
     apply_remodel_mutation_in_place(&mut next, mutation);
     next
 }
 
 /// @emoji ▶️ Applies one mutation to the projection in place.
-pub fn apply_remodel_mutation_in_place(next: &mut RemodelProjection, mutation: &RemodelMutation) {
+pub fn apply_remodel_mutation_in_place(next: &mut RemodelSnapshot, mutation: &RemodelMutation) {
     match mutation {
         RemodelMutation::SetStreams { streams } => super::set_streams::mutation::apply(next, streams),
         RemodelMutation::SetAsset { key, value } => super::set_asset::mutation::apply(next, key, value),
@@ -135,7 +135,7 @@ pub fn apply_remodel_mutation_in_place(next: &mut RemodelProjection, mutation: &
 }
 
 /// @emoji ↩️ Computes the inverse mutations from pre-state.
-pub fn inverse_remodel_mutation(base: &RemodelProjection, mutation: &RemodelMutation) -> Vec<RemodelMutation> {
+pub fn inverse_remodel_mutation(base: &RemodelSnapshot, mutation: &RemodelMutation) -> Vec<RemodelMutation> {
     match mutation {
         RemodelMutation::SetStreams { .. } => super::set_streams::inverse::inverse(base),
         RemodelMutation::SetAsset { key, .. } => super::set_asset::inverse::inverse(base, key),
@@ -160,35 +160,115 @@ pub fn inverse_remodel_mutation(base: &RemodelProjection, mutation: &RemodelMuta
     }
 }
 
-impl Mutation<RemodelProjection> for RemodelMutation {
+impl Mutation<RemodelSnapshot> for RemodelMutation {
     type Diff = RemodelDiff;
 
-    fn diff(&self, _projection: &RemodelProjection) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
         match self {
-            RemodelMutation::SetStreams { streams } => RemodelDiff::SetStreams { streams: streams.clone() },
-            RemodelMutation::SetAsset { key, value } => RemodelDiff::SetAsset { key: key.clone(), value: value.clone() },
-            RemodelMutation::SetCalibration { calibration } => RemodelDiff::SetCalibration { calibration: calibration.clone() },
-            RemodelMutation::SetGcps { gcps } => RemodelDiff::SetGcps { gcps: gcps.clone() },
-            RemodelMutation::SetIngestParams { params } => RemodelDiff::SetIngestParams { params: params.clone() },
-            RemodelMutation::SetFeatureParams { params } => RemodelDiff::SetFeatureParams { params: params.clone() },
-            RemodelMutation::SetMatchParams { params } => RemodelDiff::SetMatchParams { params: params.clone() },
-            RemodelMutation::SetSfmParams { params } => RemodelDiff::SetSfmParams { params: params.clone() },
-            RemodelMutation::SetDenseParams { params } => RemodelDiff::SetDenseParams { params: params.clone() },
-            RemodelMutation::SetMeshParams { params } => RemodelDiff::SetMeshParams { params: params.clone() },
-            RemodelMutation::SetMotionParams { params } => RemodelDiff::SetMotionParams { params: params.clone() },
-            RemodelMutation::SetGeoParams { params } => RemodelDiff::SetGeoParams { params: params.clone() },
-            RemodelMutation::SetJob { job } => RemodelDiff::SetJob { job: job.clone() },
-            RemodelMutation::SetSparse { sparse } => RemodelDiff::SetSparse { sparse: sparse.clone() },
-            RemodelMutation::SetDense { dense } => RemodelDiff::SetDense { dense: dense.clone() },
-            RemodelMutation::SetMeshResult { mesh } => RemodelDiff::SetMeshResult { mesh: mesh.clone() },
-            RemodelMutation::SetTrajectory { trajectory } => RemodelDiff::SetTrajectory { trajectory: trajectory.clone() },
-            RemodelMutation::SetTracks { tracks } => RemodelDiff::SetTracks { tracks: tracks.clone() },
-            RemodelMutation::SetGeoProducts { geo } => RemodelDiff::SetGeoProducts { geo: geo.clone() },
-            RemodelMutation::SetQc { qc } => RemodelDiff::SetQc { qc: qc.clone() },
+            RemodelMutation::SetStreams { streams } => RemodelDiff {
+                streams: Some(crate::artifacts::remodel::diff::RemodelMediaStreamList { values: streams.clone() }),
+                ..Default::default()
+            },
+            RemodelMutation::SetAsset { key, value } => {
+                let mut assets = base.assets.clone();
+                match value {
+                    Some(asset) => {
+                        assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        assets.remove(key);
+                    }
+                }
+                RemodelDiff { assets: Some(assets), ..Default::default() }
+            }
+            RemodelMutation::SetCalibration { calibration } => RemodelDiff {
+                calibration: Some(calibration.clone()),
+                ..Default::default()
+            },
+            RemodelMutation::SetGcps { gcps } => RemodelDiff {
+                gcps: Some(crate::artifacts::remodel::diff::RemodelGcpList { values: gcps.clone() }),
+                ..Default::default()
+            },
+            RemodelMutation::SetIngestParams { params } => {
+                let mut next = base.params.clone();
+                next.ingest = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetFeatureParams { params } => {
+                let mut next = base.params.clone();
+                next.feature = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetMatchParams { params } => {
+                let mut next = base.params.clone();
+                next.matching = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetSfmParams { params } => {
+                let mut next = base.params.clone();
+                next.sfm = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetDenseParams { params } => {
+                let mut next = base.params.clone();
+                next.dense = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetMeshParams { params } => {
+                let mut next = base.params.clone();
+                next.mesh = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetMotionParams { params } => {
+                let mut next = base.params.clone();
+                next.motion = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetGeoParams { params } => {
+                let mut next = base.params.clone();
+                next.geo = params.clone();
+                RemodelDiff { params: Some(next), ..Default::default() }
+            }
+            RemodelMutation::SetJob { job } => RemodelDiff { job: Some(job.clone()), ..Default::default() },
+            RemodelMutation::SetSparse { sparse } => {
+                let mut results = base.results.clone();
+                results.sparse = sparse.clone();
+                RemodelDiff { results: Some(results), ..Default::default() }
+            }
+            RemodelMutation::SetDense { dense } => {
+                let mut results = base.results.clone();
+                results.dense = dense.clone();
+                RemodelDiff { results: Some(results), ..Default::default() }
+            }
+            RemodelMutation::SetMeshResult { mesh } => {
+                let mut results = base.results.clone();
+                results.mesh = (**mesh).clone();
+                RemodelDiff { results: Some(results), ..Default::default() }
+            }
+            RemodelMutation::SetTrajectory { trajectory } => {
+                let mut results = base.results.clone();
+                results.trajectory = trajectory.clone();
+                RemodelDiff { results: Some(results), ..Default::default() }
+            }
+            RemodelMutation::SetTracks { tracks } => {
+                let mut results = base.results.clone();
+                results.tracks = tracks.clone();
+                RemodelDiff { results: Some(results), ..Default::default() }
+            }
+            RemodelMutation::SetGeoProducts { geo } => {
+                let mut results = base.results.clone();
+                results.geo = geo.clone();
+                RemodelDiff { results: Some(results), ..Default::default() }
+            }
+            RemodelMutation::SetQc { qc } => {
+                let mut results = base.results.clone();
+                results.qc = qc.clone();
+                RemodelDiff { results: Some(results), ..Default::default() }
+            }
         }
     }
 
-    fn inverse(&self, projection: &RemodelProjection) -> Vec<Self> {
+    fn inverse(&self, projection: &RemodelSnapshot) -> Vec<Self> {
         inverse_remodel_mutation(projection, self)
     }
 }
@@ -465,7 +545,7 @@ mod tests {
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder (see that
     /// crate's `populated_scene_fixture` doc comment) — needed here so every `RemodelMutation`
     /// variant below can be exercised against a document that actually populates every field.
-    fn populated_scene_fixture() -> RemodelProjection {
+    fn populated_scene_fixture() -> RemodelSnapshot {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -552,32 +632,32 @@ mod tests {
     fn every_operation_variant_roundtrips_through_op_text() {
         let scene = populated_scene_fixture();
 
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetStreams { streams: scene.streams.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetAsset { key: "asset-1".into(), value: scene.assets.get("asset-1").cloned() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetAsset { key: "asset-2".into(), value: None });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetCalibration { calibration: scene.calibration.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGcps { gcps: scene.gcps.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetIngestParams { params: scene.params.ingest.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetFeatureParams { params: scene.params.feature.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMatchParams { params: scene.params.matching.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetSfmParams { params: scene.params.sfm.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetDenseParams { params: scene.params.dense.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMeshParams { params: scene.params.mesh.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMotionParams { params: scene.params.motion.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGeoParams { params: scene.params.geo.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetJob { job: scene.job.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetSparse { sparse: scene.results.sparse.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetSparse { sparse: None });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetDense { dense: scene.results.dense.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetDense { dense: None });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMeshResult { mesh: Box::new(scene.results.mesh.clone()) });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetTrajectory { trajectory: scene.results.trajectory.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetTrajectory { trajectory: None });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetTracks { tracks: scene.results.tracks.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGeoProducts { geo: scene.results.geo.clone() });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGeoProducts { geo: None });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetQc { qc: scene.results.qc });
-        store::test_support::assert_op_line_round_trip(&RemodelMutation::SetQc { qc: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetStreams { streams: scene.streams.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetAsset { key: "asset-1".into(), value: scene.assets.get("asset-1").cloned() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetAsset { key: "asset-2".into(), value: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetCalibration { calibration: scene.calibration.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGcps { gcps: scene.gcps.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetIngestParams { params: scene.params.ingest.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetFeatureParams { params: scene.params.feature.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMatchParams { params: scene.params.matching.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetSfmParams { params: scene.params.sfm.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetDenseParams { params: scene.params.dense.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMeshParams { params: scene.params.mesh.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMotionParams { params: scene.params.motion.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGeoParams { params: scene.params.geo.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetJob { job: scene.job.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetSparse { sparse: scene.results.sparse.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetSparse { sparse: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetDense { dense: scene.results.dense.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetDense { dense: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetMeshResult { mesh: Box::new(scene.results.mesh.clone()) });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetTrajectory { trajectory: scene.results.trajectory.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetTrajectory { trajectory: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetTracks { tracks: scene.results.tracks.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGeoProducts { geo: scene.results.geo.clone() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetGeoProducts { geo: None });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetQc { qc: scene.results.qc });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelMutation::SetQc { qc: None });
     }
     //#endregion 🔖️OpText
 }

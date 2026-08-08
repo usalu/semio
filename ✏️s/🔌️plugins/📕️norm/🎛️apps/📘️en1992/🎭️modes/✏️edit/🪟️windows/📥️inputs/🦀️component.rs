@@ -1,6 +1,6 @@
 //! 📥️ EN 1992 play app — the inputs window: the raw compliance document, rendered as JSON.
 
-use crate::artifacts::en1992::Document;
+use crate::artifacts::en1992::En1992Snapshot;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 
 //#region 🔖️Constants

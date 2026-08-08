@@ -1,0 +1,17 @@
+# 🧬️ Din18599 snapshot schema — persistent fields only.
+
+type Din18599Snapshot {
+  useClass: String! @state(class: PERSISTENT)
+  heatedAreaM2: Float! @state(class: PERSISTENT)
+  occupants: Int! @state(class: PERSISTENT)
+  hT: Float! @state(class: PERSISTENT)
+  hV: Float! @state(class: PERSISTENT)
+  climate: String! @state(class: PERSISTENT)
+  internalGainsWM2: Float! @state(class: PERSISTENT)
+  solarGainsKwh: Float! @state(class: PERSISTENT)
+  systemLossesKwh: Float! @state(class: PERSISTENT)
+  renewableKwh: Float! @state(class: PERSISTENT)
+  annualLimitKwh: Float! @state(class: PERSISTENT)
+  energyCarrier: String! @state(class: PERSISTENT)
+  referenceQPKwh: Float! @state(class: PERSISTENT)
+}

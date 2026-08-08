@@ -1,0 +1,158 @@
+# 🧬️ En1993 diff schema — sparse field delta.
+
+type En1993Diff {
+  artifact: En1993Artifact @state(class: PERSISTENT)
+  annex: String @state(class: PERSISTENT)
+  nEdKn: Float @state(class: PERSISTENT)
+  mEdKnm: Float @state(class: PERSISTENT)
+  vEdKn: Float @state(class: PERSISTENT)
+  aMm2: Float @state(class: PERSISTENT)
+  aVMm2: Float @state(class: PERSISTENT)
+  wPlMm3: Float @state(class: PERSISTENT)
+  fYMpa: Float @state(class: PERSISTENT)
+  fUMpa: Float @state(class: PERSISTENT)
+  chi: Float @state(class: PERSISTENT)
+  aNetMm2: Float @state(class: PERSISTENT)
+  tensionNEdKn: Float @state(class: PERSISTENT)
+  fireThicknessMm: Float @state(class: PERSISTENT)
+  fireRating: String @state(class: PERSISTENT)
+  fireMassivity: Float @state(class: PERSISTENT)
+  fireMu0: Float @state(class: PERSISTENT)
+  fireDesignTemperatureC: Float @state(class: PERSISTENT)
+  cfBBarMm: Float @state(class: PERSISTENT)
+  cfTMm: Float @state(class: PERSISTENT)
+  cfKSigma: Float @state(class: PERSISTENT)
+  cfPsi: Float @state(class: PERSISTENT)
+  cfNEdKn: Float @state(class: PERSISTENT)
+  cfGrossResistanceKn: Float @state(class: PERSISTENT)
+  stainlessMEdKnm: Float @state(class: PERSISTENT)
+  stainlessWPlMm3: Float @state(class: PERSISTENT)
+  stainlessFYMpa: Float @state(class: PERSISTENT)
+  platedLambdaP: Float @state(class: PERSISTENT)
+  platedSigmaEdMpa: Float @state(class: PERSISTENT)
+  siloTMm: Float @state(class: PERSISTENT)
+  siloRMm: Float @state(class: PERSISTENT)
+  shellSigmaXEdMpa: Float @state(class: PERSISTENT)
+  siloK: Float @state(class: PERSISTENT)
+  siloGammaKnM3: Float @state(class: PERSISTENT)
+  siloDepthM: Float @state(class: PERSISTENT)
+  boltFEdKn: Float @state(class: PERSISTENT)
+  boltNBolts: Int @state(class: PERSISTENT)
+  boltASMm2: Float @state(class: PERSISTENT)
+  boltE1Mm: Float @state(class: PERSISTENT)
+  boltE2Mm: Float @state(class: PERSISTENT)
+  boltD0Mm: Float @state(class: PERSISTENT)
+  boltDMm: Float @state(class: PERSISTENT)
+  boltTMm: Float @state(class: PERSISTENT)
+  boltFUMpa: Float @state(class: PERSISTENT)
+  boltFUbMpa: Float @state(class: PERSISTENT)
+  weldAMm: Float @state(class: PERSISTENT)
+  weldLMm: Float @state(class: PERSISTENT)
+  weldFUMpa: Float @state(class: PERSISTENT)
+  weldSteelGrade: String @state(class: PERSISTENT)
+  weldFEdKn: Float @state(class: PERSISTENT)
+  deltaSigmaMpa: Float @state(class: PERSISTENT)
+  fatigueCategory: Int @state(class: PERSISTENT)
+  fatigueMethod: String @state(class: PERSISTENT)
+  t10SteelSubgrade: String @state(class: PERSISTENT)
+  t10ActualThicknessMm: Float @state(class: PERSISTENT)
+  t10TEdC: Float @state(class: PERSISTENT)
+  tensionComponentFUkKn: Float @state(class: PERSISTENT)
+  tensionComponentFKKn: Float @state(class: PERSISTENT)
+  tensionComponentNEdKn: Float @state(class: PERSISTENT)
+  hssWElMm3: Float @state(class: PERSISTENT)
+  hssFYMpa: Float @state(class: PERSISTENT)
+  hssSectionClass: Int @state(class: PERSISTENT)
+  hssMEdKnm: Float @state(class: PERSISTENT)
+  bridgeLambda: Float @state(class: PERSISTENT)
+  bridgePhi2: Float @state(class: PERSISTENT)
+  bridgeDeltaSigmaPMpa: Float @state(class: PERSISTENT)
+  towerWindFactor: Float @state(class: PERSISTENT)
+  towerNEdKn: Float @state(class: PERSISTENT)
+  pileSigmaMpa: Float @state(class: PERSISTENT)
+  pileKRed: Float @state(class: PERSISTENT)
+  pileNEdKn: Float @state(class: PERSISTENT)
+  craneFZEdKn: Float @state(class: PERSISTENT)
+  craneWheelContactLengthMm: Float @state(class: PERSISTENT)
+  craneDispersionMm: Float @state(class: PERSISTENT)
+  craneTWMm: Float @state(class: PERSISTENT)
+  selectedCheckIndex: Int @state(class: SHARED_UI)
+}
+
+type En1993Artifact {
+  annex: String
+  nEdKn: Float
+  mEdKnm: Float
+  vEdKn: Float
+  aMm2: Float
+  aVMm2: Float
+  wPlMm3: Float
+  fYMpa: Float
+  fUMpa: Float
+  chi: Float
+  aNetMm2: Float
+  tensionNEdKn: Float
+  fireThicknessMm: Float
+  fireRating: String
+  fireMassivity: Float
+  fireMu0: Float
+  fireDesignTemperatureC: Float
+  cfBBarMm: Float
+  cfTMm: Float
+  cfKSigma: Float
+  cfPsi: Float
+  cfNEdKn: Float
+  cfGrossResistanceKn: Float
+  stainlessMEdKnm: Float
+  stainlessWPlMm3: Float
+  stainlessFYMpa: Float
+  platedLambdaP: Float
+  platedSigmaEdMpa: Float
+  siloTMm: Float
+  siloRMm: Float
+  shellSigmaXEdMpa: Float
+  siloK: Float
+  siloGammaKnM3: Float
+  siloDepthM: Float
+  boltFEdKn: Float
+  boltNBolts: Int
+  boltASMm2: Float
+  boltE1Mm: Float
+  boltE2Mm: Float
+  boltD0Mm: Float
+  boltDMm: Float
+  boltTMm: Float
+  boltFUMpa: Float
+  boltFUbMpa: Float
+  weldAMm: Float
+  weldLMm: Float
+  weldFUMpa: Float
+  weldSteelGrade: String
+  weldFEdKn: Float
+  deltaSigmaMpa: Float
+  fatigueCategory: Int
+  fatigueMethod: String
+  t10SteelSubgrade: String
+  t10ActualThicknessMm: Float
+  t10TEdC: Float
+  tensionComponentFUkKn: Float
+  tensionComponentFKKn: Float
+  tensionComponentNEdKn: Float
+  hssWElMm3: Float
+  hssFYMpa: Float
+  hssSectionClass: Int
+  hssMEdKnm: Float
+  bridgeLambda: Float
+  bridgePhi2: Float
+  bridgeDeltaSigmaPMpa: Float
+  towerWindFactor: Float
+  towerNEdKn: Float
+  pileSigmaMpa: Float
+  pileKRed: Float
+  pileNEdKn: Float
+  craneFZEdKn: Float
+  craneWheelContactLengthMm: Float
+  craneDispersionMm: Float
+  craneTWMm: Float
+  selectedCheckIndex: Int
+}

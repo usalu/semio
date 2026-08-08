@@ -29,6 +29,7 @@ flow = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨�
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 serde.workspace = true
 serde_json.workspace = true

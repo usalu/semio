@@ -1,0 +1,8 @@
+test artifacts::cad::engine::interaction::tests::box_interaction_commits_after_height ... ok
+test artifacts::cad::engine::interaction::tests::sphere_interaction_commits_via_command_finish ... ok
+test apps::cad::component::tests::undo_redo_round_trips_added_object_through_wrapper ... ok
+test apps::cad::component::tests::forest_example_uses_per_object_brep_meshes ... ok
+test apps::cad::component::tests::renders_world_scene_for_each_pane ... ok
+
+test result: ok. 124 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.26s
+

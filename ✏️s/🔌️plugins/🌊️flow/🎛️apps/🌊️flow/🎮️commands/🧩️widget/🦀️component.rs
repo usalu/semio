@@ -7,8 +7,8 @@
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{host_operations, widget_id};
-use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
-use flow::{flow_fixture_operations, FlowEvalSession, Widget};
+use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use flow::{ FlowEvalSession, Widget};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -18,7 +18,6 @@ pub mod add_widget {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "add-widget")]
     pub struct AddWidget {
         pub kind: String,
         pub neuron_kind: Option<String>,
@@ -26,7 +25,7 @@ pub mod add_widget {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let descriptor = match payload.kind.as_str() {
             "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.as_deref().unwrap_or("math.add") }).to_string(),
             other => json!({ "kind": other }).to_string(),
@@ -34,7 +33,7 @@ pub mod add_widget {
         let x = payload.x.unwrap_or(120.0);
         let y = payload.y.unwrap_or(120.0);
         let mut new_id = None;
-        let operations = host_operations(doc.projection, cfg.projection, session, |host| match host.add_widget(&descriptor, x, y) {
+        let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| match host.add_widget(&descriptor, x, y) {
             Ok(id) => {
                 new_id = Some(id);
                 true
@@ -54,15 +53,14 @@ pub mod remove_widget {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "remove-widget")]
     pub struct RemoveWidget {
         pub widget_id: String,
     }
 
-    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let target_id = &payload.widget_id;
-        let operations = host_operations(doc.projection, config, session, |host| host.remove_widget(target_id).is_ok());
+        let operations = host_operations(doc.snapshot, config, session, |host| host.remove_widget(target_id).is_ok());
         if operations.is_empty() {
             return Ok(Emit::default());
         }
@@ -81,7 +79,6 @@ pub mod rename_flow_widget {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "rename-flow-widget")]
     pub struct RenameFlowWidget {
         pub old_id: String,
         pub value: String,
@@ -89,7 +86,7 @@ pub mod rename_flow_widget {
 
     /// ✏️ Renames a widget id (rewiring synapses and layout) purely in the fixture; `None` if the target
     /// id is blank, unchanged, or already taken.
-    fn renamed_fixture(fixture: &FlowFixture, old_id: &str, new_id: &str) -> Option<FlowFixture> {
+    fn renamed_fixture(fixture: &FlowSnapshot, old_id: &str, new_id: &str) -> Option<FlowSnapshot> {
         let trimmed = new_id.trim();
         if trimmed.is_empty() || trimmed == old_id || fixture.widgets.iter().any(|widget| widget_id(widget) == trimmed) {
             return None;
@@ -124,12 +121,12 @@ pub mod rename_flow_widget {
         Some(next)
     }
 
-    pub fn handle(payload: &RenameFlowWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        let fixture = doc.projection;
-        let config = cfg.projection;
+    pub fn handle(payload: &RenameFlowWidget, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        let fixture = doc.snapshot;
+        let config = cfg.snapshot;
         match renamed_fixture(fixture, &payload.old_id, &payload.value) {
             Some(next) => Ok(Emit {
-                document_mutations: flow_fixture_operations(fixture, &next),
+                document_mutations: crate::artifacts::flow::engine::snapshot_operations(fixture, &next),
                 config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
                 ..Default::default()
             }),
@@ -144,7 +141,6 @@ pub mod patch_flow_widgets {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "patch-flow-widgets")]
     pub struct PatchFlowWidgets {
         pub widget_ids: Vec<String>,
         pub field: String,
@@ -155,7 +151,7 @@ pub mod patch_flow_widgets {
     /// clone. `value` is the typed command field verbatim (a plain `&str`, not a `serde_json::Value` —
     /// mirrors `dag_engine::node_patch_for_field`'s "typed command carries the raw UI input string
     /// directly" convention) — numeric fields parse it themselves.
-    fn patched_widgets_fixture(fixture: &FlowFixture, widget_ids: &[String], field: &str, raw_value: &str) -> FlowFixture {
+    fn patched_widgets_fixture(fixture: &FlowSnapshot, widget_ids: &[String], field: &str, raw_value: &str) -> FlowSnapshot {
         let mut next = fixture.clone();
         for widget in next.widgets.iter_mut() {
             if !widget_ids.iter().any(|id| id == widget_id(widget)) {
@@ -174,10 +170,10 @@ pub mod patch_flow_widgets {
         next
     }
 
-    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        let fixture = doc.projection;
+    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        let fixture = doc.snapshot;
         let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
-        let operations = flow_fixture_operations(fixture, &next);
+        let operations = crate::artifacts::flow::engine::snapshot_operations(fixture, &next);
         if operations.is_empty() {
             Ok(Emit::default())
         } else {
@@ -192,15 +188,14 @@ pub mod move_media_node {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "move-media-node")]
     pub struct MoveMediaNode {
         pub node_id: String,
         pub x: f64,
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-        let operations = host_operations(doc.projection, cfg.projection, session, |host| {
+    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| {
             host.begin_change();
             host.move_widget(&payload.node_id, payload.x, payload.y).is_ok()
         });
@@ -223,10 +218,10 @@ mod tests {
     #[test]
     fn add_widget_emits_operations_and_selects_the_new_widget() {
         let mut app = flow_app();
-        let before = app.projection().expect("projection").widgets.len();
+        let before = app.snapshot().expect("snapshot").widgets.len();
         let result = dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }));
-        assert!(!result.document_mutations.is_empty(), "addWidget must emit operations");
-        assert_eq!(app.projection().expect("projection").widgets.len(), before + 1);
+        assert!(!result.mutations.is_empty(), "addWidget must emit operations");
+        assert_eq!(app.snapshot().expect("snapshot").widgets.len(), before + 1);
     }
 
     #[test]
@@ -234,7 +229,7 @@ mod tests {
         let mut app = flow_app();
         for value in ["", " ", "slider"] {
             let result = dispatch(&mut app, FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: value.into() }));
-            assert!(result.document_mutations.is_empty(), "rename to {value:?} must be a no-operation");
+            assert!(result.mutations.is_empty(), "rename to {value:?} must be a no-operation");
         }
     }
 
@@ -242,8 +237,8 @@ mod tests {
     fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() }));
-        let patched = app.projection().expect("projection");
-        assert!(patched.widgets.iter().any(|widget| matches!(widget, Widget::InputSlider { id, value, .. } if id == "slider" && (*value - 7.5).abs() < f64::EPSILON)), "slider must carry the parsed value: {patched:?}");
+        let patched = app.snapshot().expect("snapshot");
+        assert!(patched.widgets.iter().any(|widget| matches!(widget, Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)), "slider must carry the parsed value: {patched:?}");
     }
 }
 //#endregion 🧪️Tests

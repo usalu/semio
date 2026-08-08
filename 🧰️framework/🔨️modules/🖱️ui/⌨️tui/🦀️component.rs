@@ -1328,24 +1328,6 @@ pub mod layout {
 // #endregion 🔖️Layout
 
 // #region 🔖️Widget
-#[path = "../../../../🧱️elements/☑️Select/⌨️component.rs"]
-mod select;
-#[path = "../../../../🧱️elements/📃️List/⌨️component.rs"]
-mod list;
-#[path = "../../../../🧱️elements/📑️Tabs/⌨️component.rs"]
-mod tabs;
-#[path = "../../../../🧱️elements/✏️Input/⌨️component.rs"]
-mod input;
-#[path = "../../../../🧱️elements/🪵️Log/⌨️component.rs"]
-mod log;
-#[path = "../../../../🧱️elements/📊️Table/⌨️component.rs"]
-mod table;
-#[path = "../../../../🧱️elements/🏷️Label/⌨️component.rs"]
-mod label;
-#[path = "../../../../🧱️elements/➖️Divider/⌨️component.rs"]
-mod divider;
-#[path = "../../../../🧱️elements/🏷️Chip/⌨️component.rs"]
-mod chip;
 
 pub mod widget {
     use crate::tui::cell::CellBuffer;
@@ -1605,12 +1587,6 @@ pub mod widget {
 // #endregion 🔖️Widget
 
 // #region 🔖️Chrome
-#[path = "../../../../🧱️elements/🔝️Navbar/⌨️component.rs"]
-mod navbar;
-#[path = "../../../../🧱️elements/🔚️Footer/⌨️component.rs"]
-mod footer;
-#[path = "../../../../🧱️elements/🪟️Window/⌨️component.rs"]
-mod window;
 
 pub mod chrome {
     use crate::tui::cell::{Cell, CellBuffer};

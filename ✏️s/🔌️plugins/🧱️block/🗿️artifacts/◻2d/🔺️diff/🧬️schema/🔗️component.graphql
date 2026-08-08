@@ -1,0 +1,109 @@
+# 🧬️ Block2d diff schema — sparse field delta.
+
+type Block2dDiff {
+  artifact: Block2dArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  nodeKind: BlockKindIdentity @state(class: PERSISTENT)
+  presentation: Block2dPresentation @state(class: PERSISTENT)
+  handleKinds: Block2dHandleKindsDelta @state(class: PERSISTENT)
+  handles: Block2dHandlesDelta @state(class: PERSISTENT)
+  compatibility: Block2dCompatibilityDelta @state(class: PERSISTENT)
+  attributes: Block2dAttributesDelta @state(class: PERSISTENT)
+  authors: Block2dAuthorList @state(class: PERSISTENT)
+  camera2d: BlockCamera2d @state(class: PERSISTENT)
+  meta: BlockMeta @state(class: PERSISTENT)
+  selectedIds: Block2dStringList @state(class: SHARED_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type BlockKindIdentity { _placeholder: Boolean }
+
+type Block2dPresentation { _placeholder: Boolean }
+
+type Block2dHandleKind { _placeholder: Boolean }
+
+type Block2dHandleTemplate { _placeholder: Boolean }
+
+type BlockCompatibilityRule { _placeholder: Boolean }
+
+type BlockAttribute { _placeholder: Boolean }
+
+type BlockAuthor { _placeholder: Boolean }
+
+type BlockCamera2d { _placeholder: Boolean }
+
+type BlockMeta { _placeholder: Boolean }
+
+type Block2dStringList {
+  values: [String!]!
+}
+
+type Block2dAuthorList {
+  values: [BlockAuthor!]!
+}
+
+type Block2dHandleKindsDelta {
+  added: [Block2dHandleKind!]!
+  removed: [String!]!
+  patched: [Block2dHandleKindsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block2dHandleKindsPatchEntry {
+  id: String!
+  patch: Block2dHandleKindsPatch!
+}
+
+type Block2dHandleKindsPatch {
+  replacement: Block2dHandleKind
+}
+
+type Block2dHandlesDelta {
+  added: [Block2dHandleTemplate!]!
+  removed: [String!]!
+  patched: [Block2dHandlesPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block2dHandlesPatchEntry {
+  id: String!
+  patch: Block2dHandlesPatch!
+}
+
+type Block2dHandlesPatch {
+  replacement: Block2dHandleTemplate
+}
+
+type Block2dCompatibilityDelta {
+  added: [BlockCompatibilityRule!]!
+  removed: [String!]!
+  patched: [Block2dCompatibilityPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block2dCompatibilityPatchEntry {
+  id: String!
+  patch: Block2dCompatibilityPatch!
+}
+
+type Block2dCompatibilityPatch {
+  replacement: BlockCompatibilityRule
+}
+
+type Block2dAttributesDelta {
+  added: [BlockAttribute!]!
+  removed: [String!]!
+  patched: [Block2dAttributesPatchEntry!]!
+  reordered: [String!]
+}
+
+type Block2dAttributesPatchEntry {
+  id: String!
+  patch: Block2dAttributesPatch!
+}
+
+type Block2dAttributesPatch {
+  replacement: BlockAttribute
+}
+
+type Block2dArtifact { schema: String! }

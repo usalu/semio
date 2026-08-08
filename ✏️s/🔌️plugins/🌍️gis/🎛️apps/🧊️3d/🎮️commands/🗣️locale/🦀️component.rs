@@ -2,8 +2,8 @@
 //! the command palette; host/test infra dispatches it directly).
 
 use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
-use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
-use crate::artifacts::gisterrain::Gis3dTerrainDocument;
+use crate::artifacts::gisterrain::op::GisTerrainMutation;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis3dConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

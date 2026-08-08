@@ -3,7 +3,7 @@
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::artifacts::gismap::engine::{gis_map_document_from_descriptor_json, positions_operations};
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{GisMapDocument, MapFeaturePatch};
+use crate::artifacts::gismap::{GisMapSnapshot, MapFeaturePatch};
 use dsl::DslValue;
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 //#region 🔖️RouteHelpers
 /// 🌉️ Shared `patchRoutes`/`patchRoute` implementation — a single route id (`patchRoute`) is just a
 /// one-element slice of the many-route form (`patchRoutes`).
-pub fn patch_routes_operations(document: &GisMapDocument, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapMutation, Gis2dConfigMutation> {
+pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapMutation, Gis2dConfigMutation> {
     if route_ids.is_empty() {
         return Emit::default();
     }
@@ -49,12 +49,12 @@ pub mod patch_positions {
         pub positions_json: String,
     }
 
-    pub fn handle(payload: &PatchPositions, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchPositions, doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let Ok(positions) = serde_json::from_str::<Value>(&payload.positions_json) else {
             return Ok(Emit::default());
         };
         let next = gis_map_document_from_descriptor_json(&json!({ "positions": positions }).to_string()).positions;
-        Ok(Emit::mutations(positions_operations(&doc.projection.positions, &next)))
+        Ok(Emit::mutations(positions_operations(&doc.snapshot.positions, &next)))
     }
 }
 //#endregion 🔖️PatchPositions
@@ -71,8 +71,8 @@ pub mod patch_routes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoutes, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        Ok(patch_routes_operations(doc.projection, &payload.route_ids, &payload.field, &payload.value))
+    pub fn handle(payload: &PatchRoutes, doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        Ok(patch_routes_operations(doc.snapshot, &payload.route_ids, &payload.field, &payload.value))
     }
 }
 //#endregion 🔖️PatchRoutes
@@ -89,8 +89,8 @@ pub mod patch_route {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoute, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        Ok(patch_routes_operations(doc.projection, std::slice::from_ref(&payload.route_id), &payload.field, &payload.value))
+    pub fn handle(payload: &PatchRoute, doc: &DocumentView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        Ok(patch_routes_operations(doc.snapshot, std::slice::from_ref(&payload.route_id), &payload.field, &payload.value))
     }
 }
 //#endregion 🔖️PatchRoute
@@ -110,7 +110,7 @@ mod tests {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_A.into(), field: "label".into(), value: "Renamed Route".into() }));
         assert_eq!(result.mutations.len(), 1, "one matching route → one patch operation");
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         let route = document.routes.iter().find(|route| route.id == ROUTE_A).expect("route");
         assert_eq!(route.data.get("label").and_then(|value| value.as_str()), Some("Renamed Route"));
     }
@@ -133,7 +133,7 @@ mod tests {
     fn patch_positions_diffs_the_incoming_array_into_granular_operations() {
         let mut app = app();
         dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"patched-1","lon":1.0,"lat":2.0}]"#.into() }));
-        let document = app.projection().expect("projection");
+        let document = app.snapshot().expect("projection");
         assert!(document.positions.iter().any(|feature| feature.id == "patched-1"), "the incoming array is diffed into a granular add");
         assert_eq!(document.positions.len(), 1, "features absent from the incoming array are removed");
     }
@@ -144,9 +144,9 @@ mod tests {
     fn two_instances_converge_on_disjoint_route_edits() {
         let command_a = Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_A.into(), field: "label".into(), value: "A".into() });
         let command_b = Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_B.into(), field: "label".into(), value: "B".into() });
-        let label = |document: &GisMapDocument, id: &str| document.routes.iter().find(|route| route.id == id).and_then(|route| route.data.get("label").and_then(|value| value.as_str().map(str::to_string)));
+        let label = |document: &GisMapSnapshot, id: &str| document.routes.iter().find(|route| route.id == id).and_then(|route| route.data.get("label").and_then(|value| value.as_str().map(str::to_string)));
         semio_framework_plugin::testkit::assert_two_instances_converge::<crate::apps::gis2d::Gis2dPlayApp, _>("mem://gis2d-convergence", command_a, command_b, |app| {
-            let document = app.projection().expect("projection");
+            let document = app.snapshot().expect("projection");
             (label(&document, ROUTE_A), label(&document, ROUTE_B))
         });
     }

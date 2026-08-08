@@ -11,7 +11,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 use crate::artifacts::jack::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
 use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::{EntityRef, GraphFixture, PropertyValue};
+use crate::artifacts::jack::{EntityRef, JackSnapshot, PropertyValue};
 use protocol::{OpBinary, OpText};
 use store::TextError;
 
@@ -54,7 +54,7 @@ impl From<EntityRefDsl> for EntityRef {
 
 /// ⚡️ Local mirror of `TrinityGraphMutation` for `protocol::OpText`/`OpBinary` — `entity: EntityRef`
 /// and `ports`/`fixture` fields transitively carry foreign/tuple-variant shapes, so the real enum
-/// can't derive `dsl::DslOps` directly. `fixture: GraphFixture` binds through `GraphFixture`'s own
+/// can't derive `dsl::DslOps` directly. `fixture: JackSnapshot` binds through `JackSnapshot`'s own
 /// hand-written `dsl::DslField` impl (in `🗣️dsl`) unchanged.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum TrinityGraphOperationDsl {
@@ -101,7 +101,7 @@ enum TrinityGraphOperationDsl {
         key: String,
     },
     SetFixture {
-        fixture: GraphFixture,
+        fixture: JackSnapshot,
     },
 }
 //#region 🔖️HandcraftedOpCodecs
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn rename_op_binary_round_trips_and_agrees_with_text() {
         let operation = TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        ::store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -231,23 +231,23 @@ mod tests {
         let envelope = create_document_envelope_for_test();
         let mut doc_store = store::DocumentStore::new(envelope);
         doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() }], description: None }).ok();
-        store::test_support::assert_document_text_round_trip(&doc_store);
-        store::test_support::assert_document_pack_round_trip(&doc_store);
+        ::store::os_store::test_support::assert_document_text_round_trip(&doc_store);
+        ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
-    fn create_document_envelope_for_test() -> store::DocumentEnvelope<GraphFixture, TrinityGraphMutation> {
-        create_document_envelope::<GraphFixture, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::engine::empty_jack_document(), None)
+    fn create_document_envelope_for_test() -> store::DocumentEnvelope<JackSnapshot, TrinityGraphMutation> {
+        create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::engine::empty_jack_document(), None)
     }
     use store::create_document_envelope;
 
     #[test]
     fn rename_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() });
     }
 
     #[test]
     fn op_text_round_trip_create_node() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::CreateNode {
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::CreateNode {
             id: "new".into(),
             kind: "Piece".into(),
             name: "new-piece".into(),
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_delete_node() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::DeleteNode { id: "root".into() });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::DeleteNode { id: "root".into() });
     }
 
     #[test]
@@ -271,7 +271,7 @@ mod tests {
         let mut nested = std::collections::BTreeMap::new();
         nested.insert("x".into(), PropertyValue::Number(0.0));
         properties.insert("meta".into(), PropertyValue::Object(nested));
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::CreateEdge {
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::CreateEdge {
             id: "e2".into(),
             kind: "Connection".into(),
             source: crate::artifacts::jack::port_key("root", "out-a"),
@@ -282,32 +282,32 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_delete_edge() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::DeleteEdge { id: "e1".into() });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::DeleteEdge { id: "e1".into() });
     }
 
     #[test]
     fn op_text_round_trip_rename() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Rename { id: "root".into(), name: "renamed \"piece\"".into() });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Rename { id: "root".into(), name: "renamed \"piece\"".into() });
     }
 
     #[test]
     fn op_text_round_trip_reposition() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Reposition { id: "root".into(), x: 10.0, y: -20.5 });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Reposition { id: "root".into(), x: 10.0, y: -20.5 });
     }
 
     #[test]
     fn op_text_round_trip_set_data_property() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("hi 'there'".into()) });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("hi 'there'".into()) });
     }
 
     #[test]
     fn op_text_round_trip_clear_data_property() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::ClearDataProperty { entity: EntityRef::Edge("e1".into()), key: "u".into() });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::ClearDataProperty { entity: EntityRef::Edge("e1".into()), key: "u".into() });
     }
 
     #[test]
     fn op_text_round_trip_set_fixture() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::SetFixture { fixture: crate::artifacts::jack::engine::empty_jack_document() });
+        ::store::os_store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::SetFixture { fixture: crate::artifacts::jack::engine::empty_jack_document() });
     }
 
     #[test]
@@ -325,7 +325,7 @@ mod tests {
         crate::artifacts::jack::op::dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() }]).unwrap_or(());
         if let Some(edit) = store.envelope().vcs.edits.last() {
             let edit: &Edit<TrinityGraphMutation> = edit;
-            store::test_support::assert_command_envelope_round_trip::<GraphFixture, TrinityGraphMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+            ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
         }
     }
 }

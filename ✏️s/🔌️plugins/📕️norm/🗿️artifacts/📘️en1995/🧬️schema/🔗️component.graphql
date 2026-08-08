@@ -1,0 +1,25 @@
+# 🧬️ EN 1995 artifact schema.
+
+type En1995Artifact {
+  annex: Float! @state(class: PERSISTENT)
+  mEdKnm: Float! @state(class: PERSISTENT)
+  nEdKn: Float! @state(class: PERSISTENT)
+  vEdKn: Float! @state(class: PERSISTENT)
+  wMm3: Float! @state(class: PERSISTENT)
+  aMm2: Float! @state(class: PERSISTENT)
+  bMm: Float! @state(class: PERSISTENT)
+  hMm: Float! @state(class: PERSISTENT)
+  fMK: Float! @state(class: PERSISTENT)
+  fC0K: Float! @state(class: PERSISTENT)
+  serviceClass: Float! @state(class: PERSISTENT)
+  loadDuration: Float! @state(class: PERSISTENT)
+  mCritKnm: Float! @state(class: PERSISTENT)
+  fEdKn: Float! @state(class: PERSISTENT)
+  aEfMm2: Float! @state(class: PERSISTENT)
+  fVK: Float! @state(class: PERSISTENT)
+  fireDurationMin: Float! @state(class: PERSISTENT)
+  sectionDepthMm: Float! @state(class: PERSISTENT)
+  aVertMS2: Float! @state(class: PERSISTENT)
+  nCyclesBridge: Float! @state(class: PERSISTENT)
+  selectedCheckIndex: Int @state(class: SHARED_UI)
+}

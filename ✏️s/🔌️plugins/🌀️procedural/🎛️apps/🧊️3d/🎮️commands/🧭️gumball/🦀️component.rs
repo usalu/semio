@@ -4,8 +4,7 @@
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::engine::{
-    commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset, host_from_fixture,
-};
+    commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
@@ -56,8 +55,7 @@ pub mod translate_selection {
         pub node_ids: Vec<String>,
         pub dx: f64,
         pub dy: f64,
-        pub dz: f64,
-    }
+        pub dz: f64}
 
     pub fn handle(payload: &TranslateSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -69,8 +67,7 @@ pub mod translate_selection {
             host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
         }) {
             Some((operations, new_selection)) => Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-translate".into()), ..Default::default() }),
-            None => Ok(Emit::default()),
-        }
+            None => Ok(Emit::default())}
     }
 }
 //#endregion 🔖️TranslateSelection
@@ -86,8 +83,7 @@ pub mod rotate_selection {
         pub ax: f64,
         pub ay: f64,
         pub az: f64,
-        pub angle: f64,
-    }
+        pub angle: f64}
 
     pub fn handle(payload: &RotateSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -98,8 +94,7 @@ pub mod rotate_selection {
             host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
         }) {
             Some((operations, new_selection)) => Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-rotate".into()), ..Default::default() }),
-            None => Ok(Emit::default()),
-        }
+            None => Ok(Emit::default())}
     }
 }
 //#endregion 🔖️RotateSelection
@@ -114,8 +109,7 @@ pub mod scale_selection {
         pub node_ids: Vec<String>,
         pub sx: f64,
         pub sy: f64,
-        pub sz: f64,
-    }
+        pub sz: f64}
 
     pub fn handle(payload: &ScaleSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let fixture = &doc.snapshot.fixture;
@@ -126,8 +120,7 @@ pub mod scale_selection {
             host.set_neuron_params(transform_id, &gumball_scale_params_json(current_factor * uniform_factor)).is_ok()
         }) {
             Some((operations, new_selection)) => Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-scale".into()), ..Default::default() }),
-            None => Ok(Emit::default()),
-        }
+            None => Ok(Emit::default())}
     }
 }
 //#endregion 🔖️ScaleSelection

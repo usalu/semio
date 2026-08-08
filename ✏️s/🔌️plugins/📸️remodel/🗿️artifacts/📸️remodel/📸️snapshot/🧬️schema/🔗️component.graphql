@@ -1,0 +1,22 @@
+# 🧬️ Remodel snapshot schema — persistent fields only.
+
+type RemodelSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  streams: [MediaStream!]! @state(class: PERSISTENT)
+  assets: [ImageAssetEntry!]! @state(class: PERSISTENT)
+  calibration: CalibrationState! @state(class: PERSISTENT)
+  params: ReconstructionParams! @state(class: PERSISTENT)
+  gcps: [GroundControlPoint!]! @state(class: PERSISTENT)
+  job: ReconstructionJob! @state(class: PERSISTENT)
+  results: ReconstructionResults! @state(class: PERSISTENT)
+}
+
+type MediaStream { id: String! }
+type ImageAsset { mime: String! }
+type ImageAssetEntry { key: String! value: ImageAsset! }
+type CalibrationState { _placeholder: Boolean }
+type ReconstructionParams { _placeholder: Boolean }
+type GroundControlPoint { id: String! }
+type ReconstructionJob { _placeholder: Boolean }
+type ReconstructionResults { _placeholder: Boolean }

@@ -1,54 +1,88 @@
-//! 🔺️ VDI 3805 artifact — the operation diff and its `MutationDiff` law.
-//!
-//! 📌️ Every norm artifact's sole mutation is a whole-document replace, so its diff is
-//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentMutation<D>`
-//! names as its `Vdi3805Mutation::Diff`, with the `MutationDiff` impl (apply = "take the replacement,
-//! otherwise keep the projection"; absorb = "the later replacement wins") living beside it in
-//! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
-//! binding for this artifact and proves the law against this artifact's own `Document`.
-
+//! 🔺️ Vdi3805 artifact — sparse field diff runtime.
 
 //#region 📖️SemioGrammar
-/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::vdi3805::Document;
+use crate::artifacts::vdi3805::schema::Vdi3805Artifact;
+use crate::artifacts::vdi3805::Vdi3805Snapshot;
+use protocol::MutationDiff;
 
-//#region 🔖️Types
-/// 🔺️ This artifact's concrete operation diff.
-pub type Diff = crate::document::DocumentDiff<Document>;
-//#endregion 🔖️Types
-
-//#region 🧪️Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::artifacts::vdi3805::op::Vdi3805Mutation;
-    use protocol::{Mutation as _, MutationDiff};
-
-    #[test]
-    fn set_document_diff_replaces_the_whole_projection() {
-        let base = Document::default();
-        let mutation = Vdi3805Mutation::SetDocument { document: Document::default() };
-        let diff: Diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base), Document::default());
-    }
-
-    #[test]
-    fn an_empty_diff_keeps_the_projection() {
-        let base = Document::default();
-        assert_eq!(Diff::default().apply(&base), base);
-    }
-
-    #[test]
-    fn absorb_keeps_the_later_replacement() {
-        let base = Document::default();
-        let mut diff = Diff::default();
-        diff.absorb(Diff { document: Some(Document::default()) });
-        assert_eq!(diff.apply(&base), Document::default());
+//#region 🔖️Apply
+impl Vdi3805Diff {
+    pub fn apply_to_artifact(&self, artifact: &Vdi3805Artifact) -> Vdi3805Artifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(value) = self.manufacturer_file { next.manufacturer_file = value; }
+        if let Some(value) = self.catalog { next.catalog = value; }
+        if let Some(value) = self.edition_profile { next.edition_profile = value; }
+        if let Some(value) = self.correction_as_of { next.correction_as_of = value; }
+        if let Some(value) = self.strict_mode { next.strict_mode = value; }
+        if let Some(value) = self.index { next.index = value; }
+        if let Some(value) = self.geometry { next.geometry = value; }
+        if let Some(value) = self.curves { next.curves = value; }
+        if let Some(value) = self.limits { next.limits = value; }
+        if let Some(value) = &self.selected_check_index {
+            next.selected_check_index = *value;
+        }
+        next
     }
 }
-//#endregion 🧪️Tests
+
+impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
+    fn apply(&self, snapshot: &Vdi3805Snapshot) -> Vdi3805Snapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(value) = self.manufacturer_file { next.manufacturer_file = value; }
+        if let Some(value) = self.catalog { next.catalog = value; }
+        if let Some(value) = self.edition_profile { next.edition_profile = value; }
+        if let Some(value) = self.correction_as_of { next.correction_as_of = value; }
+        if let Some(value) = self.strict_mode { next.strict_mode = value; }
+        if let Some(value) = self.index { next.index = value; }
+        if let Some(value) = self.geometry { next.geometry = value; }
+        if let Some(value) = self.curves { next.curves = value; }
+        if let Some(value) = self.limits { next.limits = value; }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(manufacturer_file);
+        take!(catalog);
+        take!(edition_profile);
+        take!(correction_as_of);
+        take!(strict_mode);
+        take!(index);
+        take!(geometry);
+        take!(curves);
+        take!(limits);
+        take!(selected_check_index);
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+pub fn diff_set_snapshot(snapshot: &Vdi3805Snapshot) -> Vdi3805Diff {
+    Vdi3805Diff {
+        artifact: Some(Box::new(Vdi3805Artifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Helpers

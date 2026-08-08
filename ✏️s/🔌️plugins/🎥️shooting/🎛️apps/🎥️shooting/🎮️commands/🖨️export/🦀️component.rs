@@ -9,7 +9,7 @@
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::engine::shooting_icon_render_request_json;
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingFixture, ShootingShot};
+use crate::artifacts::shooting::{ShootingSnapshot, ShootingShot};
 use semio_framework_plugin::{ConfigView, DocumentView, DslValue, Emit, Fault, HostEffect, IconRenderExportItem};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -24,16 +24,16 @@ pub mod export_shots {
         pub all: bool,
     }
 
-    pub fn handle(payload: &ExportShots, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let fixture = doc.projection;
-        let config = cfg.projection;
-        if let Some(asset) = crate::artifacts::shooting::engine::active_asset(fixture) {
-            let shots: Vec<&ShootingShot> = if payload.all { fixture.shots.iter().collect() } else { crate::artifacts::shooting::engine::active_shot(fixture).into_iter().collect() };
+    pub fn handle(payload: &ExportShots, doc: &DocumentView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let config = cfg.snapshot;
+        if let Some(asset) = crate::artifacts::shooting::engine::active_asset(doc.snapshot) {
+            let shots: Vec<&ShootingShot> = if payload.all { snapshot.shots.iter().collect() } else { crate::artifacts::shooting::engine::active_shot(doc.snapshot).into_iter().collect() };
             let items: Vec<IconRenderExportItem> = shots
                 .iter()
                 .map(|shot| IconRenderExportItem {
                     filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                    request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(fixture, shot, asset, &config.camera)).ok().and_then(|value| semio_framework_plugin::to_dsl_value(&value).ok()).unwrap_or(DslValue::Null),
+                    request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera)).ok().and_then(|value| semio_framework_plugin::to_dsl_value(&value).ok()).unwrap_or(DslValue::Null),
                 })
                 .collect();
             if !items.is_empty() {

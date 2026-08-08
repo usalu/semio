@@ -1,6 +1,6 @@
 //! 📜️ Shooting artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::DocumentDsl for ShootingFixture` is implemented directly on the artifact type (see
+//! `store::DocumentDsl for ShootingSnapshot` is implemented directly on the artifact type (see
 //! `🗿️artifacts/🎥️shooting/🦀️component.rs`'s doc comment for why). This component only adds the thin
 //! artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example-fixture constant and its
 //! round-trip law.
@@ -13,32 +13,32 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::shooting::ShootingFixture;
+use crate::artifacts::shooting::ShootingSnapshot;
 
-/// 🗄️ The base-icon example fixture, handcrafted in `shooting`'s DSL (`store::DocumentDsl`).
+/// 🗄️ The base-icon example snapshot, handcrafted in `shooting`'s DSL (`store::DocumentDsl`).
 pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.shooting` DSL text into a `ShootingFixture`.
-pub fn parse_dsl(text: &str) -> Result<ShootingFixture, store::TextError> {
-    <ShootingFixture as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.shooting` DSL text into a `ShootingSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<ShootingSnapshot, store::TextError> {
+    <ShootingSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `ShootingFixture` back to `.shooting` DSL text.
-pub fn print_dsl(fixture: &ShootingFixture) -> String {
-    store::DocumentDsl::print_dsl(fixture)
+/// 🖨️ Prints a `ShootingSnapshot` back to `.shooting` DSL text.
+pub fn print_dsl(snapshot: &ShootingSnapshot) -> String {
+    store::DocumentDsl::print_dsl(snapshot)
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::shooting::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, SHOOTING_FIXTURE_SCHEMA};
+    use crate::artifacts::shooting::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, SHOOTING_DOCUMENT_SCHEMA};
 
     /// 🎞️ A fixture exercising every field/variant, shared verbatim by the DSL and OpText law tests.
-    #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this fixture, not the FRAC_1_SQRT_2 constant")]
-    fn representative_fixture() -> ShootingFixture {
-        ShootingFixture {
-            schema: SHOOTING_FIXTURE_SCHEMA.into(),
+    #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this snapshot, not the FRAC_1_SQRT_2 constant")]
+    fn representative_snapshot() -> ShootingSnapshot {
+        ShootingSnapshot {
+            schema: SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: vec![
                 ShootingAsset { id: "a1".into(), name: "Base \"Mesh\"".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [1.0, 2.0, 3.0], orientation: Some([0.0, 0.0, 0.7071, 0.7071]), scale: Some([2.0, 2.0, 2.0]) },
                 ShootingAsset { id: "a2".into(), name: "Plain".into(), url: "/mesh/a2.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None },
@@ -63,30 +63,31 @@ mod tests {
 
     #[test]
     fn shooting_dsl_round_trips_representative_fixture() {
-        store::test_support::assert_dsl_round_trip(&representative_fixture());
+        store::os_store::test_support::assert_dsl_round_trip(&representative_snapshot());
     }
 
     #[test]
     fn shooting_dsl_round_trips_empty_fixture() {
-        store::test_support::assert_dsl_round_trip(&crate::artifacts::shooting::empty_shooting_fixture());
+        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::shooting::empty_shooting_snapshot());
     }
 
     #[test]
     fn shooting_dsl_round_trips_base_icon_example() {
-        let fixture = parse_dsl(SHOOTING_EXAMPLE_TEXT).expect("base-icon example parses");
-        store::test_support::assert_dsl_round_trip(&fixture);
+        let snapshot = parse_dsl(SHOOTING_EXAMPLE_TEXT).expect("base-icon example parses");
+        store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 
     #[test]
     fn shooting_dsl_angle_deg_field_round_trips_bit_exactly() {
-        let mut fixture = representative_fixture();
-        fixture.saved_cameras[0].camera.fov = 30.0;
-        fixture.scene.sun.azimuth = 30.0;
-        let text = print_dsl(&fixture);
+        let mut snapshot = representative_snapshot();
+        snapshot.saved_cameras[0].camera.fov = 30.0;
+        snapshot.scene.sun.azimuth = 30.0;
+        let text = print_dsl(&snapshot);
         let reparsed = parse_dsl(&text).expect("parse_dsl");
         assert_eq!(reparsed.saved_cameras[0].camera.fov, 30.0);
         assert_eq!(reparsed.scene.sun.azimuth, 30.0);
-        assert_eq!(fixture, reparsed);
+        assert_eq!(snapshot, reparsed);
     }
 }
+
 //#endregion 🧪️Tests

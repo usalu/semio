@@ -1,0 +1,22 @@
+# 🧬️ GIS terrain diff schema — sparse field delta.
+
+type GisTerrainDiff {
+  artifact: GisTerrainArtifact @state(class: PERSISTENT)
+  exaggeration: Float @state(class: PERSISTENT)
+  importedFeaturesJson: String @state(class: PERSISTENT)
+  selectedIds: GisTerrainStringList @state(class: SHARED_UI)
+  cameraJson: String @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type GisTerrainArtifact {
+  exaggeration: Float!
+  importedFeaturesJson: String!
+  selectedIds: [String!]!
+  cameraJson: String!
+  locale: String!
+}
+
+type GisTerrainStringList {
+  values: [String!]!
+}

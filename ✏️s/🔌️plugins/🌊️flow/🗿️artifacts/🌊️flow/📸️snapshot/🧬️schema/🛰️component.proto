@@ -1,0 +1,40 @@
+syntax = "proto3";
+package semio.s.flow.flow.snapshot;
+
+// 🧬️ Flow snapshot schema — persistent fields only.
+
+message FlowSnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  CameraJson camera = 2;
+  // @state persistent
+  repeated Widget widgets = 3;
+  // @state persistent
+  repeated SynapseSpec synapses = 4;
+  // @state persistent
+  map<string, WidgetLayout> layout = 5;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+
+message Widget {
+  string json = 1;
+}

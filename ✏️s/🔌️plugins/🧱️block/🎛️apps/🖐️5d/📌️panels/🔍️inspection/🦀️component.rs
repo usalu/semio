@@ -2,7 +2,7 @@
 
 use crate::apps::block5d::block5d_action;
 use crate::apps::block5d::terminology::Block5dLabels;
-use crate::artifacts::block5d::Block5dDefinition;
+use crate::artifacts::block5d::Block5dSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -52,7 +52,7 @@ fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> Ui
     })
 }
 
-pub fn render(definition: &Block5dDefinition, labels: &Block5dLabels) -> UiNode {
+pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "block5d-play-inspector".into(),
         label: labels.summary.into(),

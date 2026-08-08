@@ -24,15 +24,13 @@ pub mod flow_eval_tick {
             let request_json = serde_json::json!({
                 "operatorId": pending.operator_id,
                 "inputJson": pending.input_json,
-                "nodeHash": pending.node_hash,
-            })
+                "nodeHash": pending.node_hash})
             .to_string();
             effects.push(HostEffect::InvokeExtension {
                 extension_id: pending.extension_id,
                 capability: "evaluate".into(),
                 request_json,
-                response_action: "flowEvalResolve".into(),
-            });
+                response_action: "flowEvalResolve".into()});
         } else if !more {
             let eval_json = session.eval_json().to_string();
             effects.extend(crate::artifacts::procedural3d::engine::preview_tessellate_effects(
@@ -55,8 +53,7 @@ pub mod flow_eval_resolve {
     #[dsl(keyword = "flow-eval-resolve")]
     pub struct FlowEvalResolve {
         pub node_hash: u64,
-        pub output_json: String,
-    }
+        pub output_json: String}
 
     pub fn handle(payload: &FlowEvalResolve, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let _ = session.seed_node_cache(payload.node_hash, &payload.output_json);
@@ -73,8 +70,7 @@ pub mod flow_tessellate_resolve {
     #[dsl(keyword = "flow-tessellate-resolve")]
     pub struct FlowTessellateResolve {
         pub node_hash: u64,
-        pub output_json: String,
-    }
+        pub output_json: String}
 
     pub fn handle(payload: &FlowTessellateResolve, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let _ = session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);

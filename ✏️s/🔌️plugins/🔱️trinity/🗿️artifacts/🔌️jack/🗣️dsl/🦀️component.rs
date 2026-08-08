@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::jack::{Camera, GraphFixture, Node, Port, PortDirection, PropertyBag, TrinityRamError};
+use crate::artifacts::jack::{Camera, JackSnapshot, Node, Port, PortDirection, PropertyBag, TrinityRamError};
 use store::{DocumentDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖️DslMirrors
@@ -85,12 +85,12 @@ fn node_dsl_to_node(node: NodeDsl) -> Node {
     Node { id: node.id, kind: node.kind, name: node.name, x: node.x, y: node.y, width: node.width, height: node.height, properties: node.properties, ports: node.ports.into_iter().map(port_dsl_to_port).collect() }
 }
 
-/// 📦️ Local mirror of `GraphFixture` for the `.trinity` document DSL. `manifest: Manifest` is
+/// 📦️ Local mirror of `JackSnapshot` for the `.trinity` document DSL. `manifest: Manifest` is
 /// deliberately NOT a field here — the manifest is resolved from `manifestId` at load time (see
-/// `GraphFixture::resolve_manifest`), never round-tripped as text.
+/// `JackSnapshot::resolve_manifest`), never round-tripped as text.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(extension = "trinity", layout = "lines")]
-struct GraphFixtureDsl {
+struct JackSnapshotDsl {
     schema: String,
     name: String,
     manifest_id: Option<String>,
@@ -104,9 +104,9 @@ struct GraphFixtureDsl {
 }
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for GraphFixtureDsl {
+impl store::DocumentDsl for JackSnapshotDsl {
     const EXTENSION: &'static str = "trinity";
-    fn envelope_id() -> &'static str { "trinity" }
+    fn envelope_id() -> &'static str { "trinity.jack" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -130,7 +130,7 @@ impl store::DocumentDsl for GraphFixtureDsl {
     }
 }
 
-impl store::DocumentPack for GraphFixtureDsl {
+impl store::DocumentPack for JackSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -160,8 +160,8 @@ impl store::DocumentPack for GraphFixtureDsl {
 
 
 
-fn graph_fixture_to_dsl(fixture: &GraphFixture) -> GraphFixtureDsl {
-    GraphFixtureDsl {
+fn jack_snapshot_to_dsl(fixture: &JackSnapshot) -> JackSnapshotDsl {
+    JackSnapshotDsl {
         schema: fixture.schema.clone(),
         name: fixture.name.clone(),
         manifest_id: fixture.manifest_id.clone(),
@@ -173,8 +173,8 @@ fn graph_fixture_to_dsl(fixture: &GraphFixture) -> GraphFixtureDsl {
 }
 
 /// 🔁️ Reconstructs the real `manifest` field via `resolve_manifest` (looked up from `manifest_id`).
-fn graph_fixture_dsl_to_graph_fixture(parsed: GraphFixtureDsl) -> Result<GraphFixture, TrinityRamError> {
-    let mut fixture = GraphFixture {
+fn jack_snapshot_dsl_to_jack_snapshot(parsed: JackSnapshotDsl) -> Result<JackSnapshot, TrinityRamError> {
+    let mut fixture = JackSnapshot {
         schema: parsed.schema,
         name: parsed.name,
         manifest_id: parsed.manifest_id,
@@ -190,52 +190,53 @@ fn graph_fixture_dsl_to_graph_fixture(parsed: GraphFixtureDsl) -> Result<GraphFi
 //#endregion 🔖️DslMirrors
 
 //#region 🔖️DslDocument
-/// 📜️ `.trinity` textual notation for a whole [`GraphFixture`] (`store::DocumentDsl`), delegating to
-/// the derive-generated `GraphFixtureDsl` mirror. Also hand-implements `dsl::DslField` (normally
-/// auto-emitted alongside `#[derive(dsl::DslRecord)]`) so `GraphFixture` can be nested as an
+/// 📜️ `.trinity` textual notation for a whole [`JackSnapshot`] (`store::DocumentDsl`), delegating to
+/// the derive-generated `JackSnapshotDsl` mirror. Also hand-implements `dsl::DslField` (normally
+/// auto-emitted alongside `#[derive(dsl::DslRecord)]`) so `JackSnapshot` can be nested as an
 /// ordinary field too — `TrinityGraphMutation::SetFixture` embeds a whole fixture snapshot.
-impl DocumentDsl for GraphFixture {
+impl DocumentDsl for JackSnapshot {
     const EXTENSION: &'static str = "trinity";
+    fn envelope_id() -> &'static str { "trinity.jack" }
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let parsed = <GraphFixtureDsl as DocumentDsl>::parse_dsl(text)?;
-        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+        let parsed = <JackSnapshotDsl as DocumentDsl>::parse_dsl(text)?;
+        jack_snapshot_dsl_to_jack_snapshot(parsed).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        <GraphFixtureDsl as DocumentDsl>::print_dsl(&graph_fixture_to_dsl(self))
+        <JackSnapshotDsl as DocumentDsl>::print_dsl(&jack_snapshot_to_dsl(self))
     }
 }
 
-impl dsl::DslField for GraphFixture {
+impl dsl::DslField for JackSnapshot {
     fn shape() -> dsl::Shape {
-        <GraphFixtureDsl as dsl::DslField>::shape()
+        <JackSnapshotDsl as dsl::DslField>::shape()
     }
 
     fn to_value(&self) -> dsl::FieldValue {
-        <GraphFixtureDsl as dsl::DslField>::to_value(&graph_fixture_to_dsl(self))
+        <JackSnapshotDsl as dsl::DslField>::to_value(&jack_snapshot_to_dsl(self))
     }
 
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let parsed = <GraphFixtureDsl as dsl::DslField>::from_value(value)?;
-        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| error.to_string())
+        let parsed = <JackSnapshotDsl as dsl::DslField>::from_value(value)?;
+        jack_snapshot_dsl_to_jack_snapshot(parsed).map_err(|error| error.to_string())
     }
 }
 //#endregion 🔖️DslDocument
 
 //#region 🔖️Pack
-/// 📦️ Binary pack notation for a whole [`GraphFixture`] (`store::DocumentPack`), delegating through
-/// the same mirror + `graph_fixture_to_dsl`/`graph_fixture_dsl_to_graph_fixture` pair as the DSL impl
+/// 📦️ Binary pack notation for a whole [`JackSnapshot`] (`store::DocumentPack`), delegating through
+/// the same mirror + `jack_snapshot_to_dsl`/`jack_snapshot_dsl_to_jack_snapshot` pair as the DSL impl
 /// above (kept here, next to the mirror types it depends on, rather than in `🎒️pack` — the mirror is
 /// private to this file).
-impl store::DocumentPack for GraphFixture {
+impl store::DocumentPack for JackSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        <GraphFixtureDsl as store::DocumentPack>::encode_pack_with(&graph_fixture_to_dsl(self), options)
+        <JackSnapshotDsl as store::DocumentPack>::encode_pack_with(&jack_snapshot_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let parsed = <GraphFixtureDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
-        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
+        let parsed = <JackSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        jack_snapshot_dsl_to_jack_snapshot(parsed).map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
     }
 }
 //#endregion 🔖️Pack
@@ -243,13 +244,13 @@ impl store::DocumentPack for GraphFixture {
 /// 📄️ The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
 pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.trinity` DSL text into a `GraphFixture`.
-pub fn parse_dsl(text: &str) -> Result<GraphFixture, TextError> {
-    <GraphFixture as DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.trinity` DSL text into a `JackSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
+    <JackSnapshot as DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `GraphFixture` back to `.trinity` DSL text.
-pub fn print_dsl(document: &GraphFixture) -> String {
+/// 🖨️ Prints a `JackSnapshot` back to `.trinity` DSL text.
+pub fn print_dsl(document: &JackSnapshot) -> String {
     DocumentDsl::print_dsl(document)
 }
 
@@ -262,28 +263,28 @@ mod tests {
     #[test]
     fn nakagin_example_dsl_round_trips() {
         let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
-        store::test_support::assert_dsl_round_trip(&document);
+        ::store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn empty_document_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&empty_trinity_graph_fixture());
+        ::store::os_store::test_support::assert_dsl_round_trip(&empty_trinity_graph_fixture());
     }
 
     #[test]
     fn parse_dsl_rejects_unknown_keyword() {
-        let err = GraphFixture::parse_dsl("bogus line").expect_err("unknown keyword");
+        let err = JackSnapshot::parse_dsl("bogus line").expect_err("unknown keyword");
         assert!(err.message.contains("expected"));
     }
 
     #[test]
     fn dsl_round_trip_mini_and_bundled_fixtures() {
         let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
-        store::test_support::assert_dsl_round_trip(&nakagin);
-        store::test_support::assert_dsl_pack_equivalence(&nakagin);
+        ::store::os_store::test_support::assert_dsl_round_trip(&nakagin);
+        ::store::os_store::test_support::assert_dsl_pack_equivalence(&nakagin);
         let branch = parse_dsl(include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).unwrap();
-        store::test_support::assert_dsl_round_trip(&branch);
-        store::test_support::assert_dsl_pack_equivalence(&branch);
+        ::store::os_store::test_support::assert_dsl_round_trip(&branch);
+        ::store::os_store::test_support::assert_dsl_pack_equivalence(&branch);
     }
 
     /// 🧩️ A hand-built fixture (not one of the bundled `.trinity` examples) with a nested `Object`-shaped
@@ -296,8 +297,8 @@ mod tests {
         use crate::artifacts::jack::{Camera, Edge, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
         use std::collections::BTreeMap;
 
-        let fixture = GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
+        let fixture = JackSnapshot {
+            schema: JackSnapshot::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
@@ -348,8 +349,8 @@ mod tests {
                 },
             }],
         };
-        store::test_support::assert_dsl_round_trip(&fixture);
-        store::test_support::assert_dsl_pack_equivalence(&fixture);
+        ::store::os_store::test_support::assert_dsl_round_trip(&fixture);
+        ::store::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 }
 //#endregion 🧪️Tests

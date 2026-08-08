@@ -28,8 +28,7 @@ pub enum Procedural3dMutation {
     RemoveLayout { id: String },
     SetCamera { camera: CameraJson },
     SetSchema { schema: String },
-    Generation(GenerationMutation),
-}
+    Generation(GenerationMutation)}
 
 fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.widgets.iter().position(|widget| widget_id(widget) == id)
@@ -44,8 +43,7 @@ impl Mutation<Procedural3dSnapshot> for Procedural3dMutation {
 
     fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
         use crate::artifacts::procedural3d::diff::{
-            diff_fixture_from_helpers, diff_generation_from_ops, LayoutDiff, SynapsesDiff, WidgetsDiff,
-        };
+            diff_fixture_from_helpers, diff_generation_from_ops, LayoutDiff, SynapsesDiff, WidgetsDiff};
         match self {
             Procedural3dMutation::SetWidget { index, widget } => diff_fixture_from_helpers(
                 base,
@@ -111,8 +109,7 @@ impl Mutation<Procedural3dSnapshot> for Procedural3dMutation {
                 None,
                 Some(schema.clone()),
             ),
-            Procedural3dMutation::Generation(operation) => diff_generation_from_ops(base, vec![operation.clone()]),
-        }
+            Procedural3dMutation::Generation(operation) => diff_generation_from_ops(base, vec![operation.clone()])}
     }
 
     fn inverse(&self, projection: &Procedural3dSnapshot) -> Vec<Self> {
@@ -120,23 +117,19 @@ impl Mutation<Procedural3dSnapshot> for Procedural3dMutation {
         match self {
             Procedural3dMutation::SetWidget { widget, .. } => match widget_index(fixture, widget_id(widget)) {
                 Some(index) => vec![Procedural3dMutation::SetWidget { index, widget: fixture.widgets[index].clone() }],
-                None => vec![Procedural3dMutation::RemoveWidget { id: widget_id(widget).to_string() }],
-            },
+                None => vec![Procedural3dMutation::RemoveWidget { id: widget_id(widget).to_string() }]},
             Procedural3dMutation::RemoveWidget { id } => widget_index(fixture, id).map(|index| vec![Procedural3dMutation::SetWidget { index, widget: fixture.widgets[index].clone() }]).unwrap_or_default(),
             Procedural3dMutation::SetSynapse { synapse, .. } => match synapse_index(fixture, &synapse.id) {
                 Some(index) => vec![Procedural3dMutation::SetSynapse { index, synapse: fixture.synapses[index].clone() }],
-                None => vec![Procedural3dMutation::RemoveSynapse { id: synapse.id.clone() }],
-            },
+                None => vec![Procedural3dMutation::RemoveSynapse { id: synapse.id.clone() }]},
             Procedural3dMutation::RemoveSynapse { id } => synapse_index(fixture, id).map(|index| vec![Procedural3dMutation::SetSynapse { index, synapse: fixture.synapses[index].clone() }]).unwrap_or_default(),
             Procedural3dMutation::SetLayout { id, .. } => match fixture.layout.get(id) {
                 Some(layout) => vec![Procedural3dMutation::SetLayout { id: id.clone(), layout: layout.clone() }],
-                None => vec![Procedural3dMutation::RemoveLayout { id: id.clone() }],
-            },
+                None => vec![Procedural3dMutation::RemoveLayout { id: id.clone() }]},
             Procedural3dMutation::RemoveLayout { id } => fixture.layout.get(id).map(|layout| vec![Procedural3dMutation::SetLayout { id: id.clone(), layout: layout.clone() }]).unwrap_or_default(),
             Procedural3dMutation::SetCamera { .. } => vec![Procedural3dMutation::SetCamera { camera: fixture.camera.clone() }],
             Procedural3dMutation::SetSchema { .. } => vec![Procedural3dMutation::SetSchema { schema: fixture.schema.clone() }],
-            Procedural3dMutation::Generation(operation) => invert_generation_operation(&projection.generation, operation).into_iter().map(Procedural3dMutation::Generation).collect(),
-        }
+            Procedural3dMutation::Generation(operation) => invert_generation_operation(&projection.generation, operation).into_iter().map(Procedural3dMutation::Generation).collect()}
     }
 }
 

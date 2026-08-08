@@ -3,7 +3,7 @@
 use crate::apps::flow::flow_action;
 use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::artifacts::flow::engine::{widget_id, widget_kind_label, widget_tree_label};
-use crate::artifacts::flow::FlowFixture;
+use crate::artifacts::flow::FlowSnapshot;
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
+pub fn render(fixture: &FlowSnapshot, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
