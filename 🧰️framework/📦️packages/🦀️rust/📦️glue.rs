@@ -47,9 +47,9 @@ pub use manifest as ui;
 pub use manifest::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
-    ActionRequest, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
-    KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
-    DocumentVersion, OperationId, PhysicalSize, PluginInstanceId, PresencePeer,
+    ActionRequest, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseMutation,
+    KernelMutation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
+    DocumentVersion, MutationId, PhysicalSize, PluginInstanceId, PresencePeer,
     PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer,
     ArtifactId, ArtifactKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,

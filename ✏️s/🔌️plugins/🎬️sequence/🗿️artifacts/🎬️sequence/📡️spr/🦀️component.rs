@@ -13,16 +13,16 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::sequence::dsl::{sequence_edge_from_dsl, sequence_edge_to_dsl, SequenceEdgeDsl};
-use crate::artifacts::sequence::op::SequenceOperation;
+use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceEdgePatch, SequenceStepPatch};
 use protocol::OpBinary;
 
 //#region 🔖️OpText
-/// ✂️ DSL-only mirror of `SequenceOperation` — identical shape except `EdgesAdd.item` goes through
+/// ✂️ DSL-only mirror of `SequenceMutation` — identical shape except `EdgesAdd.item` goes through
 /// `SequenceEdgeDsl` for the unified wire syntax (see `🗣️dsl`'s doc comment on `SequenceEdgeDsl` for
 /// why `EdgesPatch.patch` stays a plain `SequenceEdgePatch`, not a wire).
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum SequenceOperationDsl {
+enum SequenceMutationDsl {
     StepsAdd {
         index: usize,
         #[dsl(block)]
@@ -60,7 +60,7 @@ enum SequenceOperationDsl {
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
-impl protocol::OpText for SequenceOperationDsl {
+impl protocol::OpText for SequenceMutationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -74,7 +74,7 @@ impl protocol::OpText for SequenceOperationDsl {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -84,7 +84,7 @@ impl protocol::OpText for SequenceOperationDsl {
     }
 }
 
-impl protocol::OpBinary for SequenceOperationDsl {
+impl protocol::OpBinary for SequenceMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -97,64 +97,64 @@ impl protocol::OpBinary for SequenceOperationDsl {
 
 
 
-fn sequence_operation_to_dsl(operation: &SequenceOperation) -> SequenceOperationDsl {
+fn sequence_operation_to_dsl(operation: &SequenceMutation) -> SequenceMutationDsl {
     match operation {
-        SequenceOperation::StepsAdd { index, item } => SequenceOperationDsl::StepsAdd { index: *index, item: item.clone() },
-        SequenceOperation::StepsRemove { id } => SequenceOperationDsl::StepsRemove { id: id.clone() },
-        SequenceOperation::StepsMove { id, to_index } => SequenceOperationDsl::StepsMove { id: id.clone(), to_index: *to_index },
-        SequenceOperation::StepsPatch { id, patch } => SequenceOperationDsl::StepsPatch { id: id.clone(), patch: patch.clone() },
-        SequenceOperation::EdgesAdd { index, item } => SequenceOperationDsl::EdgesAdd { index: *index, item: sequence_edge_to_dsl(item) },
-        SequenceOperation::EdgesRemove { id } => SequenceOperationDsl::EdgesRemove { id: id.clone() },
-        SequenceOperation::EdgesMove { id, to_index } => SequenceOperationDsl::EdgesMove { id: id.clone(), to_index: *to_index },
-        SequenceOperation::EdgesPatch { id, patch } => SequenceOperationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
+        SequenceMutation::StepsAdd { index, item } => SequenceMutationDsl::StepsAdd { index: *index, item: item.clone() },
+        SequenceMutation::StepsRemove { id } => SequenceMutationDsl::StepsRemove { id: id.clone() },
+        SequenceMutation::StepsMove { id, to_index } => SequenceMutationDsl::StepsMove { id: id.clone(), to_index: *to_index },
+        SequenceMutation::StepsPatch { id, patch } => SequenceMutationDsl::StepsPatch { id: id.clone(), patch: patch.clone() },
+        SequenceMutation::EdgesAdd { index, item } => SequenceMutationDsl::EdgesAdd { index: *index, item: sequence_edge_to_dsl(item) },
+        SequenceMutation::EdgesRemove { id } => SequenceMutationDsl::EdgesRemove { id: id.clone() },
+        SequenceMutation::EdgesMove { id, to_index } => SequenceMutationDsl::EdgesMove { id: id.clone(), to_index: *to_index },
+        SequenceMutation::EdgesPatch { id, patch } => SequenceMutationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
     }
 }
 
-fn sequence_operation_from_dsl(operation: SequenceOperationDsl) -> Result<SequenceOperation, String> {
+fn sequence_operation_from_dsl(operation: SequenceMutationDsl) -> Result<SequenceMutation, String> {
     Ok(match operation {
-        SequenceOperationDsl::StepsAdd { index, item } => SequenceOperation::StepsAdd { index, item },
-        SequenceOperationDsl::StepsRemove { id } => SequenceOperation::StepsRemove { id },
-        SequenceOperationDsl::StepsMove { id, to_index } => SequenceOperation::StepsMove { id, to_index },
-        SequenceOperationDsl::StepsPatch { id, patch } => SequenceOperation::StepsPatch { id, patch },
-        SequenceOperationDsl::EdgesAdd { index, item } => SequenceOperation::EdgesAdd { index, item: sequence_edge_from_dsl(item)? },
-        SequenceOperationDsl::EdgesRemove { id } => SequenceOperation::EdgesRemove { id },
-        SequenceOperationDsl::EdgesMove { id, to_index } => SequenceOperation::EdgesMove { id, to_index },
-        SequenceOperationDsl::EdgesPatch { id, patch } => SequenceOperation::EdgesPatch { id, patch },
+        SequenceMutationDsl::StepsAdd { index, item } => SequenceMutation::StepsAdd { index, item },
+        SequenceMutationDsl::StepsRemove { id } => SequenceMutation::StepsRemove { id },
+        SequenceMutationDsl::StepsMove { id, to_index } => SequenceMutation::StepsMove { id, to_index },
+        SequenceMutationDsl::StepsPatch { id, patch } => SequenceMutation::StepsPatch { id, patch },
+        SequenceMutationDsl::EdgesAdd { index, item } => SequenceMutation::EdgesAdd { index, item: sequence_edge_from_dsl(item)? },
+        SequenceMutationDsl::EdgesRemove { id } => SequenceMutation::EdgesRemove { id },
+        SequenceMutationDsl::EdgesMove { id, to_index } => SequenceMutation::EdgesMove { id, to_index },
+        SequenceMutationDsl::EdgesPatch { id, patch } => SequenceMutation::EdgesPatch { id, patch },
     })
 }
 
-impl protocol::OpText for SequenceOperation {
+impl protocol::OpText for SequenceMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let dsl_operation = <SequenceOperationDsl as protocol::OpText>::parse_op(line)?;
+        let dsl_operation = <SequenceMutationDsl as protocol::OpText>::parse_op(line)?;
         sequence_operation_from_dsl(dsl_operation).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
-        <SequenceOperationDsl as protocol::OpText>::print_op(&sequence_operation_to_dsl(self))
+        <SequenceMutationDsl as protocol::OpText>::print_op(&sequence_operation_to_dsl(self))
     }
 }
 
-/// ⚡️ Binary mirror of the `OpText` impl above — `SequenceOperationDsl` already derives `OpBinary`
+/// ⚡️ Binary mirror of the `OpText` impl above — `SequenceMutationDsl` already derives `OpBinary`
 /// via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
-impl OpBinary for SequenceOperation {
+impl OpBinary for SequenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         sequence_operation_to_dsl(self).encode_op()
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let dsl_operation = SequenceOperationDsl::decode_op(bytes)?;
+        let dsl_operation = SequenceMutationDsl::decode_op(bytes)?;
         sequence_operation_from_dsl(dsl_operation).map_err(|message| protocol::ProtocolError::Malformed { what: "sequence operation", offset: 0, detail: message })
     }
 }
 
-/// 📦️ Encodes a `SequenceOperation` to its binary state-patch form.
-pub fn encode_op(operation: &SequenceOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `SequenceMutation` to its binary state-patch form.
+pub fn encode_op(operation: &SequenceMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `SequenceOperation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<SequenceOperation, protocol::ProtocolError> {
-    SequenceOperation::decode_op(bytes)
+/// 📖️ Decodes a `SequenceMutation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<SequenceMutation, protocol::ProtocolError> {
+    SequenceMutation::decode_op(bytes)
 }
 //#endregion 🔖️OpText
 
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = SequenceOperation::StepsPatch { id: "step-1".into(), patch: SequenceStepPatch { x: Some(42.0), ..Default::default() } };
+        let operation = SequenceMutation::StepsPatch { id: "step-1".into(), patch: SequenceStepPatch { x: Some(42.0), ..Default::default() } };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -177,11 +177,11 @@ mod tests {
     /// the resulting envelope survives both the text and binary document-level protocols.
     #[test]
     fn sequence_document_text_round_trips_store_with_applied_operation() {
-        let envelope = store::create_document_envelope::<SequenceFixture, SequenceOperation>(crate::artifacts::sequence::SEQUENCE_FIXTURE_SCHEMA, "sequence-text-test", default_fixture(), None);
+        let envelope = store::create_document_envelope::<SequenceFixture, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_FIXTURE_SCHEMA, "sequence-text-test", default_fixture(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
         doc_store
             .dispatch(store::DocumentCommand::Apply {
-                operations: vec![SequenceOperation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
+                mutations: vec![SequenceMutation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
                 description: None,
             })
             .expect("apply");
@@ -192,7 +192,7 @@ mod tests {
     //#region 🔖️OpTextTests
     #[test]
     fn op_text_round_trips_steps_add() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsAdd {
             index: 2,
             item: SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new().insert("message", Value::Atom(Atom::String("hi there".into()))), x: 5.0, y: -6.5, slot: None, collapsed: false },
         });
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_steps_add_with_slot() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsAdd {
             index: 0,
             item: SequenceStep { id: "step-98".into(), kind: "control.while".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "body".into() }), collapsed: true },
         });
@@ -208,17 +208,17 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_steps_remove() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsRemove { id: "step-99".into() });
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsRemove { id: "step-99".into() });
     }
 
     #[test]
     fn op_text_round_trips_steps_move() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsMove { id: "step-99".into(), to_index: 3 });
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsMove { id: "step-99".into(), to_index: 3 });
     }
 
     #[test]
     fn op_text_round_trips_steps_patch() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch {
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsPatch {
             id: "step-99".into(),
             patch: SequenceStepPatch {
                 params: Some(StepParams::new().insert("value", Value::Atom(Atom::Decimal(120.0))).insert("meta", Value::Dictionary(Dictionary::new().insert("k", Value::Atom(Atom::Null))))),
@@ -231,27 +231,27 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_steps_patch_with_no_fields() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch::default() });
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch::default() });
     }
 
     #[test]
     fn op_text_round_trips_edges_add() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesAdd { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } });
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesAdd { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } });
     }
 
     #[test]
     fn op_text_round_trips_edges_remove() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesRemove { id: "edge-1".into() });
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesRemove { id: "edge-1".into() });
     }
 
     #[test]
     fn op_text_round_trips_edges_move() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesMove { id: "edge-1".into(), to_index: 0 });
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesMove { id: "edge-1".into(), to_index: 0 });
     }
 
     #[test]
     fn op_text_round_trips_edges_patch() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
+        store::test_support::assert_op_line_round_trip(&SequenceMutation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
     }
     //#endregion 🔖️OpTextTests
 }

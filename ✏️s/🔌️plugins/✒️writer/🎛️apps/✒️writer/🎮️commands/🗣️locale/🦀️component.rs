@@ -5,8 +5,8 @@
 //! `"set-locale"` its command id would suggest — see the `as` literals in `crate::apps::writer`'s
 //! `app_commands!` invocation.
 
-use crate::apps::writer::config::{WriterConfig, WriterConfigOperation};
-use crate::artifacts::writer::op::WriterOperation;
+use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
+use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,8 +21,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
-        Ok(Emit::config(vec![WriterConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        Ok(Emit::config(vec![WriterConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

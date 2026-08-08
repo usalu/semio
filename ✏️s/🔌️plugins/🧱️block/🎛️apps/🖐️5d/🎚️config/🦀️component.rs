@@ -4,7 +4,7 @@
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! part kind's identity/presentations/grips live in `crate::artifacts::block5d`.
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -98,7 +98,7 @@ store::impl_whole_record_config!(Block5dConfig);
 /// `Block5dPlayApp` `RefCell` field write), plus a generic `Snapshot` every variant's `backwards()`
 /// returns.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Block5dConfigOperation {
+pub enum Block5dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -111,7 +111,7 @@ pub enum Block5dConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for Block5dConfigOperation {
+impl protocol::OpText for Block5dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -125,7 +125,7 @@ impl protocol::OpText for Block5dConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -136,7 +136,7 @@ impl protocol::OpText for Block5dConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Block5dConfigOperation {
+impl protocol::OpBinary for Block5dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -182,21 +182,21 @@ impl protocol::OpBinary for Block5dConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<Block5dConfig> for Block5dConfigOperation {
+impl Mutation<Block5dConfig> for Block5dConfigMutation {
     type Diff = Block5dConfig;
 
     fn diff(&self, base: &Block5dConfig) -> Block5dConfig {
         let mut next = base.clone();
         match self {
-            Block5dConfigOperation::Snapshot { config } => return config.clone(),
-            Block5dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            Block5dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            Block5dConfigMutation::Snapshot { config } => return config.clone(),
+            Block5dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Block5dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &Block5dConfig) -> Vec<Self> {
-        vec![Block5dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Block5dConfig) -> Vec<Self> {
+        vec![Block5dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -216,11 +216,11 @@ mod tests {
     #[test]
     fn config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Block5dConfig::default();
-        let operation = Block5dConfigOperation::SetSelection { ids: vec!["g0".into()] };
+        let operation = Block5dConfigMutation::SetSelection { ids: vec!["g0".into()] };
         let next = operation.diff(&base);
         assert_eq!(next.selected_ids, vec!["g0".to_string()]);
-        let inverse = operation.backwards(&base);
-        assert_eq!(inverse, vec![Block5dConfigOperation::Snapshot { config: base.clone() }]);
+        let inverse = operation.inverse(&base);
+        assert_eq!(inverse, vec![Block5dConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(inverse[0].diff(&next), base);
     }
 }

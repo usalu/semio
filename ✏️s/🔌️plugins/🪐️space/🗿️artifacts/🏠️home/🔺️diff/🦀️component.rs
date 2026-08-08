@@ -8,22 +8,26 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::home::op::SHomeOperation;
+use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeDocument;
 
-//#region 🔖️OperationDiff
-impl protocol::OperationDiff<SHomeDocument> for SHomeOperation {
+//#region 🔖️MutationDiff
+impl protocol::MutationDiff<SHomeDocument> for SHomeMutation {
     fn apply(&self, projection: &SHomeDocument) -> SHomeDocument {
         match self {
-            SHomeOperation::NoOperation => projection.clone(),
-            SHomeOperation::SetCatalogGeneration { value } => SHomeDocument { catalog_generation: *value, ..projection.clone() },
+            SHomeMutation::NoMutation => projection.clone(),
+            SHomeMutation::SetCatalogGeneration { value } => SHomeDocument { catalog_generation: *value, ..projection.clone() },
         }
     }
 
     fn absorb(&mut self, other: Self) {
-        if !matches!(other, SHomeOperation::NoOperation) {
+        if !matches!(other, SHomeMutation::NoMutation) {
             *self = other;
         }
     }
 }
-//#endregion 🔖️OperationDiff
+//#endregion 🔖️MutationDiff
+
+
+/// 🔺️ Home launcher diff fragment — `SHomeMutation` is its own idempotent diff.
+pub type SHomeDiff = SHomeMutation;

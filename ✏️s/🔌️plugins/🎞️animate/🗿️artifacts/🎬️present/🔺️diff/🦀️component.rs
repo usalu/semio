@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileSource, PresentDeck};
-use protocol::{CollectionDiff, OperationDiff, Patchable};
+use protocol::{CollectionDiff, MutationDiff, Patchable};
 
 //#region 🔖️CollectionSupport
 // 🪪️ `Identified<String> for FigureTileDraft` / `Patchable<FigureTileDraftPatch> for FigureTileDraft`
@@ -55,7 +55,7 @@ pub struct PresentDiff {
     pub set_tiles: Option<Vec<FigureTileDraft>>,
 }
 
-impl OperationDiff<PresentDeck> for PresentDiff {
+impl MutationDiff<PresentDeck> for PresentDiff {
     fn apply(&self, projection: &PresentDeck) -> PresentDeck {
         if let Some(deck) = &self.deck {
             return deck.clone();
@@ -94,17 +94,17 @@ impl OperationDiff<PresentDeck> for PresentDiff {
 mod tests {
     use super::*;
     use crate::artifacts::present::default_present_deck;
-    use crate::artifacts::present::op::PresentOperation;
-    use protocol::Operation;
+    use crate::artifacts::present::op::PresentMutation;
+    use protocol::Mutation;
 
     /// ⚖️ LAW: `op.diff(base)` applied to `base` equals applying the operation, and the diff carries only
-    /// the touched slot — the `OperationDiff` contract undo/redo rides on.
+    /// the touched slot — the `MutationDiff` contract undo/redo rides on.
     #[test]
     fn set_source_diff_applies_onto_the_base_projection() {
         let base = default_present_deck();
         let mut next_source = base.source.clone();
         next_source.kind = "video".into();
-        let operation = PresentOperation::SetSource { source: next_source.clone() };
+        let operation = PresentMutation::SetSource { source: next_source.clone() };
         let diff: PresentDiff = operation.diff(&base);
         assert_eq!(diff.source, Some(next_source));
         assert!(diff.deck.is_none() && diff.tiles.is_none() && diff.set_tiles.is_none());

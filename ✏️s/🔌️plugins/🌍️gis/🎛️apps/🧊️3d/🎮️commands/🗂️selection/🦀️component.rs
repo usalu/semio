@@ -1,20 +1,20 @@
 //! 🗂️ GIS 3D play app commands — world pin selection. Both rows are config-only: they emit
-//! `config_operations`, never document operations.
+//! `config_mutations`, never document operations.
 //!
 //! 🧷️ `setSelection` and `worldSelect` are two manifest actions with one behaviour (the pre-migration
 //! `handle` matched them in a single `|` arm) — they stay two rows because they are two declared
 //! actions with distinct wire keywords, and share one helper rather than duplicating the body.
 
-use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigOperation};
-use crate::artifacts::gisterrain::op::Gis3dTerrainOperation;
+use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
+use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
 use crate::artifacts::gisterrain::Gis3dTerrainDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SelectionHelpers
 /// 👁️ The shared body of `setSelection`/`worldSelect`: replace the selected pin id set.
-fn select_ids(ids: &[String]) -> Emit<Gis3dTerrainOperation, Gis3dConfigOperation> {
-    Emit::config(vec![Gis3dConfigOperation::SetSelection { ids: ids.to_vec() }])
+fn select_ids(ids: &[String]) -> Emit<Gis3dTerrainMutation, Gis3dConfigMutation> {
+    Emit::config(vec![Gis3dConfigMutation::SetSelection { ids: ids.to_vec() }])
 }
 //#endregion 🔖️SelectionHelpers
 
@@ -28,7 +28,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(select_ids(&payload.ids))
     }
 }
@@ -44,7 +44,7 @@ pub mod world_select {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(select_ids(&payload.ids))
     }
 }
@@ -80,8 +80,8 @@ mod tests {
 
         let via_set = set_selection::handle(&set_selection::SetSelection { ids: vec![PIN.into()] }, &doc, &cfg).expect("setSelection");
         let via_world = world_select::handle(&world_select::WorldSelect { ids: vec![PIN.into()] }, &doc, &cfg).expect("worldSelect");
-        assert_eq!(via_set.config_operations, vec![Gis3dConfigOperation::SetSelection { ids: vec![PIN.to_string()] }]);
-        assert_eq!(via_set.config_operations, via_world.config_operations, "the two declared actions share one behaviour");
+        assert_eq!(via_set.config_mutations, vec![Gis3dConfigMutation::SetSelection { ids: vec![PIN.to_string()] }]);
+        assert_eq!(via_set.config_mutations, via_world.config_mutations, "the two declared actions share one behaviour");
     }
 
     /// 🖥️ The selected id reaches the rendered World3d scene's selection payload.

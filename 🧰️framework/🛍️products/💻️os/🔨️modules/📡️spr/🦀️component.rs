@@ -19,15 +19,15 @@ pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, 
 pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseProjection, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, ProjectionBodyKind, ProjectionRecord};
 
 pub use crate::os_spr::causal::{
-    decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, operation_envelope_from_edit, operation_ids_for_edit, DocumentDiff,
-    FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseOperation, OpDag, OpDagError, OperationEnvelope, OperationTransform, TransformOutcome,
+    decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, DocumentDiff,
+    FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagError, MutationEnvelope, MutationTransform, TransformOutcome,
 };
 pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, SectionProbe, CHANNEL_VERSION};
 pub use crate::os_spr::command::{
-    apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor, CollectionDiff, CollectionOperation, CommandOutcome, DiffCodec, Edit, Identified, ItemPatch, OpBinary,
-    OpText, Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationMeta, OperationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
+    apply_collection_mutation, collection_diff_from_mutation, inverse_collection_mutation, mutation_descriptor, register_mutation_descriptor, CollectionDiff, CollectionMutation, CommandOutcome, DiffCodec, Edit, Identified, ItemPatch, OpBinary,
+    OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
 };
-pub use crate::os_spr::wire::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+pub use crate::os_spr::wire::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
 pub use crate::os_spr::crdt::merge_concurrent_diffs;
 pub use crate::os_spr::wire::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
 //#endregion 🔖️Reexports
@@ -192,7 +192,7 @@ mod tests {
                 coalesce_key: None,
                 description: None,
                 ops: vec![OpPayload { text: Some(format!("op-{i}")), binary: None }],
-                backwards: Vec::new(),
+                inverse: Vec::new(),
                 meta: None,
             };
             appender.append_edit(&edit).unwrap();
@@ -227,14 +227,14 @@ mod tests {
                 coalesce_key: None,
                 description: Some("first edit".to_string()),
                 ops: vec![OpPayload { text: Some("set foo = 1".to_string()), binary: None }],
-                backwards: Vec::new(),
+                inverse: Vec::new(),
                 meta: None,
             }],
             changes: Vec::new(),
             checkpoints: Vec::new(),
             alternatives: Vec::new(),
             active_alternative_id: None,
-            // 🎯️ W4: cursor is text-representable (unlike backwards, which is `.spr`-only) —
+            // 🎯️ W4: cursor is text-representable (unlike inverse, which is `.spr`-only) —
             // include one here to prove the compile_ops/decompile_ops text-tooling path preserves
             // it byte-for-byte, same as every other structural line.
             cursor: Some(HistoryCursor { applied_edit_ids: vec!["e0".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: None }),

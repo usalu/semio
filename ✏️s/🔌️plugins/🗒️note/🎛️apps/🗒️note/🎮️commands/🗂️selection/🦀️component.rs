@@ -1,8 +1,8 @@
 //! 🗂️ Note play app commands — ephemeral selection/hover. View-only, never a document operation.
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{block_id, flatten_blocks};
-use crate::artifacts::note::op::NoteOperation;
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -15,9 +15,9 @@ pub mod select_all {
     #[dsl(keyword = "select-all")]
     pub struct SelectAll {}
 
-    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let ids: Vec<String> = flatten_blocks(&doc.projection.blocks).into_iter().map(|block| block_id(block).into()).collect();
-        Ok(Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: ids }]))
+        Ok(Emit::config(vec![NoteConfigMutation::SetSelection { block_ids: ids }]))
     }
 }
 //#endregion 🔖️SelectAll
@@ -30,8 +30,8 @@ pub mod clear_selection {
     #[dsl(keyword = "clear-selection")]
     pub struct ClearSelection {}
 
-    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        Ok(Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }]))
+    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(Emit::config(vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }]))
     }
 }
 //#endregion 🔖️ClearSelection
@@ -46,8 +46,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        Ok(Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(Emit::config(vec![NoteConfigMutation::SetSelection { block_ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -62,8 +62,8 @@ pub mod set_hover {
         pub block_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        Ok(Emit::config(vec![NoteConfigOperation::SetHoveredBlock { block_id: payload.block_id.clone() }]))
+    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(Emit::config(vec![NoteConfigMutation::SetHoveredBlock { block_id: payload.block_id.clone() }]))
     }
 }
 //#endregion 🔖️SetHover

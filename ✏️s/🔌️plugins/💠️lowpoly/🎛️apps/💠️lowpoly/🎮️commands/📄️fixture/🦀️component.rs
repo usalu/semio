@@ -1,16 +1,16 @@
 //! 📄️ Lowpoly play app commands — whole-projection JSON replacement (`setProjectionJson`/
 //! `setFixtureJson`, two wire-distinct aliases over the identical body).
 
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolyProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-fn set_projection_from_json(json: &str) -> Emit<LowpolyOperation, LowpolyConfigOperation> {
+fn set_projection_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
     match serde_json::from_str::<LowpolyProjection>(json) {
-        Ok(parsed) => Emit::operations(vec![LowpolyOperation::SetProjection { projection: parsed }]),
+        Ok(parsed) => Emit::mutations(vec![LowpolyMutation::SetProjection { projection: parsed }]),
         Err(_) => Emit::default(),
     }
 }
@@ -25,7 +25,7 @@ pub mod set_projection_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetProjectionJson, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &SetProjectionJson, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(set_projection_from_json(&payload.json))
     }
 }
@@ -41,7 +41,7 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(set_projection_from_json(&payload.json))
     }
 }

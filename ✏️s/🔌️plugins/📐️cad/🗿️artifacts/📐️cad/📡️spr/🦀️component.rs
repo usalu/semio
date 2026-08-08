@@ -1,9 +1,9 @@
 //! 📡️ CAD artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! `CadOperation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
+//! `CadMutation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
 //! cad host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
-use crate::artifacts::cad::op::CadOperation;
+use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadProjection;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
@@ -14,19 +14,19 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-/// 📦️ Encodes a `CadOperation` to its binary command form.
-pub fn encode_op(operation: &CadOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `CadMutation` to its binary command form.
+pub fn encode_op(operation: &CadMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `CadOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<CadOperation, protocol::ProtocolError> {
-    CadOperation::decode_op(bytes)
+/// 📖️ Decodes a `CadMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<CadMutation, protocol::ProtocolError> {
+    CadMutation::decode_op(bytes)
 }
 
 //#region 🔖️Store
-pub type CadEnvelope = DocumentEnvelope<CadProjection, CadOperation>;
-pub type CadStore = DocumentStore<CadProjection, CadOperation>;
+pub type CadEnvelope = DocumentEnvelope<CadProjection, CadMutation>;
+pub type CadStore = DocumentStore<CadProjection, CadMutation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn encode_decode_op_round_trips_a_representative_operation() {
-        let operation = CadOperation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -2.0, dz: 3.5 };
+        let operation = CadMutation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -2.0, dz: 3.5 };
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -66,7 +66,7 @@ mod tests {
             solid_handle: None,
             primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }],
         };
-        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects.len(), 1);
         assert_eq!(scene.objects[0].primitives[0].kind, "solid");
@@ -77,7 +77,7 @@ mod tests {
         let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![CadOperation::AddObject {
+                operations: vec![CadMutation::AddObject {
                     pane: CadPaneId::Shape,
                     object: CadObject {
                         id: "object-1".into(),
@@ -97,7 +97,7 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
     }
@@ -108,7 +108,7 @@ mod tests {
         let mut replacement = empty_cad_projection();
         replacement.id = "replaced".into();
         replacement.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
-        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::SetScene { scene: Box::new(replacement) }], description: None }).expect("set scene");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::SetScene { scene: Box::new(replacement) }], description: None }).expect("set scene");
         assert_eq!(store.projection().expect("projection").id, "replaced");
         store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").id, "cad");

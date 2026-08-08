@@ -1,7 +1,7 @@
 //! 📐️ Mathematical play app commands — replacing the geometry playground's point cloud.
 
-use crate::apps::mathematical::config::{MathConfig, MathConfigOperation};
-use crate::artifacts::mathematical::op::MathOperation;
+use crate::apps::mathematical::config::{MathConfig, MathConfigMutation};
+use crate::artifacts::mathematical::op::MathMutation;
 use crate::artifacts::mathematical::{MathGeometry, MathProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_points {
         pub geometry: MathGeometry,
     }
 
-    pub fn handle(payload: &SetPoints, _doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![MathOperation::SetGeometry { geometry: payload.geometry.clone() }]))
+    pub fn handle(payload: &SetPoints, _doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![MathMutation::SetGeometry { geometry: payload.geometry.clone() }]))
     }
 }
 //#endregion 🔖️SetPoints

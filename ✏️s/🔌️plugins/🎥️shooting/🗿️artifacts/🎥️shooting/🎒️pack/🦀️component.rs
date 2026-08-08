@@ -31,7 +31,7 @@ mod tests {
     use super::*;
     use crate::artifacts::shooting::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, SHOOTING_FIXTURE_SCHEMA};
     use crate::artifacts::shooting::dsl;
-    use crate::artifacts::shooting::op::ShootingOperation;
+    use crate::artifacts::shooting::op::ShootingMutation;
 
     /// 🎞️ A fixture exercising every field/variant — duplicated verbatim across the `dsl`/`op`/`pack`
     /// component tests (each region is its own concern).
@@ -83,23 +83,23 @@ mod tests {
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `ShootingOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// `ShootingMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{CollectionOperation, DocumentId, Edit, SchemaId};
+        use protocol::{CollectionMutation, DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<ShootingFixture, ShootingOperation> = DocumentStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None));
+        let mut store: DocumentStore<ShootingFixture, ShootingMutation> = DocumentStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None } })],
+                mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: 0, item: ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None } })],
                 description: None,
             })
             .expect("apply");
-        let edit: &Edit<ShootingOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<ShootingFixture, ShootingOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        let edit: &Edit<ShootingMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<ShootingFixture, ShootingMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

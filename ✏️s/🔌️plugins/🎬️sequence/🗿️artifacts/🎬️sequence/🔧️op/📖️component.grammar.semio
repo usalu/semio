@@ -2,10 +2,10 @@ dialect grammar
 grammar sequence.op
 extension sequence
 use family-graph
-start operation
+start mutation
 
 artifact-mark = "sequence.sequence-op"
-operation = artifact-mark graph-op+
+mutation = artifact-mark graph-op+
 graph-op = "add-node" node-field+ | "set-port" port-field+ | "wire-edge" edge-op | "unlink-edge" edge-op | "patch-layout" layout-field+
 node-field = "id" "=" IDENT | "kind" "=" IDENT
 port-field = "node" "=" IDENT | "port" "=" IDENT | "dir" "=" IDENT

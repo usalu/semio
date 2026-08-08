@@ -1,7 +1,7 @@
 //! 🗃️ Shooting play app commands — whole-fixture load/reset/save/import shell effects.
 
-use crate::apps::shooting::config::{ShootingConfig, ShootingConfigOperation};
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingFixture;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
@@ -17,9 +17,9 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match serde_json::from_str::<ShootingFixture>(&payload.json) {
-            Ok(fixture) => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture }])),
+            Ok(fixture) => Ok(Emit::mutations(vec![ShootingMutation::SetFixture { fixture }])),
             Err(_) => Ok(Emit::default()),
         }
     }
@@ -38,7 +38,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() {
             Some(crate::artifacts::shooting::empty_shooting_fixture())
         } else if payload.example_id == SHOOTING_EXAMPLE_DEFAULT_ID || payload.example_id == "base" {
@@ -47,7 +47,7 @@ pub mod set_active_example {
             None
         };
         match next {
-            Some(fixture) => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture }])),
+            Some(fixture) => Ok(Emit::mutations(vec![ShootingMutation::SetFixture { fixture }])),
             None => Ok(Emit::default()),
         }
     }
@@ -62,8 +62,8 @@ pub mod reset_fixture {
     #[dsl(keyword = "reset-fixture")]
     pub struct ResetFixture {}
 
-    pub fn handle(_payload: &ResetFixture, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture: crate::artifacts::shooting::engine::default_fixture() }]))
+    pub fn handle(_payload: &ResetFixture, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![ShootingMutation::SetFixture { fixture: crate::artifacts::shooting::engine::default_fixture() }]))
     }
 }
 //#endregion 🔖️ResetFixture
@@ -76,7 +76,7 @@ pub mod save_download {
     #[dsl(keyword = "save-download")]
     pub struct SaveDownload {}
 
-    pub fn handle(_payload: &SaveDownload, doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(_payload: &SaveDownload, doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match serde_json::to_string_pretty(doc.projection) {
             Ok(fixture_text) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "shooting.fixture.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None })),
             Err(_) => Ok(Emit::default()),
@@ -93,7 +93,7 @@ pub mod load_request {
     #[dsl(keyword = "load-request")]
     pub struct LoadRequest {}
 
-    pub fn handle(_payload: &LoadRequest, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(_payload: &LoadRequest, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }))
     }
 }

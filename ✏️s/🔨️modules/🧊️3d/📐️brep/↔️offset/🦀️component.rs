@@ -122,6 +122,72 @@ pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64) -> Result<So
     }
 }
 
+
+/// ↔️ Shell a solid and leave the listed faces open by cutting through-face openings.
+pub fn shell_solid_with_open_faces(
+    body: &mut Body,
+    solid: SolidId,
+    thickness: f64,
+    open_faces: &[FaceId],
+) -> Result<SolidId, KernelError> {
+    let shelled = shell_solid(body, solid, thickness)?;
+    if open_faces.is_empty() {
+        return Ok(shelled);
+    }
+    let tol = 1e-6_f64.max(thickness * 1e-3);
+    let mut result = shelled;
+    for &face in open_faces {
+        let corners = face_corners(body, face);
+        if corners.len() < 3 {
+            continue;
+        }
+        let normal = face_normal_hint(&corners).unwrap_or(Vec3::new(0.0, 0.0, 1.0));
+        let n = normal.normalized().unwrap_or(Vec3::new(0.0, 0.0, 1.0));
+        let half = thickness * 2.0 + tol * 10.0;
+        let extruded: Vec<Pnt3> = corners
+            .iter()
+            .flat_map(|p| [*p + n * half, *p - n * half])
+            .collect();
+        if let Ok(cutter) = make_convex_hull(body, &extruded) {
+            if let Ok(cut) = boolean_solid(body, result, cutter, BooleanOp::Cut, tol) {
+                result = cut;
+            }
+        }
+    }
+    Ok(result)
+}
+
+fn face_corners(body: &Body, face: FaceId) -> Vec<Pnt3> {
+    let mut pts = Vec::new();
+    let Some(face_data) = body.faces.get(face) else {
+        return pts;
+    };
+    let mut loops = Vec::new();
+    if let Some(outer) = face_data.outer {
+        loops.push(outer);
+    }
+    loops.extend(face_data.inners.iter().copied());
+    for loop_id in loops {
+        for coedge in body.loop_coedges(loop_id) {
+            if let Some((start, _)) = body.coedge_endpoints(coedge) {
+                if let Some(v) = body.vertices.get(start) {
+                    pts.push(v.position);
+                }
+            }
+        }
+    }
+    pts
+}
+
+fn face_normal_hint(pts: &[Pnt3]) -> Option<Vec3> {
+    if pts.len() < 3 {
+        return None;
+    }
+    let a = pts[1] - pts[0];
+    let b = pts[2] - pts[0];
+    Some(a.cross(b))
+}
+
 /// ↔️ Apply draft angle `angle_rad` to `face` of `solid` (MVP: AABB shear for boxes).
 pub fn draft_angle(
     body: &mut Body,

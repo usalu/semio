@@ -5,8 +5,8 @@
 //! `"set-locale"` its command id would suggest — see the `as` literal in `crate::apps::vcs`'s
 //! `app_commands!` invocation.
 
-use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigOperation};
-use crate::artifacts::vcs::{op::VcsDemoOperation, VcsDemoProjection};
+use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
+use crate::artifacts::vcs::{op::VcsDemoMutation, VcsDemoProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +20,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault> {
-        Ok(Emit::config(vec![VcsDemoConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+        Ok(Emit::config(vec![VcsDemoConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

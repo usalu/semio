@@ -9,7 +9,8 @@
 //! `🗺️mesh-preview`.
 
 use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
-use crate::model::{analyses, Dof};
+use crate::model::{Dof};
+use crate::analyses;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -21,7 +22,7 @@ use crate::artifacts::fem3d::engine::{mesh_preview, meshing};
 // #region 🔖️Register
 /// 🗂️ Registers `Fem3dDocument`'s pack↔dsl codec under `FEM_3D_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse fem3d documents without
-/// depending on its concrete `Projection`/`Operation` types. Reached from the plugin root's
+/// depending on its concrete `Projection`/`Mutation` types. Reached from the plugin root's
 /// `semio_plugin!{ setup: … }` via `crate::model::register_all_engines`.
 pub fn register() {
     register_pilot_languages();
@@ -743,3 +744,36 @@ mod tests {
     // #endregion 🔖️SceneRender
 }
 // #endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+pub struct Fem3dEngine {
+    projection: crate::artifacts::fem3d::Fem3dDocument,
+}
+
+impl Fem3dEngine {
+    pub fn new(projection: crate::artifacts::fem3d::Fem3dDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Fem3dEngine {
+    type Projection = crate::artifacts::fem3d::Fem3dDocument;
+    type Mutation = crate::artifacts::fem3d::mutations::Fem3dMutation;
+    type Diff = crate::artifacts::fem3d::diff::Fem3dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::fem3d::mutations::apply_fem3d_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

@@ -1,0 +1,9 @@
+{
+  "extensionId": "flow-extension-logic",
+  "version": "0.0.0-dev",
+  "label": "flow-extension-logic",
+  "extends": "flow",
+  "moduleUrl": "/extensions/flow-extension-logic/semio_s_plugin_flow_extension_logic.js",
+  "packageHash": "dev:1786197681681",
+  "installedAt": 1786197681681
+}

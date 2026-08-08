@@ -1,13 +1,13 @@
 //! ➕️ Flow math module: schema-dispatched arithmetic operators.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, VariadicSpec};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VariadicSpec};
 use std::cell::Cell;
 
 // #region 🔖️Add
 /// ➕️ Adds numbers, points, or vectors.
 pub struct Add;
 
-impl Operation for Add {
+impl Operator for Add {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         if let Some(items) = input.get("items").and_then(|v| v.as_dictionary()) {
             return add_items(items);
@@ -27,7 +27,7 @@ impl Operation for Add {
 /// ➖️ Subtracts numbers, points, or vectors.
 pub struct Subtract;
 
-impl Operation for Subtract {
+impl Operator for Subtract {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let a = read_dict(input, "a")?;
         let b = read_dict(input, "b")?;
@@ -44,7 +44,7 @@ impl Operation for Subtract {
 /// 🚚️ Moves a point or vector by a vector.
 pub struct Move;
 
-impl Operation for Move {
+impl Operator for Move {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let subject = read_dict(input, "subject")?;
         let vector = read_dict(input, "vector")?;
@@ -63,7 +63,7 @@ impl Operation for Move {
 /// ✖️ Multiplies two numbers.
 pub struct Multiply;
 
-impl Operation for Multiply {
+impl Operator for Multiply {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("product", number_dictionary(read_channel_number(input, "a")? * read_channel_number(input, "b")?)))
     }
@@ -72,7 +72,7 @@ impl Operation for Multiply {
 /// ➗️ Divides a by b.
 pub struct Divide;
 
-impl Operation for Divide {
+impl Operator for Divide {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let b = read_channel_number(input, "b")?;
         if b.abs() < f64::EPSILON {
@@ -85,7 +85,7 @@ impl Operation for Divide {
 /// ⚡️ Raises a to the power of b.
 pub struct Power;
 
-impl Operation for Power {
+impl Operator for Power {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("power", number_dictionary(read_channel_number(input, "a")?.powf(read_channel_number(input, "b")?))))
     }
@@ -94,7 +94,7 @@ impl Operation for Power {
 /// 🧮️ Remainder of a divided by b.
 pub struct Modulo;
 
-impl Operation for Modulo {
+impl Operator for Modulo {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let b = read_channel_number(input, "b")?;
         if b.abs() < f64::EPSILON {
@@ -107,7 +107,7 @@ impl Operation for Modulo {
 /// ↔ Negates a number.
 pub struct Negate;
 
-impl Operation for Negate {
+impl Operator for Negate {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("negated", number_dictionary(-read_channel_number(input, "number")?)))
     }
@@ -116,7 +116,7 @@ impl Operation for Negate {
 /// 📏️ Absolute value.
 pub struct Abs;
 
-impl Operation for Abs {
+impl Operator for Abs {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("absolute", number_dictionary(read_channel_number(input, "number")?.abs())))
     }
@@ -125,7 +125,7 @@ impl Operation for Abs {
 /// √ Square root.
 pub struct Sqrt;
 
-impl Operation for Sqrt {
+impl Operator for Sqrt {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("root", number_dictionary(read_channel_number(input, "number")?.sqrt())))
     }
@@ -134,7 +134,7 @@ impl Operation for Sqrt {
 /// ⬇️ Minimum of two numbers.
 pub struct Min;
 
-impl Operation for Min {
+impl Operator for Min {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("minimum", number_dictionary(read_channel_number(input, "a")?.min(read_channel_number(input, "b")?))))
     }
@@ -143,7 +143,7 @@ impl Operation for Min {
 /// ⬆️ Maximum of two numbers.
 pub struct Max;
 
-impl Operation for Max {
+impl Operator for Max {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("maximum", number_dictionary(read_channel_number(input, "a")?.max(read_channel_number(input, "b")?))))
     }
@@ -152,7 +152,7 @@ impl Operation for Max {
 /// ⬇️ Floor of a number.
 pub struct Floor;
 
-impl Operation for Floor {
+impl Operator for Floor {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("floor", number_dictionary(read_channel_number(input, "number")?.floor())))
     }
@@ -161,7 +161,7 @@ impl Operation for Floor {
 /// ⬆️ Ceiling of a number.
 pub struct Ceil;
 
-impl Operation for Ceil {
+impl Operator for Ceil {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("ceiling", number_dictionary(read_channel_number(input, "number")?.ceil())))
     }
@@ -170,7 +170,7 @@ impl Operation for Ceil {
 /// ⭕️ Rounds a number.
 pub struct Round;
 
-impl Operation for Round {
+impl Operator for Round {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("rounded", number_dictionary(read_channel_number(input, "number")?.round())))
     }
@@ -179,7 +179,7 @@ impl Operation for Round {
 /// 〰 Sine in radians.
 pub struct Sin;
 
-impl Operation for Sin {
+impl Operator for Sin {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("sine", number_dictionary(read_channel_number(input, "number")?.sin())))
     }
@@ -188,7 +188,7 @@ impl Operation for Sin {
 /// 〰 Cosine in radians.
 pub struct Cos;
 
-impl Operation for Cos {
+impl Operator for Cos {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("cosine", number_dictionary(read_channel_number(input, "number")?.cos())))
     }
@@ -197,7 +197,7 @@ impl Operation for Cos {
 /// 〰 Tangent in radians.
 pub struct Tan;
 
-impl Operation for Tan {
+impl Operator for Tan {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("tangent", number_dictionary(read_channel_number(input, "number")?.tan())))
     }
@@ -206,7 +206,7 @@ impl Operation for Tan {
 /// 🗺️ Remaps a value from one range to another.
 pub struct Remap;
 
-impl Operation for Remap {
+impl Operator for Remap {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let value = read_channel_number(input, "value")?;
         let from_min = read_channel_number(input, "fromMin")?;
@@ -224,7 +224,7 @@ impl Operation for Remap {
 /// 🎲️ Seeded or entropy-backed random number in [min, max].
 pub struct Random;
 
-impl Operation for Random {
+impl Operator for Random {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let min = read_channel_number(input, "min")?;
         let max = read_channel_number(input, "max")?;
@@ -236,7 +236,7 @@ impl Operation for Random {
 /// ➡️ Forwards the number input unchanged.
 pub struct PassThrough;
 
-impl Operation for PassThrough {
+impl Operator for PassThrough {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("number", number_dictionary(read_channel_number(input, "number")?)))
     }
@@ -245,7 +245,7 @@ impl Operation for PassThrough {
 /// ∑ Sums all numbers in a list dictionary.
 pub struct Sum;
 
-impl Operation for Sum {
+impl Operator for Sum {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_dict(input, "list")?;
         let mut total = 0.0;
@@ -488,8 +488,8 @@ fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs
     OperatorInfo { id: id.into(), extension: "math".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:➕️".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }], produces);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
 }
 
 // #endregion 🔖️Helpers
@@ -504,18 +504,18 @@ pub fn register(registry: &mut Registry) {
     registry.register_operator(
         operator_info("math.add", "Add", "Add", "Adds numbers, points, or vectors", scalar.clone(), sum_output.clone()),
         vec![
-            OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Add) },
-            OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Add) },
-            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Add) },
+            OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Add) },
+            OperatorImpl { schemas: vec!["point".into(), "point".into()], operator: Box::new(Add) },
+            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Add) },
         ],
         &["number", "point", "vector"],
     );
     registry.register_operator(
         OperatorInfo { variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }), ..operator_info("math.addVariadic", "Add Variadic", "Add", "Adds any number of numbers, points, or vectors", vec![], sum_output.clone()) },
         vec![
-            OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Add) },
-            OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Add) },
-            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Add) },
+            OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Add) },
+            OperatorImpl { schemas: vec!["point".into(), "point".into()], operator: Box::new(Add) },
+            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Add) },
         ],
         &["number", "point", "vector"],
     );
@@ -523,9 +523,9 @@ pub fn register(registry: &mut Registry) {
     registry.register_operator(
         operator_info("math.subtract", "Subtract", "Sub", "Subtracts numbers, points, or vectors", subtract_scalar.clone(), vec![difference_out()]),
         vec![
-            OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Subtract) },
-            OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Subtract) },
-            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Subtract) },
+            OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Subtract) },
+            OperatorImpl { schemas: vec!["point".into(), "point".into()], operator: Box::new(Subtract) },
+            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Subtract) },
         ],
         &["number", "point", "vector"],
     );
@@ -536,7 +536,7 @@ pub fn register(registry: &mut Registry) {
     register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", binary_scalar, vec![modulo_out()]), Box::new(Modulo), vec!["number", "number"], &["number"]);
 
     for (id, name, abbreviation, summary, output, operation) in [
-        ("math.negate", "Negate", "Neg", "Negates a number", vec![negated_out()], Box::new(Negate) as Box<dyn Operation>),
+        ("math.negate", "Negate", "Neg", "Negates a number", vec![negated_out()], Box::new(Negate) as Box<dyn Operator>),
         ("math.abs", "Abs", "Abs", "Absolute value", vec![absolute_out()], Box::new(Abs)),
         ("math.sqrt", "Sqrt", "Sqrt", "Square root", vec![root_out()], Box::new(Sqrt)),
         ("math.floor", "Floor", "Flr", "Floor of a number", vec![floor_out()], Box::new(Floor)),
@@ -583,7 +583,7 @@ pub fn register(registry: &mut Registry) {
     register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output.clone()), Box::new(Sum), vec!["list"], &["number"]);
     registry.register_operator(
         operator_info("math.move", "Move", "Move", "Moves a point or vector by a vector", vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("vector", &["math.move"])], move_out()),
-        vec![OperatorImpl { schemas: vec!["point".into(), "vector".into()], operation: Box::new(Move) }, OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Move) }],
+        vec![OperatorImpl { schemas: vec!["point".into(), "vector".into()], operator: Box::new(Move) }, OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Move) }],
         &["point", "vector"],
     );
     registry.finalize();

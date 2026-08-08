@@ -6,9 +6,9 @@
 //! tick counter, both genuinely ephemeral (never undo-tracked, see `//#region 🔖️UtilityPreviewContract`
 //! in the framework plugin crate).
 
-use crate::apps::draw::config::{DrawConfig, DrawConfigOperation};
+use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::artifacts::draw::engine::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
-use crate::artifacts::draw::op::DrawOperation;
+use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawCamera, DrawDocument, DrawLayerNode, PathSegment};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
@@ -271,7 +271,7 @@ pub(crate) fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor:
 
 /// 🔷️ Emits the operations that commit a shape drag (add the shape layer + return to direct-select) and
 /// records the new layer as the current selection; empty when the drag is too small to commit.
-fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOperation> {
+fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawMutation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -299,12 +299,12 @@ fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawDocument, utility: 
     });
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawOperation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![DrawMutation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
 }
 
 /// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer and records it
 /// as the current selection; empty when the draft has too few points to form a shape.
-fn commit_draft(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawOperation> {
+fn commit_draft(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawMutation> {
     if points.len() < 2 {
         return Vec::new();
     }
@@ -327,12 +327,12 @@ fn commit_draft(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str,
     };
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawOperation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![DrawMutation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
 }
 
 /// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset) and records it as
 /// the current selection; empty when no bitmap source is available.
-fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOperation> {
+fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawMutation> {
     let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
     let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, false));
     let source_key = hit_layer_id
@@ -346,12 +346,12 @@ fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64
     let layer = create_draw_trace_layer("Trace", &source_key);
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawOperation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![DrawMutation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
 }
 
 /// 🧰️ Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns
 /// the canvas to the default select utility (the active utility is host-owned, never a document operation).
-fn commit_with_utility_reset(operations: Vec<DrawOperation>, description: &str) -> Emit<DrawOperation, DrawConfigOperation> {
+fn commit_with_utility_reset(operations: Vec<DrawMutation>, description: &str) -> Emit<DrawMutation, DrawConfigMutation> {
     if operations.is_empty() {
         return Emit::default();
     }
@@ -360,13 +360,13 @@ fn commit_with_utility_reset(operations: Vec<DrawOperation>, description: &str) 
     emit
 }
 
-/// 🧮️ B1: appends a `DrawConfigOperation::SetSelection` config edit to a gesture's document-side
+/// 🧮️ B1: appends a `DrawConfigMutation::SetSelection` config edit to a gesture's document-side
 /// `Emit` iff the gesture actually changed the selection (`apply_point_pick`/`commit_shape_drag`/…
 /// mutate `config.selected_ids` in place) — keeps document operations (shape/draft/trace commits) and
 /// the selection change that rode along with them in exactly one dispatch's `Emit`.
-pub(crate) fn finish_gesture_emit(mut emit: Emit<DrawOperation, DrawConfigOperation>, before: &DrawConfig, after: &DrawConfig) -> Emit<DrawOperation, DrawConfigOperation> {
+pub(crate) fn finish_gesture_emit(mut emit: Emit<DrawMutation, DrawConfigMutation>, before: &DrawConfig, after: &DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
     if after.selected_ids != before.selected_ids {
-        emit.config_operations.push(DrawConfigOperation::SetSelection { ids: after.selected_ids.clone() });
+        emit.config_mutations.push(DrawConfigMutation::SetSelection { ids: after.selected_ids.clone() });
     }
     emit
 }
@@ -577,7 +577,7 @@ impl DrawSession {
     /// working copy (mutated in place for selection changes the gesture makes); the returned `Emit`
     /// carries only DOCUMENT operations (shape/draft/trace commits) — the caller diffs `config`
     /// before/after via `finish_gesture_emit` to fold in any selection change.
-    pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument, config: &mut DrawConfig) -> Emit<DrawOperation, DrawConfigOperation> {
+    pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument, config: &mut DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
@@ -631,7 +631,7 @@ impl DrawSession {
 /// 👻️ CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": a pure, JSON-serializable
 /// snapshot of the gesture machine's live, uncommitted scratch geometry. `None` while `draw_gesture`
 /// is `idle` (no live gesture to preview); this function only ever reads `GestureContext`, never
-/// `DrawDocument`/`DrawOperation` — a preview can never become persistent state.
+/// `DrawDocument`/`DrawMutation` — a preview can never become persistent state.
 fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Option<serde_json::Value> {
     if is_idle {
         return None;
@@ -664,7 +664,7 @@ pub mod canvas_pointer_down {
         pub meta: bool,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
@@ -689,7 +689,7 @@ pub mod canvas_pointer_move {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
@@ -701,7 +701,7 @@ pub mod canvas_pointer_move {
             if hovered_id == config.hovered_id {
                 return Ok(Emit::default());
             }
-            return Ok(Emit::config(vec![DrawConfigOperation::SetHovered { id: hovered_id }]));
+            return Ok(Emit::config(vec![DrawConfigMutation::SetHovered { id: hovered_id }]));
         }
         let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / config.camera.zoom.max(1e-6);
         let emit = session.step_gesture(draw_gesture::Event::PointerMove { world, marquee_threshold_world }, document, &mut config);
@@ -727,7 +727,7 @@ pub mod canvas_pointer_up {
         pub meta: bool,
     }
 
-    pub fn handle(payload: &CanvasPointerUp, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerUp, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
@@ -747,7 +747,7 @@ pub mod canvas_double_click {
     #[dsl(keyword = "canvas-double-click")]
     pub struct CanvasDoubleClick {}
 
-    pub fn handle(_payload: &CanvasDoubleClick, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasDoubleClick, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         let emit = session.step_gesture(draw_gesture::Event::CommitDraft, document, &mut config);
@@ -765,7 +765,7 @@ pub mod canvas_commit_draft {
     #[dsl(keyword = "canvas-commit-draft")]
     pub struct CanvasCommitDraft {}
 
-    pub fn handle(_payload: &CanvasCommitDraft, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasCommitDraft, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         let emit = session.step_gesture(draw_gesture::Event::CommitDraft, document, &mut config);
@@ -783,7 +783,7 @@ pub mod canvas_escape {
     #[dsl(keyword = "canvas-escape")]
     pub struct CanvasEscape {}
 
-    pub fn handle(_payload: &CanvasEscape, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasEscape, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         let emit = session.step_gesture(draw_gesture::Event::Escape, document, &mut config);

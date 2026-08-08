@@ -32,15 +32,15 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn forms_playbook_builder_config() -> playbook::PlaybookBuilderConfig {
-    playbook::PlaybookBuilderConfig { action_namespace: "forms-blueprint", controller_id: crate::apps::forms::FORMS_PLAY_APP_ID, labels: playbook::PLAYBOOK_BUILDER_LABELS_EN }
+fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
+    crate::playbook::PlaybookBuilderConfig { action_namespace: "forms-blueprint", controller_id: crate::apps::forms::FORMS_PLAY_APP_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
 pub fn render(spec: &FormSpec, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let contributions = crate::apps::forms::parse_contributions(config);
     let palette: Vec<BlockPaletteEntry> = crate::apps::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
     let builder_config = forms_playbook_builder_config();
-    playbook::render_playbook_builder(FORMS_PLAY_SURFACE_BLUEPRINT, spec, &palette, config.selected_ids.first().map(String::as_str), &builder_config)
+    crate::playbook::render_playbook_builder(FORMS_PLAY_SURFACE_BLUEPRINT, spec, &palette, config.selected_ids.first().map(String::as_str), &builder_config)
 }
 //#endregion 🔖️Render
 

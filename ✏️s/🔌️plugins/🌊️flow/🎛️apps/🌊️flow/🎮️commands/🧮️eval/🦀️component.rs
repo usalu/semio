@@ -5,9 +5,9 @@
 //! plugin-exchange answer back into the node cache and re-arms. The last two are internal chain links,
 //! never user-facing manifest actions.
 
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{eval_tick_effect, host_from_fixture};
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Arm
 /// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
 /// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
-pub fn evaluate_result(fixture: &FlowFixture, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowOperation, FlowConfigOperation> {
+pub fn evaluate_result(fixture: &FlowFixture, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
     let host = host_from_fixture(fixture, config, session);
     if session.sync(&host) {
         Emit { effects: vec![eval_tick_effect()], ..Default::default() }
@@ -33,7 +33,7 @@ pub mod evaluate {
     #[dsl(keyword = "evaluate")]
     pub struct Evaluate {}
 
-    pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(evaluate_result(doc.projection, cfg.projection, session))
     }
 }
@@ -47,7 +47,7 @@ pub mod flow_eval_tick {
     #[dsl(keyword = "flow-eval-tick")]
     pub struct FlowEvalTick {}
 
-    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let mut host = host_from_fixture(doc.projection, cfg.projection, session);
         let more = session.tick(&mut host);
         let mut effects = if more { vec![eval_tick_effect()] } else { Vec::new() };
@@ -81,7 +81,7 @@ pub mod flow_eval_resolve {
         pub output_json: String,
     }
 
-    pub fn handle(payload: &FlowEvalResolve, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &FlowEvalResolve, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let _ = session.seed_node_cache(payload.node_hash, &payload.output_json);
         Ok(Emit { effects: vec![eval_tick_effect()], ..Default::default() })
     }
@@ -99,14 +99,14 @@ mod tests {
     fn evaluate_updates_preview_state_without_operations() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::Evaluate(evaluate::Evaluate {}));
-        assert!(result.operations.is_empty(), "evaluate is a view action");
+        assert!(result.document_mutations.is_empty(), "evaluate is a view action");
     }
 
     #[test]
     fn resolving_a_node_output_re_arms_the_tick_chain() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }));
-        assert!(result.operations.is_empty(), "resolving is not a document edit");
+        assert!(result.document_mutations.is_empty(), "resolving is not a document edit");
     }
 }
 //#endregion 🧪️Tests

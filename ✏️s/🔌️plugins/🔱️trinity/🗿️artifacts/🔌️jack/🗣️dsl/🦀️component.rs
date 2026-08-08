@@ -193,7 +193,7 @@ fn graph_fixture_dsl_to_graph_fixture(parsed: GraphFixtureDsl) -> Result<GraphFi
 /// 📜️ `.trinity` textual notation for a whole [`GraphFixture`] (`store::DocumentDsl`), delegating to
 /// the derive-generated `GraphFixtureDsl` mirror. Also hand-implements `dsl::DslField` (normally
 /// auto-emitted alongside `#[derive(dsl::DslRecord)]`) so `GraphFixture` can be nested as an
-/// ordinary field too — `TrinityGraphOperation::SetFixture` embeds a whole fixture snapshot.
+/// ordinary field too — `TrinityGraphMutation::SetFixture` embeds a whole fixture snapshot.
 impl DocumentDsl for GraphFixture {
     const EXTENSION: &'static str = "trinity";
 

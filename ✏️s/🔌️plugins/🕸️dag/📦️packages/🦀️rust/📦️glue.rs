@@ -1,4 +1,3 @@
-extern crate infinite_canvas as infinite_board_port_directed_dag;
 //! 🔀️ DAG plugin — declarative DAG play app bundled as a hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that is
@@ -15,11 +14,13 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as dsl;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<DagOperation, DagConfigOperation>, Fault>`, the exact signature `DocumentApp::handle` and
+// `Result<Emit<DagMutation, DagConfigMutation>, Fault>`, the exact signature `DocumentApp::handle` and
 // `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it here
 // would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself (only
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
+
+extern crate infinite_canvas as infinite_board_port_directed_dag;
 
 //#region 🗿️Artifacts
 #[path = "."]
@@ -34,6 +35,49 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🕸️dag/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod nodes {
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/🔗nodes/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/🔗nodes/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod edges {
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/➡️edges/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/➡️edges/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_nodes {
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📋set-nodes/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📋set-nodes/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_edges {
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📋set-edges/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📋set-edges/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🕸️dag/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🕸️dag/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🕸️dag/🎒️pack/🦀️component.rs"]

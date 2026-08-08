@@ -1,7 +1,7 @@
 dialect protocol
 protocol draw.spr
 version 1
-schema draw.document.operation
+schema draw.document.mutation
 start record
 framing record
 record draw.draw-add-layer tag 1

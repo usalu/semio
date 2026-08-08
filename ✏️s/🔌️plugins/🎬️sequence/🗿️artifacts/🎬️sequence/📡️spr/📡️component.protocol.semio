@@ -1,7 +1,7 @@
 dialect protocol
 protocol sequence.spr
 version 1
-schema sequence.operation
+schema sequence.mutation
 start record
 framing record
 record sequence.sequence-add-node tag 1

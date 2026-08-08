@@ -1,7 +1,7 @@
 dialect protocol
 protocol 3d.spr
 version 1
-schema block.3d.operation
+schema block.3d.mutation
 start record
 framing record
 record block.3d-add-vertex tag 1

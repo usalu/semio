@@ -1,9 +1,9 @@
 //! 👁️ Animate present app commands — ephemeral view/config-only actions: set-selected-ids,
 //! canvas-pointer-down, no-op, set-locale.
 
-use crate::apps::present::config::{PresentConfig, PresentConfigOperation};
+use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::valid_tile_ids;
-use crate::artifacts::present::op::PresentOperation;
+use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentDeck;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,8 @@ pub mod set_selected_ids {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelectedIds, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
-        Ok(Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: valid_tile_ids(doc.projection, payload.ids.clone()) }]))
+    pub fn handle(payload: &SetSelectedIds, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: valid_tile_ids(doc.projection, payload.ids.clone()) }]))
     }
 }
 //#endregion 🔖️SetSelectedIds
@@ -34,31 +34,31 @@ pub mod canvas_pointer_down {
         pub layer_id: Option<String>,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         match &payload.layer_id {
-            Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Ok(Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: vec![id.clone()] }])),
-            _ => Ok(Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }])),
+            Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: vec![id.clone()] }])),
+            _ => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }])),
         }
     }
 }
 //#endregion 🔖️CanvasPointerDown
 
-//#region 🔖️NoOperation
+//#region 🔖️NoMutation
 pub mod no_operation {
     use super::*;
 
     /// 👁️ Decorative no-op wired to the read-only "active source" catalogue field's `on_change` — never
-    /// mutates anything (mirrors the pre-B1 `"noOperation"` view action verbatim).
+    /// mutates anything (mirrors the pre-B1 `"noMutation"` view action verbatim).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "no-op")]
-    pub struct NoOperation {}
+    pub struct NoMutation {}
 
-    pub fn handle(_payload: &NoOperation, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(_payload: &NoMutation, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
-//#endregion 🔖️NoOperation
+//#endregion 🔖️NoMutation
 
 //#region 🔖️SetLocale
 pub mod set_locale {
@@ -70,8 +70,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
-        Ok(Emit::config(vec![PresentConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        Ok(Emit::config(vec![PresentConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

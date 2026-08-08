@@ -1,8 +1,8 @@
 {
   "id": "26/08/07/FIX-APPS-VERTICAL-LAYOUT-GROWTH-AND-HANG",
   "title": "Fix Apps Vertical Layout Growth And Hang",
-  "status": "open",
+  "status": "closed",
   "goal": "S-AND-PLUGINS-END-TO-END",
   "description": "Individual apps launch with a collapsed/wrong layout that grows vertically and hangs. Diagnose shell/panel root cause and restore normal layout.",
-  "summary": ""
+  "summary": "Superseded by 26/08/07/GET-ALL-APPS-WORKING-END-TO-END \u2014 root cause was missing Tailwind @source globs in standalone os-dev globals.css."
 }

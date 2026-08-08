@@ -167,7 +167,16 @@ function ResizableJoinCornerGrab({
   return <div ref={elementRef} data-slot="resizable-corner" data-edge={edgeSide} className="absolute z-50 cursor-move touch-none" style={resizableJoinCornerPlacementStyle(orientation, edgeSide, alongFraction)} />;
 }
 
-function ResizablePanelGroup({ className, orientation = "horizontal", resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+function ResizablePanelGroup({ className, orientation = "horizontal", resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE, defaultLayout, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+  // react-resizable-panels Layout is Record<panelId, number>; reject/omit mismatched array leftovers from callers.
+  const safeDefaultLayout =
+    defaultLayout == null
+      ? undefined
+      : Array.isArray(defaultLayout)
+        ? undefined
+        : typeof defaultLayout === "object"
+          ? defaultLayout
+          : undefined;
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
@@ -175,6 +184,7 @@ function ResizablePanelGroup({ className, orientation = "horizontal", resizeTarg
       className={cn("flex h-full w-full", orientation === "vertical" ? "flex-col" : "flex-row", className)}
       orientation={orientation}
       resizeTargetMinimumSize={resizeTargetMinimumSize}
+      defaultLayout={safeDefaultLayout}
       {...props}
     />
   );

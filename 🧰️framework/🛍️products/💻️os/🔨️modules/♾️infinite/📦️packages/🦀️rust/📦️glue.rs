@@ -73,3 +73,18 @@ pub mod board {
     pub mod undirected;
   }
 }
+
+//#region 🔖️DirectedNormalSurface
+/// ♾️ Crate-root surface for plugins that `extern crate infinite_canvas as infinite_board_port_directed(_normal)`.
+/// `directed_normal` already re-exports `ports::directed::*` (layouts, `GraphExtension`, `BoardEngine`, …).
+pub use board::ports::directed_normal::*;
+pub use board::HandleRole;
+pub use board::ports::directed::force_graph;
+//#endregion 🔖️DirectedNormalSurface
+
+//#region 🔖️DirectedDagSurface
+pub use board::ports::directed_dag::{
+  dag_document_from_fixture, dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagCamera, DagDiff, DagDocument, DagEdgePatch, DagFixture,
+  DagFixtureEdge, DagHost, DagLayoutOptions, DagLayoutOrientation, DagMutation, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec, PortShape, DAG_DOCUMENT_SCHEMA,
+};
+//#endregion 🔖️DirectedDagSurface

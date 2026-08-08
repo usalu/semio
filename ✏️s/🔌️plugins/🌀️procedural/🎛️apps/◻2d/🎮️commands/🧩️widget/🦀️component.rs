@@ -1,8 +1,8 @@
 //! 🧩️ Procedural2d play app commands — widget add/remove.
 
-use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOperation};
+use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::engine::host_from_fixture;
-use crate::artifacts::procedural2d::op::{procedural2d_fixture_operations, Procedural2dOperation};
+use crate::artifacts::procedural2d::op::{procedural2d_fixture_operations, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -22,7 +22,7 @@ pub mod add_widget {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.projection.fixture;
         let descriptor = match payload.kind.as_str() {
             "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
@@ -31,7 +31,7 @@ pub mod add_widget {
         let mut host = host_from_fixture(fixture);
         let baseline = host.fixture.clone();
         if let Ok(id) = host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)) {
-            return Ok(Emit { document_operations: procedural2d_fixture_operations(&baseline, &host.fixture), config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: vec![id] }], ..Default::default() });
+            return Ok(Emit { document_mutations: procedural2d_fixture_operations(&baseline, &host.fixture), config_mutations: vec![Procedural2dConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() });
         }
         Ok(Emit::default())
     }
@@ -49,7 +49,7 @@ pub mod remove_widget {
         pub widget_id: String,
     }
 
-    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.projection.fixture;
         let target_id = &payload.widget_id;
         let operations = host_operations(fixture, |host| {
@@ -59,7 +59,7 @@ pub mod remove_widget {
             return Ok(Emit::default());
         }
         let remaining: Vec<String> = cfg.projection.selected_ids.iter().filter(|id| *id != target_id).cloned().collect();
-        Ok(Emit { document_operations: operations, config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: remaining }], ..Default::default() })
+        Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural2dConfigMutation::SetSelection { ids: remaining }], ..Default::default() })
     }
 }
 //#endregion 🔖️RemoveWidget

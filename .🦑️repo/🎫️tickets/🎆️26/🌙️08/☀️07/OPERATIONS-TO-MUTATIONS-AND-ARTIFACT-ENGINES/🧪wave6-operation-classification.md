@@ -1,0 +1,101 @@
+# Wave 6 Operation-hit classification
+Total: 81
+
+## boolean_brep_err (70)
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🔺️diff/🦀️component.rs:11:pub struct SetBooleanOperationDiff {`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🔺️diff/🦀️component.rs:15:impl SetBooleanOperationDiff {`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🔺️diff/🦀️component.rs:21:impl MutationDiff<DrawDocument> for SetBooleanOperationDiff {`
+- `✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs:51:    /// Operation, so the registry's View/Shell kind discipline must let a whole-document reset through.`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🧬️mutations/🦀️component.rs:330:/// encoding respectively), same local-bridge shape as `semio_compose_rs`'s `KitSnapshot`. `Operation`/`
+- `✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🦀️component.rs:354:            // ✏️ Operation actions — flow through the document store with true inverses. `setActiveExample``
+- `✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs:12:/// ✏️ Replaces document content via a `SetDocument` operation, so this is an Operation action (not a`
+- `✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs:58:    /// an Operation. Under the real registry the View/Shell → emits-operations guard rejects a mis-declaration;`
+- `✏️s/🔨️modules/◻2d/⚙️engine/🦀️component.rs:227:    Operation(String),`
+- `✏️s/🔨️modules/◻2d/🔀️booleans/🦀️component.rs:84:        return Err(DrawingError::Operation("boolean produced empty path".into()));`
+- `✏️s/🔨️modules/◻2d/🔀️booleans/🦀️component.rs:109:        return Err(DrawingError::Operation("boolean produced empty path".into()));`
+- `✏️s/🔨️modules/◻2d/🔀️booleans/🦀️component.rs:153:        assert!(matches!(err, DrawingError::Operation(message) if message.contains("empty path")));`
+- `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs:26:        EngineFault::Compute(message) => DrawingError::Operation(message),`
+- `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs:27:        EngineFault::UnknownEngine(message) => DrawingError::Operation(message),`
+- `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs:652:            Err(DrawingError::Operation("boolean operations require booleans feature".into()))`
+- `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs:664:            Err(DrawingError::Operation("boolean operations require booleans feature".into()))`
+- `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs:677:            Err(DrawingError::Operation("trace requires trace feature".into()))`
+- `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs:735:            Err(DrawingError::Operation("boolean operations require booleans feature".into()))`
+- `✏️s/🔨️modules/◻2d/🔍️trace/🦀️component.rs:159:        return Err(DrawingError::Operation("trace produced no contours".into()));`
+- `✏️s/🔨️modules/◻2d/🔍️trace/🦀️component.rs:167:        return Err(DrawingError::Operation("trace produced no segments".into()));`
+- `✏️s/🔨️modules/◻2d/🔍️trace/🦀️component.rs:235:        assert!(matches!(err, DrawingError::Operation(message) if message.contains("no contours")));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️component.rs:117:    Operation(String),`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🚨️error/🦀️component.rs:16:    Operation(String),`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🚨️error/🦀️component.rs:30:            KernelError::Operation(msg) => write!(f, "operation failed: {msg}"),`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🩹️heal/🦀️component.rs:78:        return Err(KernelError::Operation(format!(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:37:        .ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:39:        return Err(KernelError::Operation(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:70:        return Err(KernelError::Operation(format!(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:135:        return Err(KernelError::Operation(format!(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:166:        return Err(KernelError::Operation(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:175:        .ok_or_else(|| KernelError::Operation("split vertex A missing from outer loop".into()))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:179:        .ok_or_else(|| KernelError::Operation("split vertex B missing from outer loop".into()))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:183:        return Err(KernelError::Operation(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:294:                return Err(KernelError::Operation("degenerate edge line".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:312:                return Err(KernelError::Operation(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:341:            .ok_or_else(|| KernelError::Operation(format!("coedge {cid} missing endpoints")))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🖋️imprint/🦀️component.rs:422:        assert!(matches!(err, KernelError::Operation(_)));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs:101:    BrepError::Operation(e.to_string())`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs:104:    BrepError::Operation(e.to_string())`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs:565:        let hits = intersect_curve_curve(ca, cb, tolerance).map_err(|e| BrepError::Operation(e.to_string()))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs:571:        let hits = intersect_curve_surface(c, s, tolerance).map_err(|e| BrepError::Operation(e.to_string()))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs:577:        let hits = intersect_surface_surface(sa, sb, tolerance).map_err(|e| BrepError::Operation(e.to_string()))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs:604:        let n = s.normal(u, v).ok_or_else(|| BrepError::Operation("surface normal undefined".into()))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📜️history/🦀️component.rs:1://! 📜️ Operation provenance: a [`PersistentLabel`] assigned once at an entity's birth and never`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🎨️blend/🦀️component.rs:190:        return Err(KernelError::Operation(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🎨️blend/🦀️component.rs:209:            KernelError::Operation("could not evaluate face normal for blend".into())`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🎨️blend/🦀️component.rs:214:        .ok_or_else(|| KernelError::Operation("degenerate face normal".into()))`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🎨️blend/🦀️component.rs:299:        return Err(KernelError::Operation(`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:165:            .map_err(KernelError::Operation)`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:176:    mesh_from_obj(text).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:182:    GlbExporter.export(&data).map_err(KernelError::Operation)`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:190:        .map_err(KernelError::Operation)`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:197:    dwg_to_bytes(&drawing).map_err(KernelError::Operation)`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:202:    let drawing = dwg_from_bytes(data).map_err(KernelError::Operation)?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:241:        return Err(KernelError::Operation("no valid triangles in mesh".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:264:    let text = std::str::from_utf8(data).map_err(|e| KernelError::Operation(format!("ascii stl utf-8: {e}")))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:280:        return Err(KernelError::Operation("ascii stl has no vertices".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:319:        return Err(KernelError::Operation(format!("expected 3 floats, got '{s}'")));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:327:        return Err(KernelError::Operation(format!("expected 3 floats, got '{s}'")));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs:333:    s.parse::<f64>().map_err(|e| KernelError::Operation(format!("invalid float '{s}': {e}")))`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧩️tessellate/🦀️component.rs:229:        return Err(KernelError::Operation(format!("face {face_id} outer loop degenerated to {} points", boundary.len())));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧩️tessellate/🦀️component.rs:265:        let samples = edge_cache.get(&coedge.edge).ok_or_else(|| KernelError::Operation(format!("missing edge sample for {}", coedge.edge)))?;`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/↔️offset/🦀️component.rs:96:            return Err(KernelError::Operation("offset collapsed the solid".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/↔️offset/🦀️component.rs:104:        return Err(KernelError::Operation("offset produced insufficient points".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/↔️offset/🦀️component.rs:203:        return Err(KernelError::Operation("draft angle must be non-zero".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/↔️offset/🦀️component.rs:265:        return Err(KernelError::Operation("degenerate box".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/↔️offset/🦀️component.rs:509:        assert!(matches!(err, KernelError::Operation(_)));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🌳️bvh/🦀️component.rs:47:        return Err(KernelError::Operation("edge produced no samples".into()));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🌳️bvh/🦀️component.rs:60:        return Err(KernelError::Operation(format!("face {face} has no boundary")));`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/🧵️sew/🦀️component.rs:79:        let outer = face.outer.ok_or_else(|| KernelError::Operation(format!("face {fid} has no outer loop")))?;`
+
+## compose (5)
+- `compose/client/lib/js/index.ts:890:/** @emoji 📡️ GraphQL {@code Operation} {@code __typename} → {@link EventBus} {@code kind} (react hooks rely on these strings). */`
+- `compose/client/lib/rs/lib.rs:5813:        /// @emoji 📦️ Single mutation entry: walks canonical [`crate::operation::CanonicalKitDiff`] from [`crate::operation::Operation::to_diff`].`
+- `compose/server/hub/rs/bin.rs:1629:        Commands { envelope: Box<protocol::OperationEnvelope>, frontier: db::Frontier },`
+- `compose/server/hub/rs/bin.rs:1684:            let op_envelope = protocol::OperationEnvelope {`
+- `compose/server/hub/rs/bin.rs:2486:        let envelope = protocol::OperationEnvelope {`
+
+## other (3)
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔺️diff/🦀️component.rs:17:/// 📦️ Operation-list diff: layout operations fold sequentially over a cloned projection. `absorb``
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🦀️component.rs:429:        Operation,`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs:29:/// default `Shape::Text` behavior — no per-field opt-in needed) since a `store::Operation` grammar is`
+
+## fixture (2)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:3657:      name: `Operation ${index}`,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:3658:      abbreviation: `Operation${index}`,`
+
+## noop (1)
+- `✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:238:            .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))`
+
+## graphql (0)
+
+## wgpu (0)
+
+## nodegraph (0)
+
+## bug (0)

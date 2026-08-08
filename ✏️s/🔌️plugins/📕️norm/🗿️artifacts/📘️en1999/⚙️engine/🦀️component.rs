@@ -1,6 +1,7 @@
 //! ⚙️ EN 1999 app — headless compute (constitutional: engine).
 
 use crate::artifacts::en1999::Document;
+use crate::artifacts::en1999::mutations::En1999Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
@@ -404,7 +405,7 @@ pub struct En1999Family;
 
 impl crate::document::NormFamily for En1999Family {
     type Document = Document;
-    type Operation = crate::artifacts::en1999::op::Operation;
+    type Mutation = crate::artifacts::en1999::mutations::En1999Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::En1999
@@ -414,6 +415,44 @@ impl crate::document::NormFamily for En1999Family {
         evaluate(document)
     }
 }
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1999 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1999Engine {
+    projection: Document,
+}
+
+impl En1999Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1999Engine {
+    type Projection = Document;
+    type Mutation = En1999Mutation;
+    type Diff = crate::artifacts::en1999::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = crate::document::NormHost<En1999Family>;
 // #endregion 🔖️Session

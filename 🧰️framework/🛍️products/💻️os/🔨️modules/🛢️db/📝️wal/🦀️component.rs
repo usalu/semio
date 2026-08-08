@@ -35,12 +35,12 @@ pub const WAL_TX_COMMIT: u8 = 0x42;
 /// @emoji 🚫️ Closes a transaction as rolled back; replay must discard every record since the
 /// matching `WAL_TX_BEGIN`.
 pub const WAL_TX_ABORT: u8 = 0x43;
-/// @emoji ✉️ A `protocol::OperationEnvelope`'s bytes, stored verbatim (zero-copy on the write
+/// @emoji ✉️ A `protocol::MutationEnvelope`'s bytes, stored verbatim (zero-copy on the write
 /// path — this crate never re-encodes what `db_document` hands it).
 pub const WAL_COMMAND: u8 = 0x44;
 /// @emoji 🫙️ A command payload, either inlined or referenced by CAS hash (see `WalPayloadRef`).
 pub const WAL_PAYLOAD: u8 = 0x45;
-/// @emoji 🔀️ An opaque `protocol::OperationDiff`-shaped byte blob (db crates below `db_document`
+/// @emoji 🔀️ An opaque `protocol::MutationDiff`-shaped byte blob (db crates below `db_document`
 /// never interpret operation semantics, per the contract's hard dependency rule).
 pub const WAL_DIFF: u8 = 0x46;
 /// @emoji ⏪️ An opaque inverse/undo byte blob for `db_document`'s inverse-undo pipeline.

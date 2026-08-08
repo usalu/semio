@@ -3,6 +3,7 @@
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
 use std::collections::BTreeMap;
 use crate::artifacts::vdi3805::*;
+use crate::artifacts::vdi3805::mutations::Vdi3805Mutation;
 
 const FAMILY: &str = "VDI 3805";
 const ANNEX: AnnexChoice = AnnexChoice::De;
@@ -580,7 +581,7 @@ pub struct Vdi3805Family;
 
 impl crate::document::NormFamily for Vdi3805Family {
     type Document = Document;
-    type Operation = op::Operation;
+    type Mutation = Vdi3805Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::Vdi3805
@@ -590,6 +591,44 @@ impl crate::document::NormFamily for Vdi3805Family {
         evaluate(document)
     }
 }
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent Vdi3805 artifact engine — owns the projection; every transition is a mutation.
+pub struct Vdi3805Engine {
+    projection: Document,
+}
+
+impl Vdi3805Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for Vdi3805Engine {
+    type Projection = Document;
+    type Mutation = Vdi3805Mutation;
+    type Diff = crate::artifacts::vdi3805::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = crate::document::NormHost<Vdi3805Family>;
 // #endregion 🔖️Session
@@ -790,54 +829,54 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "vdi3805.document",
         extension: Some("vdi3805"),
-        role: dsl::LanguageRole::Document,
+        role: crate::dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vdi3805.document"),
+        hooks: crate::dsl::passthrough_hooks("vdi3805.document"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "vdi3805.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: crate::dsl::LanguageRole::Ops,
         grammar: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vdi3805.op"),
+        hooks: crate::dsl::passthrough_hooks("vdi3805.op"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "vdi3805.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: crate::dsl::LanguageRole::Diff,
         grammar: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("vdi3805.diff"),
+        hooks: crate::dsl::passthrough_hooks("vdi3805.diff"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "vdi3805.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: crate::dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::vdi3805::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vdi3805.pack"),
+        hooks: crate::dsl::passthrough_hooks("vdi3805.pack"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "vdi3805.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: crate::dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vdi3805.spr"),
+        hooks: crate::dsl::passthrough_hooks("vdi3805.spr"),
     });
 }

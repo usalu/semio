@@ -1,0 +1,1 @@
+error: could not compile `semio-s-plugin-flow` (lib) due to 11 previous errors; 1 warning emitted

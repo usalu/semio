@@ -1,4 +1,4 @@
-//! 🔺️ Wires artifact — diff structs + `OperationDiff` impl (constitutional: diff, extracted from op).
+//! 🔺️ Wires artifact — diff structs + `MutationDiff` impl (constitutional: diff, extracted from op).
 
 
 //#region 📖️SemioGrammar
@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::wires::engine::{array_mut, entity_id};
 use crate::artifacts::wires::MindmapWiresDocument;
 use dsl::DslValue;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -66,7 +66,7 @@ pub struct MindmapWiresDiff {
     pub replace: Option<Box<MindmapWiresDocument>>,
 }
 
-impl OperationDiff<MindmapWiresDocument> for MindmapWiresDiff {
+impl MutationDiff<MindmapWiresDocument> for MindmapWiresDiff {
     fn apply(&self, projection: &MindmapWiresDocument) -> MindmapWiresDocument {
         let base = self.replace.as_ref().map_or_else(|| projection.clone(), |document| (**document).clone());
         let mut wires = base.wires_fixture;

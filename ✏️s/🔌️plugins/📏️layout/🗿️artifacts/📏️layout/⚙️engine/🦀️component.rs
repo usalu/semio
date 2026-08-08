@@ -31,7 +31,7 @@ pub enum LayoutError {
 //#region 🔖️Register
 /// 🗂️ Registers `LayoutDocument`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse layout
-/// documents without depending on this crate's concrete `Projection`/`Operation` types. Also registers
+/// documents without depending on this crate's concrete `Projection`/`Mutation` types. Also registers
 /// the 2D export handler and the DWG import handler. Called from the plugin root's `semio_plugin!{
 /// setup: … }`.
 pub fn register() {
@@ -384,3 +384,41 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent document engine — every transition is a `LayoutMutation`.
+pub struct LayoutEngine {
+    projection: crate::artifacts::layout::LayoutDocument,
+}
+
+impl LayoutEngine {
+    pub fn new(projection: crate::artifacts::layout::LayoutDocument) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::layout::LayoutDocument {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for LayoutEngine {
+    type Projection = crate::artifacts::layout::LayoutDocument;
+    type Mutation = crate::artifacts::layout::mutations::LayoutMutation;
+    type Diff = crate::artifacts::layout::diff::LayoutDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::layout::mutations::apply_layout_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

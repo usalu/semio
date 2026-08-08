@@ -1,8 +1,8 @@
 //! ⚙️ EN 1991 actions on structures — headless compute (constitutional: engine).
 
 use crate::artifacts::en1990::engine::{na_de::NaDe, na_en::NaEn};
+use crate::artifacts::en1991::mutations::En1991Mutation;
 use crate::artifacts::en1991::{part_1_2::FireCurve, Document};
-use crate::artifacts::en1991::op::Operation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, NationalAnnex, NormFamily, NormFamilyId, NormHost, Quantity};
 
 // #region 🔖️NaDe
@@ -522,6 +522,44 @@ pub fn check_full_actions(document: &Document) -> CheckReport {
 }
 
 // #region 🔖️Session
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1991 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1991Engine {
+    projection: Document,
+}
+
+impl En1991Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1991Engine {
+    type Projection = Document;
+    type Mutation = En1991Mutation;
+    type Diff = crate::artifacts::en1991::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
 pub type Host = NormHost<En1991Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
@@ -532,7 +570,7 @@ pub struct En1991Family;
 
 impl NormFamily for En1991Family {
     type Document = Document;
-    type Operation = Operation;
+    type Mutation = En1991Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1991

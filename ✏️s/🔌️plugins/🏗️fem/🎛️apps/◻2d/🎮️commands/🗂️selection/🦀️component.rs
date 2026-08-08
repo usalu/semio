@@ -1,7 +1,7 @@
 //! 🗂️ Fem2d play app commands — removing a mixed-kind selection of document entities.
 
-use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigOperation};
-use crate::artifacts::fem2d::op::Fem2dOperation;
+use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::element_id;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,32 +21,32 @@ pub mod remove_selection {
     /// 🧩️ Resolves each id against every collection in turn (nodes, elements, materials, sections,
     /// supports, load cases, regions, combinations) and emits the matching typed `Remove*` operation —
     /// mirrors the pre-migration stringly-typed selection-delete dispatch, now over the typed document.
-    pub fn handle(payload: &RemoveSelection, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveSelection, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let mut operations = Vec::new();
         for id in &payload.ids {
             if projection.nodes.iter().any(|n| &n.id == id) {
-                operations.push(Fem2dOperation::RemoveNode { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveNode { id: id.clone() });
             } else if projection.elements.iter().any(|e| element_id(e) == id) {
-                operations.push(Fem2dOperation::RemoveElement { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveElement { id: id.clone() });
             } else if projection.materials.iter().any(|m| &m.id == id) {
-                operations.push(Fem2dOperation::RemoveMaterial { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveMaterial { id: id.clone() });
             } else if projection.sections.iter().any(|s| &s.id == id) {
-                operations.push(Fem2dOperation::RemoveSection { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveSection { id: id.clone() });
             } else if projection.supports.iter().any(|s| &s.id == id) {
-                operations.push(Fem2dOperation::RemoveSupport { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveSupport { id: id.clone() });
             } else if projection.load_cases.iter().any(|l| &l.id == id) {
-                operations.push(Fem2dOperation::RemoveLoadCase { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveLoadCase { id: id.clone() });
             } else if projection.regions.iter().any(|r| &r.id == id) {
-                operations.push(Fem2dOperation::RemoveRegion { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveRegion { id: id.clone() });
             } else if projection.combinations.iter().any(|c| &c.id == id) {
-                operations.push(Fem2dOperation::RemoveCombination { id: id.clone() });
+                operations.push(Fem2dMutation::RemoveCombination { id: id.clone() });
             }
         }
         if operations.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::operations(operations))
+            Ok(Emit::mutations(operations))
         }
     }
 }
@@ -70,7 +70,7 @@ mod tests {
         let case_id = app.projection().expect("projection").load_cases[0].id.clone();
 
         let result = dispatch(&mut app, Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec![node_id, case_id] }));
-        assert_eq!(result.operations.len(), 2);
+        assert_eq!(result.mutations.len(), 2);
         assert!(app.projection().expect("projection").nodes.is_empty());
         assert!(app.projection().expect("projection").load_cases.is_empty());
     }
@@ -81,7 +81,7 @@ mod tests {
         dispatch(&mut app, Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 1.0, height: 1.0, material_id: "steel".into(), thickness: None, mesh_size: None }));
         let region_id = app.projection().expect("projection").regions[0].id.clone();
         let result = dispatch(&mut app, Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec![region_id] }));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.mutations.len(), 1);
         assert!(app.projection().expect("projection").regions.is_empty());
     }
 
@@ -89,7 +89,7 @@ mod tests {
     fn remove_selection_with_no_matching_ids_is_a_no_op() {
         let mut app = fem2d_app();
         let result = dispatch(&mut app, Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["missing".into()] }));
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

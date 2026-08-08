@@ -33,10 +33,10 @@
 /// byte-identical to its on-wire form (M-C's "communication AND storage both binary"). `db_wal`
 /// itself never interprets these bytes (per the contract, no crate below `db_document` does);
 /// this crate is the first one that needs to read a command's bytes back out semantically (to
-/// relay it as a typed `protocol::OperationEnvelope` in a `ServerFrame::Commands`), so it is the
+/// relay it as a typed `protocol::MutationEnvelope` in a `ServerFrame::Commands`), so it is the
 /// natural place to fix this convention. Once `db_document` lands it becomes the writer of these
 /// bytes; this codec is the seam it should reuse rather than inventing a second one.
-pub fn encode_command_envelope(envelope: &protocol::OperationEnvelope) -> Vec<u8> {
+pub fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> Vec<u8> {
     let mut out = Vec::new();
     protocol::encode_envelope(envelope, &mut out);
     out
@@ -46,7 +46,7 @@ pub fn encode_command_envelope(envelope: &protocol::OperationEnvelope) -> Vec<u8
 /// `DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
 /// `pack_core`'s stated invariant), then maps a decode failure to `DbError::Corrupt` rather than
 /// leaking `protocol::ProtocolError`.
-pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::OperationEnvelope, DbError> {
+pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::MutationEnvelope, DbError> {
     check_len(bytes.len() as u64, DbLimits::default().max_command_bytes, "wal_command_envelope")?;
     let mut pos = 0usize;
     let envelope = protocol::decode_envelope(bytes, &mut pos).map_err(|error| DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
@@ -70,7 +70,7 @@ pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::OperationEnvelo
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocumentSyncState {
     pub frontier: Frontier,
-    pub commands: Vec<protocol::OperationEnvelope>,
+    pub commands: Vec<protocol::MutationEnvelope>,
     /// @emoji 🚧️ The lowest `head_seq` this crate can still serve via tail (missing-command)
     /// transfer — the `head_seq` of the most recent `WAL_SNAPSHOT_PUB` record replayed, or `0` if
     /// none (nothing has ever been compacted away). A replica behind this floor needs
@@ -133,7 +133,7 @@ pub fn frontier_delta(from: &Frontier, to: &Frontier) -> Result<FrontierDelta, D
 /// `ServerFrame::{Welcome, Commands, Ack}.*frontier` fields carry). `head_edit_id` has no
 /// `Frontier` counterpart (see `DocumentSyncState`'s doc); callers pass whatever they
 /// consider the frontier's tip identity (`state_frontier_summary` below supplies the natural
-/// choice: the last replayed command's `operation_id`).
+/// choice: the last replayed command's `mutation_id`).
 pub fn to_frontier_summary(frontier: &Frontier, head_edit_id: String) -> protocol::RuntimeFrontierSummary {
     protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId(frontier.document.0.clone()), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
@@ -148,10 +148,10 @@ pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> Fron
 }
 
 /// @emoji 🌉️ `state`'s own frontier as a `RuntimeFrontierSummary`, with `head_edit_id` filled from
-/// the last replayed command's `operation_id` (empty string for a genesis document with no
+/// the last replayed command's `mutation_id` (empty string for a genesis document with no
 /// commands yet).
 pub fn state_frontier_summary(state: &DocumentSyncState) -> protocol::RuntimeFrontierSummary {
-    let head_edit_id = state.commands.last().map(|envelope| envelope.operation_id.0.clone()).unwrap_or_default();
+    let head_edit_id = state.commands.last().map(|envelope| envelope.mutation_id.0.clone()).unwrap_or_default();
     to_frontier_summary(&state.frontier, head_edit_id)
 }
 //#endregion 🔖️Frontier
@@ -169,7 +169,7 @@ pub fn state_frontier_summary(state: &DocumentSyncState) -> protocol::RuntimeFro
 /// cannot find them. This function is this crate's `WAL_COMMAND`-shaped analog, built the same
 /// way (a linear ordinal-indexed slice) but over `DocumentSyncState::commands`, which is already
 /// the fully-decoded, ordinal-indexed sequence `replay_sync_state` produced.
-pub fn missing_commands(state: &DocumentSyncState, replica: &Frontier) -> Result<Vec<protocol::OperationEnvelope>, DbError> {
+pub fn missing_commands(state: &DocumentSyncState, replica: &Frontier) -> Result<Vec<protocol::MutationEnvelope>, DbError> {
     if replica.document != state.frontier.document {
         return Err(DbError::InvalidArgument(format!("frontier document mismatch: replica {} vs server {}", replica.document, state.frontier.document)));
     }
@@ -186,7 +186,7 @@ pub fn missing_commands(state: &DocumentSyncState, replica: &Frontier) -> Result
 /// stamped with `state`'s current frontier — `origin` is the relaying actor identity the caller
 /// (the semio_hub session layer, which owns its own actor identity) supplies; this crate has no opinion
 /// on it beyond passing it through.
-pub fn commands_server_frame(state: &DocumentSyncState, envelopes: Vec<protocol::OperationEnvelope>, origin: protocol::ActorId) -> protocol::ServerFrame {
+pub fn commands_server_frame(state: &DocumentSyncState, envelopes: Vec<protocol::MutationEnvelope>, origin: protocol::ActorId) -> protocol::ServerFrame {
     protocol::ServerFrame::Commands { envelopes, origin, frontier: state_frontier_summary(state) }
 }
 //#endregion 🔖️MissingCommands
@@ -202,7 +202,7 @@ pub enum BootstrapPlan {
     None,
     /// @emoji 🚚️ The replica is within the retained WAL floor: ship it the missing commands
     /// directly, no snapshot needed.
-    Tail { envelopes: Vec<protocol::OperationEnvelope> },
+    Tail { envelopes: Vec<protocol::MutationEnvelope> },
     /// @emoji 📸️ The replica is behind the retained WAL floor (or brand new against a compacted
     /// document): ship it a whole snapshot generation first.
     Snapshot { generation: u64, bytes: Vec<u8>, pack_hash: [u8; 32] },
@@ -323,14 +323,14 @@ mod tests {
     use db_wal::{DocumentWal, GroupCommitPolicy, WalRecord};
 
     //#region 🧸️Fixtures
-    fn sample_envelope(id: &str, seq: u64) -> protocol::OperationEnvelope {
-        protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(id.to_string()),
+    fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
+        protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(id.to_string()),
             document_id: protocol::DocumentId("doc-1".to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }
@@ -379,8 +379,8 @@ mod tests {
         assert_eq!(state.frontier.commit_seq, 3);
         assert_eq!(state.floor_head_seq, 0);
         assert_eq!(state.commands.len(), 3);
-        assert_eq!(state.commands[0].operation_id.0, "op-0");
-        assert_eq!(state.commands[2].operation_id.0, "op-2");
+        assert_eq!(state.commands[0].mutation_id.0, "op-0");
+        assert_eq!(state.commands[2].mutation_id.0, "op-2");
     }
 
     #[test]
@@ -480,8 +480,8 @@ mod tests {
         let second_state = replay_sync_state(&storage, document).unwrap();
         let missing = missing_commands(&second_state, &replica_frontier).unwrap();
         assert_eq!(missing.len(), 3);
-        assert_eq!(missing[0].operation_id.0, "op-3");
-        assert_eq!(missing[2].operation_id.0, "op-5");
+        assert_eq!(missing[0].mutation_id.0, "op-3");
+        assert_eq!(missing[2].mutation_id.0, "op-5");
     }
 
     #[test]
@@ -666,7 +666,7 @@ mod tests {
         match frame {
             Some(protocol::ServerFrame::Commands { envelopes, .. }) => {
                 assert_eq!(envelopes.len(), 1);
-                assert_eq!(envelopes[0].operation_id.0, "op-2");
+                assert_eq!(envelopes[0].mutation_id.0, "op-2");
             }
             other => panic!("expected a Commands frame, got {other:?}"),
         }

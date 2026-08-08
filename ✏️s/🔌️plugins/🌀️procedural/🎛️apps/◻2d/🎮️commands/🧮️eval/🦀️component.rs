@@ -1,8 +1,8 @@
 //! 🧮️ Procedural2d play app commands — off-main-thread flow evaluation driver.
 
-use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOperation};
+use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::engine::host_from_fixture_with_session;
-use crate::artifacts::procedural2d::op::Procedural2dOperation;
+use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -18,7 +18,7 @@ pub mod set_eval_outputs {
         pub outputs_json: String,
     }
 
-    pub fn handle(payload: &SetEvalOutputs, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetEvalOutputs, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         session.set_eval_json(payload.outputs_json.clone());
         Ok(Emit::default())
     }
@@ -33,7 +33,7 @@ pub mod flow_eval_tick {
     #[dsl(keyword = "flow-eval-tick")]
     pub struct FlowEvalTick {}
 
-    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let fixture = &doc.projection.fixture;
         let mut host = host_from_fixture_with_session(fixture, session);
         let more = session.tick(&mut host);

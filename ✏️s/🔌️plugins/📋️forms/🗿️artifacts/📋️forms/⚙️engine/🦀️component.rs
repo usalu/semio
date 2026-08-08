@@ -6,7 +6,7 @@
 //! the app's taxonomy tree (a helper with exactly one consumer lives in that consumer's component file).
 //! `FormsConfig` (view state, not document state) does NOT live here — see `🎛️apps/📋️forms/🦀️config.rs`.
 
-use crate::artifacts::forms::op::FormOperation;
+use crate::artifacts::forms::op::FormMutation;
 // 🧷️ Aliased (not the bare `dsl` name): this file also needs the EXTERN `dsl` crate (kernel DSL
 // value/derive surface) for `value_to_dsl`/`dsl_to_value` below — importing the artifact's own `dsl`
 // submodule under the bare name would shadow that crate and break every `dsl::DslValue`/`dsl::to_dsl_value`
@@ -16,7 +16,7 @@ use crate::artifacts::forms::{FormQuestion, FormSpec, FormStep, FORMS_DOCUMENT_S
 use serde_json::Value;
 
 //#region 🔖️Types
-pub use playbook::{
+pub use crate::playbook::{
     can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, initial_values as initial_try_values,
     is_block_visible as is_question_visible, is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
 };
@@ -25,7 +25,7 @@ pub use playbook::{
 //#region 🔖️Register
 /// 🗂️ Registers `FormSpec`'s pack↔dsl codec under `FORMS_DOCUMENT_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse forms documents without
-/// depending on this crate's concrete `Projection`/`Operation` types. Called from the plugin root's
+/// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
 /// `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
@@ -176,11 +176,11 @@ pub fn locate_question(spec: &FormSpec, question_id: &str) -> Option<QuestionLoc
 /// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `UpdateBlock`
 /// operation that records the edit — the single seam every inspector/command patch flows through.
 /// Returns `None` if the question no longer exists.
-pub fn update_block_operation(spec: &FormSpec, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormOperation> {
+pub fn update_block_operation(spec: &FormSpec, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormMutation> {
     let location = locate_question(spec, question_id)?;
     let mut question = location.question;
     mutate(&mut question);
-    Some(FormOperation::UpdateBlock { step_id: location.step_id, block: question })
+    Some(FormMutation::UpdateBlock { step_id: location.step_id, block: question })
 }
 //#endregion 🔖️QuestionLocation
 
@@ -283,12 +283,12 @@ mod tests {
         let mut spec = building_component_spec();
         let question_id = spec.steps[0].blocks[0].id.clone();
         let operation = update_block_operation(&spec, &question_id, |question| question.label = "Renamed".into()).expect("operation");
-        spec = apply_form_edit_operation(&spec, &operation);
+        spec = apply_form_edit_mutation(&spec, &operation);
         assert_eq!(spec.steps[0].blocks[0].label, "Renamed");
     }
 
-    fn apply_form_edit_operation(spec: &FormSpec, operation: &FormOperation) -> FormSpec {
-        crate::artifacts::forms::op::apply_form_edit_operation(spec, operation)
+    fn apply_form_edit_mutation(spec: &FormSpec, operation: &FormMutation) -> FormSpec {
+        crate::artifacts::forms::op::apply_form_edit_mutation(spec, operation)
     }
 
     #[test]

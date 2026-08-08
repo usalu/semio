@@ -13,17 +13,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::curate::op::SourcingOperation;
+use crate::artifacts::curate::op::SourcingMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `SourcingOperation` to its binary state-patch form.
-pub fn encode_op(operation: &SourcingOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `SourcingMutation` to its binary state-patch form.
+pub fn encode_op(operation: &SourcingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `SourcingOperation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<SourcingOperation, protocol::ProtocolError> {
-    SourcingOperation::decode_op(bytes)
+/// 📖️ Decodes a `SourcingMutation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolError> {
+    SourcingMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = SourcingOperation::SetDocument { document: crate::artifacts::curate::engine::empty_document() };
+        let operation = SourcingMutation::SetDocument { document: crate::artifacts::curate::engine::empty_document() };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -47,7 +47,7 @@ mod tests {
         let mut doc_store = store::DocumentStore::new(envelope);
         let mut next = doc_store.projection().expect("projection");
         crate::artifacts::curate::engine::curate_delta(&mut next, "beam-glulam-gl24h", 3);
-        doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![SourcingOperation::SetDocument { document: next }], description: None }).expect("apply");
+        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![SourcingMutation::SetDocument { document: next }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }

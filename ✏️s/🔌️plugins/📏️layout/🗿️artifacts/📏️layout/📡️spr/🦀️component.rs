@@ -1,14 +1,14 @@
 //! ⚖️ Layout artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
 //!
-//! `protocol::OpText`/`protocol::OpBinary for LayoutOperation` would normally come for free from
+//! `protocol::OpText`/`protocol::OpBinary for LayoutMutation` would normally come for free from
 //! `#[derive(dsl::DslEnum)]`, but its `Pages`/`Stories`/`Links` variants wrap a foreign generic type
-//! (`protocol::CollectionOperation<K,V,P>`, orphan rule: can't gain a `dsl::DslField`/`dsl::DslVariants`
+//! (`protocol::CollectionMutation<K,V,P>`, orphan rule: can't gain a `dsl::DslField`/`dsl::DslVariants`
 //! binding here) and `FramePatch.fill`/`.stroke` (`Option<Option<[f32;4]>>`) has the same "no direct
-//! binding" issue one level down. `LayoutOperationDsl` is a local, DSL-only mirror that flattens each
+//! binding" issue one level down. `LayoutMutationDsl` is a local, DSL-only mirror that flattens each
 //! collection wrapper into its own keyworded variants and `FramePatchDsl`/`ColorPatch` fix the doubly-
-//! optional color fields, mirroring `process_3d::Process3dOperationDsl`'s identical fix for the same
+//! optional color fields, mirroring `process_3d::Process3dMutationDsl`'s identical fix for the same
 //! foreign-type problem. Both hand-written impls below convert at the `OpText`/`OpBinary` boundary only;
-//! `LayoutOperation` itself (and every consumer matching on it) is untouched.
+//! `LayoutMutation` itself (and every consumer matching on it) is untouched.
 //!
 //! The app's typed `LayoutCommand` enum — which used to share the old `📡️protocol` crate with this codec
 //! — is an APP concern, not an artifact one: it now lives in `🎛️apps/📏️layout/🦀️component.rs`, assembled
@@ -22,19 +22,19 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::layout::op::LayoutOperation;
+use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::{Frame, FramePatch, ImageLink, ImageLinkPatch, Page, PagePatch, TextStory, TextStoryPatch};
-use protocol::{CollectionOperation, OpBinary, OpText};
+use protocol::{CollectionMutation, OpBinary, OpText};
 use store::TextError;
 
-/// 📦️ Encodes a `LayoutOperation` to its binary state-patch form.
-pub fn encode_op(operation: &LayoutOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `LayoutMutation` to its binary state-patch form.
+pub fn encode_op(operation: &LayoutMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `LayoutOperation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<LayoutOperation, protocol::ProtocolError> {
-    LayoutOperation::decode_op(bytes)
+/// 📖️ Decodes a `LayoutMutation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError> {
+    LayoutMutation::decode_op(bytes)
 }
 
 //#region 🔖️DslMirror
@@ -63,7 +63,7 @@ impl protocol::OpText for ColorPatch {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -179,9 +179,9 @@ fn frame_patch_from_dsl(patch: FramePatchDsl) -> FramePatch {
     }
 }
 
-/// ⚡️ DSL-only mirror of `LayoutOperation` — see this module's opening doc comment.
+/// ⚡️ DSL-only mirror of `LayoutMutation` — see this module's opening doc comment.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum LayoutOperationDsl {
+enum LayoutMutationDsl {
     PagesAdd {
         index: usize,
         #[dsl(block)]
@@ -257,7 +257,7 @@ enum LayoutOperationDsl {
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
-impl protocol::OpText for LayoutOperationDsl {
+impl protocol::OpText for LayoutMutationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -271,7 +271,7 @@ impl protocol::OpText for LayoutOperationDsl {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -281,7 +281,7 @@ impl protocol::OpText for LayoutOperationDsl {
     }
 }
 
-impl protocol::OpBinary for LayoutOperationDsl {
+impl protocol::OpBinary for LayoutMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -294,67 +294,67 @@ impl protocol::OpBinary for LayoutOperationDsl {
 
 
 
-fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
+fn layout_operation_to_dsl(operation: &LayoutMutation) -> LayoutMutationDsl {
     match operation {
-        LayoutOperation::Pages(CollectionOperation::Add { index: at, item }) => LayoutOperationDsl::PagesAdd { index: *at, item: item.clone() },
-        LayoutOperation::Pages(CollectionOperation::Remove { id }) => LayoutOperationDsl::PagesRemove { id: id.clone() },
-        LayoutOperation::Pages(CollectionOperation::Move { id, to_index: to }) => LayoutOperationDsl::PagesMove { id: id.clone(), to_index: *to },
-        LayoutOperation::Pages(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::PagesPatch { id: id.clone(), patch: patch.clone() },
-        LayoutOperation::Stories(CollectionOperation::Add { index: at, item }) => LayoutOperationDsl::StoriesAdd { index: *at, item: item.clone() },
-        LayoutOperation::Stories(CollectionOperation::Remove { id }) => LayoutOperationDsl::StoriesRemove { id: id.clone() },
-        LayoutOperation::Stories(CollectionOperation::Move { id, to_index: to }) => LayoutOperationDsl::StoriesMove { id: id.clone(), to_index: *to },
-        LayoutOperation::Stories(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::StoriesPatch { id: id.clone(), patch: patch.clone() },
-        LayoutOperation::Links(CollectionOperation::Add { index: at, item }) => LayoutOperationDsl::LinksAdd { index: *at, item: item.clone() },
-        LayoutOperation::Links(CollectionOperation::Remove { id }) => LayoutOperationDsl::LinksRemove { id: id.clone() },
-        LayoutOperation::Links(CollectionOperation::Move { id, to_index: to }) => LayoutOperationDsl::LinksMove { id: id.clone(), to_index: *to },
-        LayoutOperation::Links(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::LinksPatch { id: id.clone(), patch: patch.clone() },
-        LayoutOperation::AddFrame { page_id, index, frame, layer_id } => LayoutOperationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() },
-        LayoutOperation::RemoveFrame { page_id, frame_id } => LayoutOperationDsl::RemoveFrame { page_id: page_id.clone(), frame_id: frame_id.clone() },
-        LayoutOperation::PatchFrame { page_id, frame_id, patch } => LayoutOperationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) },
-        LayoutOperation::SetDataFields { json } => LayoutOperationDsl::SetDataFields { json: json.clone() },
+        LayoutMutation::Pages(CollectionMutation::Add { index: at, item }) => LayoutMutationDsl::PagesAdd { index: *at, item: item.clone() },
+        LayoutMutation::Pages(CollectionMutation::Remove { id }) => LayoutMutationDsl::PagesRemove { id: id.clone() },
+        LayoutMutation::Pages(CollectionMutation::Move { id, to_index: to }) => LayoutMutationDsl::PagesMove { id: id.clone(), to_index: *to },
+        LayoutMutation::Pages(CollectionMutation::Patch { id, patch }) => LayoutMutationDsl::PagesPatch { id: id.clone(), patch: patch.clone() },
+        LayoutMutation::Stories(CollectionMutation::Add { index: at, item }) => LayoutMutationDsl::StoriesAdd { index: *at, item: item.clone() },
+        LayoutMutation::Stories(CollectionMutation::Remove { id }) => LayoutMutationDsl::StoriesRemove { id: id.clone() },
+        LayoutMutation::Stories(CollectionMutation::Move { id, to_index: to }) => LayoutMutationDsl::StoriesMove { id: id.clone(), to_index: *to },
+        LayoutMutation::Stories(CollectionMutation::Patch { id, patch }) => LayoutMutationDsl::StoriesPatch { id: id.clone(), patch: patch.clone() },
+        LayoutMutation::Links(CollectionMutation::Add { index: at, item }) => LayoutMutationDsl::LinksAdd { index: *at, item: item.clone() },
+        LayoutMutation::Links(CollectionMutation::Remove { id }) => LayoutMutationDsl::LinksRemove { id: id.clone() },
+        LayoutMutation::Links(CollectionMutation::Move { id, to_index: to }) => LayoutMutationDsl::LinksMove { id: id.clone(), to_index: *to },
+        LayoutMutation::Links(CollectionMutation::Patch { id, patch }) => LayoutMutationDsl::LinksPatch { id: id.clone(), patch: patch.clone() },
+        LayoutMutation::AddFrame { page_id, index, frame, layer_id } => LayoutMutationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() },
+        LayoutMutation::RemoveFrame { page_id, frame_id } => LayoutMutationDsl::RemoveFrame { page_id: page_id.clone(), frame_id: frame_id.clone() },
+        LayoutMutation::PatchFrame { page_id, frame_id, patch } => LayoutMutationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) },
+        LayoutMutation::SetDataFields { json } => LayoutMutationDsl::SetDataFields { json: json.clone() },
     }
 }
 
-fn layout_operation_from_dsl(operation: LayoutOperationDsl) -> LayoutOperation {
+fn layout_operation_from_dsl(operation: LayoutMutationDsl) -> LayoutMutation {
     match operation {
-        LayoutOperationDsl::PagesAdd { index, item } => LayoutOperation::Pages(CollectionOperation::Add { index: index, item }),
-        LayoutOperationDsl::PagesRemove { id } => LayoutOperation::Pages(CollectionOperation::Remove { id }),
-        LayoutOperationDsl::PagesMove { id, to_index } => LayoutOperation::Pages(CollectionOperation::Move { id, to_index: to_index }),
-        LayoutOperationDsl::PagesPatch { id, patch } => LayoutOperation::Pages(CollectionOperation::Patch { id, patch }),
-        LayoutOperationDsl::StoriesAdd { index, item } => LayoutOperation::Stories(CollectionOperation::Add { index: index, item }),
-        LayoutOperationDsl::StoriesRemove { id } => LayoutOperation::Stories(CollectionOperation::Remove { id }),
-        LayoutOperationDsl::StoriesMove { id, to_index } => LayoutOperation::Stories(CollectionOperation::Move { id, to_index: to_index }),
-        LayoutOperationDsl::StoriesPatch { id, patch } => LayoutOperation::Stories(CollectionOperation::Patch { id, patch }),
-        LayoutOperationDsl::LinksAdd { index, item } => LayoutOperation::Links(CollectionOperation::Add { index: index, item }),
-        LayoutOperationDsl::LinksRemove { id } => LayoutOperation::Links(CollectionOperation::Remove { id }),
-        LayoutOperationDsl::LinksMove { id, to_index } => LayoutOperation::Links(CollectionOperation::Move { id, to_index: to_index }),
-        LayoutOperationDsl::LinksPatch { id, patch } => LayoutOperation::Links(CollectionOperation::Patch { id, patch }),
-        LayoutOperationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutOperation::AddFrame { page_id, index, frame: *frame, layer_id },
-        LayoutOperationDsl::RemoveFrame { page_id, frame_id } => LayoutOperation::RemoveFrame { page_id, frame_id },
-        LayoutOperationDsl::PatchFrame { page_id, frame_id, patch } => LayoutOperation::PatchFrame { page_id, frame_id, patch: frame_patch_from_dsl(patch) },
-        LayoutOperationDsl::SetDataFields { json } => LayoutOperation::SetDataFields { json },
+        LayoutMutationDsl::PagesAdd { index, item } => LayoutMutation::Pages(CollectionMutation::Add { index: index, item }),
+        LayoutMutationDsl::PagesRemove { id } => LayoutMutation::Pages(CollectionMutation::Remove { id }),
+        LayoutMutationDsl::PagesMove { id, to_index } => LayoutMutation::Pages(CollectionMutation::Move { id, to_index: to_index }),
+        LayoutMutationDsl::PagesPatch { id, patch } => LayoutMutation::Pages(CollectionMutation::Patch { id, patch }),
+        LayoutMutationDsl::StoriesAdd { index, item } => LayoutMutation::Stories(CollectionMutation::Add { index: index, item }),
+        LayoutMutationDsl::StoriesRemove { id } => LayoutMutation::Stories(CollectionMutation::Remove { id }),
+        LayoutMutationDsl::StoriesMove { id, to_index } => LayoutMutation::Stories(CollectionMutation::Move { id, to_index: to_index }),
+        LayoutMutationDsl::StoriesPatch { id, patch } => LayoutMutation::Stories(CollectionMutation::Patch { id, patch }),
+        LayoutMutationDsl::LinksAdd { index, item } => LayoutMutation::Links(CollectionMutation::Add { index: index, item }),
+        LayoutMutationDsl::LinksRemove { id } => LayoutMutation::Links(CollectionMutation::Remove { id }),
+        LayoutMutationDsl::LinksMove { id, to_index } => LayoutMutation::Links(CollectionMutation::Move { id, to_index: to_index }),
+        LayoutMutationDsl::LinksPatch { id, patch } => LayoutMutation::Links(CollectionMutation::Patch { id, patch }),
+        LayoutMutationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutMutation::AddFrame { page_id, index, frame: *frame, layer_id },
+        LayoutMutationDsl::RemoveFrame { page_id, frame_id } => LayoutMutation::RemoveFrame { page_id, frame_id },
+        LayoutMutationDsl::PatchFrame { page_id, frame_id, patch } => LayoutMutation::PatchFrame { page_id, frame_id, patch: frame_patch_from_dsl(patch) },
+        LayoutMutationDsl::SetDataFields { json } => LayoutMutation::SetDataFields { json },
     }
 }
 
-impl OpText for LayoutOperation {
+impl OpText for LayoutMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        Ok(layout_operation_from_dsl(<LayoutOperationDsl as OpText>::parse_op(line)?))
+        Ok(layout_operation_from_dsl(<LayoutMutationDsl as OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        <LayoutOperationDsl as OpText>::print_op(&layout_operation_to_dsl(self))
+        <LayoutMutationDsl as OpText>::print_op(&layout_operation_to_dsl(self))
     }
 }
 
-/// ⚡️ Binary mirror of the `OpText` impl above — `LayoutOperationDsl` already derives
+/// ⚡️ Binary mirror of the `OpText` impl above — `LayoutMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
-impl OpBinary for LayoutOperation {
+impl OpBinary for LayoutMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         layout_operation_to_dsl(self).encode_op()
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(layout_operation_from_dsl(LayoutOperationDsl::decode_op(bytes)?))
+        Ok(layout_operation_from_dsl(LayoutMutationDsl::decode_op(bytes)?))
     }
 }
 //#endregion 🔖️DslMirror
@@ -369,7 +369,7 @@ mod tests {
     fn op_binary_round_trips_and_agrees_with_text() {
         let document = crate::artifacts::layout::engine::default_document();
         let page_id = document.pages[0].id.clone();
-        let operation = LayoutOperation::Pages(CollectionOperation::Patch { id: page_id, patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } });
+        let operation = LayoutMutation::Pages(CollectionMutation::Patch { id: page_id, patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } });
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -381,16 +381,16 @@ mod tests {
 
         let initial = crate::artifacts::layout::engine::default_document();
         let envelope = store::create_document_envelope(LAYOUT_FIXTURE_SCHEMA, "layout-doc-text-test", initial, None);
-        let mut doc_store: store::DocumentStore<LayoutDocument, LayoutOperation> = store::DocumentStore::new(envelope);
+        let mut doc_store: store::DocumentStore<LayoutDocument, LayoutMutation> = store::DocumentStore::new(envelope);
         doc_store
             .dispatch(store::DocumentCommand::Apply {
-                operations: vec![LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { width: Some(640.0), ..Default::default() } })],
+                mutations: vec![LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { width: Some(640.0), ..Default::default() } })],
                 description: Some("resize page".into()),
             })
             .expect("apply patch page width");
         doc_store
             .dispatch(store::DocumentCommand::Apply {
-                operations: vec![LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } })],
+                mutations: vec![LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } })],
                 description: Some("rename page".into()),
             })
             .expect("apply patch page");
@@ -405,27 +405,27 @@ mod tests {
 
         let mut page_2 = doc.pages[0].clone();
         page_2.id = "page-3".into();
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Add { index: 1, item: page_2 }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Remove { id: "page-1".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Move { id: "page-1".into(), to_index: 1 }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch::default() }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Add { index: 1, item: page_2 }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Remove { id: "page-1".into() }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Move { id: "page-1".into(), to_index: 1 }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch::default() }));
 
         let mut story_2 = doc.stories[0].clone();
         story_2.id = "story-2".into();
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Add { index: 1, item: story_2 }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Remove { id: "story-1".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Move { id: "story-1".into(), to_index: 0 }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: None } }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Add { index: 1, item: story_2 }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Remove { id: "story-1".into() }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Move { id: "story-1".into(), to_index: 0 }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: None } }));
 
         let mut link_2 = doc.links[0].clone();
         link_2.id = "link-2".into();
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Add { index: 1, item: link_2 }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Remove { id: "link-missing".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Move { id: "link-missing".into(), to_index: 0 }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Add { index: 1, item: link_2 }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Remove { id: "link-missing".into() }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Move { id: "link-missing".into(), to_index: 0 }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
 
         let rect_frame = Frame::Rect {
             id: "frame-new".into(),
@@ -436,40 +436,40 @@ mod tests {
             fill: Some([0.1, 0.2, 0.3, 1.0]),
             stroke: None,
         };
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::AddFrame { page_id: "page-1".into(), index: 1, frame: rect_frame, layer_id: Some("layer-1".into()) });
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: rect_frame, layer_id: Some("layer-1".into()) });
         let image_frame =
             Frame::Image { id: "frame-img".into(), layer_id: "layer-1".into(), bounds: crate::artifacts::layout::LayoutBounds { x: 1.0, y: 2.0, width: 3.0, height: 4.0, rotation: 5.0 }, locked: Some(false), visible: None, link_id: "link-missing".into() };
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::AddFrame { page_id: "page-1".into(), index: 1, frame: image_frame, layer_id: None });
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into() });
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame {
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: image_frame, layer_id: None });
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into() });
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame {
             page_id: "page-1".into(),
             frame_id: "frame-text-1".into(),
             patch: FramePatch { x: Some(10.0), fill: Some(Some([0.5, 0.5, 0.5, 1.0])), stroke: Some(None), ..Default::default() },
         });
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into(), patch: FramePatch::default() });
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into(), patch: FramePatch::default() });
     }
 
     #[test]
     fn op_text_round_trips_full_page_and_frame_patch_fields() {
         let full_page_patch =
             PagePatch { name: Some("Renamed".into()), width: Some(300.0), height: Some(400.0), margin_top: Some(1.0), margin_right: Some(2.0), margin_bottom: Some(3.0), margin_left: Some(4.0), columns_count: Some(5), columns_gutter: Some(6.0) };
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: full_page_patch }));
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: full_page_patch }));
 
         let full_frame_patch = FramePatch { x: Some(1.0), y: Some(2.0), width: Some(3.0), height: Some(4.0), fill: Some(Some([0.1, 0.2, 0.3, 0.4])), stroke: Some(None), wrap_mode: Some("column".into()), columns: Some(3) };
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: full_frame_patch });
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: full_frame_patch });
 
         let clearing_frame_patch = FramePatch { fill: Some(None), stroke: Some(Some([0.5, 0.5, 0.5, 1.0])), ..Default::default() };
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: clearing_frame_patch });
+        store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: clearing_frame_patch });
     }
 
     #[test]
     fn parse_op_reports_engine_parser_errors() {
-        assert!(LayoutOperation::parse_op("patch-frame page-id=page-1 frame-id=frame-1 patch=1,2,3").is_err(), "patch must be a block, not a bare tuple attribute");
+        assert!(LayoutMutation::parse_op("patch-frame page-id=page-1 frame-id=frame-1 patch=1,2,3").is_err(), "patch must be a block, not a bare tuple attribute");
     }
 
     #[test]
     fn op_text_rejects_unknown_operation_name() {
-        assert!(LayoutOperation::parse_op("bogusOp id=x").is_err(), "unknown op keyword must fail");
+        assert!(LayoutMutation::parse_op("bogusOp id=x").is_err(), "unknown op keyword must fail");
     }
 }
 //#endregion 🧪️Tests

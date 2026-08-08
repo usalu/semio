@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::mathematical::{MathGeometry, MathGraph, MathProjection};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -23,7 +23,7 @@ pub struct MathDiff {
     pub geometry: Option<MathGeometry>,
 }
 
-impl OperationDiff<MathProjection> for MathDiff {
+impl MutationDiff<MathProjection> for MathDiff {
     fn apply(&self, projection: &MathProjection) -> MathProjection {
         let mut next = projection.clone();
         if let Some(graph) = &self.graph {

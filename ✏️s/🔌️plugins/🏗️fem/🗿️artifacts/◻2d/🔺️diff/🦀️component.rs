@@ -1,7 +1,7 @@
 //! 🩹️ FEM 2D artifact — sparse document diff (constitutional: op, diff half).
 
 use crate::artifacts::fem2d::{element_id, Fem2dDocument, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 // #region 🔖️Collections
 /// 🪪️ Stable-id accessor shared by every id-keyed document collection entry. `pub(crate)`: `index_of`
-/// (below) is called cross-node from `crate::artifacts::fem2d::op`'s `Operation::backwards` impl, and a
+/// (below) is called cross-node from `crate::artifacts::fem2d::op`'s `Mutation::inverse` impl, and a
 /// private trait cannot appear in a more-visible function's signature.
 pub(crate) trait HasId {
     fn id(&self) -> &str;
@@ -133,7 +133,7 @@ fn apply_collection_diff<T: HasId + Clone>(items: &mut Vec<T>, removed: &[String
     }
 }
 
-/// 🔎️ `pub(crate)`: also called from `crate::artifacts::fem2d::op`'s `Operation::backwards` impl to
+/// 🔎️ `pub(crate)`: also called from `crate::artifacts::fem2d::op`'s `Mutation::inverse` impl to
 /// locate the pre-operation index/value a removal or replace should invert to.
 pub(crate) fn index_of<T: HasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
@@ -159,7 +159,7 @@ pub struct Fem2dDiff {
     pub analysis: Option<FemAnalysisSettings>,
 }
 
-impl OperationDiff<Fem2dDocument> for Fem2dDiff {
+impl MutationDiff<Fem2dDocument> for Fem2dDiff {
     fn apply(&self, projection: &Fem2dDocument) -> Fem2dDocument {
         if let Some(document) = &self.document {
             return document.clone();

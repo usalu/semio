@@ -7,15 +7,15 @@
 //! `ImperativeCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::apps::imperative::config::{ImperativeConfig, ImperativeConfigOperation};
+use crate::apps::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
 use crate::apps::imperative::modes::edit;
 use crate::apps::imperative::modes::edit::windows::{main, script};
 use crate::apps::imperative::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::imperative::terminology::imperative_labels;
 use crate::artifacts::imperative::engine::{default_document, imperative_io};
-use crate::artifacts::imperative::op::ImperativeOperation;
+use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::{ImperativeDocument, IMPERATIVE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 use store::DocumentPack;
@@ -43,7 +43,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — `setLocale`/`locale` is the row that
     /// proves they are different vocabularies. **Row order is the binary variant ordinal: appending is
     /// safe, reordering is a wire-format break.**
-    pub enum ImperativeCommand for ImperativeDocument, ImperativeOperation, ImperativeConfig, ImperativeConfigOperation {
+    pub enum ImperativeCommand for ImperativeDocument, ImperativeMutation, ImperativeConfig, ImperativeConfigMutation {
         "addStep" as "add-step" => add_step::AddStep,
         "addStepAt" as "add-step-at" => add_step_at::AddStepAt,
         "removeStep" as "remove-step" => remove_step::RemoveStep,
@@ -68,17 +68,17 @@ use crate::apps::imperative::commands::view::{run, set_locale, set_selection};
 
 //#region 🔖️ImperativePlayApp
 /// 🧪️ B1: unit struct — the former `ImperativePlayRuntime`/`self.runtime` field now lives in
-/// `ImperativeConfig` (see `DocumentApp::Config`), written via `ImperativeConfigOperation`s.
+/// `ImperativeConfig` (see `DocumentApp::Config`), written via `ImperativeConfigMutation`s.
 #[derive(Default)]
 pub struct ImperativePlayApp;
 
 impl DocumentApp for ImperativePlayApp {
     type Projection = ImperativeDocument;
-    type Operation = ImperativeOperation;
+    type Mutation = ImperativeMutation;
     type Config = ImperativeConfig;
-    type ConfigOperation = ImperativeConfigOperation;
+    type ConfigMutation = ImperativeConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = ImperativeCommand;
 
@@ -99,7 +99,7 @@ impl DocumentApp for ImperativePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -160,14 +160,14 @@ pub fn create_imperative_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             // 🔧️ Document-mutating step edits — dispatched as VCS operations with a true inverse.
             // The `*At` variants address a nested body via owner/slot fields (drag-and-drop into blocks).
-            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
-            .operation("addStepAt", LocalizedLabel::native("Add Step At", "Schritt bei Position hinzufügen"))
-            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
-            .operation("removeStepAt", LocalizedLabel::native("Remove Step At", "Schritt bei Position entfernen"))
-            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
-            .operation("moveStepAt", LocalizedLabel::native("Move Step At", "Schritt bei Position verschieben"))
-            .operation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
-            .operation("setStepParamsAt", LocalizedLabel::native("Set Step Params At", "Schrittparameter bei Position festlegen"))
+            .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .mutation("addStepAt", LocalizedLabel::native("Add Step At", "Schritt bei Position hinzufügen"))
+            .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .mutation("removeStepAt", LocalizedLabel::native("Remove Step At", "Schritt bei Position entfernen"))
+            .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .mutation("moveStepAt", LocalizedLabel::native("Move Step At", "Schritt bei Position verschieben"))
+            .mutation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
+            .mutation("setStepParamsAt", LocalizedLabel::native("Set Step Params At", "Schrittparameter bei Position festlegen"))
             // 👁️ Ephemeral view state / runtime effect — selection is scratch, `run` evaluates into config.
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("run", LocalizedLabel::native("Run", "Ausführen"))
@@ -340,7 +340,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn add_step_materializes_kind_default_and_run_emits_no_document_operations() {
+    fn add_step_materializes_kind_default_and_run_emits_no_document_mutations() {
         let mut app = imperative_app_with_registry();
         // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
         // materialized by the registry's action-arg default resolution.
@@ -349,7 +349,7 @@ mod tests {
         assert_eq!(document.path.steps.last().unwrap().kind, "log.print");
         // `run` is a View-kind command: under registry enforcement it must not emit document operations.
         let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).expect("run");
-        assert!(result.operations.is_empty(), "run evaluates into config, never the document");
+        assert!(result.document_mutations.is_empty(), "run evaluates into config, never the document");
     }
 
     #[test]

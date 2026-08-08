@@ -1,12 +1,12 @@
 //! 🌉️ Shooting play app — the `wasm-bindgen` VCS bridge: a JS-facing surface distinct from the WASM
 //! Component Model plugin ABI the rest of this crate speaks. Only compiled for `target_arch = "wasm32"`.
 
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingFixture;
 
 //#region 🔖️Store
-pub type ShootingEnvelope = store::DocumentEnvelope<ShootingFixture, ShootingOperation>;
-pub type ShootingStore = store::DocumentStore<ShootingFixture, ShootingOperation>;
+pub type ShootingEnvelope = store::DocumentEnvelope<ShootingFixture, ShootingMutation>;
+pub type ShootingStore = store::DocumentStore<ShootingFixture, ShootingMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️WasmBridge

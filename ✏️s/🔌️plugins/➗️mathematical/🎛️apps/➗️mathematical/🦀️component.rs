@@ -1,7 +1,7 @@
 //! 🧮️ Mathematical play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch. B1: the pure-trait pilot for this plugin — `MathematicalPlayApp` is a unit
 //! struct; the former `MathPlayRuntime` app-struct `RefCell` (the node-graph viewport camera) now lives in
-//! `crate::apps::mathematical::config::MathConfig`, written via `MathConfigOperation`s (real `backwards`,
+//! `crate::apps::mathematical::config::MathConfig`, written via `MathConfigMutation`s (real `backwards`,
 //! no ad hoc inverse tracking); every action dispatches through the single typed `MathCommand` channel via
 //! `DocumentApp::handle`.
 //!
@@ -14,12 +14,12 @@ use crate::apps::mathematical::commands::document::set_document;
 use crate::apps::mathematical::commands::geometry::set_points;
 use crate::apps::mathematical::commands::graph::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
 use crate::apps::mathematical::commands::locale::set_locale;
-use crate::apps::mathematical::config::{MathConfig, MathConfigOperation};
+use crate::apps::mathematical::config::{MathConfig, MathConfigMutation};
 use crate::apps::mathematical::modes::edit;
 use crate::apps::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
-use crate::artifacts::mathematical::op::MathOperation;
+use crate::artifacts::mathematical::op::MathMutation;
 use crate::artifacts::mathematical::{MathProjection, MATH_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use store::EngineHandles;
@@ -39,7 +39,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
     /// vocabularies; `setLocale`/`locale` is the row that proves it. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum MathCommand for MathProjection, MathOperation, MathConfig, MathConfigOperation {
+    pub enum MathCommand for MathProjection, MathMutation, MathConfig, MathConfigMutation {
         "setDocument" as "set-document" => set_document::SetDocument,
         "setAlgorithm" as "set-algorithm" => set_algorithm::SetAlgorithm,
         "setDirected" as "set-directed" => set_directed::SetDirected,
@@ -54,17 +54,17 @@ semio_framework_plugin::app_commands! {
 //#region 🔖️MathematicalPlayApp
 /// 🧪️ B1: unit struct — the former `MathPlayRuntime`/`self.runtime` field now lives in
 /// `crate::apps::mathematical::config::MathConfig` (see `DocumentApp::Config`), written through
-/// `MathConfigOperation`s.
+/// `MathConfigMutation`s.
 #[derive(Default)]
 pub struct MathematicalPlayApp;
 
 impl DocumentApp for MathematicalPlayApp {
     type Projection = MathProjection;
-    type Operation = MathOperation;
+    type Mutation = MathMutation;
     type Config = MathConfig;
-    type ConfigOperation = MathConfigOperation;
+    type ConfigMutation = MathConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = MathCommand;
 
@@ -86,7 +86,7 @@ impl DocumentApp for MathematicalPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &MathCommand, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathOperation, MathConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &MathCommand, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathMutation, MathConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -136,12 +136,12 @@ pub fn create_mathematical_app() -> App {
             .window_kind_def(geometry_window::definition())
             .default_layout(edit::layout())
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
-            .operation("setAlgorithm", LocalizedLabel::native("Set Algorithm", "Algorithmus festlegen"))
-            .operation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
-            .operation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
+            .mutation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
+            .mutation("setAlgorithm", LocalizedLabel::native("Set Algorithm", "Algorithmus festlegen"))
+            .mutation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
+            .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
-            .operation("setPoints", LocalizedLabel::native("Set Points", "Punkte festlegen"))
+            .mutation("setPoints", LocalizedLabel::native("Set Points", "Punkte festlegen"))
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 📝️ Staged argument forms for the graph analysis controls.
             .action_args("setAlgorithm", vec![

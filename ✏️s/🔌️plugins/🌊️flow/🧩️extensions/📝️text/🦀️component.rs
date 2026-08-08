@@ -1,12 +1,12 @@
 //! 📝️ Flow text module: operators for text dictionaries.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
 // #region 🔖️Concat
 /// 🔗️ Joins two text inputs.
 pub struct Concat;
 
-impl Operation for Concat {
+impl Operator for Concat {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("text", text_dictionary(format!("{}{}", read_channel_text(input, "a")?, read_channel_text(input, "b")?))))
     }
@@ -17,7 +17,7 @@ impl Operation for Concat {
 /// 🔠️ Uppercases a text input.
 pub struct Upper;
 
-impl Operation for Upper {
+impl Operator for Upper {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("text", text_dictionary(read_channel_text(input, "text")?.to_uppercase())))
     }
@@ -47,12 +47,12 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: C
 pub fn register(registry: &mut Registry) {
     registry.register_operator(
         info("text.concat", "Concat", "Joins two text values", vec![text_channel("a", "text.concat"), text_channel("b", "text.concat")], ChannelSpec::named("T", "Txt", "text", "JoinedText")),
-        vec![OperatorImpl { schemas: vec!["text".into(), "text".into()], operation: Box::new(Concat) }],
+        vec![OperatorImpl { schemas: vec!["text".into(), "text".into()], operator: Box::new(Concat) }],
         &["text"],
     );
     registry.register_operator(
         info("text.upper", "Upper", "Uppercases text", vec![text_channel("text", "text.upper")], ChannelSpec::named("T", "Txt", "text", "UppercasedText")),
-        vec![OperatorImpl { schemas: vec!["text".into()], operation: Box::new(Upper) }],
+        vec![OperatorImpl { schemas: vec!["text".into()], operator: Box::new(Upper) }],
         &["text"],
     );
     registry.finalize();

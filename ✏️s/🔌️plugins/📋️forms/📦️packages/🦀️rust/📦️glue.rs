@@ -11,8 +11,10 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate flow;
+pub use flow::playbook;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<FormOperation, FormsConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<FormMutation, FormsConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -31,6 +33,77 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/📋️forms/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod add_step {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➕add-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➕add-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod remove_step {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➖remove-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➖remove-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod move_step {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/↔️move-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/↔️move-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod add_block {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➕add-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➕add-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod remove_block {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➖remove-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/➖remove-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod move_block {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/↔️move-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/↔️move-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod update_block {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/🩹update-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/🩹update-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod update_step {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/🩹update-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/🩹update-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod update_playbook {
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/📖update-playbook/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📋️forms/🧬️mutations/📖update-playbook/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📋️forms/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/📋️forms/🎒️pack/🦀️component.rs"]

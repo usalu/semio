@@ -1,7 +1,7 @@
 dialect protocol
 protocol writer.spr
 version 1
-schema writer.document.operation
+schema writer.document.mutation
 start record
 framing record
 record writer.writer-insert-text tag 1

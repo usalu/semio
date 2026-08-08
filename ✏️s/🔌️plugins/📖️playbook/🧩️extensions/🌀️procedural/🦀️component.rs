@@ -2,10 +2,10 @@
 
 use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
-use playbook::{visible_blocks, PlaybookBlock};
-use protocol::{Operation, OperationDiff};
+use crate::playbook::{visible_blocks, PlaybookBlock};
+use protocol::{Mutation, MutationDiff};
 use semio_framework::mesh_from_indexed;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
     Contribution, DocumentApp, DocumentView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
 };
@@ -193,14 +193,14 @@ fn params_as_json(params: &dsl::DslValue) -> Value {
     dsl::from_dsl_value(params.clone()).unwrap_or(Value::Null)
 }
 
-//#region 🔖️DocumentOperation
+//#region 🔖️DocumentMutation
 /// ✏️ Whole-payload replace operation for the procedural block-kind slot document. The module's document is a
 /// transient render/params payload (not a collaboratively-edited structure), so its single operation
 /// swaps the payload wholesale — export/import stash their results on `params` and re-emit it. The VCS
 /// store still records the pre-operation payload as a true inverse, so undo works.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-enum ModulePayloadOperation {
+#[serde(tag = "mutation", rename_all = "camelCase")]
+enum ModulePayloadMutation {
     SetPayload {
         #[dsl(block)]
         payload: ModuleRenderPayload,
@@ -208,7 +208,7 @@ enum ModulePayloadOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for ModulePayloadOperation {
+impl protocol::OpText for ModulePayloadMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -222,7 +222,7 @@ impl protocol::OpText for ModulePayloadOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -233,7 +233,7 @@ impl protocol::OpText for ModulePayloadOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for ModulePayloadOperation {
+impl protocol::OpBinary for ModulePayloadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -286,7 +286,7 @@ struct ModulePayloadDiff {
     payload: Option<ModuleRenderPayload>,
 }
 
-impl OperationDiff<ModuleRenderPayload> for ModulePayloadDiff {
+impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
     fn apply(&self, projection: &ModuleRenderPayload) -> ModuleRenderPayload {
         self.payload.clone().unwrap_or_else(|| projection.clone())
     }
@@ -298,20 +298,20 @@ impl OperationDiff<ModuleRenderPayload> for ModulePayloadDiff {
     }
 }
 
-impl Operation<ModuleRenderPayload> for ModulePayloadOperation {
+impl Mutation<ModuleRenderPayload> for ModulePayloadMutation {
     type Diff = ModulePayloadDiff;
 
     fn diff(&self, _projection: &ModuleRenderPayload) -> ModulePayloadDiff {
         match self {
-            ModulePayloadOperation::SetPayload { payload } => ModulePayloadDiff { payload: Some(payload.clone()) },
+            ModulePayloadMutation::SetPayload { payload } => ModulePayloadDiff { payload: Some(payload.clone()) },
         }
     }
 
-    fn backwards(&self, projection: &ModuleRenderPayload) -> Vec<Self> {
-        vec![ModulePayloadOperation::SetPayload { payload: projection.clone() }]
+    fn inverse(&self, projection: &ModuleRenderPayload) -> Vec<Self> {
+        vec![ModulePayloadMutation::SetPayload { payload: projection.clone() }]
     }
 }
-//#endregion 🔖️DocumentOperation
+//#endregion 🔖️DocumentMutation
 
 fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
     match slug {
@@ -721,11 +721,11 @@ struct ModuleApp;
 
 impl DocumentApp for ModuleApp {
     type Projection = ModuleRenderPayload;
-    type Operation = ModulePayloadOperation;
+    type Mutation = ModulePayloadMutation;
     type Config = semio_framework_plugin::NoConfig;
-    type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type ConfigMutation = semio_framework_plugin::NoConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Command;
 
@@ -760,17 +760,17 @@ impl DocumentApp for ModuleApp {
         }
     }
 
-    fn handle(command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadOperation, semio_framework_plugin::NoConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
                 let mut payload = doc.projection.clone();
                 handle_export_solid(&mut payload, format);
-                Ok(Emit::operations(vec![ModulePayloadOperation::SetPayload { payload }]))
+                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload { payload }]))
             }
             Command::ImportSolid { format, data } => {
                 let mut payload = doc.projection.clone();
                 handle_import_solid(&mut payload, format, data);
-                Ok(Emit::operations(vec![ModulePayloadOperation::SetPayload { payload }]))
+                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload { payload }]))
             }
         }
     }
@@ -800,8 +800,8 @@ fn create_module_app() -> App {
             ))
             // 🔧️ Whole-payload import/export of the block's solid geometry — legitimate coarse-grained
             // operations for this non-collaborative render slot (not the deleted framework `setDocument`).
-            .operation(ACTION_EXPORT_SOLID, LocalizedLabel::native("Export Solid", "Volumenkörper exportieren"))
-            .operation(ACTION_IMPORT_SOLID, LocalizedLabel::native("Import Solid", "Volumenkörper importieren"))
+            .mutation(ACTION_EXPORT_SOLID, LocalizedLabel::native("Export Solid", "Volumenkörper exportieren"))
+            .mutation(ACTION_IMPORT_SOLID, LocalizedLabel::native("Import Solid", "Volumenkörper importieren"))
             // 📝️ Only the interchange `format` is a user-facing panel choice; the import `data` payload
             // arrives through the host file-open callback, so it is deliberately not a declared arg.
             .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()])
@@ -816,7 +816,7 @@ fn solid_format_arg() -> ActionArgDef {
 
 /// 🗂️ Registers `ModuleRenderPayload`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
-/// this module's render payload without depending on this crate's concrete `Projection`/`Operation`
+/// this module's render payload without depending on this crate's concrete `Projection`/`Mutation`
 /// types.
 fn register_module_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ModuleApp>(MODULE_DOCUMENT_SCHEMA);
@@ -1005,12 +1005,12 @@ mod tests {
 
     #[test]
     fn module_payload_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&ModulePayloadOperation::SetPayload { payload: default_payload() });
+        store::test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload { payload: default_payload() });
     }
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `ModulePayloadOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside
+    /// `ModulePayloadMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside
     /// this file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`). Dispatches through a standalone
     /// `store::DocumentStore` directly (this app has no separate dsl/pack/protocol crate split, so
@@ -1020,12 +1020,12 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<ModuleRenderPayload, ModulePayloadOperation> = DocumentStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None));
+        let mut store: DocumentStore<ModuleRenderPayload, ModulePayloadMutation> = DocumentStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None));
         let mut payload = default_payload();
         payload.interactive = false;
-        store.dispatch(DocumentCommand::Apply { operations: vec![ModulePayloadOperation::SetPayload { payload }], description: None }).expect("apply");
-        let edit: &Edit<ModulePayloadOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).expect("apply");
+        let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
     //#endregion 🔖️DslAndOpText

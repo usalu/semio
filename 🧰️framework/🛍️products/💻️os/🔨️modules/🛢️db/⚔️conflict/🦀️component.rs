@@ -8,8 +8,8 @@
 //! (`## db crate family`, `db_conflict` row).
 //!
 //! 🎯️ Design choice: per the contract's hard rule ("command payloads are opaque
-//! `protocol::OperationEnvelope`/binary bytes below `db_document` — no db crate below it
-//! interprets operation semantics"), this crate never sees a concrete `Operation<P>`/`OperationDiff<P>`
+//! `protocol::MutationEnvelope`/binary bytes below `db_document` — no db crate below it
+//! interprets operation semantics"), this crate never sees a concrete `Mutation<P>`/`MutationDiff<P>`
 //! type and therefore never calls `protocol_crdt::merge_concurrent_diffs` itself (that function is
 //! generic over the concrete diff type, which only `db_document` knows). What this crate DOES own
 //! is the *decision*: given two commands' declared `protocol::ConflictRule`s, it produces a
@@ -26,7 +26,7 @@ use db_state::{TouchKind, TouchedRegion, TouchedSet};
 /// @emoji 🏷️ A command's declared kind — the tag `CommandKindMatrix` keys structural
 /// commutativity knowledge by. Deliberately a bare string newtype (not tied to
 /// `protocol_core::SchemaId`) so this crate stays usable for kinds that aren't yet registered
-/// `OperationDescriptor`s.
+/// `MutationDescriptor`s.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct CommandKind(pub String);
 
@@ -43,7 +43,7 @@ impl From<&str> for CommandKind {
 /// a batch to `ConflictDetector::detect`.
 #[derive(Clone, Debug)]
 pub struct CommandTouch {
-    pub command_id: protocol::OperationId,
+    pub command_id: protocol::MutationId,
     pub actor: protocol::ActorId,
     pub kind: CommandKind,
     pub conflict_rule: protocol::ConflictRule,
@@ -58,7 +58,7 @@ pub struct CommandTouch {
 }
 
 impl CommandTouch {
-    pub fn new(command_id: protocol::OperationId, actor: protocol::ActorId, kind: CommandKind, conflict_rule: protocol::ConflictRule, timestamp: protocol::HybridLogicalTimestamp) -> Self {
+    pub fn new(command_id: protocol::MutationId, actor: protocol::ActorId, kind: CommandKind, conflict_rule: protocol::ConflictRule, timestamp: protocol::HybridLogicalTimestamp) -> Self {
         CommandTouch { command_id, actor, kind, conflict_rule, timestamp, touched: TouchedSet::new(), claims: Vec::new() }
     }
 
@@ -295,7 +295,7 @@ impl From<protocol::ConflictRule> for ResolutionPlan {
 /// PAIR, so two commands of different kinds may legitimately declare different rules; there is no
 /// principled "combine" defined by the contract. When both sides agree, use that rule outright. When
 /// they disagree, fall back to `Transform` — the one mechanism in this family (`protocol_causal
-/// ::OperationTransform`) that is defined generically over any `Operation<P>` regardless of its
+/// ::MutationTransform`) that is defined generically over any `Mutation<P>` regardless of its
 /// declared merge strategy, making it the safest default for a genuinely mixed-kind conflict.
 pub fn combine_conflict_rules(a: protocol::ConflictRule, b: protocol::ConflictRule) -> ResolutionPlan {
     if a == b {
@@ -322,8 +322,8 @@ pub enum ConflictKind {
 /// `conflicting_with`, which already held (or would otherwise hold) priority.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConflictRecord {
-    pub command_id: protocol::OperationId,
-    pub conflicting_with: protocol::OperationId,
+    pub command_id: protocol::MutationId,
+    pub conflicting_with: protocol::MutationId,
     pub kind: ConflictKind,
     pub resolution: ResolutionPlan,
 }
@@ -472,7 +472,7 @@ mod tests {
     }
 
     fn command(id: &str, actor: u64, physical_ms: u64, kind: &str, rule: protocol::ConflictRule) -> CommandTouch {
-        CommandTouch::new(protocol::OperationId(id.into()), protocol::ActorId(format!("actor-{actor}")), CommandKind::from(kind), rule, hlt(physical_ms, actor))
+        CommandTouch::new(protocol::MutationId(id.into()), protocol::ActorId(format!("actor-{actor}")), CommandKind::from(kind), rule, hlt(physical_ms, actor))
     }
     //#endregion 🧸️Fixtures
 
@@ -604,8 +604,8 @@ mod tests {
         let detector = ConflictDetector::new();
         let records = detector.detect(&[a, b]);
         assert_eq!(records.len(), 1);
-        assert_eq!(records[0].command_id, protocol::OperationId("cmd-b".into()), "the later command carries the record");
-        assert_eq!(records[0].conflicting_with, protocol::OperationId("cmd-a".into()));
+        assert_eq!(records[0].command_id, protocol::MutationId("cmd-b".into()), "the later command carries the record");
+        assert_eq!(records[0].conflicting_with, protocol::MutationId("cmd-a".into()));
         assert_eq!(records[0].resolution, ResolutionPlan::Merge(protocol::MergeStrategyKind::LwwRegister));
         match &records[0].kind {
             ConflictKind::TouchedRegion(regions) => assert_eq!(regions.len(), 1),
@@ -698,8 +698,8 @@ mod tests {
 
         let records = ConflictDetector::new().detect(&[later, earlier]);
         assert_eq!(records.len(), 1);
-        assert_eq!(records[0].conflicting_with, protocol::OperationId("cmd-earlier".into()));
-        assert_eq!(records[0].command_id, protocol::OperationId("cmd-later".into()));
+        assert_eq!(records[0].conflicting_with, protocol::MutationId("cmd-earlier".into()));
+        assert_eq!(records[0].command_id, protocol::MutationId("cmd-later".into()));
     }
     //#endregion 🔖️Detector
 }

@@ -1,3 +1,27 @@
-semio demo.dsl v1
-id=demo
-body=demo
+semio lowpoly.lowpoly.dsl v1
+schema=lowpoly.document
+objects=[
+  {
+    id=obj-1
+    name="Unit Box"
+    smooth-shading=false
+    mesh {
+      vertices [
+        { position=(-0.5,-0.5,-0.5) }
+        { position=(0.5,-0.5,-0.5) }
+        { position=(0.5,0.5,-0.5) }
+        { position=(-0.5,0.5,-0.5) }
+      ]
+      halfedges [
+        { vertex=0 next=1 }
+        { vertex=1 next=2 }
+        { vertex=2 next=3 }
+        { vertex=3 next=0 }
+      ]
+      faces [
+        { halfedge=0 }
+      ]
+    }
+    paint-layers=[]
+  }
+]

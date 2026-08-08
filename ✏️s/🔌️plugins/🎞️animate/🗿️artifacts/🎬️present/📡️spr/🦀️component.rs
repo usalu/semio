@@ -2,7 +2,7 @@
 //! `protocol`).
 //!
 //! Also hosts the `PresentEnvelope`/`PresentStore` type aliases and the VCS envelope helpers — both need
-//! `PresentOperation` (from `crate::artifacts::present::op`) alongside `PresentDeck` (from the artifact's
+//! `PresentMutation` (from `crate::artifacts::present::op`) alongside `PresentDeck` (from the artifact's
 //! own component file), so this is the natural home for them.
 //!
 //! The app's typed `PresentCommand` enum — which used to share the old `📡️protocol` crate with this
@@ -19,24 +19,24 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::present::engine::{empty_present_deck, PresentError};
-use crate::artifacts::present::op::PresentOperation;
+use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{PresentDeck, PRESENT_DECK_SCHEMA};
 use protocol::OpBinary;
 use store::{create_document_envelope, materialize_document_projection, DocumentEnvelope, DocumentStore};
 
-/// 📦️ Encodes a `PresentOperation` to its binary state-patch form.
-pub fn encode_op(operation: &PresentOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `PresentMutation` to its binary state-patch form.
+pub fn encode_op(operation: &PresentMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `PresentOperation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<PresentOperation, protocol::ProtocolError> {
-    PresentOperation::decode_op(bytes)
+/// 📖️ Decodes a `PresentMutation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<PresentMutation, protocol::ProtocolError> {
+    PresentMutation::decode_op(bytes)
 }
 
 //#region 🔖️Store
-pub type PresentEnvelope = DocumentEnvelope<PresentDeck, PresentOperation>;
-pub type PresentStore = DocumentStore<PresentDeck, PresentOperation>;
+pub type PresentEnvelope = DocumentEnvelope<PresentDeck, PresentMutation>;
+pub type PresentStore = DocumentStore<PresentDeck, PresentMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️VcsEnvelope
@@ -57,13 +57,13 @@ pub fn materialize_present_projection_json(envelope_json: &str) -> Result<Presen
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::present::op::PresentOperation;
-    use protocol::CollectionOperation;
+    use crate::artifacts::present::op::PresentMutation;
+    use protocol::CollectionMutation;
     use store::{test_support, DocumentCommand};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = PresentOperation::SetTiles { tiles: Vec::new() };
+        let operation = PresentMutation::SetTiles { tiles: Vec::new() };
         test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -83,7 +83,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");
@@ -96,7 +96,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", crate::artifacts::present::default_present_deck(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");

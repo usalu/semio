@@ -4,9 +4,9 @@
 //! `"locale"`/`"terminology"` rather than the kebab-cased forms their command ids would suggest —
 //! see the `as` literals in `crate::apps::cad`'s `app_commands!` invocation.
 
-use crate::apps::cad::config::{CadConfig, CadConfigOperation};
+use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::op::CadOperation;
+use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -23,10 +23,10 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.projection);
         config.locale = payload.value.clone();
-        Ok(Emit::config(vec![CadConfigOperation::Snapshot { config }]))
+        Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -41,10 +41,10 @@ pub mod set_terminology {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetTerminology, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetTerminology, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.projection);
         config.terminology = payload.value.clone();
-        Ok(Emit::config(vec![CadConfigOperation::Snapshot { config }]))
+        Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))
     }
 }
 //#endregion 🔖️SetTerminology

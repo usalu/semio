@@ -2,7 +2,7 @@
 //! `ConfigOperation`, split out per the taxonomy recipe: view state lives at app level, not artifact).
 
 use crate::artifacts::draw::DrawCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// session-only free viewport camera) plus the two former `ViewModel`-driven fields the draw UI
 /// actually reads (`active_utility_id`/`locale` — mirrors `shooting_engine::ShootingConfig`'s
 /// identical B1 migration) — session view state now round-trips through the config `DocumentStore`
-/// exactly like document content, with a real `backwards` per `DrawConfigOperation` instead of
+/// exactly like document content, with a real `backwards` per `DrawConfigMutation` instead of
 /// never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
@@ -116,7 +116,7 @@ store::impl_whole_record_config!(DrawConfig);
 /// "restore the whole-config snapshot from just before it" — mirrors
 /// `shooting_op::ShootingConfigOperation`'s identical shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum DrawConfigOperation {
+pub enum DrawConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -140,7 +140,7 @@ pub enum DrawConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for DrawConfigOperation {
+impl protocol::OpText for DrawConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -154,7 +154,7 @@ impl protocol::OpText for DrawConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -165,7 +165,7 @@ impl protocol::OpText for DrawConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for DrawConfigOperation {
+impl protocol::OpBinary for DrawConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -211,25 +211,25 @@ impl protocol::OpBinary for DrawConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<DrawConfig> for DrawConfigOperation {
+impl Mutation<DrawConfig> for DrawConfigMutation {
     type Diff = DrawConfig;
 
     fn diff(&self, base: &DrawConfig) -> DrawConfig {
         let mut next = base.clone();
         match self {
-            DrawConfigOperation::Snapshot { config } => return config.clone(),
-            DrawConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            DrawConfigOperation::SetHovered { id } => next.hovered_id = id.clone(),
-            DrawConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            DrawConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            DrawConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            DrawConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            DrawConfigMutation::Snapshot { config } => return config.clone(),
+            DrawConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            DrawConfigMutation::SetHovered { id } => next.hovered_id = id.clone(),
+            DrawConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            DrawConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            DrawConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            DrawConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &DrawConfig) -> Vec<Self> {
-        vec![DrawConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &DrawConfig) -> Vec<Self> {
+        vec![DrawConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -263,25 +263,25 @@ mod tests {
     #[test]
     fn draw_config_operation_round_trips_and_backwards_restores_snapshot() {
         let base = DrawConfig { selected_ids: vec!["a".into()], active_utility_id: "selectDirect".into(), ..Default::default() };
-        let operation = DrawConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] };
+        let operation = DrawConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] };
         let forward = operation.diff(&base);
         assert_eq!(forward.selected_ids, vec!["a".to_string(), "b".to_string()]);
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![DrawConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![DrawConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
         assert_eq!(restored, base);
     }
 
     #[test]
     fn draw_config_operation_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::Snapshot { config: DrawConfig::default() });
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetHovered { id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetHovered { id: None });
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetEngagementInput { value: "New \"Name\"".into() });
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetActiveUtility { utility_id: "pen".into() });
-        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::Snapshot { config: DrawConfig::default() });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: None });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetEngagementInput { value: "New \"Name\"".into() });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() });
+        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }
 //#endregion 🧪️Tests

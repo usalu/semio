@@ -1,7 +1,7 @@
 dialect protocol
 protocol gisterrain.spr
 version 1
-schema gis.terrain.operation
+schema gis.terrain.mutation
 start record
 framing record
 record gis.gisterrain-set-crs tag 1

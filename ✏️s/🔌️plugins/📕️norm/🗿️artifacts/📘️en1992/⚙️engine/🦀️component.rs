@@ -1,7 +1,7 @@
 //! ⚙️ EN 1992 design of concrete structures — headless compute (constitutional: engine).
 
 use crate::artifacts::en1992::{part_1_2::FireRating, part_3::TightnessClass, Document};
-use crate::artifacts::en1992::op::Operation;
+use crate::artifacts::en1992::mutations::En1992Mutation;
 use crate::document::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
 
 // #region 🔖️NaDe
@@ -409,9 +409,12 @@ pub fn check_full_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_m
 }
 
 // #region 🔖️Fem
+#[cfg(feature = "cross-fem")]
 use fem::core::elements2d::BeamEb2;
+#[cfg(feature = "cross-fem")]
 use fem::core::{Dof, MemberUdl, Model, Node, Support};
 
+#[cfg(feature = "cross-fem")]
 fn max_beam_moment_knm(result: &fem::core::StaticResult, element_id: &str) -> f64 {
     let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
@@ -419,6 +422,7 @@ fn max_beam_moment_knm(result: &fem::core::StaticResult, element_id: &str) -> f6
     stations.iter().map(|s| s.m.abs()).fold(0.0_f64, f64::max) / 1000.0
 }
 
+#[cfg(feature = "cross-fem")]
 fn max_beam_shear_kn(result: &fem::core::StaticResult, element_id: &str) -> f64 {
     let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
@@ -427,6 +431,7 @@ fn max_beam_shear_kn(result: &fem::core::StaticResult, element_id: &str) -> f64 
 }
 
 /// 🏗️ Solve a simply supported RC beam with `fem_core` and run EN 1992 ULS checks.
+#[cfg(feature = "cross-fem")]
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, annex: AnnexChoice) -> Result<CheckReport, fem::core::FemError> {
     let mut model = Model::default();
@@ -446,11 +451,56 @@ pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, 
 // #endregion 🔖️Fem
 
 // #region 🔖️Session
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1992 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1992Engine {
+    projection: Document,
+}
+
+impl En1992Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1992Engine {
+    type Projection = Document;
+    type Mutation = En1992Mutation;
+    type Diff = crate::artifacts::en1992::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
 pub type Host = NormHost<En1992Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
     let mut report = if document.use_fem {
-        check_rc_beam_from_fem(document.span_m, document.udl_kn_m, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.annex).unwrap_or_else(|_| CheckReport::default())
+        #[cfg(feature = "cross-fem")]
+        {
+            check_rc_beam_from_fem(document.span_m, document.udl_kn_m, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.annex).unwrap_or_else(|_| CheckReport::default())
+        }
+        #[cfg(not(feature = "cross-fem"))]
+        {
+            CheckReport::default()
+        }
     } else {
         check_full_rc_beam(document.m_ed_knm, document.v_ed_kn, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.n_ed_kn, document.p_kn, document.a_c_mm2, document.annex)
     };
@@ -475,7 +525,7 @@ pub struct En1992Family;
 
 impl NormFamily for En1992Family {
     type Document = Document;
-    type Operation = Operation;
+    type Mutation = En1992Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1992
@@ -543,6 +593,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "cross-fem")]
     fn rc_beam_from_fem_e2e() {
         let report = check_rc_beam_from_fem(6.0, 20.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01, AnnexChoice::De).expect("fem solve");
         assert!(!report.checks.is_empty());

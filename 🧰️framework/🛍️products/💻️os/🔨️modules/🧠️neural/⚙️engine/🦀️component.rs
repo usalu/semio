@@ -509,7 +509,7 @@ impl SchemaComponent {
     }
 }
 
-impl Operation for SchemaComponent {
+impl Operator for SchemaComponent {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let has_instance = schema_input_present(input, &self.schema.id);
         let provided: Vec<&FieldSpec> = self.schema.fields.iter().filter(|field| schema_input_present(input, &field.key)).collect();
@@ -610,7 +610,7 @@ pub fn cluster_operator_info(id: &str, name: &str, tree: &Tree) -> OperatorInfo 
 }
 // #endregion 🔖️Contract
 
-// #region 🔖️Operator
+// #region 🔖️OperatorRecord
 /// ⚙️ Eval error from an operator.
 #[derive(Clone, Debug, PartialEq)]
 pub enum EvalError {
@@ -640,7 +640,7 @@ impl std::fmt::Display for EvalError {
 impl std::error::Error for EvalError {}
 
 /// 🧮️ Computational unit: one dictionary to another.
-pub trait Operation: Send + Sync {
+pub trait Operator: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
 }
 
@@ -897,10 +897,10 @@ pub struct OperatorInfo {
 
 pub struct OperatorImpl {
     pub schemas: Vec<String>,
-    pub operation: Box<dyn Operation>,
+    pub operator: Box<dyn Operator>,
 }
 
-pub struct Operator {
+pub struct OperatorRecord {
     pub info: OperatorInfo,
     pub implementations: Vec<OperatorImpl>,
 }
@@ -909,7 +909,7 @@ pub struct Operator {
 #[derive(Default)]
 pub struct Registry {
     schemas: HashMap<String, Schema>,
-    operators: HashMap<String, Operator>,
+    operators: HashMap<String, OperatorRecord>,
     operator_produces: HashMap<String, Vec<String>>,
     schema_providers: HashMap<String, HashSet<String>>,
     finalized: bool,
@@ -936,7 +936,7 @@ impl Registry {
             }
         }
         self.operator_produces.insert(id.clone(), produces.iter().map(|entry| (*entry).to_string()).collect());
-        self.operators.insert(id, Operator { info, implementations });
+        self.operators.insert(id, OperatorRecord { info, implementations });
         self.finalized = false;
     }
 
@@ -961,7 +961,7 @@ impl Registry {
             }
             self.schema_providers.entry(schema.id.clone()).or_default().insert(operator_id.clone());
             self.operator_produces.insert(operator_id.clone(), produces);
-            self.operators.insert(operator_id, Operator { info, implementations: vec![OperatorImpl { schemas: vec![], operation: Box::new(SchemaComponent { schema }) }] });
+            self.operators.insert(operator_id, OperatorRecord { info, implementations: vec![OperatorImpl { schemas: vec![], operator: Box::new(SchemaComponent { schema }) }] });
         }
         let operator_produces = self.operator_produces.clone();
         let schema_providers = self.schema_providers.clone();
@@ -1002,7 +1002,7 @@ impl Registry {
         self.schemas.get(schema_id)
     }
 
-    pub fn operator(&self, operator_id: &str) -> Option<&Operator> {
+    pub fn operator(&self, operator_id: &str) -> Option<&OperatorRecord> {
         self.operators.get(operator_id)
     }
 
@@ -1063,12 +1063,12 @@ impl Registry {
             .find(|implementation| implementation.schemas == signature)
             .or_else(|| operator.implementations.iter().find(|implementation| implementation.schemas.is_empty()))
             .ok_or_else(|| EvalError::InvalidInput(format!("no implementation for {operator_id}({})", signature.join(", "))))?;
-        let output = implementation.operation.evaluate(input)?;
+        let output = implementation.operator.evaluate(input)?;
         validate_operator_outputs(&operator.info, &output)?;
         Ok(output)
     }
 }
-// #endregion 🔖️Operator
+// #endregion 🔖️OperatorRecord
 
 // #region 🔖️Cache
 fn hash_str<H: Hasher>(hasher: &mut H, value: &str) {
@@ -1991,7 +1991,7 @@ mod tests {
 
     struct Echo;
 
-    impl Operation for Echo {
+    impl Operator for Echo {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
             let payload = input.get("x").and_then(|value| value.as_dictionary()).cloned().unwrap_or_else(|| input.clone());
             Ok(channel_output("x", payload))
@@ -2000,7 +2000,7 @@ mod tests {
 
     struct Double;
 
-    impl Operation for Double {
+    impl Operator for Double {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
             let value = input.get("number").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number.value".into()))?;
             Ok(channel_output("doubled", number_dictionary(value * 2.0)))
@@ -2068,7 +2068,7 @@ mod tests {
     fn registry_dispatches_operator() {
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
         let out = reg.dispatch("echo", &Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0)))).unwrap();
         assert!(out.get("x").is_some());
     }
@@ -2077,8 +2077,8 @@ mod tests {
     fn registry_catalogue_lists_operators_and_schemas() {
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         assert_eq!(reg.schema_catalogue()[0].id, "number");
         assert_eq!(reg.operator_catalogue()[0].id, "double");
         assert_eq!(reg.operator_catalogue()[1].id, "echo");
@@ -2100,8 +2100,8 @@ mod tests {
     fn two_neuron_pipeline() {
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         let tree = Tree {
             neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(2.0)), Neuron::with_kind("b", "double", Dictionary::new())],
             synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }],
@@ -2114,7 +2114,7 @@ mod tests {
     fn evaluate_channels_returns_resolved_inputs_per_neuron() {
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         let tree = Tree { neurons: vec![Neuron::with_kind("add", "double", Dictionary::new())], synapses: vec![Synapse { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "number".into() }] };
         let mut seeds = HashMap::new();
         seeds.insert("slider".into(), channel_output("number", number_dictionary(3.0)));
@@ -2172,7 +2172,7 @@ mod tests {
 
     struct AddNumbers;
 
-    impl Operation for AddNumbers {
+    impl Operator for AddNumbers {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
             let a = input.get("a").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("a".into()))?;
             let b = input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("b".into()))?;
@@ -2238,7 +2238,7 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
+        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(AddNumbers) }], &["number"]);
         let mut seeds = HashMap::new();
         seeds.insert("a_src".into(), channel_output("number", number_dictionary(2.0)));
         seeds.insert("b_src".into(), channel_output("number", number_dictionary(3.0)));
@@ -2258,7 +2258,7 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
+        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(AddNumbers) }], &["number"]);
         let in_dict = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(2.0))).insert("b", Value::Dictionary(number_dictionary(3.0)));
         let out = Evaluator::new(&reg).evaluate_function(&tree, &in_dict).unwrap();
         assert_eq!(out.get("sum").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
@@ -2314,8 +2314,8 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         let evaluator = Evaluator::new(&reg);
         let cache = NeuralCache::new();
         let calls = AtomicUsize::new(0);
@@ -2339,8 +2339,8 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(AddNumbers) }], &["number"]);
         let channels = Evaluator::new(&reg).evaluate_channels(&tree, &HashMap::new(), &HashMap::from([(add_info().id.clone(), add_info())])).unwrap();
         let add_out = channels.outputs.get("add").expect("add output");
         assert!(add_out.get("error").is_some() || add_out.get("sum").is_none());
@@ -2356,8 +2356,8 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(AddNumbers) }], &["number"]);
         let evaluator = Evaluator::new(&reg);
         let cache = NeuralCache::new();
         let calls = AtomicUsize::new(0);
@@ -2384,8 +2384,8 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         let evaluator = Evaluator::new(&reg);
         let cache = NeuralCache::new();
         let calls = AtomicUsize::new(0);
@@ -2409,8 +2409,8 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         let evaluator = Evaluator::new(&reg);
         let cache = NeuralCache::new();
         let calls = AtomicUsize::new(0);
@@ -2433,8 +2433,8 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         let evaluator = Evaluator::new(&reg);
         let cache = NeuralCache::new();
         let calls = AtomicUsize::new(0);
@@ -2463,8 +2463,8 @@ mod tests {
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
-        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
-        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
         let evaluator = Evaluator::new(&reg);
         let cache = NeuralCache::new();
         let mut dispatch = |kind: &str, input: &Dictionary| reg.dispatch(kind, input);

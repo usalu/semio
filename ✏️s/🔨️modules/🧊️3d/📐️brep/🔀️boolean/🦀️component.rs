@@ -2,7 +2,7 @@
 //!
 //! Lane 4-boolean of ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`.
 //! AABB fast paths cover disjoint/contained/axis-aligned-box cases; general overlaps
-//! rebuild via tessellation + centroid classification + convex hull (MVP).
+//! rebuild via tessellation + centroid classification + triangle-soup stitch (hull only as last resort).
 
 use std::collections::HashSet;
 
@@ -13,7 +13,7 @@ use crate::brep::error::{BooleanError, KernelError};
 use crate::brep::euler::{add_shell, add_solid};
 use crate::brep::history::OpRecorder;
 use crate::brep::measure::{solid_bounding_box, solid_volume, AxisAlignedBox};
-use crate::brep::primitives::{make_box, make_convex_hull};
+use crate::brep::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
 use crate::brep::tessellate::tessellate_solid;
 use crate::brep::topo::Body;
 use crate::brep::vec::{Pnt3, Vec3};
@@ -28,7 +28,7 @@ pub enum BooleanOp {
     Intersect,
 }
 
-/// 🔀 Combines solids `a` and `b` under `op`, preferring AABB fast paths then mesh hull fallback.
+/// 🔀 Combines solids `a` and `b` under `op`, preferring AABB fast paths then classified triangle-soup stitch.
 pub fn boolean_solid(
     body: &mut Body,
     a: SolidId,
@@ -74,7 +74,7 @@ pub fn compound_cut(
 
 /// 🔀 Planar section of `solid` by the plane `(origin, normal)`.
 ///
-/// MVP: returns an empty face list (full imprint/section faces deferred).
+/// Collects in-plane vertices and edge/plane hits, then builds one planar face from those points.
 pub fn section_solid_by_plane(
     body: &mut Body,
     solid: SolidId,
@@ -84,13 +84,50 @@ pub fn section_solid_by_plane(
 ) -> Result<Vec<FaceId>, KernelError> {
     require_tol(tol)?;
     require_solid(body, solid)?;
-    let _ = plane_normal(normal)?;
-    let _ = origin;
-    // MVP: planar section faces via imprint are deferred; callers may receive empty.
-    Ok(Vec::new())
+    let n = plane_normal(normal)?;
+    let points = solid_vertex_positions(body, solid)?;
+    let mut section_pts = Vec::new();
+    for p in &points {
+        if ((*p - origin).dot(n)).abs() <= tol * 10.0 {
+            section_pts.push(*p);
+        }
+    }
+    // Also sample edge intersections with the plane.
+    let mut edge_ids = std::collections::HashSet::new();
+    for face in body.solid_faces(solid) {
+        for loop_id in body.face_loops(face) {
+            for cid in body.loop_coedges(loop_id) {
+                if let Some(co) = body.coedges.get(cid) {
+                    edge_ids.insert(co.edge);
+                }
+            }
+        }
+    }
+    for edge_id in edge_ids {
+        let Some(edge) = body.edges.get(edge_id) else { continue };
+        let Some(v0) = body.vertices.get(edge.v0).map(|v| v.position) else { continue };
+        let Some(v1) = body.vertices.get(edge.v1).map(|v| v.position) else { continue };
+        let d0 = (v0 - origin).dot(n);
+        let d1 = (v1 - origin).dot(n);
+        if d0 * d1 > 0.0 {
+            continue;
+        }
+        let denom = d0 - d1;
+        if denom.abs() <= 1e-15 {
+            continue;
+        }
+        let t = d0 / denom;
+        section_pts.push(v0 + (v1 - v0) * t);
+    }
+    if section_pts.len() < 3 {
+        return Ok(Vec::new());
+    }
+    // Build a planar face from the convex hull of section points in-plane.
+    let face = crate::brep::primitives::make_planar_face_from_points(body, &section_pts)?;
+    Ok(vec![face])
 }
 
-/// 🔀 Splits `solid` by the plane `(origin, normal)` into two convex hull solids (one per side).
+/// 🔀 Splits `solid` by the plane `(origin, normal)` into two solids (classified triangle soups; hull fallback).
 pub fn split_solid_by_plane(
     body: &mut Body,
     solid: SolidId,
@@ -101,33 +138,65 @@ pub fn split_solid_by_plane(
     require_tol(tol)?;
     require_solid(body, solid)?;
     let n = plane_normal(normal)?;
-    let points = solid_vertex_positions(body, solid)?;
-    if points.is_empty() {
-        return Err(KernelError::InvalidInput(format!("solid {solid} has no vertices")));
+    let mesh = tessellate_solid(body, solid, tol.max(1e-3))?;
+    let mut pos_tris: Vec<[Pnt3; 3]> = Vec::new();
+    let mut neg_tris: Vec<[Pnt3; 3]> = Vec::new();
+    let mut pos_pts = Vec::new();
+    let mut neg_pts = Vec::new();
+    let npos = mesh.position.len() / 3;
+    if mesh.index.len() % 3 != 0 {
+        return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));
     }
-    let mut pos = Vec::new();
-    let mut neg = Vec::new();
-    for p in points {
-        let d = (p - origin).dot(n);
+    for tri in mesh.index.chunks_exact(3) {
+        let i0 = tri[0] as usize;
+        let i1 = tri[1] as usize;
+        let i2 = tri[2] as usize;
+        if i0 >= npos || i1 >= npos || i2 >= npos {
+            return Err(KernelError::InvalidInput("mesh index out of range".into()));
+        }
+        let p0 = mesh_position(&mesh, i0);
+        let p1 = mesh_position(&mesh, i1);
+        let p2 = mesh_position(&mesh, i2);
+        let c = Pnt3::new((p0.x + p1.x + p2.x) / 3.0, (p0.y + p1.y + p2.y) / 3.0, (p0.z + p1.z + p2.z) / 3.0);
+        let d = (c - origin).dot(n);
         if d >= -tol {
-            pos.push(p);
+            pos_tris.push([p0, p1, p2]);
+            pos_pts.extend([p0, p1, p2]);
         }
         if d <= tol {
-            neg.push(p);
+            neg_tris.push([p0, p1, p2]);
+            neg_pts.extend([p0, p1, p2]);
         }
     }
-    if pos.len() < 4 {
-        return Err(KernelError::Boolean(BooleanError::InvalidResult(
-            "split_solid_by_plane: positive side has too few points".into(),
-        )));
+    if pos_tris.is_empty() || neg_tris.is_empty() {
+        // Fall back to vertex-side hulls when tessellation did not straddle the plane.
+        let points = solid_vertex_positions(body, solid)?;
+        let mut pos = Vec::new();
+        let mut neg = Vec::new();
+        for p in points {
+            let d = (p - origin).dot(n);
+            if d >= -tol {
+                pos.push(p);
+            }
+            if d <= tol {
+                neg.push(p);
+            }
+        }
+        if pos.len() < 4 || neg.len() < 4 {
+            return Err(KernelError::Boolean(BooleanError::InvalidResult(
+                "split_solid_by_plane: one side has too few points".into(),
+            )));
+        }
+        return Ok((make_convex_hull(body, &pos)?, make_convex_hull(body, &neg)?));
     }
-    if neg.len() < 4 {
-        return Err(KernelError::Boolean(BooleanError::InvalidResult(
-            "split_solid_by_plane: negative side has too few points".into(),
-        )));
-    }
-    let solid_pos = make_convex_hull(body, &pos)?;
-    let solid_neg = make_convex_hull(body, &neg)?;
+    let solid_pos = match solid_from_triangle_soup(body, &pos_tris) {
+        Ok(id) => id,
+        Err(_) => make_convex_hull(body, &pos_pts)?,
+    };
+    let solid_neg = match solid_from_triangle_soup(body, &neg_tris) {
+        Ok(id) => id,
+        Err(_) => make_convex_hull(body, &neg_pts)?,
+    };
     Ok((solid_pos, solid_neg))
 }
 
@@ -220,27 +289,34 @@ fn mesh_boolean(
     let mesh_a = tessellate_solid(body, a, deflection)?;
     let mesh_b = tessellate_solid(body, b, deflection)?;
     let mut points = Vec::new();
-    append_kept_triangle_vertices(body, &mesh_a, b, op, true, tol, &mut points)?;
-    append_kept_triangle_vertices(body, &mesh_b, a, op, false, tol, &mut points)?;
-    if points.is_empty() {
+    let mut triangles: Vec<[Pnt3; 3]> = Vec::new();
+    append_kept_triangles(body, &mesh_a, b, op, true, tol, &mut points, &mut triangles)?;
+    append_kept_triangles(body, &mesh_b, a, op, false, tol, &mut points, &mut triangles)?;
+    if triangles.is_empty() {
         return Err(KernelError::Boolean(BooleanError::InvalidResult(
-            "mesh boolean produced no points".into(),
+            "mesh boolean produced no triangles".into(),
         )));
     }
-    make_convex_hull(body, &points).map_err(|e| match e {
-        KernelError::InvalidInput(msg) => KernelError::Boolean(BooleanError::InvalidResult(msg)),
-        other => other,
-    })
+    // Prefer the classified triangle soup (non-convex cuts/fuses) over a convex hull of the kept
+    // vertices — hull was collapsing C-shaped and holed results into the wrong solid.
+    match solid_from_triangle_soup(body, &triangles) {
+        Ok(id) => Ok(id),
+        Err(_) => make_convex_hull(body, &points).map_err(|e| match e {
+            KernelError::InvalidInput(msg) => KernelError::Boolean(BooleanError::InvalidResult(msg)),
+            other => other,
+        }),
+    }
 }
 
-fn append_kept_triangle_vertices(
+fn append_kept_triangles(
     body: &Body,
     mesh: &MeshTransfer,
     other: SolidId,
     op: BooleanOp,
     from_a: bool,
     tol: f64,
-    out: &mut Vec<Pnt3>,
+    out_points: &mut Vec<Pnt3>,
+    out_tris: &mut Vec<[Pnt3; 3]>,
 ) -> Result<(), KernelError> {
     let npos = mesh.position.len() / 3;
     if mesh.index.len() % 3 != 0 {
@@ -263,13 +339,15 @@ fn append_kept_triangle_vertices(
         );
         let class = point_in_solid(body, other, centroid, tol)?;
         if keep_triangle(op, from_a, class) {
-            out.push(p0);
-            out.push(p1);
-            out.push(p2);
+            out_points.push(p0);
+            out_points.push(p1);
+            out_points.push(p2);
+            out_tris.push([p0, p1, p2]);
         }
     }
     Ok(())
 }
+
 
 fn keep_triangle(op: BooleanOp, from_a: bool, class: PointClassification) -> bool {
     match op {

@@ -8,21 +8,21 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 // (clippy::result_large_err is allowed crate-wide from the plugin root 📦️glue.rs.)
 
 use crate::apps::layout::commands::{author, export, pointer, view};
-use crate::apps::layout::config::{LayoutConfig, LayoutConfigOperation};
+use crate::apps::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::apps::layout::modes::edit::windows::{blueprint, preview};
 use crate::apps::layout::modes::edit;
 use crate::apps::layout::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, preflight as preflight_panel};
 use crate::apps::layout::terminology::{layout_labels, LayoutLabels};
-use crate::artifacts::layout::op::LayoutOperation;
+use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutDocument;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
 };
@@ -61,7 +61,7 @@ semio_framework_plugin::app_commands! {
     /// the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum LayoutCommand for LayoutDocument, LayoutOperation, LayoutConfig, LayoutConfigOperation {
+    pub enum LayoutCommand for LayoutDocument, LayoutMutation, LayoutConfig, LayoutConfigMutation {
         "setSelection" as "selection" => set_selection::SetSelection,
         "setActivePage" as "active-page" => set_active_page::SetActivePage,
         "setHover" as "hover" => set_hover::SetHover,
@@ -123,17 +123,17 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
 
 //#region 🔖️LayoutPlayApp
 /// 🧪️ B1: unit struct — every former `LayoutPlayRuntime` field now lives in [`LayoutConfig`], written
-/// through [`LayoutConfigOperation`]s. Parley/font layout state stays on the app instance.
+/// through [`LayoutConfigMutation`]s. Parley/font layout state stays on the app instance.
 #[derive(Default)]
 pub struct LayoutPlayApp;
 
 impl DocumentApp for LayoutPlayApp {
     type Projection = LayoutDocument;
-    type Operation = LayoutOperation;
+    type Mutation = LayoutMutation;
     type Config = LayoutConfig;
-    type ConfigOperation = LayoutConfigOperation;
+    type ConfigMutation = LayoutConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = LayoutCommand;
 
@@ -153,7 +153,7 @@ impl DocumentApp for LayoutPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutOperation, LayoutConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -185,13 +185,13 @@ impl DocumentApp for LayoutPlayApp {
     /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
     /// named data source (see `crate::artifacts::layout::LayoutDocument::data_fields_json`'s doc) rather
     /// than wiring it into rendering today.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LayoutDocument>) -> Result<Emit<LayoutOperation, LayoutConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LayoutDocument>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "fields:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "fields:in only accepts a Structured (JSON object) payload".into()));
                 };
-                Ok(Emit::operations(vec![LayoutOperation::SetDataFields { json: Some(json.clone()) }]))
+                Ok(Emit::mutations(vec![LayoutMutation::SetDataFields { json: Some(json.clone()) }]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -253,8 +253,8 @@ pub fn create_layout_app() -> App {
             .panel_tab_def(preflight_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Palette-visible content commands — dispatched as VCS operations with a true inverse.
-            .operation("addFrame", LocalizedLabel::native("Add Frame", "Rahmen hinzufügen"))
-            .operation("addPage", LocalizedLabel::native("Add Page", "Seite hinzufügen"))
+            .mutation("addFrame", LocalizedLabel::native("Add Frame", "Rahmen hinzufügen"))
+            .mutation("addPage", LocalizedLabel::native("Add Page", "Seite hinzufügen"))
             .action_args("addFrame", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("rect", LocalizedLabel::native("Rectangle", "Rechteck")),
@@ -270,9 +270,9 @@ pub fn create_layout_app() -> App {
             .shell_action("exportPdf", LocalizedLabel::native("Export Pdf", "Pdf exportieren"))
             .shell_action("exportPackage", LocalizedLabel::native("Export Package", "Paket exportieren"))
             // 🔧️ Internal document operations — inspector/DnD-bound, not palette commands.
-            .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Operation))
-            .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Operation))
-            .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Operation))
+            .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Mutation))
+            .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
+            .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Mutation))
             // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, pointer, camera, engagement draft.
             .action_with(layout_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
             .action_with(layout_internal_action("setActivePage", LocalizedLabel::native("Set Active Page", "Aktive Seite festlegen"), ActionKind::View))
@@ -542,10 +542,10 @@ mod tests {
 
     #[test]
     fn registry_backed_add_frame_emits_operation() {
-        // 🧬️ addFrame is declared `Operation`: the registry-backed wrapper must let its operations through.
+        // 🧬️ addFrame is declared `Mutation`: the registry-backed wrapper must let its operations through.
         let mut app = layout_app_with_registry();
         let result = dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.document_mutations.len(), 1);
     }
 
     #[test]
@@ -555,7 +555,7 @@ mod tests {
         let mut app = layout_app_with_registry();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
-        assert!(result.operations.is_empty(), "View action must not emit document operations");
+        assert!(result.document_mutations.is_empty(), "View action must not emit document operations");
     }
     //#endregion 🔖️CrossCutting
 

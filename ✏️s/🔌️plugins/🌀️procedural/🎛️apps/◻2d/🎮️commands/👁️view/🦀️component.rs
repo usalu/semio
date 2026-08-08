@@ -1,8 +1,8 @@
 //! 👁️ Procedural2d play app commands — the show-mode display toggle and canvas pointer/wheel events
 //! (config-only or no-ops; never document operations).
 
-use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOperation};
-use crate::artifacts::procedural2d::op::Procedural2dOperation;
+use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
+use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -18,8 +18,8 @@ pub mod set_show_mode {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetShowMode, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetShowMode, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural2dConfigMutation::SetShowMode { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetShowMode
@@ -32,7 +32,7 @@ pub mod canvas_pointer_down {
     #[dsl(keyword = "canvas-pointer-down")]
     pub struct CanvasPointerDown {}
 
-    pub fn handle(_payload: &CanvasPointerDown, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerDown, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -46,7 +46,7 @@ pub mod canvas_pointer_move {
     #[dsl(keyword = "canvas-pointer-move")]
     pub struct CanvasPointerMove {}
 
-    pub fn handle(_payload: &CanvasPointerMove, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerMove, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -60,7 +60,7 @@ pub mod canvas_pointer_up {
     #[dsl(keyword = "canvas-pointer-up")]
     pub struct CanvasPointerUp {}
 
-    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -74,7 +74,7 @@ pub mod canvas_wheel {
     #[dsl(keyword = "canvas-wheel")]
     pub struct CanvasWheel {}
 
-    pub fn handle(_payload: &CanvasWheel, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasWheel, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }

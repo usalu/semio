@@ -6,9 +6,9 @@
 use crate::apps::layout::canvas::active_page;
 use crate::apps::layout::commands::author::{add_frame, add_page};
 use crate::apps::layout::config::{LayoutConfig, LayoutDropPreviewState};
-use crate::apps::layout::config::LayoutConfigOperation;
+use crate::apps::layout::config::LayoutConfigMutation;
 use crate::artifacts::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
-use crate::artifacts::layout::op::LayoutOperation;
+use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::{LayoutCamera, LayoutDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -54,7 +54,7 @@ pub mod canvas_pointer_down {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint || payload.button != 0 {
             return Ok(Emit::default());
@@ -73,7 +73,7 @@ pub mod canvas_pointer_down {
             Some(id) => vec![id],
             None => Vec::new(),
         };
-        Ok(Emit::config(vec![LayoutConfigOperation::SetSelection { ids }]))
+        Ok(Emit::config(vec![LayoutConfigMutation::SetSelection { ids }]))
     }
 }
 //#endregion 🔖️CanvasPointerDown
@@ -92,12 +92,12 @@ pub mod canvas_pointer_move {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint {
             return Ok(Emit::default());
         }
-        Ok(Emit::config(vec![LayoutConfigOperation::SetHover { id: hit_test_at(doc.projection, cfg.projection, payload.x, payload.y, payload.width, payload.height, blueprint) }]))
+        Ok(Emit::config(vec![LayoutConfigMutation::SetHover { id: hit_test_at(doc.projection, cfg.projection, payload.x, payload.y, payload.width, payload.height, blueprint) }]))
     }
 }
 //#endregion 🔖️CanvasPointerMove
@@ -110,7 +110,7 @@ pub mod canvas_pointer_up {
     #[dsl(keyword = "canvas-pointer-up")]
     pub struct CanvasPointerUp {}
 
-    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
+    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -131,13 +131,13 @@ pub mod canvas_drag_over {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasDragOver, _doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasDragOver, _doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint {
             return Ok(Emit::default());
         }
         let (wx, wy) = screen_to_world_for_surface(cfg.projection, blueprint, payload.x, payload.y, payload.width, payload.height);
-        Ok(Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState { kind: payload.kind.clone(), x: wx, y: wy } }]))
+        Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState { kind: payload.kind.clone(), x: wx, y: wy } }]))
     }
 }
 //#endregion 🔖️CanvasDragOver
@@ -150,8 +150,8 @@ pub mod canvas_drag_leave {
     #[dsl(keyword = "canvas-drag-leave")]
     pub struct CanvasDragLeave {}
 
-    pub fn handle(_payload: &CanvasDragLeave, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() }]))
+    pub fn handle(_payload: &CanvasDragLeave, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() }]))
     }
 }
 //#endregion 🔖️CanvasDragLeave
@@ -168,13 +168,13 @@ pub mod set_camera {
         pub camera: LayoutCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         let _ = cfg;
         if blueprint {
-            Ok(Emit::config(vec![LayoutConfigOperation::SetCamera { camera: payload.camera.clone() }]))
+            Ok(Emit::config(vec![LayoutConfigMutation::SetCamera { camera: payload.camera.clone() }]))
         } else {
-            Ok(Emit::config(vec![LayoutConfigOperation::SetPreviewCamera { camera: payload.camera.clone() }]))
+            Ok(Emit::config(vec![LayoutConfigMutation::SetPreviewCamera { camera: payload.camera.clone() }]))
         }
     }
 }
@@ -197,10 +197,10 @@ pub mod canvas_drop {
 
     /// 🐛️ Delegates document creation to `add_page`/`add_frame`'s own handlers so "drop adds content"
     /// has one implementation, then always clears the drag-ghost regardless of surface/outcome.
-    pub fn handle(payload: &CanvasDrop, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasDrop, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
         if !blueprint {
-            return Ok(Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() }]));
+            return Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() }]));
         }
         let (wx, wy) = screen_to_world_for_surface(cfg.projection, blueprint, payload.x, payload.y, payload.width, payload.height);
         let mut emitted = if payload.kind == "page" {
@@ -208,7 +208,7 @@ pub mod canvas_drop {
         } else {
             add_frame::handle(&add_frame::AddFrame { kind: payload.kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg)?
         };
-        emitted.config_operations.push(LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() });
+        emitted.config_mutations.push(LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() });
         Ok(emitted)
     }
 }
@@ -226,7 +226,7 @@ mod tests {
         let mut app = layout_app();
         let before = app.projection().expect("projection");
         let result = dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } }));
-        assert!(result.operations.is_empty(), "camera is a config action and emits no operations");
+        assert!(result.document_mutations.is_empty(), "camera is a config action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
     }
 
@@ -254,7 +254,7 @@ mod tests {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
-        assert!(result.operations.is_empty(), "hover is a config action, not an operation");
+        assert!(result.document_mutations.is_empty(), "hover is a config action, not an operation");
         let json = render(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.frame.frame-text-1"));
     }
@@ -264,7 +264,7 @@ mod tests {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 }));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.document_mutations.len(), 1);
         let doc = app.projection().expect("projection");
         let frame = doc.pages[0].frames.last().unwrap();
         let bounds = frame.bounds();
@@ -277,7 +277,7 @@ mod tests {
         let mut app = layout_app();
         let before = app.projection().expect("projection").pages.len();
         let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 }));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.document_mutations.len(), 1);
         assert_eq!(app.projection().expect("projection").pages.len(), before + 1);
     }
 

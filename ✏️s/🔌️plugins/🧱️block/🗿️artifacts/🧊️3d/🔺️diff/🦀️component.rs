@@ -1,4 +1,4 @@
-//! 🔺️ Block 3D artifact — the operation diff and its `OperationDiff` law, plus the id-keyed collection
+//! 🔺️ Block 3D artifact — the operation diff and its `MutationDiff` law, plus the id-keyed collection
 //! diff plumbing shared with `🔧️op`'s `backwards()` (split out of the old constitutional `op` crate).
 
 
@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::block3d::{Block3dDefinition, Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Collections
@@ -72,7 +72,7 @@ fn apply_block3d_collection_diff<T: Block3dHasId + Clone>(items: &mut Vec<T>, re
     }
 }
 
-/// 🔍️ Reused by `🔧️op`'s `Operation::backwards` to look up a row's pre-operation state.
+/// 🔍️ Reused by `🔧️op`'s `Mutation::inverse` to look up a row's pre-operation state.
 pub(crate) fn block3d_index_of<T: Block3dHasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
 }
@@ -123,7 +123,7 @@ fn block3d_diff_absorb(diff: &mut Block3dDiff, other: Block3dDiff) {
     }
 }
 
-impl OperationDiff<Block3dDefinition> for Block3dDiff {
+impl MutationDiff<Block3dDefinition> for Block3dDiff {
     fn apply(&self, projection: &Block3dDefinition) -> Block3dDefinition {
         if let Some(document) = &self.document {
             return document.clone();

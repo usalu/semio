@@ -9,17 +9,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::block5d::op::Block5dOperation;
+use crate::artifacts::block5d::op::Block5dMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `Block5dOperation` to its binary command form.
-pub fn encode_op(operation: &Block5dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `Block5dMutation` to its binary command form.
+pub fn encode_op(operation: &Block5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `Block5dOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Block5dOperation, protocol::ProtocolError> {
-    Block5dOperation::decode_op(bytes)
+/// 📖️ Decodes a `Block5dMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolError> {
+    Block5dMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -35,14 +35,14 @@ mod tests {
         use crate::artifacts::block5d::op::Block5dStore;
 
         let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dDefinition::default(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![Block5dOperation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Block5dMutation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }], description: None }).expect("apply");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.part_kind.id, "p1");
     }
 
     #[test]
     fn block5d_operation_binary_round_trips() {
-        let operation = Block5dOperation::RemoveGrip { id: "g0".into() };
+        let operation = Block5dMutation::RemoveGrip { id: "g0".into() };
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }

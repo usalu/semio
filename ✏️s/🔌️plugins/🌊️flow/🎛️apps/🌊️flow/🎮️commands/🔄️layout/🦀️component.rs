@@ -1,8 +1,8 @@
 //! 🔄️ Flow play app commands — auto-layout of the whole canvas.
 
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::host_operations;
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -19,14 +19,14 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        Ok(Emit::operations(reorganize_operations(doc, cfg, session)))
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        Ok(Emit::mutations(reorganize_operations(doc, cfg, session)))
     }
 }
 
 /// 🔄️ The reorganize document operations, extracted so the extension action can reuse them without
 /// round-tripping through the command enum.
-pub fn reorganize_operations(doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Vec<FlowOperation> {
+pub fn reorganize_operations(doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Vec<FlowMutation> {
     host_operations(doc.projection, cfg.projection, session, |host| host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok())
 }
 //#endregion 🔖️Reorganize

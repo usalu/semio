@@ -176,7 +176,7 @@ pub struct FemCombination {
 /// orthonormalized) and the viewer normalizes them to a fixed fraction of the model's own extent
 /// instead of using this factor.
 // No `#[dsl(keyword = ...)]` here: the only field embedding this type (`Fem3dDocument::analysis`,
-// `Fem3dOperation::SetAnalysisSettings::settings`) is itself `#[dsl(block)]`, which already supplies
+// `Fem3dMutation::SetAnalysisSettings::settings`) is itself `#[dsl(block)]`, which already supplies
 // the bare leading keyword from the FIELD's own name — an inner keyword too would double it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]

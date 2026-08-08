@@ -793,27 +793,123 @@ export class VerifyScript extends Script {
         if (!existsSync(resolved)) offenders.push(`scope ${JSON.stringify(scope.id)}: storyGlob ${JSON.stringify(glob)} has no matching directory (resolved ${JSON.stringify(relative(this.root, resolved))})`);
       }
     }
-    // 🎨️ `.storybook/globals.css`'s `@import`/`@source` at-rules are hand-maintained literal paths (Tailwind
-    // v4's content-scanning `@source` needs a real filesystem path, not a package specifier) — this is the
-    // exact bug class (a de-sandwiched plugin's old `⚡️implementations/<lang>` segment left dangling in this
-    // file) `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG` found and fixed for cad;
-    // guard against it recurring.
-    const globalsCssPath = join(this.root, ".storybook", "globals.css");
-    if (existsSync(globalsCssPath)) {
-      for (const rawLine of readFileSync(globalsCssPath, "utf8").split("\n")) {
-        const match = rawLine.match(/^@(?:import|source)\s+"([^"]+)"/);
-        if (!match) continue;
-        const literal = match[1];
-        if (!literal.startsWith(".")) continue; // 🌐️ a bare package specifier (node resolution), not a literal fs path — nothing to check on disk here.
-        if (!existsSync(resolve(this.root, ".storybook", literal))) offenders.push(`.storybook/globals.css: ${JSON.stringify(literal)} does not exist`);
-      }
-    }
+    // 🎨️ App-level Tailwind entry CSS files' `@import`/`@source` at-rules are hand-maintained literal paths
+    // (Tailwind v4's content-scanning `@source` needs a real filesystem path, not a package specifier) —
+    // the same bug class as a de-sandwiched plugin's old `⚡️implementations/<lang>` segment left dangling
+    // (see `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`). Also assert each entry
+    // reaches the shared UI stylesheet through its import chain so a future app cannot silently ship a
+    // stylesheet that never scans `Layout`/`Panel`/`ShellHost` class names.
+    this.checkAppTailwindEntries(offenders);
     if (offenders.length) {
-      console.error(`[verify] ${offenders.length} Storybook scope path(s) are stale:`);
+      console.error(`[verify] ${offenders.length} Storybook scope / Tailwind entry path(s) are stale:`);
       for (const o of offenders) console.error(`  ${o}`);
-      console.error("run-check `.storybook/scopes.ts`'s HAND_CURATED_SCOPES (or the opting-in package's own manifest) — see 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG.");
+      console.error("run-check `.storybook/scopes.ts`'s HAND_CURATED_SCOPES (or the opting-in package's own manifest / app globals.css) — see 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG.");
       process.exit(1);
     }
+  }
+
+  /** @emoji 🎨️ Discovers every app-level Tailwind entry (`globals.css` / `🎨️globals.css`), validates
+   * relative `@import`/`@source` literals resolve on disk, and asserts each entry's import chain reaches
+   * the shared UI react stylesheet that owns the framework class sources. */
+  private checkAppTailwindEntries(offenders: string[]): void {
+    const uiGlobalsRel = this.findSharedUiGlobalsRel();
+    if (!uiGlobalsRel) {
+      offenders.push("shared UI react 🎨️globals.css not found under 🧰️framework/🔨️modules/🖱️ui");
+      return;
+    }
+    const uiGlobalsAbs = join(this.root, uiGlobalsRel);
+    const entries = this.listAppTailwindEntries();
+    for (const entryAbs of entries) {
+      const entryRel = relative(this.root, entryAbs);
+      const entryDir = dirname(entryAbs);
+      const body = readFileSync(entryAbs, "utf8");
+      for (const rawLine of body.split("\n")) {
+        const match = rawLine.match(/^@(?:import|source)\s+"([^"]+)"/);
+        if (!match) continue;
+        const literal = match[1]!;
+        if (!literal.startsWith(".")) continue;
+        const resolved = resolve(entryDir, literal);
+        if (!existsSync(resolved)) offenders.push(`${entryRel}: ${JSON.stringify(literal)} does not exist`);
+      }
+      // Fragment stylesheets (e.g. animate present's reveal overrides) only declare `@source` / custom
+      // rules and are `@import`ed by a real entry — they must not be forced to import the UI chain themselves.
+      const importsShared = /@import\s+"(?:\.\.?\/|@semio-tech\/ui-styling)/.test(body);
+      if (importsShared && !this.cssImportChainReaches(entryAbs, uiGlobalsAbs, new Set())) {
+        offenders.push(`${entryRel}: import chain does not reach shared UI stylesheet ${JSON.stringify(uiGlobalsRel)}`);
+      }
+    }
+  }
+
+  /** @emoji 🎨️ App / storybook / product Tailwind entry CSS files that must inherit the shared UI sources. */
+  private listAppTailwindEntries(): string[] {
+    const found: string[] = [];
+    const visit = (dir: string, depth: number): void => {
+      if (depth > 10) return;
+      let entries: ReturnType<typeof readdirSync>;
+      try {
+        entries = readdirSync(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const entry of entries) {
+        if (entry.name === "node_modules" || entry.name === "dist" || entry.name === "target" || entry.name === ".git") continue;
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          visit(full, depth + 1);
+          continue;
+        }
+        if (entry.name === "globals.css" || entry.name === "🎨️globals.css") found.push(full);
+      }
+    };
+    for (const top of [".storybook", "compose", "♻️mit-bestand", "✏️s", "🧰️framework"]) {
+      const abs = join(this.root, top);
+      if (existsSync(abs)) visit(abs, 0);
+    }
+    return found.filter((abs) => {
+      const rel = relative(this.root, abs).replace(/\\/g, "/");
+      // Shared module stylesheets are sources in the chain, not app entries that must import themselves.
+      if (rel.includes("/🎯️targets/⚛️react/🎨️globals.css")) return false;
+      if (rel.includes("/🎨️styling/")) return false;
+      return true;
+    });
+  }
+
+  /** @emoji 🎨️ Relative path of the shared UI react `🎨️globals.css` from the workspace root. */
+  private findSharedUiGlobalsRel(): string | null {
+    const candidates = [
+      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css",
+    ];
+    for (const rel of candidates) {
+      if (existsSync(join(this.root, rel))) return rel;
+    }
+    return null;
+  }
+
+  /** @emoji 🎨️ Walks relative `@import "..."` edges (skipping package specifiers) until `targetAbs` is reached. */
+  private cssImportChainReaches(fromAbs: string, targetAbs: string, seen: Set<string>): boolean {
+    const normalizedFrom = resolve(fromAbs);
+    const normalizedTarget = resolve(targetAbs);
+    if (normalizedFrom === normalizedTarget) return true;
+    if (seen.has(normalizedFrom)) return false;
+    seen.add(normalizedFrom);
+    if (!existsSync(normalizedFrom)) return false;
+    const body = readFileSync(normalizedFrom, "utf8");
+    for (const rawLine of body.split("\n")) {
+      const match = rawLine.match(/^@import\s+"([^"]+)"/);
+      if (!match) continue;
+      const literal = match[1]!;
+      let nextAbs: string | null = null;
+      if (literal.startsWith(".")) {
+        nextAbs = resolve(dirname(normalizedFrom), literal);
+      } else if (literal.startsWith("@semio-tech/ui-styling")) {
+        // Package import of the styling base — the shared UI globals imports this; reaching UI globals is enough.
+        continue;
+      } else {
+        continue;
+      }
+      if (this.cssImportChainReaches(nextAbs, normalizedTarget, seen)) return true;
+    }
+    return false;
   }
 }
 //#endregion 🔖️VerifyScript
@@ -2115,7 +2211,7 @@ const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
  * `vcs::test_support::assert_command_envelope_round_trip` (added in CW7) on the same fixtures — seeded
  * at CW8 with every file that fails the check today, exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST`
  * was seeded for the dsl/pack lock step (`vcs/rs/lib.rs` itself proves the mechanism on its own
- * `DemoProjection`/`LossyOperation` fixtures, which is why it is NOT in this list). Remove an entry
+ * `DemoProjection`/`LossyMutation` fixtures, which is why it is NOT in this list). Remove an entry
  * once that file adds the command-envelope-round-trip call. Keyed by `policyNormalizeRelPath` (canonical
  * `<pluginId>/<component>`, not the raw repo-relative path) so a plugin's move to the taxonomy layout
  * never requires touching this list — matched against every discovered file via `policyNormalizeRelPath`
@@ -2146,19 +2242,19 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
  * - `Value` (`serde_json::Value`): blanket `impl DocumentDsl for serde_json::Value` in `vcs/rs/lib.rs`
  *   (the schema-less escape hatch for a technology whose `DocumentApp::Projection` predates its own
  *   typed DSL derive — see `puzzle_2d`'s `🔖️ValueBridge` region).
- * - `SetDocumentOperation` (`norm_core::SetDocumentOperation<D>`): one hand-rolled generic
- *   `impl<D: DocumentDsl> OpText for SetDocumentOperation<D>` in `norm/core/rs/lib.rs`, shared by every
- *   norm family's `Operation` type instead of a per-family derive.
+ * - `SetDocumentMutation` (`norm_core::SetDocumentMutation<D>`): one hand-rolled generic
+ *   `impl<D: DocumentDsl> OpText for SetDocumentMutation<D>` in `norm/core/rs/lib.rs`, shared by every
+ *   norm family's `Mutation` type instead of a per-family derive.
  */
-const POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST = new Set<string>(["Value", "SetDocumentOperation"]);
+const POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST = new Set<string>(["Value", "SetDocumentMutation"]);
 
 /**
  * 🎫️ W1 grammar-engine wave (`.claude/plans/the-final-goal-for-jolly-spindle.md` `## Master wave
  * plan` `W1 — Grammar engine`, design ruling B-R4): every `*.rs` file that defines a real
- * `impl protocol::OperationDiff<...>` diff type but does not yet ALSO give that type a
+ * `impl protocol::MutationDiff<...>` diff type but does not yet ALSO give that type a
  * `protocol::DiffCodec` impl (via `#[derive(dsl::DslDiff)]` or a hand-rolled impl) — seeded at W1
  * with every file that fails the check today. `DiffCodec` is deliberately NOT (yet) a hard
- * supertrait bound of `OperationDiff` (see that trait's doc comment in `protocol_command/rs/lib.rs`)
+ * supertrait bound of `MutationDiff` (see that trait's doc comment in `protocol_command/rs/lib.rs`)
  * — this allowlist is the shrinking-list enforcement mechanism instead, exactly like
  * `POLICY_PACK_COMPLETENESS_ALLOWLIST`/`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST` before it.
  * `writer_op/rs/lib.rs` (`WriterDiff`) and `note_op/rs/lib.rs` (`NoteDiff`) are the two W1
@@ -2238,269 +2334,26 @@ const POLICY_GRAMMAR_FILE_ALLOWLIST = new Set<string>([]);
 /** @emoji 📡️ Stub `.protocol.semio` files not yet backed by a byte-level recognizer proof. */
 const POLICY_PROTOCOL_FILE_ALLOWLIST = new Set<string>([]);
 
-/** @emoji 🟦️ TypeScript WASM facades still throwing the scaffold placeholder. */
-const POLICY_TS_FACADE_ALLOWLIST = new Set<string>([
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📡️spr/🟦️component.ts",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🗣️dsl/🟦️component.ts",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔧️op/🟦️component.ts",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔺️diff/🟦️component.ts",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🎒️pack/🟦️component.ts",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📡️spr/🟦️component.ts",
+/**
+ * ⚖️ Constitutional artifact facets whose `🟦️component.ts` may remain a WASM scaffold stub.
+ * Stubs under these facets (and under `🧬️mutations/<mut>/{🦠️mutation,🔺️diff,↩️inverse}`) are accepted
+ * structurally — never tracked in a per-file allowlist (Wave 2b / OPERATIONS-TO-MUTATIONS).
+ */
+const POLICY_TS_FACADE_CONSTITUTIONAL_FACETS = new Set<string>([
+  "🗣️dsl",
+  "🔧️op",
+  "🔺️diff",
+  "🎒️pack",
+  "📡️spr",
+  "🧬️mutations",
+  "⚙️engine",
 ]);
+const POLICY_MUTATION_TRIAD_DIRS = ["🦠️mutation", "🔺️diff", "↩️inverse"] as const;
+const POLICY_MUTATIONS_FACET = "🧬️mutations";
+const POLICY_ENGINE_FACET = "⚙️engine";
+const POLICY_OP_FACET = "🔧️op";
+const POLICY_TS_COMPONENT_LEAF = "🟦️component.ts";
+const POLICY_RS_COMPONENT_LEAF_NAME = "🦀️component.rs";
 /**
  * ⚖️P3/M4: colliding .grammar.semio/.protocol.semio after name/start normalization. Remove a path once its normalized hash is unique.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
@@ -3010,9 +2863,10 @@ function policyDiscoverOpsFiles(repoRoot: string): string[] {
 const POLICY_OPS_STRUCTURAL_KEYWORDS = ["@doc", "@edit", "@change", "@checkpoint", "@alternative", "@active"];
 
 /**
- * 📏️dsl/ migration lock-step rule: basic `.ops`-file grammar sanity — one structural `@doc`/`@edit`/
- * `@change`/`@checkpoint`/`@alternative`/`@active` line, or one 2-space-indented op-text line under a
- * preceding `@edit`, per line; never blank. Forward-looking: no `*.ops` fixture exists in the repo yet
+ * 📏️dsl/ migration lock-step rule: basic `.ops` op-log grammar sanity — one structural `@doc`/`@edit`/
+ * `@change`/`@checkpoint`/`@alternative`/`@active` line, or one 2-space-indented mutation-text (op grammar)
+ * line under a preceding `@edit`, per line; never blank. The `.ops` brand is the compact op-log format
+ * (not the document `Mutation` trait name). Forward-looking: no `*.ops` fixture exists in the repo yet
  * (`FolderTextStorage`'s `.ops` companion file is additive/unwired — see `vcs/rs/lib.rs`), but the check
  * is ready the day one lands.
  */
@@ -3032,7 +2886,7 @@ function policyOpsGrammarBreaches(repoRoot: string): BreachRecord[] {
           scope: relPath,
           line: lineNo,
           priority: "medium",
-          reason: "The .ops op-log grammar is one structural @-line or one indented op-text line per line — no blank lines.",
+          reason: "The .ops op-log grammar is one structural @-line or one indented mutation-text (op grammar) line per line — no blank lines.",
           solution: `Remove the blank line at ${relPath}:${lineNo}.`,
         });
         return;
@@ -3042,12 +2896,12 @@ function policyOpsGrammarBreaches(repoRoot: string): BreachRecord[] {
       if (!isStructural && !isIndentedOp) {
         breaches.push({
           id: `ops-grammar-line-${relPath}-${lineNo}`,
-          summary: `"${relPath}" line ${lineNo} is neither a structural @-line nor a 2-space-indented op-text line`,
+          summary: `"${relPath}" line ${lineNo} is neither a structural @-line nor a 2-space-indented mutation-text (op grammar) line`,
           kind: "dsl-migration/ops-grammar",
           scope: relPath,
           line: lineNo,
           priority: "medium",
-          reason: "Every .ops line must be a recognized @doc/@edit/@change/@checkpoint/@alternative/@active structural line or a 2-space-indented op-text line under an @edit block.",
+          reason: "Every .ops line must be a recognized @doc/@edit/@change/@checkpoint/@alternative/@active structural line or a 2-space-indented mutation-text line (op grammar) under an @edit block.",
           solution: `Fix ${relPath}:${lineNo} to match the .ops grammar (see vcs::print_document_text/parse_document_text).`,
         });
       }
@@ -3083,11 +2937,11 @@ function policyAllRustFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
-type PolicyDocumentAppUsage = { scope: string; line: number; appType: string; projectionType: string; operationType: string };
+type PolicyDocumentAppUsage = { scope: string; line: number; appType: string; projectionType: string; mutationType: string };
 
 const POLICY_DOCUMENT_APP_IMPL_RE = /impl\s+DocumentApp\s+for\s+(\w+)\s*\{/g;
 
-/** 🔎️Extracts `type Projection = X;` / `type Operation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
+/** 🔎️Extracts `type Projection = X;` / `type Mutation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
 function policyDocumentAppUsages(scope: string, content: string): PolicyDocumentAppUsage[] {
   const usages: PolicyDocumentAppUsage[] = [];
   let m: RegExpExecArray | null;
@@ -3095,14 +2949,14 @@ function policyDocumentAppUsages(scope: string, content: string): PolicyDocument
   while ((m = POLICY_DOCUMENT_APP_IMPL_RE.exec(content))) {
     const body = policyExtractFnBody(content, m.index);
     const projectionMatch = body.match(/type\s+Projection\s*=\s*([\w:<>]+)\s*;/);
-    const operationMatch = body.match(/type\s+Operation\s*=\s*([\w:<>]+)\s*;/);
-    if (!projectionMatch || !operationMatch) continue;
+    const mutationMatch = body.match(/type\s+Mutation\s*=\s*([\w:<>]+)\s*;/);
+    if (!projectionMatch || !mutationMatch) continue;
     usages.push({
       scope,
       line: policyLineOfIndex(content, m.index),
       appType: m[1]!,
       projectionType: projectionMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
-      operationType: operationMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
+      mutationType: mutationMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
     });
   }
   return usages;
@@ -3116,7 +2970,7 @@ const POLICY_DSL_DERIVE_RE = /derive\([^)]*\bDsl(?:Document|Ops|Record|Enum|Scal
 // harmless since no such impl exists).
 const POLICY_HAND_ROLLED_IMPL_RE = /impl(?:<[^>]*>)?\s+(?:vcs::|protocol::)?(DocumentDsl|OpText)\s+for\s+(?:vcs::|protocol::)?(\w+)/g;
 
-/** 🧬️One O(total content) pass building every type name that's DSL-complete — via `#[derive(dsl::Dsl…)]` a few lines above its own `struct`/`enum` declaration, or a hand-rolled `impl (vcs::|protocol::)?DocumentDsl`/`impl (vcs::|protocol::)?OpText` (an explicit generic impl also counts, e.g. `impl<D> OpText for SetDocumentOperation<D>`) — split by trait since a type may satisfy one but not the other. */
+/** 🧬️One O(total content) pass building every type name that's DSL-complete — via `#[derive(dsl::Dsl…)]` a few lines above its own `struct`/`enum` declaration, or a hand-rolled `impl (vcs::|protocol::)?DocumentDsl`/`impl (vcs::|protocol::)?OpText` (an explicit generic impl also counts, e.g. `impl<D> OpText for SetDocumentMutation<D>`) — split by trait since a type may satisfy one but not the other. */
 function policyDslCompleteTypeNames(files: readonly { content: string }[]): { documentDsl: Set<string>; opText: Set<string> } {
   const documentDsl = new Set<string>();
   const opText = new Set<string>();
@@ -3171,12 +3025,12 @@ function policyResolveAlias(aliasOf: ReadonlyMap<string, string>, typeName: stri
 }
 
 /**
- * 📏️dsl/ migration lock-step rule: every `impl DocumentApp for X` app's `Projection`/`Operation` type
+ * 📏️dsl/ migration lock-step rule: every `impl DocumentApp for X` app's `Projection`/`Mutation` type
  * must be DSL-complete — `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type itself (or
  * on the real type behind a `RealName as AliasName` import rename), a hand-rolled `impl DocumentDsl`/
  * `impl OpText`, or a documented generic bridge (see `POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`).
  * Advisory/textual — the real compile-time gate is `DocumentApp`'s `Projection: vcs::DocumentDsl` /
- * `Operation: vcs::OpText` bounds in `framework/plugin/rs/lib.rs`; this catches the same gap without
+ * `Mutation: vcs::OpText` bounds in `framework/plugin/rs/lib.rs`; this catches the same gap without
  * needing a full `cargo build`. A single pass builds the DSL-complete type-name sets once
  * (`policyDslCompleteTypeNames`) so checking every app's usage stays O(1) instead of re-scanning the
  * whole corpus per usage.
@@ -3190,9 +3044,9 @@ function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] {
 
   for (const { relPath, content } of files) {
     for (const usage of policyDocumentAppUsages(relPath, content)) {
-      const checks: readonly { label: "Projection" | "Operation"; typeName: string; trait: "DocumentDsl" | "OpText"; completeNames: Set<string> }[] = [
+      const checks: readonly { label: "Projection" | "Mutation"; typeName: string; trait: "DocumentDsl" | "OpText"; completeNames: Set<string> }[] = [
         { label: "Projection", typeName: usage.projectionType, trait: "DocumentDsl", completeNames: complete.documentDsl },
-        { label: "Operation", typeName: usage.operationType, trait: "OpText", completeNames: complete.opText },
+        { label: "Mutation", typeName: usage.mutationType, trait: "OpText", completeNames: complete.opText },
       ];
       for (const { label, typeName, trait, completeNames } of checks) {
         if (POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST.has(typeName)) continue;
@@ -3205,8 +3059,8 @@ function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] {
           scope: relPath,
           line: usage.line,
           priority: "high",
-          reason: "Every DocumentApp app's Projection must implement vcs::DocumentDsl and Operation must implement vcs::OpText (compiler-enforced since the Lock step) — via #[derive(dsl::DslDocument)]/#[derive(dsl::DslOps)], a hand-rolled impl, or a documented generic bridge.",
-          solution: `Add #[derive(dsl::DslDocument)] (Projection) / #[derive(dsl::DslOps)] (Operation) to ${typeName}, write a hand-rolled impl ${trait} for ${typeName}, or if it's a genuine generic bridge add it to POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST citing why.`,
+          reason: "Every DocumentApp app's Projection must implement vcs::DocumentDsl and Mutation must implement vcs::OpText (compiler-enforced since the Lock step) — via #[derive(dsl::DslDocument)]/#[derive(dsl::DslOps)], a hand-rolled impl, or a documented generic bridge.",
+          solution: `Add #[derive(dsl::DslDocument)] (Projection) / #[derive(dsl::DslOps)] (Mutation) to ${typeName}, write a hand-rolled impl ${trait} for ${typeName}, or if it's a genuine generic bridge add it to POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST citing why.`,
         });
       }
     }
@@ -3255,8 +3109,8 @@ function policyPackCompletenessBreaches(repoRoot: string): BreachRecord[] {
  * 📏️CW7 command-envelope law rule — mirrors `policyPackCompletenessBreaches`'s shrinking-allowlist
  * pattern one step further: every file that already proves the dsl/pack round-trip laws
  * (`assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(`) must ALSO call
- * `vcs::test_support::assert_command_envelope_round_trip` beside them — a technology's `Edit<Operation>`
- * round-tripping through `protocol::OperationEnvelope`s is a third projection of the same value model,
+ * `vcs::test_support::assert_command_envelope_round_trip` beside them — a technology's `Edit<Mutation>`
+ * round-tripping through `protocol::MutationEnvelope`s is a third projection of the same value model,
  * not an optional extra. `POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST` tracks not-yet-converted
  * files exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST` does for the pack lock step.
  */
@@ -3274,8 +3128,8 @@ function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachReco
       kind: "protocol-migration/command-envelope-completeness",
       scope: relPath,
       priority: "high",
-      reason: "CW7 added vcs::test_support::assert_command_envelope_round_trip as the command-envelope law every technology's Edit/Operation pair must also prove, beside its existing dsl/pack round-trip laws.",
-      solution: `Add a vcs::test_support::assert_command_envelope_round_trip::<Projection, Operation>(...) call beside ${relPath}'s existing pack round-trip test(s), or if this technology hasn't wired the command-envelope law yet, add "${relPath}" to POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST citing the follow-up ticket.`,
+      reason: "CW7 added vcs::test_support::assert_command_envelope_round_trip as the command-envelope law every technology's Edit/Mutation pair must also prove, beside its existing dsl/pack round-trip laws.",
+      solution: `Add a vcs::test_support::assert_command_envelope_round_trip::<Projection, Mutation>(...) call beside ${relPath}'s existing pack round-trip test(s), or if this technology hasn't wired the command-envelope law yet, add "${relPath}" to POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST citing the follow-up ticket.`,
     });
   }
   return breaches;
@@ -3286,18 +3140,18 @@ function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachReco
 /**
  * 📏️W1 grammar-engine wave rule (design ruling B-R4) — mirrors `policyCommandEnvelopeCompletenessBreaches`'s
  * shrinking-allowlist pattern one step further: every file that defines a real `impl
- * protocol::OperationDiff<...>` for some type must ALSO give that same type a `protocol::DiffCodec`
+ * protocol::MutationDiff<...>` for some type must ALSO give that same type a `protocol::DiffCodec`
  * impl (via `#[derive(dsl::DslDiff)]` or a hand-rolled `impl DiffCodec for`) — a diff is a first-class
  * grammared value now, not serde-only. `POLICY_DIFF_COMPLETENESS_ALLOWLIST` tracks not-yet-converted
  * (or permanently-exempt trait-machinery-fixture) files exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST`
  * does for the pack lock step. File-level (not per-type) detection, matching this file's established
- * convention: a file "has a diff impl" if some line matches `impl ... OperationDiff<...>`, and "has
+ * convention: a file "has a diff impl" if some line matches `impl ... MutationDiff<...>`, and "has
  * DiffCodec coverage" if it mentions `dsl::DslDiff` (the derive) or `DiffCodec for` (a hand-rolled impl)
- * anywhere in the same file.
+ * anywhere in the same file. Paths may still contain `/op` (the grammar facet folder stays).
  */
 function policyDiffCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  const diffImplPattern = /\bimpl\b[^\n{]*\bOperationDiff\s*</;
+  const diffImplPattern = /\bimpl\b[^\n{]*\bMutationDiff\s*</;
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (POLICY_DIFF_COMPLETENESS_ALLOWLIST.has(policyNormalizeRelPath(relPath))) continue;
     const content = readFileSync(join(repoRoot, relPath), "utf8");
@@ -3306,11 +3160,11 @@ function policyDiffCompletenessBreaches(repoRoot: string): BreachRecord[] {
     if (hasDiffCodec) continue;
     breaches.push({
       id: `diff-completeness-${relPath}`,
-      summary: `"${relPath}" implements protocol::OperationDiff but never gives that diff type a protocol::DiffCodec impl`,
+      summary: `"${relPath}" implements protocol::MutationDiff but never gives that diff type a protocol::DiffCodec impl`,
       kind: "dsl-migration/diff-completeness",
       scope: relPath,
       priority: "high",
-      reason: "Design ruling B-R4: every OperationDiff::Diff type must also be a grammared DiffCodec value (print/parse/encode/decode_diff) — via #[derive(dsl::DslDiff)] or a hand-rolled impl.",
+      reason: "Design ruling B-R4: every MutationDiff type must also be a grammared DiffCodec value (print/parse/encode/decode_diff) — via #[derive(dsl::DslDiff)] or a hand-rolled impl.",
       solution: `Add #[derive(dsl::DslDiff)] to ${relPath}'s diff type (or a hand-rolled impl DiffCodec for it), or if it's a genuine trait-machinery test fixture / not-yet-converted real type, add "${relPath}" to POLICY_DIFF_COMPLETENESS_ALLOWLIST citing why.`,
     });
   }
@@ -3360,17 +3214,64 @@ function policyProtocolFileBreaches(_repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-function policyTsFacadeBreaches(_repoRoot: string): BreachRecord[] {
+/**
+ * 🏷️True when `relPath` is a constitutional artifact TS facade (facet root or mutation triad leaf).
+ * Stubs under these paths are accepted — no per-file allowlist (Wave 2b).
+ */
+function policyIsConstitutionalTsFacadePath(relPath: string): boolean {
+  const parts = relPath.replaceAll("\\", "/").split("/");
+  if (parts[parts.length - 1] !== POLICY_TS_COMPONENT_LEAF) return false;
+  if (!parts.includes("🗿️artifacts")) return false;
+  const parent = parts[parts.length - 2] ?? "";
+  if (POLICY_TS_FACADE_CONSTITUTIONAL_FACETS.has(parent)) return true;
+  if ((POLICY_MUTATION_TRIAD_DIRS as readonly string[]).includes(parent) && parts.includes(POLICY_MUTATIONS_FACET)) return true;
+  return false;
+}
+
+/** 🧪True when a TS facade still throws the WASM scaffold placeholder. */
+function policyTsFacadeIsScaffoldStub(content: string): boolean {
+  return /wire\s+.+\s+to plugin WASM/i.test(content) || /throw new Error\(\s*["'`][^"'`]*WASM[^"'`]*["'`]\s*\)/.test(content);
+}
+
+/**
+ * 📏️Structural TS-facade rule (replaces POLICY_TS_FACADE_ALLOWLIST): scaffold stubs are accepted under
+ * constitutional facets (`🗣️dsl`/`🔧️op`/`🔺️diff`/`🎒️pack`/`📡️spr`/`🧬️mutations`/`⚙️engine`) and under
+ * `🧬️mutations/<mut>/{🦠️mutation,🔺️diff,↩️inverse}`. A stub outside those slots is a breach.
+ */
+function policyTsFacadeBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const relPath of POLICY_TS_FACADE_ALLOWLIST) {
+  const files: string[] = [];
+  const walk = (relDir: string): void => {
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name.startsWith(".")) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name === POLICY_TS_COMPONENT_LEAF) files.push(childRel);
+    }
+  };
+  walk("✏️s");
+  for (const relPath of files.sort()) {
+    if (!relPath.replaceAll("\\", "/").includes("/🗿️artifacts/")) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    if (!policyTsFacadeIsScaffoldStub(content)) continue;
+    if (policyIsConstitutionalTsFacadePath(relPath)) continue;
     breaches.push({
-      id: `ts-facade-completeness-${relPath}`,
-      summary: `"${relPath}" is tracked in POLICY_TS_FACADE_ALLOWLIST as still a WASM scaffold facade`,
+      id: `ts-facade-misplaced-stub-${relPath}`,
+      summary: `"${relPath}" is a WASM scaffold stub outside constitutional artifact facets`,
       kind: "dsl-migration/ts-facade-completeness",
       scope: relPath,
-      priority: "low",
-      reason: "Each facet's 🟦️component.ts must delegate parse/print or encode/decode to Rust WASM with a conformance test.",
-      solution: `Wire ${relPath} to plugin WASM and add the Rust-agreement test, then remove it from POLICY_TS_FACADE_ALLOWLIST.`,
+      priority: "medium",
+      reason: "Scaffold stubs are only accepted under constitutional facets (including 🧬️mutations and 🔧️op) or mutation triad leaves — never elsewhere.",
+      solution: `Move ${relPath} under a constitutional facet / mutation triad, or wire it to plugin WASM.`,
     });
   }
   return breaches;
@@ -3380,23 +3281,23 @@ function policyTsFacadeBreaches(_repoRoot: string): BreachRecord[] {
 //#region 🔧️PolicyRuleProtocolMigration
 /**
  * 🔒️Names that must never again be reached through a re-created `vcs::` shim: the temporary CW3
- * `pub use protocol::{...}` re-export deleted in CW8 (`Operation`/`OperationDiff`/`OperationMeta`/
+ * `pub use protocol::{...}` re-export deleted in CW8 (`Mutation`/`MutationDiff`/`MutationMeta`/
  * `OpText`/`Edit`/`merge_concurrent_diffs`/`ReconcileReport`/`ReconcileSeverity`), the CW3-extracted
- * `semio_framework_core` types (`HybridLogicalTimestamp`/`OperationEnvelope`/`OpDag`/`UndoPolicy`/
+ * `semio_framework_core` types (`HybridLogicalTimestamp`/`MutationEnvelope`/`MutationDag`/`UndoPolicy`/
  * `MergeStrategyKind`), and the hub wire-frame enums (`HubClientFrame`/`HubServerFrame`).
  */
 const POLICY_PROTOCOL_MIGRATION_NAMES = [
-  "Operation",
-  "OperationDiff",
-  "OperationMeta",
+  "Mutation",
+  "MutationDiff",
+  "MutationMeta",
   "OpText",
   "Edit",
   "merge_concurrent_diffs",
   "ReconcileReport",
   "ReconcileSeverity",
   "HybridLogicalTimestamp",
-  "OperationEnvelope",
-  "OpDag",
+  "MutationEnvelope",
+  "MutationDag",
   "UndoPolicy",
   "MergeStrategyKind",
   "HubClientFrame",
@@ -3406,8 +3307,8 @@ const POLICY_PROTOCOL_MIGRATION_QUALIFIED_RE = new RegExp(`\\bvcs::(${POLICY_PRO
 const POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE = /use\s+(?:::)?vcs::\{([^}]*)\}/gs;
 
 /**
- * 📏️CW8 regression-prevention rule: `vcs/rs/lib.rs`'s temporary CW3 `pub use protocol::{Operation,
- * OperationDiff, OpText, OperationMeta, Edit, merge_concurrent_diffs, ReconcileReport,
+ * 📏️CW8 regression-prevention rule: `vcs/rs/lib.rs`'s temporary CW3 `pub use protocol::{Mutation,
+ * MutationDiff, OpText, MutationMeta, Edit, merge_concurrent_diffs, ReconcileReport,
  * ReconcileSeverity}` shim is deleted — every dependent crate now imports `protocol::` directly (see
  * `policyCommandEnvelopeCompletenessBreaches` above and CW7's import sweep). This rule fires the
  * moment `vcs::` is asked to re-supply any of those names again, or any of the other CW3-extracted
@@ -3439,7 +3340,7 @@ function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
         scope: relPath,
         line,
         priority: "high",
-        reason: "CW8 deleted vcs/rs/lib.rs's temporary pub-use shim for protocol-owned Operation/OpText/OperationDiff/OperationMeta/Edit/ReconcileReport/ReconcileSeverity and never re-exported the CW3-extracted framework_core types or hub wire frames — vcs:: must never resolve any of them again.",
+        reason: "CW8 deleted vcs/rs/lib.rs's temporary pub-use shim for protocol-owned Mutation/OpText/MutationDiff/MutationMeta/Edit/ReconcileReport/ReconcileSeverity and never re-exported the CW3-extracted framework_core types or hub wire frames — vcs:: must never resolve any of them again.",
         solution: `Import the name from "protocol" directly (e.g. "use protocol::${m[1]};") instead of "vcs::${m[1]}".`,
       });
     }
@@ -4739,7 +4640,7 @@ function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateR
 /** ⚖️P3/M4 handcrafted-grammar policy scanners (distinctness / generic / declared-use / wiring / empty examples). Exemptions shrink to empty by P6 — see ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT. */
 
 const POLICY_HANDCRAFTED_SPEC_ROOTS = ["✏️s", "🧰️framework"] as const;
-const POLICY_HANDCRAFTED_FACETS = ["🗣️dsl", "🔧️op", "🔺️diff", "🎒️pack", "📡️spr"] as const;
+const POLICY_HANDCRAFTED_FACETS = ["🗣️dsl", "🔧️op", "🔺️diff", "🎒️pack", "📡️spr", "🧬️mutations"] as const;
 const POLICY_GRAMMAR_SPEC_LEAF = "📖️component.grammar.semio";
 const POLICY_PROTOCOL_SPEC_LEAF = "📡️component.protocol.semio";
 const POLICY_RS_COMPONENT_LEAF = "🦀️component.rs";
@@ -4916,7 +4817,7 @@ function policyDeclaredUseBreaches(repoRoot: string): BreachRecord[] {
         continue;
       }
       if (frag.productions.length === 0) continue;
-      const referenced = frag.productions.some((prod) => new RegExp(`\\b${prod.replace(/[.*+?^${}()|[\]\\]/g, "\\//#region 🔖️PolicyExport")}\\b`).test(content));
+      const referenced = frag.productions.some((prod) => new RegExp(`\b${prod.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\b`).test(content));
       if (referenced) continue;
       breaches.push({
         id: `declared-use-${relPath}-${fam}`,
@@ -5225,6 +5126,241 @@ function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
 }
 //#endregion 🔧️PolicyRuleHandcraftedSpecP3
 
+//#region 🔧️PolicyRuleMutationArtifactEngines
+/**
+ * 🧬️Wave 2b mutation / artifact-engine scanners (OPERATIONS-TO-MUTATIONS).
+ * Missing `🧬️mutations` / triad / `⚙️engine` / `start mutation` report as breaches so Wave 2+ can track
+ * unmigrated artifacts; dispatch-enum coverage stays a deliberate placeholder until Wave 3 pilot lands.
+ */
+
+/** 🏷️Leading emoji prefix of a taxonomy dir name (everything before the ASCII stem). */
+function policyLeadingEmojiPrefix(name: string): string {
+  const ascii = policyStripEmoji(name);
+  if (!ascii) return name;
+  const idx = name.indexOf(ascii);
+  return idx > 0 ? name.slice(0, idx) : "";
+}
+
+/** 🔎️Mutation-specific dirs under `🧬️mutations/` (skips leaf files and reserved kind names). */
+function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[] {
+  const reserved = new Set<string>([...POLICY_MUTATION_TRIAD_DIRS, "📚️examples"]);
+  return policyReaddirSafe(repoRoot, mutationsRel)
+    .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
+    .map((e) => e.name)
+    .sort();
+}
+
+/**
+ * 📏️Every artifact must own `🧬️mutations/`; each concrete mutation dir must carry the triad
+ * `🦠️mutation` / `🔺️diff` / `↩️inverse` (leaves optional until fan-out — directory presence is the gate).
+ */
+function policyMutationTriadCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    const mutationsRel = `${artRel}/${POLICY_MUTATIONS_FACET}`;
+    if (!existsSync(join(repoRoot, mutationsRel))) {
+      breaches.push({
+        id: `mutation-facet-missing-${artRel}`,
+        summary: `"${artRel}" is missing required ${POLICY_MUTATIONS_FACET}/ facet`,
+        kind: "mutation-migration/triad-completeness",
+        scope: artRel,
+        priority: "high",
+        reason: "Every artifact must decompose document changes into 🧬️mutations/<mut>/{🦠️mutation,🔺️diff,↩️inverse}.",
+        solution: `Create ${mutationsRel}/ with a dispatch 🦀️component.rs and one triad dir per mutation.`,
+      });
+      continue;
+    }
+    const mutDirs = policyListMutationDirs(repoRoot, mutationsRel);
+    if (mutDirs.length === 0) {
+      breaches.push({
+        id: `mutation-dirs-empty-${artRel}`,
+        summary: `"${mutationsRel}" has no concrete mutation directories yet`,
+        kind: "mutation-migration/triad-completeness",
+        scope: artRel,
+        priority: "medium",
+        reason: "The 🧬️mutations facet must contain at least one emoji-prefixed mutation directory with the triad.",
+        solution: `Add mutation dirs under ${mutationsRel}/ each with 🦠️mutation/, 🔺️diff/, and ↩️inverse/.`,
+      });
+      continue;
+    }
+    for (const mutName of mutDirs) {
+      const mutRel = `${mutationsRel}/${mutName}`;
+      for (const kind of POLICY_MUTATION_TRIAD_DIRS) {
+        const kindRel = `${mutRel}/${kind}`;
+        if (existsSync(join(repoRoot, kindRel))) continue;
+        breaches.push({
+          id: `mutation-triad-missing-${kindRel}`,
+          summary: `"${mutRel}" is missing triad kind ${kind}/`,
+          kind: "mutation-migration/triad-completeness",
+          scope: artRel,
+          priority: "high",
+          reason: "Each concrete mutation must expose 🦠️mutation + 🔺️diff + ↩️inverse directories.",
+          solution: `Create ${kindRel}/ with 🦀️component.rs (and 🟦️component.ts stub if needed).`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️When a `🦠️mutation/🦀️component.rs` exists, it should mention `impl`…`Mutation` (advisory while
+ * Wave 3 pilot lands the first real impls).
+ */
+function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const implPattern = /\bimpl\b[^\n{]*\bMutation\s*</;
+  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    const mutationsRel = `${artRel}/${POLICY_MUTATIONS_FACET}`;
+    if (!existsSync(join(repoRoot, mutationsRel))) continue;
+    for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
+      const rsRel = `${mutationsRel}/${mutName}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      const abs = join(repoRoot, rsRel);
+      if (!existsSync(abs)) continue;
+      const content = readFileSync(abs, "utf8");
+      if (implPattern.test(content)) continue;
+      breaches.push({
+        id: `mutation-impl-missing-${rsRel}`,
+        summary: `"${rsRel}" does not yet implement Mutation<…>`,
+        kind: "mutation-migration/impl-presence",
+        scope: artRel,
+        priority: "medium",
+        reason: "Each concrete mutation struct must implement Mutation<P> (or a helper the dispatch enum delegates to).",
+        solution: `Add impl Mutation<Projection> for the mutation struct in ${rsRel}.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Every artifact must own `⚙️engine/` and that engine must eventually implement `ArtifactEngine`
+ * (folder missing = high; trait missing = medium until Wave 3/4 rewrite engines as state machines).
+ */
+function policyArtifactEnginePresenceBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const engineImplPattern = /\bimpl\b[^\n{]*\bArtifactEngine\b/;
+  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    const engineRel = `${artRel}/${POLICY_ENGINE_FACET}`;
+    if (!existsSync(join(repoRoot, engineRel))) {
+      breaches.push({
+        id: `artifact-engine-folder-missing-${artRel}`,
+        summary: `"${artRel}" is missing required ${POLICY_ENGINE_FACET}/ facet`,
+        kind: "mutation-migration/artifact-engine",
+        scope: artRel,
+        priority: "high",
+        reason: "Every artifact must expose an ArtifactEngine state machine under ⚙️engine/.",
+        solution: `Create ${engineRel}/${POLICY_RS_COMPONENT_LEAF_NAME} implementing ArtifactEngine.`,
+      });
+      continue;
+    }
+    const rsFiles = policyWalkRelFiles(repoRoot, [engineRel], (_p, name) => name.endsWith(".rs"));
+    const hasImpl = rsFiles.some((rel) => engineImplPattern.test(readFileSync(join(repoRoot, rel), "utf8")));
+    if (hasImpl) continue;
+    breaches.push({
+      id: `artifact-engine-impl-missing-${artRel}`,
+      summary: `"${engineRel}" has no impl ArtifactEngine yet`,
+      kind: "mutation-migration/artifact-engine",
+      scope: artRel,
+      priority: "medium",
+      reason: "⚙️engine must implement ArtifactEngine (UI-independent apply/inverse over Mutation).",
+      solution: `Add impl ArtifactEngine for the artifact engine type under ${engineRel}.`,
+    });
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Every `🔧️op/*.grammar.semio` must declare `start mutation` (production `mutation =` follows in fan-out).
+ */
+function policyOpGrammarStartMutationBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const grammars = policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => {
+    if (!name.endsWith(".grammar.semio")) return false;
+    return relPath.replaceAll("\\", "/").includes(`/${POLICY_OP_FACET}/`);
+  });
+  for (const relPath of grammars) {
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    if (/^start\s+mutation\b/m.test(content)) continue;
+    const legacy = /^start\s+operation\b/m.test(content);
+    breaches.push({
+      id: `op-grammar-start-mutation-${relPath}`,
+      summary: legacy
+        ? `"${relPath}" still declares start operation — must be start mutation`
+        : `"${relPath}" is missing start mutation`,
+      kind: "mutation-migration/op-grammar-start",
+      scope: relPath,
+      priority: "high",
+      reason: "The 🔧️op grammar start symbol is the Mutation production (`start mutation`); OpText/OpBinary brand stays.",
+      solution: `Change the start line in ${relPath} to "start mutation" (and rename production operation = to mutation =).`,
+    });
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Specific mutation directory emojis must be unique within one artifact's `🧬️mutations/` tree.
+ */
+function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    const mutationsRel = `${artRel}/${POLICY_MUTATIONS_FACET}`;
+    if (!existsSync(join(repoRoot, mutationsRel))) continue;
+    const seen = new Map<string, string>();
+    for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
+      const emoji = policyLeadingEmojiPrefix(mutName);
+      if (!emoji) {
+        breaches.push({
+          id: `mutation-emoji-missing-${mutationsRel}/${mutName}`,
+          summary: `"${mutationsRel}/${mutName}" has no leading emoji prefix`,
+          kind: "mutation-migration/emoji-uniqueness",
+          scope: artRel,
+          priority: "high",
+          reason: "Each concrete mutation directory must pick a unique emoji within its artifact.",
+          solution: `Rename ${mutName} to include a unique emoji prefix (e.g. ➕️objects-add).`,
+        });
+        continue;
+      }
+      const prev = seen.get(emoji);
+      if (prev) {
+        breaches.push({
+          id: `mutation-emoji-dup-${artRel}-${emoji}-${mutName}`,
+          summary: `"${mutationsRel}/${mutName}" reuses emoji "${emoji}" already used by "${prev}"`,
+          kind: "mutation-migration/emoji-uniqueness",
+          scope: artRel,
+          priority: "high",
+          reason: "Specific mutation dir emojis must be unique within an artifact.",
+          solution: `Give ${mutName} a different emoji than ${prev}.`,
+        });
+        continue;
+      }
+      seen.set(emoji, mutName);
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Placeholder: dispatch-enum variant coverage vs mutation dirs (Wave 3 pilot will flesh this out).
+ * Kept as a real policy function so Wave 6 can tighten without inventing a new export slot.
+ */
+function policyMutationDispatchCoverageBreaches(_repoRoot: string): BreachRecord[] {
+  return [];
+}
+
+/** ⚖️Aggregates Wave 2b mutation / ArtifactEngine / op-grammar scanners. */
+function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policyMutationTriadCompletenessBreaches(repoRoot),
+    ...policyMutationImplPresenceBreaches(repoRoot),
+    ...policyArtifactEnginePresenceBreaches(repoRoot),
+    ...policyOpGrammarStartMutationBreaches(repoRoot),
+    ...policyMutationEmojiUniquenessBreaches(repoRoot),
+    ...policyMutationDispatchCoverageBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleMutationArtifactEngines
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -5279,6 +5415,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyGrammarFileBreaches(repoRoot));
   breaches.push(...policyProtocolFileBreaches(repoRoot));
   breaches.push(...policyTsFacadeBreaches(repoRoot));
+  breaches.push(...policyMutationArtifactEngineBreaches(repoRoot));
   breaches.push(...policyHandcraftedSpecP3Breaches(repoRoot));
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));

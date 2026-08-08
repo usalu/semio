@@ -7,7 +7,7 @@
 //! file.
 
 use crate::apps::flow::config::FlowConfig;
-use crate::artifacts::flow::op::FlowOperation;
+use crate::artifacts::flow::op::FlowMutation;
 use crate::artifacts::flow::FlowFixture;
 use flow::{
     dag::{DagDrawLod, DagFixture},
@@ -126,9 +126,9 @@ pub fn host_from_fixture(fixture: &FlowFixture, config: &FlowConfig, session: &F
     host
 }
 
-/// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowOperation`s —
+/// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowMutation`s —
 /// returns an empty vec when `mutate` reports "nothing changed".
-pub fn host_operations(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowOperation> {
+pub fn host_operations(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
     let mut host = host_from_fixture(fixture, config, session);
     if !mutate(&mut host) {
         return Vec::new();

@@ -107,11 +107,11 @@ impl Default for RewriteConfig {
 store::impl_whole_record_config!(RewriteConfig);
 
 /// @emoji 🧮️ Rewrite's `RewriteConfig` operation enum — one variant per settled interaction, plus a
-/// generic `Snapshot` every variant's `backwards()` returns. See `JackConfigOperation`'s doc comment
+/// generic `Snapshot` every variant's `backwards()` returns. See `JackConfigMutation`'s doc comment
 /// for why `Snapshot`'s size is allowed rather than boxed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[allow(clippy::large_enum_variant)]
-pub enum RewriteConfigOperation {
+pub enum RewriteConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -141,7 +141,7 @@ pub enum RewriteConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for RewriteConfigOperation {
+impl protocol::OpText for RewriteConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -155,7 +155,7 @@ impl protocol::OpText for RewriteConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -166,7 +166,7 @@ impl protocol::OpText for RewriteConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for RewriteConfigOperation {
+impl protocol::OpBinary for RewriteConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -212,30 +212,30 @@ impl protocol::OpBinary for RewriteConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl protocol::Operation<RewriteConfig> for RewriteConfigOperation {
+impl protocol::Mutation<RewriteConfig> for RewriteConfigMutation {
     type Diff = RewriteConfig;
 
     fn diff(&self, base: &RewriteConfig) -> RewriteConfig {
         let mut next = base.clone();
         match self {
-            RewriteConfigOperation::Snapshot { config } => return config.clone(),
-            RewriteConfigOperation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
-            RewriteConfigOperation::SetBeforePaneCamera { camera } => next.before_pane_camera = camera.clone(),
-            RewriteConfigOperation::SetReorganizeEpoch { value } => next.reorganize_epoch = *value,
-            RewriteConfigOperation::SetActiveHoverVar { value } => next.active_hover_var = value.clone(),
-            RewriteConfigOperation::SetHoverEpoch { value } => next.hover_epoch = *value,
-            RewriteConfigOperation::SetActiveSelectVar { value } => next.active_select_var = value.clone(),
-            RewriteConfigOperation::SetSelectEpoch { value } => next.select_epoch = *value,
-            RewriteConfigOperation::SetLodMode { window_id, value } => {
+            RewriteConfigMutation::Snapshot { config } => return config.clone(),
+            RewriteConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
+            RewriteConfigMutation::SetBeforePaneCamera { camera } => next.before_pane_camera = camera.clone(),
+            RewriteConfigMutation::SetReorganizeEpoch { value } => next.reorganize_epoch = *value,
+            RewriteConfigMutation::SetActiveHoverVar { value } => next.active_hover_var = value.clone(),
+            RewriteConfigMutation::SetHoverEpoch { value } => next.hover_epoch = *value,
+            RewriteConfigMutation::SetActiveSelectVar { value } => next.active_select_var = value.clone(),
+            RewriteConfigMutation::SetSelectEpoch { value } => next.select_epoch = *value,
+            RewriteConfigMutation::SetLodMode { window_id, value } => {
                 next.lod_mode_by_window.insert(window_id.clone(), value.clone());
             }
-            RewriteConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            RewriteConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &RewriteConfig) -> Vec<Self> {
-        vec![RewriteConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &RewriteConfig) -> Vec<Self> {
+        vec![RewriteConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
@@ -263,18 +263,18 @@ mod tests {
     #[test]
     fn rewrite_config_operation_backwards_restores_prior_snapshot() {
         let base = RewriteConfig::default();
-        let operation = RewriteConfigOperation::SetSelection { node_ids: vec!["n1".into()] };
-        let next = protocol::Operation::diff(&operation, &base);
+        let operation = RewriteConfigMutation::SetSelection { node_ids: vec!["n1".into()] };
+        let next = protocol::Mutation::diff(&operation, &base);
         assert_eq!(next.selected_node_ids, vec!["n1".to_string()]);
-        let backwards = protocol::Operation::backwards(&operation, &base);
-        let restored = protocol::Operation::diff(&backwards[0], &next);
+        let backwards = protocol::Mutation::backwards(&operation, &base);
+        let restored = protocol::Mutation::diff(&backwards[0], &next);
         assert_eq!(restored, base);
     }
 
     #[test]
     fn rewrite_config_operation_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&RewriteConfigOperation::SetLodMode { window_id: "trinity-rewrite-before".into(), value: "compact".into() });
-        store::test_support::assert_op_line_round_trip(&RewriteConfigOperation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&RewriteConfigMutation::SetLodMode { window_id: "trinity-rewrite-before".into(), value: "compact".into() });
+        store::test_support::assert_op_line_round_trip(&RewriteConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
     }
 }
 //#endregion 🧪️Tests

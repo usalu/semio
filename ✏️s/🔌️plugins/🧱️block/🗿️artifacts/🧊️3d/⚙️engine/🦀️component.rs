@@ -197,3 +197,36 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+pub struct Block3dEngine {
+    projection: crate::artifacts::block3d::Block3dDefinition,
+}
+
+impl Block3dEngine {
+    pub fn new(projection: crate::artifacts::block3d::Block3dDefinition) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Block3dEngine {
+    type Projection = crate::artifacts::block3d::Block3dDefinition;
+    type Mutation = crate::artifacts::block3d::mutations::Block3dMutation;
+    type Diff = crate::artifacts::block3d::diff::Block3dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::block3d::mutations::apply_block3d_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

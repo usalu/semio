@@ -1,7 +1,7 @@
 //! 🧩️ Imperative play app commands — host-pushed plugin contributions (imperative modules).
 
-use crate::apps::imperative::config::{ImperativeConfig, ImperativeConfigOperation};
-use crate::artifacts::imperative::op::ImperativeOperation;
+use crate::apps::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
+use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::ImperativeDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ImperativeConfigOperation::SetContributions { json: payload.json.clone() }]))
+    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ImperativeConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }
 //#endregion 🔖️SetContributions

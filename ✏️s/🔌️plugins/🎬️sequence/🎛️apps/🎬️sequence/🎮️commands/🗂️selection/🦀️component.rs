@@ -1,7 +1,7 @@
 //! 🗂️ Sequence play app commands — selection.
 
-use crate::apps::sequence::config::{SequenceConfig, SequenceConfigOperation};
-use crate::artifacts::sequence::op::SequenceOperation;
+use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
+use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceFixture;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ pub mod set_selection {
         pub step_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigOperation::SetSelection { step_ids: payload.step_ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SequenceConfigMutation::SetSelection { step_ids: payload.step_ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection

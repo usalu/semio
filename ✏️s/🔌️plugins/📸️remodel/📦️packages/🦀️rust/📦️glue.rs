@@ -16,7 +16,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as pack;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
 // framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
 // lint does not fire on the trait impl itself (only on the free functions the taxonomy split creates),
@@ -38,6 +38,213 @@ pub mod artifacts {
         pub mod dsl;
         #[path = "../../🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_streams {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🎞️set-streams/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🎞️set-streams/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🎞️set-streams/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_asset {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🖼️set-asset/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🖼️set-asset/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🖼️set-asset/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_calibration {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📐️set-calibration/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📐️set-calibration/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📐️set-calibration/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_gcps {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📍️set-gcps/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📍️set-gcps/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📍️set-gcps/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_ingest_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📥️set-ingest-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📥️set-ingest-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📥️set-ingest-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_feature_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌟️set-feature-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌟️set-feature-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌟️set-feature-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_match_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🔗️set-match-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🔗️set-match-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🔗️set-match-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_sfm_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🧭️set-sfm-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🧭️set-sfm-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🧭️set-sfm-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_dense_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌫️set-dense-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌫️set-dense-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌫️set-dense-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_mesh_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🎛set-mesh-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🎛set-mesh-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🎛set-mesh-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_motion_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🏃️set-motion-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🏃️set-motion-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🏃️set-motion-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_geo_params {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🗺️set-geo-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🗺️set-geo-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🗺️set-geo-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_job {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🏭️set-job/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🏭️set-job/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🏭️set-job/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_sparse {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/✨️set-sparse/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/✨️set-sparse/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/✨️set-sparse/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_dense {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌧️set-dense/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌧️set-dense/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌧️set-dense/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_mesh_result {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📦️set-mesh-result/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📦️set-mesh-result/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📦️set-mesh-result/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_trajectory {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🛤️set-trajectory/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🛤️set-trajectory/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🛤️set-trajectory/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_tracks {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📈️set-tracks/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📈️set-tracks/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/📈️set-tracks/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_geo_products {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌍️set-geo-products/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌍️set-geo-products/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/🌍️set-geo-products/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_qc {
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/✅️set-qc/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/✅️set-qc/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📸️remodel/🧬️mutations/✅️set-qc/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📸️remodel/🎒️pack/🦀️component.rs"]
         pub mod pack;
         #[path = "../../🗿️artifacts/📸️remodel/📡️spr/🦀️component.rs"]

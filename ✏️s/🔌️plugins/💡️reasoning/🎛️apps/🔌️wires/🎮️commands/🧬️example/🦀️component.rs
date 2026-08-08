@@ -1,9 +1,9 @@
 //! 🧬️ Wires play app commands — loading a named example fixture (currently just "metabolism").
 
-use crate::apps::wires::config::{WiresConfig, WiresConfigOperation};
+use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::empty_mindmap_wires_document;
 use crate::artifacts::wires::engine::metabolism_wires_example_document;
-use crate::artifacts::wires::op::MindmapWiresOperation;
+use crate::artifacts::wires::op::MindmapWiresMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -21,11 +21,11 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, crate::artifacts::wires::MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, crate::artifacts::wires::MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
         let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID { metabolism_wires_example_document() } else { empty_mindmap_wires_document() };
         Ok(Emit {
-            document_operations: vec![MindmapWiresOperation::ReplaceDocument { wires_fixture: next.wires_fixture, board_fixture: next.board_fixture }],
-            config_operations: vec![WiresConfigOperation::SetSelection { ids: Vec::new() }, WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
+            document_mutations: vec![MindmapWiresMutation::ReplaceDocument { wires_fixture: next.wires_fixture, board_fixture: next.board_fixture }],
+            config_mutations: vec![WiresConfigMutation::SetSelection { ids: Vec::new() }, WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
             ..Default::default()
         })
     }

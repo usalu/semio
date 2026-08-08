@@ -17,7 +17,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<DrawOperation, DrawConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<DrawMutation, DrawConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -45,6 +45,164 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_layer_visible {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/👁️set-layer-visible/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/👁️set-layer-visible/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/👁️set-layer-visible/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_locked {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔒️set-layer-locked/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔒️set-layer-locked/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_opacity {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🌫️set-layer-opacity/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🌫️set-layer-opacity/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_blend_mode {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖌️set-layer-blend-mode/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖌️set-layer-blend-mode/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖌️set-layer-blend-mode/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_name {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🏷️set-layer-name/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🏷️set-layer-name/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🏷️set-layer-name/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_transform {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/↔️set-layer-transform/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/↔️set-layer-transform/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/↔️set-layer-transform/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_fill {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🎨set-fill/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🎨set-fill/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🎨set-fill/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_stroke {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/✏️set-stroke/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/✏️set-stroke/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/✏️set-stroke/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_boolean_operation {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_trace_params {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖼️set-trace-params/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖼️set-trace-params/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖼️set-trace-params/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod add_layer {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/➕️add-layer/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/➕️add-layer/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/➕️add-layer/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod duplicate_layer {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🧬️duplicate-layer/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🧬️duplicate-layer/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🧬️duplicate-layer/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_layer {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/➖️remove-layer/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/➖️remove-layer/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/➖️remove-layer/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod reorder_layer {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔃reorder-layer/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔃reorder-layer/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔃reorder-layer/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+        }
+
         #[path = "../../🗿️artifacts/🖍️draw/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🖍️draw/🎒️pack/🦀️component.rs"]

@@ -1,8 +1,8 @@
 //! 🗂️ DAG play app commands — selection and viewport. All config-only View commands (ephemeral view
 //! state, was the pre-migration `DagPlayRuntime` field writes) — never emit document operations.
 
-use crate::apps::dag::config::{DagConfig, DagConfigOperation};
-use crate::artifacts::dag::op::DagOperation;
+use crate::apps::dag::config::{DagConfig, DagConfigMutation};
+use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -33,8 +33,8 @@ pub mod select_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: vec![payload.node_id.clone()] }]))
+    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: vec![payload.node_id.clone()] }]))
     }
 }
 //#endregion 🔖️SelectNode
@@ -49,8 +49,8 @@ pub mod node_graph_select {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: payload.node_ids.clone() }]))
+    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }]))
     }
 }
 //#endregion 🔖️NodeGraphSelect
@@ -63,7 +63,7 @@ pub mod node_graph_hover {
     #[dsl(keyword = "node-graph-hover")]
     pub struct NodeGraphHover {}
 
-    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -81,8 +81,8 @@ pub mod node_graph_viewport {
         pub zoom: f64,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DagConfigOperation::SetCamera { x: payload.x, y: payload.y, zoom: payload.zoom }]))
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DagConfigMutation::SetCamera { x: payload.x, y: payload.y, zoom: payload.zoom }]))
     }
 }
 //#endregion 🔖️NodeGraphViewport
@@ -95,8 +95,8 @@ pub mod graph_pointer_down {
     #[dsl(keyword = "graph-pointer-down")]
     pub struct GraphPointerDown {}
 
-    pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: Vec::new() }]))
+    pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DagConfigMutation::SetSelection { node_ids: Vec::new() }]))
     }
 }
 //#endregion 🔖️GraphPointerDown
@@ -143,7 +143,7 @@ mod tests {
     fn node_graph_hover_is_a_pure_no_op() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(DagCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {}), &semio_framework_plugin::testkit::meta("local")).expect("hover");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
     }
 
     /// 🧪️ `selection` is `skip_serializing_if = Vec::is_empty` on `NodeGraphScene`, so an empty selection

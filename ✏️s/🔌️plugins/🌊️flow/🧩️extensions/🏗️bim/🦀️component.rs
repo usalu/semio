@@ -1,6 +1,6 @@
 //! 🏗️ Flow bim module: semantic building information modeling operators.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VariadicSpec};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VariadicSpec};
 
 // #region 🔖️Schemas
 fn material_schema() -> Schema {
@@ -183,8 +183,8 @@ fn operator_info(meta: OperatorMeta<'_>, inputs: Vec<ChannelSpec>, output: Chann
     }
 }
 
-fn register_element(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schema_id: &str) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operation }], &[schema_id, "element"]);
+fn register_element(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schema_id: &str) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[schema_id, "element"]);
 }
 
 fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
@@ -279,7 +279,7 @@ fn building_stories(building: &Dictionary) -> Option<&Dictionary> {
 // #region 🔖️Elements
 struct MaterialElement;
 
-impl Operation for MaterialElement {
+impl Operator for MaterialElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "material",
@@ -294,7 +294,7 @@ impl Operation for MaterialElement {
 
 struct SpaceElement;
 
-impl Operation for SpaceElement {
+impl Operator for SpaceElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "space",
@@ -308,7 +308,7 @@ impl Operation for SpaceElement {
 
 struct WallElement;
 
-impl Operation for WallElement {
+impl Operator for WallElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "wall",
@@ -322,7 +322,7 @@ impl Operation for WallElement {
 
 struct SlabElement;
 
-impl Operation for SlabElement {
+impl Operator for SlabElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "slab",
@@ -336,7 +336,7 @@ impl Operation for SlabElement {
 
 struct ColumnElement;
 
-impl Operation for ColumnElement {
+impl Operator for ColumnElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "column",
@@ -350,7 +350,7 @@ impl Operation for ColumnElement {
 
 struct WindowElement;
 
-impl Operation for WindowElement {
+impl Operator for WindowElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "window",
@@ -366,7 +366,7 @@ impl Operation for WindowElement {
 // #region 🔖️Assembly
 struct AssembleStory;
 
-impl Operation for AssembleStory {
+impl Operator for AssembleStory {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let elevation = read_channel_number(input, "elevation").unwrap_or(0.0);
         let height = read_channel_number(input, "height")?;
@@ -382,7 +382,7 @@ impl Operation for AssembleStory {
 
 struct AssembleBuilding;
 
-impl Operation for AssembleBuilding {
+impl Operator for AssembleBuilding {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let name = read_channel_text(input, "name").unwrap_or_else(|_| "Building".into());
         let stories = list_from_variadic(input.get("stories").and_then(|value| value.as_dictionary()));
@@ -394,7 +394,7 @@ impl Operation for AssembleBuilding {
 // #region 🔖️Measure
 struct FloorArea;
 
-impl Operation for FloorArea {
+impl Operator for FloorArea {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let building = read_building(input, "building")?;
         let mut total = 0.0;
@@ -411,7 +411,7 @@ impl Operation for FloorArea {
 
 struct GrossVolume;
 
-impl Operation for GrossVolume {
+impl Operator for GrossVolume {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let building = read_building(input, "building")?;
         let mut total = 0.0;
@@ -524,7 +524,7 @@ pub fn register(registry: &mut Registry) {
                 &["Assembly"],
             )
         },
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(AssembleStory) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(AssembleStory) }],
         &["story"],
     );
     registry.register_operator(
@@ -537,7 +537,7 @@ pub fn register(registry: &mut Registry) {
                 &["Assembly"],
             )
         },
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(AssembleBuilding) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(AssembleBuilding) }],
         &["building"],
     );
 
@@ -548,7 +548,7 @@ pub fn register(registry: &mut Registry) {
             out_floor_area(),
             &["Measure"],
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(FloorArea) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(FloorArea) }],
         &["number"],
     );
     registry.register_operator(
@@ -558,7 +558,7 @@ pub fn register(registry: &mut Registry) {
             out_gross_volume(),
             &["Measure"],
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(GrossVolume) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(GrossVolume) }],
         &["number"],
     );
 

@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::curate::CurateDocument;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SourcingDiff
@@ -22,7 +22,7 @@ pub struct SourcingDiff {
     pub document: Option<CurateDocument>,
 }
 
-impl OperationDiff<CurateDocument> for SourcingDiff {
+impl MutationDiff<CurateDocument> for SourcingDiff {
     fn apply(&self, projection: &CurateDocument) -> CurateDocument {
         self.document.clone().unwrap_or_else(|| projection.clone())
     }
@@ -39,14 +39,14 @@ impl OperationDiff<CurateDocument> for SourcingDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::curate::op::SourcingOperation;
-    use protocol::Operation;
+    use crate::artifacts::curate::op::SourcingMutation;
+    use protocol::Mutation;
 
     #[test]
     fn set_document_diff_carries_the_new_document_and_applies_it_verbatim() {
         let base = CurateDocument::default();
         let next = CurateDocument { stock: vec![], curated: vec![] };
-        let operation = SourcingOperation::SetDocument { document: next.clone() };
+        let operation = SourcingMutation::SetDocument { document: next.clone() };
         let diff: SourcingDiff = operation.diff(&base);
         assert_eq!(diff.document, Some(next.clone()));
         assert_eq!(diff.apply(&base), next);

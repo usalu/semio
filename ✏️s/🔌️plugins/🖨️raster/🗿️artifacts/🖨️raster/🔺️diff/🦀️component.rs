@@ -9,12 +9,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterProjection};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Tree
 /// 🌳️ Tree mutation helpers shared by {@link apply_step} (diff application) and
-/// `crate::artifacts::raster::op::RasterOperation::backwards` (which needs {@link patch_layer_in_tree}
+/// `crate::artifacts::raster::op::RasterMutation::backwards` (which needs {@link patch_layer_in_tree}
 /// to compute a `PatchLayer` inverse from the pre-operation projection) — `pub`, not `pub(crate)`, so the
 /// sibling `🔧️op` node can reach them via `crate::artifacts::raster::diff::…`.
 pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str) -> Option<RasterLayerNode> {
@@ -192,7 +192,7 @@ pub struct RasterDiff {
     pub replace: Option<Box<RasterProjection>>,
 }
 
-impl OperationDiff<RasterProjection> for RasterDiff {
+impl MutationDiff<RasterProjection> for RasterDiff {
     fn apply(&self, projection: &RasterProjection) -> RasterProjection {
         let mut next = self.replace.as_ref().map_or_else(|| projection.clone(), |document| (**document).clone());
         for step in &self.steps {

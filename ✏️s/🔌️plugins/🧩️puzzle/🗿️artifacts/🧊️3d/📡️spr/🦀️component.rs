@@ -1,5 +1,5 @@
 //! 📡️ Puzzle 3d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! `Puzzle3dOperation`'s binary wire form, `encode_engine_command`/`decode_engine_command` for the
+//! `Puzzle3dMutation`'s binary wire form, `encode_engine_command`/`decode_engine_command` for the
 //! headless engine's own `Puzzle3dEngineCommand` envelope, plus the `DocumentEnvelope`/
 //! `DocumentStore` aliases every puzzle-3d host binds. Renamed from the pre-consolidation
 //! `📡️protocol` module; both wire formats are unchanged (`dsl::DslOps`'s generated `OpBinary`).
@@ -12,24 +12,24 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::puzzle3d::op::Puzzle3dOperation;
+use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dProjection;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
 
-/// 📦️ Encodes a `Puzzle3dOperation` to its binary command form.
-pub fn encode_op(operation: &Puzzle3dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `Puzzle3dMutation` to its binary command form.
+pub fn encode_op(operation: &Puzzle3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `Puzzle3dOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Puzzle3dOperation, protocol::ProtocolError> {
-    Puzzle3dOperation::decode_op(bytes)
+/// 📖️ Decodes a `Puzzle3dMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Puzzle3dMutation, protocol::ProtocolError> {
+    Puzzle3dMutation::decode_op(bytes)
 }
 
 //#region 🔖️Store
-pub type Puzzle3dEnvelope = DocumentEnvelope<Puzzle3dProjection, Puzzle3dOperation>;
-pub type Puzzle3dStore = DocumentStore<Puzzle3dProjection, Puzzle3dOperation>;
+pub type Puzzle3dEnvelope = DocumentEnvelope<Puzzle3dProjection, Puzzle3dMutation>;
+pub type Puzzle3dStore = DocumentStore<Puzzle3dProjection, Puzzle3dMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️Puzzle3dEngineCommand
@@ -37,7 +37,7 @@ pub type Puzzle3dStore = DocumentStore<Puzzle3dProjection, Puzzle3dOperation>;
 /// `#[derive(dsl::DslEnum)]` is applied where the type is declared, in `⚙️engine` — not here — because
 /// the derive's generated code needs `SceneConfig`/`BrushPlacePayload` (types `⚙️engine` owns) by
 /// value; re-exporting it here plus wrapping `encode_op`/`decode_op` mirrors exactly how
-/// `Puzzle3dOperation` (declared in `🔧️op`) is surfaced above.
+/// `Puzzle3dMutation` (declared in `🔧️op`) is surfaced above.
 pub use crate::artifacts::puzzle3d::engine::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 
 /// 📦️ Encodes a `Puzzle3dEngineCommand` to its binary command form.
@@ -65,7 +65,7 @@ mod tests {
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![Puzzle3dOperation::SetObject {
+                mutations: vec![Puzzle3dMutation::SetObject {
                     index: 0,
                     object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
                 }],
@@ -168,7 +168,7 @@ mod wire_format_guard {
     use protocol::OpText;
     use serde_json::json;
 
-    fn ops() -> Vec<Puzzle3dOperation> {
+    fn ops() -> Vec<Puzzle3dMutation> {
         let object: puzzle_3d::Puzzle3dObject = serde_json::from_value(json!({"id":"o1","label":"L","objectKind":"Capsule","origin":[1.0,2.0,3.0],"orientation":[0.0,0.0,0.0,1.0],"scale":[2.0,3.0,4.0],"meshUrl":"/m.glb","vortices":[{"id":"v0","vortexKind":"k","position":[0.0,0.0,0.0],"direction":[0.0,0.0,1.0],"radius":3.0,"hidden":false,"locked":false}],"hidden":false,"locked":true})).unwrap();
         let attraction: puzzle_3d::Puzzle3dAttraction = serde_json::from_value(json!({"id":"a1","attracting":"o1:v0","attracted":"o2:v0","gap":1.0,"shift":2.0,"rise":3.0,"rotation":4.0,"turn":5.0,"tilt":6.0})).unwrap();
         let target_volume: puzzle_3d::Puzzle3dTargetVolume = serde_json::from_value(json!({"id":"t1","origin":[0.0,1.0,2.0],"orientation":[0.0,0.0,0.0,1.0],"scale":5.0,"hidden":false,"locked":false})).unwrap();
@@ -176,16 +176,16 @@ mod wire_format_guard {
         let meta: puzzle_3d::Puzzle3dMeta = serde_json::from_value(json!({"kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"important":false,"specificity":"vortex"}]})).unwrap();
         let document = Puzzle3dProjection::default();
         vec![
-            Puzzle3dOperation::SetObject { index: 0, object },
-            Puzzle3dOperation::RemoveObject { id: "o1".into() },
-            Puzzle3dOperation::SetAttraction { index: 1, attraction },
-            Puzzle3dOperation::RemoveAttraction { id: "a1".into() },
-            Puzzle3dOperation::SetTargetVolume { index: 2, target_volume },
-            Puzzle3dOperation::RemoveTargetVolume { id: "t1".into() },
-            Puzzle3dOperation::SetReference { index: 3, reference },
-            Puzzle3dOperation::RemoveReference { id: "r1".into() },
-            Puzzle3dOperation::SetMeta { meta },
-            Puzzle3dOperation::SetDocument { document },
+            Puzzle3dMutation::SetObject { index: 0, object },
+            Puzzle3dMutation::RemoveObject { id: "o1".into() },
+            Puzzle3dMutation::SetAttraction { index: 1, attraction },
+            Puzzle3dMutation::RemoveAttraction { id: "a1".into() },
+            Puzzle3dMutation::SetTargetVolume { index: 2, target_volume },
+            Puzzle3dMutation::RemoveTargetVolume { id: "t1".into() },
+            Puzzle3dMutation::SetReference { index: 3, reference },
+            Puzzle3dMutation::RemoveReference { id: "r1".into() },
+            Puzzle3dMutation::SetMeta { meta },
+            Puzzle3dMutation::SetDocument { document },
         ]
     }
 

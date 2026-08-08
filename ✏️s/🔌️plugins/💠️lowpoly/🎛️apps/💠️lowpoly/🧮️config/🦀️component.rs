@@ -1,22 +1,22 @@
 //! 🧮️ Lowpoly play app — view state (`LowpolyConfig`) and its patch operations
-//! (`LowpolyConfigOperation`). Absorbs every field that used to live in the old ui crate's
+//! (`LowpolyConfigMutation`). Absorbs every field that used to live in the old ui crate's
 //! `LowpolyPlayRuntime` app-struct `RefCell` (selection, active object, paint utility/layer, selection
 //! method/mode, hover, world camera, sun, show-edges) plus the two `ViewModel` fields lowpoly actually
 //! read (`active_utility_id`/`locale`) — session-only view state round-trips through the config
 //! `DocumentStore` exactly like document content, with a real `backwards` per
-//! `LowpolyConfigOperation`, mirroring the `shooting_engine::ShootingConfig` pilot. Nested value types
+//! `LowpolyConfigMutation`, mirroring the `shooting_engine::ShootingConfig` pilot. Nested value types
 //! (`LowpolySelection`, the world camera, hover target, sun, paint color) are flattened into scalar
 //! fields rather than embedded as DSL blocks — `LowpolySelection`/`WorldSunConfig` aren't
 //! `dsl::DslField`-capable today and flattening avoids widening that surface just for this migration.
 
-use protocol::Operation;
+use protocol::Mutation;
 use semio_framework_plugin::WorldSunConfig;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "lowpolycfg")]
+#[dsl(extension = "lowpoly.lowpolycfg")]
 #[dsl(layout = "lines")]
 pub struct LowpolyConfig {
     /// 👁️ Was `LowpolyPlayRuntime::active_object_id`.
@@ -208,7 +208,7 @@ pub fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
 }
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
+//#region 🔖️ConfigMutations
 /// @emoji 🧮️ B1: `LowpolyConfig`'s operation enum — one variant per settled interaction (mirrors the
 /// pre-B1 `LowpolyPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns — mirrors `shooting_op::ShootingConfigOperation`'s identical pattern: a config-only dispatch
@@ -216,7 +216,7 @@ pub fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
 /// snapshot from just before it", the simplest correct inverse.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[allow(clippy::large_enum_variant, reason = "Snapshot must carry the whole LowpolyConfig by value (not boxed) so its dsl(block)-derived wire encoding stays byte-identical to the pre-migration wire format; every variant is dispatched rarely (config-only ticks), never in a hot allocation path")]
-pub enum LowpolyConfigOperation {
+pub enum LowpolyConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -269,7 +269,7 @@ pub enum LowpolyConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for LowpolyConfigOperation {
+impl protocol::OpText for LowpolyConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -283,7 +283,7 @@ impl protocol::OpText for LowpolyConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -294,7 +294,7 @@ impl protocol::OpText for LowpolyConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for LowpolyConfigOperation {
+impl protocol::OpBinary for LowpolyConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -340,68 +340,68 @@ impl protocol::OpBinary for LowpolyConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<LowpolyConfig> for LowpolyConfigOperation {
+impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
     type Diff = LowpolyConfig;
 
     fn diff(&self, base: &LowpolyConfig) -> LowpolyConfig {
         let mut next = base.clone();
         match self {
-            LowpolyConfigOperation::Snapshot { config } => return config.clone(),
-            LowpolyConfigOperation::SetActiveObject { object_id } => next.active_object_id = object_id.clone(),
-            LowpolyConfigOperation::SetSelection { mode, ids } => {
+            LowpolyConfigMutation::Snapshot { config } => return config.clone(),
+            LowpolyConfigMutation::SetActiveObject { object_id } => next.active_object_id = object_id.clone(),
+            LowpolyConfigMutation::SetSelection { mode, ids } => {
                 next.selection_mode = mode.clone();
                 next.selection_ids = ids.clone();
             }
-            LowpolyConfigOperation::SetSelectionTargets { mesh, vertex, edge, face } => {
+            LowpolyConfigMutation::SetSelectionTargets { mesh, vertex, edge, face } => {
                 next.selection_targets_mesh = *mesh;
                 next.selection_targets_vertex = *vertex;
                 next.selection_targets_edge = *edge;
                 next.selection_targets_face = *face;
             }
-            LowpolyConfigOperation::SetSelectionKeys { keys } => next.selection_keys = keys.clone(),
-            LowpolyConfigOperation::SetPaintUtility { value } => next.paint_utility = value.clone(),
-            LowpolyConfigOperation::SetActivePaintLayer { value } => next.active_paint_layer = *value,
-            LowpolyConfigOperation::SetSelectionMethod { value } => next.selection_method = value.clone(),
-            LowpolyConfigOperation::SetSelectionModeDefault { value } => next.selection_mode_default = value.clone(),
-            LowpolyConfigOperation::SetSelectedObjectIds { ids } => next.selected_object_ids = ids.clone(),
-            LowpolyConfigOperation::SetHoveredObject { object_id } => next.hovered_object_id = object_id.clone(),
-            LowpolyConfigOperation::SetHoveredTarget { object_id, mode, id } => {
+            LowpolyConfigMutation::SetSelectionKeys { keys } => next.selection_keys = keys.clone(),
+            LowpolyConfigMutation::SetPaintUtility { value } => next.paint_utility = value.clone(),
+            LowpolyConfigMutation::SetActivePaintLayer { value } => next.active_paint_layer = *value,
+            LowpolyConfigMutation::SetSelectionMethod { value } => next.selection_method = value.clone(),
+            LowpolyConfigMutation::SetSelectionModeDefault { value } => next.selection_mode_default = value.clone(),
+            LowpolyConfigMutation::SetSelectedObjectIds { ids } => next.selected_object_ids = ids.clone(),
+            LowpolyConfigMutation::SetHoveredObject { object_id } => next.hovered_object_id = object_id.clone(),
+            LowpolyConfigMutation::SetHoveredTarget { object_id, mode, id } => {
                 next.hovered_target_object_id = object_id.clone();
                 next.hovered_target_mode = mode.clone();
                 next.hovered_target_id = *id;
             }
-            LowpolyConfigOperation::SetUtilityParams { json } => next.utility_params_json = json.clone(),
-            LowpolyConfigOperation::SetPaintColor { r, g, b, a } => {
+            LowpolyConfigMutation::SetUtilityParams { json } => next.utility_params_json = json.clone(),
+            LowpolyConfigMutation::SetPaintColor { r, g, b, a } => {
                 next.paint_color_r = *r;
                 next.paint_color_g = *g;
                 next.paint_color_b = *b;
                 next.paint_color_a = *a;
             }
-            LowpolyConfigOperation::SetWorldCamera { position, target, fov } => {
+            LowpolyConfigMutation::SetWorldCamera { position, target, fov } => {
                 next.world_camera_position = *position;
                 next.world_camera_target = *target;
                 next.world_camera_fov = *fov;
             }
-            LowpolyConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            LowpolyConfigOperation::SetShowEdges { value } => next.show_edges = *value,
-            LowpolyConfigOperation::SetSun { enabled, azimuth, elevation, intensity, color } => {
+            LowpolyConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            LowpolyConfigMutation::SetShowEdges { value } => next.show_edges = *value,
+            LowpolyConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => {
                 next.sun_enabled = *enabled;
                 next.sun_azimuth = *azimuth;
                 next.sun_elevation = *elevation;
                 next.sun_intensity = *intensity;
                 next.sun_color = color.clone();
             }
-            LowpolyConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            LowpolyConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            LowpolyConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            LowpolyConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &LowpolyConfig) -> Vec<Self> {
-        vec![LowpolyConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &LowpolyConfig) -> Vec<Self> {
+        vec![LowpolyConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn lowpoly_config_dsl_round_trips_default() {
-        store::test_support::assert_dsl_round_trip(&LowpolyConfig::default());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&LowpolyConfig::default());
     }
 
     #[test]
@@ -428,7 +428,7 @@ mod tests {
             locale: "de-DE".into(),
             ..LowpolyConfig::default()
         };
-        store::test_support::assert_dsl_round_trip(&config);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&config);
     }
 
     #[test]
@@ -442,33 +442,33 @@ mod tests {
     #[test]
     fn config_op_backwards_always_snapshots_prior_state() {
         let base = LowpolyConfig { active_object_id: "obj-1".into(), ..LowpolyConfig::default() };
-        let operation = LowpolyConfigOperation::SetActiveObject { object_id: "obj-2".into() };
+        let operation = LowpolyConfigMutation::SetActiveObject { object_id: "obj-2".into() };
         let after = operation.diff(&base);
         assert_eq!(after.active_object_id, "obj-2");
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![LowpolyConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![LowpolyConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(backwards[0].diff(&after), base);
     }
 
     #[test]
     fn config_op_text_round_trip_set_selection() {
-        store::test_support::assert_op_line_round_trip(&LowpolyConfigOperation::SetSelection { mode: "face".into(), ids: vec![1, 2, 3] });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::SetSelection { mode: "face".into(), ids: vec![1, 2, 3] });
     }
 
     #[test]
     fn config_op_text_round_trip_world_camera() {
-        store::test_support::assert_op_line_round_trip(&LowpolyConfigOperation::SetWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::SetWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
     }
 
     #[test]
     fn config_op_text_round_trip_snapshot() {
-        store::test_support::assert_op_line_round_trip(&LowpolyConfigOperation::Snapshot { config: LowpolyConfig::default() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::Snapshot { config: LowpolyConfig::default() });
     }
 
     #[test]
     fn config_op_binary_round_trips_and_agrees_with_text() {
-        let operation = LowpolyConfigOperation::SetHoveredTarget { object_id: Some("obj-1".into()), mode: Some("mesh".into()), id: Some(3) };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        let operation = LowpolyConfigMutation::SetHoveredTarget { object_id: Some("obj-1".into()), mode: Some("mesh".into()), id: Some(3) };
+        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     }
 }
 //#endregion 🧪️Tests

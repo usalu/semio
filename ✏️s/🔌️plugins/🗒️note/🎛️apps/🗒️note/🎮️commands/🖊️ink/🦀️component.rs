@@ -1,20 +1,20 @@
 //! 🖊️ Note play app command — batched ink-canvas events (add/update/remove block, put asset, set
 //! camera). The sole content-mutating entry point the ink-canvas host surface calls.
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{insert_block, remove_block_from_tree, update_block_in_tree};
-use crate::artifacts::note::op::NoteOperation;
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::Deserialize;
 
 //#region 🔖️CanvasEvents
 /// 🖱️ Batched canvas-event wire shape the `ink-canvas-host` surface emits (`addBlock`/`updateBlock`/
-/// `removeBlock`/`putAsset`/`setCamera`); content events diff into `NoteOperation`s via
-/// `note_ops_from_canvas_events`, `setCamera` diffs into a `NoteConfigOperation::SetCamera` instead
+/// `removeBlock`/`putAsset`/`setCamera`); content events diff into `NoteMutation`s via
+/// `note_ops_from_canvas_events`, `setCamera` diffs into a `NoteConfigMutation::SetCamera` instead
 /// (session-only view state, never a document field).
 #[derive(Clone, Debug, Deserialize)]
-#[serde(tag = "operation")]
+#[serde(tag = "mutation")]
 enum NoteCanvasEvent {
     #[serde(rename = "addBlock", rename_all = "camelCase")]
     AddBlock {
@@ -54,21 +54,21 @@ fn apply_note_canvas_event(document: &mut NoteDocument, event: &NoteCanvasEvent)
     }
 }
 
-/// 🔀️ Applies a batch of canvas events to a cloned document and returns the minimal `NoteOperation`s
+/// 🔀️ Applies a batch of canvas events to a cloned document and returns the minimal `NoteMutation`s
 /// describing what changed (block-tree snapshot and per-asset puts) — the empty vec means no content
 /// changed (e.g. a gesture that ended where it began).
-fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEvent]) -> Vec<NoteOperation> {
+fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEvent]) -> Vec<NoteMutation> {
     let mut next = document.clone();
     for event in events {
         apply_note_canvas_event(&mut next, event);
     }
     let mut operations = Vec::new();
     if next.blocks != document.blocks {
-        operations.push(NoteOperation::SetBlocks { blocks: next.blocks.clone() });
+        operations.push(NoteMutation::SetBlocks { blocks: next.blocks.clone() });
     }
     for (key, asset) in &next.assets {
         if document.assets.get(key) != Some(asset) {
-            operations.push(NoteOperation::PutAsset { key: key.clone(), asset: asset.clone() });
+            operations.push(NoteMutation::PutAsset { key: key.clone(), asset: asset.clone() });
         }
     }
     operations
@@ -87,22 +87,22 @@ pub mod ink_apply_events {
         pub select_ids: Option<Vec<String>>,
     }
 
-    pub fn handle(payload: &InkApplyEvents, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &InkApplyEvents, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let document = doc.projection;
         let events: Vec<NoteCanvasEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
-        let mut config_operations = Vec::new();
+        let mut config_mutations = Vec::new();
         if let Some(ids) = &payload.select_ids {
-            config_operations.push(NoteConfigOperation::SetSelection { block_ids: ids.clone() });
+            config_mutations.push(NoteConfigMutation::SetSelection { block_ids: ids.clone() });
         }
         // 📷️ Camera rides in the same batch as content edits but never becomes a document operation —
         // diffs into a config operation instead.
         for event in &events {
             if let NoteCanvasEvent::SetCamera { camera } = event {
-                config_operations.push(NoteConfigOperation::SetCamera { camera: camera.clone() });
+                config_mutations.push(NoteConfigMutation::SetCamera { camera: camera.clone() });
             }
         }
         let operations = note_ops_from_canvas_events(document, &events);
-        if operations.is_empty() && config_operations.is_empty() {
+        if operations.is_empty() && config_mutations.is_empty() {
             return Ok(Emit::default());
         }
         // The whole drag (begin → live* → commit) coalesces into ONE undoable edit; a lone `atomic`
@@ -116,7 +116,7 @@ pub mod ink_apply_events {
                 _ => None,
             }
         };
-        Ok(Emit { document_operations: operations, config_operations, coalesce_key, ..Default::default() })
+        Ok(Emit { document_mutations: operations, config_mutations, coalesce_key, ..Default::default() })
     }
 }
 //#endregion 🔖️InkApplyEvents

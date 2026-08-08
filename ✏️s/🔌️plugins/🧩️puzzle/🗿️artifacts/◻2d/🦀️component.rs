@@ -245,3 +245,5 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+pub use crate::artifacts::puzzle2d::op::Puzzle2dPlayProjection;

@@ -1,7 +1,7 @@
 //! 🧮️ FEM 3D app commands — analysis settings (modal/buckling mode counts, deformation display scale).
 
-use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigOperation};
-use crate::artifacts::fem3d::op::Fem3dOperation;
+use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,14 +21,14 @@ pub mod set_analysis_settings {
 
     /// ⚙️ Every field is optional and defaults to the document's current setting when omitted — a
     /// partial update, not a whole-record replace.
-    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let current = &doc.projection.analysis;
         let settings = crate::artifacts::fem3d::FemAnalysisSettings {
             modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
             buckling_count: payload.buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
             deformation_scale: payload.deformation_scale.unwrap_or(current.deformation_scale),
         };
-        Ok(Emit::operations(vec![Fem3dOperation::SetAnalysisSettings { settings }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetAnalysisSettings { settings }]))
     }
 }
 //#endregion 🔖️SetAnalysisSettings

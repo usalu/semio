@@ -1,8 +1,8 @@
 //! 🗣️ GIS 3D play app command — the host-pushed locale switch (undeclared in the manifest, never in
 //! the command palette; host/test infra dispatches it directly).
 
-use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigOperation};
-use crate::artifacts::gisterrain::op::Gis3dTerrainOperation;
+use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
+use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
 use crate::artifacts::gisterrain::Gis3dTerrainDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Gis3dConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Gis3dConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -36,7 +36,7 @@ mod tests {
     fn locale_command_dispatches_through_the_config_store() {
         let mut app = app();
         let result = dispatch(&mut app, Gis3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
-        assert!(result.operations.is_empty(), "locale is config state, not a document edit");
+        assert!(result.mutations.is_empty(), "locale is config state, not a document edit");
     }
 
     #[test]

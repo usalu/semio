@@ -8,7 +8,7 @@
 //! `definition()` per node.
 
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<DagOperation, DagConfigOperation>, Fault>`, the exact signature `DocumentApp::handle` and
+// `Result<Emit<DagMutation, DagConfigMutation>, Fault>`, the exact signature `DocumentApp::handle` and
 // `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it here
 // would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself (only
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -18,15 +18,15 @@ use crate::apps::dag::commands::graph::{connect_media_ports, delete_selection, d
 use crate::apps::dag::commands::locale::set_locale;
 use crate::apps::dag::commands::nodes::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
 use crate::apps::dag::commands::selection::{graph_pointer_down, node_graph_hover, node_graph_select, node_graph_viewport, select_node, set_selection};
-use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigOperation};
+use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::apps::dag::modes::edit;
 use crate::apps::dag::modes::edit::windows::{compiled, main};
 use crate::apps::dag::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::dag::terminology::{dag_play_labels, is_de_locale};
-use crate::artifacts::dag::op::DagOperation;
+use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::{DagDocument, DAG_DOCUMENT_SCHEMA};
 use infinite_board_port_directed_dag::default_dag_document;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode,
 };
 use store::EngineHandles;
@@ -56,7 +56,7 @@ semio_framework_plugin::app_commands! {
     /// where they happen to coincide (e.g. `"reorganize" as "reorganize"`). `"setLocale" as "locale"` is
     /// the row that proves it. **Row order is the binary variant ordinal: appending is safe, reordering
     /// is a wire-format break.**
-    pub enum DagCommand for DagDocument, DagOperation, DagConfig, DagConfigOperation {
+    pub enum DagCommand for DagDocument, DagMutation, DagConfig, DagConfigMutation {
         "addNode" as "add-node" => add_node::AddNode,
         "removeNode" as "remove-node" => remove_node::RemoveNode,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
@@ -107,17 +107,17 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::apps::da
 
 //#region 🔖️DagPlayApp
 /// 🧪️ Unit struct — every former `DagPlayRuntime`/`ViewModel.locale` field now lives in [`DagConfig`],
-/// written through [`DagConfigOperation`]s.
+/// written through [`DagConfigMutation`]s.
 #[derive(Default)]
 pub struct DagPlayApp;
 
 impl DocumentApp for DagPlayApp {
     type Projection = DagDocument;
-    type Operation = DagOperation;
+    type Mutation = DagMutation;
     type Config = DagConfig;
-    type ConfigOperation = DagConfigOperation;
+    type ConfigMutation = DagConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = DagCommand;
 
@@ -128,8 +128,8 @@ impl DocumentApp for DagPlayApp {
         default_dag_document()
     }
 
-    fn whole_document_operation(projection: DagDocument) -> Option<DagOperation> {
-        Some(DagOperation::SetDocument { document: projection })
+    fn whole_document_operation(projection: DagDocument) -> Option<DagMutation> {
+        Some(DagMutation::SetDocument { document: projection })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -138,7 +138,7 @@ impl DocumentApp for DagPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagOperation, DagConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -187,16 +187,16 @@ pub fn create_dag_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
             // 🗂️ Referenced by `dag_context_menu_items` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Operation).with_category("create"))
-            .operation("removeNode", LocalizedLabel::native("Remove Node", "Knoten entfernen"))
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"), ActionKind::Operation).with_category("selection"))
-            .operation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
-            .action_with(ActionDefinition::new_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Operation).with_category("transfer"))
-            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-            .action_with(ActionDefinition::new_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Operation).with_category("actions"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
-            .operation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
+            .action_with(ActionDefinition::new_catalog("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .mutation("removeNode", LocalizedLabel::native("Remove Node", "Knoten entfernen"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"), ActionKind::Mutation).with_category("selection"))
+            .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
+            .action_with(ActionDefinition::new_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Mutation).with_category("transfer"))
+            .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Mutation).with_category("actions"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .mutation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
             // 👁️ Ephemeral view state — selection and camera/viewport.
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"))
@@ -273,7 +273,7 @@ mod tests {
             DagCommand::RemoveNode(remove_node::RemoveNode { node_id: "n1".into() }),
             DagCommand::DeleteSelection(delete_selection::DeleteSelection {}),
             DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations: vec![
+                mutations: vec![
                     node_graph_edit::DagNodeGraphEditOp::SetFixture { fixture_json: "{}".into() },
                     node_graph_edit::DagNodeGraphEditOp::DeleteSelection,
                     node_graph_edit::DagNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
@@ -390,7 +390,7 @@ mod tests {
         }
         let mut app: DagApp = new_app_with_registry();
         let result = app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
-        assert!(result.operations.is_empty(), "setSelection (View) emits no operations even under registry enforcement");
+        assert!(result.document_mutations.is_empty(), "setSelection (View) emits no operations even under registry enforcement");
     }
     //#endregion 🔖️ManifestSanity
 
@@ -440,7 +440,7 @@ mod tests {
         let app = DagPlayApp;
         let replacement = default_dag_document();
         let operation = app.whole_document_operation(replacement.clone()).expect("whole document operation");
-        assert_eq!(operation, DagOperation::SetDocument { document: replacement });
+        assert_eq!(operation, DagMutation::SetDocument { document: replacement });
     }
 
     /// 🧬️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to

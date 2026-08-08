@@ -1,13 +1,13 @@
 //! 📜️ Procedural2d artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
 //! `FlowFixture`/`Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson` (from `flow`) and
-//! `GenerationPlayState`/`FormGeneration`/`GenerationOperation` (from `playbook`) are all foreign to
+//! `GenerationPlayState`/`FormGeneration`/`GenerationMutation` (from `playbook`) are all foreign to
 //! this crate, so none can carry a `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires
 //! the impl target type to live in the crate that also owns the trait or the type, and neither is
 //! true here. The `*Dsl` types below are LOCAL structural twins the real types convert to/from right
 //! at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary (same pattern as `fem_2d`'s `FemDof`
 //! and `imperative_core`'s `ValueDsl`/`StepNodeDsl`/`PathDsl`) — `Procedural2dDocument`/
-//! `Procedural2dOperation` themselves keep their ORIGINAL foreign field types unchanged.
+//! `Procedural2dMutation` themselves keep their ORIGINAL foreign field types unchanged.
 
 
 //#region 📖️SemioGrammar
@@ -459,18 +459,18 @@ mod tests {
     //#endregion 🔖️DslTests
 
     //#region 🔖️CommandEnvelopeTests
-    /// 🎫️ CW7 command-envelope law: proves `Procedural2dOperation`'s `Edit` round-trips through
-    /// `protocol::OperationEnvelope`s beside this file's existing dsl/pack round-trip laws.
+    /// 🎫️ CW7 command-envelope law: proves `Procedural2dMutation`'s `Edit` round-trips through
+    /// `protocol::MutationEnvelope`s beside this file's existing dsl/pack round-trip laws.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::procedural2d::op::Procedural2dOperation;
+        use crate::artifacts::procedural2d::op::Procedural2dMutation;
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<Procedural2dDocument, Procedural2dOperation> = DocumentStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dDocument::default(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![Procedural2dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
-        let edit: &Edit<Procedural2dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        test_support::assert_command_envelope_round_trip::<Procedural2dDocument, Procedural2dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        let mut store: DocumentStore<Procedural2dDocument, Procedural2dMutation> = DocumentStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dDocument::default(), None));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural2dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let edit: &Edit<Procedural2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        test_support::assert_command_envelope_round_trip::<Procedural2dDocument, Procedural2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 

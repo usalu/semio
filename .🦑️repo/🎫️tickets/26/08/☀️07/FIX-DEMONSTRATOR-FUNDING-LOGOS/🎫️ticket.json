@@ -1,0 +1,8 @@
+{
+  "title": "Fix Demonstrator Funding Logos Path",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "Fix funding logo asset path in demonstrator brand and footer to align asset directory name (🪧️logo vs 🪧️logos).",
+  "summary": "Renamed `♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logo` directory to `🪧️logos` to match the taxonomy convention and fixed asset URLs in `⚛️footer.tsx`. Now funding logos (BMWSB, BBSR, Zukunft Bau) and partner logos (LUH, UdK) resolve correctly without 404s in the demonstrator.",
+  "goal": "R26-02"
+}

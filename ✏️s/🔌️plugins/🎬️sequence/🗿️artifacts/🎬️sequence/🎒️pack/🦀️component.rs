@@ -81,23 +81,23 @@ mod tests {
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `SequenceOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// `SequenceMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing dsl/pack round-trip laws.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::sequence::op::SequenceOperation;
+        use crate::artifacts::sequence::mutations::SequenceMutation;
         use protocol::{DocumentId, Edit, SchemaId};
 
-        let envelope = store::create_document_envelope::<SequenceFixture, SequenceOperation>(crate::artifacts::sequence::SEQUENCE_FIXTURE_SCHEMA, "sequence-envelope-test", default_fixture(), None);
+        let envelope = store::create_document_envelope::<SequenceFixture, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_FIXTURE_SCHEMA, "sequence-envelope-test", default_fixture(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
         doc_store
             .dispatch(store::DocumentCommand::Apply {
-                operations: vec![SequenceOperation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
+                mutations: vec![SequenceMutation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
                 description: None,
             })
             .expect("apply");
-        let edit: &Edit<SequenceOperation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<SequenceFixture, SequenceOperation>(edit, &DocumentId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
+        let edit: &Edit<SequenceMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<SequenceFixture, SequenceMutation>(edit, &DocumentId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

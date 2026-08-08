@@ -1,7 +1,7 @@
 //! 👥️ S Studio app — local presence heartbeat command.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
-use semio_framework_os::{WorkflowDocument, WorkflowOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{WorkflowDocument, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️PresenceHeartbeat
@@ -18,9 +18,9 @@ pub mod presence_heartbeat {
 
     /// 🐢️ A heartbeat only records this client's own identity for the presence broadcast — it must
     /// declare `None` `ui_scope` so it never triggers a full-shell `refresh-ui` for the sending client.
-    pub fn handle(payload: &PresenceHeartbeat, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        let config_operations = vec![SpaceConfigOperation::SetClient { client_id: Some(payload.client_id.clone()), client_name: Some(payload.name.clone()) }];
-        Ok(Emit { config_operations, ui_scope: semio_framework::kernel::UiDirtyScope::None, ..Default::default() })
+    pub fn handle(payload: &PresenceHeartbeat, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let config_mutations = vec![SpaceConfigMutation::SetClient { client_id: Some(payload.client_id.clone()), client_name: Some(payload.name.clone()) }];
+        Ok(Emit { config_mutations, ui_scope: semio_framework::kernel::UiDirtyScope::None, ..Default::default() })
     }
 }
 //#endregion 🔖️PresenceHeartbeat

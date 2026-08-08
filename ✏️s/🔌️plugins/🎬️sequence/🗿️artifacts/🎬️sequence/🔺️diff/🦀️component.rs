@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::sequence::{SequenceEdge, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch};
-use protocol::{CollectionDiff, OperationDiff};
+use protocol::{CollectionDiff, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Collections
@@ -53,7 +53,7 @@ pub struct SequenceDiff {
     pub edges: Option<CollectionDiff<String, SequenceEdgePatch, SequenceEdge>>,
 }
 
-impl OperationDiff<SequenceFixture> for SequenceDiff {
+impl MutationDiff<SequenceFixture> for SequenceDiff {
     fn apply(&self, projection: &SequenceFixture) -> SequenceFixture {
         let mut next = projection.clone();
         if let Some(diff) = &self.steps {
@@ -76,9 +76,9 @@ impl OperationDiff<SequenceFixture> for SequenceDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::op::SequenceOperation;
+    use crate::artifacts::sequence::mutations::SequenceMutation;
     use crate::artifacts::sequence::{default_fixture, StepParams};
-    use protocol::Operation;
+    use protocol::Mutation;
 
     /// ⚖️ LAW: `op.diff(base)` applied to `base` equals applying the operation, and the diff carries
     /// only the touched slot.
@@ -86,7 +86,7 @@ mod tests {
     fn steps_add_diff_applies_onto_the_base_projection() {
         let base = default_fixture();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
-        let operation = SequenceOperation::StepsAdd { index: 2, item: step };
+        let operation = SequenceMutation::StepsAdd { index: 2, item: step };
         let diff: SequenceDiff = operation.diff(&base);
         assert!(diff.steps.is_some(), "StepsAdd must produce a steps diff: {diff:?}");
         assert!(diff.edges.is_none(), "StepsAdd must touch only the steps slot: {diff:?}");

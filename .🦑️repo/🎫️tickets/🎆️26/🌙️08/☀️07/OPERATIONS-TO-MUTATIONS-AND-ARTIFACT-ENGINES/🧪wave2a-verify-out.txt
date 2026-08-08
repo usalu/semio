@@ -1,0 +1,22 @@
+PASS wave2a taxonomy+validateTaxonomy
+{
+  "artifactComponentDirs": [
+    "🧬️mutations",
+    "🔺️diff",
+    "🗣️dsl",
+    "🎒️pack",
+    "🔧️op",
+    "📡️spr",
+    "⚙️engine"
+  ],
+  "mutationChildDirs": [
+    "🦠️mutation",
+    "🔺️diff",
+    "↩️inverse"
+  ],
+  "validateTaxonomy": []
+}
+
+---STDERR---
+
+---CODE 0---

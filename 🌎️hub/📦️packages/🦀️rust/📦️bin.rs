@@ -21,7 +21,7 @@ use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, OperationEnvelope, RuntimeFrontierSummary, ServerFrame};
+use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::model::SpaceRole;
@@ -362,7 +362,7 @@ fn engine_frontier_to_wire(frontier: &db::Frontier, head_edit_id: String) -> Run
 /// `Ack` to send the submitter plus (on acceptance) the `Commands` frame to fan out to every other
 /// session on the same document. `Fsync` durability: a hub session's `submit` genuinely committing
 /// is the promise `AckStage::Persisted` makes to the client.
-async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<OperationEnvelope>) -> (ServerFrame, Option<ServerFrame>) {
+async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>) -> (ServerFrame, Option<ServerFrame>) {
     let batch = match db::document::CommandBatch::new(envelopes.clone()) {
         Ok(batch) => batch,
         Err(error) => {
@@ -392,7 +392,7 @@ async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id:
 /// `db_document`'s pipeline and never interprets an operation's schema/diff semantics (matches
 /// `db_security`'s own module doc — payload interpretation stays out of this layer), so command-kind
 /// granularity inside one document is not this wave's concern.
-fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolDocumentId, envelopes: &[OperationEnvelope], physical_ms: u64) -> Option<String> {
+fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolDocumentId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Option<String> {
     envelopes.iter().find_map(|envelope| gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.operation_id, physical_ms).err().map(|error| error.to_string()))
 }
 
@@ -814,14 +814,14 @@ mod tests {
         HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()), extensions_root: dir.path().join("extension-modules") }
     }
 
-    fn sample_envelope(id: &str, document: &WireDocumentId) -> OperationEnvelope {
-        OperationEnvelope {
-            operation_id: protocol::OperationId(id.to_string()),
+    fn sample_envelope(id: &str, document: &WireDocumentId) -> MutationEnvelope {
+        MutationEnvelope {
+            mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({ "value": id })).unwrap() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({})).unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({})).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }

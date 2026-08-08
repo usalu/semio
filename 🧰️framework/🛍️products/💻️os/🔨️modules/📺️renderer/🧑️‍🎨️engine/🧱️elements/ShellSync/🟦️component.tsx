@@ -37,7 +37,7 @@ function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
   const remote =
     status.remote.kind === "live" ? `live · ${status.remote.peerCount} peer${status.remote.peerCount === 1 ? "" : "s"}` : status.remote.kind === "connecting" ? "connecting…" : status.remote.kind === "backoff" ? "reconnecting…" : "offline";
   const persisted = status.persisted ? "saved" : "unsaved";
-  const pending = status.pendingOperations > 0 ? ` · ${status.pendingOperations} pending` : "";
+  const pending = status.pendingMutations > 0 ? ` · ${status.pendingMutations} pending` : "";
   return `${remote} · ${persisted}${pending}`;
 }
 

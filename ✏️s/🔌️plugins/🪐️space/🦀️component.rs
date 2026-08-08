@@ -26,8 +26,8 @@ pub fn ensure_space_fixtures_registered() {
         // `materialize_os_app_instance_document_json`'s `serde_json::from_str` will fall back to
         // `json!({})` for these two slugs until then. Non-fatal: seed content is a convenience default,
         // not required for correctness.
-        register_os_fixture_json("🖍️semio.draw.json", include_str!("../🖍️draw/🗿️artifacts/🖍️draw/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.draw.draw.dsl.semio"));
-        register_os_fixture_json("✒️jack.writer.json", include_str!("../✒️writer/🗿️artifacts/✒️writer/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.writer.writer.jack-writer.dsl.semio"));
+        register_os_fixture_json("🖍️semio.draw.json", include_str!("../🖍️draw/🗿️artifacts/🖍️draw/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"));
+        register_os_fixture_json("✒️jack.writer.json", include_str!("../✒️writer/🗿️artifacts/✒️writer/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"));
     });
     let _ = &*FIXTURES;
 }

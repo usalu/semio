@@ -180,7 +180,7 @@ export type DocumentDiff = { readonly schemaId: string; readonly payload: unknow
 export type UndoPolicy = "exactBaseOnly" | "transformAgainstConcurrent" | "semanticUndo" | "compensatingAction";
 
 /** @emoji ↩️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
-export type InverseOperation = {
+export type InverseMutation = {
   readonly targetOperation: string;
   readonly inverseDiff: DocumentDiff;
   readonly baseVersion: number;
@@ -189,13 +189,13 @@ export type InverseOperation = {
 };
 
 /** @emoji 🔁️ One typed document operation with its true inverse — the CQRS wire unit. */
-export type KernelOperation = {
+export type KernelMutation = {
   readonly id: string;
   readonly document: number;
   readonly baseVersion: number;
   readonly invocationId: string;
   readonly diff: DocumentDiff;
-  readonly inverse: InverseOperation;
+  readonly inverse: InverseMutation;
   readonly dependencies?: readonly string[];
   readonly author: string;
   readonly timestamp: HybridLogicalTimestamp;
@@ -204,8 +204,8 @@ export type KernelOperation = {
 /** @emoji 🎁️ The undo group binding an invocation (action or command) to its operations + inverses. */
 export type UndoGroup = {
   readonly invocationId: string;
-  readonly operations: readonly string[];
-  readonly inverseOperations: readonly InverseOperation[];
+  readonly mutations: readonly string[];
+  readonly inverseMutations: readonly InverseMutation[];
 };
 
 /** @emoji 📣️ An out-of-band app event surfaced to the shell (e.g. history changed). */
@@ -359,12 +359,12 @@ export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtySco
 /**
  * @emoji 📤️ Typed result of a plugin `handle-action`/`handle-command` call — mirrors the Rust
  * `InvocationResult`. Replaces the legacy `string[]` JSON-patch shape: operations are now typed
- * `KernelOperation`s with true inverses, and the shell applies `requestedEffects` through
+ * `KernelMutation`s with true inverses, and the shell applies `requestedEffects` through
  * `applyHostEffects` (WS-E).
  */
 export type InvocationResponse = {
   readonly output: unknown;
-  readonly operations: readonly KernelOperation[];
+  readonly mutations: readonly KernelMutation[];
   readonly inverseGroup: UndoGroup;
   readonly diagnostics?: readonly Diagnostic[];
   readonly requestedEffects?: readonly HostEffect[];
@@ -377,15 +377,15 @@ export type InvocationResponse = {
 // (unparseable response, stub module missing `handleAction`/`handleCommand`).
 const EMPTY_INVOCATION_RESPONSE: InvocationResponse = {
   output: null,
-  operations: [],
-  inverseGroup: { invocationId: "", operations: [], inverseOperations: [] },
+  mutations: [],
+  inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] },
 };
 
 /** @emoji 📥️ Parses a raw program `handle-action`/`handle-command` response string into a typed {@link InvocationResponse}. */
 export function parseInvocationResponse(raw: string): InvocationResponse {
   try {
     const parsed = JSON.parse(raw) as Partial<InvocationResponse> | null;
-    if (parsed && typeof parsed === "object" && Array.isArray(parsed.operations)) {
+    if (parsed && typeof parsed === "object" && Array.isArray(parsed.mutations)) {
       return parsed as InvocationResponse;
     }
   } catch {

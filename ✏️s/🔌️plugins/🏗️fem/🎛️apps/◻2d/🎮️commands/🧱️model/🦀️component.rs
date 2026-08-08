@@ -1,8 +1,8 @@
 //! 🧱️ Fem2d play app commands — structural model authoring: nodes, bars/beams, materials, sections,
 //! supports, and meshed regions.
 
-use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigOperation};
-use crate::artifacts::fem2d::op::Fem2dOperation;
+use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::{element_id, FemDof, FemElement, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,11 +20,11 @@ pub mod add_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
         let index = projection.nodes.len();
-        Ok(Emit::operations(vec![Fem2dOperation::SetNode { index, node: FemNode { id, x: payload.x, y: payload.y } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetNode { index, node: FemNode { id, x: payload.x, y: payload.y } }]))
     }
 }
 //#endregion 🔖️AddNode
@@ -42,12 +42,12 @@ pub mod add_bar {
         pub section_id: String,
     }
 
-    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.elements.iter().map(|e| element_id(e).to_string()), "e");
         let index = projection.elements.len();
         let element = FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-        Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetElement { index, element: Box::new(element) }]))
     }
 }
 //#endregion 🔖️AddBar
@@ -65,12 +65,12 @@ pub mod add_beam {
         pub section_id: String,
     }
 
-    pub fn handle(payload: &AddBeam, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddBeam, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.elements.iter().map(|e| element_id(e).to_string()), "e");
         let index = projection.elements.len();
         let element = FemElement::Beam { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-        Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetElement { index, element: Box::new(element) }]))
     }
 }
 //#endregion 🔖️AddBeam
@@ -86,11 +86,11 @@ pub mod add_material {
         pub e: f64,
     }
 
-    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
         let index = projection.materials.len();
-        Ok(Emit::operations(vec![Fem2dOperation::SetMaterial { index, material: FemMaterial { id, name: payload.name.clone(), e: payload.e, nu: 0.3, rho: 7850.0 } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetMaterial { index, material: FemMaterial { id, name: payload.name.clone(), e: payload.e, nu: 0.3, rho: 7850.0 } }]))
     }
 }
 //#endregion 🔖️AddMaterial
@@ -107,11 +107,11 @@ pub mod add_section {
         pub iy: f64,
     }
 
-    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
         let index = projection.sections.len();
-        Ok(Emit::operations(vec![Fem2dOperation::SetSection { index, section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetSection { index, section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy } }]))
     }
 }
 //#endregion 🔖️AddSection
@@ -127,11 +127,11 @@ pub mod add_support {
         pub fixed: Vec<FemDof>,
     }
 
-    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
         let index = projection.supports.len();
-        Ok(Emit::operations(vec![Fem2dOperation::SetSupport { index, support: FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetSupport { index, support: FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
     }
 }
 //#endregion 🔖️AddSupport
@@ -152,13 +152,13 @@ pub mod add_region {
         pub mesh_size: Option<f64>,
     }
 
-    pub fn handle(payload: &AddRegion, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddRegion, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.regions.iter().map(|r| r.id.clone()), "r");
         let index = projection.regions.len();
         let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.height], [payload.x, payload.y + payload.height]];
         let region = FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: payload.thickness.unwrap_or(0.02), material_id: payload.material_id.clone(), mesh_size: payload.mesh_size.unwrap_or(0.25) };
-        Ok(Emit::operations(vec![Fem2dOperation::SetRegion { index, region }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetRegion { index, region }]))
     }
 }
 //#endregion 🔖️AddRegion
@@ -174,7 +174,7 @@ mod tests {
     fn add_node_action_emits_op_2d() {
         let mut app = fem2d_app();
         let result = dispatch(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0 }));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.mutations.len(), 1);
         assert_eq!(app.projection().expect("projection").nodes.last().expect("node added").x, 1.0);
     }
 

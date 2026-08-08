@@ -1,8 +1,8 @@
 //! 🖼️ CAD play app commands — the per-pane reference overlays: patch, select, hover.
 
-use crate::apps::cad::config::{CadConfig, CadConfigOperation};
+use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::op::CadOperation;
+use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ pub mod patch_cad_play_reference {
         pub delta: Option<f64>,
     }
 
-    pub fn handle(payload: &PatchCadPlayReference, doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchCadPlayReference, doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.projection;
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
         let delta_json = payload.delta.map(|entry| json!(entry));
@@ -45,7 +45,7 @@ pub mod patch_cad_play_reference {
             }),
         };
         match patch {
-            Some(patch) => Ok(Emit::operations(vec![CadOperation::PatchReference { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), patch }])),
+            Some(patch) => Ok(Emit::mutations(vec![CadMutation::PatchReference { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), patch }])),
             None => Ok(Emit::default()),
         }
     }
@@ -64,7 +64,7 @@ pub mod set_reference_selection {
         pub reference_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetReferenceSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetReferenceSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.model_definition_id.as_deref().and_then(cad_pane_from_model_definition_id)).unwrap_or(CadPaneId::Shape);
         runtime.selected_reference_model_definition_id = Some(pane_id.model_definition_id().into());
@@ -90,7 +90,7 @@ pub mod reference_hover {
         pub reference_id: Option<String>,
     }
 
-    pub fn handle(payload: &ReferenceHover, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &ReferenceHover, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.hovered_object_id = payload.reference_id.as_deref().map(|id| format!("reference:{id}"));
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.projection)]))

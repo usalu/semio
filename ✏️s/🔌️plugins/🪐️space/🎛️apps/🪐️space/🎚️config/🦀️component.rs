@@ -1,5 +1,5 @@
 //! ⚙️ S Studio app — `DocumentApp::Config` + its operation enum (constitutional: engine + op, merged
-//! at app level: `Config`/`ConfigOperation` are inherently app-scoped, and this app owns no
+//! at app level: `Config`/`ConfigMutation` are inherently app-scoped, and this app owns no
 //! document-side artifact — see `🦀️component.rs`'s module doc for why).
 
 use crate::apps::space::S_PLAY_CATALOGUE_TAB_ID;
@@ -180,16 +180,16 @@ store::impl_whole_record_config!(SpaceConfig);
 /// @emoji 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, plus a generic
 /// `Snapshot` every variant's `backwards()` returns: a config-only dispatch is a plain `Apply` (not an
 /// `AmendLast`), so each tick is its own distinct, real config edit and "undo this tick" is exactly
-/// "restore the whole-config snapshot from just before it". `Operation::Diff` is the WHOLE `SpaceConfig`,
+/// "restore the whole-config snapshot from just before it". `Mutation::Diff` is the WHOLE `SpaceConfig`,
 /// not a granular patch type.
 // 🧯️ `large_enum_variant`: `Snapshot` deliberately carries the WHOLE `SpaceConfig` while every other row
 // carries one or two scalars — that whole-config snapshot IS the inverse mechanism every variant's
 // `backwards()` returns. Boxing it would change the derived `dsl::DslOps` wire encoding, which this
 // migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as
-// block3d's `Block3dConfigOperation`/gis's `Gis2dConfigOperation`).
+// block3d's `Block3dConfigMutation`/gis's `Gis2dConfigMutation`).
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum SpaceConfigOperation {
+pub enum SpaceConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -233,7 +233,7 @@ pub enum SpaceConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for SpaceConfigOperation {
+impl protocol::OpText for SpaceConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -247,7 +247,7 @@ impl protocol::OpText for SpaceConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -258,7 +258,7 @@ impl protocol::OpText for SpaceConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for SpaceConfigOperation {
+impl protocol::OpBinary for SpaceConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -304,42 +304,42 @@ impl protocol::OpBinary for SpaceConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl protocol::Operation<SpaceConfig> for SpaceConfigOperation {
+impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
     type Diff = SpaceConfig;
 
     fn diff(&self, base: &SpaceConfig) -> SpaceConfig {
         let mut next = base.clone();
         match self {
-            SpaceConfigOperation::Snapshot { config } => return config.clone(),
-            SpaceConfigOperation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
-            SpaceConfigOperation::SetHover { node_id } => next.hovered_node_id = node_id.clone(),
-            SpaceConfigOperation::SetActiveNode { node_id } => next.active_node_id = node_id.clone(),
-            SpaceConfigOperation::SetFocusedNode { node_id } => next.focused_node_id = node_id.clone(),
-            SpaceConfigOperation::SetClipboard { node_ids } => next.clipboard_node_ids = node_ids.clone(),
-            SpaceConfigOperation::SetCollapsed { node_ids } => next.collapsed_node_ids = node_ids.clone(),
-            SpaceConfigOperation::SetPreviewOff { node_ids } => next.preview_off_node_ids = node_ids.clone(),
-            SpaceConfigOperation::SetCamera { window_id, camera } => {
+            SpaceConfigMutation::Snapshot { config } => return config.clone(),
+            SpaceConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
+            SpaceConfigMutation::SetHover { node_id } => next.hovered_node_id = node_id.clone(),
+            SpaceConfigMutation::SetActiveNode { node_id } => next.active_node_id = node_id.clone(),
+            SpaceConfigMutation::SetFocusedNode { node_id } => next.focused_node_id = node_id.clone(),
+            SpaceConfigMutation::SetClipboard { node_ids } => next.clipboard_node_ids = node_ids.clone(),
+            SpaceConfigMutation::SetCollapsed { node_ids } => next.collapsed_node_ids = node_ids.clone(),
+            SpaceConfigMutation::SetPreviewOff { node_ids } => next.preview_off_node_ids = node_ids.clone(),
+            SpaceConfigMutation::SetCamera { window_id, camera } => {
                 next.camera.insert(window_id.clone(), *camera);
             }
-            SpaceConfigOperation::SetWorkflowEngagementInput { value } => next.workflow_engagement_input = value.clone(),
-            SpaceConfigOperation::SetCompiledDagEngagementInput { value } => next.compiled_dag_engagement_input = value.clone(),
-            SpaceConfigOperation::SetPendingImport { node_id, format } => {
+            SpaceConfigMutation::SetWorkflowEngagementInput { value } => next.workflow_engagement_input = value.clone(),
+            SpaceConfigMutation::SetCompiledDagEngagementInput { value } => next.compiled_dag_engagement_input = value.clone(),
+            SpaceConfigMutation::SetPendingImport { node_id, format } => {
                 next.pending_import_node_id = node_id.clone();
                 next.pending_import_format = format.clone();
             }
-            SpaceConfigOperation::SetSpaceId { space_id } => next.space_id = space_id.clone(),
-            SpaceConfigOperation::SetClient { client_id, client_name } => {
+            SpaceConfigMutation::SetSpaceId { space_id } => next.space_id = space_id.clone(),
+            SpaceConfigMutation::SetClient { client_id, client_name } => {
                 next.client_id = client_id.clone();
                 next.client_name = client_name.clone();
             }
-            SpaceConfigOperation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
-            SpaceConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            SpaceConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
+            SpaceConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &SpaceConfig) -> Vec<Self> {
-        vec![SpaceConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &SpaceConfig) -> Vec<Self> {
+        vec![SpaceConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -350,14 +350,14 @@ mod tests {
     use super::*;
     use crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW;
     use crate::apps::space::S_PLAY_PARAMETERS_TAB_ID;
-    use protocol::Operation;
+    use protocol::Mutation;
 
-    fn round_trip(config: &SpaceConfig, operation: &SpaceConfigOperation) -> SpaceConfig {
-        let forward = vcs::apply_operation(config, operation);
-        let backwards = operation.backwards(config);
+    fn round_trip(config: &SpaceConfig, operation: &SpaceConfigMutation) -> SpaceConfig {
+        let forward = vcs::apply_mutation(config, operation);
+        let backwards = operation.inverse(config);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = vcs::apply_operation(&restored, back);
+            restored = vcs::apply_mutation(&restored, back);
         }
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
         forward
@@ -380,7 +380,7 @@ mod tests {
     #[test]
     fn set_selection_round_trips() {
         let config = SpaceConfig::default();
-        let operation = SpaceConfigOperation::SetSelection { node_ids: vec!["node-1".into(), "node-2".into()] };
+        let operation = SpaceConfigMutation::SetSelection { node_ids: vec!["node-1".into(), "node-2".into()] };
         let next = round_trip(&config, &operation);
         assert_eq!(next.selected_node_ids, vec!["node-1".to_string(), "node-2".to_string()]);
     }
@@ -389,7 +389,7 @@ mod tests {
     fn set_camera_round_trips_and_keys_by_window_id() {
         let config = SpaceConfig::default();
         let camera = SpaceWindowCamera { x: 12.0, y: -4.0, zoom: 2.0 };
-        let operation = SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera };
+        let operation = SpaceConfigMutation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera };
         let next = round_trip(&config, &operation);
         assert_eq!(next.camera.get(S_PLAY_WINDOW_WORKFLOW), Some(&camera));
     }
@@ -397,31 +397,31 @@ mod tests {
     #[test]
     fn set_active_panel_tab_round_trips() {
         let config = SpaceConfig::default();
-        let operation = SpaceConfigOperation::SetActivePanelTab { tab_id: S_PLAY_PARAMETERS_TAB_ID.into() };
+        let operation = SpaceConfigMutation::SetActivePanelTab { tab_id: S_PLAY_PARAMETERS_TAB_ID.into() };
         let next = round_trip(&config, &operation);
         assert_eq!(next.active_panel_tab, S_PLAY_PARAMETERS_TAB_ID);
     }
 
     #[test]
     fn space_config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::Snapshot { config: SpaceConfig::default() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetHover { node_id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetHover { node_id: None });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetActiveNode { node_id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetFocusedNode { node_id: None });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetClipboard { node_ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetCollapsed { node_ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetPreviewOff { node_ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetCamera { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetWorkflowEngagementInput { value: "draw draw".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetCompiledDagEngagementInput { value: "".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetPendingImport { node_id: Some("a".into()), format: Some("dwg".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetPendingImport { node_id: None, format: None });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetSpaceId { space_id: Some("demo".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetClient { client_id: Some("c1".into()), client_name: Some("Ada".into()) });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetLocale { value: "de".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::Snapshot { config: SpaceConfig::default() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: None });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActiveNode { node_id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetFocusedNode { node_id: None });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClipboard { node_ids: vec!["a".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCollapsed { node_ids: vec!["a".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPreviewOff { node_ids: vec!["a".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCamera { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "draw draw".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCompiledDagEngagementInput { value: "".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport { node_id: Some("a".into()), format: Some("dwg".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId { space_id: Some("demo".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClient { client_id: Some("c1".into()), client_name: Some("Ada".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetLocale { value: "de".into() });
     }
 
     #[test]

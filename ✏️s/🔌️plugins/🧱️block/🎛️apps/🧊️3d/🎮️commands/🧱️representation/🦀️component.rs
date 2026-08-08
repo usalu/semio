@@ -1,8 +1,8 @@
 //! 🧱️ Block 3D play app commands — add/remove/patch a representation (mesh at a LOD/tag combination).
 
 pub mod add_representation {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use crate::BlockRepresentation;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -12,16 +12,16 @@ pub mod add_representation {
     #[dsl(keyword = "addRepresentation")]
     pub struct AddRepresentation {}
 
-    pub fn handle(_payload: &AddRepresentation, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
+    pub fn handle(_payload: &AddRepresentation, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         let id = crate::artifacts::block3d::engine::next_id(doc.projection.representations.iter().map(|representation| representation.id.as_str()), "representation-");
         let representation = BlockRepresentation { id: id.clone(), name: id, mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
-        Ok(Emit::operations(vec![Block3dOperation::SetRepresentation { index: doc.projection.representations.len(), representation }]))
+        Ok(Emit::mutations(vec![Block3dMutation::SetRepresentation { index: doc.projection.representations.len(), representation }]))
     }
 }
 
 pub mod remove_representation {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -32,14 +32,14 @@ pub mod remove_representation {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveRepresentation, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![Block3dOperation::RemoveRepresentation { id: payload.id.clone() }]))
+    pub fn handle(payload: &RemoveRepresentation, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![Block3dMutation::RemoveRepresentation { id: payload.id.clone() }]))
     }
 }
 
 pub mod patch_representation {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -52,7 +52,7 @@ pub mod patch_representation {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRepresentation, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchRepresentation, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         let Some(index) = doc.projection.representations.iter().position(|representation| representation.id == payload.id) else {
             return Ok(Emit::default());
         };
@@ -62,6 +62,6 @@ pub mod patch_representation {
             "meshUrl" | "mesh_url" => representation.mesh_url = if payload.value.is_empty() { None } else { Some(payload.value.clone()) },
             _ => return Ok(Emit::default()),
         }
-        Ok(Emit::operations(vec![Block3dOperation::SetRepresentation { index, representation }]))
+        Ok(Emit::mutations(vec![Block3dMutation::SetRepresentation { index, representation }]))
     }
 }

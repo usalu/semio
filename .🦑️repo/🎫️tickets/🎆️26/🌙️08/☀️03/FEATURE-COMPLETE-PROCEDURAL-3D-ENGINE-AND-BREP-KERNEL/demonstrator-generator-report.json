@@ -1,0 +1,40 @@
+{
+  "modeClicked": "Generieren",
+  "addGen": "clicked-id",
+  "snap": {
+    "hasWorld": true,
+    "meshCount": 10,
+    "meshEdges": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "meshPositions": [
+      72,
+      72,
+      72,
+      72,
+      288,
+      288,
+      288,
+      72,
+      72,
+      72
+    ],
+    "layoutErr": null,
+    "hasGenerations": true,
+    "hasForm": true,
+    "hasPreview": true,
+    "hasGeneration1": true,
+    "hasHeight": true,
+    "generateRenderfehler": false,
+    "bodyText": "Der Ablauf-Editor\nÜberspringen\n\nIm Generator entwerfen Sie parametrische Abläufe für Baukomponenten. Zoomen Sie mit dem Mausrad, verschieben Sie mit Mittelklick ziehen und orbitieren Sie mit Alt + Rechtsklick ziehen.\n\nZoomen (Mausrad)\nVerschieben (Mittelklick ziehen)\nOrbitieren (Alt + Rechtsklick ziehen)\n1 / 2\nDokument\nKatalog\nInspektion\nVollbild\nsemio · procedural · 3d\nBeispiel\nSechseckige Pilzsäule\nBearbeiten\nGenerieren\nGenerationen\nFokussieren\nSchließen\nGENERATIONS\nGeneration 1 3 values\nACTIO"
+  }
+}

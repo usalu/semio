@@ -1,4 +1,4 @@
-//! 🔺️ Draw artifact — diff structs + `OperationDiff` impl (constitutional: diff).
+//! 🔺️ Draw artifact — diff structs + `MutationDiff` impl (constitutional: diff).
 
 
 //#region 📖️SemioGrammar
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::draw::engine::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree};
 use crate::artifacts::draw::{DrawDocument, DrawLayerNode};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
@@ -48,7 +48,7 @@ pub struct DrawDiff {
     pub layers_added: Vec<DrawLayerTreeAdd>,
 }
 
-impl OperationDiff<DrawDocument> for DrawDiff {
+impl MutationDiff<DrawDocument> for DrawDiff {
     fn apply(&self, projection: &DrawDocument) -> DrawDocument {
         let mut next = projection.clone();
         if let Some(document) = &self.document {

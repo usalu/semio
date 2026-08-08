@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dProjection};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Collections
@@ -91,7 +91,7 @@ pub(crate) fn puzzle5d_diff_absorb(diff: &mut Puzzle5dDiff, other: Puzzle5dDiff)
     }
 }
 
-impl OperationDiff<Puzzle5dProjection> for Puzzle5dDiff {
+impl MutationDiff<Puzzle5dProjection> for Puzzle5dDiff {
     fn apply(&self, projection: &Puzzle5dProjection) -> Puzzle5dProjection {
         if let Some(document) = &self.document {
             return document.clone();

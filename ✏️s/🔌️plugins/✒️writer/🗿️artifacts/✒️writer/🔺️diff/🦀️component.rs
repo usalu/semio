@@ -1,7 +1,7 @@
 //! 🔺️ Writer artifact — the operation diff (constitutional: diff).
 
 use crate::artifacts::writer::WriterProjection;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
@@ -20,7 +20,7 @@ pub struct WriterDiff {
     pub document: Option<WriterProjection>,
 }
 
-impl OperationDiff<WriterProjection> for WriterDiff {
+impl MutationDiff<WriterProjection> for WriterDiff {
     fn apply(&self, projection: &WriterProjection) -> WriterProjection {
         if let Some(document) = &self.document {
             return document.clone();

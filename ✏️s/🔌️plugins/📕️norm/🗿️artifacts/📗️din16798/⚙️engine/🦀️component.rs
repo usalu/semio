@@ -13,6 +13,7 @@
 //! category checks in `part_13`/`part_1` respectively).
 
 use crate::artifacts::din16798::Document;
+use crate::artifacts::din16798::mutations::Din16798Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, OccupancyType, Quantity};
 
 // #region 🔖️Part1
@@ -862,7 +863,7 @@ pub struct DinEn16798Family;
 
 impl NormFamily for DinEn16798Family {
     type Document = Document;
-    type Operation = crate::document::SetDocumentOperation<Document>;
+    type Mutation = Din16798Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinEn16798
@@ -872,6 +873,45 @@ impl NormFamily for DinEn16798Family {
         evaluate(document)
     }
 }
+
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent Din16798 artifact engine — owns the projection; every transition is a mutation.
+pub struct Din16798Engine {
+    projection: Document,
+}
+
+impl Din16798Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for Din16798Engine {
+    type Projection = Document;
+    type Mutation = Din16798Mutation;
+    type Diff = crate::artifacts::din16798::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = NormHost<DinEn16798Family>;
 // #endregion 🔖️Session

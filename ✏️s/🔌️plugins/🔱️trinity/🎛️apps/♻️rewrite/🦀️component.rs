@@ -2,16 +2,16 @@
 //!
 //! 📌️ Pure-trait `DocumentApp`: `TrinityRewritePlayApp` is a unit struct; every former
 //! `RewritePlayRuntime` field (selection, hover/select var, camera, LOD, …) lives in
-//! `config::RewriteConfig`, written via `config::RewriteConfigOperation`s. Every rule/parameter/
-//! before-fixture mutation flows through the single LWW `RewriteRuleOperation::SetState`. The
+//! `config::RewriteConfig`, written via `config::RewriteConfigMutation`s. Every rule/parameter/
+//! before-fixture mutation flows through the single LWW `RewriteRuleMutation::SetState`. The
 //! `TrinityRewriteCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 
 use crate::artifacts::jack::{Camera, GraphFixture, Node, PropertyValue};
 use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
-use crate::artifacts::rewrite::op::RewriteRuleOperation;
+use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::{LayoutPoint, RewriteRuleModel, REWRITE_RULE_SCHEMA};
-use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigOperation};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigMutation};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaType, NodeGraphViewport, PanelGroup, SurfaceKind, UiNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -379,7 +379,7 @@ pub enum TrinityRewriteCommand {
     #[dsl(key = "patch-nodes")]
     PatchNodes { node_ids: Vec<String>, field: String, value: String },
 
-    // 👁️ Config-only — was ephemeral `RewritePlayRuntime` state, now emits `config_operations`.
+    // 👁️ Config-only — was ephemeral `RewritePlayRuntime` state, now emits `config_mutations`.
     #[dsl(key = "set-selection")]
     SetSelection { ids: Vec<String>, surface_id: Option<String> },
     #[dsl(key = "node-graph-hover")]
@@ -415,7 +415,7 @@ impl protocol::OpText for TrinityRewriteCommand {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -480,11 +480,11 @@ pub struct TrinityRewritePlayApp;
 
 impl DocumentApp for TrinityRewritePlayApp {
     type Projection = RewriteRuleModel;
-    type Operation = RewriteRuleOperation;
+    type Mutation = RewriteRuleMutation;
     type Config = RewriteConfig;
-    type ConfigOperation = RewriteConfigOperation;
+    type ConfigMutation = RewriteConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = TrinityRewriteCommand;
 
@@ -504,14 +504,14 @@ impl DocumentApp for TrinityRewritePlayApp {
         Some(rewrite_io())
     }
 
-    fn whole_document_operation(projection: RewriteRuleModel) -> Option<RewriteRuleOperation> {
-        Some(RewriteRuleOperation::SetState { state: projection })
+    fn whole_document_operation(projection: RewriteRuleModel) -> Option<RewriteRuleMutation> {
+        Some(RewriteRuleMutation::SetState { state: projection })
     }
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
     /// working graph. `"document:in"` reimplements the default `DocumentApp::import_media` body for
     /// the rule document itself.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteRuleModel>) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteRuleModel>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "graph:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -522,7 +522,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 let fixture_json = fixture.to_json().map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let mut next = doc.projection.clone();
                 next.before_fixture_json = fixture_json;
-                Ok(Emit::operations(vec![RewriteRuleOperation::SetState { state: next }]))
+                Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
             }
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -531,7 +531,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let projection = <RewriteRuleModel as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
-                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
             }
@@ -580,7 +580,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.projection;
         let config = cfg.projection;
         match command {
@@ -736,14 +736,14 @@ pub fn create_rewrite_app() -> App {
                 TRINITY_REWRITE_PLAY_BODY_INSPECTION,
             )
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("addRuleClause", LocalizedLabel::native("Add Rule Clause", "Regelklausel hinzufügen"), ActionKind::Operation).with_category("create"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("resetRule", LocalizedLabel::native("Reset Rule", "Regel zurücksetzen"), ActionKind::Operation).with_category("history"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Operation).with_category("settings"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Operation).with_category("transform"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Operation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("addRuleClause", LocalizedLabel::native("Add Rule Clause", "Regelklausel hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("resetRule", LocalizedLabel::native("Reset Rule", "Regel zurücksetzen"), ActionKind::Mutation).with_category("history"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Mutation).with_category("settings"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Mutation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("transform"))
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Operation).with_category("tools") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Operation).with_category("tools") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
             // 👁️ Ephemeral view state — selection, hover, text cursor, recompute/layout, LOD.
             .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View).with_category("selection"))
             .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphHover", LocalizedLabel::native("Hover Graph Node", "Graph-Knoten hovern"), ActionKind::View).with_category("hand"))
@@ -845,11 +845,11 @@ mod tests {
     }
 
     #[test]
-    fn set_viewport_writes_before_pane_config_camera_without_document_operations() {
+    fn set_viewport_writes_before_pane_config_camera_without_document_mutations() {
         let mut app = new_app();
         let before_state = app.projection().unwrap();
         let result = app.dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: serde_json::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local")).expect("viewport");
-        assert!(result.operations.is_empty(), "camera is a config-only command, no document operations");
+        assert!(result.mutations.is_empty(), "camera is a config-only command, no document operations");
         assert_eq!(app.projection().unwrap(), before_state, "document is untouched by a viewport pan");
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&before).unwrap().contains("2.5"), "render reads the live config camera");
@@ -883,7 +883,7 @@ mod tests {
     fn set_parameter_emits_one_op_and_is_undoable() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityRewriteCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).expect("set parameter");
-        assert_eq!(result.operations.len(), 1, "a parameter edit is a single SetState operation");
+        assert_eq!(result.mutations.len(), 1, "a parameter edit is a single SetState operation");
         assert_eq!(app.projection().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("changed".into())));
         app.handle_action("undo", None, &meta("local")).expect("undo");
         assert_eq!(app.projection().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
@@ -898,7 +898,7 @@ mod tests {
         app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["rhs-set-1".into()], surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_RHS.into()) }, &meta("local")).expect("select");
         let result =
             app.dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: serde_json::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local")).expect("delete selection");
-        assert!(!result.operations.is_empty());
+        assert!(!result.mutations.is_empty());
         let rhs: Rhs = serde_json::from_str(&app.projection().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 1);
     }
@@ -907,7 +907,7 @@ mod tests {
     fn jack_view_has_occurrences_after_select() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityRewriteCommand::TextSelect { var: Some("a".into()), start: None }, &meta("local")).expect("text select");
-        assert!(result.operations.is_empty(), "text selection is a config-only command, no document operations");
+        assert!(result.mutations.is_empty(), "text selection is a config-only command, no document operations");
         let node = app.render(TRINITY_REWRITE_PLAY_BODY_JACK, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("occurrencesJson"));
     }

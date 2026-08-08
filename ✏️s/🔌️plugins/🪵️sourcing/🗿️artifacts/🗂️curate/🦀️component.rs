@@ -124,6 +124,8 @@ pub struct CurateDocument {
     #[dsl(table)]
     pub curated: Vec<CuratedItem>,
 }
+
+pub type SourcingDocument = CurateDocument;
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for CurateDocument {

@@ -12,8 +12,10 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate flow;
+pub use flow::playbook;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<FlowOperation, FlowConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<FlowMutation, FlowConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -32,6 +34,42 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🌊️flow/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod widgets {
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/🧩widgets/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/🧩widgets/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod synapses {
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/🔗synapses/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/🔗synapses/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_layout {
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📐set-layout/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📐set-layout/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_fixture {
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📄set-fixture/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌊️flow/🧬️mutations/📄set-fixture/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🌊️flow/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🌊️flow/🎒️pack/🦀️component.rs"]

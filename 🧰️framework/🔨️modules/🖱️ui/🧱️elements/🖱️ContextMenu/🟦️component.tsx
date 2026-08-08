@@ -22,11 +22,6 @@ import { floatingMenuItemClass, ContextMenuChrome, formatKeybindingShortcut } fr
 const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
 const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs text-muted-foreground tabular-nums";
 
-/** @emoji 🪟️ Context-menu surface — window-chrome wrapper around menu rows; caps height like {@link CommandList} so long/grouped menus scroll instead of overflowing the viewport. */
-function contextMenuContentClassName(...extra: Array<string | false | null | undefined>): string {
-  return cn("z-menu w-auto min-w-[10rem] max-h-layout-command overflow-y-auto", ...extra);
-}
-
 /** @emoji 🪟️ Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
 function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
   return cn(

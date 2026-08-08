@@ -1,0 +1,12 @@
+{
+  "id": "26/08/07/OPERATIONS-TO-MUTATIONS-AND-ARTIFACT-ENGINES",
+  "title": "Operations To Mutations And Artifact Engines",
+  "status": "closed",
+  "goal": "AI-OPTIMIZED-REPO",
+  "due": "2026-08-07",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "description": "Rename document Operation to Mutation with no legacy; decompose each artifact operation enum into per-mutation folders (mutation/diff/inverse); make every artifact engine a UI-independent state machine whose transitions are mutations. Keep \ud83d\udd27\ufe0fop as the compact handcrafted grammar for mutations.",
+  "summary": "Wave 6 complete: zero document-mutation Operation leftovers in framework+plugins+hub. Also renamed AppBuilder.operation\u2192mutation, BackboneMessage/DocumentEvent Operations\u2192Mutations, apply_operations\u2192apply_mutations. Kernel check green; lowpoly 138 tests green; registry generate refreshed launch.json. verify-gate/policy/registry-check exit 1 on residual TS stub/path breaches (documented). AGENTS.md Operation mentions listed only. compose/ still uses OperationEnvelope (out of scope).",
+  "closed": "2026-08-07"
+}

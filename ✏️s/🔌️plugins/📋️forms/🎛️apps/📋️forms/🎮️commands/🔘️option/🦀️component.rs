@@ -1,16 +1,16 @@
 //! 🔘️ Forms play app commands — question option lifecycle (patch / add / remove), for `single`/`multi`
 //! question kinds.
 
-use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::parse_value_json;
 use crate::artifacts::forms::engine::{create_form_id, update_block_operation};
-use crate::artifacts::forms::{op::FormOperation, FormQuestionOption, FormSpec};
+use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️Shell
-fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormOperation> {
+fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
@@ -22,7 +22,7 @@ fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str,
     })
 }
 
-fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Option<FormOperation> {
+fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Option<FormMutation> {
     let value = create_form_id("opt");
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
@@ -31,7 +31,7 @@ fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Optio
     })
 }
 
-fn remove_question_option(spec: &FormSpec, question_id: &str, option_value: &str) -> Option<FormOperation> {
+fn remove_question_option(spec: &FormSpec, question_id: &str, option_value: &str) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         options.retain(|entry| entry.value != option_value);
@@ -53,10 +53,10 @@ pub mod patch_question_options {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &PatchQuestionOptions, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchQuestionOptions, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.projection;
         let raw_value = parse_value_json(&payload.value_json);
-        let operations: Vec<FormOperation> = payload.question_ids.iter().filter_map(|question_id| patch_question_option(spec, question_id, &payload.option_value, &payload.field, &raw_value)).collect();
+        let operations: Vec<FormMutation> = payload.question_ids.iter().filter_map(|question_id| patch_question_option(spec, question_id, &payload.option_value, &payload.field, &raw_value)).collect();
         if operations.is_empty() {
             return Ok(Emit::default());
         }
@@ -76,9 +76,9 @@ pub mod add_question_option {
         pub label: String,
     }
 
-    pub fn handle(payload: &AddQuestionOption, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &AddQuestionOption, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         match add_question_option(doc.projection, &payload.question_id, &payload.label) {
-            Some(operation) => Ok(Emit::operations(vec![operation])),
+            Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }
     }
@@ -96,9 +96,9 @@ pub mod remove_question_option {
         pub option_value: String,
     }
 
-    pub fn handle(payload: &RemoveQuestionOption, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveQuestionOption, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         match remove_question_option(doc.projection, &payload.question_id, &payload.option_value) {
-            Some(operation) => Ok(Emit::operations(vec![operation])),
+            Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }
     }

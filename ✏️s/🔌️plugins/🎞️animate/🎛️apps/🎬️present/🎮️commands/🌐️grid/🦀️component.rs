@@ -1,8 +1,8 @@
 //! 🌐️ Animate present app commands — grid seeding: seed-grid, reset-grid, clear-tiles.
 
-use crate::apps::present::config::{PresentConfig, PresentConfigOperation};
+use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
-use crate::artifacts::present::op::PresentOperation;
+use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentDeck;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,11 +18,11 @@ pub mod seed_grid {
         pub columns: u32,
     }
 
-    pub fn handle(payload: &SeedGrid, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &SeedGrid, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-        Ok(Emit { document_operations: vec![PresentOperation::SetTiles { tiles }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: selected }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![PresentMutation::SetTiles { tiles }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
     }
 }
 //#endregion 🔖️SeedGrid
@@ -39,11 +39,11 @@ pub mod reset_grid {
     #[dsl(keyword = "reset-grid")]
     pub struct ResetGrid {}
 
-    pub fn handle(_payload: &ResetGrid, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(_payload: &ResetGrid, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-        Ok(Emit { document_operations: vec![PresentOperation::SetTiles { tiles }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: selected }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![PresentMutation::SetTiles { tiles }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
     }
 }
 //#endregion 🔖️ResetGrid
@@ -56,8 +56,8 @@ pub mod clear_tiles {
     #[dsl(keyword = "clear-tiles")]
     pub struct ClearTiles {}
 
-    pub fn handle(_payload: &ClearTiles, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
-        Ok(Emit { document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
+    pub fn handle(_payload: &ClearTiles, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        Ok(Emit { document_mutations: vec![PresentMutation::SetTiles { tiles: Vec::new() }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️ClearTiles

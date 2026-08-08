@@ -282,7 +282,7 @@ mod tests {
         // 🪚️ Circular saw's realistic 0.065m max cut depth needs a shallower stock than the default 0.24m beam.
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(!result.operations.is_empty(), "circular saw crosscut should be valid against the shrunk stock");
+        assert!(!result.mutations.is_empty(), "circular saw crosscut should be valid against the shrunk stock");
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
         let origin = last.origin.as_ref().expect("origin");
@@ -299,7 +299,7 @@ mod tests {
     fn add_step_via_catalogue_rejected_when_validation_fails() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("tableSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(result.operations.is_empty(), "table saw crosscut should be rejected server-side against oversized stock");
+        assert!(result.mutations.is_empty(), "table saw crosscut should be rejected server-side against oversized stock");
     }
 
     #[test]
@@ -319,7 +319,7 @@ mod tests {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
         let add_result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(!add_result.operations.is_empty());
+        assert!(!add_result.mutations.is_empty());
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.5), text: None }));
         let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
         testkit::dispatch(&mut app, Process3dCommand::SetSelection(crate::apps::process3d::commands::selection::set_selection::SetSelection { id: Some(step_id) }));

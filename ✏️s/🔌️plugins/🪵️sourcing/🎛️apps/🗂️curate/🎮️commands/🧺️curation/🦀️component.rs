@@ -1,15 +1,15 @@
 //! 🧺️ Sourcing curate app commands — curated-set mutations (add/remove/set-count/drag-drop). Distinct
 //! from `crate::apps::curate::modes::curate::windows::curated` (the "Curated" window this pushes into).
 
-use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigOperation};
+use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::artifacts::curate::engine::{curate_delta, curate_set};
-use crate::artifacts::curate::op::SourcingOperation;
+use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-fn set_document(document: CurateDocument) -> Emit<SourcingOperation, SourcingCurateConfigOperation> {
-    Emit::operations(vec![SourcingOperation::SetDocument { document }])
+fn set_document(document: CurateDocument) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
+    Emit::mutations(vec![SourcingMutation::SetDocument { document }])
 }
 
 //#region 🔖️CurateAdd
@@ -22,7 +22,7 @@ pub mod curate_add {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &CurateAdd, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &CurateAdd, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.projection.clone();
         curate_delta(&mut document, &payload.object_id, 1);
         Ok(set_document(document))
@@ -44,7 +44,7 @@ pub mod curate_set_count {
 
     /// 🎚️ The pool/curated tables' count stepper cell dispatches this SAME action for both a relative
     /// drag tick (`delta`) and an absolute typed value (`value`) — `delta` is checked first.
-    pub fn handle(payload: &CurateSetCount, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &CurateSetCount, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.projection.clone();
         if let Some(delta) = payload.delta {
             curate_delta(&mut document, &payload.object_id, delta as i64);
@@ -66,7 +66,7 @@ pub mod curate_remove {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &CurateRemove, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &CurateRemove, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.projection.clone();
         curate_set(&mut document, &payload.object_id, 0);
         Ok(set_document(document))
@@ -85,7 +85,7 @@ pub mod drop_on_pool {
     }
 
     /// 🪂️ Dropping a curated row back onto the pool mirrors `curate_remove`: zero its curated count.
-    pub fn handle(payload: &DropOnPool, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &DropOnPool, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.projection.clone();
         curate_set(&mut document, &payload.object_id, 0);
         Ok(set_document(document))
@@ -103,7 +103,7 @@ pub mod drop_on_curated {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &DropOnCurated, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &DropOnCurated, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.projection.clone();
         curate_delta(&mut document, &payload.object_id, 1);
         Ok(set_document(document))

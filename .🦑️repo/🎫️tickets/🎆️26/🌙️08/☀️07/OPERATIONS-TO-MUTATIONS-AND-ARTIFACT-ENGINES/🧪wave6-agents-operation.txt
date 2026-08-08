@@ -1,0 +1,4 @@
+🧰️framework/🛍️products/💻️os/AGENTS.md:61:# Operation
+🧰️framework/🛍️products/💻️os/🖥️host/AGENTS.md:61:# Operation
+✏️s/🔌️plugins/🌿️vcs/AGENTS.md:12:- **Operation** — stored semantic mutation; defines `diff(pre)` and `backwards(pre)`
+✏️s/🔌️plugins/📖️playbook/AGENTS.md:15:- **ProtocolOp**/**ProtocolDiff** — `vcs::Operation`/`OperationDiff` implementations for add/remove/move step and block, and title updates

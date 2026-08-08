@@ -116,7 +116,7 @@ pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
 use crate::ast::{Assignment, Clause, Expr, Pattern, PatternEdge, PatternNode, Query, QueryResult, QueryResultKind, ReturnItem};
 use math::graph::dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 // #region 🔖️Language
 fn completion_prefix(source: &str, cursor: usize) -> String {

@@ -1,7 +1,7 @@
 dialect protocol
 protocol present.spr
 version 1
-schema animate.present.deck.operation
+schema animate.present.deck.mutation
 start record
 framing record
 record animate.present-add-layer tag 1

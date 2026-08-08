@@ -1,4 +1,4 @@
-//! 🔺️ Block 2D artifact — the operation diff and its `OperationDiff` law, plus the id-keyed collection
+//! 🔺️ Block 2D artifact — the operation diff and its `MutationDiff` law, plus the id-keyed collection
 //! diff plumbing shared with `🔧️op`'s `backwards()` (split out of the old constitutional `op` crate).
 
 
@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::block2d::{Block2dDefinition, Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Collections
@@ -67,7 +67,7 @@ fn apply_block2d_collection_diff<T: Block2dHasId + Clone>(items: &mut Vec<T>, re
     }
 }
 
-/// 🔍️ Reused by `🔧️op`'s `Operation::backwards` to look up a row's pre-operation state.
+/// 🔍️ Reused by `🔧️op`'s `Mutation::inverse` to look up a row's pre-operation state.
 pub(crate) fn block2d_index_of<T: Block2dHasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
 }
@@ -122,7 +122,7 @@ fn block2d_diff_absorb(diff: &mut Block2dDiff, other: Block2dDiff) {
     }
 }
 
-impl OperationDiff<Block2dDefinition> for Block2dDiff {
+impl MutationDiff<Block2dDefinition> for Block2dDiff {
     fn apply(&self, projection: &Block2dDefinition) -> Block2dDefinition {
         if let Some(document) = &self.document {
             return document.clone();

@@ -1,8 +1,8 @@
 //! 👁️ Lowpoly play app command — the show-edges chrome toggle. Config-only.
 
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolyProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -15,8 +15,8 @@ pub mod toggle_show_edges {
     #[dsl(keyword = "toggle-show-edges")]
     pub struct ToggleShowEdges {}
 
-    pub fn handle(_payload: &ToggleShowEdges, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LowpolyConfigOperation::SetShowEdges { value: !cfg.projection.show_edges }]))
+    pub fn handle(_payload: &ToggleShowEdges, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetShowEdges { value: !cfg.projection.show_edges }]))
     }
 }
 //#endregion 🔖️ToggleShowEdges
@@ -31,7 +31,7 @@ mod tests {
     fn toggle_show_edges_emits_config_operation() {
         let mut a = app();
         let result = dispatch(&mut a, LowpolyCommand::ToggleShowEdges(super::toggle_show_edges::ToggleShowEdges {}));
-        assert!(result.operations.is_empty(), "chrome toggle is config-only");
+        assert!(result.mutations.is_empty(), "chrome toggle is config-only");
     }
 }
 //#endregion 🧪️Tests

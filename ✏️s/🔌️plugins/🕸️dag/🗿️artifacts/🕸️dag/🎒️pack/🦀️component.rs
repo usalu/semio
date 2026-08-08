@@ -40,21 +40,21 @@ mod tests {
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `DagOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this file's
+    /// `DagMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing dsl/pack round-trip law (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::dag::op::DagOperation;
+        use crate::artifacts::dag::op::DagMutation;
         use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
         let document = DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() };
-        let mut store: DocumentStore<DagDocument, DagOperation> = DocumentStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::SetNodes { nodes: Vec::new() }], description: None }).expect("apply");
-        let edit: &Edit<DagOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<DagDocument, DagOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        let mut store: DocumentStore<DagDocument, DagMutation> = DocumentStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::SetNodes { nodes: Vec::new() }], description: None }).expect("apply");
+        let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<DagDocument, DagMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

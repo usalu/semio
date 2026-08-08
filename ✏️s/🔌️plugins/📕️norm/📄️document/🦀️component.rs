@@ -1,6 +1,6 @@
 //! 📏️ Norm core: shared quantities, clause identity, compliance results, and national annex selection.
 
-use protocol::{OpBinary, OpText, Operation, OperationDiff, ProtocolError};
+use protocol::{Mutation, MutationDiff, OpBinary, OpText, ProtocolError};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -481,7 +481,7 @@ impl NormFamilyId {
 /// 🧩️ Headless norm family contract: typed document, undoable operations, and compliance evaluation.
 pub trait NormFamily: Send + Sync + 'static {
     type Document: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send;
-    type Operation: Operation<Self::Document> + Clone + PartialEq + Send;
+    type Mutation: Mutation<Self::Document> + Clone + PartialEq + Send;
 
     fn family_id() -> NormFamilyId;
     fn evaluate(document: &Self::Document) -> CheckReport;
@@ -495,7 +495,7 @@ pub struct DocumentDiff<D> {
     pub document: Option<D>,
 }
 
-impl<D: Clone + Default + Serialize + DeserializeOwned> OperationDiff<D> for DocumentDiff<D> {
+impl<D: Clone + Default + Serialize + DeserializeOwned> MutationDiff<D> for DocumentDiff<D> {
     fn apply(&self, projection: &D) -> D {
         self.document.clone().unwrap_or_else(|| projection.clone())
     }
@@ -507,14 +507,14 @@ impl<D: Clone + Default + Serialize + DeserializeOwned> OperationDiff<D> for Doc
     }
 }
 
-/// 📤️ Whole-document replacement operation shared by norm family sessions.
+/// 📤️ Whole-document replacement mutation shared by norm family sessions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-pub enum SetDocumentOperation<D> {
+#[serde(tag = "mutation", rename_all = "camelCase")]
+pub enum SetDocumentMutation<D> {
     SetDocument { document: D },
 }
 
-impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Operation<D> for SetDocumentOperation<D> {
+impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Mutation<D> for SetDocumentMutation<D> {
     type Diff = DocumentDiff<D>;
 
     fn diff(&self, _projection: &D) -> DocumentDiff<D> {
@@ -523,7 +523,7 @@ impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Operation<D>
         }
     }
 
-    fn backwards(&self, projection: &D) -> Vec<Self> {
+    fn inverse(&self, projection: &D) -> Vec<Self> {
         vec![Self::SetDocument { document: projection.clone() }]
     }
 }
@@ -556,8 +556,8 @@ impl<F: NormFamily> NormHost<F> {
         &self.report
     }
 
-    pub fn apply(&mut self, operation: &F::Operation) {
-        self.document = vcs::apply_operation(&self.document, operation);
+    pub fn apply(&mut self, mutation: &F::Mutation) {
+        self.document = vcs::apply_mutation(&self.document, mutation);
         self.report = F::evaluate(&self.document);
     }
 
@@ -613,14 +613,14 @@ fn unescape_op_text_field(value: &str) -> String {
     out
 }
 
-/// ⚡️ One `OpText` implementation shared by every norm family: `SetDocumentOperation<D>`'s only variant
+/// ⚡️ One `OpText` implementation shared by every norm family: `SetDocumentMutation<D>`'s only variant
 /// replaces the whole document, so the op line is `set-document "<escaped D::print_dsl() text>"` — the
 /// (possibly multi-line) DSL text folded onto one physical line via {@link escape_op_text_field}, and
 /// recovered via `D::parse_dsl` after {@link unescape_op_text_field}. Bounded on `store::DocumentDsl` (for
-/// `print_dsl`/`parse_dsl`) plus the same bounds `SetDocumentOperation<D>`'s own `Operation<D>` impl
+/// `print_dsl`/`parse_dsl`) plus the same bounds `SetDocumentMutation<D>`'s own `Mutation<D>` impl
 /// already requires, so every one of the 15 family `Document` types gets this for free the moment it
 /// implements `DocumentDsl`.
-impl<D> OpText for SetDocumentOperation<D>
+impl<D> OpText for SetDocumentMutation<D>
 where
     D: DocumentDsl + Clone + Default + PartialEq + Serialize + DeserializeOwned,
 {
@@ -630,12 +630,12 @@ where
         let quoted = rest.strip_prefix('"').and_then(|value| value.strip_suffix('"')).ok_or_else(|| TextError::new("expected a double-quoted document text field", TextSpan::at(1, 15)))?;
         let document_text = unescape_op_text_field(quoted);
         let document = D::parse_dsl(&document_text)?;
-        Ok(SetDocumentOperation::SetDocument { document })
+        Ok(SetDocumentMutation::SetDocument { document })
     }
 
     fn print_op(&self) -> String {
         match self {
-            SetDocumentOperation::SetDocument { document } => {
+            SetDocumentMutation::SetDocument { document } => {
                 format!("set-document \"{}\"", escape_op_text_field(&document.print_dsl()))
             }
         }
@@ -648,13 +648,13 @@ where
 /// which has no line-boundary to protect). Bounded on `store::DocumentPack` in addition to the
 /// `OpText` impl's bounds — every family `Document` type gets both for free from the same
 /// `#[derive(dsl::DslDocument)]` that already granted `DocumentDsl`.
-impl<D> OpBinary for SetDocumentOperation<D>
+impl<D> OpBinary for SetDocumentMutation<D>
 where
     D: DocumentPack + Clone + Default + PartialEq + Serialize + DeserializeOwned,
 {
     fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
         match self {
-            SetDocumentOperation::SetDocument { document } => {
+            SetDocumentMutation::SetDocument { document } => {
                 let mut out = vec![1u8];
                 out.extend(document.encode_pack());
                 Ok(out)
@@ -668,7 +668,7 @@ where
             return Err(ProtocolError::Malformed { what: "set-document operation", offset: 0, detail: format!("unsupported format {format}") });
         }
         let document = D::decode_pack(&bytes[1..]).map_err(|error| ProtocolError::Malformed { what: "set-document operation", offset: 1, detail: error.to_string() })?;
-        Ok(SetDocumentOperation::SetDocument { document })
+        Ok(SetDocumentMutation::SetDocument { document })
     }
 }
 // #endregion 🔖️OpText
@@ -770,7 +770,7 @@ impl store::DocumentPack for DemoDocument {
 
     impl NormFamily for DemoFamily {
         type Document = DemoDocument;
-        type Operation = SetDocumentOperation<DemoDocument>;
+        type Mutation = SetDocumentMutation<DemoDocument>;
 
         fn family_id() -> NormFamilyId {
             NormFamilyId::En1990
@@ -787,7 +787,7 @@ impl store::DocumentPack for DemoDocument {
     fn norm_host_recomputes_report_after_apply() {
         let mut host = NormHost::<DemoFamily>::default();
         assert!(host.report().checks[0].utilization < 1.0);
-        host.apply(&SetDocumentOperation::SetDocument { document: DemoDocument { value: 2.0 } });
+        host.apply(&SetDocumentMutation::SetDocument { document: DemoDocument { value: 2.0 } });
         assert!(host.report().checks[0].utilization > 1.0);
     }
 
@@ -799,45 +799,45 @@ impl store::DocumentPack for DemoDocument {
 
     #[test]
     fn set_document_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&SetDocumentOperation::SetDocument { document: DemoDocument { value: 4.5 } });
+        store::test_support::assert_op_line_round_trip(&SetDocumentMutation::SetDocument { document: DemoDocument { value: 4.5 } });
     }
 
     #[test]
     fn set_document_operation_op_text_escapes_multiline_dsl_text() {
         // ⚡️ The op-text field wraps the newline `print_dsl` always emits, so this exercises the
         // `\n` escape (not just the general round-trip law already covered above).
-        let printed = SetDocumentOperation::SetDocument { document: DemoDocument { value: 7.0 } }.print_op();
+        let printed = SetDocumentMutation::SetDocument { document: DemoDocument { value: 7.0 } }.print_op();
         assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");
         assert_eq!(printed, "set-document \"value=7\\n\"");
-        let parsed = <SetDocumentOperation<DemoDocument> as OpText>::parse_op(&printed).expect("parse_op");
-        assert_eq!(parsed, SetDocumentOperation::SetDocument { document: DemoDocument { value: 7.0 } });
+        let parsed = <SetDocumentMutation<DemoDocument> as OpText>::parse_op(&printed).expect("parse_op");
+        assert_eq!(parsed, SetDocumentMutation::SetDocument { document: DemoDocument { value: 7.0 } });
     }
 
     #[test]
     fn document_text_round_trips_for_a_norm_family_document() {
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
         let mut store = store::DocumentStore::new(envelope);
-        store.dispatch(store::DocumentCommand::Apply { operations: vec![SetDocumentOperation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![SetDocumentMutation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `SetDocumentOperation<DemoDocument>`'s `Edit` round-trips through
-    /// `protocol::OperationEnvelope`s beside this file's existing pack round-trip law (same pattern
+    /// `SetDocumentMutation<DemoDocument>`'s `Edit` round-trips through
+    /// `protocol::MutationEnvelope`s beside this file's existing pack round-trip law (same pattern
     /// as `dag`'s own `command_envelope_round_trip_holds_for_an_applied_operation`) — proves the law
-    /// once for the shared generic `SetDocumentOperation<D>` bridge (`POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`'s
-    /// `"SetDocumentOperation"` entry), covering every norm family that reuses it.
+    /// once for the shared generic `SetDocumentMutation<D>` bridge (`POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`'s
+    /// `"SetDocumentMutation"` entry), covering every norm family that reuses it.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{DocumentId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
         let mut store = store::DocumentStore::new(envelope);
-        store.dispatch(store::DocumentCommand::Apply { operations: vec![SetDocumentOperation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
-        let edit: &Edit<SetDocumentOperation<DemoDocument>> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<DemoDocument, SetDocumentOperation<DemoDocument>>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![SetDocumentMutation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
+        let edit: &Edit<SetDocumentMutation<DemoDocument>> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<DemoDocument, SetDocumentMutation<DemoDocument>>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

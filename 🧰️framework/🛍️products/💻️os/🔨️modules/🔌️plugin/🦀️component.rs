@@ -87,8 +87,8 @@ pub mod app {
     use semio_framework::{
         clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
-            ActorId, AppEvent, ArtifactKind, CapabilityRequirement, ClipboardError, ClipboardFragment, DocumentDiff, DocumentHandle, DocumentVersion, HostEffect, HybridLogicalTimestamp, InverseOperation, InvocationId, InvocationResult,
-            KernelOperation, OperationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
+            ActorId, AppEvent, ArtifactKind, CapabilityRequirement, ClipboardError, ClipboardFragment, DocumentDiff, DocumentHandle, DocumentVersion, HostEffect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult,
+            KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
         start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, CommandRef, CommandScope, ConfigSpec, Contribution, DialogDefinition, ExampleDefinition,
@@ -565,7 +565,7 @@ pub mod app {
             self
         }
 
-        /// 📇️ Scopes actions to a window kind — references ids declared via `.operation()/.view_action()/.shell_action()`.
+        /// 📇️ Scopes actions to a window kind — references ids declared via `.mutation()/.view_action()/.shell_action()`.
         pub fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, action_ids: Vec<ActionRef>) -> Self {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
@@ -618,8 +618,8 @@ pub mod app {
         }
 
         /// @emoji ✏️ Declares a document-mutating action — dispatched as VCS operations with a true inverse.
-        pub fn operation(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Operation))
+        pub fn mutation(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Mutation))
         }
 
         /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active utility) — not recorded in history.
@@ -703,7 +703,7 @@ pub mod app {
         }
 
         /// @emoji 🧷️ Keybinding-vs-action-registry consistency is only enforced for apps that declare
-        /// actions via `.operation()`/`.view_action()`/`.shell_action()` — apps with an empty action
+        /// actions via `.mutation()`/`.view_action()`/`.shell_action()` — apps with an empty action
         /// registry keybind directly against controller actions instead, so there is nothing to check.
         pub fn build_definition(mut self) -> AppDefinition {
             assert!(!self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty()), "app {} document must contain non-empty segments", self.id);
@@ -1584,12 +1584,23 @@ pub mod app {
         }
 
         /// 🗿️ The taxonomy-shape half of [`assert_constitutional_crates`]: every `🗿️artifacts/<artifact>/`
-        /// carries all five component slots as `🦀️component.rs` leaves, and every `🎛️apps/<app>/` has its
-        /// own `🦀️component.rs`. The Rust-side twin of the registry script's `validateTaxonomyTree`, kept
-        /// here so a plugin's own `cargo test` catches a half-finished migration without waiting for the
-        /// TS gate.
+        /// carries the completeness component slots (incl. `🧬️mutations` + `⚙️engine`) as `🦀️component.rs` leaves,
+        /// and every `🎛️apps/<app>/` has its own `🦀️component.rs`. The Rust-side twin of the registry script's
+        /// `validateTaxonomyTree`, kept here so a plugin's own `cargo test` catches a half-finished migration
+        /// without waiting for the TS gate.
+        ///
+        /// Full `🧬️mutations/<mutation>/{🦠️mutation,🔺️diff,↩️inverse}` triad walking is policy/registry-side
+        /// for now (`validateTaxonomyTree`); this twin only hard-requires the facet leaves themselves.
         fn assert_taxonomy_components(plugin_root: &std::path::Path, app_root: &std::path::Path) {
-            const ARTIFACT_COMPONENTS: [&str; 5] = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"];
+            const ARTIFACT_COMPONENTS: [&str; 7] = [
+                "🧬️mutations",
+                "🔺️diff",
+                "🗣️dsl",
+                "🎒️pack",
+                "🔧️op",
+                "📡️spr",
+                "⚙️engine",
+            ];
             const EXAMPLE_KINDS: [&str; 4] = ["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
             const EXAMPLES: &str = "📚️examples";
             const LEAF: &str = "🦀️component.rs";
@@ -1739,7 +1750,7 @@ pub mod app {
             assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same projection");
         }
 
-        /// 🧪️ The `Operation::reconcile` counterpart to `assert_two_instances_converge`: `command_delete`/
+        /// 🧪️ The `Mutation::reconcile` counterpart to `assert_two_instances_converge`: `command_delete`/
         /// `command_wire` race on two `paired_apps` instances (typically one deletes a graph node, the other
         /// concurrently wires an edge to it), a `commitCheckpoint` pumps each side's inbound operations, then both
         /// sides' post-reconcile `probe` results (`(projection, conflicts)`) must agree, `has_dangling_ref`
@@ -1778,7 +1789,7 @@ pub mod app {
 
             let mut envelopes = Vec::new();
             for message in far.receive().expect("receive") {
-                if let BackboneMessage::Operations { envelopes: operations } = message {
+                if let BackboneMessage::Mutations { envelopes: operations } = message {
                     envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
                 }
             }
@@ -1795,12 +1806,12 @@ pub mod app {
         mod testkit_tests {
             //! 🧪️ Proves each `testkit` primitive against a minimal dummy `DocumentApp` before any real app
             //! adopts them.
-            use super::super::{ConfigView, DraftView, NoConfig, NoConfigOperation, NoDraft, NoDraftOperation};
+            use super::super::{ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation};
             use super::*;
             use crate::app::{DocumentView, Emit};
             use store::EngineHandles;
             use crate::{ui_text, UiNode};
-            use protocol::{Operation, OperationDiff};
+            use protocol::{Mutation, MutationDiff};
             use serde::{Deserialize, Serialize};
 
             #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -1814,7 +1825,7 @@ pub mod app {
                 count: Option<i32>,
             }
 
-            impl OperationDiff<DummyProjection> for DummyDiff {
+            impl MutationDiff<DummyProjection> for DummyDiff {
                 fn apply(&self, projection: &DummyProjection) -> DummyProjection {
                     DummyProjection { count: self.count.unwrap_or(projection.count) }
                 }
@@ -1828,22 +1839,22 @@ pub mod app {
 
             #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
             #[serde(tag = "operation", rename_all = "camelCase")]
-            enum DummyOperation {
+            enum DummyMutation {
                 #[dsl(key = "set-count")]
                 SetCount { value: i32 },
             }
 
-            impl Operation<DummyProjection> for DummyOperation {
+            impl Mutation<DummyProjection> for DummyMutation {
                 type Diff = DummyDiff;
 
                 fn diff(&self, _projection: &DummyProjection) -> DummyDiff {
                     match self {
-                        DummyOperation::SetCount { value } => DummyDiff { count: Some(*value) },
+                        DummyMutation::SetCount { value } => DummyDiff { count: Some(*value) },
                     }
                 }
 
-                fn backwards(&self, projection: &DummyProjection) -> Vec<Self> {
-                    vec![DummyOperation::SetCount { value: projection.count }]
+                fn inverse(&self, projection: &DummyProjection) -> Vec<Self> {
+                    vec![DummyMutation::SetCount { value: projection.count }]
                 }
             }
 
@@ -1860,20 +1871,20 @@ pub mod app {
                 const APP_ID: &'static str = "testkit-dummy";
                 const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
                 type Projection = DummyProjection;
-                type Operation = DummyOperation;
+                type Mutation = DummyMutation;
                 type Config = NoConfig;
-                type ConfigOperation = NoConfigOperation;
+                type ConfigMutation = NoConfigMutation;
                 type Draft = NoDraft;
-                type DraftOperation = NoDraftOperation;
+                type DraftMutation = NoDraftMutation;
                 type Command = DummyCommand;
 
                 fn initial_projection() -> DummyProjection {
                     DummyProjection::default()
                 }
 
-                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyOperation>, Fault> {
+                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {
                     match command {
-                        DummyCommand::Increment => Ok(Emit { document_operations: vec![DummyOperation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+                        DummyCommand::Increment => Ok(Emit { document_mutations: vec![DummyMutation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
                     }
                 }
 
@@ -2068,22 +2079,22 @@ pub mod app {
         #[test]
         fn operation_view_and_shell_actions_are_declared_with_their_kind() {
             let definition =
-                minimal_app("typed-actions-app").operation("addLayer", LocalizedLabel::data("Add Layer")).view_action("setCamera", LocalizedLabel::data("Set Camera")).shell_action("exportPng", LocalizedLabel::data("Export PNG")).build_definition();
+                minimal_app("typed-actions-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).view_action("setCamera", LocalizedLabel::data("Set Camera")).shell_action("exportPng", LocalizedLabel::data("Export PNG")).build_definition();
             let by_id = |id: &str| definition.actions.iter().find(|c| c.id == id).expect("declared");
-            assert_eq!(by_id("addLayer").kind, ActionKind::Operation);
+            assert_eq!(by_id("addLayer").kind, ActionKind::Mutation);
             assert_eq!(by_id("setCamera").kind, ActionKind::View);
             assert_eq!(by_id("exportPng").kind, ActionKind::Shell);
         }
 
         #[test]
         fn build_definition_rejects_duplicate_action_ids() {
-            let result = std::panic::catch_unwind(|| minimal_app("dupe-action-app").operation("addLayer", LocalizedLabel::data("Add Layer")).operation("addLayer", LocalizedLabel::data("Add Layer Again")).build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("dupe-action-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).mutation("addLayer", LocalizedLabel::data("Add Layer Again")).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
         fn build_definition_rejects_keybinding_for_undeclared_action_once_opted_in() {
-            let result = std::panic::catch_unwind(|| minimal_app("undeclared-keybinding-app").operation("addLayer", LocalizedLabel::data("Add Layer")).keybinding("mod+l", "removeLayer").build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("undeclared-keybinding-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).keybinding("mod+l", "removeLayer").build_definition());
             assert!(result.is_err());
         }
 
@@ -2152,7 +2163,7 @@ pub mod app {
 
         #[test]
         fn action_args_attaches_declared_arguments() {
-            let definition = minimal_app("args-app").operation("resize", LocalizedLabel::data("Resize")).action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).build_definition();
+            let definition = minimal_app("args-app").mutation("resize", LocalizedLabel::data("Resize")).action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).build_definition();
             let resize = definition.actions.iter().find(|action| action.id == "resize").expect("declared");
             assert_eq!(resize.args.len(), 1);
             assert_eq!(resize.args[0].id, "scale");
@@ -2167,7 +2178,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
-            let result = std::panic::catch_unwind(|| minimal_app("bad-action-ref-app").operation("addLayer", LocalizedLabel::data("Add Layer")).window_kind_actions("main", vec!["removeLayer".into()]).build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("bad-action-ref-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).window_kind_actions("main", vec!["removeLayer".into()]).build_definition());
             assert!(result.is_err());
         }
 
@@ -2176,7 +2187,7 @@ pub mod app {
             use semio_framework::{ActionArgControl, ActionArgDef};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-select-app")
-                    .operation("pick", LocalizedLabel::data("Pick"))
+                    .mutation("pick", LocalizedLabel::data("Pick"))
                     .action_args("pick", vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("choice", LocalizedLabel::data("Choice")) }])
                     .build_definition()
             });
@@ -2286,7 +2297,7 @@ pub mod app {
         fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             let definition = minimal_app("good-intro-app")
-                .operation("addLayer", LocalizedLabel::data("Add Layer"))
+                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
                 .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
                 .window_kind_utilities("main", vec!["brush".into()])
                 .window_kind_actions("main", vec!["addLayer".into()])
@@ -2393,7 +2404,7 @@ pub mod app {
             tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "addLayer".into(), args: None } }];
             tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 20, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] } }];
             tutorial.tracks.gestures = vec![TutorialGestureCue { at: 30, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: window_element_id("main"), offset: None } }, cursor: None }];
-            let definition = minimal_app("good-tutorial-app").operation("addLayer", LocalizedLabel::data("Add Layer")).utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).tutorial(tutorial).build_definition();
+            let definition = minimal_app("good-tutorial-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).tutorial(tutorial).build_definition();
             assert_eq!(definition.tutorials.len(), 1);
             assert_eq!(definition.tutorials[0].id, "good-tour");
         }
@@ -2401,7 +2412,7 @@ pub mod app {
         #[test]
         fn declaring_dialog_appends_to_definition() {
             use semio_framework::{ActionRef, DialogDefinition};
-            let definition = minimal_app("dialog-app").operation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))).build_definition();
+            let definition = minimal_app("dialog-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))).build_definition();
             assert_eq!(definition.dialogs.len(), 1);
             assert_eq!(definition.dialogs[0].id, "addLayer");
             assert_eq!(definition.dialogs[0].submit_label, "OK");
@@ -2412,7 +2423,7 @@ pub mod app {
             use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-app")
-                    .operation("addLayer", LocalizedLabel::data("Add Layer"))
+                    .mutation("addLayer", LocalizedLabel::data("Add Layer"))
                     .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")))
                     .dialog(DialogDefinition::new("addLayer", "Add Layer Again", ActionRef::new("addLayer")))
                     .build_definition()
@@ -2431,7 +2442,7 @@ pub mod app {
         fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
             use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
-                minimal_app("bad-dialog-cancel-app").operation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).build_definition()
+                minimal_app("bad-dialog-cancel-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).build_definition()
             });
             assert!(result.is_err());
         }
@@ -2448,7 +2459,7 @@ pub mod app {
             use semio_framework::{ActionArgDef, ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-arg-app")
-                    .operation("addLayer", LocalizedLabel::data("Add Layer"))
+                    .mutation("addLayer", LocalizedLabel::data("Add Layer"))
                     .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")), ActionArgDef::text("name", LocalizedLabel::data("Name Again"))]))
                     .build_definition()
             });
@@ -2460,7 +2471,7 @@ pub mod app {
             use semio_framework::{ActionArgControl, ActionArgDef, ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-dialog-select-app")
-                    .operation("addLayer", LocalizedLabel::data("Add Layer"))
+                    .mutation("addLayer", LocalizedLabel::data("Add Layer"))
                     .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).args(vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("kind", LocalizedLabel::data("Kind")) }]))
                     .build_definition()
             });
@@ -2708,7 +2719,7 @@ pub mod app {
 
     impl store::ConfigRecord for NoConfig {}
 
-    impl ::protocol::OperationDiff<NoConfig> for NoConfig {
+    impl ::protocol::MutationDiff<NoConfig> for NoConfig {
         fn apply(&self, base: &NoConfig) -> NoConfig {
             base.clone()
         }
@@ -2717,23 +2728,23 @@ pub mod app {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(rename_all = "camelCase")]
-    pub enum NoConfigOperation {
+    pub enum NoConfigMutation {
         Noop,
     }
 
-    impl ::protocol::Operation<NoConfig> for NoConfigOperation {
+    impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
         type Diff = NoConfig;
 
         fn diff(&self, _base: &NoConfig) -> NoConfig {
             NoConfig::default()
         }
 
-        fn backwards(&self, _base: &NoConfig) -> Vec<Self> {
-            vec![NoConfigOperation::Noop]
+        fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
+            vec![NoConfigMutation::Noop]
         }
     }
 
-    impl ::protocol::OpText for NoConfigOperation {
+    impl ::protocol::OpText for NoConfigMutation {
         fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let variants = <Self as ::dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
@@ -2757,7 +2768,7 @@ pub mod app {
         }
     }
 
-    impl ::protocol::OpBinary for NoConfigOperation {
+    impl ::protocol::OpBinary for NoConfigMutation {
         fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
             ::dsl::variants_binary::encode_op(self)
         }
@@ -2770,8 +2781,8 @@ pub mod app {
     //#region 🔖️NoDraft
     /// @emoji 📝️ Default `DocumentApp::Draft` for apps with no draft lane yet.
     pub type NoDraft = NoConfig;
-    /// @emoji 📝️ Default `DocumentApp::DraftOperation` twin of {@link NoDraft}.
-    pub type NoDraftOperation = NoConfigOperation;
+    /// @emoji 📝️ Default `DocumentApp::DraftMutation` twin of {@link NoDraft}.
+    pub type NoDraftMutation = NoConfigMutation;
     //#endregion 🔖️NoDraft
 
     //#region 🔖️CommandLog
@@ -2780,12 +2791,12 @@ pub mod app {
     pub enum HistoryCommandFilter {
         #[default]
         All,
-        WithoutOperations,
-        OnlyOperations,
+        WithoutMutations,
+        OnlyMutations,
     }
 
     /// @emoji ⏪️ A stored, replayable inverse for a `View`/`Shell`-kind command — the memory-only
-    /// counterpart to a VCS edit's `Operation::backwards`. `action_id` is a plugin action id (`View` rows —
+    /// counterpart to a VCS edit's `Mutation::inverse`. `action_id` is a plugin action id (`View` rows —
     /// replayed locally via `dispatch_action`) or a shell command id (`Shell` rows — bubbled out as
     /// `HostEffect::ReplayShellCommand` since the plugin has no access to shell-owned state). Never
     /// persisted: it lives only on the in-memory `CommandLogEntry`/`CommandView`.
@@ -2810,7 +2821,7 @@ pub mod app {
         pub edit_id: Option<String>,
         /// @emoji 🧮️ B1: the CONFIG-store twin of `edit_id` — every CONFIG edit this command created
         /// (the former "View"-kind self-computed `InverseAction` path: a config op carries a real
-        /// `backwards`, so reverting it is a real config-store undo-to-position, not a memory replay). A
+        /// `inverse`, so reverting it is a real config-store undo-to-position, not a memory replay). A
         /// `Vec` (not a single id) because a folded row may accumulate several distinct config edits — one
         /// per fold tick, since a config-only "View" dispatch is a plain `Apply`, not an `AmendLast` (unlike
         /// the document side, which reuses one edit id for a whole coalesced gesture) — `backfill_command_log`
@@ -2819,12 +2830,12 @@ pub mod app {
         /// (touching both stores at once); `revertToCommand` prefers `edit_id` when both are present.
         pub config_edit_ids: Vec<String>,
         /// @emoji 🔢️ How many consecutive identical `View`/`Shell` dispatches folded into this one row —
-        /// see `VcsDocumentApp::record_command`. Always `1` for `Operation`/`History`/`Clipboard` entries
+        /// see `VcsDocumentApp::record_command`. Always `1` for `Mutation`/`History`/`Clipboard` entries
         /// and for anything carrying an `edit_id`, which never fold.
         pub count: u32,
         /// @emoji ⏪️ A real inverse for a `Shell`-kind row with neither `edit_id` nor `config_edit_ids`
         /// (`noteShellCommand`-authored — shell-owned state this plugin cannot touch itself) — see
-        /// `InverseAction`. `None` means this row has no working backwards (not just unauthored/foreign).
+        /// `InverseAction`. `None` means this row has no working inverse (not just unauthored/foreign).
         pub inverse: Option<InverseAction>,
     }
 
@@ -2848,7 +2859,7 @@ pub mod app {
         pub applied: bool,
         /// @emoji ⏪️ Either (document edit-linked) `applied` AND authored by the local actor, (config
         /// edit-linked) the config edit is similarly applied+local, or (memory-only) this row carries a
-        /// stored `inverse` — only these entries offer "backwards".
+        /// stored `inverse` — only these entries offer "inverse".
         pub revertible: bool,
         /// @emoji 🔢️ See `CommandLogEntry::count`.
         pub count: u32,
@@ -2887,7 +2898,7 @@ pub mod app {
 
     fn history_panel_icon_id(kind: ActionKind) -> IconName {
         match kind {
-            ActionKind::Operation => IconName::Pencil,
+            ActionKind::Mutation => IconName::Pencil,
             ActionKind::History => IconName::Undo,
             ActionKind::Clipboard => IconName::Clipboard,
             // 🕶️ View is ephemeral cursor/selection/camera state; Shell is an outside-the-document
@@ -2899,7 +2910,7 @@ pub mod app {
 
     /// @emoji 🕰️ Builds the framework's history panel body from a `HistoryView` as a pure side-panel
     /// `Tree` (same shape as Document/Catalogue): an Actions section (undo/redo/checkpoint/alternative +
-    /// filter control) and a Commands section of newest-first rows with optional "backwards" revert.
+    /// filter control) and a Commands section of newest-first rows with optional "inverse" revert.
     /// Shared by both renderers — `VcsDocumentApp::render` returns this verbatim for
     /// `FRAMEWORK_HISTORY_BODY_KEY`.
     pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool) -> UiNode {
@@ -2925,8 +2936,8 @@ pub mod app {
 
         let filter_value = match history.command_filter {
             HistoryCommandFilter::All => "all",
-            HistoryCommandFilter::WithoutOperations => "withoutOperations",
-            HistoryCommandFilter::OnlyOperations => "onlyOperations",
+            HistoryCommandFilter::WithoutMutations => "withoutMutations",
+            HistoryCommandFilter::OnlyMutations => "onlyMutations",
         };
         let mut filter_item = UiTreeItemNode::base("framework.history.filter", Label::data("Filter"));
         filter_item.icon_id = Some(IconName::Filter);
@@ -2935,8 +2946,8 @@ pub mod app {
             value: filter_value.into(),
             items: vec![
                 UiSelectItem { value: "all".into(), label: Label::data(if is_de { "Alle" } else { "All" }) },
-                UiSelectItem { value: "withoutOperations".into(), label: Label::data(if is_de { "Ohne Operationen" } else { "Without Operations" }) },
-                UiSelectItem { value: "onlyOperations".into(), label: Label::data(if is_de { "Nur Operationen" } else { "Only Operations" }) },
+                UiSelectItem { value: "withoutMutations".into(), label: Label::data(if is_de { "Ohne Operationen" } else { "Without Operations" }) },
+                UiSelectItem { value: "onlyMutations".into(), label: Label::data(if is_de { "Nur Operationen" } else { "Only Operations" }) },
             ],
             placeholder: None,
             on_change: act(SET_HISTORY_COMMAND_FILTER_ACTION_ID, None),
@@ -2949,8 +2960,8 @@ pub mod app {
             .iter()
             .filter(|entry| match history.command_filter {
                 HistoryCommandFilter::All => true,
-                HistoryCommandFilter::WithoutOperations => entry.edit_id.is_none(),
-                HistoryCommandFilter::OnlyOperations => entry.edit_id.is_some(),
+                HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
+                HistoryCommandFilter::OnlyMutations => entry.edit_id.is_some(),
             })
             .take(HISTORY_PANEL_ROW_LIMIT)
             .map(|entry| {
@@ -3001,16 +3012,16 @@ pub mod app {
 
     /// @emoji 📤️ What a pure `DocumentApp::handle` emits: zero-or-more typed document operations (applied
     /// through the document store with a true inverse) and zero-or-more typed config operations (applied
-    /// through the config store, also with a true inverse via `ConfigOperation::backwards` — the config-op
+    /// through the config store, also with a true inverse via `ConfigMutation::inverse` — the config-op
     /// twin of a document op, replacing the old `ActionEmit::inverse`/`InverseAction` ad hoc self-computed
-    /// inverse: a former "View"-kind action now just emits a `ConfigOperation` and gets a real backwards
+    /// inverse: a former "View"-kind action now just emits a `ConfigMutation` and gets a real inverse
     /// for free), plus an optional description/coalesce key for the resulting edit(s), host effects
     /// (navigate/export/spawn…), and app events. `B1` rename: was `ActionEmit`, `operations` renamed
-    /// `document_operations` to sit next to `config_operations` unambiguously.
-    pub struct Emit<Operation, ConfigOperation = NoConfigOperation, DraftOperation = NoDraftOperation> {
-        pub document_operations: Vec<Operation>,
-        pub config_operations: Vec<ConfigOperation>,
-        pub draft_operations: Vec<DraftOperation>,
+    /// `document_mutations` to sit next to `config_mutations` unambiguously.
+    pub struct Emit<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
+        pub document_mutations: Vec<Mutation>,
+        pub config_mutations: Vec<ConfigMutation>,
+        pub draft_mutations: Vec<DraftMutation>,
         pub description: Option<String>,
         pub coalesce_key: Option<String>,
         pub effects: Vec<HostEffect>,
@@ -3020,53 +3031,53 @@ pub mod app {
         pub ui_scope: semio_framework::kernel::UiDirtyScope,
     }
 
-    impl<Operation, ConfigOperation, DraftOperation> Default for Emit<Operation, ConfigOperation, DraftOperation> {
+    impl<Mutation, ConfigMutation, DraftMutation> Default for Emit<Mutation, ConfigMutation, DraftMutation> {
         fn default() -> Self {
-            Self { document_operations: Vec::new(), config_operations: Vec::new(), draft_operations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework::kernel::UiDirtyScope::default() }
+            Self { document_mutations: Vec::new(), config_mutations: Vec::new(), draft_mutations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework::kernel::UiDirtyScope::default() }
         }
     }
 
-    impl<Operation, ConfigOperation, DraftOperation> Emit<Operation, ConfigOperation, DraftOperation> {
-        /// @emoji ✏️ A document-operation emission carrying `document_operations` and nothing else.
-        pub fn operations(document_operations: Vec<Operation>) -> Self {
-            Self { document_operations, ..Default::default() }
+    impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, DraftMutation> {
+        /// @emoji ✏️ A document-operation emission carrying `document_mutations` and nothing else.
+        pub fn mutations(document_mutations: Vec<Mutation>) -> Self {
+            Self { document_mutations, ..Default::default() }
         }
 
         /// @emoji 🔁️ Preview pattern (a): a per-tick coalesced DOCUMENT emission. The `coalesce_key` folds
         /// every tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is
         /// one undo. Use for cheap per-tick document operations. See `🔖️UtilityPreviewContract`.
-        pub fn amend(document_operations: Vec<Operation>, coalesce_key: impl Into<String>) -> Self {
-            Self { document_operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+        pub fn amend(document_mutations: Vec<Mutation>, coalesce_key: impl Into<String>) -> Self {
+            Self { document_mutations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
         }
 
         /// @emoji 📌️ Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
         /// described DOCUMENT edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick
         /// amending would be O(N²) (draw drafts, lowpoly strokes). See `🔖️UtilityPreviewContract`.
-        pub fn commit(document_operations: Vec<Operation>, description: impl Into<String>) -> Self {
-            Self { document_operations, description: Some(description.into()), ..Default::default() }
+        pub fn commit(document_mutations: Vec<Mutation>, description: impl Into<String>) -> Self {
+            Self { document_mutations, description: Some(description.into()), ..Default::default() }
         }
 
-        /// @emoji 🧮️ A config-operation emission carrying `config_operations` and nothing else — the
+        /// @emoji 🧮️ A config-operation emission carrying `config_mutations` and nothing else — the
         /// replacement for a former "View"-kind `ActionEmit::view_with_inverse`: selection/camera/hover/…
-        /// changes now flow through the config store, which computes their real `backwards` itself.
-        pub fn config(config_operations: Vec<ConfigOperation>) -> Self {
-            Self { config_operations, ..Default::default() }
+        /// changes now flow through the config store, which computes their real `inverse` itself.
+        pub fn config(config_mutations: Vec<ConfigMutation>) -> Self {
+            Self { config_mutations, ..Default::default() }
         }
 
-        /// @emoji 📝️ A draft-operation emission carrying `draft_operations` and nothing else.
-        pub fn draft(draft_operations: Vec<DraftOperation>) -> Self {
-            Self { draft_operations, ..Default::default() }
+        /// @emoji 📝️ A draft-operation emission carrying `draft_mutations` and nothing else.
+        pub fn draft(draft_mutations: Vec<DraftMutation>) -> Self {
+            Self { draft_mutations, ..Default::default() }
         }
 
         /// @emoji 🔁️ `amend`'s CONFIG-targeted twin — coalesces one live gesture's ticks into a single
         /// amendable config edit (e.g. a live camera drag).
-        pub fn amend_config(config_operations: Vec<ConfigOperation>, coalesce_key: impl Into<String>) -> Self {
-            Self { config_operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+        pub fn amend_config(config_mutations: Vec<ConfigMutation>, coalesce_key: impl Into<String>) -> Self {
+            Self { config_mutations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
         }
 
         /// @emoji 📌️ `commit`'s CONFIG-targeted twin — a described, non-coalesced config edit.
-        pub fn commit_config(config_operations: Vec<ConfigOperation>, description: impl Into<String>) -> Self {
-            Self { config_operations, description: Some(description.into()), ..Default::default() }
+        pub fn commit_config(config_mutations: Vec<ConfigMutation>, description: impl Into<String>) -> Self {
+            Self { config_mutations, description: Some(description.into()), ..Default::default() }
         }
 
         /// @emoji 🐚️ A single host effect and no operations (a shell action).
@@ -3099,7 +3110,7 @@ pub mod app {
     }
 
     /// @emoji 🏭️ Generates a closed per-app action enum plus its `AppAction` impl from a list of
-    /// `Variant = "actionId"` pairs — the ids should match what's passed to `.operation()/.view_action()/
+    /// `Variant = "actionId"` pairs — the ids should match what's passed to `.mutation()/.view_action()/
     /// .shell_action()` on the app's `AppBuilder` so the declared action registry and the dispatch match
     /// can't drift apart silently.
     #[macro_export]
@@ -3152,18 +3163,18 @@ pub mod app {
     /// - `command_id(&self) -> &'static str`, returning each row's `$id` — mirrors the per-command labeling
     ///   `DocumentApp::command_id` needs (today hand-rolled as a parallel `match` per app, e.g.
     ///   `TestApp::command_id` above).
-    /// - `dispatch(&self, doc: &DocumentView<'_, $Projection>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Operation, $ConfigOperation>, Fault>`,
-    ///   matching each variant to `$module::handle(payload, doc, cfg)` — `$Projection`/`$Operation`/`$Config`/
-    ///   `$ConfigOperation` are the four types declared after `for` in the invocation (see below).
+    /// - `dispatch(&self, doc: &DocumentView<'_, $Projection>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Mutation, $ConfigMutation>, Fault>`,
+    ///   matching each variant to `$module::handle(payload, doc, cfg)` — `$Projection`/`$Mutation`/`$Config`/
+    ///   `$ConfigMutation` are the four types declared after `for` in the invocation (see below).
     ///
     /// # 🔖️DispatchDesignChoice
     /// The macro invocation names the app's four `DocumentApp` associated types up front —
-    /// `enum $Name for $Projection, $Operation, $Config, $ConfigOperation { .. }` — so `dispatch` can be a
+    /// `enum $Name for $Projection, $Mutation, $Config, $ConfigMutation { .. }` — so `dispatch` can be a
     /// perfectly ordinary, CONCRETE (non-generic) inherent method. This was chosen over the alternative
     /// tried first: a `dispatch<P, O, C, CO>` generic over all four, inferring them from the call site. That
     /// alternative does not type-check, and the `app_commands_tests` module below hit exactly this in
     /// practice — every real `🎮️commands/<command>/🦀️component.rs::handle` fn will be written against ONE
-    /// app's concrete `Projection`/`Operation`/`Config`/`ConfigOperation` (the same way
+    /// app's concrete `Projection`/`Mutation`/`Config`/`ConfigMutation` (the same way
     /// `flow_protocol`/`dag_protocol`/... payload handlers are today), never generically; a generic
     /// `dispatch<P,O,C,CO>` body calling a concrete-typed `$module::handle` fails to unify (`P` is not
     /// literally `FlowFixture`, even though there is only ever one real instantiation). Naming the four
@@ -3179,10 +3190,10 @@ pub mod app {
     ///
     /// 1. **Keyed rows** — `"commandId" as "wire-key" => module::Payload`. Every hand-written Command enum in
     ///    the repo keys its wire form in kebab-case (`#[dsl(key = "add-widget")]`) while `command_id()` must
-    ///    return the camelCase manifest ACTION id (`"addWidget"`) the app declared via `.operation()`/
+    ///    return the camelCase manifest ACTION id (`"addWidget"`) the app declared via `.mutation()`/
     ///    `.view_action()`. The plain arm conflates the two into one literal, which silently rewrites the wire
     ///    format of any existing app it is applied to. Stating both keeps a migration pure code motion.
-    /// 2. **A dispatch context** — `…, $ConfigOperation:ty, ctx = $Ctx:ty { … }` adds a fourth
+    /// 2. **A dispatch context** — `…, $ConfigMutation:ty, ctx = $Ctx:ty { … }` adds a fourth
     ///    `ctx: &mut $Ctx` parameter to `dispatch` and to every row's `$module::handle`. Apps whose handlers
     ///    need app-struct state that is deliberately NOT in the document or the config (flow's
     ///    `Mutex<FlowEvalSession>` off-main-thread eval driver, reached once per dispatch and threaded through
@@ -3192,7 +3203,7 @@ pub mod app {
     /// The two are independent; combine them or use `ctx = ()` when only the keys differ.
     #[macro_export]
     macro_rules! app_commands {
-    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
@@ -3212,7 +3223,7 @@ pub mod app {
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg, ctx)` — see
             /// `🔖️KeyedAndContextualForms` for why `ctx` exists.
-            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Operation, $ConfigOperation>, $crate::Fault> {
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg, ctx),)*
                 }
@@ -3253,7 +3264,7 @@ pub mod app {
         }
     };
 
-    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
@@ -3272,7 +3283,7 @@ pub mod app {
             }
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)`.
-            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Operation, $ConfigOperation>, $crate::Fault> {
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
@@ -3313,7 +3324,7 @@ pub mod app {
         }
     };
 
-    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
@@ -3333,7 +3344,7 @@ pub mod app {
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)` — see `🔖️DispatchDesignChoice`
             /// above for why this is concrete (not generic) in the app's own associated types.
-            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Operation, $ConfigOperation>, $crate::Fault> {
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
@@ -3383,7 +3394,7 @@ pub mod app {
     /// `flow_command_text_binary_round_trips_document_mutating_variants`).
     #[cfg(test)]
     mod app_commands_tests {
-        use crate::{ConfigView, DocumentView, Emit, HistoryView, NoConfigOperation};
+        use crate::{ConfigView, DocumentView, Emit, HistoryView, NoConfigMutation};
 
         mod add_widget {
             #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
@@ -3393,9 +3404,9 @@ pub mod app {
             }
 
             /// 🎯️ Mirrors the shape a real `🎮️commands/add_widget/🦀️component.rs::handle` will have —
-            /// `(payload, doc, cfg) -> Result<Emit<Operation, ConfigOperation>, Fault>`.
-            pub fn handle(payload: &AddWidget, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
-                Ok(crate::Emit::operations(vec![format!("add:{}:{}", payload.kind, payload.x)]))
+            /// `(payload, doc, cfg) -> Result<Emit<Mutation, ConfigMutation>, Fault>`.
+            pub fn handle(payload: &AddWidget, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
+                Ok(crate::Emit::mutations(vec![format!("add:{}:{}", payload.kind, payload.x)]))
             }
         }
 
@@ -3405,13 +3416,13 @@ pub mod app {
                 pub id: String,
             }
 
-            pub fn handle(payload: &DeleteSelection, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
-                Ok(crate::Emit::operations(vec![format!("delete:{}", payload.id)]))
+            pub fn handle(payload: &DeleteSelection, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
+                Ok(crate::Emit::mutations(vec![format!("delete:{}", payload.id)]))
             }
         }
 
         app_commands! {
-            pub enum TestFakeCommand for u32, String, (), NoConfigOperation {
+            pub enum TestFakeCommand for u32, String, (), NoConfigMutation {
                 "addWidget" => add_widget::AddWidget,
                 "deleteSelection" => delete_selection::DeleteSelection,
             }
@@ -3430,11 +3441,11 @@ pub mod app {
             let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
             let cfg = ConfigView { projection: &config };
 
-            let emit: Emit<String, NoConfigOperation> = TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).dispatch(&doc, &cfg).expect("dispatch add-widget");
-            assert_eq!(emit.document_operations, vec!["add:inputSlider:1.5".to_string()]);
+            let emit: Emit<String, NoConfigMutation> = TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).dispatch(&doc, &cfg).expect("dispatch add-widget");
+            assert_eq!(emit.document_mutations, vec!["add:inputSlider:1.5".to_string()]);
 
-            let emit: Emit<String, NoConfigOperation> = TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).dispatch(&doc, &cfg).expect("dispatch delete-selection");
-            assert_eq!(emit.document_operations, vec!["delete:n1".to_string()]);
+            let emit: Emit<String, NoConfigMutation> = TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).dispatch(&doc, &cfg).expect("dispatch delete-selection");
+            assert_eq!(emit.document_mutations, vec!["delete:n1".to_string()]);
         }
 
         #[test]
@@ -3449,9 +3460,9 @@ pub mod app {
                 pub kind: String,
             }
 
-            pub fn handle(payload: &AddWidget, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
+            pub fn handle(payload: &AddWidget, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
                 *ctx += 1;
-                Ok(crate::Emit::operations(vec![format!("add:{}:{ctx}", payload.kind)]))
+                Ok(crate::Emit::mutations(vec![format!("add:{}:{ctx}", payload.kind)]))
             }
         }
 
@@ -3459,13 +3470,13 @@ pub mod app {
             #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
             pub struct DeleteSelection {}
 
-            pub fn handle(_payload: &DeleteSelection, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
-                Ok(crate::Emit::operations(vec!["delete".to_string()]))
+            pub fn handle(_payload: &DeleteSelection, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
+                Ok(crate::Emit::mutations(vec!["delete".to_string()]))
             }
         }
 
         app_commands! {
-            pub enum TestKeyedCommand for u32, String, (), NoConfigOperation, ctx = u32 {
+            pub enum TestKeyedCommand for u32, String, (), NoConfigMutation, ctx = u32 {
                 "addWidget" as "add-widget" => keyed::AddWidget,
                 "deleteSelection" as "delete-selection" => keyed_unit::DeleteSelection,
             }
@@ -3498,22 +3509,22 @@ pub mod app {
             let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
             let cfg = ConfigView { projection: &config };
             let mut ctx = 41u32;
-            let emit: Emit<String, NoConfigOperation> = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "neuron".into() }).dispatch(&doc, &cfg, &mut ctx).expect("dispatch");
-            assert_eq!(emit.document_operations, vec!["add:neuron:42".to_string()]);
+            let emit: Emit<String, NoConfigMutation> = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "neuron".into() }).dispatch(&doc, &cfg, &mut ctx).expect("dispatch");
+            assert_eq!(emit.document_mutations, vec!["add:neuron:42".to_string()]);
             assert_eq!(ctx, 42);
         }
     }
     //#endregion 🔖️AppCommands
 
-    /// @emoji 🧩️ Typed, per-app author surface. An app declares its `Projection` and `Operation` (a
-    /// `store::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
+    /// @emoji 🧩️ Typed, per-app author surface. An app declares its `Projection` and `Mutation` (a
+    /// `store::Mutation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
     /// operations flow through a persistent `DocumentStore` owned by {@link VcsDocumentApp}. Ephemeral
     /// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
     ///
     /// # 🔖️UtilityPreviewContract
     /// The formalized actions-vs-utilities contract:
     /// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
-    ///   renderer, and execute once. `Operation`-kind actions emit operations; `View`/`Shell`-kind actions must
+    ///   renderer, and execute once. `Mutation`-kind actions emit operations; `View`/`Shell`-kind actions must
     ///   emit **zero** operations ({@link VcsDocumentApp} enforces this — a View/Shell action returning operations is a
     ///   hard error).
     /// - **Utilities** are interactive live-preview pointer modes. Exactly one utility is active per window kind;
@@ -3534,13 +3545,13 @@ pub mod app {
         /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
         type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
-        type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Mutation: ::protocol::Mutation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
         type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + DocumentPack;
-        type ConfigOperation: ::protocol::Operation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
         /// @emoji 📝️ Volatile draft projection — use {@link NoDraft} when the app has no draft lane.
         type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
         /// @emoji 📝️ Draft-lane operations applied to {@link store::DraftStore}.
-        type DraftOperation: ::protocol::Operation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
         /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
         /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
         /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp::dispatch_typed_command`,
@@ -3571,10 +3582,10 @@ pub mod app {
             cfg: &ConfigView<'_, Self::Config>,
             draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
-        ) -> Result<Emit<Self::Operation, Self::ConfigOperation, Self::DraftOperation>, Fault>;
+        ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
         /// @emoji 🏷️ `command`'s action/command id string — used for command-log labeling and
         /// `AppActionRegistry` kind-discipline lookup (`View`/`Shell`-kind must not emit
-        /// `document_operations`; `VcsDocumentApp::dispatch_typed_command_inner` enforces this when the
+        /// `document_mutations`; `VcsDocumentApp::dispatch_typed_command_inner` enforces this when the
         /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
         /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
         /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
@@ -3618,10 +3629,10 @@ pub mod app {
         fn copy_fragment( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
             Err(ClipboardError::EmptySelection)
         }
-        fn cut_operations( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Operation> {
+        fn cut_operations( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Mutation> {
             Vec::new()
         }
-        fn paste_operations( _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
+        fn paste_operations( _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
         fn pending_effects( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
@@ -3662,7 +3673,7 @@ pub mod app {
         /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
         /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every program driven purely
         /// by user actions leaves it untouched.
-        fn seed( _store: &mut DocumentStore<Self::Projection, Self::Operation>) {}
+        fn seed( _store: &mut DocumentStore<Self::Projection, Self::Mutation>) {}
 
         /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
         /// the implicit document ports" (`media_ports` below still returns those two). Override to return
@@ -3694,16 +3705,16 @@ pub mod app {
         /// 🎞️ Builds the operation that replaces the whole document with `projection` — the seam the
         /// default `import_media("document:in")` below needs to turn a decoded document pack into a real,
         /// undoable operation. `None` (the default) means "not implemented" (there is no generic "replace
-        /// whole projection" operation); an app whose `Operation` enum has such a variant (e.g.
+        /// whole projection" operation); an app whose `Mutation` enum has such a variant (e.g.
         /// `SetFixture`/`SetDocument`) overrides this one-liner to unlock the default `import_media`.
-        fn whole_document_operation( _projection: Self::Projection) -> Option<Self::Operation> {
+        fn whole_document_operation( _projection: Self::Projection) -> Option<Self::Mutation> {
             None
         }
         /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
         /// state directly, so a headless import is exactly as undoable/syncable as a UI edit. Default:
         /// decodes a `"document:in"` structured (base64 pack) payload via `whole_document_operation`;
         /// `MediaError::NotImplemented` for any other port or when `whole_document_operation` is `None`.
-        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Operation, Self::ConfigOperation, Self::DraftOperation>, MediaError> {
+        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
             }
@@ -3713,7 +3724,7 @@ pub mod app {
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             let projection = <Self::Projection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             match Self::whole_document_operation(projection) {
-                Some(operation) => Ok(Emit::operations(vec![operation])),
+                Some(operation) => Ok(Emit::mutations(vec![operation])),
                 None => Err(MediaError::NotImplemented),
             }
         }
@@ -3804,16 +3815,16 @@ pub mod app {
         fn config_pack(&self) -> Result<store::DocumentPackFiles, Fault>;
         /// 🧮️ Object-safe counterpart to `load_document_pack`, targeting the config store.
         fn load_config_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), Fault>;
-        /// 🧮️ Dispatches one binary-encoded `store::DocumentCommand<Self::ConfigOperation>` against the
+        /// 🧮️ Dispatches one binary-encoded `store::DocumentCommand<Self::ConfigMutation>` against the
         /// config store — the `AppCommand::ConfigCommand` wire frame's real handler (replaces the deleted
         /// `apply_config_bytes` whole-record-replace legacy path).
         fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
-        /// @emoji 📥️ Ingests binary-encoded remote `OperationEnvelope`s (`protocol::decode_envelopes`)
-        /// into the causal DAG (idempotent — duplicate operation ids are dropped).
-        fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), Fault>;
+        /// @emoji 📥️ Ingests binary-encoded remote `MutationEnvelope`s (`protocol::decode_envelopes`)
+        /// into the causal DAG (idempotent — duplicate mutation ids are dropped).
+        fn ingest_operations(&mut self, mutations: &[u8]) -> Result<(), Fault>;
         /// @emoji 📜️ Text-DSL counterpart to {@link Self::ingest_operations}: applies one already-authored
-        /// `Self::Operation` per non-blank line (via `store::OpText::parse_op`) as a fresh local edit — unlike
-        /// the JSON path (which ingests already-caused remote `OperationEnvelope`s into the causal DAG
+        /// `Self::Mutation` per non-blank line (via `store::OpText::parse_op`) as a fresh local edit — unlike
+        /// the JSON path (which ingests already-caused remote `MutationEnvelope`s into the causal DAG
         /// via `store.ingest_remote`, preserving their original ids/deps), each parsed line here goes
         /// through the normal `DocumentCommand::Apply` path (a fresh id/timestamp, a real computed
         /// inverse) — the natural mapping for hand-authored or externally-generated op-text, which carries
@@ -3860,7 +3871,7 @@ pub mod app {
             Vec::new()
         }
         /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless workflow
-        /// runner calls without knowing the app's concrete `Projection`/`Operation` types.
+        /// runner calls without knowing the app's concrete `Projection`/`Mutation` types.
         fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
             Err(MediaError::NotImplemented)
         }
@@ -4167,21 +4178,21 @@ pub mod app {
     }
 
     /// @emoji 🧬️ Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
-    /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Operation>` — the single source of
+    /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Mutation>` — the single source of
     /// truth for the app's document across every call — intercepts the six injected history actions into
     /// `DocumentCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
-    /// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection+history
+    /// `InvocationResult` whose inverses come from the just-recorded `Edit.inverse`. A projection+history
     /// cache keyed on `(store generation, log generation, history filter)` keeps renders O(1). Holds an
     /// {@link AppActionRegistry} to enforce the actions contract before/after delegating to the app.
     /// Host `DocumentSession` already mirrors opaque document/config/draft packs; typed stores here
     /// remain guest-owned until `AppCommand::PureCommand` returns `AppFrame::Emit` for host apply.
     pub struct VcsDocumentApp<A: DocumentApp> {
         app: A,
-        store: DocumentStore<A::Projection, A::Operation>,
-        config_store: ConfigStore<A::Config, A::ConfigOperation>,
+        store: DocumentStore<A::Projection, A::Mutation>,
+        config_store: ConfigStore<A::Config, A::ConfigMutation>,
         /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `DocumentCommand::PruneDrafts`.
         /// Moves to host `DocumentSession` when CHANNEL_VERSION 5 exchange lands.
-        draft_store: store::DraftStore<A::Draft, A::DraftOperation>,
+        draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
         /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
         last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,
         /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
@@ -4213,11 +4224,11 @@ pub mod app {
         /// @emoji 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
         /// enforces default materialization, required-arg validation, and kind discipline.
         pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
-            let envelope = create_document_envelope::<A::Projection, A::Operation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_projection(), None);
+            let envelope = create_document_envelope::<A::Projection, A::Mutation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_projection(), None);
             let config_id = format!("{}-config", A::APP_ID);
-            let config_envelope = create_config_envelope::<A::Config, A::ConfigOperation>(A::config_schema(), &config_id, A::initial_config(), None);
+            let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema(), &config_id, A::initial_config(), None);
             let draft_id = format!("{}-draft", A::APP_ID);
-            let draft_envelope = create_document_envelope::<A::Draft, A::DraftOperation>("draft.empty", &draft_id, A::initial_draft(), None);
+            let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft(), None);
             let mut store = DocumentStore::new(envelope);
             let config_store = ConfigStore::new(config_envelope);
             let draft_store = store::DraftStore::new(draft_envelope);
@@ -4258,7 +4269,7 @@ pub mod app {
             self.store.projection().map_err(|error| error.into_fault())
         }
 
-        /// @emoji 🤝️ Fresh replay plus whatever `Operation::reconcile` reports for the result — the typed
+        /// @emoji 🤝️ Fresh replay plus whatever `Mutation::reconcile` reports for the result — the typed
         /// counterpart to `store::DocumentStore::projection_with_conflicts`.
         pub fn projection_with_conflicts(&self) -> Result<(A::Projection, Vec<SpaceConflict>), Fault> {
             self.store.projection_with_conflicts().map_err(|error| error.into_fault())
@@ -4292,9 +4303,9 @@ pub mod app {
         /// backfill, which never folds). Consecutive `View`/`Shell` dispatches of the SAME `(action_id,
         /// kind)` with no `edit_id` fold into one row — its `count` increments and its `label`/`timestamp`
         /// refresh, but its ORIGINAL `seq` is kept so the panel's tree-item id stays stable across
-        /// re-renders. `Operation`/`History`/`Clipboard` entries and anything with an `edit_id` never fold.
+        /// re-renders. `Mutation`/`History`/`Clipboard` entries and anything with an `edit_id` never fold.
         /// `inverse` (computed from state BEFORE this dispatch) is only stored on a FRESH row — a folded
-        /// row keeps its original inverse, since backwards on a folded "×N" row must undo the whole run,
+        /// row keeps its original inverse, since inverse on a folded "×N" row must undo the whole run,
         /// not just the last dispatch that folded into it.
         fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
             // 🚧️ Same locale-context gap as `Menu::action_with_args` — history log entries are recorded
@@ -4343,7 +4354,7 @@ pub mod app {
                 })
                 .collect();
             for (edit_id, label, timestamp) in missing {
-                self.push_log_entry("apply", label, ActionKind::Operation, Some(edit_id), None, Some(timestamp), None);
+                self.push_log_entry("apply", label, ActionKind::Mutation, Some(edit_id), None, Some(timestamp), None);
             }
             // 🧮️ Same backfill, for the CONFIG store's own edits — a config edit reached via `seed`/
             // `load_config_pack`/ingest never passes through `dispatch_emit` either.
@@ -4361,7 +4372,7 @@ pub mod app {
                 })
                 .collect();
             for (config_edit_id, label, timestamp) in missing_config {
-                self.push_log_entry("configApply", label, ActionKind::Operation, None, Some(config_edit_id), Some(timestamp), None);
+                self.push_log_entry("configApply", label, ActionKind::Mutation, None, Some(config_edit_id), Some(timestamp), None);
             }
         }
 
@@ -4382,7 +4393,7 @@ pub mod app {
                     let latest_config_edit_id = entry.config_edit_ids.last().map(String::as_str);
                     let config_edit = latest_config_edit_id.and_then(|edit_id| self.config_store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id));
                     let config_applied = latest_config_edit_id.is_some_and(|edit_id| config_applied_ids.contains(edit_id));
-                    // ⏪️ Three disjoint ways a row earns "backwards": document edit-linked (applied +
+                    // ⏪️ Three disjoint ways a row earns "inverse": document edit-linked (applied +
                     // locally authored), config edit-linked (same, on the config store — B1's replacement
                     // for the old memory-only "View"-kind inverse), or memory-only (a stored
                     // `InverseAction`, the remaining `Shell`-kind `noteShellCommand` path).
@@ -4446,7 +4457,7 @@ pub mod app {
         }
 
         /// @emoji 🕰️ Maps one of the six injected history action ids to its `DocumentCommand`.
-        fn history_command(action: &str, args: Option<&Value>) -> Option<DocumentCommand<A::Operation>> {
+        fn history_command(action: &str, args: Option<&Value>) -> Option<DocumentCommand<A::Mutation>> {
             let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
             match action {
                 "undo" => Some(DocumentCommand::Undo),
@@ -4460,57 +4471,57 @@ pub mod app {
         }
 
         /// @emoji 📇️ An empty `InvocationResult` carrying only host effects/events (view/shell actions,
-        /// no-operation commands, and history notifications produce no `KernelOperation`s).
+        /// no-operation commands, and history notifications produce no `KernelMutation`s).
         fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
             let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
-            InvocationResult { output: DslValue::Null, operations: Vec::new(), inverse_group: UndoGroup { invocation_id, operations: Vec::new(), inverse_operations: Vec::new() }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
+            InvocationResult { output: DslValue::Null, mutations: Vec::new(), inverse_group: UndoGroup { invocation_id, mutations: Vec::new(), inverse_mutations: Vec::new() }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
         }
 
-        /// @emoji 🧱️ Builds the `InvocationResult` for a just-dispatched edit: one `KernelOperation` per
+        /// @emoji 🧱️ Builds the `InvocationResult` for a just-dispatched edit: one `KernelMutation` per
         /// forward operation NEW in this dispatch (`tail_offset`), each carrying just this dispatch's
-        /// `backwards` as its inverse diff. For a coalesced (`AmendLast`) edit, `edit_operations()` returns
+        /// `inverse` as its inverse diff. For a coalesced (`AmendLast`) edit, `edit_mutations()` returns
         /// the WHOLE accumulated edit — without slicing to `tail_offset`, every dispatch would rebuild and
-        /// serialize every `KernelOperation` since the gesture started (O(edit-size) per dispatch, O(edit-
+        /// serialize every `KernelMutation` since the gesture started (O(edit-size) per dispatch, O(edit-
         /// size²) over the whole gesture) purely to report operations the caller already knows about.
         fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
             let schema = A::DOCUMENT_SCHEMA.to_string();
             let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
             let document = DocumentHandle(meta.instance_id as u128);
-            let mut operations: Vec<KernelOperation> = Vec::new();
-            if let Some((forwards, backwards, operation_meta)) = self.store.edit_operations() {
+            let mut mutations: Vec<KernelMutation> = Vec::new();
+            if let Some((forwards, inverse, mutation_meta)) = self.store.edit_mutations() {
                 let (forwards_offset, backwards_offset) = tail_offset;
                 let forwards = &forwards[forwards_offset.min(forwards.len())..];
-                let backwards = &backwards[backwards_offset.min(backwards.len())..];
-                let operation_meta = &operation_meta[forwards_offset.min(operation_meta.len())..];
+                let inverse = &inverse[backwards_offset.min(inverse.len())..];
+                let mutation_meta = &mutation_meta[forwards_offset.min(mutation_meta.len())..];
                 // 🎯️ B5: real binary — each backward op's own `OpBinary::encode_op()`, framed as a
-                // binary ops-vec (`protocol::encode_ops_vec`, replacing the old `json!({"backwards":
-                // [...]})` convention). Every op in `backwards` shares the same encoding; a decode
+                // binary ops-vec (`protocol::encode_ops_vec`, replacing the old `json!({"inverse":
+                // [...]})` convention). Every op in `inverse` shares the same encoding; a decode
                 // failure here would mean a real corrupt/foreign operation, not a schema choice, so
                 // `unwrap_or_default` on an individual encode failure degrades to an empty inverse
                 // (same fallback behavior `payload: Vec::new()` already has elsewhere) rather than
                 // panicking mid-invocation.
-                let inverse_payload = protocol::encode_ops_vec(&backwards.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>());
+                let inverse_payload = protocol::encode_ops_vec(&inverse.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>());
                 for (index, forward) in forwards.iter().enumerate() {
-                    let entry = operation_meta.get(index);
-                    // 🎯️ W6 kernel unification: `operation_meta` entries are `protocol::OperationMeta`,
+                    let entry = mutation_meta.get(index);
+                    // 🎯️ W6 kernel unification: `mutation_meta` entries are `protocol::MutationMeta`,
                     // and this kernel's own `DocumentDiff`/`UndoPolicy`/`HybridLogicalTimestamp` are now
                     // `pub use` re-exports of the SAME `protocol`/`protocol_core` types (see
                     // `framework/core`'s kernel cut-over note) — no bridging left to do, just direct
                     // field moves. `DocumentDiff.schema`/`.payload` are `SchemaId`/`Vec<u8>` now (was
                     // `schema_id`/`Value`), so the payload is JSON-encoded to bytes at construction.
-                    let operation_id = entry.and_then(|entry_meta| entry_meta.operation_id.clone()).unwrap_or_else(|| OperationId(format!("{}:{index}", invocation_id.0)));
+                    let mutation_id = entry.and_then(|entry_meta| entry_meta.mutation_id.clone()).unwrap_or_else(|| MutationId(format!("{}:{index}", invocation_id.0)));
                     let base_version = DocumentVersion(entry.map(|entry_meta| entry_meta.base_version).unwrap_or(0));
                     let undo_policy = entry.map(|entry_meta| entry_meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
                     let author = entry.and_then(|entry_meta| entry_meta.author_id.clone()).unwrap_or_else(|| ActorId(meta.actor.clone()));
                     let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
-                    operations.push(KernelOperation {
-                        id: operation_id.clone(),
+                    mutations.push(KernelMutation {
+                        id: mutation_id.clone(),
                         document,
                         base_version,
                         invocation_id: invocation_id.clone(),
                         diff: DocumentDiff { schema: SchemaId(format!("{schema}.operation")), payload: ::protocol::OpBinary::encode_op(forward).unwrap_or_default() },
-                        inverse: InverseOperation {
-                            target_operation: operation_id,
+                        inverse: InverseMutation {
+                            target_mutation: mutation_id,
                             inverse_diff: DocumentDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: inverse_payload.clone() },
                             base_version,
                             dependencies: Vec::new(),
@@ -4522,9 +4533,9 @@ pub mod app {
                     });
                 }
             }
-            let operation_ids: Vec<OperationId> = operations.iter().map(|operation| operation.id.clone()).collect();
-            let inverse_operations: Vec<InverseOperation> = operations.iter().map(|operation| operation.inverse.clone()).collect();
-            InvocationResult { output: DslValue::Null, operations, inverse_group: UndoGroup { invocation_id, operations: operation_ids, inverse_operations }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
+            let mutation_ids: Vec<MutationId> = mutations.iter().map(|operation| operation.id.clone()).collect();
+            let inverse_mutations: Vec<InverseMutation> = mutations.iter().map(|operation| operation.inverse.clone()).collect();
+            InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
         }
 
         // 🧮️ B1: `materialize_args` (JSON-args default-fill + required-arg enforcement for app-declared
@@ -4540,36 +4551,36 @@ pub mod app {
         /// `verb` is the action/command id, used to resolve the registry kind/label and to synthesize the
         /// `InvocationId`.
         /// @emoji 🧬️ B1: the single dispatch tail for BOTH `dispatch_typed_command` (the app's own
-        /// `Emit`) and the framework-reserved clipboard actions below — commits `document_operations` to
-        /// the document store and `config_operations` to the config store (independently, each its own
+        /// `Emit`) and the framework-reserved clipboard actions below — commits `document_mutations` to
+        /// the document store and `config_mutations` to the config store (independently, each its own
         /// undo stack), records exactly one command-log row carrying whichever edit id(s) were produced,
         /// and builds the resulting `InvocationResult` from the document side (config-only dispatches
-        /// never touch `KernelOperation`/space-sync — see `🔖️CommandLog`'s doc region for why).
-        fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation, A::DraftOperation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            let Emit { document_operations, config_operations, draft_operations, description, coalesce_key, effects, events, ui_scope } = emit;
+        /// never touch `KernelMutation`/space-sync — see `🔖️CommandLog`'s doc region for why).
+        fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let Emit { document_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope } = emit;
             self.last_emit_wire = Some((
-                protocol::encode_ops_vec(&document_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
-                protocol::encode_ops_vec(&config_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
-                protocol::encode_ops_vec(&draft_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
+                protocol::encode_ops_vec(&document_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
+                protocol::encode_ops_vec(&config_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
+                protocol::encode_ops_vec(&draft_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
             ));
 
             // 📝️ Draft lane — ephemeral; applied without command-log rows (never checkpoints).
-            if !draft_operations.is_empty() {
+            if !draft_mutations.is_empty() {
                 self.draft_store.set_local_actor_id(Some(meta.actor.clone()));
                 self.draft_store
-                    .dispatch(DocumentCommand::Apply { operations: draft_operations, description: None })
+                    .dispatch(DocumentCommand::Apply { mutations: draft_mutations, description: None })
                     .map_err(|error| error.into_fault())?;
             }
 
             // 🧮️ Config side dispatches first, independent of whether this verb ALSO touches the document
             // — captures the resulting (possibly amended) config edit id for the command-log row below.
             let mut config_edit_id: Option<String> = None;
-            if !config_operations.is_empty() {
+            if !config_mutations.is_empty() {
                 self.config_store.set_local_actor_id(Some(meta.actor.clone()));
                 let before_config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
                 let config_command = match &coalesce_key {
-                    Some(key) => DocumentCommand::AmendLast { operations: config_operations, coalesce_key: Some(format!("config:{key}")) },
-                    None => DocumentCommand::Apply { operations: config_operations, description: description.clone() },
+                    Some(key) => DocumentCommand::AmendLast { mutations: config_mutations, coalesce_key: Some(format!("config:{key}")) },
+                    None => DocumentCommand::Apply { mutations: config_mutations, description: description.clone() },
                 };
                 self.config_store.dispatch(config_command).map_err(|error| error.into_fault())?;
                 self.cache = None;
@@ -4577,8 +4588,8 @@ pub mod app {
                 config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
             }
 
-            if document_operations.is_empty() {
-                // 🧾️ An app-declared action logs under its declared kind (so an `Operation`-kind action
+            if document_mutations.is_empty() {
+                // 🧾️ An app-declared action logs under its declared kind (so an `Mutation`-kind action
                 // that happened to produce zero document operations — e.g. paste with no clipboard
                 // fragment, or a pure config-op dispatch — still gets a real row, `edit_id: None`,
                 // correctly filed under "Without Operations"); a declared command (no `ActionKind` of its
@@ -4595,14 +4606,14 @@ pub mod app {
             self.store.set_local_actor_id(Some(meta.actor.clone()));
             // 🪢️ Captured before dispatch so `result_from_last_edit` can report only the operations THIS dispatch
             // added — if `AmendLast` amends the same edit (`before_edit_id` unchanged after dispatch), these
-            // are the tail offsets into that edit's now-longer forwards/backwards; if a new edit was created
+            // are the tail offsets into that edit's now-longer forwards/inverse; if a new edit was created
             // instead, the offsets are moot (checked via edit identity, not reused blindly).
             let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
-            let (before_forwards_len, before_backwards_len) = self.store.edit_operations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
+            let (before_forwards_len, before_backwards_len) = self.store.edit_mutations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
             let log_label = description.clone();
             let vcs_command = match coalesce_key {
-                Some(key) => DocumentCommand::AmendLast { operations: document_operations, coalesce_key: Some(key) },
-                None => DocumentCommand::Apply { operations: document_operations, description },
+                Some(key) => DocumentCommand::AmendLast { mutations: document_mutations, coalesce_key: Some(key) },
+                None => DocumentCommand::Apply { mutations: document_mutations, description },
             };
             self.store.dispatch(vcs_command).map_err(|error| error.into_fault())?;
             self.cache = None;
@@ -4613,9 +4624,9 @@ pub mod app {
                 if let Some(edit_id) = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) {
                     // 🧾️ `verb` is the app's typed-command tag or a framework command id — `CommandDefinition`
                     // has no `ActionKind` (commands aren't View/Shell/History), and reaching here means
-                    // operations were dispatched, so `Operation` is always correct.
-                    let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Operation);
-                    // ⏪️ No memory `inverse` for an edit-linked row — the VCS edit's own `Operation::backwards`
+                    // operations were dispatched, so `Mutation` is always correct.
+                    let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Mutation);
+                    // ⏪️ No memory `inverse` for an edit-linked row — the VCS edit's own `Mutation::inverse`
                     // is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
                     self.record_command(verb, kind, log_label, Some(edit_id), config_edit_id, None);
                 }
@@ -4717,8 +4728,8 @@ pub mod app {
                 // 🎚️ Arg key is `"value"`, not `"filter"` — see `set_history_command_filter_action_definition`'s doc.
                 let filter = args.and_then(|value| value.get("value")).and_then(Value::as_str).unwrap_or("all");
                 self.history_filter = match filter {
-                    "withoutOperations" => HistoryCommandFilter::WithoutOperations,
-                    "onlyOperations" => HistoryCommandFilter::OnlyOperations,
+                    "withoutMutations" => HistoryCommandFilter::WithoutMutations,
+                    "onlyMutations" => HistoryCommandFilter::OnlyMutations,
                     _ => HistoryCommandFilter::All,
                 };
                 // 🗂️ Deliberately UNLOGGED — the panel operating its own filter chrome shouldn't fill the
@@ -4764,7 +4775,7 @@ pub mod app {
                         "cut" => {
                             let fragment = A::copy_fragment(&doc, &cfg).ok();
                             let operations = A::cut_operations(&doc, &cfg);
-                            let mut emit = Emit::operations(operations);
+                            let mut emit = Emit::mutations(operations);
                             emit.description = Some("Cut".into());
                             if let Some(fragment) = fragment {
                                 emit.effects.push(HostEffect::ClipboardWrite { fragment });
@@ -4777,7 +4788,7 @@ pub mod app {
                             match fragment {
                                 Some(fragment) => match A::paste_operations(&doc, &fragment, &placement) {
                                     Ok(operations) => {
-                                        let mut emit = Emit::operations(operations);
+                                        let mut emit = Emit::mutations(operations);
                                         emit.description = Some("Paste".into());
                                         emit
                                     }
@@ -4851,7 +4862,7 @@ pub mod app {
             // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
             // registry-less construction, or a command whose id isn't declared, skips this check).
             if let Some(def) = self.registry.get(&verb) {
-                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_mutations.is_empty() {
                     return Err(Fault::from(format!("{:?}-kind command '{verb}' must not emit operations", def.kind)));
                 }
             }
@@ -4881,7 +4892,7 @@ pub mod app {
             self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
         }
 
-        /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigOperation>` against
+        /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigMutation>` against
         /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
         /// `apply_config_bytes` whole-record-replace legacy path).
         fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -4980,7 +4991,7 @@ pub mod app {
             if pack.is_empty() && spr.is_empty() {
                 return Ok(());
             }
-            let parsed: store::ParsedDocumentText<A::Draft, A::DraftOperation> = store::parse_document_pack(pack, spr).map_err(|error| error.into_fault())?;
+            let parsed: store::ParsedDocumentText<A::Draft, A::DraftMutation> = store::parse_document_pack(pack, spr).map_err(|error| error.into_fault())?;
             let (applied, redo) = match &parsed.envelope.cursor {
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
@@ -4994,7 +5005,7 @@ pub mod app {
         }
 
         fn load_config_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), Fault> {
-            let parsed: store::ParsedDocumentText<A::Config, A::ConfigOperation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
+            let parsed: store::ParsedDocumentText<A::Config, A::ConfigMutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
             let (applied, redo) = match &parsed.envelope.cursor {
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
@@ -5010,8 +5021,8 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, "configCommand", result))
         }
 
-        fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), Fault> {
-            let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.into_fault())?;
+        fn ingest_operations(&mut self, mutations: &[u8]) -> Result<(), Fault> {
+            let envelopes = protocol::decode_envelopes(mutations).map_err(|error| error.into_fault())?;
             for envelope in envelopes {
                 self.store.dispatch(DocumentCommand::IngestRemote { envelope }).map_err(|error| error.into_fault())?;
             }
@@ -5020,11 +5031,11 @@ pub mod app {
         }
 
         fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), Fault> {
-            let operations: Vec<A::Operation> = operations_text.lines().map(str::trim).filter(|line| !line.is_empty()).map(|line| A::Operation::parse_op(line).map_err(|error| error.into_fault())).collect::<Result<Vec<_>, _>>()?;
-            if operations.is_empty() {
+            let mutations: Vec<A::Mutation> = operations_text.lines().map(str::trim).filter(|line| !line.is_empty()).map(|line| A::Mutation::parse_op(line).map_err(|error| error.into_fault())).collect::<Result<Vec<_>, _>>()?;
+            if mutations.is_empty() {
                 return Ok(());
             }
-            self.store.dispatch(DocumentCommand::Apply { operations, description: None }).map_err(|error| error.into_fault())?;
+            self.store.dispatch(DocumentCommand::Apply { mutations, description: None }).map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }
@@ -5034,7 +5045,7 @@ pub mod app {
         }
 
         fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), Fault> {
-            let parsed: store::ParsedDocumentText<A::Projection, A::Operation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;
+            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;
             let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             self.store.reset(parsed.envelope, applied, Vec::new()).map_err(|error| error.into_fault())?;
             self.cache = None;
@@ -5046,7 +5057,7 @@ pub mod app {
         }
 
         fn load_document_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), Fault> {
-            let parsed: store::ParsedDocumentText<A::Projection, A::Operation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
+            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
             // 🎯️ W4: honor a persisted cursor (undo/redo position) when present — falling back to
             // "every edit applied" for a pack predating this field, matching `DocumentStore::new`'s
             // own cursor-aware seeding.
@@ -5499,18 +5510,18 @@ pub mod plugin_runtime {
         })
     }
 
-    /// @emoji 📥️ Ingests binary-encoded remote `OperationEnvelope`s (`protocol::decode_envelopes`) into
-    /// the instance's document store (idempotent — duplicate operation ids are dropped by the causal
+    /// @emoji 📥️ Ingests binary-encoded remote `MutationEnvelope`s (`protocol::decode_envelopes`) into
+    /// the instance's document store (idempotent — duplicate mutation ids are dropped by the causal
     /// DAG / edit-id dedupe).
-    pub fn plugin_ingest_operations(instance_id: u32, operations: &[u8]) -> Result<(), Fault> {
+    pub fn plugin_ingest_operations(instance_id: u32, mutations: &[u8]) -> Result<(), Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
-            instance.app.ingest_operations(operations)
+            instance.app.ingest_operations(mutations)
         })
     }
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_ingest_operations}: one already-authored operation
-    /// per non-blank op-text line instead of a binary `OperationEnvelope` array.
+    /// per non-blank op-text line instead of a binary `MutationEnvelope` array.
     pub fn plugin_ingest_operations_text(instance_id: u32, operations_text: &str) -> Result<(), Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
@@ -5556,9 +5567,9 @@ pub mod plugin_runtime {
     /// `store::DocumentCodec` registry — the one-liner every app's own native registration fn
     /// (`register_<app>_exports()`-style) calls once per document kind so `framework/sync`'s
     /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
-    /// depending on its concrete `Projection`/`Operation` types.
+    /// depending on its concrete `Projection`/`Mutation` types.
     pub fn register_document_codec_for_app<A: DocumentApp>(schema: impl Into<String>) {
-        store::register_document_codec(store::DocumentCodec::of::<A::Projection, A::Operation>(schema));
+        store::register_document_codec(store::DocumentCodec::of::<A::Projection, A::Mutation>(schema));
     }
 
     /// @emoji 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
@@ -5933,7 +5944,7 @@ pub mod plugin_runtime {
                     frames.push(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: instance_id, manifest: manifest_bytes });
                 }
                 protocol::AppCommand::ConfigCommand { seq, command } => {
-                    // 🧮️ B1: `command` is a binary-encoded `store::DocumentCommand<A::ConfigOperation>` —
+                    // 🧮️ B1: `command` is a binary-encoded `store::DocumentCommand<A::ConfigMutation>` —
                     // real dispatch against the config store (replaces the deleted `apply_config_bytes`
                     // whole-record-replace legacy path); undo/redo/checkpoint all work on config now.
                     let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
@@ -6426,10 +6437,10 @@ pub mod plugin_runtime {
         //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
 
         use super::ContextMenuWireRequest;
-        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftOperation, PluginApp, VcsDocumentApp};
+        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, PluginApp, VcsDocumentApp};
         use store::EngineHandles;
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
-        use protocol::{Operation, OperationDiff};
+        use protocol::{Mutation, MutationDiff};
         use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
         use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
         use serde::{Deserialize, Serialize};
@@ -6451,7 +6462,7 @@ pub mod plugin_runtime {
             label: Option<String>,
         }
 
-        impl OperationDiff<TestProjection> for TestDiff {
+        impl MutationDiff<TestProjection> for TestDiff {
             fn apply(&self, projection: &TestProjection) -> TestProjection {
                 TestProjection { count: self.count.unwrap_or(projection.count), label: self.label.clone().unwrap_or_else(|| projection.label.clone()) }
             }
@@ -6468,34 +6479,34 @@ pub mod plugin_runtime {
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
         #[serde(tag = "operation", rename_all = "camelCase")]
-        enum TestOperation {
+        enum TestMutation {
             #[dsl(key = "set-count")]
             SetCount { value: i32 },
             #[dsl(key = "set-label")]
             SetLabel { value: String },
         }
 
-        impl Operation<TestProjection> for TestOperation {
+        impl Mutation<TestProjection> for TestMutation {
             type Diff = TestDiff;
 
             fn diff(&self, _projection: &TestProjection) -> TestDiff {
                 match self {
-                    TestOperation::SetCount { value } => TestDiff { count: Some(*value), label: None },
-                    TestOperation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
+                    TestMutation::SetCount { value } => TestDiff { count: Some(*value), label: None },
+                    TestMutation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
                 }
             }
 
-            fn backwards(&self, projection: &TestProjection) -> Vec<Self> {
+            fn inverse(&self, projection: &TestProjection) -> Vec<Self> {
                 match self {
-                    TestOperation::SetCount { .. } => vec![TestOperation::SetCount { value: projection.count }],
-                    TestOperation::SetLabel { .. } => vec![TestOperation::SetLabel { value: projection.label.clone() }],
+                    TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: projection.count }],
+                    TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: projection.label.clone() }],
                 }
             }
         }
 
         /// 🧪️ B1: `TestApp`'s config — `selected` moved out of an app-struct `RefCell` into a real config
         /// artifact (was ephemeral view state demonstrated via `ActionEmit::view_with_inverse`; now a
-        /// config operation with a real `backwards`, proving the B1 replacement end to end).
+        /// config operation with a real `inverse`, proving the B1 replacement end to end).
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
         #[dsl(extension = "testkit-macro-cfg")]
         struct TestConfig {
@@ -6504,7 +6515,7 @@ pub mod plugin_runtime {
 
         impl store::ConfigRecord for TestConfig {}
 
-        impl OperationDiff<TestConfig> for TestConfig {
+        impl MutationDiff<TestConfig> for TestConfig {
             fn apply(&self, _base: &TestConfig) -> TestConfig {
                 self.clone()
             }
@@ -6514,27 +6525,27 @@ pub mod plugin_runtime {
         }
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-        enum TestConfigOperation {
+        enum TestConfigMutation {
             #[dsl(key = "set-selected")]
             SetSelected { value: Option<String> },
-            /// 🧮️ Full-snapshot restore — every `backwards()` below returns this, mirroring the
-            /// `ShootingConfigOperation` pilot pattern (see `shooting_op`).
+            /// 🧮️ Full-snapshot restore — every `inverse()` below returns this, mirroring the
+            /// `ShootingConfigMutation` pilot pattern (see `shooting_op`).
             #[dsl(key = "snapshot")]
             Snapshot { selected: Option<String> },
         }
 
-        impl Operation<TestConfig> for TestConfigOperation {
+        impl Mutation<TestConfig> for TestConfigMutation {
             type Diff = TestConfig;
 
             fn diff(&self, _base: &TestConfig) -> TestConfig {
                 match self {
-                    TestConfigOperation::SetSelected { value } => TestConfig { selected: value.clone() },
-                    TestConfigOperation::Snapshot { selected } => TestConfig { selected: selected.clone() },
+                    TestConfigMutation::SetSelected { value } => TestConfig { selected: value.clone() },
+                    TestConfigMutation::Snapshot { selected } => TestConfig { selected: selected.clone() },
                 }
             }
 
-            fn backwards(&self, base: &TestConfig) -> Vec<Self> {
-                vec![TestConfigOperation::Snapshot { selected: base.selected.clone() }]
+            fn inverse(&self, base: &TestConfig) -> Vec<Self> {
+                vec![TestConfigMutation::Snapshot { selected: base.selected.clone() }]
             }
         }
 
@@ -6556,7 +6567,7 @@ pub mod plugin_runtime {
             #[dsl(key = "navigate")]
             Navigate,
             #[dsl(key = "noop-operation")]
-            NoopOperation,
+            NoopMutation,
             #[dsl(key = "view-no-scope")]
             ViewNoScope,
             #[dsl(key = "view-partial-scope")]
@@ -6581,11 +6592,11 @@ pub mod plugin_runtime {
             const APP_ID: &'static str = "synthetic-play";
             const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
             type Projection = TestProjection;
-            type Operation = TestOperation;
+            type Mutation = TestMutation;
             type Config = TestConfig;
-            type ConfigOperation = TestConfigOperation;
+            type ConfigMutation = TestConfigMutation;
             type Draft = NoDraft;
-            type DraftOperation = NoDraftOperation;
+            type DraftMutation = NoDraftMutation;
             type Command = TestCommand;
 
             fn initial_projection() -> TestProjection {
@@ -6601,7 +6612,7 @@ pub mod plugin_runtime {
                     TestCommand::BadView => "badView",
                     TestCommand::Select { .. } => "select",
                     TestCommand::Navigate => "navigate",
-                    TestCommand::NoopOperation => "noopOperation",
+                    TestCommand::NoopMutation => "noopMutation",
                     TestCommand::ViewNoScope => "viewNoScope",
                     TestCommand::ViewPartialScope => "viewPartialScope",
                     TestCommand::IncrementViaCommand => "incrementViaCommand",
@@ -6610,19 +6621,19 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestOperation, TestConfigOperation>, Fault> {
+            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
                 self.received_actions.borrow_mut().push(self.command_id(command).to_string());
                 match command {
-                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
-                    TestCommand::SetLabel { value } => Ok(Emit { document_operations: vec![TestOperation::SetLabel { value: value.clone() }], coalesce_key: Some("label".into()), ..Default::default() }),
-                    TestCommand::SetLabelViaCommand { value } => Ok(Emit::operations(vec![TestOperation::SetLabel { value: value.clone() }])),
-                    TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestOperation::SetLabel { value: value.clone() }], "label")),
-                    TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestOperation::SetLabel { value: value.clone() }], "commit label")),
-                    TestCommand::BadView => Ok(Emit::operations(vec![TestOperation::SetCount { value: 99 }])),
+                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_mutations: vec![TestMutation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+                    TestCommand::SetLabel { value } => Ok(Emit { document_mutations: vec![TestMutation::SetLabel { value: value.clone() }], coalesce_key: Some("label".into()), ..Default::default() }),
+                    TestCommand::SetLabelViaCommand { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel { value: value.clone() }])),
+                    TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel { value: value.clone() }], "label")),
+                    TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel { value: value.clone() }], "commit label")),
+                    TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount { value: 99 }])),
                     TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) })),
-                    TestCommand::Select { id } => Ok(Emit::config(vec![TestConfigOperation::SetSelected { value: id.clone() }])),
+                    TestCommand::Select { id } => Ok(Emit::config(vec![TestConfigMutation::SetSelected { value: id.clone() }])),
                     TestCommand::Navigate => Ok(Emit::effect(HostEffect::Navigate { uri: "semio://home".into() })),
-                    TestCommand::NoopOperation => Ok(Emit::default()),
+                    TestCommand::NoopMutation => Ok(Emit::default()),
                     TestCommand::ViewNoScope => Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }),
                     TestCommand::ViewPartialScope => Ok(Emit {
                         ui_scope: UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
@@ -6653,15 +6664,15 @@ pub mod plugin_runtime {
                 })
             }
 
-            fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestOperation> {
+            fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestMutation> {
                 if doc.projection.label.is_empty() {
                     Vec::new()
                 } else {
-                    vec![TestOperation::SetLabel { value: String::new() }]
+                    vec![TestMutation::SetLabel { value: String::new() }]
                 }
             }
 
-            fn paste_operations(&self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestOperation>, ClipboardError> {
+            fn paste_operations(&self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {
                 if !self.clipboard_accepts().contains(&fragment.media_type) {
                     return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
                 }
@@ -6669,7 +6680,7 @@ pub mod plugin_runtime {
                     PasteAnchor::Original => fragment.dsl_text.clone(),
                     _ => format!("{}-{:?}", fragment.dsl_text, placement.anchor),
                 };
-                Ok(vec![TestOperation::SetLabel { value }])
+                Ok(vec![TestMutation::SetLabel { value }])
             }
 
             /// 🧪️ Menu = always "setLabelRequired"; "incrementViaCommand" gated on a non-empty label
@@ -6715,11 +6726,11 @@ pub mod plugin_runtime {
                 .document(["state"])
                 .mode("edit", LocalizedLabel::data("Edit"), "pencil")
                 .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .operation("setLabelRequired", LocalizedLabel::data("Set Label"))
+                .mutation("setLabelRequired", LocalizedLabel::data("Set Label"))
                 .action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).required()])
-                // 🧪️ `Operation`-kind by declaration, but `TestApp` emits zero operations for it — the
-                // "declared Operation action that happened to produce nothing" fixture.
-                .operation("noopOperation", LocalizedLabel::data("Noop Operation"))
+                // 🧪️ `Mutation`-kind by declaration, but `TestApp` emits zero operations for it — the
+                // "declared Mutation action that happened to produce nothing" fixture.
+                .mutation("noopMutation", LocalizedLabel::data("Noop Mutation"))
                 .view_action("badView", LocalizedLabel::data("Bad View"))
                 .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
                 .app_command("incrementViaCommand", "Increment", "counter")
@@ -6764,10 +6775,10 @@ pub mod plugin_runtime {
         fn operation_action_emits_kernel_op_with_true_inverse() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
-            assert_eq!(result.operations.len(), 1);
-            assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 1 }).unwrap());
-            assert_eq!(result.operations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 0 }).unwrap()]));
-            assert_eq!(result.inverse_group.operations.len(), 1);
+            assert_eq!(result.mutations.len(), 1);
+            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).unwrap());
+            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).unwrap()]));
+            assert_eq!(result.inverse_group.mutations.len(), 1);
             assert_eq!(app.test_projection().count, 1);
         }
 
@@ -6775,7 +6786,7 @@ pub mod plugin_runtime {
         fn view_action_emits_no_operations() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).expect("select");
-            assert!(result.operations.is_empty());
+            assert!(result.mutations.is_empty());
             assert!(result.requested_effects.is_empty());
             // A view command never advances the document.
             assert_eq!(app.test_projection(), TestProjection::default());
@@ -6784,7 +6795,7 @@ pub mod plugin_runtime {
         #[test]
         fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
             let mut app = VcsDocumentApp::new(TestApp::default());
-            // Keep the two selects from folding into one row by dispatching an unrelated Operation between them.
+            // Keep the two selects from folding into one row by dispatching an unrelated Mutation between them.
             app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).expect("select a");
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
             app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).expect("select b");
@@ -6834,7 +6845,7 @@ pub mod plugin_runtime {
         fn shell_action_emits_host_effect_without_operations() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Navigate, &meta()).expect("navigate");
-            assert!(result.operations.is_empty());
+            assert!(result.mutations.is_empty());
             assert_eq!(result.requested_effects, vec![HostEffect::Navigate { uri: "semio://home".into() }]);
         }
 
@@ -6843,7 +6854,7 @@ pub mod plugin_runtime {
             let mut app = VcsDocumentApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).expect("setLabel");
             let result = app.handle_action("copy", None, &meta()).expect("copy");
-            assert!(result.operations.is_empty(), "copy must not record an undo entry");
+            assert!(result.mutations.is_empty(), "copy must not record an undo entry");
             assert_eq!(result.requested_effects.len(), 1);
             let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
             assert_eq!(fragment.dsl_text, "hello");
@@ -6854,7 +6865,7 @@ pub mod plugin_runtime {
         fn copy_on_empty_selection_is_a_benign_no_operation() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let result = app.handle_action("copy", None, &meta()).expect("copy");
-            assert!(result.operations.is_empty());
+            assert!(result.mutations.is_empty());
             assert!(result.requested_effects.is_empty());
         }
 
@@ -6895,7 +6906,7 @@ pub mod plugin_runtime {
         fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let result = app.handle_action("paste", None, &meta()).expect("paste");
-            assert!(result.operations.is_empty());
+            assert!(result.mutations.is_empty());
             assert_eq!(app.test_projection().label, "");
         }
 
@@ -6928,7 +6939,7 @@ pub mod plugin_runtime {
             assert_eq!(app.test_projection().count, 2);
 
             let undo = app.handle_action("undo", None, &meta()).expect("undo");
-            assert!(undo.operations.is_empty());
+            assert!(undo.mutations.is_empty());
             assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
             assert_eq!(app.test_projection().count, 1);
 
@@ -6936,7 +6947,7 @@ pub mod plugin_runtime {
             assert_eq!(app.test_projection().count, 2);
 
             let checkpoint = app.handle_action("commitCheckpoint", None, &meta()).expect("checkpoint");
-            assert!(checkpoint.operations.is_empty());
+            assert!(checkpoint.mutations.is_empty());
             assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
         }
 
@@ -6950,7 +6961,7 @@ pub mod plugin_runtime {
             let entry = &history.commands[0];
             assert_eq!(entry.action_id, "increment");
             assert_eq!(entry.label, "increment");
-            assert_eq!(entry.kind, ActionKind::Operation);
+            assert_eq!(entry.kind, ActionKind::Mutation);
             assert!(entry.edit_id.is_some());
             assert!(!entry.op_lines.is_empty(), "operation entry must carry printed op-text");
             assert!(entry.applied && entry.revertible);
@@ -7010,7 +7021,7 @@ pub mod plugin_runtime {
 
             let mut envelopes = Vec::new();
             for message in far.receive().expect("receive") {
-                if let BackboneMessage::Operations { envelopes: operations } = message {
+                if let BackboneMessage::Mutations { envelopes: operations } = message {
                     envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
                 }
             }
@@ -7028,9 +7039,9 @@ pub mod plugin_runtime {
         #[test]
         fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
             let mut app = VcsDocumentApp::new(TestApp::default());
-            let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &meta()).expect("setHistoryCommandFilter");
-            assert!(result.operations.is_empty());
-            assert_eq!(app.test_history().command_filter, HistoryCommandFilter::OnlyOperations);
+            let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).expect("setHistoryCommandFilter");
+            assert!(result.mutations.is_empty());
+            assert_eq!(app.test_history().command_filter, HistoryCommandFilter::OnlyMutations);
         }
 
         #[test]
@@ -7046,7 +7057,7 @@ pub mod plugin_runtime {
                         seq: 1,
                         action_id: "increment".into(),
                         label: "Increment".into(),
-                        kind: ActionKind::Operation,
+                        kind: ActionKind::Mutation,
                         timestamp: "0".into(),
                         edit_id: Some("e1".into()),
                         config_edit_id: None,
@@ -7080,15 +7091,15 @@ pub mod plugin_runtime {
             assert!(all_tree.sections[0].items.iter().all(|item| item.control.is_some()), "Actions rows use label+control like Settings/Theme");
             assert_eq!(all_tree.sections[1].label.as_deref(), Some("Commands"));
             assert_eq!(all_tree.sections[1].items.len(), 2);
-            assert!(all_tree.sections[1].items[0].actions.is_some(), "the revertible entry must offer backwards");
-            assert!(all_tree.sections[1].items[1].actions.is_none(), "the non-revertible entry must not offer backwards");
+            assert!(all_tree.sections[1].items[0].actions.is_some(), "the revertible entry must offer inverse");
+            assert!(all_tree.sections[1].items[1].actions.is_none(), "the non-revertible entry must not offer inverse");
 
-            let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyOperations, ..history.clone() };
+            let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
             let UiNode::Tree(ops_tree) = ui_history_panel(&only_ops, "ctrl", false) else { panic!("expected a Tree root") };
             assert_eq!(ops_tree.sections[1].items.len(), 1);
             assert_eq!(ops_tree.sections[1].items[0].id, "framework.history.entry.1");
 
-            let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutOperations, ..history };
+            let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
             let UiNode::Tree(no_ops_tree) = ui_history_panel(&without_ops, "ctrl", false) else { panic!("expected a Tree root") };
             assert_eq!(no_ops_tree.sections[1].items.len(), 1);
             assert_eq!(no_ops_tree.sections[1].items[0].id, "framework.history.entry.2");
@@ -7191,7 +7202,7 @@ pub mod plugin_runtime {
         fn set_history_command_filter_is_never_logged() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let before_len = app.test_history().commands.len();
-            app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &meta()).expect("setHistoryCommandFilter");
+            app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).expect("setHistoryCommandFilter");
             assert_eq!(app.test_history().commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
         }
 
@@ -7209,13 +7220,13 @@ pub mod plugin_runtime {
         #[test]
         fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
             let mut app = contract_app_under_test();
-            app.dispatch_typed(TestCommand::NoopOperation, &meta()).expect("noopOperation");
+            app.dispatch_typed(TestCommand::NoopMutation, &meta()).expect("noopMutation");
             let history = app.test_history();
             assert_eq!(history.commands.len(), 1);
             let entry = &history.commands[0];
-            assert_eq!(entry.action_id, "noopOperation");
-            assert_eq!(entry.kind, ActionKind::Operation);
-            assert!(entry.edit_id.is_none(), "no operations means no VCS edit, even though the action is Operation-kind");
+            assert_eq!(entry.action_id, "noopMutation");
+            assert_eq!(entry.kind, ActionKind::Mutation);
+            assert!(entry.edit_id.is_none(), "no operations means no VCS edit, even though the action is Mutation-kind");
             assert_eq!(entry.count, 1);
         }
         //#endregion 🔖️CommandLogTests
@@ -7224,7 +7235,7 @@ pub mod plugin_runtime {
         fn undo_on_empty_history_is_a_benign_no_operation() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let result = app.handle_action("undo", None, &meta()).expect("undo");
-            assert!(result.operations.is_empty());
+            assert!(result.mutations.is_empty());
             assert!(result.events.is_empty());
         }
 
@@ -7249,7 +7260,7 @@ pub mod plugin_runtime {
 
             let mut envelopes = Vec::new();
             for message in far.receive().expect("receive") {
-                if let BackboneMessage::Operations { envelopes: operations } = message {
+                if let BackboneMessage::Mutations { envelopes: operations } = message {
                     envelopes.extend(operations);
                 }
             }
@@ -7303,7 +7314,7 @@ pub mod plugin_runtime {
 
             use semio_framework::{catalog_action_icon_id, catalog_command_icon_id};
 
-            let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Operation).as_str().to_string();
+            let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Mutation).as_str().to_string();
             let increment_icon = catalog_command_icon_id("incrementViaCommand").as_str().to_string();
 
             let empty_label = app.context_menu(&request);
@@ -7319,7 +7330,7 @@ pub mod plugin_runtime {
         //#region 🗂️GroupedContextMenu
         #[test]
         fn action_definition_with_category_sets_the_ribbon_taxonomy_field() {
-            let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Operation).with_category("view");
+            let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation).with_category("view");
             assert_eq!(action.category.as_deref(), Some("view"));
         }
 
@@ -7343,18 +7354,18 @@ pub mod plugin_runtime {
                     .document(["state"])
                     .mode("edit", LocalizedLabel::data("Edit"), "pencil")
                     .window_kind("main", LocalizedLabel::data("Main"), "flat-menu-test.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .operation("setLabelRequired", LocalizedLabel::data("Set Label"))
+                    .mutation("setLabelRequired", LocalizedLabel::data("Set Label"))
                     .action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).required()])
-                    .operation("flatLeaf1", LocalizedLabel::data("Flat Leaf 1"))
-                    .operation("flatLeaf2", LocalizedLabel::data("Flat Leaf 2"))
-                    .operation("flatLeaf3", LocalizedLabel::data("Flat Leaf 3"))
-                    .operation("flatLeaf4", LocalizedLabel::data("Flat Leaf 4"))
-                    .action_with(ActionDefinition::new_catalog("flatLeaf5", LocalizedLabel::data("Flat Leaf 5"), ActionKind::Operation).with_category("view"))
-                    .action_with(ActionDefinition::new_catalog("flatLeaf6", LocalizedLabel::data("Flat Leaf 6"), ActionKind::Operation).with_category("view"))
-                    .action_with(ActionDefinition::new_catalog("flatLeaf7", LocalizedLabel::data("Flat Leaf 7"), ActionKind::Operation).with_category("export"))
-                    .action_with(ActionDefinition::new_catalog("flatLeaf8", LocalizedLabel::data("Flat Leaf 8"), ActionKind::Operation).with_category("export"))
-                    .operation("flatLeaf9", LocalizedLabel::data("Flat Leaf 9"))
-                    .operation("flatLeaf10", LocalizedLabel::data("Flat Leaf 10")),
+                    .mutation("flatLeaf1", LocalizedLabel::data("Flat Leaf 1"))
+                    .mutation("flatLeaf2", LocalizedLabel::data("Flat Leaf 2"))
+                    .mutation("flatLeaf3", LocalizedLabel::data("Flat Leaf 3"))
+                    .mutation("flatLeaf4", LocalizedLabel::data("Flat Leaf 4"))
+                    .action_with(ActionDefinition::new_catalog("flatLeaf5", LocalizedLabel::data("Flat Leaf 5"), ActionKind::Mutation).with_category("view"))
+                    .action_with(ActionDefinition::new_catalog("flatLeaf6", LocalizedLabel::data("Flat Leaf 6"), ActionKind::Mutation).with_category("view"))
+                    .action_with(ActionDefinition::new_catalog("flatLeaf7", LocalizedLabel::data("Flat Leaf 7"), ActionKind::Mutation).with_category("export"))
+                    .action_with(ActionDefinition::new_catalog("flatLeaf8", LocalizedLabel::data("Flat Leaf 8"), ActionKind::Mutation).with_category("export"))
+                    .mutation("flatLeaf9", LocalizedLabel::data("Flat Leaf 9"))
+                    .mutation("flatLeaf10", LocalizedLabel::data("Flat Leaf 10")),
             );
             AppActionRegistry::from_definition(&app.definition)
         }
@@ -7403,7 +7414,7 @@ pub mod plugin_runtime {
         fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
             let mut app = contract_app_under_test();
             let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta()).expect("setActiveUtility is a valid View command");
-            assert!(result.operations.is_empty(), "utility switching must not create history");
+            assert!(result.mutations.is_empty(), "utility switching must not create history");
             let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
             assert_eq!(event.payload, dsl::to_dsl_value(&json!({ "utilityId": "brush" })).unwrap());
         }
@@ -7433,20 +7444,20 @@ pub mod plugin_runtime {
             // 🪢️ Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
             // coalesced edit accumulates every amend's operations (3 after this loop), each dispatch's
             // `InvocationResult` must report only the operation IT just added — never re-serializing the whole
-            // growing edit into every `KernelOperation`/`UndoGroup` on every single dispatch.
+            // growing edit into every `KernelMutation`/`UndoGroup` on every single dispatch.
             let mut app = contract_app_under_test();
             app.dispatch_typed(TestCommand::AmendLabel { value: "a".into() }, &meta()).expect("amendLabel a");
             app.dispatch_typed(TestCommand::AmendLabel { value: "ab".into() }, &meta()).expect("amendLabel ab");
             let result = app.dispatch_typed(TestCommand::AmendLabel { value: "abc".into() }, &meta()).expect("amendLabel abc");
-            assert_eq!(result.operations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
-            assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetLabel { value: "abc".into() }).unwrap());
+            assert_eq!(result.mutations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
+            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetLabel { value: "abc".into() }).unwrap());
             assert_eq!(
-                result.operations[0].inverse.inverse_diff.payload,
-                protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestOperation::SetLabel { value: "ab".into() }).unwrap()]),
+                result.mutations[0].inverse.inverse_diff.payload,
+                protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetLabel { value: "ab".into() }).unwrap()]),
                 "the new operation's own inverse undoes back to the pre-dispatch label, not the whole gesture"
             );
-            assert_eq!(result.inverse_group.operations.len(), 1);
-            assert_eq!(result.inverse_group.inverse_operations.len(), 1);
+            assert_eq!(result.inverse_group.mutations.len(), 1);
+            assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
             assert_eq!(app.test_projection().label, "abc");
             // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
             app.handle_action("undo", None, &meta()).expect("undo amend");
@@ -7457,9 +7468,9 @@ pub mod plugin_runtime {
         fn operation_command_emits_kernel_op_with_true_inverse() {
             let mut app = contract_app_under_test();
             let result = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("incrementViaCommand");
-            assert_eq!(result.operations.len(), 1);
-            assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 1 }).unwrap());
-            assert_eq!(result.operations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 0 }).unwrap()]));
+            assert_eq!(result.mutations.len(), 1);
+            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).unwrap());
+            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).unwrap()]));
             assert_eq!(app.test_projection().count, 1);
         }
 
@@ -8448,7 +8459,7 @@ pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
     node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, ExampleSource, HistoryView, KeybindingSpec,
-    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NoDraft, NoDraftOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp, WindowKindSpec,
+    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsDocumentApp, WindowKindSpec,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};

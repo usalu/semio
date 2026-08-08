@@ -1,9 +1,9 @@
 //! 🌞️ Lowpoly play app commands — the world-3d sun toggle/azimuth/elevation/intensity, reusing the
 //! framework's shared `WorldSunConfig`-shaped action logic. Config-only.
 
-use crate::apps::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolyProjection;
 use semio_framework_plugin::{apply_world3d_sun_action, ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -11,11 +11,11 @@ use serde_json::json;
 
 /// 🌞️ Reuses the framework's shared sun toggle/slider logic (`apply_world3d_sun_action`), threading it
 /// through `LowpolyConfig`'s flattened sun fields and returning the resulting `SetSun` config op.
-fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>) -> LowpolyConfigOperation {
+fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>) -> LowpolyConfigMutation {
     let mut sun = lowpoly_sun_config(config);
     let args = value.map(|value| json!({ "value": value }));
     apply_world3d_sun_action(&mut sun, action_id, args.as_ref());
-    LowpolyConfigOperation::SetSun { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color }
+    LowpolyConfigMutation::SetSun { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color }
 }
 
 //#region 🔖️ToggleSun
@@ -26,7 +26,7 @@ pub mod toggle_sun {
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
-    pub fn handle(_payload: &ToggleSun, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(_payload: &ToggleSun, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.projection, "toggleSun", None)]))
     }
 }
@@ -42,7 +42,7 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.projection, "setSunAzimuth", Some(payload.value))]))
     }
 }
@@ -58,7 +58,7 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.projection, "setSunElevation", Some(payload.value))]))
     }
 }
@@ -74,7 +74,7 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.projection, "setSunIntensity", Some(payload.value))]))
     }
 }

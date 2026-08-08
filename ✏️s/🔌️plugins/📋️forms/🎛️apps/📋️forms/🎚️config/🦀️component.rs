@@ -1,4 +1,4 @@
-//! 🧮️ Forms play app — view state (`FormsConfig`) and its operation enum (`FormsConfigOperation`).
+//! 🧮️ Forms play app — view state (`FormsConfig`) and its operation enum (`FormsConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.forms` document. It still round-trips through a real
@@ -11,7 +11,7 @@
 //! extension question rendering; the host now pushes contributions into config via
 //! `SetContributions`, mirroring how it now pushes locale via `SetLocale`).
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -112,12 +112,12 @@ impl Default for FormsConfig {
 store::impl_whole_record_config!(FormsConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
+//#region 🔖️ConfigMutations
 /// 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS Config recipe: [`FormsConfig`]'s operation enum — mirrors
-/// `shooting_op::ShootingConfigOperation`'s shape exactly: one variant per settled interaction (was a
+/// `shooting_op::ShootingConfigMutation`'s shape exactly: one variant per settled interaction (was a
 /// `FormsPlayRuntime` field write pre-B1), plus a generic `Snapshot` every variant's `backwards()` returns.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum FormsConfigOperation {
+pub enum FormsConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -136,7 +136,7 @@ pub enum FormsConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for FormsConfigOperation {
+impl protocol::OpText for FormsConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -161,7 +161,7 @@ impl protocol::OpText for FormsConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for FormsConfigOperation {
+impl protocol::OpBinary for FormsConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -207,27 +207,27 @@ impl protocol::OpBinary for FormsConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<FormsConfig> for FormsConfigOperation {
+impl Mutation<FormsConfig> for FormsConfigMutation {
     type Diff = FormsConfig;
 
     fn diff(&self, base: &FormsConfig) -> FormsConfig {
         let mut next = base.clone();
         match self {
-            FormsConfigOperation::Snapshot { config } => return config.clone(),
-            FormsConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            FormsConfigOperation::SetStepIndex { index } => next.current_step_index = *index,
-            FormsConfigOperation::SetTryValues { json } => next.try_values_json = json.clone(),
-            FormsConfigOperation::SetLocale { value } => next.locale = value.clone(),
-            FormsConfigOperation::SetContributions { json } => next.contributions_json = json.clone(),
+            FormsConfigMutation::Snapshot { config } => return config.clone(),
+            FormsConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            FormsConfigMutation::SetStepIndex { index } => next.current_step_index = *index,
+            FormsConfigMutation::SetTryValues { json } => next.try_values_json = json.clone(),
+            FormsConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            FormsConfigMutation::SetContributions { json } => next.contributions_json = json.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &FormsConfig) -> Vec<Self> {
-        vec![FormsConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &FormsConfig) -> Vec<Self> {
+        vec![FormsConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -251,9 +251,9 @@ mod tests {
         store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    fn config_round_trip(base: &FormsConfig, operation: &FormsConfigOperation) -> FormsConfig {
+    fn config_round_trip(base: &FormsConfig, operation: &FormsConfigMutation) -> FormsConfig {
         let forward = operation.diff(base);
-        let backwards = operation.backwards(base);
+        let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
             restored = back.diff(&restored);
@@ -263,22 +263,22 @@ mod tests {
     }
 
     #[test]
-    fn config_operations_apply_and_restore_every_field() {
+    fn config_mutations_apply_and_restore_every_field() {
         let base = FormsConfig::default();
-        assert_eq!(config_round_trip(&base, &FormsConfigOperation::SetSelection { ids: vec!["q1".into()] }).selected_ids, vec!["q1".to_string()]);
-        assert_eq!(config_round_trip(&base, &FormsConfigOperation::SetStepIndex { index: 2 }).current_step_index, 2);
-        assert_eq!(config_round_trip(&base, &FormsConfigOperation::SetTryValues { json: r#"{"a":1}"#.into() }).try_values_json, r#"{"a":1}"#);
-        assert_eq!(config_round_trip(&base, &FormsConfigOperation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
-        assert_eq!(config_round_trip(&base, &FormsConfigOperation::SetContributions { json: "[]".into() }).contributions_json, "[]");
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetSelection { ids: vec!["q1".into()] }).selected_ids, vec!["q1".to_string()]);
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetStepIndex { index: 2 }).current_step_index, 2);
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetTryValues { json: r#"{"a":1}"#.into() }).try_values_json, r#"{"a":1}"#);
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetContributions { json: "[]".into() }).contributions_json, "[]");
     }
 
     #[test]
     fn config_snapshot_op_text_round_trips() {
         let config = FormsConfig { selected_ids: vec!["q1".into(), "q2".into()], current_step_index: 1, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
-        store::test_support::assert_op_line_round_trip(&FormsConfigOperation::Snapshot { config });
-        store::test_support::assert_op_line_round_trip(&FormsConfigOperation::SetSelection { ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&FormsConfigOperation::SetStepIndex { index: 3 });
-        store::test_support::assert_op_line_round_trip(&FormsConfigOperation::SetLocale { value: "en-US".into() });
+        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetSelection { ids: vec!["a".into()] });
+        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex { index: 3 });
+        store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale { value: "en-US".into() });
     }
 }
 //#endregion 🧪️Tests

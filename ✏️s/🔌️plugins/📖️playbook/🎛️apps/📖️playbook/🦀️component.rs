@@ -8,13 +8,13 @@
 //! importer (an app-level `DocumentApp` trait override, not a command).
 
 use crate::apps::playbook::commands::{block, contribution, selection, step, locale};
-use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigOperation};
+use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::apps::playbook::modes::builder;
 use crate::apps::playbook::modes::builder::windows::builder as builder_window;
 use crate::artifacts::playbook::engine::{default_block, flatten_playbook_blocks, playbook_io, PlaybookChapterPayload};
-use crate::artifacts::playbook::op::PlaybookOperation;
+use crate::artifacts::playbook::op::PlaybookMutation;
 use crate::artifacts::playbook::{artifact_kind, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -34,7 +34,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — copied verbatim off the pre-migration
     /// `playbook_protocol::PlaybookCommand`'s `#[dsl(key)]` attributes. **Row order is the binary
     /// variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum PlaybookCommand for PlaybookSpec, PlaybookOperation, PlaybookConfig, PlaybookConfigOperation {
+    pub enum PlaybookCommand for PlaybookSpec, PlaybookMutation, PlaybookConfig, PlaybookConfigMutation {
         "addStep" as "add-step" => add_step::AddStep,
         "removeStep" as "remove-step" => remove_step::RemoveStep,
         "moveStep" as "move-step" => move_step::MoveStep,
@@ -59,17 +59,17 @@ use contribution::set_contributions;
 
 //#region 🔖️PlaybookPlayApp
 /// 🧪️ B1: unit struct — the former app-struct `RefCell<Vec<String>>` selection now lives in
-/// `PlaybookConfig` (see `DocumentApp::Config`), written through `PlaybookConfigOperation`s.
+/// `PlaybookConfig` (see `DocumentApp::Config`), written through `PlaybookConfigMutation`s.
 #[derive(Default)]
 pub struct PlaybookPlayApp;
 
 impl DocumentApp for PlaybookPlayApp {
     type Projection = PlaybookSpec;
-    type Operation = PlaybookOperation;
+    type Mutation = PlaybookMutation;
     type Config = PlaybookConfig;
-    type ConfigOperation = PlaybookConfigOperation;
+    type ConfigMutation = PlaybookConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = PlaybookCommand;
 
@@ -90,7 +90,7 @@ impl DocumentApp for PlaybookPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PlaybookCommand, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &PlaybookCommand, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -98,7 +98,7 @@ impl DocumentApp for PlaybookPlayApp {
     /// `writer_engine::WriterChapterPayload`/`PlaybookChapterPayload`) and inserts it as a `"note"` block
     /// (free-form `text` field, non-interactive) into a dedicated `"imported"` step, created on first
     /// import and reused on every later one (idempotent step creation).
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PlaybookSpec>) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PlaybookSpec>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "chapters:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -109,14 +109,14 @@ impl DocumentApp for PlaybookPlayApp {
         let spec = doc.projection;
         let mut operations = Vec::new();
         if !spec.steps.iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
-            operations.push(PlaybookOperation::AddStep { step: PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() }, index: None });
+            operations.push(PlaybookMutation::AddStep { step: PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() }, index: None });
         }
         let block_id = format!("chapter-{}", flatten_playbook_blocks(spec).len() + 1);
         let mut block = default_block(block_id, "note");
         block.label = chapter.title;
         block.text = Some(chapter.text);
         operations.push(crate::artifacts::playbook::op::add_block_operation(PLAYBOOK_IMPORTED_STEP_ID, block, None));
-        Ok(Emit::operations(operations))
+        Ok(Emit::mutations(operations))
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
@@ -141,13 +141,13 @@ pub fn create_playbook_play_app() -> App {
             .default_mode_id(builder::PLAYBOOK_PLAY_MODE_BUILDER)
             .window_kind_def(builder_window::definition())
             .default_layout(builder::layout())
-            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
-            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
-            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
-            .operation("addBlock", LocalizedLabel::native("Add Block", "Baustein hinzufügen"))
-            .operation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
-            .operation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
-            .operation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
+            .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .mutation("addBlock", LocalizedLabel::native("Add Block", "Baustein hinzufügen"))
+            .mutation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
+            .mutation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
+            .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
             .action_args("addBlock", vec![
@@ -343,10 +343,10 @@ mod tests {
         let doc_view = DocumentView { projection: &spec, history: &history };
         let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
         let emit = app.import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
-        assert_eq!(emit.document_operations.len(), 2, "creates the imported step, then the note block");
-        assert!(matches!(&emit.document_operations[0], PlaybookOperation::AddStep { step, .. } if step.id == PLAYBOOK_IMPORTED_STEP_ID));
-        match &emit.document_operations[1] {
-            PlaybookOperation::AddBlock { step_id, block, .. } => {
+        assert_eq!(emit.document_mutations.len(), 2, "creates the imported step, then the note block");
+        assert!(matches!(&emit.document_mutations[0], PlaybookMutation::AddStep { step, .. } if step.id == PLAYBOOK_IMPORTED_STEP_ID));
+        match &emit.document_mutations[1] {
+            PlaybookMutation::AddBlock { step_id, block, .. } => {
                 assert_eq!(step_id, PLAYBOOK_IMPORTED_STEP_ID);
                 assert_eq!(block.kind, "note");
                 assert_eq!(block.label, "Jack Query");
@@ -365,8 +365,8 @@ mod tests {
         let doc_view = DocumentView { projection: &spec, history: &history };
         let media = chapter_media("second chapter", "Second");
         let emit = app.import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
-        assert_eq!(emit.document_operations.len(), 1, "the imported step already exists, only the block is added");
-        assert!(matches!(&emit.document_operations[0], PlaybookOperation::AddBlock { step_id, .. } if step_id == PLAYBOOK_IMPORTED_STEP_ID));
+        assert_eq!(emit.document_mutations.len(), 1, "the imported step already exists, only the block is added");
+        assert!(matches!(&emit.document_mutations[0], PlaybookMutation::AddBlock { step_id, .. } if step_id == PLAYBOOK_IMPORTED_STEP_ID));
     }
 
     #[test]

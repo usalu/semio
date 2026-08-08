@@ -1,7 +1,7 @@
 //! 🎞️ Animate present app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch. B1: the pure-trait pivot — `AnimatePresentPlayApp` is a unit struct; every former
 //! `AnimatePresentPlayRuntime` field (selection, engagement draft) now lives in
-//! `crate::apps::present::config::PresentConfig`, written via `PresentConfigOperation`s (real
+//! `crate::apps::present::config::PresentConfig`, written via `PresentConfigMutation`s (real
 //! `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
 //! `PresentCommand` channel via `DocumentApp::handle`.
 //!
@@ -12,16 +12,16 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::present::commands::{engagement, grid, shell, source, tile, view};
-use crate::apps::present::config::{PresentConfig, PresentConfigOperation};
+use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::modes::main;
 use crate::apps::present::modes::main::windows::tile_editor;
 use crate::apps::present::panels::{catalogue, document, inspection};
 use crate::apps::present::terminology::animate_present_labels;
 use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile_crop, next_frame_tile_id};
-use crate::artifacts::present::op::PresentOperation;
+use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_deck, FigureTileDraft, PresentDeck, PRESENT_DECK_SCHEMA};
-use protocol::CollectionOperation;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use protocol::CollectionMutation;
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashSet;
@@ -90,7 +90,7 @@ semio_framework_plugin::app_commands! {
     /// `"animate.resetGrid" as "reset-grid"` is the row that proves it (mirrors the pre-B1
     /// `handle_command`-only `"animate.resetGrid"` app-scope command). **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum PresentCommand for PresentDeck, PresentOperation, PresentConfig, PresentConfigOperation {
+    pub enum PresentCommand for PresentDeck, PresentMutation, PresentConfig, PresentConfigMutation {
         "seedGrid" as "seed-grid" => seed_grid::SeedGrid,
         "addTile" as "add-tile" => add_tile::AddTile,
         "deleteTile" as "delete-tile" => delete_tile::DeleteTile,
@@ -107,7 +107,7 @@ semio_framework_plugin::app_commands! {
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "setLocale" as "set-locale" => set_locale::SetLocale,
-        "noOperation" as "no-op" => no_operation::NoOperation,
+        "noMutation" as "no-op" => no_operation::NoMutation,
         "copyPrompt" as "copy-prompt" => copy_prompt::CopyPrompt,
         "exportVideoFromDeck" as "export-video-from-deck" => export_video_from_deck::ExportVideoFromDeck,
     }
@@ -126,17 +126,17 @@ use view::{canvas_pointer_down, no_operation, set_locale, set_selected_ids};
 //#region 🔖️AnimatePresentPlayApp
 /// 🧪️ B1: unit struct — every former `AnimatePresentPlayRuntime` field now lives in
 /// `crate::apps::present::config::PresentConfig` (see `DocumentApp::Config`), written through
-/// `PresentConfigOperation`s.
+/// `PresentConfigMutation`s.
 #[derive(Default)]
 pub struct AnimatePresentPlayApp;
 
 impl DocumentApp for AnimatePresentPlayApp {
     type Projection = PresentDeck;
-    type Operation = PresentOperation;
+    type Mutation = PresentMutation;
     type Config = PresentConfig;
-    type ConfigOperation = PresentConfigOperation;
+    type ConfigMutation = PresentConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = PresentCommand;
 
@@ -151,8 +151,8 @@ impl DocumentApp for AnimatePresentPlayApp {
         Some(crate::artifacts::present::engine::present_io())
     }
 
-    fn whole_document_operation(projection: PresentDeck) -> Option<PresentOperation> {
-        Some(PresentOperation::SetDeck { deck: projection })
+    fn whole_document_operation(projection: PresentDeck) -> Option<PresentMutation> {
+        Some(PresentMutation::SetDeck { deck: projection })
     }
 
     /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
@@ -160,7 +160,7 @@ impl DocumentApp for AnimatePresentPlayApp {
     /// doc comment for why this schema's single shared `source` means tiles, not `source`, are the
     /// natural insertion point). Never mutates anything directly: the caller applies the returned
     /// `Tiles(Add)` through the ordinary, undoable document store.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PresentDeck>) -> Result<Emit<PresentOperation, PresentConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PresentDeck>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "frames:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -170,7 +170,7 @@ impl DocumentApp for AnimatePresentPlayApp {
         let crop = next_frame_tile_crop(count);
         let name = frame_media_name(port, media)?;
         let tile = FigureTileDraft { id: id.clone(), name, crop };
-        Ok(Emit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { index: count, item: tile })]))
+        Ok(Emit::mutations(vec![PresentMutation::Tiles(CollectionMutation::Add { index: count, item: tile })]))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -179,7 +179,7 @@ impl DocumentApp for AnimatePresentPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentOperation, PresentConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -217,17 +217,17 @@ pub fn create_animate_present_app() -> App {
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
             // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
-            .operation("seedGrid", LocalizedLabel::native("Seed Grid", "Raster erzeugen"))
-            .operation("addTile", LocalizedLabel::native("Add Tile", "Kachel hinzufügen"))
-            .operation("deleteTile", LocalizedLabel::native("Delete Tile", "Kachel löschen"))
-            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-            .operation("renameTiles", LocalizedLabel::native("Rename Tiles", "Kacheln umbenennen"))
-            .operation("patchTileCrops", LocalizedLabel::native("Patch Tile Crops", "Kachelzuschnitte aktualisieren"))
-            .operation("setSource", LocalizedLabel::native("Set Source", "Quelle festlegen"))
-            .operation("setFrame", LocalizedLabel::native("Set Frame", "Rahmen festlegen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("clearTiles", LocalizedLabel::native("Clear Tiles", "Kacheln leeren"))
-            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .mutation("seedGrid", LocalizedLabel::native("Seed Grid", "Raster erzeugen"))
+            .mutation("addTile", LocalizedLabel::native("Add Tile", "Kachel hinzufügen"))
+            .mutation("deleteTile", LocalizedLabel::native("Delete Tile", "Kachel löschen"))
+            .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .mutation("renameTiles", LocalizedLabel::native("Rename Tiles", "Kacheln umbenennen"))
+            .mutation("patchTileCrops", LocalizedLabel::native("Patch Tile Crops", "Kachelzuschnitte aktualisieren"))
+            .mutation("setSource", LocalizedLabel::native("Set Source", "Quelle festlegen"))
+            .mutation("setFrame", LocalizedLabel::native("Set Frame", "Rahmen festlegen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("clearTiles", LocalizedLabel::native("Clear Tiles", "Kacheln leeren"))
+            .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
             .shell_action("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"))
             .shell_action("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"))
@@ -235,7 +235,7 @@ pub fn create_animate_present_app() -> App {
             .view_action("setSelectedIds", LocalizedLabel::native("Set Selected Ids", "Auswahl-IDs festlegen"))
             .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
-            .view_action("noOperation", LocalizedLabel::native("No Operation", "Keine Aktion"))
+            .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
@@ -328,7 +328,7 @@ mod tests {
     fn app_manifest_declares_expected_operations_and_shell_actions() {
         use semio_framework_plugin::ActionKind;
         let definition = create_animate_present_app().definition;
-        let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Operation)).map(|action| action.id.as_str()).collect();
+        let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
         for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
             assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
         }
@@ -472,7 +472,7 @@ mod tests {
             ("engagementInput", "engagement-input"),
             ("canvasPointerDown", "canvas-pointer-down"),
             ("setLocale", "set-locale"),
-            ("noOperation", "no-op"),
+            ("noMutation", "no-op"),
             ("copyPrompt", "copy-prompt"),
             ("exportVideoFromDeck", "export-video-from-deck"),
         ];
@@ -520,7 +520,7 @@ mod tests {
             PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "add".into() }),
             PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) }),
             PresentCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            PresentCommand::NoOperation(no_operation::NoOperation {}),
+            PresentCommand::NoMutation(no_operation::NoMutation {}),
             PresentCommand::CopyPrompt(copy_prompt::CopyPrompt {}),
             PresentCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: "output/x".into(), scene_json: "{}".into() }),
         ]

@@ -18,11 +18,11 @@ mod document_vcs {
 
     use store::{DocumentEnvelope, DocumentStore};
 
-    use crate::artifacts::writer::op::WriterOperation;
+    use crate::artifacts::writer::op::WriterMutation;
     use crate::artifacts::writer::WriterProjection;
 
-    type WriterEnvelope = DocumentEnvelope<WriterProjection, WriterOperation>;
-    type WriterStore = DocumentStore<WriterProjection, WriterOperation>;
+    type WriterEnvelope = DocumentEnvelope<WriterProjection, WriterMutation>;
+    type WriterStore = DocumentStore<WriterProjection, WriterMutation>;
 
     #[wasm_bindgen]
     pub struct WriterDocumentVcs {

@@ -3,7 +3,7 @@
 #![cfg(target_arch = "wasm32")]
 
 use crate::artifacts::procedural3d::engine::empty_procedural3d_projection;
-use crate::artifacts::procedural3d::op::{Procedural3dEnvelope, Procedural3dStore};
+use crate::artifacts::procedural3d::mutations::{Procedural3dEnvelope, Procedural3dStore};
 use crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA;
 use std::cell::RefCell;
 use store::create_document_envelope;

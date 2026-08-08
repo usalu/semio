@@ -141,11 +141,11 @@ pub fn empty_space_projection(name: &str, kind: SpaceKind, visibility: SpaceVisi
     }
 }
 
-//#region 🔖️SpaceOperation
+//#region 🔖️SpaceMutation
 /// ⚡️ One settled space-manifest mutation. Every variant's op keyword is the auto-derived kebab-case
 /// of its own name (`UpsertUser` -> `upsert-user`, ...) — see [`protocol::OpText`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum SpaceOperation {
+pub enum SpaceMutation {
     SetName {
         name: String,
     },
@@ -220,7 +220,7 @@ pub struct SpaceDiff {
     pub set_extension_enabled: Option<bool>,
 }
 
-impl protocol::OperationDiff<SpaceProjection> for SpaceDiff {
+impl protocol::MutationDiff<SpaceProjection> for SpaceDiff {
     fn apply(&self, base: &SpaceProjection) -> SpaceProjection {
         let mut next = base.clone();
         if let Some(name) = &self.name {
@@ -326,26 +326,26 @@ impl protocol::OperationDiff<SpaceProjection> for SpaceDiff {
     }
 }
 
-impl protocol::Operation<SpaceProjection> for SpaceOperation {
+impl protocol::Mutation<SpaceProjection> for SpaceMutation {
     type Diff = SpaceDiff;
 
     fn diff(&self, _base: &SpaceProjection) -> SpaceDiff {
         let mut diff = SpaceDiff::default();
         match self {
-            SpaceOperation::SetName { name } => diff.name = Some(name.clone()),
-            SpaceOperation::SetKind { kind } => diff.kind = Some(*kind),
-            SpaceOperation::SetVisibility { visibility } => diff.visibility = Some(*visibility),
-            SpaceOperation::UpsertUser { user } => diff.upsert_user = Some(user.clone()),
-            SpaceOperation::RemoveUser { user_id } => diff.remove_user_id = Some(user_id.clone()),
-            SpaceOperation::AddCollection { collection } => diff.add_collection = Some(collection.clone()),
-            SpaceOperation::RemoveCollection { collection_id } => diff.remove_collection_id = Some(collection_id.clone()),
-            SpaceOperation::RenameCollection { collection_id, name } => {
+            SpaceMutation::SetName { name } => diff.name = Some(name.clone()),
+            SpaceMutation::SetKind { kind } => diff.kind = Some(*kind),
+            SpaceMutation::SetVisibility { visibility } => diff.visibility = Some(*visibility),
+            SpaceMutation::UpsertUser { user } => diff.upsert_user = Some(user.clone()),
+            SpaceMutation::RemoveUser { user_id } => diff.remove_user_id = Some(user_id.clone()),
+            SpaceMutation::AddCollection { collection } => diff.add_collection = Some(collection.clone()),
+            SpaceMutation::RemoveCollection { collection_id } => diff.remove_collection_id = Some(collection_id.clone()),
+            SpaceMutation::RenameCollection { collection_id, name } => {
                 diff.rename_collection_id = Some(collection_id.clone());
                 diff.rename_collection_name = Some(name.clone());
             }
-            SpaceOperation::InstallProgram { plugin_id } => diff.install_program = Some(plugin_id.clone()),
-            SpaceOperation::UninstallProgram { plugin_id } => diff.uninstall_program = Some(plugin_id.clone()),
-            SpaceOperation::InstallExtension { extension_id, version, source_uri, package_hash, enabled } => {
+            SpaceMutation::InstallProgram { plugin_id } => diff.install_program = Some(plugin_id.clone()),
+            SpaceMutation::UninstallProgram { plugin_id } => diff.uninstall_program = Some(plugin_id.clone()),
+            SpaceMutation::InstallExtension { extension_id, version, source_uri, package_hash, enabled } => {
                 diff.install_extension = Some(InstalledExtension {
                     extension_id: extension_id.clone(),
                     version: version.clone(),
@@ -354,8 +354,8 @@ impl protocol::Operation<SpaceProjection> for SpaceOperation {
                     enabled: *enabled,
                 });
             }
-            SpaceOperation::UninstallExtension { extension_id } => diff.uninstall_extension_id = Some(extension_id.clone()),
-            SpaceOperation::SetExtensionEnabled { extension_id, enabled } => {
+            SpaceMutation::UninstallExtension { extension_id } => diff.uninstall_extension_id = Some(extension_id.clone()),
+            SpaceMutation::SetExtensionEnabled { extension_id, enabled } => {
                 diff.set_extension_enabled_id = Some(extension_id.clone());
                 diff.set_extension_enabled = Some(*enabled);
             }
@@ -363,56 +363,56 @@ impl protocol::Operation<SpaceProjection> for SpaceOperation {
         diff
     }
 
-    fn backwards(&self, base: &SpaceProjection) -> Vec<Self> {
+    fn inverse(&self, base: &SpaceProjection) -> Vec<Self> {
         match self {
-            SpaceOperation::SetName { .. } => vec![SpaceOperation::SetName { name: base.name.clone() }],
-            SpaceOperation::SetKind { .. } => vec![SpaceOperation::SetKind { kind: base.kind }],
-            SpaceOperation::SetVisibility { .. } => vec![SpaceOperation::SetVisibility { visibility: base.visibility }],
-            SpaceOperation::UpsertUser { user } => match base.users.iter().find(|existing| existing.id == user.id) {
-                Some(existing) => vec![SpaceOperation::UpsertUser { user: existing.clone() }],
-                None => vec![SpaceOperation::RemoveUser { user_id: user.id.clone() }],
+            SpaceMutation::SetName { .. } => vec![SpaceMutation::SetName { name: base.name.clone() }],
+            SpaceMutation::SetKind { .. } => vec![SpaceMutation::SetKind { kind: base.kind }],
+            SpaceMutation::SetVisibility { .. } => vec![SpaceMutation::SetVisibility { visibility: base.visibility }],
+            SpaceMutation::UpsertUser { user } => match base.users.iter().find(|existing| existing.id == user.id) {
+                Some(existing) => vec![SpaceMutation::UpsertUser { user: existing.clone() }],
+                None => vec![SpaceMutation::RemoveUser { user_id: user.id.clone() }],
             },
-            SpaceOperation::RemoveUser { user_id } => base.users.iter().find(|user| &user.id == user_id).map(|user| vec![SpaceOperation::UpsertUser { user: user.clone() }]).unwrap_or_default(),
-            SpaceOperation::AddCollection { collection } => vec![SpaceOperation::RemoveCollection { collection_id: collection.id.clone() }],
-            SpaceOperation::RemoveCollection { collection_id } => {
-                base.collections.iter().find(|collection| &collection.id == collection_id).map(|collection| vec![SpaceOperation::AddCollection { collection: collection.clone() }]).unwrap_or_default()
+            SpaceMutation::RemoveUser { user_id } => base.users.iter().find(|user| &user.id == user_id).map(|user| vec![SpaceMutation::UpsertUser { user: user.clone() }]).unwrap_or_default(),
+            SpaceMutation::AddCollection { collection } => vec![SpaceMutation::RemoveCollection { collection_id: collection.id.clone() }],
+            SpaceMutation::RemoveCollection { collection_id } => {
+                base.collections.iter().find(|collection| &collection.id == collection_id).map(|collection| vec![SpaceMutation::AddCollection { collection: collection.clone() }]).unwrap_or_default()
             }
-            SpaceOperation::RenameCollection { collection_id, .. } => base
+            SpaceMutation::RenameCollection { collection_id, .. } => base
                 .collections
                 .iter()
                 .find(|collection| &collection.id == collection_id)
-                .map(|collection| vec![SpaceOperation::RenameCollection { collection_id: collection_id.clone(), name: collection.name.clone() }])
+                .map(|collection| vec![SpaceMutation::RenameCollection { collection_id: collection_id.clone(), name: collection.name.clone() }])
                 .unwrap_or_default(),
-            SpaceOperation::InstallProgram { plugin_id } => {
+            SpaceMutation::InstallProgram { plugin_id } => {
                 if base.programs.contains(plugin_id) {
                     Vec::new()
                 } else {
-                    vec![SpaceOperation::UninstallProgram { plugin_id: plugin_id.clone() }]
+                    vec![SpaceMutation::UninstallProgram { plugin_id: plugin_id.clone() }]
                 }
             }
-            SpaceOperation::UninstallProgram { plugin_id } => {
+            SpaceMutation::UninstallProgram { plugin_id } => {
                 if base.programs.contains(plugin_id) {
-                    vec![SpaceOperation::InstallProgram { plugin_id: plugin_id.clone() }]
+                    vec![SpaceMutation::InstallProgram { plugin_id: plugin_id.clone() }]
                 } else {
                     Vec::new()
                 }
             }
-            SpaceOperation::InstallExtension { extension_id, .. } => match base.extensions.iter().find(|existing| &existing.extension_id == extension_id) {
-                Some(existing) => vec![SpaceOperation::InstallExtension {
+            SpaceMutation::InstallExtension { extension_id, .. } => match base.extensions.iter().find(|existing| &existing.extension_id == extension_id) {
+                Some(existing) => vec![SpaceMutation::InstallExtension {
                     extension_id: existing.extension_id.clone(),
                     version: existing.version.clone(),
                     source_uri: existing.source_uri.clone(),
                     package_hash: existing.package_hash.clone(),
                     enabled: existing.enabled,
                 }],
-                None => vec![SpaceOperation::UninstallExtension { extension_id: extension_id.clone() }],
+                None => vec![SpaceMutation::UninstallExtension { extension_id: extension_id.clone() }],
             },
-            SpaceOperation::UninstallExtension { extension_id } => base
+            SpaceMutation::UninstallExtension { extension_id } => base
                 .extensions
                 .iter()
                 .find(|existing| &existing.extension_id == extension_id)
                 .map(|existing| {
-                    vec![SpaceOperation::InstallExtension {
+                    vec![SpaceMutation::InstallExtension {
                         extension_id: existing.extension_id.clone(),
                         version: existing.version.clone(),
                         source_uri: existing.source_uri.clone(),
@@ -421,12 +421,12 @@ impl protocol::Operation<SpaceProjection> for SpaceOperation {
                     }]
                 })
                 .unwrap_or_default(),
-            SpaceOperation::SetExtensionEnabled { extension_id, .. } => base
+            SpaceMutation::SetExtensionEnabled { extension_id, .. } => base
                 .extensions
                 .iter()
                 .find(|existing| &existing.extension_id == extension_id)
                 .map(|existing| {
-                    vec![SpaceOperation::SetExtensionEnabled {
+                    vec![SpaceMutation::SetExtensionEnabled {
                         extension_id: extension_id.clone(),
                         enabled: existing.enabled,
                     }]
@@ -440,7 +440,7 @@ impl protocol::Operation<SpaceProjection> for SpaceOperation {
         reconcile_space_atelier_invariant(projection)
     }
 }
-//#endregion 🔖️SpaceOperation
+//#endregion 🔖️SpaceMutation
 //#endregion 🔖️Space
 
 //#region 🔖️Collection
@@ -570,13 +570,13 @@ pub fn empty_collection_projection(name: &str) -> CollectionProjection {
     CollectionProjection { schema: S_COLLECTION_SCHEMA.into(), name: name.into(), folders: Vec::new(), entries: Vec::new() }
 }
 
-//#region 🔖️CollectionOperation
+//#region 🔖️CollectionMutation
 /// ⚡️ One settled collection-tree mutation. `Move*`/`Rename*`/`ReplaceEntryBody` diff as the WHOLE
 /// post-mutation folder/entry record (see `CollectionDiff` below) rather than a bare field delta —
 /// sidesteps the derive engine's lack of nested-`Option` support (a "was this field touched, and to
 /// what new *optional* value" diff shape) while staying exactly as replayable.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum CollectionOperation {
+pub enum CollectionMutation {
     SetName {
         name: String,
     },
@@ -660,7 +660,7 @@ fn replace_entry(entries: &mut Vec<CollectionEntry>, replacement: CollectionEntr
     }
 }
 
-impl protocol::OperationDiff<CollectionProjection> for CollectionDiff {
+impl protocol::MutationDiff<CollectionProjection> for CollectionDiff {
     fn apply(&self, base: &CollectionProjection) -> CollectionProjection {
         let mut next = base.clone();
         if let Some(name) = &self.name {
@@ -739,52 +739,52 @@ impl protocol::OperationDiff<CollectionProjection> for CollectionDiff {
     }
 }
 
-impl protocol::Operation<CollectionProjection> for CollectionOperation {
+impl protocol::Mutation<CollectionProjection> for CollectionMutation {
     type Diff = CollectionDiff;
 
     fn diff(&self, base: &CollectionProjection) -> CollectionDiff {
         let mut diff = CollectionDiff::default();
         match self {
-            CollectionOperation::SetName { name } => diff.name = Some(name.clone()),
-            CollectionOperation::AddFolder { folder, at } => {
+            CollectionMutation::SetName { name } => diff.name = Some(name.clone()),
+            CollectionMutation::AddFolder { folder, at } => {
                 diff.add_folder = Some(folder.clone());
                 diff.add_folder_at = Some(*at);
             }
-            CollectionOperation::RemoveFolder { folder_id } => diff.remove_folder_id = Some(folder_id.clone()),
-            CollectionOperation::MoveFolder { folder_id, parent_id } => {
+            CollectionMutation::RemoveFolder { folder_id } => diff.remove_folder_id = Some(folder_id.clone()),
+            CollectionMutation::MoveFolder { folder_id, parent_id } => {
                 if let Some(folder) = base.folders.iter().find(|folder| &folder.id == folder_id) {
                     let mut moved = folder.clone();
                     moved.parent_id = parent_id.clone();
                     diff.move_folder = Some(moved);
                 }
             }
-            CollectionOperation::RenameFolder { folder_id, name } => {
+            CollectionMutation::RenameFolder { folder_id, name } => {
                 if let Some(folder) = base.folders.iter().find(|folder| &folder.id == folder_id) {
                     let mut renamed = folder.clone();
                     renamed.name = name.clone();
                     diff.rename_folder = Some(renamed);
                 }
             }
-            CollectionOperation::AddEntry { entry, at } => {
+            CollectionMutation::AddEntry { entry, at } => {
                 diff.add_entry = Some(entry.clone());
                 diff.add_entry_at = Some(*at);
             }
-            CollectionOperation::RemoveEntry { entry_id } => diff.remove_entry_id = Some(entry_id.clone()),
-            CollectionOperation::MoveEntry { entry_id, folder_id } => {
+            CollectionMutation::RemoveEntry { entry_id } => diff.remove_entry_id = Some(entry_id.clone()),
+            CollectionMutation::MoveEntry { entry_id, folder_id } => {
                 if let Some(entry) = base.entries.iter().find(|entry| &entry.id == entry_id) {
                     let mut moved = entry.clone();
                     moved.folder_id = folder_id.clone();
                     diff.move_entry = Some(moved);
                 }
             }
-            CollectionOperation::RenameEntry { entry_id, name } => {
+            CollectionMutation::RenameEntry { entry_id, name } => {
                 if let Some(entry) = base.entries.iter().find(|entry| &entry.id == entry_id) {
                     let mut renamed = entry.clone();
                     renamed.name = name.clone();
                     diff.rename_entry = Some(renamed);
                 }
             }
-            CollectionOperation::ReplaceEntryBody { entry_id, body } => {
+            CollectionMutation::ReplaceEntryBody { entry_id, body } => {
                 if let Some(entry) = base.entries.iter().find(|entry| &entry.id == entry_id) {
                     let mut replaced = entry.clone();
                     replaced.body = body.clone();
@@ -795,40 +795,40 @@ impl protocol::Operation<CollectionProjection> for CollectionOperation {
         diff
     }
 
-    fn backwards(&self, base: &CollectionProjection) -> Vec<Self> {
+    fn inverse(&self, base: &CollectionProjection) -> Vec<Self> {
         match self {
-            CollectionOperation::SetName { .. } => vec![CollectionOperation::SetName { name: base.name.clone() }],
-            CollectionOperation::AddFolder { folder, .. } => vec![CollectionOperation::RemoveFolder { folder_id: folder.id.clone() }],
-            CollectionOperation::RemoveFolder { folder_id } => base
+            CollectionMutation::SetName { .. } => vec![CollectionMutation::SetName { name: base.name.clone() }],
+            CollectionMutation::AddFolder { folder, .. } => vec![CollectionMutation::RemoveFolder { folder_id: folder.id.clone() }],
+            CollectionMutation::RemoveFolder { folder_id } => base
                 .folders
                 .iter()
                 .position(|folder| &folder.id == folder_id)
-                .map(|at| vec![CollectionOperation::AddFolder { folder: base.folders[at].clone(), at: at as u32 }])
+                .map(|at| vec![CollectionMutation::AddFolder { folder: base.folders[at].clone(), at: at as u32 }])
                 .unwrap_or_default(),
-            CollectionOperation::MoveFolder { folder_id, .. } => base
+            CollectionMutation::MoveFolder { folder_id, .. } => base
                 .folders
                 .iter()
                 .find(|folder| &folder.id == folder_id)
-                .map(|folder| vec![CollectionOperation::MoveFolder { folder_id: folder_id.clone(), parent_id: folder.parent_id.clone() }])
+                .map(|folder| vec![CollectionMutation::MoveFolder { folder_id: folder_id.clone(), parent_id: folder.parent_id.clone() }])
                 .unwrap_or_default(),
-            CollectionOperation::RenameFolder { folder_id, .. } => {
-                base.folders.iter().find(|folder| &folder.id == folder_id).map(|folder| vec![CollectionOperation::RenameFolder { folder_id: folder_id.clone(), name: folder.name.clone() }]).unwrap_or_default()
+            CollectionMutation::RenameFolder { folder_id, .. } => {
+                base.folders.iter().find(|folder| &folder.id == folder_id).map(|folder| vec![CollectionMutation::RenameFolder { folder_id: folder_id.clone(), name: folder.name.clone() }]).unwrap_or_default()
             }
-            CollectionOperation::AddEntry { entry, .. } => vec![CollectionOperation::RemoveEntry { entry_id: entry.id.clone() }],
-            CollectionOperation::RemoveEntry { entry_id } => base
+            CollectionMutation::AddEntry { entry, .. } => vec![CollectionMutation::RemoveEntry { entry_id: entry.id.clone() }],
+            CollectionMutation::RemoveEntry { entry_id } => base
                 .entries
                 .iter()
                 .position(|entry| &entry.id == entry_id)
-                .map(|at| vec![CollectionOperation::AddEntry { entry: base.entries[at].clone(), at: at as u32 }])
+                .map(|at| vec![CollectionMutation::AddEntry { entry: base.entries[at].clone(), at: at as u32 }])
                 .unwrap_or_default(),
-            CollectionOperation::MoveEntry { entry_id, .. } => {
-                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionOperation::MoveEntry { entry_id: entry_id.clone(), folder_id: entry.folder_id.clone() }]).unwrap_or_default()
+            CollectionMutation::MoveEntry { entry_id, .. } => {
+                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::MoveEntry { entry_id: entry_id.clone(), folder_id: entry.folder_id.clone() }]).unwrap_or_default()
             }
-            CollectionOperation::RenameEntry { entry_id, .. } => {
-                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionOperation::RenameEntry { entry_id: entry_id.clone(), name: entry.name.clone() }]).unwrap_or_default()
+            CollectionMutation::RenameEntry { entry_id, .. } => {
+                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::RenameEntry { entry_id: entry_id.clone(), name: entry.name.clone() }]).unwrap_or_default()
             }
-            CollectionOperation::ReplaceEntryBody { entry_id, .. } => {
-                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionOperation::ReplaceEntryBody { entry_id: entry_id.clone(), body: entry.body.clone() }]).unwrap_or_default()
+            CollectionMutation::ReplaceEntryBody { entry_id, .. } => {
+                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::ReplaceEntryBody { entry_id: entry_id.clone(), body: entry.body.clone() }]).unwrap_or_default()
             }
         }
     }
@@ -838,7 +838,7 @@ impl protocol::Operation<CollectionProjection> for CollectionOperation {
         reconcile_collection_integrity(projection)
     }
 }
-//#endregion 🔖️CollectionOperation
+//#endregion 🔖️CollectionMutation
 //#endregion 🔖️Collection
 
 //#region 🔖️Laws
@@ -1144,7 +1144,7 @@ pub struct DraftEntry {
 /// 🎯️ W5 Lane B: promoted from the W2/W4 stub to the real thing. `promote_draft`/`demote_asset` now
 /// relocate the draft's actual envelope bytes via an injected `SpaceBackbonePort` — read at
 /// `draft_uri`, written at `artifact_backbone_uri`/vice versa, byte-for-byte, no decode/re-encode —
-/// while still returning the `CollectionOperation` (`AddEntry`/`RemoveEntry`) that keeps promotion
+/// while still returning the `CollectionMutation` (`AddEntry`/`RemoveEntry`) that keeps promotion
 /// itself operation-sourced. One `DraftCatalog` per distinct backbone port identity lives in the
 /// port-keyed global registry below (`draft_catalog_for`), mirroring os-core's `SPACE_CATALOG_URIS`
 /// per-port keying — this crate still doesn't reach into os-core's session state directly (that
@@ -1223,15 +1223,15 @@ impl DraftCatalog {
     /// before and after, just at a different backbone uri — the plan's exact promotion invariant),
     /// then tombstones the draft uri. Only removes the draft bookkeeping once the byte move fully
     /// succeeds. Returns the draft bookkeeping (removed from this catalog) plus the
-    /// `CollectionOperation::AddEntry` the caller applies to their `CollectionProjection` — promotion
+    /// `CollectionMutation::AddEntry` the caller applies to their `CollectionProjection` — promotion
     /// stays operation-sourced even though it now really touches bytes. The artifact keeps its id
     /// (`entry.id == draft.artifact_id == document id`); a caller who knows the artifact's concrete
-    /// `<P, Operation>` pair can reconstruct a live `store::DocumentStore<P, Operation>` from the SAME
+    /// `<P, Mutation>` pair can reconstruct a live `store::DocumentStore<P, Mutation>` from the SAME
     /// moved bytes via `import_document_artifact` (see `🔖️ZipStoreBridge` above) and register it into
     /// their `store::SpaceHost` (`register_member`/`register_space_documents`) — this catalog stays
     /// type-erased on purpose (same reasoning as `ArtifactBody`'s hand-written `DslVariants`) and never
-    /// touches `P`/`Operation` itself, so it never calls `SpaceHost` directly.
-    pub fn promote_draft(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionOperation), SpaceError> {
+    /// touches `P`/`Mutation` itself, so it never calls `SpaceHost` directly.
+    pub fn promote_draft(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionMutation), SpaceError> {
         let draft = {
             let drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             drafts.get(draft_id).cloned().ok_or_else(|| SpaceError::UnknownDraft(draft_id.to_string()))?
@@ -1252,16 +1252,16 @@ impl DraftCatalog {
             kind_id: draft.kind_id.clone(),
             body: Box::new(ArtifactBody::Document { schema: draft.schema.clone(), document_id: draft.artifact_id.clone() }),
         };
-        Ok((draft, CollectionOperation::AddEntry { entry, at: u32::MAX }))
+        Ok((draft, CollectionMutation::AddEntry { entry, at: u32::MAX }))
     }
 
-    /// ⏪️ Demotion's STRUCTURAL inverse — removing the entry from the collection. `CollectionOperation`'s
-    /// own `backwards()` on `AddEntry` already produces exactly this (see `## Draft vs asset`'s
-    /// "demotion is AddEntry's natural backwards"); kept as a standalone helper since a caller building
+    /// ⏪️ Demotion's STRUCTURAL inverse — removing the entry from the collection. `CollectionMutation`'s
+    /// own `inverse()` on `AddEntry` already produces exactly this (see `## Draft vs asset`'s
+    /// "demotion is AddEntry's natural inverse"); kept as a standalone helper since a caller building
     /// a demote flow from scratch (not undoing a specific `AddEntry`) needs the operation without an
     /// `AddEntry` in hand. Does NOT move bytes — see `demote_asset` for the real byte-moving version.
-    pub fn demote_operation(entry_id: &str) -> CollectionOperation {
-        CollectionOperation::RemoveEntry { entry_id: entry_id.to_string() }
+    pub fn demote_operation(entry_id: &str) -> CollectionMutation {
+        CollectionMutation::RemoveEntry { entry_id: entry_id.to_string() }
     }
 
     /// ⏪️ REAL demotion: the byte-moving inverse of `promote_draft` — relocates `entry`'s envelope
@@ -1269,11 +1269,11 @@ impl DraftCatalog {
     /// byte-for-byte, tombstones the asset uri, and re-registers fresh draft bookkeeping (`now_ms`/
     /// `ttl_ms` are caller-supplied, same convention as `create_draft` — a demoted draft gets a fresh
     /// TTL window, it doesn't inherit whatever deadline it had before its original promotion). Returns
-    /// the `CollectionOperation::RemoveEntry` for the caller to apply to their `CollectionProjection`
+    /// the `CollectionMutation::RemoveEntry` for the caller to apply to their `CollectionProjection`
     /// (identical to `demote_operation`'s output — this is the byte-touching sibling of that pure
     /// helper, needed whenever a demotion must actually relocate bytes rather than just undo an
     /// in-hand `AddEntry`).
-    pub fn demote_asset(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, entry: &CollectionEntry, kind_id: &str, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionOperation, SpaceError> {
+    pub fn demote_asset(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, entry: &CollectionEntry, kind_id: &str, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
         let source_uri = artifact_backbone_uri(space_id, &entry.id);
         let target_uri = draft_uri(&entry.id);
         let envelope_bytes = port.read(&source_uri).map_err(|error| SpaceError::Backbone(error.to_string()))?;
@@ -1433,15 +1433,15 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 /// round-trips through a real `.zip` byte stream.
 ///
 /// 📤️ EXPORT side: a caller snapshots each open document artifact's `store::DocumentStore<P,
-/// Operation>` via its own `snapshot_pack()` into a `document_id -> store::DocumentPackFiles` table,
+/// Mutation>` via its own `snapshot_pack()` into a `document_id -> store::DocumentPackFiles` table,
 /// then hands `real_artifact_reader`/`real_blob_reader` (closures over that table and a live
 /// `store::BlobStore`) straight to `export_collection_zip`.
 ///
 /// 📥️ IMPORT side: `import_document_artifact`/`import_blob` are the inverse — reconstructing a real
-/// `store::DocumentStore<P, Operation>` from one `ImportedCollection::artifacts` entry's pack+spr
+/// `store::DocumentStore<P, Mutation>` from one `ImportedCollection::artifacts` entry's pack+spr
 /// bytes (generic over the artifact's own concrete schema, mirroring `store::parse_document_pack`'s
 /// own genericity — this crate never knows a document artifact's concrete type, only its `schema`
-/// string, so the caller supplies `P`/`Operation` at the call site), and re-`put`-ing one imported
+/// string, so the caller supplies `P`/`Mutation` at the call site), and re-`put`-ing one imported
 /// blob's bytes into a live `store::BlobStore`, verifying the freshly computed content hash still
 /// matches the `store::BlobRef` recorded in the collection.
 pub fn real_artifact_reader(pack_files: &HashMap<String, store::DocumentPackFiles>) -> impl Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + '_ {
@@ -1457,14 +1457,14 @@ pub fn real_blob_reader(blob_store: &dyn store::BlobStore) -> impl Fn(&str) -> R
     }
 }
 
-/// 📥️ Reconstructs a real `store::DocumentStore<P, Operation>` from one imported document artifact's
+/// 📥️ Reconstructs a real `store::DocumentStore<P, Mutation>` from one imported document artifact's
 /// pack+spr bytes — the import-side counterpart to snapshotting it for `real_artifact_reader`.
-pub fn import_document_artifact<P, Operation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::DocumentStore<P, Operation>, SpaceZipError>
+pub fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::DocumentStore<P, Mutation>, SpaceZipError>
 where
     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
-    Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    Mutation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText,
 {
-    let parsed = store::parse_document_pack::<P, Operation>(pack_bytes, spr_bytes).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
     Ok(store::DocumentStore::new(parsed.envelope))
 }
 
@@ -1575,47 +1575,47 @@ mod tests {
     }
     //#endregion 🧪️CollectionDocumentLaws
 
-    //#region 🧪️SpaceOperationLaws
+    //#region 🧪️SpaceMutationLaws
     #[test]
     fn space_operation_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::SetName { name: "Renamed".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::SetKind { kind: SpaceKind::Studio });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::SetVisibility { visibility: SpaceVisibility::Public });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator) });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::RemoveUser { user_id: "u2".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() } });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::RemoveCollection { collection_id: "c2".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::RenameCollection { collection_id: "c1".into(), name: "Renamed Collection".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::InstallProgram { plugin_id: "cad".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::UninstallProgram { plugin_id: "cad".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::InstallExtension {
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::SetName { name: "Renamed".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::SetKind { kind: SpaceKind::Studio });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::SetVisibility { visibility: SpaceVisibility::Public });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator) });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::RemoveUser { user_id: "u2".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() } });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::RemoveCollection { collection_id: "c2".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed Collection".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::InstallProgram { plugin_id: "cad".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::InstallExtension {
             extension_id: "flow-math".into(),
             version: "1.0.0".into(),
             source_uri: "https://example.test/flow-math.sxt".into(),
             package_hash: "hash-flow-math".into(),
             enabled: true,
         });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::UninstallExtension { extension_id: "flow-math".into() });
-        store::test_support::assert_op_line_round_trip(&SpaceOperation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::UninstallExtension { extension_id: "flow-math".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
     }
 
     #[test]
     fn space_operation_backwards_restores_pre_state() {
         let base = demo_space();
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::SetName { name: "New Name".into() });
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::UpsertUser { user: demo_user("u2", SpaceRole::Author) });
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::UpsertUser { user: demo_user("u1", SpaceRole::Spectator) });
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::RemoveUser { user_id: "u1".into() });
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() } });
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::RemoveCollection { collection_id: "c1".into() });
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::RenameCollection { collection_id: "c1".into(), name: "Renamed".into() });
-        store::test_support::assert_operation_round_trip(&base, SpaceOperation::InstallProgram { plugin_id: "cad".into() });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::SetName { name: "New Name".into() });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Author) });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u1", SpaceRole::Spectator) });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveUser { user_id: "u1".into() });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() } });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveCollection { collection_id: "c1".into() });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed".into() });
+        store::test_support::assert_operation_round_trip(&base, SpaceMutation::InstallProgram { plugin_id: "cad".into() });
         let mut with_program = base.clone();
         with_program.programs.push("cad".into());
-        store::test_support::assert_operation_round_trip(&with_program, SpaceOperation::UninstallProgram { plugin_id: "cad".into() });
+        store::test_support::assert_operation_round_trip(&with_program, SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
         store::test_support::assert_operation_round_trip(
             &base,
-            SpaceOperation::InstallExtension {
+            SpaceMutation::InstallExtension {
                 extension_id: "flow-math".into(),
                 version: "1.0.0".into(),
                 source_uri: "https://example.test/flow-math.sxt".into(),
@@ -1625,11 +1625,11 @@ mod tests {
         );
         let mut with_extension = base.clone();
         with_extension.extensions.push(demo_extension("flow-math", true));
-        store::test_support::assert_operation_round_trip(&with_extension, SpaceOperation::UninstallExtension { extension_id: "flow-math".into() });
-        store::test_support::assert_operation_round_trip(&with_extension, SpaceOperation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
+        store::test_support::assert_operation_round_trip(&with_extension, SpaceMutation::UninstallExtension { extension_id: "flow-math".into() });
+        store::test_support::assert_operation_round_trip(&with_extension, SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
         store::test_support::assert_operation_round_trip(
             &with_extension,
-            SpaceOperation::InstallExtension {
+            SpaceMutation::InstallExtension {
                 extension_id: "flow-math".into(),
                 version: "2.0.0".into(),
                 source_uri: "https://example.test/flow-math-v2.sxt".into(),
@@ -1661,45 +1661,45 @@ mod tests {
             assert_eq!(decoded, diff);
         }
     }
-    //#endregion 🧪️SpaceOperationLaws
+    //#endregion 🧪️SpaceMutationLaws
 
-    //#region 🧪️CollectionOperationLaws
+    //#region 🧪️CollectionMutationLaws
     #[test]
     fn collection_operation_op_text_round_trips_every_variant() {
         let folder = CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() };
         let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "s.puzzle2d".into(), document_id: "doc-e3".into() }) };
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::SetName { name: "Renamed".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::AddFolder { folder: folder.clone(), at: 0 });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::RemoveFolder { folder_id: "f1".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::MoveFolder { folder_id: "f1".into(), parent_id: Some("f2".into()) });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::MoveFolder { folder_id: "f1".into(), parent_id: None });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::RenameFolder { folder_id: "f1".into(), name: "Renders 2".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::AddEntry { entry: entry.clone(), at: 0 });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::RemoveEntry { entry_id: "e1".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::MoveEntry { entry_id: "e1".into(), folder_id: None });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::RenameEntry { entry_id: "e1".into(), name: "sketch 2".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionOperation::ReplaceEntryBody { entry_id: "e2".into(), body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::SetName { name: "Renamed".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::AddFolder { folder: folder.clone(), at: 0 });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::RemoveFolder { folder_id: "f1".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveFolder { folder_id: "f1".into(), parent_id: Some("f2".into()) });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveFolder { folder_id: "f1".into(), parent_id: None });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameFolder { folder_id: "f1".into(), name: "Renders 2".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::AddEntry { entry: entry.clone(), at: 0 });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::RemoveEntry { entry_id: "e1".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveEntry { entry_id: "e1".into(), folder_id: None });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameEntry { entry_id: "e1".into(), name: "sketch 2".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
     }
 
     #[test]
     fn collection_operation_binary_matches_text() {
-        store::test_support::assert_op_text_binary_equivalence(&CollectionOperation::SetName { name: "Renamed".into() });
+        store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::SetName { name: "Renamed".into() });
         let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "s.puzzle2d".into(), document_id: "doc-e3".into() }) };
-        store::test_support::assert_op_text_binary_equivalence(&CollectionOperation::AddEntry { entry, at: 0 });
+        store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::AddEntry { entry, at: 0 });
     }
 
     #[test]
     fn collection_operation_backwards_restores_pre_state() {
         let base = demo_collection();
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::SetName { name: "Renamed".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::AddFolder { folder: CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() }, at: 0 });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::RemoveFolder { folder_id: "f1".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::MoveFolder { folder_id: "f1".into(), parent_id: None });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::RenameFolder { folder_id: "f1".into(), name: "Renders 2".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::RemoveEntry { entry_id: "e1".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::MoveEntry { entry_id: "e1".into(), folder_id: None });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::RenameEntry { entry_id: "e1".into(), name: "sketch 2".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionOperation::ReplaceEntryBody { entry_id: "e2".into(), body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::SetName { name: "Renamed".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::AddFolder { folder: CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() }, at: 0 });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RemoveFolder { folder_id: "f1".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveFolder { folder_id: "f1".into(), parent_id: None });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameFolder { folder_id: "f1".into(), name: "Renders 2".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RemoveEntry { entry_id: "e1".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveEntry { entry_id: "e1".into(), folder_id: None });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameEntry { entry_id: "e1".into(), name: "sketch 2".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
     }
 
     #[test]
@@ -1715,7 +1715,7 @@ mod tests {
             assert_eq!(decoded, diff);
         }
     }
-    //#endregion 🧪️CollectionOperationLaws
+    //#endregion 🧪️CollectionMutationLaws
 
     //#region 🧪️RoleLaws
     #[test]
@@ -1890,7 +1890,7 @@ mod tests {
 
         let (removed_draft, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, Some("f1".into())).expect("promote");
         assert_eq!(removed_draft.artifact_id, draft.artifact_id);
-        let CollectionOperation::AddEntry { entry, .. } = &operation else { panic!("promote_draft must return AddEntry") };
+        let CollectionMutation::AddEntry { entry, .. } = &operation else { panic!("promote_draft must return AddEntry") };
         assert_eq!(entry.id, draft.artifact_id, "promotion preserves the document id");
         assert_eq!(entry.folder_id, Some("f1".into()));
         assert!(catalog.list_drafts().is_empty(), "promoted draft is no longer a draft");
@@ -1900,9 +1900,9 @@ mod tests {
         assert_eq!(port.read(&draft_uri(&draft.artifact_id)).expect("read tombstoned draft uri"), Vec::<u8>::new(), "draft uri is tombstoned after promotion");
 
         let demote = DraftCatalog::demote_operation(&entry.id);
-        assert_eq!(demote, CollectionOperation::RemoveEntry { entry_id: entry.id.clone() });
+        assert_eq!(demote, CollectionMutation::RemoveEntry { entry_id: entry.id.clone() });
 
-        // Operation-sourced round trip: AddEntry then its backwards restores the empty collection.
+        // Mutation-sourced round trip: AddEntry then its inverse restores the empty collection.
         let empty = empty_collection_projection("Demo");
         store::test_support::assert_operation_round_trip(&empty, operation);
     }
@@ -1918,10 +1918,10 @@ mod tests {
         port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
 
         let (_, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, None).expect("promote");
-        let CollectionOperation::AddEntry { entry, .. } = operation else { panic!("expected AddEntry") };
+        let CollectionMutation::AddEntry { entry, .. } = operation else { panic!("expected AddEntry") };
 
         let demote_operation = catalog.demote_asset(&port, "space-1", &entry, "puzzle.2d", "s.puzzle2d", 2_000, Some(1_000)).expect("demote");
-        assert_eq!(demote_operation, CollectionOperation::RemoveEntry { entry_id: entry.id.clone() });
+        assert_eq!(demote_operation, CollectionMutation::RemoveEntry { entry_id: entry.id.clone() });
 
         let restored_bytes = port.read(&draft_uri(&entry.id)).expect("read demoted draft bytes");
         assert_eq!(restored_bytes, original_bytes, "demoted envelope bytes are byte-identical to the originally-promoted ones");
@@ -2037,7 +2037,7 @@ mod tests {
     }
 
     /// 🧪️ End-to-end law with REAL `store` types (not the fixture-string readers `zip_fixture_bytes`
-    /// injects above): a real `store::DocumentStore<SpaceProjection, SpaceOperation>` document
+    /// injects above): a real `store::DocumentStore<SpaceProjection, SpaceMutation>` document
     /// artifact (itself an ordinary `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` document —
     /// exercising exactly the same `DocumentPack`/`OpBinary`/`OpText` machinery any real app document
     /// would) plus a real blob round-trip through `real_artifact_reader`/`real_blob_reader`/
@@ -2046,8 +2046,8 @@ mod tests {
     /// that export->import->export stays byte-stable with real data too.
     #[test]
     fn zip_export_import_round_trips_real_store_documents_and_blob() {
-        let mut nested_space_store = store::DocumentStore::new(store::create_document_envelope::<SpaceProjection, SpaceOperation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
-        nested_space_store.dispatch(store::DocumentCommand::Apply { operations: vec![SpaceOperation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
+        let mut nested_space_store = store::DocumentStore::new(store::create_document_envelope::<SpaceProjection, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
+        nested_space_store.dispatch(store::DocumentCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
         nested_space_store.dispatch(store::DocumentCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit checkpoint");
         let original_pack_files = nested_space_store.snapshot_pack().expect("snapshot pack");
 
@@ -2079,7 +2079,7 @@ mod tests {
         assert_eq!(imported_pack, &original_pack_files.pack, "artifact pack bytes are byte-identical after the round trip");
         assert_eq!(imported_spr, &original_pack_files.spr, "artifact spr bytes are byte-identical after the round trip");
 
-        let restored_store = import_document_artifact::<SpaceProjection, SpaceOperation>(imported_pack, imported_spr).expect("reconstruct store");
+        let restored_store = import_document_artifact::<SpaceProjection, SpaceMutation>(imported_pack, imported_spr).expect("reconstruct store");
         assert_eq!(restored_store.projection().expect("projection"), nested_space_store.projection().expect("projection"), "reconstructed document projection matches the original exactly");
 
         let (imported_blob, imported_blob_bytes) = imported.blobs.iter().find(|(blob, _)| blob.hash == blob_ref.hash).expect("blob present");

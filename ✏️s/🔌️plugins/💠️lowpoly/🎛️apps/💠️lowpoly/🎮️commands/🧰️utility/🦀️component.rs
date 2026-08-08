@@ -2,10 +2,10 @@
 //! also clears mid-gesture scratch so switching tools never leaves a stale drag behind) and per-utility
 //! parameter writes (`setUtilityParam`). Config-only.
 
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{is_paint_utility, utility_params_value};
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolyProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ pub mod set_utility_param {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &SetUtilityParam, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &SetUtilityParam, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mut params = utility_params_value(cfg.projection);
         let value: Value = serde_json::from_str(&payload.value_json).unwrap_or(Value::Null);
         if let Some(map) = params.as_object_mut() {
@@ -32,7 +32,7 @@ pub mod set_utility_param {
             map.insert(payload.key.clone(), value);
             params = Value::Object(map);
         }
-        Ok(Emit::config(vec![LowpolyConfigOperation::SetUtilityParams { json: params.to_string() }]))
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetUtilityParams { json: params.to_string() }]))
     }
 }
 //#endregion 🔖️SetUtilityParam
@@ -47,17 +47,17 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.reset_gestures();
-        let mut config_operations = vec![
-            LowpolyConfigOperation::SetActiveUtility { utility_id: payload.utility_id.clone() },
-            LowpolyConfigOperation::SetHoveredTarget { object_id: None, mode: None, id: None },
-            LowpolyConfigOperation::SetHoveredObject { object_id: None },
+        let mut config_mutations = vec![
+            LowpolyConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() },
+            LowpolyConfigMutation::SetHoveredTarget { object_id: None, mode: None, id: None },
+            LowpolyConfigMutation::SetHoveredObject { object_id: None },
         ];
         if is_paint_utility(&payload.utility_id) {
-            config_operations.push(LowpolyConfigOperation::SetPaintUtility { value: payload.utility_id.clone() });
+            config_mutations.push(LowpolyConfigMutation::SetPaintUtility { value: payload.utility_id.clone() });
         }
-        Ok(Emit::config(config_operations))
+        Ok(Emit::config(config_mutations))
     }
 }
 //#endregion 🔖️SetActiveUtility
@@ -74,7 +74,7 @@ mod tests {
         // 🧰️ Selecting a host-owned utility must never create an undoable edit.
         let mut a = app();
         let result = dispatch(&mut a, LowpolyCommand::SetActiveUtility(super::set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));
-        assert!(result.operations.is_empty(), "utility switch must emit no operations");
+        assert!(result.mutations.is_empty(), "utility switch must emit no operations");
         let before = a.projection().expect("projection");
         a.handle_action("undo", None, &testkit::meta("a")).unwrap();
         assert_eq!(a.projection().expect("projection"), before, "utility switch left nothing to undo");

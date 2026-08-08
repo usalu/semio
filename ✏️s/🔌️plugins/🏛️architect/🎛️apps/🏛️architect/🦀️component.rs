@@ -16,14 +16,14 @@ use crate::apps::architect::commands::register::{add_register_item, patch_regist
 use crate::apps::architect::commands::search::query;
 use crate::apps::architect::commands::selection::set_selection;
 use crate::apps::architect::commands::template::apply;
-use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigOperation};
+use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
 use crate::apps::architect::modes::edit as edit_mode;
 use crate::apps::architect::modes::edit::windows::{adjacency as adjacency_window, graph as graph_window, register as register_window, report as report_window, trace as trace_window};
 use crate::apps::architect::modes::{report as report_mode, review as review_mode};
 use crate::apps::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::program::op::ProgramOperation;
+use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::{empty_plugin, sample_plugin, Program, ARCHITECT_PROGRAM_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -48,7 +48,7 @@ semio_framework_plugin::app_commands! {
     /// JSON blob arguments (patches, CSV, DSL payloads, node-graph edit lists, viewport JSON) stay
     /// `String`-typed and are parsed inside each handler — mirrors `gis2d`'s `positions_json`/`camera_json`
     /// convention for the same reason (their shapes have no `dsl::DslField` binding of their own).
-    pub enum ArchitectCommand for Program, ProgramOperation, ArchitectConfig, ArchitectConfigOperation {
+    pub enum ArchitectCommand for Program, ProgramMutation, ArchitectConfig, ArchitectConfigMutation {
         "setSelection" as "set-selection" => set_selection::SetSelection,
         "selectRegister" as "select-register" => select_register::SelectRegister,
         "addRegisterItem" as "add-register-item" => add_register_item::AddRegisterItem,
@@ -77,17 +77,17 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️ArchitectPlayApp
 /// 🧪️ B1: unit struct — every former `RefCell<ArchitectPlayRuntime>` field now lives in
-/// `crate::apps::architect::config::ArchitectConfig`, written through `ArchitectConfigOperation`s.
+/// `crate::apps::architect::config::ArchitectConfig`, written through `ArchitectConfigMutation`s.
 #[derive(Default)]
 pub struct ArchitectPlayApp;
 
 impl DocumentApp for ArchitectPlayApp {
     type Projection = Program;
-    type Operation = ProgramOperation;
+    type Mutation = ProgramMutation;
     type Config = ArchitectConfig;
-    type ConfigOperation = ArchitectConfigOperation;
+    type ConfigMutation = ArchitectConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = ArchitectCommand;
 
@@ -166,7 +166,7 @@ impl DocumentApp for ArchitectPlayApp {
         }
     }
 
-    fn handle(command: &ArchitectCommand, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramOperation, ArchitectConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &ArchitectCommand, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -206,14 +206,14 @@ pub fn create_architect_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .operation("setAdjacencyKind", LocalizedLabel::native("Set Adjacency Kind", "Adjazenzart festlegen"))
-            .operation("addRegisterItem", LocalizedLabel::native("Add Register Item", "Registereintrag hinzufügen"))
-            .operation("removeRegisterItem", LocalizedLabel::native("Remove Register Item", "Registereintrag entfernen"))
-            .operation("patchRegisterItem", LocalizedLabel::native("Patch Register Item", "Registereintrag patchen"))
-            .operation("importProgram", LocalizedLabel::native("Import Program", "Programm importieren"))
-            .operation("importRegistersCsv", LocalizedLabel::native("Import Registers CSV", "Register CSV importieren"))
-            .operation("applyTemplate", LocalizedLabel::native("Apply Template", "Vorlage anwenden"))
-            .operation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
+            .mutation("setAdjacencyKind", LocalizedLabel::native("Set Adjacency Kind", "Adjazenzart festlegen"))
+            .mutation("addRegisterItem", LocalizedLabel::native("Add Register Item", "Registereintrag hinzufügen"))
+            .mutation("removeRegisterItem", LocalizedLabel::native("Remove Register Item", "Registereintrag entfernen"))
+            .mutation("patchRegisterItem", LocalizedLabel::native("Patch Register Item", "Registereintrag patchen"))
+            .mutation("importProgram", LocalizedLabel::native("Import Program", "Programm importieren"))
+            .mutation("importRegistersCsv", LocalizedLabel::native("Import Registers CSV", "Register CSV importieren"))
+            .mutation("applyTemplate", LocalizedLabel::native("Apply Template", "Vorlage anwenden"))
+            .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
             .view_action("selectRegister", LocalizedLabel::native("Select Register", "Register wählen"))
             .view_action("addElement", LocalizedLabel::native("Add Element", "Element hinzufügen"))
@@ -320,23 +320,23 @@ pub(crate) mod testkit {
 
     /// 🔀️ Drives a typed `ArchitectCommand` straight through `handle` against a bare
     /// `ArchitectPlayApp` — mirrors `cad`'s `drive`/`drive_with_config` harness.
-    pub fn drive(command: &ArchitectCommand, program: &Program) -> Emit<ProgramOperation, ArchitectConfigOperation> {
+    pub fn drive(command: &ArchitectCommand, program: &Program) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         drive_with_config(command, program, &ArchitectPlayApp.initial_config())
     }
 
-    pub fn drive_with_config(command: &ArchitectCommand, program: &Program, config: &ArchitectConfig) -> Emit<ProgramOperation, ArchitectConfigOperation> {
+    pub fn drive_with_config(command: &ArchitectCommand, program: &Program, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         let history = HistoryView::empty();
         let doc = DocumentView { projection: program, history: &history };
         let cfg = ConfigView { projection: config };
         ArchitectPlayApp.handle(command, &doc, &cfg).expect("handle")
     }
 
-    /// 🧮️ Folds an `Emit`'s `config_operations` onto a base `ArchitectConfig` — mirrors what
+    /// 🧮️ Folds an `Emit`'s `config_mutations` onto a base `ArchitectConfig` — mirrors what
     /// `VcsDocumentApp`'s config store does when it dispatches them.
-    pub fn config_after(emit: &Emit<ProgramOperation, ArchitectConfigOperation>, base: &ArchitectConfig) -> ArchitectConfig {
-        use protocol::Operation;
+    pub fn config_after(emit: &Emit<ProgramMutation, ArchitectConfigMutation>, base: &ArchitectConfig) -> ArchitectConfig {
+        use protocol::Mutation;
         let mut next = base.clone();
-        for operation in &emit.config_operations {
+        for operation in &emit.config_mutations {
             next = operation.diff(&next);
         }
         next
@@ -357,7 +357,7 @@ mod tests {
     use crate::apps::architect::testkit;
     use crate::artifacts::program::engine::exchange::export_registers_csv;
     use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind};
-    use protocol::CollectionOperation;
+    use protocol::CollectionMutation;
     use semio_framework_plugin::PluginApp;
     use serde_json::json;
 
@@ -517,8 +517,8 @@ mod tests {
             &program,
         );
         assert!(matches!(
-            emit.document_operations.first(),
-            Some(ProgramOperation::SetAdjacency { adjacency: updated }) if updated.kind == AdjacencyKind::Preferred
+            emit.document_mutations.first(),
+            Some(ProgramMutation::SetAdjacency { adjacency: updated }) if updated.kind == AdjacencyKind::Preferred
         ));
     }
 
@@ -558,8 +558,8 @@ mod tests {
             &program,
         );
         assert!(matches!(
-            emit.document_operations.first(),
-            Some(ProgramOperation::Elements(CollectionOperation::Patch { patch, .. })) if patch.name.as_deref() == Some("Updated Reception")
+            emit.document_mutations.first(),
+            Some(ProgramMutation::Elements(CollectionMutation::Patch { patch, .. })) if patch.name.as_deref() == Some("Updated Reception")
         ));
     }
 
@@ -590,7 +590,7 @@ mod tests {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("export csv");
         let emit = testkit::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
-        assert!(matches!(emit.document_operations.first(), Some(ProgramOperation::SetProgram { .. })));
+        assert!(matches!(emit.document_mutations.first(), Some(ProgramMutation::SetProgram { .. })));
     }
 
     #[test]
@@ -609,10 +609,10 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_operations_under_the_real_registry() {
+    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, ArchitectCommand::SetSelection(set_selection::SetSelection { ids: vec!["e1".into()] }));
-        assert!(result.operations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
     }
     //#endregion 🔖️Behavior
 }

@@ -1,4 +1,4 @@
-//! 🔺️ Imperative artifact — diff structs + `OperationDiff` impl (constitutional: diff).
+//! 🔺️ Imperative artifact — diff structs + `MutationDiff` impl (constitutional: diff).
 
 
 //#region 📖️SemioGrammar
@@ -8,19 +8,19 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::imperative::op::ImperativeOperation;
+use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::{ImperativeDocument, Path, PathRef};
 
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct ImperativeDiff(pub Option<ImperativeOperation>);
+pub struct ImperativeDiff(pub Option<ImperativeMutation>);
 
-impl protocol::OperationDiff<ImperativeDocument> for ImperativeDiff {
+impl protocol::MutationDiff<ImperativeDocument> for ImperativeDiff {
     fn apply(&self, projection: &ImperativeDocument) -> ImperativeDocument {
         let mut next = projection.clone();
         if let Some(operation) = &self.0 {
             if let Some(steps) = resolve_steps_mut(&mut next, &operation.path_ref) {
-                protocol::apply_collection_operation(steps, &operation.collection);
+                protocol::apply_collection_mutation(steps, &operation.collection);
             }
             prune_empty_slot(&mut next, &operation.path_ref);
         }
@@ -98,14 +98,14 @@ mod tests {
 
     #[test]
     fn imperative_diff_absorb_keeps_latest_some_and_ignores_none() {
-        use protocol::OperationDiff;
-        let first = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Remove { id: "step-1".into() } };
-        let second = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Remove { id: "step-2".into() } };
+        use protocol::MutationDiff;
+        let first = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Remove { id: "step-1".into() } };
+        let second = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Remove { id: "step-2".into() } };
         let mut diff = ImperativeDiff(Some(first));
         diff.absorb(ImperativeDiff(None));
-        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionOperation::Remove { id } if id == "step-1")));
+        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionMutation::Remove { id } if id == "step-1")));
         diff.absorb(ImperativeDiff(Some(second)));
-        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionOperation::Remove { id } if id == "step-2")));
+        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionMutation::Remove { id } if id == "step-2")));
     }
 }
 //#endregion 🧪️Tests

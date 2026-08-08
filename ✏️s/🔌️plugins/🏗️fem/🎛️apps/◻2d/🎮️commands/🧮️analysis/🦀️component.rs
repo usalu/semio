@@ -1,7 +1,7 @@
 //! 🧮️ Fem2d play app commands — analysis settings (modal/buckling mode counts, deformation scale).
 
-use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigOperation};
-use crate::artifacts::fem2d::op::Fem2dOperation;
+use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::FemAnalysisSettings;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,14 +20,14 @@ pub mod set_analysis_settings {
         pub deformation_scale: Option<f64>,
     }
 
-    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let current = &doc.projection.analysis;
         let settings = FemAnalysisSettings {
             modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
             buckling_count: payload.buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
             deformation_scale: payload.deformation_scale.unwrap_or(current.deformation_scale),
         };
-        Ok(Emit::operations(vec![Fem2dOperation::SetAnalysisSettings { settings }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::SetAnalysisSettings { settings }]))
     }
 }
 //#endregion 🔖️SetAnalysisSettings

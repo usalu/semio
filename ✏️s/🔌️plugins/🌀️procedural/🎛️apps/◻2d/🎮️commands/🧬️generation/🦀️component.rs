@@ -5,13 +5,13 @@
 //! method, now a free function taking the action id + a synthetic JSON args value built from the typed
 //! payload fields — mirrors `procedural_3d`'s identical shape).
 
-use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOperation};
+use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::engine::refresh_generation_preview;
-use crate::artifacts::procedural2d::op::Procedural2dOperation;
+use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::FlowEvalSession;
-use flow::playbook::{apply_generation_operation, generation_operations, select_generation};
+use flow::playbook::{apply_generation_mutation, generation_operations, select_generation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -20,7 +20,7 @@ use serde_json::{json, Value};
 /// 🧬️ Emits generation operations for the generate-mode commands, updating the config's ephemeral
 /// selection and preview from the post-operation state via a whole-config `Snapshot`.
 /// `selectGeneration` is config-only (no document operations).
-fn handle_generation(action: &str, args: Option<&Value>, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
+fn handle_generation(action: &str, args: Option<&Value>, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
     let projection = doc.projection;
     let spec = flow_fixture_to_form_spec(&projection.fixture);
     let mut state = projection.generation.clone();
@@ -35,13 +35,13 @@ fn handle_generation(action: &str, args: Option<&Value>, doc: &DocumentView<'_, 
         if let Some(preview) = next_config.generation_preview_text.clone() {
             session.set_eval_json(preview);
         }
-        return Emit::config(vec![Procedural2dConfigOperation::Snapshot { config: next_config }]);
+        return Emit::config(vec![Procedural2dConfigMutation::Snapshot { config: next_config }]);
     }
     let Some(operations) = generation_operations(action, args, &state, &spec) else {
         return Emit::default();
     };
     for operation in &operations {
-        apply_generation_operation(&mut state, operation);
+        apply_generation_mutation(&mut state, operation);
     }
     next_config.selected_generation_id = state.selected_generation_id.clone();
     refresh_generation_preview(&mut next_config, &projection.fixture, &state);
@@ -49,7 +49,7 @@ fn handle_generation(action: &str, args: Option<&Value>, doc: &DocumentView<'_, 
         session.set_eval_json(preview);
     }
     let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
-    Emit { document_operations: operations.into_iter().map(Procedural2dOperation::Generation).collect(), config_operations: vec![Procedural2dConfigOperation::Snapshot { config: next_config }], coalesce_key, ..Default::default() }
+    Emit { document_mutations: operations.into_iter().map(Procedural2dMutation::Generation).collect(), config_mutations: vec![Procedural2dConfigMutation::Snapshot { config: next_config }], coalesce_key, ..Default::default() }
 }
 //#endregion 🔖️Shared
 
@@ -61,7 +61,7 @@ pub mod add_generation {
     #[dsl(keyword = "add-generation")]
     pub struct AddGeneration {}
 
-    pub fn handle(_payload: &AddGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(_payload: &AddGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(handle_generation("addGeneration", None, doc, cfg, session))
     }
 }
@@ -77,7 +77,7 @@ pub mod remove_generation {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))
     }
 }
@@ -94,7 +94,7 @@ pub mod rename_generation {
         pub name: String,
     }
 
-    pub fn handle(payload: &RenameGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(payload: &RenameGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc, cfg, session))
     }
 }
@@ -112,7 +112,7 @@ pub mod update_generation_values {
         pub value: dsl::DslValue,
     }
 
-    pub fn handle(payload: &UpdateGenerationValues, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(payload: &UpdateGenerationValues, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
         Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc, cfg, session))
     }
@@ -129,7 +129,7 @@ pub mod select_generation {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SelectGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
+    pub fn handle(payload: &SelectGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(handle_generation("selectGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))
     }
 }
@@ -145,8 +145,8 @@ pub mod enter_generate {
     #[dsl(keyword = "generate")]
     pub struct Generate {}
 
-    pub fn handle(_payload: &Generate, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: "generate".into() }]))
+    pub fn handle(_payload: &Generate, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural2dConfigMutation::SetShowMode { value: "generate".into() }]))
     }
 }
 //#endregion 🔖️Generate
@@ -167,7 +167,7 @@ mod tests {
     }
 
     #[test]
-    fn generate_is_a_view_action_with_no_document_operations() {
+    fn generate_is_a_view_action_with_no_document_mutations() {
         let mut app = app();
         let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural2dCommand::Generate(enter_generate::Generate {}));

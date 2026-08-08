@@ -138,7 +138,7 @@ fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json
 /// parity only, unused by `build_shell_context_menu_specs` itself.
 fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
     match kind {
-        semio_framework::ActionKind::Operation => "operation",
+        semio_framework::ActionKind::Mutation => "mutation",
         semio_framework::ActionKind::View => "view",
         semio_framework::ActionKind::History => "history",
         semio_framework::ActionKind::Clipboard => "clipboard",
@@ -525,7 +525,7 @@ pub struct ShellState {
     /// 🎬️ Document-track operations queued by a tutorial tick/seek this frame, drained and applied
     /// asynchronously right after `render_chrome` returns (mirrors how `AppRuntime::frame` already defers
     /// `scene_events`/wheel actions through `spawn_app_task` for the same reason: the plugin bridge's
-    /// `apply_operations`/`handle_action` calls are async, but chrome rendering isn't).
+    /// `apply_mutations`/`handle_action` calls are async, but chrome rendering isn't).
     pub tutorial_pending_document_ops: Vec<TutorialPendingDocOp>,
 }
 //#endregion ShellTypes
@@ -1586,7 +1586,7 @@ mod panel_anchor_model_tests {
 
 //#region ShellActions
 fn patch_ops_from_action_result(result: &semio_framework::kernel::InvocationResult) -> Vec<String> {
-    result.operations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect()
+    result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect()
 }
 
 impl ShellState {
@@ -1639,7 +1639,7 @@ impl ShellState {
     /// @emoji 📬️ Drains the active document actor's event stream into the plugin store and the sync
     /// badge. Called once per native frame — the render loop already redraws continuously (winit
     /// `ControlFlow::Poll`), so a `try_recv` poll suffices and no `EventLoopProxy` wake is needed.
-    /// `RemoteOperations` are force-applied via `apply_operations` (idempotent by operation id), which also covers
+    /// `RemoteMutations` are force-applied via `apply_mutations` (idempotent by operation id), which also covers
     /// idle frames where the sandboxed store never pumps its `ChannelBackbone` on its own. Returns
     /// whether anything changed (and a re-render was issued).
     #[cfg(not(target_arch = "wasm32"))]
@@ -1666,12 +1666,12 @@ impl ShellState {
         let mut changed = false;
         for event in events {
             match event {
-                DocumentEvent::RemoteOperations { envelopes } => {
+                DocumentEvent::RemoteMutations { envelopes } => {
                     if let Some(plugin) = plugin.as_ref() {
                         let operations = protocol::encode_envelopes(&envelopes);
-                        match plugin.apply_operations(instance_id, &operations) {
+                        match plugin.apply_mutations(instance_id, &operations) {
                             Ok(()) => changed = true,
-                            Err(error) => eprintln!("[DEBUG] wgpu shell apply_operations failed: {error}"),
+                            Err(error) => eprintln!("[DEBUG] wgpu shell apply_mutations failed: {error}"),
                         }
                     }
                 }
@@ -1702,7 +1702,7 @@ impl ShellState {
                 }
                 DocumentEvent::CommandOutcome { .. } => {
                     // 📮️ Terminal batch dispositions (accepted/transformed/rejected) have no native
-                    // wgpu shell surfacing yet — `RemoteOperations`/rollback already keep document
+                    // wgpu shell surfacing yet — `RemoteMutations`/rollback already keep document
                     // state correct; this event is purely informational until a UI is built for it.
                 }
             }
@@ -1751,7 +1751,7 @@ impl ShellState {
             runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)).map_err(|error| format!("register host backbone: {error}"))?;
             plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
             let cmd_tx = channels.cmd_tx.clone();
-            let _ = cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() });
+            let _ = cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() });
             self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events });
             self.sync_status = Some(DocumentSyncStatus::default());
             self.sync_backbone_uri = Some(uri);
@@ -1964,11 +1964,11 @@ impl ShellState {
                 _ => {}
             }
         }
-        let operations: Vec<String> = result.operations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
-        self.apply_operations(&operations).await
+        let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
+        self.apply_mutations(&operations).await
     }
 
-    pub async fn apply_operations(&mut self, operations: &[String]) -> Result<(), String> {
+    pub async fn apply_mutations(&mut self, operations: &[String]) -> Result<(), String> {
         self.apply_ops_inner(operations, true).await
     }
 
@@ -6794,7 +6794,7 @@ impl ShellState {
                     eprintln!("[DEBUG] tutorial load document (json) not wired to the pack-only plugin bridge");
                 }
                 TutorialPendingDocOp::ApplyOperations(operations) => {
-                    if let Err(err) = self.apply_operations(&operations).await {
+                    if let Err(err) = self.apply_mutations(&operations).await {
                         eprintln!("[DEBUG] tutorial apply operations failed: {err}");
                     }
                 }

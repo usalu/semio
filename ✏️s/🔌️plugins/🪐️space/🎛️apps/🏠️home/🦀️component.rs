@@ -14,13 +14,13 @@ use crate::artifacts::home::SHomeDocument;
 use crate::{ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
     artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_projection, empty_workflow_document, encode_backbone_payload,
-    export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, ArtifactBody, CollectionOperation, CollectionProjection, DraftCatalog,
-    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceOperation, SpaceProjection, SpaceRole, SpaceUser, SpaceVisibility, WorkflowDocument, WorkflowOperation,
+    export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, ArtifactBody, CollectionMutation, CollectionProjection, DraftCatalog,
+    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceProjection, SpaceRole, SpaceUser, SpaceVisibility, WorkflowDocument, WorkflowMutation,
     S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, app_commands, create_tab_stack_layout, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_tab_stack_layout, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -54,12 +54,12 @@ fn catalog_port_concrete() -> Arc<LocalStorageBackbonePort> {
         // workflow artifact — that stays a later, explicit user action).
         let demo_name = { let demo = parse_demo_space_document(); if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name } };
         let mut projection = empty_space_projection(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
-        projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author }
+        projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
         let _ = seed_os_space_catalog_if_empty(seed, os_port);
     }
     port
-});
+}
 
 /// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()` — every draft
 /// space a user creates from Home lives here at `space::draft_uri(id)` until it's promoted (bound to a
@@ -140,7 +140,7 @@ pub fn resolve_studio_document_for(app: &HomeApp, space_id: &str) -> Option<OsSp
     let draft_port = draft_backbone_port();
     if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(space_id)) {
         if !payload.is_empty() {
-            if let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceOperation>(&payload, S_SPACE_SCHEMA) {
+            if let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
                 return Some(document);
             }
         }
@@ -209,7 +209,7 @@ pub fn resolve_workflow_artifact_document_for(app: &HomeApp, space_id: &str, spa
     for collection_ref in &projection.collections {
         let collection_uri = collection_backbone_uri(space_id, &collection_ref.id);
         let Some(collection_payload) = resolve_backbone_bytes(app, &collection_uri) else { continue };
-        let Ok(collection_document) = decode_backbone_payload::<CollectionProjection, CollectionOperation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
+        let Ok(collection_document) = decode_backbone_payload::<CollectionProjection, CollectionMutation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
         let Ok(collection_projection) = materialize_backbone_projection(&collection_document, &collection_document.applied_edit_ids) else { continue };
         for entry in &collection_projection.entries {
             let ArtifactBody::Document { schema, document_id } = entry.body.as_ref() else { continue };
@@ -218,7 +218,7 @@ pub fn resolve_workflow_artifact_document_for(app: &HomeApp, space_id: &str, spa
             }
             let artifact_uri = artifact_backbone_uri(space_id, document_id);
             let Some(artifact_payload) = resolve_backbone_bytes(app, &artifact_uri) else { continue };
-            if let Ok(workflow_document) = decode_backbone_payload::<WorkflowDocument, WorkflowOperation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
+            if let Ok(workflow_document) = decode_backbone_payload::<WorkflowDocument, WorkflowMutation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
                 return Some(workflow_document);
             }
         }
@@ -283,7 +283,7 @@ pub(crate) fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpac
         if payload.is_empty() {
             continue;
         }
-        let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceOperation>(&payload, S_SPACE_SCHEMA) else { continue };
+        let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceMutation>(&payload, S_SPACE_SCHEMA) else { continue };
         let projection = &document.vcs.initial_projection;
         entries.push(semio_framework_os::OsSpaceCatalogEntry {
             id: draft.artifact_id,
@@ -303,7 +303,7 @@ pub(crate) fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpac
 app_commands! {
     /// 🎯️ `HomeApp::Command` — the SOLE dispatch surface for the Home launcher's own behavior, one
     /// variant per action declared in `create_home_app`'s manifest.
-    pub enum HomeCommand for SHomeDocument, crate::artifacts::home::op::SHomeOperation, HomeConfig, crate::apps::home::config::HomeConfigOperation {
+    pub enum HomeCommand for SHomeDocument, crate::artifacts::home::op::SHomeMutation, HomeConfig, crate::apps::home::config::HomeConfigMutation {
         "createStudio" as "create-studio" => create_studio::CreateStudio,
         "bindSpaceFile" as "bind-space-file" => bind_space_file::BindSpaceFile,
         "importSpace" as "import-space" => import_space::ImportSpace,
@@ -319,15 +319,10 @@ app_commands! {
 //#region 🔖️HomeApp
 /// 🧪️ Unit struct — the Home launcher holds catalog bootstrap ports plus per-session studio port
 /// bindings for folder/file-backed studios.
-pub #[derive(Default, Clone, Copy)]
-struct HomeApp;
+#[derive(Default, Clone, Copy)]
+pub struct HomeApp;
 
-impl Default for HomeApp
-}
-
-impl DocumentApp for HomeApp
-    }
-
+impl DocumentApp for HomeApp {
     fn command_id(command: &HomeCommand) -> &str {
         command.command_id()
     }
@@ -367,7 +362,7 @@ impl DocumentApp for HomeApp
         }
     }
 
-    fn handle(command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeOperation, crate::apps::home::config::HomeConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::apps::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -394,12 +389,12 @@ pub fn create_home_app() -> App {
             .default_mode_id("explore")
             .window_kind_def(crate::apps::home::modes::explore::windows::main::definition())
             .default_layout(create_tab_stack_layout(&[crate::apps::home::modes::explore::windows::main::S_HOME_WINDOW.into()], Some(&["Studios".into()])))
-            .operation("createStudio", LocalizedLabel::native("Create Studio", "Studio erstellen"))
+            .mutation("createStudio", LocalizedLabel::native("Create Studio", "Studio erstellen"))
             .shell_action("bindSpaceFile", LocalizedLabel::native("Bind Studio File", "Studio-Datei verknüpfen"))
-            .operation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))
+            .mutation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))
             .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"))
             .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"))
-            .operation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
+            .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
             .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
             .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
             .keybinding("mod+n", "createStudio")

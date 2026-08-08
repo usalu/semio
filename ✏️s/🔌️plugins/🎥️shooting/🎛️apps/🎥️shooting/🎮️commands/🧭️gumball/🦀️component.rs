@@ -1,8 +1,8 @@
 //! 🧭️ Shooting play app commands — the transform gumball: translate/rotate/scale the selected assets.
 //! Every drag tick coalesces into one undo step via `Emit::amend`'s coalesce key.
 
-use crate::apps::shooting::config::{ShootingConfig, ShootingConfigOperation};
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingFixture;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -29,12 +29,12 @@ pub mod translate_selection {
         pub dz: f64,
     }
 
-    pub fn handle(payload: &TranslateSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &TranslateSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.projection.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingOperation::TranslateAssets { asset_ids: ids, dx: payload.dx, dy: payload.dy, dz: payload.dz }], "gumball-translate"))
+            Ok(Emit::amend(vec![ShootingMutation::TranslateAssets { asset_ids: ids, dx: payload.dx, dy: payload.dy, dz: payload.dz }], "gumball-translate"))
         }
     }
 }
@@ -54,12 +54,12 @@ pub mod rotate_selection {
         pub angle: f64,
     }
 
-    pub fn handle(payload: &RotateSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &RotateSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.projection.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingOperation::RotateAssets { asset_ids: ids, ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle }], "gumball-rotate"))
+            Ok(Emit::amend(vec![ShootingMutation::RotateAssets { asset_ids: ids, ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle }], "gumball-rotate"))
         }
     }
 }
@@ -78,12 +78,12 @@ pub mod scale_selection {
         pub sz: f64,
     }
 
-    pub fn handle(payload: &ScaleSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &ScaleSelection, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &cfg.projection.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingOperation::ScaleAssets { asset_ids: ids, sx: payload.sx, sy: payload.sy, sz: payload.sz }], "gumball-scale"))
+            Ok(Emit::amend(vec![ShootingMutation::ScaleAssets { asset_ids: ids, sx: payload.sx, sy: payload.sy, sz: payload.sz }], "gumball-scale"))
         }
     }
 }
@@ -115,7 +115,7 @@ mod tests {
         let mut app = shooting_app();
         // No explicit ids and an empty config selection: nothing to transform.
         let result = dispatch(&mut app, ShootingCommand::RotateSelection(rotate_selection::RotateSelection { asset_ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 1.0 }));
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

@@ -5,8 +5,8 @@
 //! against it. An extension action only runs while its automation is enabled in the config.
 
 use crate::apps::flow::commands::{eval::evaluate_result, layout::reorganize_operations};
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -28,10 +28,10 @@ pub mod toggle_extension {
         pub enabled: bool,
     }
 
-    pub fn handle(payload: &ToggleExtension, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &ToggleExtension, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let mut map = cfg.projection.automation_enabled();
         map.insert(payload.id.clone(), payload.enabled);
-        Ok(Emit::config(vec![FlowConfigOperation::SetAutomationEnabled { json: serde_json::to_string(&map).unwrap_or_default() }]))
+        Ok(Emit::config(vec![FlowConfigMutation::SetAutomationEnabled { json: serde_json::to_string(&map).unwrap_or_default() }]))
     }
 }
 //#endregion 🔖️ToggleExtension
@@ -48,7 +48,7 @@ pub mod run_extension_action {
         pub action_id: String,
     }
 
-    pub fn handle(payload: &RunExtensionAction, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &RunExtensionAction, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let Some((id, _, _, _, effect)) = FLOW_AUTOMATIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == payload.action_id) else {
             return Ok(Emit::default());
         };
@@ -56,7 +56,7 @@ pub mod run_extension_action {
             return Ok(Emit::default());
         }
         match *effect {
-            "reorganize" => Ok(Emit::operations(reorganize_operations(doc, cfg, session))),
+            "reorganize" => Ok(Emit::mutations(reorganize_operations(doc, cfg, session))),
             "evaluate" => Ok(evaluate_result(doc.projection, cfg.projection, session)),
             _ => Ok(Emit::default()),
         }
@@ -76,8 +76,8 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        Ok(Emit::config(vec![FlowConfigOperation::SetContributions { json: payload.json.clone() }]))
+    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FlowConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }
 //#endregion 🔖️SetContributions
@@ -104,7 +104,7 @@ mod tests {
     fn an_unknown_extension_action_id_is_a_no_operation() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "third.party.nope".into() }));
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

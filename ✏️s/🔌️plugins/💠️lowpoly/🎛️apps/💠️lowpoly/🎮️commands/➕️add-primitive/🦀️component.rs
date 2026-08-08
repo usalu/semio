@@ -2,10 +2,10 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{build_doc, primitive_kind};
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolyProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ pub struct AddPrimitive {
     pub kind: Option<String>,
 }
 
-pub fn handle(payload: &AddPrimitive, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+pub fn handle(payload: &AddPrimitive, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
     let projection = doc.projection;
     let kind = primitive_kind(payload.kind.as_deref().unwrap_or("box")).to_string();
     let Some(mut build) = build_doc(projection, cfg.projection) else { return Ok(Emit::default()) };
@@ -30,12 +30,12 @@ pub fn handle(payload: &AddPrimitive, doc: &DocumentView<'_, LowpolyProjection>,
     };
     let index = projection.objects.len();
     Ok(Emit {
-        document_operations: vec![LowpolyOperation::ObjectsAdd { index, item: new_object }],
-        config_operations: vec![
-            LowpolyConfigOperation::SetActiveObject { object_id: new_id },
-            LowpolyConfigOperation::SetSelectionTargets { mesh: true, vertex: false, edge: false, face: false },
-            LowpolyConfigOperation::SetSelection { mode: "mesh".into(), ids: Vec::new() },
-            LowpolyConfigOperation::SetSelectionKeys { keys: Vec::new() },
+        document_mutations: vec![LowpolyMutation::ObjectsAdd { index, item: new_object }],
+        config_mutations: vec![
+            LowpolyConfigMutation::SetActiveObject { object_id: new_id },
+            LowpolyConfigMutation::SetSelectionTargets { mesh: true, vertex: false, edge: false, face: false },
+            LowpolyConfigMutation::SetSelection { mode: "mesh".into(), ids: Vec::new() },
+            LowpolyConfigMutation::SetSelectionKeys { keys: Vec::new() },
         ],
         ..Default::default()
     })

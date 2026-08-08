@@ -2,12 +2,12 @@
 //!
 //! Everything the pre-B1 `RefCell<ArchitectPlayRuntime>` held (selection, active register, search,
 //! cached report/analysis JSON, adjacency filter, graph camera) lives here, written via whole-snapshot
-//! `ArchitectConfigOperation::Snapshot`s from the `🎮️commands/*` handlers.
+//! `ArchitectConfigMutation::Snapshot`s from the `🎮️commands/*` handlers.
 
 use crate::artifacts::program::engine::report::ProgramReport;
 use crate::artifacts::program::engine::search::SearchQuery;
 use crate::artifacts::program::registers::AdjacencyKind;
-use protocol::{Operation, OperationDiff};
+use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -123,7 +123,7 @@ impl Default for ArchitectConfig {
 
 impl store::ConfigRecord for ArchitectConfig {}
 
-impl OperationDiff<ArchitectConfig> for ArchitectConfig {
+impl MutationDiff<ArchitectConfig> for ArchitectConfig {
     fn apply(&self, _base: &ArchitectConfig) -> ArchitectConfig {
         self.clone()
     }
@@ -137,7 +137,7 @@ impl OperationDiff<ArchitectConfig> for ArchitectConfig {
 /// and `cad`'s `snapshot_of` helper; architect's config has no single hot-path field worth its own
 /// granular operation variant the way `NormConfig::selected_check_index` did).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum ArchitectConfigOperation {
+pub enum ArchitectConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -146,7 +146,7 @@ pub enum ArchitectConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for ArchitectConfigOperation {
+impl protocol::OpText for ArchitectConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -160,7 +160,7 @@ impl protocol::OpText for ArchitectConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -171,7 +171,7 @@ impl protocol::OpText for ArchitectConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for ArchitectConfigOperation {
+impl protocol::OpBinary for ArchitectConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -217,17 +217,17 @@ impl protocol::OpBinary for ArchitectConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<ArchitectConfig> for ArchitectConfigOperation {
+impl Mutation<ArchitectConfig> for ArchitectConfigMutation {
     type Diff = ArchitectConfig;
 
     fn diff(&self, _base: &ArchitectConfig) -> ArchitectConfig {
         match self {
-            ArchitectConfigOperation::Snapshot { config } => config.clone(),
+            ArchitectConfigMutation::Snapshot { config } => config.clone(),
         }
     }
 
-    fn backwards(&self, base: &ArchitectConfig) -> Vec<Self> {
-        vec![ArchitectConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &ArchitectConfig) -> Vec<Self> {
+        vec![ArchitectConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️Config
@@ -255,8 +255,8 @@ pub fn parse_active_report(cfg: &ArchitectConfig) -> Option<ProgramReport> {
 }
 
 /// 🧮️ The whole-snapshot config edit every command handler emits.
-pub fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigOperation> {
-    vec![ArchitectConfigOperation::Snapshot { config: next }]
+pub fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
+    vec![ArchitectConfigMutation::Snapshot { config: next }]
 }
 //#endregion 🔖️Readers
 
@@ -275,9 +275,9 @@ mod tests {
     fn a_snapshot_operation_replaces_the_whole_config_and_inverts_to_the_base() {
         let base = ArchitectConfig::default();
         let next = ArchitectConfig { search_query: "hall".into(), ..ArchitectConfig::default() };
-        let operation = ArchitectConfigOperation::Snapshot { config: next.clone() };
+        let operation = ArchitectConfigMutation::Snapshot { config: next.clone() };
         assert_eq!(operation.diff(&base), next);
-        assert_eq!(operation.backwards(&base), vec![ArchitectConfigOperation::Snapshot { config: base }]);
+        assert_eq!(operation.inverse(&base), vec![ArchitectConfigMutation::Snapshot { config: base }]);
     }
 
     #[test]

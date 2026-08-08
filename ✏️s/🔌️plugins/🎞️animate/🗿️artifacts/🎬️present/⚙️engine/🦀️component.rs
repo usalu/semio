@@ -722,3 +722,41 @@ mod tests {
     //#endregion 🔖️IoTests
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent document engine — every transition is a `PresentMutation`.
+pub struct PresentEngine {
+    projection: crate::artifacts::present::PresentDeck,
+}
+
+impl PresentEngine {
+    pub fn new(projection: crate::artifacts::present::PresentDeck) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::present::PresentDeck {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for PresentEngine {
+    type Projection = crate::artifacts::present::PresentDeck;
+    type Mutation = crate::artifacts::present::mutations::PresentMutation;
+    type Diff = crate::artifacts::present::diff::PresentDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = crate::artifacts::present::mutations::apply_present_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

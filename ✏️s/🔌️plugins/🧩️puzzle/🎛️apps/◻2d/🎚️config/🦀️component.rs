@@ -1,6 +1,6 @@
 //! 🎛️ Puzzle 2d play app — its `DocumentApp::Config`: every piece of view state the app owns but the
 //! document must never carry (camera, selection, per-pane LOD/engagement input, brush scratch, grid
-//! settings, active utility, locale/terminology), plus the whole-snapshot `ConfigOperation` that
+//! settings, active utility, locale/terminology), plus the whole-snapshot `ConfigMutation` that
 //! patches it.
 //!
 //! 🎥️ The camera lives here, not on the document: moving it is an `ActionKind::View` action and must
@@ -53,7 +53,7 @@ fn default_terminology() -> String {
 /// 🧮️ B1: puzzle2d's real `DocumentApp::Config`. `Puzzle2dConfig` is an alias for it (not a new
 /// type), mirroring `Puzzle3dConfig = Puzzle3dRuntime`, so every helper taking a
 /// `&Puzzle2dPlayRuntime` keeps working unchanged; every read comes from `cfg.projection`, every
-/// write flows out as a `Puzzle2dConfigOperation` in the returned `Emit`.
+/// write flows out as a `Puzzle2dConfigMutation` in the returned `Emit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle2dPlayRuntime {
@@ -159,31 +159,31 @@ impl store::DocumentPack for Puzzle2dPlayRuntime {
 store::impl_whole_record_config!(Puzzle2dPlayRuntime);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperation
-/// 🧮️ B1: `Puzzle2dConfig`'s operation enum. Mirrors `Puzzle3dConfigOperation`'s single-generic-
+//#region 🔖️ConfigMutation
+/// 🧮️ B1: `Puzzle2dConfig`'s operation enum. Mirrors `Puzzle3dConfigMutation`'s single-generic-
 /// `Snapshot`-variant pattern exactly: every real config edit is captured as "the whole config after
 /// this edit"; `backwards()` restores the whole-config snapshot from just before, regardless of what
 /// changed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum Puzzle2dConfigOperation {
+pub enum Puzzle2dConfigMutation {
     Snapshot { config: Puzzle2dConfig },
 }
 
-impl protocol::Operation<Puzzle2dConfig> for Puzzle2dConfigOperation {
+impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     type Diff = Puzzle2dConfig;
 
     fn diff(&self, _base: &Puzzle2dConfig) -> Puzzle2dConfig {
         match self {
-            Puzzle2dConfigOperation::Snapshot { config } => config.clone(),
+            Puzzle2dConfigMutation::Snapshot { config } => config.clone(),
         }
     }
 
-    fn backwards(&self, base: &Puzzle2dConfig) -> Vec<Self> {
-        vec![Puzzle2dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Puzzle2dConfig) -> Vec<Self> {
+        vec![Puzzle2dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
-impl protocol::OpBinary for Puzzle2dConfigOperation {
+impl protocol::OpBinary for Puzzle2dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
@@ -192,7 +192,7 @@ impl protocol::OpBinary for Puzzle2dConfigOperation {
     }
 }
 
-impl protocol::OpText for Puzzle2dConfigOperation {
+impl protocol::OpText for Puzzle2dConfigMutation {
     fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
@@ -200,4 +200,4 @@ impl protocol::OpText for Puzzle2dConfigOperation {
         serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }
-//#endregion 🔖️ConfigOperation
+//#endregion 🔖️ConfigMutation

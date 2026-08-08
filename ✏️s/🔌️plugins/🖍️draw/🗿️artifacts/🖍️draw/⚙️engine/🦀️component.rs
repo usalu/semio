@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Register
 /// 🗂️ Registers `DrawDocument`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
-/// draw documents without depending on this crate's concrete `Projection`/`Operation` types, plus
+/// draw documents without depending on this crate's concrete `Projection`/`Mutation` types, plus
 /// the 2D export/import media handlers (SVG raster export, DWG export/import).
 pub fn register() {
     register_pilot_languages();
@@ -1996,3 +1996,41 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent artifact engine — owns the projection; every transition is a mutation.
+pub struct DrawEngine {
+    projection: crate::artifacts::draw::DrawDocument,
+}
+
+impl DrawEngine {
+    pub fn new(projection: crate::artifacts::draw::DrawDocument) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::draw::DrawDocument {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for DrawEngine {
+    type Projection = crate::artifacts::draw::DrawDocument;
+    type Mutation = crate::artifacts::draw::mutations::DrawMutation;
+    type Diff = crate::artifacts::draw::diff::DrawDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = <Self::Diff as protocol::MutationDiff<Self::Projection>>::apply(&diff, &self.projection);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

@@ -101,7 +101,7 @@ fn to_engine_frontier(core: &Frontier, document: protocol::DocumentId) -> Fronti
 /// @emoji 🧾️ The frozen `CommandReceipt` shape: `DocumentHandle::submit`'s resolved output.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandReceipt {
-    pub command_id: protocol::OperationId,
+    pub command_id: protocol::MutationId,
     pub frontier: Frontier,
     pub durability: DurabilityClass,
     pub conflicts: Vec<db_document::ConflictRecord>,
@@ -152,7 +152,7 @@ pub struct QueryStream {
 /// does NOT go through `DocumentAuthority`'s mailbox).
 #[derive(Clone, Debug, PartialEq)]
 pub struct HistoryEntry {
-    pub operation_ids: Vec<protocol::OperationId>,
+    pub operation_ids: Vec<protocol::MutationId>,
     pub frontier: Frontier,
 }
 
@@ -168,14 +168,14 @@ pub struct HistoryView {
 fn replay_history(storage: &dyn DbStorage, core_document: &DocumentId, protocol_document: &protocol::DocumentId) -> Result<HistoryView, DbError> {
     let records = db_wal::replay_document(storage.wal(), core_document)?;
     let mut entries = Vec::new();
-    let mut pending_operation_ids: Vec<protocol::OperationId> = Vec::new();
+    let mut pending_operation_ids: Vec<protocol::MutationId> = Vec::new();
     for record in records {
         match record {
             db_wal::WalRecord::TxBegin { .. } => pending_operation_ids.clear(),
             db_wal::WalRecord::Command(bytes) => {
                 let mut pos = 0usize;
                 let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
-                pending_operation_ids.push(envelope.operation_id);
+                pending_operation_ids.push(envelope.mutation_id);
             }
             db_wal::WalRecord::Frontier(frontier) if !pending_operation_ids.is_empty() => {
                 entries.push(HistoryEntry { operation_ids: std::mem::take(&mut pending_operation_ids), frontier: to_engine_frontier(&frontier, protocol_document.clone()) });
@@ -247,7 +247,7 @@ impl SecurityAuthzHook {
 }
 
 impl db_document::AuthzHook for SecurityAuthzHook {
-    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::OperationEnvelope) -> Result<(), DbError> {
+    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> Result<(), DbError> {
         let principal = (self.principal_for)(actor);
         self.gate.authorize(&principal, &db_security::AuthzScope::Document { document: envelope.document_id.clone() }, db_security::Action::Write)
     }
@@ -267,9 +267,9 @@ pub mod vcs_integration {
     //#region 🔖️SchemaErasedTypes
     /// @emoji #⃣ The `VersionGraph` seam (`ChangeRecord`/`CheckpointRequest`) is already
     /// schema-erased — it carries a `pack::ContentHash`, never document semantics — so this
-    /// crate drives the real `store::DocumentStore<P, Operation>` with the smallest concrete `P`/
-    /// `Operation` pair that can faithfully round-trip exactly that: a projection that IS the
-    /// latest recorded hash, and an operation that overwrites it (its `backwards` recovering the
+    /// crate drives the real `store::DocumentStore<P, Mutation>` with the smallest concrete `P`/
+    /// `Mutation` pair that can faithfully round-trip exactly that: a projection that IS the
+    /// latest recorded hash, and an operation that overwrites it (its `inverse` recovering the
     /// PRIOR hash from the pre-state, a real, correct inverse — not a placeholder). This mirrors
     /// `db_document`'s own schema-erased-JSON convention one layer up: neither crate has (or needs)
     /// compile-time knowledge of any real document schema.
@@ -318,7 +318,7 @@ pub mod vcs_integration {
         pub hash: Option<[u8; 32]>,
     }
 
-    impl protocol::OperationDiff<HashProjection> for HashDiff {
+    impl protocol::MutationDiff<HashProjection> for HashDiff {
         fn apply(&self, base: &HashProjection) -> HashProjection {
             match self.hash {
                 Some(hash) => HashProjection { latest_hash: hash },
@@ -334,13 +334,13 @@ pub mod vcs_integration {
     }
 
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    pub struct HashOperation {
+    pub struct HashMutation {
         pub hash: [u8; 32],
         pub author: Option<protocol::ActorId>,
         pub timestamp: Option<protocol::HybridLogicalTimestamp>,
     }
 
-    impl protocol::Operation<HashProjection> for HashOperation {
+    impl protocol::Mutation<HashProjection> for HashMutation {
         type Diff = HashDiff;
 
         fn diff(&self, _base: &HashProjection) -> HashDiff {
@@ -349,8 +349,8 @@ pub mod vcs_integration {
 
         /// @emoji ↩️ The true inverse: an operation that would restore `base`'s hash — not a
         /// no-op placeholder.
-        fn backwards(&self, base: &HashProjection) -> Vec<HashOperation> {
-            vec![HashOperation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
+        fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
+            vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
         }
 
         fn author_id(&self) -> Option<protocol::ActorId> {
@@ -383,7 +383,7 @@ pub mod vcs_integration {
     }
 
     /// @emoji 🎯️ Single-line text form: `hash=<hex64>[ author=<id>][ ts=<actor>,<physical_ms>,<logical>]`.
-    impl protocol::OpText for HashOperation {
+    impl protocol::OpText for HashMutation {
         fn print_op(&self) -> String {
             let mut out = format!("hash={}", hex_encode(&self.hash));
             if let Some(author) = &self.author {
@@ -417,13 +417,13 @@ pub mod vcs_integration {
                     other => return Err(err(format!("unknown key '{other}'"))),
                 }
             }
-            Ok(HashOperation { hash: hash.ok_or_else(|| err("missing hash".to_string()))?, author, timestamp })
+            Ok(HashMutation { hash: hash.ok_or_else(|| err("missing hash".to_string()))?, author, timestamp })
         }
     }
 
     /// @emoji 🎯️ Binary form: `hash 32 bytes | presence u8 (bit0=author, bit1=timestamp) | [author
     /// len varint + utf8 bytes] | [timestamp: actor/physical_ms/logical varint each]`.
-    impl protocol::OpBinary for HashOperation {
+    impl protocol::OpBinary for HashMutation {
         fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
             let mut out = self.hash.to_vec();
             let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
@@ -464,13 +464,13 @@ pub mod vcs_integration {
             } else {
                 None
             };
-            Ok(HashOperation { hash, author, timestamp })
+            Ok(HashMutation { hash, author, timestamp })
         }
     }
     //#endregion 🔖️SchemaErasedTypes
 
     //#region 🔖️Store
-    type HashStore = store::DocumentStore<HashProjection, HashOperation>;
+    type HashStore = store::DocumentStore<HashProjection, HashMutation>;
 
     // 🔒️ Used as a bare fn-pointer error mapper (`.map_err(map_vcs_error)`) below — same rationale
     // as `db_document`'s `json_err`: `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the
@@ -500,7 +500,7 @@ pub mod vcs_integration {
         fn with_store<R>(&self, document: &DocumentId, f: impl FnOnce(&mut HashStore) -> Result<R, DbError>) -> Result<R, DbError> {
             let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
             let store = stores.entry(document.0.clone()).or_insert_with(|| {
-                let envelope = store::create_document_envelope::<HashProjection, HashOperation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
+                let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
                 store::DocumentStore::new(envelope)
             });
             f(store)
@@ -510,8 +510,8 @@ pub mod vcs_integration {
     impl VersionGraph for VcsVersionGraph {
         fn record_change(&self, document: &DocumentId, change: ChangeRecord) -> Result<String, DbError> {
             self.with_store(document, |store| {
-                let operation = HashOperation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
-                store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: Some(change.message.clone()) }).map_err(map_vcs_error)?;
+                let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
+                store.dispatch(store::DocumentCommand::Apply { mutations: vec![operation], description: Some(change.message.clone()) }).map_err(map_vcs_error)?;
                 Ok(store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
             })
         }
@@ -998,23 +998,23 @@ impl DocumentHandle {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vcs_integration::{HashOperation, HashProjection};
+    use crate::vcs_integration::{HashMutation, HashProjection};
     use protocol::{OpBinary, OpText};
     use store::DocumentPack;
 
     #[test]
     fn hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent() {
-        let bare = HashOperation { hash: [7u8; 32], author: None, timestamp: None };
-        assert_eq!(HashOperation::parse_op(&bare.print_op()).unwrap().hash, bare.hash);
-        assert!(HashOperation::parse_op(&bare.print_op()).unwrap().author.is_none());
-        assert_eq!(HashOperation::decode_op(&bare.encode_op().unwrap()).unwrap(), bare);
+        let bare = HashMutation { hash: [7u8; 32], author: None, timestamp: None };
+        assert_eq!(HashMutation::parse_op(&bare.print_op()).unwrap().hash, bare.hash);
+        assert!(HashMutation::parse_op(&bare.print_op()).unwrap().author.is_none());
+        assert_eq!(HashMutation::decode_op(&bare.encode_op().unwrap()).unwrap(), bare);
 
-        let full = HashOperation { hash: [9u8; 32], author: Some(protocol::ActorId("actor-1".into())), timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }) };
-        let reparsed = HashOperation::parse_op(&full.print_op()).unwrap();
+        let full = HashMutation { hash: [9u8; 32], author: Some(protocol::ActorId("actor-1".into())), timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }) };
+        let reparsed = HashMutation::parse_op(&full.print_op()).unwrap();
         assert_eq!(reparsed.hash, full.hash);
         assert_eq!(reparsed.author, full.author);
         assert_eq!(reparsed.timestamp, full.timestamp);
-        let redecoded = HashOperation::decode_op(&full.encode_op().unwrap()).unwrap();
+        let redecoded = HashMutation::decode_op(&full.encode_op().unwrap()).unwrap();
         assert_eq!(redecoded, full);
     }
 
@@ -1033,18 +1033,18 @@ mod tests {
         dir
     }
 
-    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::DocumentId, entries: &[(&str, serde_json::Value)]) -> protocol::OperationEnvelope {
+    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::DocumentId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
         let mut payload = serde_json::Map::new();
         for (path, value) in entries {
             payload.insert((*path).to_string(), value.clone());
         }
-        protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(id.to_string()),
+        protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
-            dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
+            dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -1104,7 +1104,7 @@ mod tests {
 
         let batch = db_document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))])]).unwrap();
         let receipt = db_actor::block_on(handle.submit(batch, db_document::SubmitOptions { durability: DurabilityClass::Fsync })).unwrap().unwrap();
-        assert_eq!(receipt.command_id, protocol::OperationId("op-1".to_string()));
+        assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.document, document);
         assert_eq!(receipt.frontier.head_seq, 1);
         assert!(receipt.conflicts.is_empty());
@@ -1122,7 +1122,7 @@ mod tests {
 
         let history = handle.history().unwrap();
         assert_eq!(history.entries.len(), 1);
-        assert_eq!(history.entries[0].operation_ids, vec![protocol::OperationId("op-1".to_string())]);
+        assert_eq!(history.entries[0].operation_ids, vec![protocol::MutationId("op-1".to_string())]);
     }
 
     #[test]

@@ -17,8 +17,9 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — `DocumentApp::handle` and `import_media` return
-// `Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation>, Fault>`/`…, MediaError>`, the exact
+// `Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault>`/`…, MediaError>`, the exact
 // signatures the trait requires. `Fault` is a framework-owned error type; boxing it here would
 // diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself (only
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -37,6 +38,73 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/◻2d/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/◻2d/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_node {
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📍set-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📍set-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📍set-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_node {
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/➖remove-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/➖remove-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/➖remove-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_edge {
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/🔗set-edge/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/🔗set-edge/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/🔗set-edge/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_edge {
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/✂️remove-edge/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/✂️remove-edge/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/✂️remove-edge/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_meta {
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/🏷set-meta/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/🏷set-meta/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/🏷set-meta/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/◻2d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/◻2d/🎒️pack/🦀️component.rs"]
@@ -73,6 +141,113 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_object {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-object/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-object/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-object/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_object {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-object/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-object/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-object/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_attraction {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-attraction/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-attraction/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-attraction/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_attraction {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-attraction/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-attraction/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-attraction/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_target_volume {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-target-volume/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-target-volume/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-target-volume/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_target_volume {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-target-volume/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-target-volume/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-target-volume/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_reference {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-reference/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-reference/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-reference/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_reference {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-reference/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-reference/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-reference/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_meta {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🏷set-meta/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🏷set-meta/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/🏷set-meta/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs"]
@@ -107,6 +282,73 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_part {
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🎛set-part/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🎛set-part/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🎛set-part/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_part {
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/➖remove-part/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/➖remove-part/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/➖remove-part/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_fastener {
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🎛set-fastener/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🎛set-fastener/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🎛set-fastener/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_fastener {
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/➖remove-fastener/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/➖remove-fastener/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/➖remove-fastener/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_meta {
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🏷set-meta/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🏷set-meta/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/🏷set-meta/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖐️5d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs"]

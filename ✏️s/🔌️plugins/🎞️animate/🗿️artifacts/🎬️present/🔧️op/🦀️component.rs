@@ -1,4 +1,4 @@
-//! 🔧️ Animate present artifact — operation enum + laws (constitutional: op).
+//! 🔧 present artifact — OpText/OpBinary for `PresentMutation`.
 
 
 //#region 📖️SemioGrammar
@@ -7,55 +7,22 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use crate::artifacts::present::mutations::{apply_present_mutation, inverse_present_mutation, PresentMutation};
 
-use crate::artifacts::present::diff::PresentDiff;
 use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileSource, PresentDeck};
-use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionOperation, Operation};
-use serde::{Deserialize, Serialize};
+use protocol::CollectionMutation;
 
-//#region 🔖️Operations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-pub enum PresentOperation {
-    Tiles(CollectionOperation<String, FigureTileDraft, FigureTileDraftPatch>),
-    SetSource { source: FigureTileSource },
-    SetTiles { tiles: Vec<FigureTileDraft> },
-    SetDeck { deck: PresentDeck },
-}
-
-impl Operation<PresentDeck> for PresentOperation {
-    type Diff = PresentDiff;
-
-    fn diff(&self, projection: &PresentDeck) -> PresentDiff {
-        match self {
-            PresentOperation::Tiles(operation) => PresentDiff { tiles: Some(collection_diff_from_operation(&projection.tiles, operation)), ..Default::default() },
-            PresentOperation::SetSource { source } => PresentDiff { source: Some(source.clone()), ..Default::default() },
-            PresentOperation::SetTiles { tiles } => PresentDiff { set_tiles: Some(tiles.clone()), ..Default::default() },
-            PresentOperation::SetDeck { deck } => PresentDiff { deck: Some(deck.clone()), ..Default::default() },
-        }
-    }
-
-    fn backwards(&self, projection: &PresentDeck) -> Vec<Self> {
-        match self {
-            PresentOperation::Tiles(operation) => vec![PresentOperation::Tiles(invert_collection_operation(&projection.tiles, operation))],
-            PresentOperation::SetSource { .. } => vec![PresentOperation::SetSource { source: projection.source.clone() }],
-            PresentOperation::SetTiles { .. } => vec![PresentOperation::SetTiles { tiles: projection.tiles.clone() }],
-            PresentOperation::SetDeck { .. } => vec![PresentOperation::SetDeck { deck: projection.clone() }],
-        }
-    }
-}
-//#endregion 🔖️Operations
 
 //#region 🔖️OpText
-/// ⚡️ DSL-facing mirror of `PresentOperation`, declared purely so `#[derive(dsl::DslEnum)]` has
-/// something to attach to: `PresentOperation::Tiles` wraps `protocol::CollectionOperation<..>`, a
+/// ⚡️ DSL-facing mirror of `PresentMutation`, declared purely so `#[derive(dsl::DslEnum)]` has
+/// something to attach to: `PresentMutation::Tiles` wraps `protocol::CollectionMutation<..>`, a
 /// foreign generic type the derive can't classify (and can't gain a `DslField` impl here either — both
 /// the trait and the type live outside this crate, so Rust's orphan rules forbid it). Every `Tiles(...)`
 /// case is flattened into its own tagged variant instead; `SetSource`/`SetTiles`/`SetDeck` carry
 /// straight through unchanged. `From`/`Into` below keep this an implementation detail — nothing
-/// outside `impl protocol::OpText for PresentOperation` ever names it.
+/// outside `impl protocol::OpText for PresentMutation` ever names it.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum PresentOperationDsl {
+enum PresentMutationDsl {
     TilesAdd {
         index: usize,
         #[dsl(block)]
@@ -88,7 +55,7 @@ enum PresentOperationDsl {
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
-impl protocol::OpText for PresentOperationDsl {
+impl protocol::OpText for PresentMutationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -102,7 +69,7 @@ impl protocol::OpText for PresentOperationDsl {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -112,7 +79,7 @@ impl protocol::OpText for PresentOperationDsl {
     }
 }
 
-impl protocol::OpBinary for PresentOperationDsl {
+impl protocol::OpBinary for PresentMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -125,46 +92,55 @@ impl protocol::OpBinary for PresentOperationDsl {
 
 
 
-impl From<&PresentOperation> for PresentOperationDsl {
-    fn from(operation: &PresentOperation) -> Self {
+impl From<&PresentMutation> for PresentMutationDsl {
+    fn from(operation: &PresentMutation) -> Self {
         match operation {
-            PresentOperation::Tiles(CollectionOperation::Add { index: at, item }) => PresentOperationDsl::TilesAdd { index: *at, item: item.clone() },
-            PresentOperation::Tiles(CollectionOperation::Remove { id }) => PresentOperationDsl::TilesRemove { id: id.clone() },
-            PresentOperation::Tiles(CollectionOperation::Move { id, to_index: to }) => PresentOperationDsl::TilesMove { id: id.clone(), to_index: *to },
-            PresentOperation::Tiles(CollectionOperation::Patch { id, patch }) => PresentOperationDsl::TilesPatch { id: id.clone(), patch: patch.clone() },
-            PresentOperation::SetSource { source } => PresentOperationDsl::SetSource { source: source.clone() },
-            PresentOperation::SetTiles { tiles } => PresentOperationDsl::SetTiles { tiles: tiles.clone() },
-            PresentOperation::SetDeck { deck } => PresentOperationDsl::SetDeck { deck: deck.clone() },
+            PresentMutation::Tiles(CollectionMutation::Add { index: at, item }) => PresentMutationDsl::TilesAdd { index: *at, item: item.clone() },
+            PresentMutation::Tiles(CollectionMutation::Remove { id }) => PresentMutationDsl::TilesRemove { id: id.clone() },
+            PresentMutation::Tiles(CollectionMutation::Move { id, to_index: to }) => PresentMutationDsl::TilesMove { id: id.clone(), to_index: *to },
+            PresentMutation::Tiles(CollectionMutation::Patch { id, patch }) => PresentMutationDsl::TilesPatch { id: id.clone(), patch: patch.clone() },
+            PresentMutation::SetSource { source } => PresentMutationDsl::SetSource { source: source.clone() },
+            PresentMutation::SetTiles { tiles } => PresentMutationDsl::SetTiles { tiles: tiles.clone() },
+            PresentMutation::SetDeck { deck } => PresentMutationDsl::SetDeck { deck: deck.clone() },
         }
     }
 }
 
-impl From<PresentOperationDsl> for PresentOperation {
-    fn from(operation: PresentOperationDsl) -> Self {
+impl From<PresentMutationDsl> for PresentMutation {
+    fn from(operation: PresentMutationDsl) -> Self {
         match operation {
-            PresentOperationDsl::TilesAdd { index, item } => PresentOperation::Tiles(CollectionOperation::Add { index: index, item }),
-            PresentOperationDsl::TilesRemove { id } => PresentOperation::Tiles(CollectionOperation::Remove { id }),
-            PresentOperationDsl::TilesMove { id, to_index } => PresentOperation::Tiles(CollectionOperation::Move { id, to_index: to_index }),
-            PresentOperationDsl::TilesPatch { id, patch } => PresentOperation::Tiles(CollectionOperation::Patch { id, patch }),
-            PresentOperationDsl::SetSource { source } => PresentOperation::SetSource { source },
-            PresentOperationDsl::SetTiles { tiles } => PresentOperation::SetTiles { tiles },
-            PresentOperationDsl::SetDeck { deck } => PresentOperation::SetDeck { deck },
+            PresentMutationDsl::TilesAdd { index, item } => PresentMutation::Tiles(CollectionMutation::Add { index: index, item }),
+            PresentMutationDsl::TilesRemove { id } => PresentMutation::Tiles(CollectionMutation::Remove { id }),
+            PresentMutationDsl::TilesMove { id, to_index } => PresentMutation::Tiles(CollectionMutation::Move { id, to_index: to_index }),
+            PresentMutationDsl::TilesPatch { id, patch } => PresentMutation::Tiles(CollectionMutation::Patch { id, patch }),
+            PresentMutationDsl::SetSource { source } => PresentMutation::SetSource { source },
+            PresentMutationDsl::SetTiles { tiles } => PresentMutation::SetTiles { tiles },
+            PresentMutationDsl::SetDeck { deck } => PresentMutation::SetDeck { deck },
         }
     }
 }
 
-/// ⚡️ One-line op-text for every `PresentOperation` variant, routed through {@link PresentOperationDsl}
+/// ⚡️ One-line op-text for every `PresentMutation` variant, routed through {@link PresentMutationDsl}
 
 
-/// ⚡️ Binary mirror of the `OpText` bridge above — `PresentOperationDsl` already derives `OpBinary`
+/// ⚡️ Binary mirror of the `OpText` bridge above — `PresentMutationDsl` already derives `OpBinary`
 /// via `#[derive(dsl::DslEnum)]`, so this is a pure `From`/`Into` forward.
-impl protocol::OpBinary for PresentOperation {
+impl protocol::OpText for PresentMutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        PresentMutationDsl::parse_op(line).map(Into::into)
+    }
+    fn print_op(&self) -> String {
+        PresentMutationDsl::from(self).print_op()
+    }
+}
+
+impl protocol::OpBinary for PresentMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        PresentOperationDsl::from(self).encode_op()
+        PresentMutationDsl::from(self).encode_op()
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        PresentOperationDsl::decode_op(bytes).map(PresentOperationDsl::into)
+        PresentMutationDsl::decode_op(bytes).map(PresentMutationDsl::into)
     }
 }
 //#endregion 🔖️OpText
@@ -177,11 +153,11 @@ mod tests {
     use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::test_support;
 
-    fn round_trip(deck: &PresentDeck, operation: &PresentOperation) -> PresentDeck {
-        let forward = vcs::apply_operation(deck, operation);
+    fn round_trip(deck: &PresentDeck, operation: &PresentMutation) -> PresentDeck {
+        let forward = vcs::apply_mutation(deck, operation);
         let mut restored = forward.clone();
-        for back in operation.backwards(deck) {
-            restored = vcs::apply_operation(&restored, &back);
+        for back in operation.inverse(deck) {
+            restored = vcs::apply_mutation(&restored, &back);
         }
         assert_eq!(&restored, deck, "backwards() must exactly restore the pre-operation deck");
         forward
@@ -191,9 +167,9 @@ mod tests {
     fn set_tiles_and_clear_round_trip() {
         let deck = default_present_deck();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        let seeded = round_trip(&deck, &PresentOperation::SetTiles { tiles });
+        let seeded = round_trip(&deck, &PresentMutation::SetTiles { tiles });
         assert_eq!(seeded.tiles.len(), 4);
-        let cleared = round_trip(&seeded, &PresentOperation::SetTiles { tiles: Vec::new() });
+        let cleared = round_trip(&seeded, &PresentMutation::SetTiles { tiles: Vec::new() });
         assert!(cleared.tiles.is_empty());
     }
 
@@ -201,13 +177,13 @@ mod tests {
     fn tile_add_patch_remove_round_trip() {
         let deck = default_present_deck();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        let added = round_trip(&deck, &PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: tile }));
+        let added = round_trip(&deck, &PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: tile }));
         assert_eq!(added.tiles.len(), 1);
-        let renamed = round_trip(&added, &PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None } }));
+        let renamed = round_trip(&added, &PresentMutation::Tiles(CollectionMutation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None } }));
         assert_eq!(renamed.tiles[0].name, "Renamed");
-        let recropped = round_trip(&renamed, &PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: None, crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) } }));
+        let recropped = round_trip(&renamed, &PresentMutation::Tiles(CollectionMutation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: None, crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) } }));
         assert_eq!(recropped.tiles[0].crop.width, 0.4);
-        let removed = round_trip(&recropped, &PresentOperation::Tiles(CollectionOperation::Remove { id: "t1".into() }));
+        let removed = round_trip(&recropped, &PresentMutation::Tiles(CollectionMutation::Remove { id: "t1".into() }));
         assert!(removed.tiles.is_empty());
     }
 
@@ -215,46 +191,46 @@ mod tests {
     #[test]
     fn op_text_round_trip_tiles_add() {
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: tile }));
+        test_support::assert_op_line_round_trip(&PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: tile }));
     }
 
     #[test]
     fn op_text_round_trip_tiles_remove() {
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Remove { id: "t1".into() }));
+        test_support::assert_op_line_round_trip(&PresentMutation::Tiles(CollectionMutation::Remove { id: "t1".into() }));
     }
 
     #[test]
     fn op_text_round_trip_tiles_move() {
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Move { id: "t1".into(), to_index: 2 }));
+        test_support::assert_op_line_round_trip(&PresentMutation::Tiles(CollectionMutation::Move { id: "t1".into(), to_index: 2 }));
     }
 
     #[test]
     fn op_text_round_trip_tiles_patch_full() {
         let patch = FigureTileDraftPatch { name: Some("Renamed".into()), crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) };
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch }));
+        test_support::assert_op_line_round_trip(&PresentMutation::Tiles(CollectionMutation::Patch { id: "t1".into(), patch }));
     }
 
     #[test]
     fn op_text_round_trip_tiles_patch_empty() {
         let patch = FigureTileDraftPatch { name: None, crop: None };
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch }));
+        test_support::assert_op_line_round_trip(&PresentMutation::Tiles(CollectionMutation::Patch { id: "t1".into(), patch }));
     }
 
     #[test]
     fn op_text_round_trip_set_source() {
-        test_support::assert_op_line_round_trip(&PresentOperation::SetSource { source: default_figure_tile_source() });
+        test_support::assert_op_line_round_trip(&PresentMutation::SetSource { source: default_figure_tile_source() });
     }
 
     #[test]
     fn op_text_round_trip_set_tiles() {
         let source = default_figure_tile_source();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        test_support::assert_op_line_round_trip(&PresentOperation::SetTiles { tiles });
+        test_support::assert_op_line_round_trip(&PresentMutation::SetTiles { tiles });
     }
 
     #[test]
     fn op_text_round_trip_set_deck() {
-        test_support::assert_op_line_round_trip(&PresentOperation::SetDeck { deck: default_present_deck() });
+        test_support::assert_op_line_round_trip(&PresentMutation::SetDeck { deck: default_present_deck() });
     }
     //#endregion 🔖️OpTextTests
 }

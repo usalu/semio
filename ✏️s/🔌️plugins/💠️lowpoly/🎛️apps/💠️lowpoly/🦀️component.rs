@@ -10,15 +10,15 @@
 //! read-view/selection helpers in `🧭️view/🦀️component.rs`.
 
 use crate::apps::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv, world};
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::modes::{edit, paint as paint_mode};
 use crate::apps::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::{format_selection_targets_label, selection_targets_from_config, utility_param_f64, LowpolyView};
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::{artifact_kind, mesh_artifact_kind, LowpolyProjection, LOWPOLY_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
 };
@@ -43,6 +43,15 @@ pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(LOWPOLY_PLAY_CONTROLLER_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️ScratchSlot
+thread_local! {
+    /// 🖌️ Mid-gesture scratch survives across `DocumentApp::handle` calls (associated fn has no `&mut self`).
+    /// Host-owned session scratch lands with CHANNEL_VERSION 5; until then one TLS slot per thread.
+    static LOWPOLY_SCRATCH: std::cell::RefCell<crate::apps::lowpoly::session::LowpolyScratch> = std::cell::RefCell::new(crate::apps::lowpoly::session::LowpolyScratch::default());
+}
+//#endregion 🔖️ScratchSlot
+
 
 //#region 🔖️SharedMeasures
 /// 🎛️ Collects every window-chrome measure from the app-level `🎚️options/*` shared by both windows
@@ -155,7 +164,7 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `LowpolyPlayApp::Command` — the SOLE dispatch surface for lowpoly's own behavior, covering
     /// every declared action. Row order is the binary variant ordinal: appending is safe, reordering is
     /// a wire-format break.
-    pub enum LowpolyCommand for LowpolyProjection, LowpolyOperation, LowpolyConfig, LowpolyConfigOperation, ctx = LowpolyScratch {
+    pub enum LowpolyCommand for LowpolyProjection, LowpolyMutation, LowpolyConfig, LowpolyConfigMutation, ctx = LowpolyScratch {
         "addPrimitive" as "add-primitive" => add_primitive::AddPrimitive,
         "patchObject" as "patch-object" => patch_object::PatchObject,
         "extrude" as "extrude" => extrude::Extrude,
@@ -235,7 +244,7 @@ use chrome::toggle_show_edges;
 
 //#region 🔖️LowpolyPlayApp
 /// @emoji 🖌️ B1: sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime field now lives in
-/// `LowpolyConfig`, written through `LowpolyConfigOperation`s emitted from `handle`. The one remaining
+/// `LowpolyConfig`, written through `LowpolyConfigMutation`s emitted from `handle`. The one remaining
 /// field is genuine mid-gesture scratch state (`LowpolyScratch`) — the "scratch + commit" pattern the
 /// `DocumentApp` trait itself sanctions for `&self`-only `handle`/`render`.
 #[derive(Default, Clone, Copy)]
@@ -243,11 +252,11 @@ pub struct LowpolyPlayApp;
 
 impl DocumentApp for LowpolyPlayApp {
     type Projection = LowpolyProjection;
-    type Operation = LowpolyOperation;
+    type Mutation = LowpolyMutation;
     type Config = LowpolyConfig;
-    type ConfigOperation = LowpolyConfigOperation;
+    type ConfigMutation = LowpolyConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = LowpolyCommand;
 
@@ -262,8 +271,8 @@ impl DocumentApp for LowpolyPlayApp {
         Some(crate::artifacts::lowpoly::engine::lowpoly_io())
     }
 
-    fn whole_document_operation(projection: LowpolyProjection) -> Option<LowpolyOperation> {
-        Some(LowpolyOperation::SetProjection { projection })
+    fn whole_document_operation(projection: LowpolyProjection) -> Option<LowpolyMutation> {
+        Some(LowpolyMutation::SetProjection { projection })
     }
 
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.projection`, replicated
@@ -290,7 +299,7 @@ impl DocumentApp for LowpolyPlayApp {
     /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `SetProjection` op; `document:in`
     /// replicates the trait's default whole-pack import inline (overriding `import_media` shadows the
     /// default for every port on this app, not just the new one).
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LowpolyProjection>) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LowpolyProjection>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "mesh:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -300,7 +309,7 @@ impl DocumentApp for LowpolyPlayApp {
                 let mesh = crate::artifacts::lowpoly::engine::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let projection_json = crate::artifacts::lowpoly::engine::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let projection: LowpolyProjection = serde_json::from_value(projection_json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                Ok(Emit::operations(vec![LowpolyOperation::SetProjection { projection }]))
+                Ok(Emit::mutations(vec![LowpolyMutation::SetProjection { projection }]))
             }
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -309,7 +318,7 @@ impl DocumentApp for LowpolyPlayApp {
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 let projection = <LowpolyProjection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
-                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
             }
@@ -321,9 +330,8 @@ impl DocumentApp for LowpolyPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation, Self::DraftOperation>, Fault> {
-        let mut scratch = LowpolyScratch::default();
-        command.dispatch(doc, cfg, &mut scratch)
+    fn handle(command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
+        LOWPOLY_SCRATCH.with(|scratch| command.dispatch(doc, cfg, &mut scratch.borrow_mut()))
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
@@ -331,14 +339,15 @@ impl DocumentApp for LowpolyPlayApp {
         let config = cfg.projection;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
         let active_utility = config.active_utility_id.as_str();
-        let mut scratch = LowpolyScratch::default();
-        let scratch_projection = scratch.transform_projection();
+        let (scratch_projection, texture_cache) = LOWPOLY_SCRATCH.with(|scratch| {
+            let mut scratch = scratch.borrow_mut();
+            if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
+                scratch.refresh_texture_cache(projection);
+            }
+            (scratch.transform_projection(), scratch.textures().clone())
+        });
         let render_projection = scratch_projection.as_ref().unwrap_or(projection);
         let view = LowpolyView { projection: render_projection, config };
-        if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
-            scratch.refresh_texture_cache(projection);
-        }
-        let texture_cache = scratch.textures().clone();
         let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT).then(|| crate::apps::lowpoly::view::build_doc(projection, config)).flatten();
         match body_key {
             LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
@@ -401,35 +410,35 @@ pub fn create_lowpoly_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             .panel_tab_def(layers_panel::definition())
             // 🔧️ Document-mutating operations — dispatched as VCS operations with true inverses.
-            .operation("addPrimitive", LocalizedLabel::native("Add Primitive", "Primitive hinzufügen"))
-            .operation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
-            .operation("extrude", LocalizedLabel::native("Extrude", "Extrudieren"))
-            .operation("inset", LocalizedLabel::native("Inset", "Einziehen"))
-            .operation("bevel", LocalizedLabel::native("Bevel", "Fasen"))
-            .operation("loopCut", LocalizedLabel::native("Loop Cut", "Schleifenschnitt"))
-            .operation("subdivide", LocalizedLabel::native("Subdivide", "Unterteilen"))
-            .operation("triangulate", LocalizedLabel::native("Triangulate", "Triangulieren"))
-            .operation("mirror", LocalizedLabel::native("Mirror", "Spiegeln"))
-            .operation("decimate", LocalizedLabel::native("Decimate", "Dezimieren"))
-            .operation("flipFaces", LocalizedLabel::native("Flip Faces", "Flächen umkehren"))
-            .operation("merge", LocalizedLabel::native("Merge", "Zusammenführen"))
-            .operation("dissolve", LocalizedLabel::native("Dissolve", "Auflösen"))
-            .operation("snap", LocalizedLabel::native("Snap", "Einrasten"))
-            .operation("toggleSmooth", LocalizedLabel::native("Toggle Smooth", "Glättung umschalten"))
-            .operation("unwrapActive", LocalizedLabel::native("Unwrap", "Abwickeln"))
-            .operation("markUvSeam", LocalizedLabel::native("Mark Seam", "Naht markieren"))
-            .operation("clearSeam", LocalizedLabel::native("Clear Seam", "Naht entfernen"))
-            .operation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
-            .operation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
-            .operation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
-            .operation("transformEnd", LocalizedLabel::native("Transform End", "Transformation beenden"))
-            .operation("addPaintLayer", LocalizedLabel::native("Add Paint Layer", "Malebene hinzufügen"))
-            .operation("paintStrokeEnd", LocalizedLabel::native("Paint Stroke End", "Malstrich beenden"))
-            .operation("paintFill", LocalizedLabel::native("Paint Fill", "Füllen malen"))
-            .operation("fillBucket", LocalizedLabel::native("Fill Bucket", "Fülleimer"))
-            .operation("setProjectionJson", LocalizedLabel::native("Set Projection Json", "Projektions-JSON festlegen"))
-            .operation("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
-            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .mutation("addPrimitive", LocalizedLabel::native("Add Primitive", "Primitive hinzufügen"))
+            .mutation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
+            .mutation("extrude", LocalizedLabel::native("Extrude", "Extrudieren"))
+            .mutation("inset", LocalizedLabel::native("Inset", "Einziehen"))
+            .mutation("bevel", LocalizedLabel::native("Bevel", "Fasen"))
+            .mutation("loopCut", LocalizedLabel::native("Loop Cut", "Schleifenschnitt"))
+            .mutation("subdivide", LocalizedLabel::native("Subdivide", "Unterteilen"))
+            .mutation("triangulate", LocalizedLabel::native("Triangulate", "Triangulieren"))
+            .mutation("mirror", LocalizedLabel::native("Mirror", "Spiegeln"))
+            .mutation("decimate", LocalizedLabel::native("Decimate", "Dezimieren"))
+            .mutation("flipFaces", LocalizedLabel::native("Flip Faces", "Flächen umkehren"))
+            .mutation("merge", LocalizedLabel::native("Merge", "Zusammenführen"))
+            .mutation("dissolve", LocalizedLabel::native("Dissolve", "Auflösen"))
+            .mutation("snap", LocalizedLabel::native("Snap", "Einrasten"))
+            .mutation("toggleSmooth", LocalizedLabel::native("Toggle Smooth", "Glättung umschalten"))
+            .mutation("unwrapActive", LocalizedLabel::native("Unwrap", "Abwickeln"))
+            .mutation("markUvSeam", LocalizedLabel::native("Mark Seam", "Naht markieren"))
+            .mutation("clearSeam", LocalizedLabel::native("Clear Seam", "Naht entfernen"))
+            .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
+            .mutation("transformEnd", LocalizedLabel::native("Transform End", "Transformation beenden"))
+            .mutation("addPaintLayer", LocalizedLabel::native("Add Paint Layer", "Malebene hinzufügen"))
+            .mutation("paintStrokeEnd", LocalizedLabel::native("Paint Stroke End", "Malstrich beenden"))
+            .mutation("paintFill", LocalizedLabel::native("Paint Fill", "Füllen malen"))
+            .mutation("fillBucket", LocalizedLabel::native("Fill Bucket", "Fülleimer"))
+            .mutation("setProjectionJson", LocalizedLabel::native("Set Projection Json", "Projektions-JSON festlegen"))
+            .mutation("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
+            .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
             // mid-drag (paint ticks, gumball scratch, eyedropper sample).
             .view_action("setActiveObject", LocalizedLabel::native("Set Active Object", "Aktives Objekt festlegen"))
@@ -561,7 +570,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -701,10 +710,10 @@ mod tests {
         let projection = crate::artifacts::lowpoly::engine::default_projection();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = lowpoly_app.import_media("mesh:in", &media, &doc).expect("import mesh:in");
-        assert_eq!(emit.document_operations.len(), 1);
-        match &emit.document_operations[0] {
-            LowpolyOperation::SetProjection { projection } => assert_eq!(projection.objects.len(), 1),
+        let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
+        assert_eq!(emit.document_mutations.len(), 1);
+        match &emit.document_mutations[0] {
+            LowpolyMutation::SetProjection { projection } => assert_eq!(projection.objects.len(), 1),
             other => panic!("expected SetProjection, got {other:?}"),
         }
     }

@@ -14,7 +14,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<...Operation, ...ConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<...Mutation, ...ConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -33,6 +33,23 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🗺️gismap/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs"]
@@ -53,6 +70,43 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_exaggeration {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-exaggeration/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-exaggeration/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-exaggeration/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_imported_features {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-imported-features/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-imported-features/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/🎛set-imported-features/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs"]
@@ -187,6 +241,10 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
+#[path = "../../🔌️plugin/🔧️setup/🦀️component.rs"]
+mod setup;
+pub use setup::register_gis_exports;
+
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);

@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::jack::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
-use crate::artifacts::jack::op::TrinityGraphOperation;
+use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{EntityRef, GraphFixture, PropertyValue};
 use protocol::{OpBinary, OpText};
 use store::TextError;
@@ -52,7 +52,7 @@ impl From<EntityRefDsl> for EntityRef {
     }
 }
 
-/// ⚡️ Local mirror of `TrinityGraphOperation` for `protocol::OpText`/`OpBinary` — `entity: EntityRef`
+/// ⚡️ Local mirror of `TrinityGraphMutation` for `protocol::OpText`/`OpBinary` — `entity: EntityRef`
 /// and `ports`/`fixture` fields transitively carry foreign/tuple-variant shapes, so the real enum
 /// can't derive `dsl::DslOps` directly. `fixture: GraphFixture` binds through `GraphFixture`'s own
 /// hand-written `dsl::DslField` impl (in `🗣️dsl`) unchanged.
@@ -120,7 +120,7 @@ impl protocol::OpText for TrinityGraphOperationDsl {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -143,43 +143,43 @@ impl protocol::OpBinary for TrinityGraphOperationDsl {
 
 
 
-fn trinity_graph_operation_to_dsl(operation: &TrinityGraphOperation) -> TrinityGraphOperationDsl {
+fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
     match operation {
-        TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports } => {
+        TrinityGraphMutation::CreateNode { id, kind, name, x, y, width, height, ports } => {
             TrinityGraphOperationDsl::CreateNode { id: id.clone(), kind: kind.clone(), name: name.clone(), x: *x, y: *y, width: *width, height: *height, ports: ports.iter().map(port_to_port_dsl).collect() }
         }
-        TrinityGraphOperation::DeleteNode { id } => TrinityGraphOperationDsl::DeleteNode { id: id.clone() },
-        TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => TrinityGraphOperationDsl::CreateEdge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() },
-        TrinityGraphOperation::DeleteEdge { id } => TrinityGraphOperationDsl::DeleteEdge { id: id.clone() },
-        TrinityGraphOperation::Rename { id, name } => TrinityGraphOperationDsl::Rename { id: id.clone(), name: name.clone() },
-        TrinityGraphOperation::Reposition { id, x, y } => TrinityGraphOperationDsl::Reposition { id: id.clone(), x: *x, y: *y },
-        TrinityGraphOperation::SetDataProperty { entity, key, value } => TrinityGraphOperationDsl::SetDataProperty { entity: entity.into(), key: key.clone(), value: value.clone() },
-        TrinityGraphOperation::ClearDataProperty { entity, key } => TrinityGraphOperationDsl::ClearDataProperty { entity: entity.into(), key: key.clone() },
-        TrinityGraphOperation::SetFixture { fixture } => TrinityGraphOperationDsl::SetFixture { fixture: fixture.clone() },
+        TrinityGraphMutation::DeleteNode { id } => TrinityGraphOperationDsl::DeleteNode { id: id.clone() },
+        TrinityGraphMutation::CreateEdge { id, kind, source, target, properties } => TrinityGraphOperationDsl::CreateEdge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() },
+        TrinityGraphMutation::DeleteEdge { id } => TrinityGraphOperationDsl::DeleteEdge { id: id.clone() },
+        TrinityGraphMutation::Rename { id, name } => TrinityGraphOperationDsl::Rename { id: id.clone(), name: name.clone() },
+        TrinityGraphMutation::Reposition { id, x, y } => TrinityGraphOperationDsl::Reposition { id: id.clone(), x: *x, y: *y },
+        TrinityGraphMutation::SetDataProperty { entity, key, value } => TrinityGraphOperationDsl::SetDataProperty { entity: entity.into(), key: key.clone(), value: value.clone() },
+        TrinityGraphMutation::ClearDataProperty { entity, key } => TrinityGraphOperationDsl::ClearDataProperty { entity: entity.into(), key: key.clone() },
+        TrinityGraphMutation::SetFixture { fixture } => TrinityGraphOperationDsl::SetFixture { fixture: fixture.clone() },
     }
 }
 
-fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphOperation {
+fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
     match operation {
         TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => {
-            TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports: ports.into_iter().map(port_dsl_to_port).collect() }
+            TrinityGraphMutation::CreateNode { id, kind, name, x, y, width, height, ports: ports.into_iter().map(port_dsl_to_port).collect() }
         }
-        TrinityGraphOperationDsl::DeleteNode { id } => TrinityGraphOperation::DeleteNode { id },
-        TrinityGraphOperationDsl::CreateEdge { id, kind, source, target, properties } => TrinityGraphOperation::CreateEdge { id, kind, source, target, properties },
-        TrinityGraphOperationDsl::DeleteEdge { id } => TrinityGraphOperation::DeleteEdge { id },
-        TrinityGraphOperationDsl::Rename { id, name } => TrinityGraphOperation::Rename { id, name },
-        TrinityGraphOperationDsl::Reposition { id, x, y } => TrinityGraphOperation::Reposition { id, x, y },
-        TrinityGraphOperationDsl::SetDataProperty { entity, key, value } => TrinityGraphOperation::SetDataProperty { entity: entity.into(), key, value },
-        TrinityGraphOperationDsl::ClearDataProperty { entity, key } => TrinityGraphOperation::ClearDataProperty { entity: entity.into(), key },
-        TrinityGraphOperationDsl::SetFixture { fixture } => TrinityGraphOperation::SetFixture { fixture },
+        TrinityGraphOperationDsl::DeleteNode { id } => TrinityGraphMutation::DeleteNode { id },
+        TrinityGraphOperationDsl::CreateEdge { id, kind, source, target, properties } => TrinityGraphMutation::CreateEdge { id, kind, source, target, properties },
+        TrinityGraphOperationDsl::DeleteEdge { id } => TrinityGraphMutation::DeleteEdge { id },
+        TrinityGraphOperationDsl::Rename { id, name } => TrinityGraphMutation::Rename { id, name },
+        TrinityGraphOperationDsl::Reposition { id, x, y } => TrinityGraphMutation::Reposition { id, x, y },
+        TrinityGraphOperationDsl::SetDataProperty { entity, key, value } => TrinityGraphMutation::SetDataProperty { entity: entity.into(), key, value },
+        TrinityGraphOperationDsl::ClearDataProperty { entity, key } => TrinityGraphMutation::ClearDataProperty { entity: entity.into(), key },
+        TrinityGraphOperationDsl::SetFixture { fixture } => TrinityGraphMutation::SetFixture { fixture },
     }
 }
 //#endregion 🔖️DslMirrors
 
 //#region 🔖️OpText
-/// ⚡️ One-line textual notation for [`TrinityGraphOperation`] (`protocol::OpText`), delegating to the
+/// ⚡️ One-line textual notation for [`TrinityGraphMutation`] (`protocol::OpText`), delegating to the
 /// derive-generated `TrinityGraphOperationDsl` mirror.
-impl OpText for TrinityGraphOperation {
+impl OpText for TrinityGraphMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
         <TrinityGraphOperationDsl as OpText>::parse_op(line).map(trinity_graph_operation_from_dsl)
     }
@@ -191,7 +191,7 @@ impl OpText for TrinityGraphOperation {
 
 /// ⚡️ Binary mirror of the `OpText` impl above — `TrinityGraphOperationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
-impl OpBinary for TrinityGraphOperation {
+impl OpBinary for TrinityGraphMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         trinity_graph_operation_to_dsl(self).encode_op()
     }
@@ -202,14 +202,14 @@ impl OpBinary for TrinityGraphOperation {
 }
 //#endregion 🔖️OpText
 
-/// 📦️ Encodes a Trinity graph `Operation` to its binary command form.
-pub fn encode_op(operation: &TrinityGraphOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a Trinity graph `Mutation` to its binary command form.
+pub fn encode_op(operation: &TrinityGraphMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a Trinity graph `Operation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<TrinityGraphOperation, protocol::ProtocolError> {
-    TrinityGraphOperation::decode_op(bytes)
+/// 📖️ Decodes a Trinity graph `Mutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<TrinityGraphMutation, protocol::ProtocolError> {
+    TrinityGraphMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn rename_op_binary_round_trips_and_agrees_with_text() {
-        let operation = TrinityGraphOperation::Rename { id: "node-1".into(), name: "Renamed".into() };
+        let operation = TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -230,24 +230,24 @@ mod tests {
     fn nakagin_document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope_for_test();
         let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![TrinityGraphOperation::Rename { id: "node-1".into(), name: "Renamed".into() }], description: None }).ok();
+        doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() }], description: None }).ok();
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
-    fn create_document_envelope_for_test() -> store::DocumentEnvelope<GraphFixture, TrinityGraphOperation> {
-        create_document_envelope::<GraphFixture, TrinityGraphOperation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::engine::empty_jack_document(), None)
+    fn create_document_envelope_for_test() -> store::DocumentEnvelope<GraphFixture, TrinityGraphMutation> {
+        create_document_envelope::<GraphFixture, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::engine::empty_jack_document(), None)
     }
     use store::create_document_envelope;
 
     #[test]
     fn rename_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::Rename { id: "node-1".into(), name: "Renamed".into() });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() });
     }
 
     #[test]
     fn op_text_round_trip_create_node() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::CreateNode {
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::CreateNode {
             id: "new".into(),
             kind: "Piece".into(),
             name: "new-piece".into(),
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_delete_node() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::DeleteNode { id: "root".into() });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::DeleteNode { id: "root".into() });
     }
 
     #[test]
@@ -271,7 +271,7 @@ mod tests {
         let mut nested = std::collections::BTreeMap::new();
         nested.insert("x".into(), PropertyValue::Number(0.0));
         properties.insert("meta".into(), PropertyValue::Object(nested));
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::CreateEdge {
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::CreateEdge {
             id: "e2".into(),
             kind: "Connection".into(),
             source: crate::artifacts::jack::port_key("root", "out-a"),
@@ -282,38 +282,38 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_delete_edge() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::DeleteEdge { id: "e1".into() });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::DeleteEdge { id: "e1".into() });
     }
 
     #[test]
     fn op_text_round_trip_rename() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::Rename { id: "root".into(), name: "renamed \"piece\"".into() });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Rename { id: "root".into(), name: "renamed \"piece\"".into() });
     }
 
     #[test]
     fn op_text_round_trip_reposition() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::Reposition { id: "root".into(), x: 10.0, y: -20.5 });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::Reposition { id: "root".into(), x: 10.0, y: -20.5 });
     }
 
     #[test]
     fn op_text_round_trip_set_data_property() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("hi 'there'".into()) });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("hi 'there'".into()) });
     }
 
     #[test]
     fn op_text_round_trip_clear_data_property() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Edge("e1".into()), key: "u".into() });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::ClearDataProperty { entity: EntityRef::Edge("e1".into()), key: "u".into() });
     }
 
     #[test]
     fn op_text_round_trip_set_fixture() {
-        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::SetFixture { fixture: crate::artifacts::jack::engine::empty_jack_document() });
+        store::test_support::assert_op_line_round_trip(&TrinityGraphMutation::SetFixture { fixture: crate::artifacts::jack::engine::empty_jack_document() });
     }
 
     #[test]
     fn parse_op_rejects_unknown_keyword() {
-        let err = TrinityGraphOperation::parse_op("bogusOp x").expect_err("unknown op");
-        assert!(err.message.contains("unknown operation line"));
+        let err = TrinityGraphMutation::parse_op("bogusOp x").expect_err("unknown op");
+        assert!(err.message.contains("unknown mutation line"));
     }
 
     #[test]
@@ -322,10 +322,10 @@ mod tests {
         use crate::artifacts::jack::op::TrinityGraphStore;
 
         let mut store = TrinityGraphStore::new(create_document_envelope_for_test());
-        crate::artifacts::jack::op::dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Rename { id: "node-1".into(), name: "Renamed".into() }]).unwrap_or(());
+        crate::artifacts::jack::op::dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::Rename { id: "node-1".into(), name: "Renamed".into() }]).unwrap_or(());
         if let Some(edit) = store.envelope().vcs.edits.last() {
-            let edit: &Edit<TrinityGraphOperation> = edit;
-            store::test_support::assert_command_envelope_round_trip::<GraphFixture, TrinityGraphOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+            let edit: &Edit<TrinityGraphMutation> = edit;
+            store::test_support::assert_command_envelope_round_trip::<GraphFixture, TrinityGraphMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
         }
     }
 }

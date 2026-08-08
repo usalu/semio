@@ -1,0 +1,1 @@
+Repo MCP unavailable during Wave 6. ticket_close not called; status written directly to 🎫️ticket.json and 🧪wave6-report.md.

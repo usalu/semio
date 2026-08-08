@@ -1,5 +1,5 @@
 //! 📡️ Puzzle 2d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! `Puzzle2dOperation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
+//! `Puzzle2dMutation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
 //! puzzle-2d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
@@ -11,24 +11,24 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::puzzle2d::op::Puzzle2dOperation;
+use crate::artifacts::puzzle2d::op::Puzzle2dMutation;
 use crate::artifacts::puzzle2d::Puzzle2dProjection;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
 
-/// 📦️ Encodes a `Puzzle2dOperation` to its binary command form.
-pub fn encode_op(operation: &Puzzle2dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `Puzzle2dMutation` to its binary command form.
+pub fn encode_op(operation: &Puzzle2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `Puzzle2dOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Puzzle2dOperation, protocol::ProtocolError> {
-    Puzzle2dOperation::decode_op(bytes)
+/// 📖️ Decodes a `Puzzle2dMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Puzzle2dMutation, protocol::ProtocolError> {
+    Puzzle2dMutation::decode_op(bytes)
 }
 
 //#region 🔖️Store
-pub type Puzzle2dEnvelope = DocumentEnvelope<Puzzle2dProjection, Puzzle2dOperation>;
-pub type Puzzle2dStore = DocumentStore<Puzzle2dProjection, Puzzle2dOperation>;
+pub type Puzzle2dEnvelope = DocumentEnvelope<Puzzle2dProjection, Puzzle2dMutation>;
+pub type Puzzle2dStore = DocumentStore<Puzzle2dProjection, Puzzle2dMutation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
@@ -45,7 +45,7 @@ mod tests {
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_projection(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![Puzzle2dOperation::SetNode {
+                mutations: vec![Puzzle2dMutation::SetNode {
                     index: 0,
                     node: Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() },
                 }],
@@ -70,18 +70,18 @@ mod wire_format_guard {
     use protocol::OpText;
     use serde_json::json;
 
-    fn ops() -> Vec<Puzzle2dOperation> {
+    fn ops() -> Vec<Puzzle2dMutation> {
         let node: puzzle_2d::Puzzle2dNode = serde_json::from_value(json!({"id":"n1","nodeKind":"Base","shape":"circle","x":1.5,"y":-2.25,"radius":3.0,"text":"hi","iconKind":"base","root":true,"scale":2.0,"visible":true,"locked":false,"handles":[]})).unwrap();
         let edge: puzzle_2d::Puzzle2dEdge = serde_json::from_value(json!({"id":"e1","source":"n1:h0","target":"n2:h0","edgeKind":"wire.link","sourceTip":"none","targetTip":"arrow","visible":true,"locked":false})).unwrap();
         let meta: puzzle_2d::Puzzle2dMeta = serde_json::from_value(json!({"manifestId":"nakagin","kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"specificity":"handle"}]})).unwrap();
         let document = Puzzle2dProjection::default();
         vec![
-            Puzzle2dOperation::SetNode { index: 0, node },
-            Puzzle2dOperation::RemoveNode { id: "n1".into() },
-            Puzzle2dOperation::SetEdge { index: 1, edge },
-            Puzzle2dOperation::RemoveEdge { id: "e1".into() },
-            Puzzle2dOperation::SetMeta { meta },
-            Puzzle2dOperation::SetDocument { document },
+            Puzzle2dMutation::SetNode { index: 0, node },
+            Puzzle2dMutation::RemoveNode { id: "n1".into() },
+            Puzzle2dMutation::SetEdge { index: 1, edge },
+            Puzzle2dMutation::RemoveEdge { id: "e1".into() },
+            Puzzle2dMutation::SetMeta { meta },
+            Puzzle2dMutation::SetDocument { document },
         ]
     }
 

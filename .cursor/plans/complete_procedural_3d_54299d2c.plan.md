@@ -19,16 +19,16 @@ todos:
     status: completed
   - id: verify-runtime
     content: Verify flow and preview render on :6018 and the demonstrator :6029 using the existing procedural-3d-runtime-probe and hex-column-status probes; capture screenshots for all eight examples
-    status: in_progress
+    status: completed
   - id: kernel-wave-a
     content: "BREP wave A: implement revolve/loft/sweep-along-path/pipe/helical, CDT tessellation for faces with holes, true B-rep transforms replacing the convex-hull proxy"
-    status: pending
+    status: completed
   - id: kernel-wave-b
     content: "BREP wave B: general surface-surface intersection, real imprint/stitch/classify booleans replacing the mesh+hull fallback, plane section, imprint double-boundary case"
-    status: pending
+    status: in_progress
   - id: kernel-wave-c
     content: "BREP wave C: rolling-ball fillet/chamfer, real healing and watertightness, honest kernel facade (arc angles, interpolate/approximate, NURBS grid, coons, curvature, deconstruct, face loops, structured validate), document op engine, STEP gaps"
-    status: pending
+    status: in_progress
   - id: close
     content: Close the ticket with a summary and the full list of touched files, leaving probes and logs in the ticket folder
     status: pending

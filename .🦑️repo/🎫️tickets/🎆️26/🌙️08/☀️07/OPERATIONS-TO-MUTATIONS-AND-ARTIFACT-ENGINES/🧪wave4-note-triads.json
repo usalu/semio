@@ -1,0 +1,23 @@
+{
+  "pluginRel": "✏️s/🔌️plugins/🗒️note",
+  "artFolder": "🗒️note",
+  "artMod": "note",
+  "prefix": "Note",
+  "proj": "NoteDocument",
+  "applyFn": "apply_note_mutation",
+  "mutType": "NoteMutation",
+  "variants": [
+    { "emojiKebab": "👁️set-grid-visible", "rustMod": "set_grid_visible" },
+    { "emojiKebab": "📏set-grid-spacing", "rustMod": "set_grid_spacing" },
+    { "emojiKebab": "🔢set-grid-subdivisions", "rustMod": "set_grid_subdivisions" },
+    { "emojiKebab": "🌫️set-grid-opacity", "rustMod": "set_grid_opacity" },
+    { "emojiKebab": "🧲set-snap-enabled", "rustMod": "set_snap_enabled" },
+    { "emojiKebab": "📐set-snap-grid-spacing", "rustMod": "set_snap_grid_spacing" },
+    { "emojiKebab": "✏️set-pencil-width", "rustMod": "set_pencil_width" },
+    { "emojiKebab": "🧽set-eraser-radius", "rustMod": "set_eraser_radius" },
+    { "emojiKebab": "🧱set-blocks", "rustMod": "set_blocks" },
+    { "emojiKebab": "📥put-asset", "rustMod": "put_asset" },
+    { "emojiKebab": "🗑️remove-asset", "rustMod": "remove_asset" },
+    { "emojiKebab": "📄set-document", "rustMod": "set_document" }
+  ]
+}

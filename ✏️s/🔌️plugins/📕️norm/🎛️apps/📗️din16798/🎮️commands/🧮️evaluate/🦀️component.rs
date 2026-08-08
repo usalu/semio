@@ -4,9 +4,9 @@
 //! document state, it is derived on every read, so a no-op whole-document commit is the honest way to
 //! record "the user asked for a fresh evaluation" in the command log.
 
-use crate::artifacts::din16798::op::Operation;
+use crate::artifacts::din16798::op::Din16798Mutation;
 use crate::artifacts::din16798::Document;
-use crate::config::{NormConfig, NormConfigOperation};
+use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +19,7 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
+pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din16798Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_document(doc.projection.clone(), "evaluate")
 }
 //#endregion 🔖️Handler
@@ -28,7 +28,7 @@ pub fn handle(_payload: &Evaluate, doc: &DocumentView<'_, Document>, _cfg: &Conf
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::SetDocumentOperation;
+    use crate::document::SetDocumentMutation;
     use semio_framework_plugin::HistoryView;
 
     #[test]
@@ -36,7 +36,7 @@ mod tests {
         let projection = Document::default();
         let config = NormConfig::default();
         let emit = handle(&Evaluate {}, &DocumentView { projection: &projection, history: &HistoryView::empty() }, &ConfigView { projection: &config }).expect("handle");
-        assert_eq!(emit.document_operations, vec![SetDocumentOperation::SetDocument { document: Document::default() }]);
+        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: Document::default() }]);
         assert_eq!(emit.description.as_deref(), Some("evaluate"));
     }
 }

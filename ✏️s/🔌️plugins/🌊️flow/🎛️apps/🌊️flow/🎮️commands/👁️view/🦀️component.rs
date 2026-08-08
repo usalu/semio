@@ -1,8 +1,8 @@
 //! 👁️ Flow play app commands — pure view interactions: camera, hover, spotlight, image replacement and
 //! the per-widget live-eval preview toggle. All config-only.
 
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
 use flow::{CameraJson, FlowEvalSession};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,8 @@ pub mod node_graph_viewport {
         pub camera: CameraJson,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        Ok(Emit::config(vec![FlowConfigOperation::SetCamera { camera: payload.camera.clone() }]))
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FlowConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
 //#endregion 🔖️NodeGraphViewport
@@ -33,7 +33,7 @@ pub mod node_graph_hover {
     #[dsl(keyword = "node-graph-hover")]
     pub struct NodeGraphHover {}
 
-    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -48,7 +48,7 @@ pub mod open_spotlight {
     #[dsl(keyword = "open-spotlight")]
     pub struct OpenSpotlight {}
 
-    pub fn handle(_payload: &OpenSpotlight, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(_payload: &OpenSpotlight, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -65,7 +65,7 @@ pub mod replace_image {
         pub id: String,
     }
 
-    pub fn handle(_payload: &ReplaceImage, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(_payload: &ReplaceImage, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -82,7 +82,7 @@ pub mod set_preview_off {
         pub value: bool,
     }
 
-    pub fn handle(payload: &SetPreviewOff, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &SetPreviewOff, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let mut next = cfg.projection.preview_off_node_ids.clone();
         if payload.value {
             for id in &payload.ids {
@@ -93,7 +93,7 @@ pub mod set_preview_off {
         } else {
             next.retain(|id| !payload.ids.contains(id));
         }
-        Ok(Emit::config(vec![FlowConfigOperation::SetPreviewOff { node_ids: next }]))
+        Ok(Emit::config(vec![FlowConfigMutation::SetPreviewOff { node_ids: next }]))
     }
 }
 //#endregion 🔖️SetPreviewOff

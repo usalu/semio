@@ -1,8 +1,8 @@
 //! 📚️ FEM 3D app commands — loading a bundled example, replacing the whole document and resetting
 //! view-state config back to its default.
 
-use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigOperation};
-use crate::artifacts::fem3d::op::Fem3dOperation;
+use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,13 +21,13 @@ pub mod set_active_example {
     /// 📚️ `"default"` loads the bundled `.fem3d` fixture; any other id resets to an empty document —
     /// fem3d only ships the one example (mirrors the pre-migration `handle_action` behavior). Also
     /// resets the whole config back to its default (camera, result display) via a `Snapshot`.
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let document = if payload.example_id == "default" {
             <Fem3dDocument as store::DocumentDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default()
         } else {
             Fem3dDocument::default()
         };
-        Ok(Emit { document_operations: vec![Fem3dOperation::SetDocument { document }], config_operations: vec![Fem3dConfigOperation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![Fem3dMutation::SetDocument { document }], config_mutations: vec![Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -48,13 +48,13 @@ mod tests {
     }
 
     /// 🧬️ `setActiveExample` replaces document content via `SetDocument` operations, so it MUST be
-    /// declared as an Operation, not a View/Shell action — the framework's "View/Shell actions must not
+    /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
     #[test]
     fn set_active_example_is_declared_as_operation_3d() {
         let definition = crate::apps::fem3d::create_fem3d_app().definition;
         let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-        assert!(matches!(action.kind, ActionKind::Operation), "loading an example emits SetDocument operations, so it is an Operation");
+        assert!(matches!(action.kind, ActionKind::Mutation), "loading an example emits SetDocument operations, so it is a Mutation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }
 

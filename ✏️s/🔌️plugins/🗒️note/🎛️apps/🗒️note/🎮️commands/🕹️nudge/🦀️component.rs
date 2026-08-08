@@ -1,9 +1,9 @@
 //! 🕹️ Note play app commands — nudge the selection by a fixed step in a direction (or an arbitrary
 //! `(dx, dy)`). Document-mutating.
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{block_id, flatten_blocks, update_block_in_tree};
-use crate::artifacts::note::op::NoteOperation;
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteBlockNode, NoteDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ const NUDGE_STEP: f64 = 1.0;
 const NUDGE_STEP_FAST: f64 = 10.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — the shared body of every nudge command.
-fn nudge(document: &NoteDocument, config: &NoteConfig, dx: f64, dy: f64) -> Emit<NoteOperation, NoteConfigOperation> {
+fn nudge(document: &NoteDocument, config: &NoteConfig, dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
     if config.selected_block_ids.is_empty() {
         return Emit::default();
     }
@@ -54,7 +54,7 @@ fn nudge(document: &NoteDocument, config: &NoteConfig, dx: f64, dy: f64) -> Emit
     for (id, updated) in nudges {
         update_block_in_tree(&mut blocks, &id, updated);
     }
-    Emit::operations(vec![NoteOperation::SetBlocks { blocks }])
+    Emit::mutations(vec![NoteMutation::SetBlocks { blocks }])
 }
 //#endregion 🔖️Helpers
 
@@ -69,7 +69,7 @@ pub mod nudge_selection {
         pub dy: f64,
     }
 
-    pub fn handle(payload: &NudgeSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &NudgeSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(nudge(doc.projection, cfg.projection, payload.dx, payload.dy))
     }
 }
@@ -85,7 +85,7 @@ macro_rules! directional_nudge {
             #[dsl(keyword = $key)]
             pub struct $Payload {}
 
-            pub fn handle(_payload: &$Payload, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+            pub fn handle(_payload: &$Payload, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
                 Ok(nudge(doc.projection, cfg.projection, $dx, $dy))
             }
         }

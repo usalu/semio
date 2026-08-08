@@ -15,15 +15,15 @@ use crate::apps::block3d::commands::selection::{hover_vortex, select_vortex, set
 use crate::apps::block3d::commands::vortex::{add_vortex, remove_vortex};
 use crate::apps::block3d::commands::vortex_kind::{add_vortex_kind, remove_vortex_kind};
 use crate::apps::block3d::commands::window::{set_active_representation, set_active_utility, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
-use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
+use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use crate::apps::block3d::modes::edit as edit_mode;
 use crate::apps::block3d::modes::edit::windows::world;
 use crate::apps::block3d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::block3d::terminology::block3d_labels;
-use crate::artifacts::block3d::op::Block3dOperation;
+use crate::artifacts::block3d::op::Block3dMutation;
 use crate::artifacts::block3d::{artifact_kind, Block3dDefinition, BLOCK_3D_SCHEMA};
 use crate::BlockCamera3d;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     UiNode, UtilityDefinition,
 };
@@ -80,7 +80,7 @@ semio_framework_plugin::app_commands! {
     /// is safe, reordering is a wire-format break. Every id/key pair is IDENTICAL EXCEPT the three
     /// `worldSurface*` rows (`HoverSurface`/`LeaveSurface`/`PlaceVortex`), whose manifest action id and
     /// `#[dsl(key)]` wire keyword genuinely diverge pre-migration — preserved verbatim.
-    pub enum Block3dCommand for Block3dDefinition, Block3dOperation, Block3dConfig, Block3dConfigOperation {
+    pub enum Block3dCommand for Block3dDefinition, Block3dMutation, Block3dConfig, Block3dConfigMutation {
         "patchObjectKind" as "patchObjectKind" => patch_object_kind::PatchObjectKind,
         "addRepresentation" as "addRepresentation" => add_representation::AddRepresentation,
         "removeRepresentation" as "removeRepresentation" => remove_representation::RemoveRepresentation,
@@ -113,17 +113,17 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️Block3dPlayApp
 /// 🧪️ B1: unit struct — every former `RefCell` field now lives in `crate::apps::block3d::config::
-/// Block3dConfig`, written through `Block3dConfigOperation`s.
+/// Block3dConfig`, written through `Block3dConfigMutation`s.
 #[derive(Default)]
 pub struct Block3dPlayApp;
 
 impl DocumentApp for Block3dPlayApp {
     type Projection = Block3dDefinition;
-    type Operation = Block3dOperation;
+    type Mutation = Block3dMutation;
     type Config = Block3dConfig;
-    type ConfigOperation = Block3dConfigOperation;
+    type ConfigMutation = Block3dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Block3dCommand;
 
@@ -224,7 +224,7 @@ impl DocumentApp for Block3dPlayApp {
         }
     }
 
-    fn handle(command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dOperation, Block3dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -303,15 +303,15 @@ pub fn create_block3d_app() -> App {
             .default_layout(edit_mode::layout())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .operation("patchObjectKind", LocalizedLabel::native("Patch Object Kind", "Objektart bearbeiten"))
-            .operation("addRepresentation", LocalizedLabel::native("Add Representation", "Darstellung hinzufügen"))
-            .operation("removeRepresentation", LocalizedLabel::native("Remove Representation", "Darstellung entfernen"))
-            .operation("addVortexKind", LocalizedLabel::native("Add Vortex Kind", "Wirbelart hinzufügen"))
-            .operation("removeVortexKind", LocalizedLabel::native("Remove Vortex Kind", "Wirbelart entfernen"))
-            .operation("addVortex", LocalizedLabel::native("Add Vortex", "Wirbel hinzufügen"))
-            .operation("removeVortex", LocalizedLabel::native("Remove Vortex", "Wirbel entfernen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .mutation("patchObjectKind", LocalizedLabel::native("Patch Object Kind", "Objektart bearbeiten"))
+            .mutation("addRepresentation", LocalizedLabel::native("Add Representation", "Darstellung hinzufügen"))
+            .mutation("removeRepresentation", LocalizedLabel::native("Remove Representation", "Darstellung entfernen"))
+            .mutation("addVortexKind", LocalizedLabel::native("Add Vortex Kind", "Wirbelart hinzufügen"))
+            .mutation("removeVortexKind", LocalizedLabel::native("Remove Vortex Kind", "Wirbelart entfernen"))
+            .mutation("addVortex", LocalizedLabel::native("Add Vortex", "Wirbel hinzufügen"))
+            .mutation("removeVortex", LocalizedLabel::native("Remove Vortex", "Wirbel entfernen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("setActiveRepresentation", LocalizedLabel::native("Set Active Representation", "Aktive Darstellung festlegen"))
             .view_action("setWindowRepresentations", LocalizedLabel::native("Set Window Representations", "Fensterdarstellungen festlegen"))
@@ -323,10 +323,10 @@ pub fn create_block3d_app() -> App {
             .view_action("setBrushFlip", LocalizedLabel::native("Set Brush Flip", "Pinselrichtung umkehren"))
             .view_action("worldSurfaceHover", LocalizedLabel::native("Surface Hover", "Flächenhover"))
             .view_action("worldSurfaceLeave", LocalizedLabel::native("Surface Leave", "Fläche verlassen"))
-            .operation("worldSurfacePlace", LocalizedLabel::native("Place Vortex", "Wirbel platzieren"))
+            .mutation("worldSurfacePlace", LocalizedLabel::native("Place Vortex", "Wirbel platzieren"))
             .view_action("selectVortex", LocalizedLabel::native("Select Vortex", "Wirbel auswählen"))
             .view_action("hoverVortex", LocalizedLabel::native("Hover Vortex", "Wirbel hovern"))
-            .operation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
+            .mutation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
             .io(crate::artifacts::block3d::engine::block3d_io()),
     )
     .example(
@@ -521,7 +521,7 @@ mod tests {
     fn set_selection_writes_config_not_document() {
         let mut app: Block3dApp = new_app();
         let result = app.dispatch_typed(Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["representation:r0".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        assert!(result.operations.is_empty(), "setSelection is config-only and must emit no document operations");
+        assert!(result.mutations.is_empty(), "setSelection is config-only and must emit no document operations");
     }
 
     #[test]
@@ -565,10 +565,10 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_operations_under_the_real_registry() {
+    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["r0".into()] }));
-        assert!(result.operations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
     }
 
     /// 🎚️ The world window collects its five option measures (representations/quick-pick/arrangement/

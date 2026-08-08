@@ -1,20 +1,20 @@
 //! 🎞️ Protocol CRDT merge strategies: real per-`MergeStrategyKind` conflict resolution for
-//! concurrent `crate::os_spr::command::OperationDiff` pairs, replacing `crate::os_store::merge_concurrent_diffs`
+//! concurrent `crate::os_spr::command::MutationDiff` pairs, replacing `crate::os_store::merge_concurrent_diffs`
 //! (`vcs/rs/lib.rs`'s `🔖️MergeStrategy` region), which today collapses all five declared
 //! strategies to a blind `absorb()` regardless of what the operation actually declared. Frozen
 //! contract: `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §
 //! `protocol_crdt`.
 //!
 //! # Design note (how five strategies come out of one generic signature)
-//! `merge_concurrent_diffs` is generic over `D: crate::os_spr::command::OperationDiff<P>` and only ever
-//! sees `D::apply`/`D::absorb` plus the two sides' `OperationMeta` — it never inspects `D`'s
+//! `merge_concurrent_diffs` is generic over `D: crate::os_spr::command::MutationDiff<P>` and only ever
+//! sees `D::apply`/`D::absorb` plus the two sides' `MutationMeta` — it never inspects `D`'s
 //! concrete fields (ops stay schema-opaque in this family, same rule as `protocol_command`). Given
 //! that surface, exactly two primitive combinators are expressible:
 //! - **winner-take-all**: return one side's diff entirely, discarding the other (`Lww`,
 //!   `ContentAddressedBlob`'s non-equal-hash fallback) — arbitrated by
 //!   `HybridLogicalTimestamp::Ord` (`crate::os_spr::ids::HybridLogicalTimestamp`), which is
 //!   actor-tiebroken so a strict winner always exists.
-//! - **chronological semio_compose_rs**: order the two sides by `OperationMeta.timestamp` and call
+//! - **chronological semio_compose_rs**: order the two sides by `MutationMeta.timestamp` and call
 //!   `earlier.absorb(later)` — every real `absorb` impl in this codebase (see
 //!   `crate::os_store::DocumentVcsEnvelopeDiff::absorb` and friends) is "per-field overwrite iff the other
 //!   side set that field", i.e. later-in-time already wins per-field when absorbed in order. This
@@ -23,13 +23,13 @@
 //!   resurrects it" law for free: feed the earlier diff first, `absorb` the later one — whichever
 //!   side is later always ends up as the surviving field value.
 //!
-//! `ContentAddressedBlob` additionally short-circuits on `OperationMeta.payload_hash` equality
+//! `ContentAddressedBlob` additionally short-circuits on `MutationMeta.payload_hash` equality
 //! before falling back to winner-take-all, per the contract.
 
 //#region 🔖️Merge
 /// @emoji 🧩️ Replaces `crate::os_store::merge_concurrent_diffs` (`vcs/rs/lib.rs` L680), which collapsed every
 /// `MergeStrategyKind` to plain `absorb()`. Dispatches to a real per-strategy combinator instead.
-pub fn merge_concurrent_diffs<P, D: crate::os_spr::command::OperationDiff<P>>(strategy: crate::os_spr::MergeStrategyKind, existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+pub fn merge_concurrent_diffs<P, D: crate::os_spr::command::MutationDiff<P>>(strategy: crate::os_spr::MergeStrategyKind, existing: D, incoming: D, existing_meta: &crate::os_spr::command::MutationMeta, incoming_meta: &crate::os_spr::command::MutationMeta) -> D {
     match strategy {
         crate::os_spr::MergeStrategyKind::LwwRegister => lww_merge(existing, incoming, existing_meta, incoming_meta),
         crate::os_spr::MergeStrategyKind::OrderedSequence => ordered_sequence_merge(existing, incoming, existing_meta, incoming_meta),
@@ -40,11 +40,11 @@ pub fn merge_concurrent_diffs<P, D: crate::os_spr::command::OperationDiff<P>>(st
 }
 
 /// @emoji 🕰️ Shared "later absorbs into earlier" combinator: orders `existing`/`incoming` by
-/// `OperationMeta.timestamp` (ties — not expected post the `HybridLogicalTimestamp` actor-tiebreak
+/// `MutationMeta.timestamp` (ties — not expected post the `HybridLogicalTimestamp` actor-tiebreak
 /// fix, see `crate::os_spr::ids::HybridLogicalTimestamp::cmp_key` — break toward `existing`) and calls
 /// `earlier.absorb(later)`, so per-field overwrites land in chronological order regardless of which
 /// side the caller happened to pass as `existing` vs `incoming`.
-fn chronological_compose<P, D: crate::os_spr::command::OperationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+fn chronological_compose<P, D: crate::os_spr::command::MutationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::MutationMeta, incoming_meta: &crate::os_spr::command::MutationMeta) -> D {
     let (mut earlier, later) = if incoming_meta.timestamp < existing_meta.timestamp { (incoming, existing) } else { (existing, incoming) };
     earlier.absorb(later);
     earlier
@@ -52,10 +52,10 @@ fn chronological_compose<P, D: crate::os_spr::command::OperationDiff<P>>(existin
 //#endregion 🔖️Merge
 
 //#region 🔖️Lww
-/// @emoji 🏆️ HLC-arbitrated register: the diff whose `OperationMeta.timestamp` is greater (via
+/// @emoji 🏆️ HLC-arbitrated register: the diff whose `MutationMeta.timestamp` is greater (via
 /// `HybridLogicalTimestamp::Ord`, actor-tiebroken) wins outright — the loser is discarded whole,
 /// not merged field-by-field, matching classical LWW-register semantics.
-fn lww_merge<P, D: crate::os_spr::command::OperationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+fn lww_merge<P, D: crate::os_spr::command::MutationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::MutationMeta, incoming_meta: &crate::os_spr::command::MutationMeta) -> D {
     if incoming_meta.timestamp > existing_meta.timestamp {
         incoming
     } else {
@@ -75,7 +75,7 @@ pub struct AnchorId(pub Vec<u8>);
 /// @emoji 🧵️ Stable-anchor sequence merge: concurrent inserts are ordered deterministically by
 /// `(timestamp, actor)` on both replicas via `chronological_compose` — see the module-level design
 /// note for why chronological absorb order is sufficient without inspecting anchor keys directly.
-fn ordered_sequence_merge<P, D: crate::os_spr::command::OperationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+fn ordered_sequence_merge<P, D: crate::os_spr::command::MutationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::MutationMeta, incoming_meta: &crate::os_spr::command::MutationMeta) -> D {
     chronological_compose(existing, incoming, existing_meta, incoming_meta)
 }
 //#endregion 🔖️OrderedSequence
@@ -86,7 +86,7 @@ fn ordered_sequence_merge<P, D: crate::os_spr::command::OperationDiff<P>>(existi
 /// overlapping ranges fall back to Lww on the overlapping span only, which is exactly what
 /// `chronological_compose`'s later-overwrites-earlier absorb order already gives for whichever
 /// sub-range both sides touched.
-fn text_sequence_merge<P, D: crate::os_spr::command::OperationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+fn text_sequence_merge<P, D: crate::os_spr::command::MutationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::MutationMeta, incoming_meta: &crate::os_spr::command::MutationMeta) -> D {
     chronological_compose(existing, incoming, existing_meta, incoming_meta)
 }
 //#endregion 🔖️TextSequence
@@ -98,16 +98,16 @@ fn text_sequence_merge<P, D: crate::os_spr::command::OperationDiff<P>>(existing:
 /// the earlier one means whichever op is chronologically later always ends up as the surviving
 /// per-field state — a later remove overwrites an earlier add (tombstone outranks), and a later add
 /// overwrites an earlier remove (resurrection).
-fn tombstoned_graph_set_merge<P, D: crate::os_spr::command::OperationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+fn tombstoned_graph_set_merge<P, D: crate::os_spr::command::MutationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::MutationMeta, incoming_meta: &crate::os_spr::command::MutationMeta) -> D {
     chronological_compose(existing, incoming, existing_meta, incoming_meta)
 }
 //#endregion 🔖️TombstonedGraphSet
 
 //#region 🔖️ContentAddressedBlob
-/// @emoji 🗄️ Two concurrent blob-extent writes: equal `OperationMeta.payload_hash` short-circuits
+/// @emoji 🗄️ Two concurrent blob-extent writes: equal `MutationMeta.payload_hash` short-circuits
 /// to "not a conflict at all" (either side's diff already represents the same content, so
 /// `existing` is returned as-is); unequal hashes fall back to `lww_merge` by timestamp.
-fn content_addressed_blob_merge<P, D: crate::os_spr::command::OperationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::OperationMeta, incoming_meta: &crate::os_spr::command::OperationMeta) -> D {
+fn content_addressed_blob_merge<P, D: crate::os_spr::command::MutationDiff<P>>(existing: D, incoming: D, existing_meta: &crate::os_spr::command::MutationMeta, incoming_meta: &crate::os_spr::command::MutationMeta) -> D {
     let hashes_equal = matches!((&existing_meta.payload_hash, &incoming_meta.payload_hash), (Some(a), Some(b)) if a == b);
     if hashes_equal {
         existing
@@ -121,7 +121,7 @@ fn content_addressed_blob_merge<P, D: crate::os_spr::command::OperationDiff<P>>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_spr::command::OperationDiff;
+    use crate::os_spr::command::MutationDiff;
 
     //#region 🧸️Fixtures
     // `RegisterDiff`: single-value-register shaped diff (P = (i64, i64), two overwrite-able
@@ -132,7 +132,7 @@ mod tests {
         field_a: Option<i64>,
         field_b: Option<i64>,
     }
-    impl OperationDiff<(i64, i64)> for RegisterDiff {
+    impl MutationDiff<(i64, i64)> for RegisterDiff {
         fn apply(&self, base: &(i64, i64)) -> (i64, i64) {
             (self.field_a.unwrap_or(base.0), self.field_b.unwrap_or(base.1))
         }
@@ -153,7 +153,7 @@ mod tests {
         add: Option<bool>,
         remove: Option<bool>,
     }
-    impl OperationDiff<bool> for GraphDiff {
+    impl MutationDiff<bool> for GraphDiff {
         fn apply(&self, base: &bool) -> bool {
             if self.remove.is_some() {
                 false
@@ -175,9 +175,9 @@ mod tests {
         }
     }
 
-    fn meta_at(actor: u64, physical_ms: u64) -> crate::os_spr::command::OperationMeta {
-        crate::os_spr::command::OperationMeta {
-            operation_id: None,
+    fn meta_at(actor: u64, physical_ms: u64) -> crate::os_spr::command::MutationMeta {
+        crate::os_spr::command::MutationMeta {
+            mutation_id: None,
             dependencies: Vec::new(),
             base_version: 0,
             author_id: None,
@@ -187,8 +187,8 @@ mod tests {
         }
     }
 
-    fn meta_with_hash(actor: u64, physical_ms: u64, hash: Option<[u8; 32]>) -> crate::os_spr::command::OperationMeta {
-        crate::os_spr::command::OperationMeta { payload_hash: hash.map(crate::os_spr::ids::PayloadHash), ..meta_at(actor, physical_ms) }
+    fn meta_with_hash(actor: u64, physical_ms: u64, hash: Option<[u8; 32]>) -> crate::os_spr::command::MutationMeta {
+        crate::os_spr::command::MutationMeta { payload_hash: hash.map(crate::os_spr::ids::PayloadHash), ..meta_at(actor, physical_ms) }
     }
     //#endregion 🧸️Fixtures
 

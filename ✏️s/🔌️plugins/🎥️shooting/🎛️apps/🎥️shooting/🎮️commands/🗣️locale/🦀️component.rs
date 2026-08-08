@@ -1,7 +1,7 @@
 //! 🗣️ Shooting play app command — the host-pushed locale switch. Config-only.
 
-use crate::apps::shooting::config::{ShootingConfig, ShootingConfigOperation};
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingFixture;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ShootingConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -36,7 +36,7 @@ mod tests {
 
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
-        assert!(result.operations.is_empty(), "locale is config-only");
+        assert!(result.mutations.is_empty(), "locale is config-only");
         assert!(render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).contains("Aufnahmen"), "the document panel now resolves German labels");
     }
 }

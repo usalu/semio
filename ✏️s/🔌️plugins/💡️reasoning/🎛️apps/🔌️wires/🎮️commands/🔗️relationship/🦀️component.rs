@@ -1,8 +1,8 @@
 //! 🔗️ Wires play app commands — adding a relationship edge between two identities.
 
-use crate::apps::wires::config::{WiresConfig, WiresConfigOperation};
+use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::fixture_edges;
-use crate::artifacts::wires::op::MindmapWiresOperation;
+use crate::artifacts::wires::op::MindmapWiresMutation;
 use crate::artifacts::wires::MindmapWiresDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,7 +18,7 @@ pub mod add_relationship {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddRelationship, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
+    pub fn handle(payload: &AddRelationship, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.projection;
         let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
         let edge_id = format!("edge-{}", fixture_edges(&document.board_fixture).len() + 1);
@@ -36,7 +36,7 @@ pub mod add_relationship {
             "targetIdentityId": 2
         }))
         .expect("relationship serializes");
-        Ok(Emit { document_operations: vec![MindmapWiresOperation::AddRelationship { edge, relationship }], config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![MindmapWiresMutation::AddRelationship { edge, relationship }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddRelationship

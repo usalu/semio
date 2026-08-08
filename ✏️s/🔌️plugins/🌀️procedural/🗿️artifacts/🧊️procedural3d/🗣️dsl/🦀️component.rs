@@ -416,14 +416,14 @@ mod tests {
 
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::procedural3d::op::Procedural3dOperation;
+        use crate::artifacts::procedural3d::op::Procedural3dMutation;
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<Procedural3dDocument, Procedural3dOperation> = DocumentStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dDocument::default(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![Procedural3dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
-        let edit: &Edit<Procedural3dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        test_support::assert_command_envelope_round_trip::<Procedural3dDocument, Procedural3dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        let mut store: DocumentStore<Procedural3dDocument, Procedural3dMutation> = DocumentStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dDocument::default(), None));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let edit: &Edit<Procedural3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        test_support::assert_command_envelope_round_trip::<Procedural3dDocument, Procedural3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 }
 //#endregion 🧪️Tests

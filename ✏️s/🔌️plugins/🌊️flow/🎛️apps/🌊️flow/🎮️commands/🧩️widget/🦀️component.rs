@@ -1,13 +1,13 @@
 //! 🧩️ Flow play app commands — widget lifecycle (add / remove / rename / patch / move).
 //!
 //! Every handler here mutates the DOCUMENT: it runs the stateful `FlowHost` mutation through
-//! `engine::host_operations` and lets the fixture diff produce granular `FlowOperation`s with true
+//! `engine::host_operations` and lets the fixture diff produce granular `FlowMutation`s with true
 //! inverses. Payload field names and order are load-bearing — they ARE the `dsl` record shape of the
 //! matching `FlowCommand` variant (see `crate::apps::flow::FlowCommand`).
 
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{host_operations, widget_id};
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
 use flow::{flow_fixture_operations, FlowEvalSession, Widget};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ pub mod add_widget {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let descriptor = match payload.kind.as_str() {
             "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.as_deref().unwrap_or("math.add") }).to_string(),
             other => json!({ "kind": other }).to_string(),
@@ -42,8 +42,8 @@ pub mod add_widget {
             Err(_) => false,
         });
         match new_id {
-            Some(id) => Ok(Emit { document_operations: operations, config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() }),
-            None => Ok(Emit::operations(operations)),
+            Some(id) => Ok(Emit { document_mutations: operations, config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() }),
+            None => Ok(Emit::mutations(operations)),
         }
     }
 }
@@ -59,7 +59,7 @@ pub mod remove_widget {
         pub widget_id: String,
     }
 
-    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let config = cfg.projection;
         let target_id = &payload.widget_id;
         let operations = host_operations(doc.projection, config, session, |host| host.remove_widget(target_id).is_ok());
@@ -68,8 +68,8 @@ pub mod remove_widget {
         }
         let remaining: Vec<String> = config.selected_node_ids.iter().filter(|id| *id != target_id).cloned().collect();
         Ok(Emit {
-            document_operations: operations,
-            config_operations: vec![FlowConfigOperation::SetSelection { node_ids: remaining, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
+            document_mutations: operations,
+            config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: remaining, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
             ..Default::default()
         })
     }
@@ -124,13 +124,13 @@ pub mod rename_flow_widget {
         Some(next)
     }
 
-    pub fn handle(payload: &RenameFlowWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &RenameFlowWidget, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         match renamed_fixture(fixture, &payload.old_id, &payload.value) {
             Some(next) => Ok(Emit {
-                document_operations: flow_fixture_operations(fixture, &next),
-                config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![payload.value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
+                document_mutations: flow_fixture_operations(fixture, &next),
+                config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
                 ..Default::default()
             }),
             None => Ok(Emit::default()),
@@ -174,7 +174,7 @@ pub mod patch_flow_widgets {
         next
     }
 
-    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let fixture = doc.projection;
         let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
         let operations = flow_fixture_operations(fixture, &next);
@@ -199,7 +199,7 @@ pub mod move_media_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let operations = host_operations(doc.projection, cfg.projection, session, |host| {
             host.begin_change();
             host.move_widget(&payload.node_id, payload.x, payload.y).is_ok()
@@ -225,7 +225,7 @@ mod tests {
         let mut app = flow_app();
         let before = app.projection().expect("projection").widgets.len();
         let result = dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }));
-        assert!(!result.operations.is_empty(), "addWidget must emit operations");
+        assert!(!result.document_mutations.is_empty(), "addWidget must emit operations");
         assert_eq!(app.projection().expect("projection").widgets.len(), before + 1);
     }
 
@@ -234,7 +234,7 @@ mod tests {
         let mut app = flow_app();
         for value in ["", " ", "slider"] {
             let result = dispatch(&mut app, FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: value.into() }));
-            assert!(result.operations.is_empty(), "rename to {value:?} must be a no-operation");
+            assert!(result.document_mutations.is_empty(), "rename to {value:?} must be a no-operation");
         }
     }
 

@@ -1,0 +1,1 @@
+error: could not compile `semio-s-plugin-trinity` (lib) due to 31 previous errors; 25 warnings emitted

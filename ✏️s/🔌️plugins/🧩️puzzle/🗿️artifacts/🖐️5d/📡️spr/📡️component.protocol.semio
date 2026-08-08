@@ -1,7 +1,7 @@
 dialect protocol
 protocol 5d.spr
 version 1
-schema puzzle.5d.operation
+schema puzzle.5d.mutation
 start record
 framing record
 record puzzle.5d-add-vertex tag 1

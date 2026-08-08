@@ -1,3 +1,5 @@
+@source ".";
+
 :root {
 	--r-background-color: var(--base);
 	--r-main-font: var(--font-sans);

@@ -1,7 +1,7 @@
 //! 🗂️ Forms play app commands — blueprint/inspector selection.
 
-use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
-use crate::artifacts::forms::{op::FormOperation, FormSpec};
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::artifacts::forms::{op::FormMutation, FormSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
-        Ok(Emit::config(vec![FormsConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FormsConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection

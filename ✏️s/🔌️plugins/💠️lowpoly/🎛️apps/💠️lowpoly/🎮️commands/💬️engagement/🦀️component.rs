@@ -2,10 +2,10 @@
 //! resolution into a real mesh-edit command (`engagementSubmit`).
 
 use crate::apps::lowpoly::commands::mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, triangulate};
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::LowpolyCommand;
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolyProjection;
 use semio_framework_plugin::{engagement_token_matches, ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,8 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LowpolyConfigOperation::SetEngagementInput { value: payload.value.clone() }]))
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -36,7 +36,7 @@ pub mod engagement_submit {
         pub value: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         const ENGAGEMENT_COMMANDS: &[&str] = &["extrude", "inset", "bevel", "loopCut", "subdivide", "triangulate", "mirror", "decimate", "flipFaces", "merge", "dissolve", "snap"];
         let Some(typed) = payload.value.as_deref().map(str::trim).filter(|value| !value.is_empty()) else {
             return Ok(Emit::default());
@@ -83,7 +83,7 @@ mod tests {
     fn engagement_submit_ignores_unresolvable_input() {
         let mut a = app();
         let result = dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("bogus".into()) }));
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

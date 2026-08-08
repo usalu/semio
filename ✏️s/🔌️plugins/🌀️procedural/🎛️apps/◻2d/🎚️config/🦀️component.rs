@@ -1,5 +1,5 @@
 //! 🧮️ Procedural2d play app — view state (`Procedural2dConfig`) and its operation enum
-//! (`Procedural2dConfigOperation`).
+//! (`Procedural2dConfigMutation`).
 //!
 //! This is APP state, not document state: selection, camera, show-mode and the derived generation
 //! preview live here rather than under `🗿️artifacts/`, since none of it survives into the `.procedural2d`
@@ -7,14 +7,14 @@
 //! edit is VCS'd exactly like document content.
 
 use flow::CameraJson;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ `Procedural2dPlayApp::Config` — the pure-trait config artifact. Selection, the graph camera, the
 /// show-mode display toggle, the derived generation selection/preview, and locale all round-trip
 /// through the config `DocumentStore` exactly like document content, with a real `backwards` per
-/// [`Procedural2dConfigOperation`].
+/// [`Procedural2dConfigMutation`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural2dcfg")]
@@ -116,7 +116,7 @@ store::impl_whole_record_config!(Procedural2dConfig);
 /// `Snapshot` every variant's `backwards()` returns (each config tick is its own distinct edit, so
 /// "undo this tick" is "restore the whole-config snapshot from just before it").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Procedural2dConfigOperation {
+pub enum Procedural2dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -138,7 +138,7 @@ pub enum Procedural2dConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for Procedural2dConfigOperation {
+impl protocol::OpText for Procedural2dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -152,7 +152,7 @@ impl protocol::OpText for Procedural2dConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -163,7 +163,7 @@ impl protocol::OpText for Procedural2dConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Procedural2dConfigOperation {
+impl protocol::OpBinary for Procedural2dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -209,27 +209,27 @@ impl protocol::OpBinary for Procedural2dConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<Procedural2dConfig> for Procedural2dConfigOperation {
+impl Mutation<Procedural2dConfig> for Procedural2dConfigMutation {
     type Diff = Procedural2dConfig;
 
     fn diff(&self, base: &Procedural2dConfig) -> Procedural2dConfig {
         let mut next = base.clone();
         match self {
-            Procedural2dConfigOperation::Snapshot { config } => return config.clone(),
-            Procedural2dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            Procedural2dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            Procedural2dConfigOperation::SetShowMode { value } => next.show_mode = value.clone(),
-            Procedural2dConfigOperation::SetGeneration { selected_generation_id, generation_preview_text } => {
+            Procedural2dConfigMutation::Snapshot { config } => return config.clone(),
+            Procedural2dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Procedural2dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            Procedural2dConfigMutation::SetShowMode { value } => next.show_mode = value.clone(),
+            Procedural2dConfigMutation::SetGeneration { selected_generation_id, generation_preview_text } => {
                 next.selected_generation_id = selected_generation_id.clone();
                 next.generation_preview_text = generation_preview_text.clone();
             }
-            Procedural2dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            Procedural2dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &Procedural2dConfig) -> Vec<Self> {
-        vec![Procedural2dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Procedural2dConfig) -> Vec<Self> {
+        vec![Procedural2dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -242,10 +242,10 @@ mod tests {
     #[test]
     fn config_set_selection_round_trips_and_restores() {
         let base = Procedural2dConfig::default();
-        let operation = Procedural2dConfigOperation::SetSelection { ids: vec!["w1".into(), "w2".into()] };
+        let operation = Procedural2dConfigMutation::SetSelection { ids: vec!["w1".into(), "w2".into()] };
         let forward = operation.diff(&base);
         assert_eq!(forward.selected_ids, vec!["w1".to_string(), "w2".to_string()]);
-        let backwards = operation.backwards(&base);
+        let backwards = operation.inverse(&base);
         assert_eq!(backwards[0].diff(&forward), base);
     }
 
@@ -253,34 +253,34 @@ mod tests {
     fn config_set_camera_round_trips_and_restores() {
         let base = Procedural2dConfig::default();
         let camera = CameraJson { x: 9.0, y: -3.0, zoom: 2.5 };
-        let forward = Procedural2dConfigOperation::SetCamera { camera: camera.clone() }.diff(&base);
+        let forward = Procedural2dConfigMutation::SetCamera { camera: camera.clone() }.diff(&base);
         assert_eq!(forward.camera, camera);
     }
 
     #[test]
     fn config_set_show_mode_round_trips_and_restores() {
         let base = Procedural2dConfig::default();
-        let forward = Procedural2dConfigOperation::SetShowMode { value: "wire".into() }.diff(&base);
+        let forward = Procedural2dConfigMutation::SetShowMode { value: "wire".into() }.diff(&base);
         assert_eq!(forward.show_mode, "wire");
     }
 
     #[test]
     fn config_set_locale_round_trips_and_restores() {
         let base = Procedural2dConfig::default();
-        let forward = Procedural2dConfigOperation::SetLocale { value: "de-DE".into() }.diff(&base);
+        let forward = Procedural2dConfigMutation::SetLocale { value: "de-DE".into() }.diff(&base);
         assert_eq!(forward.locale, "de-DE");
     }
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
         let config = Procedural2dConfig { selected_ids: vec!["a".into()], locale: "de-DE".into(), ..Procedural2dConfig::default() };
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::Snapshot { config });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetShowMode { value: "generate".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetGeneration { selected_generation_id: None, generation_preview_text: None });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetLocale { value: "en-US".into() });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetShowMode { value: "generate".into() });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetGeneration { selected_generation_id: None, generation_preview_text: None });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetLocale { value: "en-US".into() });
     }
 }
 //#endregion 🧪️Tests

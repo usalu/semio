@@ -1,8 +1,8 @@
 //! 🧱️ Note play app commands — block create/move/delete/duplicate/patch. Document-mutating.
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::{block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, insert_after, insert_block, offset_block_tree, patch_block_field, remove_block_from_tree};
-use crate::artifacts::note::op::NoteOperation;
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteBlockNode, NoteDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ use serde_json::Value;
 //#region 🔖️Helpers
 /// 🧬️ Clones each of `ids` (present in `document`), offsets the clone by `(24, 24)`, and selects the
 /// clones — the shared body of `DuplicateBlock`/`DuplicateSelection`.
-fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Emit<NoteOperation, NoteConfigOperation> {
+fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Emit<NoteMutation, NoteConfigMutation> {
     let mut blocks = document.blocks.clone();
     let mut new_ids = Vec::new();
     for source_id in ids {
@@ -27,7 +27,7 @@ fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Emit<NoteOperati
     if new_ids.is_empty() {
         return Emit::default();
     }
-    Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: new_ids }], ..Default::default() }
+    Emit { document_mutations: vec![NoteMutation::SetBlocks { blocks }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: new_ids }], ..Default::default() }
 }
 
 /// 🩹️ `PatchBlocks`'s typed field/value pair, reconstructed into the `serde_json::Value` shape
@@ -55,12 +55,12 @@ pub mod add_block {
         pub y: f64,
     }
 
-    pub fn handle(payload: &AddBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &AddBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let block = create_block_by_kind(&payload.kind, payload.x, payload.y);
         let new_id = block_id(&block).to_string();
         let mut blocks = doc.projection.blocks.clone();
         blocks.push(block);
-        Ok(Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: vec![new_id] }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![NoteMutation::SetBlocks { blocks }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: vec![new_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddBlock
@@ -77,7 +77,7 @@ pub mod move_block {
         pub drop_position: String,
     }
 
-    pub fn handle(payload: &MoveBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &MoveBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let document = doc.projection;
         let Some(block) = find_block(&document.blocks, &payload.block_id).cloned() else {
             return Ok(Emit::default());
@@ -99,7 +99,7 @@ pub mod move_block {
         let mut blocks = document.blocks.clone();
         remove_block_from_tree(&mut blocks, &payload.block_id);
         insert_block(&mut blocks, parent_id.as_deref(), index, block);
-        Ok(Emit::operations(vec![NoteOperation::SetBlocks { blocks }]))
+        Ok(Emit::mutations(vec![NoteMutation::SetBlocks { blocks }]))
     }
 }
 //#endregion 🔖️MoveBlock
@@ -114,11 +114,11 @@ pub mod delete_block {
         pub block_id: String,
     }
 
-    pub fn handle(payload: &DeleteBlock, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &DeleteBlock, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let mut blocks = doc.projection.blocks.clone();
         remove_block_from_tree(&mut blocks, &payload.block_id);
         let selection: Vec<String> = cfg.projection.selected_block_ids.iter().filter(|id| **id != payload.block_id).cloned().collect();
-        Ok(Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: selection }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![NoteMutation::SetBlocks { blocks }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: selection }], ..Default::default() })
     }
 }
 //#endregion 🔖️DeleteBlock
@@ -131,7 +131,7 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let config = cfg.projection;
         if config.selected_block_ids.is_empty() {
             return Ok(Emit::default());
@@ -140,7 +140,7 @@ pub mod delete_selection {
         for id in &config.selected_block_ids {
             remove_block_from_tree(&mut blocks, id);
         }
-        Ok(Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![NoteMutation::SetBlocks { blocks }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️DeleteSelection
@@ -155,7 +155,7 @@ pub mod duplicate_block {
         pub block_id: String,
     }
 
-    pub fn handle(payload: &DuplicateBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &DuplicateBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(duplicate_blocks(doc.projection, std::slice::from_ref(&payload.block_id)))
     }
 }
@@ -169,7 +169,7 @@ pub mod duplicate_selection {
     #[dsl(keyword = "duplicate-selection")]
     pub struct DuplicateSelection {}
 
-    pub fn handle(_payload: &DuplicateSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(_payload: &DuplicateSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(duplicate_blocks(doc.projection, &cfg.projection.selected_block_ids))
     }
 }
@@ -187,7 +187,7 @@ pub mod patch_blocks {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchBlocks, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchBlocks, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         if payload.block_ids.is_empty() || payload.field.is_empty() {
             return Ok(Emit::default());
         }
@@ -196,7 +196,7 @@ pub mod patch_blocks {
         for id in &payload.block_ids {
             next = patch_block_field(&next, id, &payload.field, &json_value);
         }
-        Ok(Emit::operations(vec![NoteOperation::SetBlocks { blocks: next.blocks }]))
+        Ok(Emit::mutations(vec![NoteMutation::SetBlocks { blocks: next.blocks }]))
     }
 }
 //#endregion 🔖️PatchBlocks
@@ -212,7 +212,7 @@ mod tests {
     fn add_block_action_emits_one_op_and_grows_projection() {
         let mut app = note_app();
         let result = dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 80.0, y: 80.0 }));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.document_mutations.len(), 1);
         let projection = app.projection().expect("projection");
         assert_eq!(projection.blocks.len(), 1);
         assert_eq!(crate::artifacts::note::engine::block_kind(&projection.blocks[0]), "text");
@@ -251,7 +251,7 @@ mod tests {
         let source_id = block_id(&app.projection().expect("projection").blocks[0]).to_string();
 
         let result = dispatch(&mut app, NoteCommand::DuplicateSelection(duplicate_selection::DuplicateSelection {}));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.document_mutations.len(), 1);
         let projection = app.projection().expect("projection");
         assert_eq!(projection.blocks.len(), 2);
         let clone = projection.blocks.iter().find(|block| block_id(block) != source_id).expect("clone block");

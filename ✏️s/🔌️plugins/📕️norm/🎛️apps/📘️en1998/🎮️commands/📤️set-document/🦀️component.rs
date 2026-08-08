@@ -4,9 +4,9 @@
 //! tuple variant delegates its whole `RecordSpec` to the inner type, whose keyword otherwise defaults to
 //! `None` and would print with no leading keyword at all.
 
-use crate::artifacts::en1998::op::Operation;
+use crate::artifacts::en1998::op::En1998Mutation;
 use crate::artifacts::en1998::Document;
-use crate::config::{NormConfig, NormConfigOperation};
+use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub struct SetDocument {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
+pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1998Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_document(payload.document.clone(), "setDocument")
 }
 //#endregion 🔖️Handler
@@ -29,7 +29,7 @@ pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, Document>, _cfg: &C
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::SetDocumentOperation;
+    use crate::document::SetDocumentMutation;
     use semio_framework_plugin::HistoryView;
 
     #[test]
@@ -42,9 +42,9 @@ mod tests {
             &ConfigView { projection: &config },
         )
         .expect("handle");
-        assert_eq!(emit.document_operations, vec![SetDocumentOperation::SetDocument { document: Document::default() }]);
+        assert_eq!(emit.document_mutations, vec![SetDocumentMutation::SetDocument { document: Document::default() }]);
         assert_eq!(emit.description.as_deref(), Some("setDocument"));
-        assert!(emit.config_operations.is_empty());
+        assert!(emit.config_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

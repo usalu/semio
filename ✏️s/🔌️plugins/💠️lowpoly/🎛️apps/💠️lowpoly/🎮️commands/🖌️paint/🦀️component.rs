@@ -2,11 +2,11 @@
 //! `canvasPointerDown`/`canvasPointerMove`/`paintStrokeEnd`), single-shot fill (`paintFill`/
 //! `fillBucket`), sampling (`paintSample`) and paint-layer creation (`addPaintLayer`).
 
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::resolve_active_object_id;
 use crate::artifacts::lowpoly::engine::{composite_layer_pixels, sample_pixel_from};
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolyProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ fn paint_uv(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> O
 /// Bare `Emit` (no `Result`): every one of its 3 call sites is a handler's tail expression, wrapped in
 /// `Ok(...)` there to satisfy `app_commands!`'s `Result<Emit<_, _>, Fault>` handler signature.
 #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for the 3 identically-shaped paint-tick commands' fields (object_id + u/v/x/y); a params struct would only move the same fields around for this one shared body")]
-fn paint_tick_command(doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch, object_id: Option<String>, u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Emit<LowpolyOperation, LowpolyConfigOperation> {
+fn paint_tick_command(doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch, object_id: Option<String>, u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
     let Some((uu, vv)) = paint_uv(u, v, x, y) else { return Emit::default() };
     let object_id = object_id.unwrap_or_else(|| resolve_active_object_id(doc.projection, cfg.projection));
     ctx.paint_tick(doc.projection, cfg.projection, &object_id, uu, vv)
@@ -36,7 +36,7 @@ pub mod paint_stroke_begin {
     #[dsl(keyword = "paint-stroke-begin")]
     pub struct PaintStrokeBegin {}
 
-    pub fn handle(_payload: &PaintStrokeBegin, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(_payload: &PaintStrokeBegin, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.begin_stroke_drag();
         Ok(Emit::default())
     }
@@ -51,7 +51,7 @@ pub mod paint_stroke_end {
     #[dsl(keyword = "paint-stroke-end")]
     pub struct PaintStrokeEnd {}
 
-    pub fn handle(_payload: &PaintStrokeEnd, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(_payload: &PaintStrokeEnd, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(ctx.end_stroke_drag())
     }
 }
@@ -71,7 +71,7 @@ pub mod paint_stroke {
         pub y: Option<f32>,
     }
 
-    pub fn handle(payload: &PaintStroke, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &PaintStroke, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(paint_tick_command(doc, cfg, ctx, payload.object_id.clone(), payload.u, payload.v, payload.x, payload.y))
     }
 }
@@ -91,7 +91,7 @@ pub mod paint_at {
         pub y: Option<f32>,
     }
 
-    pub fn handle(payload: &PaintAt, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &PaintAt, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(paint_tick_command(doc, cfg, ctx, payload.object_id.clone(), payload.u, payload.v, payload.x, payload.y))
     }
 }
@@ -111,7 +111,7 @@ pub mod canvas_pointer_down {
         pub y: Option<f32>,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(paint_tick_command(doc, cfg, ctx, payload.object_id.clone(), payload.u, payload.v, payload.x, payload.y))
     }
 }
@@ -131,7 +131,7 @@ pub mod canvas_pointer_move {
         pub y: Option<f32>,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         if !ctx.stroke_drag_active() {
             return Ok(Emit::default());
         }
@@ -154,7 +154,7 @@ pub mod paint_fill {
         pub y: Option<f32>,
     }
 
-    pub fn handle(payload: &PaintFill, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &PaintFill, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.projection, cfg.projection));
         Ok(ctx.fill_at(doc.projection, cfg.projection, object_id, uu, vv))
@@ -176,7 +176,7 @@ pub mod fill_bucket {
         pub y: Option<f32>,
     }
 
-    pub fn handle(payload: &FillBucket, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &FillBucket, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.projection, cfg.projection));
         Ok(ctx.fill_at(doc.projection, cfg.projection, object_id, uu, vv))
@@ -198,13 +198,13 @@ pub mod paint_sample {
         pub y: Option<f32>,
     }
 
-    pub fn handle(payload: &PaintSample, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &PaintSample, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.projection, cfg.projection));
         let Some(object) = doc.projection.objects.iter().find(|object| object.id == object_id) else { return Ok(Emit::default()) };
         let composite = composite_layer_pixels(&object.paint_layers);
         let color = sample_pixel_from(&composite, uu, vv);
-        Ok(Emit::config(vec![LowpolyConfigOperation::SetPaintColor { r: color[0], g: color[1], b: color[2], a: color[3] }]))
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetPaintColor { r: color[0], g: color[1], b: color[2], a: color[3] }]))
     }
 }
 //#endregion 🔖️PaintSample
@@ -220,11 +220,11 @@ pub mod add_paint_layer {
         pub name: Option<String>,
     }
 
-    pub fn handle(payload: &AddPaintLayer, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &AddPaintLayer, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.projection, cfg.projection));
         let name = payload.name.as_deref().unwrap_or("Layer");
         let index = doc.projection.objects.iter().find(|object| object.id == object_id).map_or(0, |object| object.paint_layers.len());
-        Ok(Emit::operations(vec![LowpolyOperation::AddPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) }]))
+        Ok(Emit::mutations(vec![LowpolyMutation::AddPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) }]))
     }
 }
 //#endregion 🔖️AddPaintLayer
@@ -253,9 +253,9 @@ mod tests {
         a.dispatch_typed(LowpolyCommand::PaintStrokeBegin(super::paint_stroke_begin::PaintStrokeBegin {}), &testkit::meta("a")).unwrap();
         let tick_a = a.dispatch_typed(LowpolyCommand::PaintAt(super::paint_at::PaintAt { object_id: Some(object_id.clone()), u: Some(0.5), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).unwrap();
         let tick_b = a.dispatch_typed(LowpolyCommand::PaintAt(super::paint_at::PaintAt { object_id: Some(object_id), u: Some(0.52), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).unwrap();
-        assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag ticks emit no operations");
+        assert!(tick_a.mutations.is_empty() && tick_b.mutations.is_empty(), "mid-drag ticks emit no operations");
         let end = a.dispatch_typed(LowpolyCommand::PaintStrokeEnd(super::paint_stroke_end::PaintStrokeEnd {}), &testkit::meta("a")).unwrap();
-        assert_eq!(end.operations.len(), 1, "the whole drag commits as one operation");
+        assert_eq!(end.mutations.len(), 1, "the whole drag commits as one operation");
         let painted = a.projection().expect("projection").objects[0].paint_layers[0].pixels.clone();
         assert_ne!(painted, before, "the stroke changed pixels");
         a.handle_action("undo", None, &testkit::meta("a")).unwrap();
@@ -270,9 +270,9 @@ mod tests {
         let mut a = app();
         // 🧰️ The host-owned utility switch bridges into config.paint_utility and emits no operations.
         let switch = a.dispatch_typed(LowpolyCommand::SetActiveUtility(crate::apps::lowpoly::commands::utility::set_active_utility::SetActiveUtility { utility_id: "eyedropper".into() }), &testkit::meta("a")).unwrap();
-        assert!(switch.operations.is_empty());
+        assert!(switch.mutations.is_empty());
         let result = a.dispatch_typed(LowpolyCommand::PaintSample(super::paint_sample::PaintSample { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).unwrap();
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

@@ -1,8 +1,8 @@
 //! 🎥️ CAD play app commands — the per-pane camera pose and its classical-projection configuration. All three are config-only: a camera move never records a VCS edit.
 
-use crate::apps::cad::config::{CadConfig, CadConfigOperation};
+use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::op::CadOperation;
+use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,7 @@ pub mod set_camera {
         pub camera: CadCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the FULL `surfaceId` (`"cad.play.scene3d/building"`), not a bare
         // pane suffix — mirrors the pre-B1 `args.get("surfaceId")` resolution exactly.
         let mut runtime = runtime_of(cfg);
@@ -50,7 +50,7 @@ pub mod set_projection {
         pub param: Option<String>,
     }
 
-    pub fn handle(payload: &SetProjection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetProjection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
@@ -85,7 +85,7 @@ pub mod set_projection_param {
         pub param: Option<String>,
     }
 
-    pub fn handle(payload: &SetProjectionParam, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetProjectionParam, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);

@@ -1,7 +1,7 @@
 //! 🧭️ S Studio app — shell navigation + app-registry push commands.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
-use semio_framework_os::{register_app_io, AppDefinition, WorkflowDocument, WorkflowOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{register_app_io, AppDefinition, WorkflowDocument, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::Deserialize;
 
@@ -16,8 +16,8 @@ pub mod set_active_panel_tab {
         pub tab_id: String,
     }
 
-    pub fn handle(payload: &SetActivePanelTab, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SpaceConfigOperation::SetActivePanelTab { tab_id: payload.tab_id.clone() }]))
+    pub fn handle(payload: &SetActivePanelTab, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SpaceConfigMutation::SetActivePanelTab { tab_id: payload.tab_id.clone() }]))
     }
 }
 //#endregion 🔖️SetActivePanelTab
@@ -31,7 +31,7 @@ pub mod go_home {
     #[dsl(keyword = "go-home")]
     pub struct GoHome {}
 
-    pub fn handle(_payload: &GoHome, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(_payload: &GoHome, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
     }
 }
@@ -48,7 +48,7 @@ pub mod navigate_virtual_file_system_node {
         pub space_id: String,
     }
 
-    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
     }
 }
@@ -91,7 +91,7 @@ pub mod set_app_registrations {
 
     /// 🪐️ Pure host-hint side effect; no document/config mutation, so the default full-refresh `Emit`
     /// is enough to pick up the newly-registered apps on the next catalogue render.
-    pub fn handle(payload: &SetAppRegistrations, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &SetAppRegistrations, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         apply_app_registrations(&payload.json);
         Ok(Emit::default())
     }

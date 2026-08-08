@@ -1,8 +1,8 @@
 //! 💾️ S Studio app — whole-studio export/import + open commands.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::host::{export_os_space_dsl, export_os_space_pack, import_os_space_from_pack};
-use semio_framework_os::{create_backbone_document, WorkflowDocument, WorkflowOperation, OS_SPACE_SCHEMA, S_SPACE_SCHEMA};
+use semio_framework_os::{create_backbone_document, WorkflowDocument, WorkflowMutation, OS_SPACE_SCHEMA, S_SPACE_SCHEMA};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, FaultCode, FaultOrigin, HostEffect};
 
 //#region 🔖️SetActiveExample
@@ -16,7 +16,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         if payload.example_id.is_empty() {
             Ok(Emit::default())
         } else {
@@ -35,7 +35,7 @@ pub mod export_studio_pack {
     #[dsl(keyword = "export-studio-pack")]
     pub struct ExportStudioPack {}
 
-    pub fn handle(_payload: &ExportStudioPack, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(_payload: &ExportStudioPack, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let space_id = crate::apps::space::config_space_id(cfg.projection);
         match crate::apps::home::resolve_studio_document(&space_id) {
             Some(document) => match export_os_space_pack(&document) {
@@ -66,7 +66,7 @@ pub mod export_studio_dsl {
     #[dsl(keyword = "export-studio-dsl")]
     pub struct ExportStudioDsl {}
 
-    pub fn handle(_payload: &ExportStudioDsl, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(_payload: &ExportStudioDsl, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let space_id = crate::apps::space::config_space_id(cfg.projection);
         match crate::apps::home::resolve_studio_document(&space_id) {
             Some(document) => match export_os_space_dsl(&document) {
@@ -88,7 +88,7 @@ pub mod import_space_pack {
     #[dsl(keyword = "import-space-pack")]
     pub struct ImportSpacePack {}
 
-    pub fn handle(_payload: &ImportSpacePack, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(_payload: &ImportSpacePack, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false }))
     }
 }
@@ -105,7 +105,7 @@ pub mod import_space_pack_payload {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportSpacePackPayload, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportSpacePackPayload, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         use base64::Engine;
         let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
         if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
@@ -132,7 +132,7 @@ pub mod open_space {
         pub space_id: String,
     }
 
-    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let space_id = &payload.space_id;
         // 🚧️ `parse_demo_space_document()` yields a `workflow::WorkflowDocument`, not a
         // `space::SpaceProjection`-backed catalog entry — the "demo" id fallback below synthesizes a
@@ -150,11 +150,11 @@ pub mod open_space {
         let Some(document) = document else {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.not-found"), format!("studio `{space_id}` not found")));
         };
-        let mut config_operations = vec![
-            SpaceConfigOperation::SetSpaceId { space_id: Some(space_id.clone()) },
-            SpaceConfigOperation::SetFocusedNode { node_id: None },
-            SpaceConfigOperation::SetSelection { node_ids: Vec::new() },
-            SpaceConfigOperation::SetClipboard { node_ids: Vec::new() },
+        let mut config_mutations = vec![
+            SpaceConfigMutation::SetSpaceId { space_id: Some(space_id.clone()) },
+            SpaceConfigMutation::SetFocusedNode { node_id: None },
+            SpaceConfigMutation::SetSelection { node_ids: Vec::new() },
+            SpaceConfigMutation::SetClipboard { node_ids: Vec::new() },
         ];
         // 🕸️ `document` is a `space::SpaceProjection`-backed manifest — it carries no workflow graph of
         // its own anymore; the graph lives on a separate `s.workflow` artifact document within one of
@@ -167,7 +167,7 @@ pub mod open_space {
             .or_else(|| is_demo_space.then(crate::parse_demo_space_document))
             .unwrap_or_else(|| crate::apps::home::empty_workflow_artifact_document(space_id, &document.name));
         let active_node_id = workflow_document.vcs.initial_projection.graph.nodes.first().map(|node| node.id.clone());
-        config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: active_node_id });
+        config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: active_node_id });
         match crate::apps::home::workflow_artifact_envelope_pack(&workflow_document) {
             Some(files) => {
                 eprintln!(
@@ -177,11 +177,11 @@ pub mod open_space {
                     workflow_document.vcs.initial_projection.graph.nodes.len(),
                     document.vcs.initial_projection.collections.len()
                 );
-                Ok(Emit { config_operations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
+                Ok(Emit { config_mutations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
             }
             None => {
                 eprintln!("[DEBUG] openSpace workflow pack export failed id={space_id}");
-                Ok(Emit::config(config_operations))
+                Ok(Emit::config(config_mutations))
             }
         }
     }
@@ -217,8 +217,8 @@ mod tests {
         let empty = empty_workflow_document();
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: entry.id.clone() })).expect("handle");
-        assert!(emit.config_operations.contains(&SpaceConfigOperation::SetSpaceId { space_id: Some(entry.id) }));
-        assert!(emit.config_operations.contains(&SpaceConfigOperation::SetActiveNode { node_id: None }));
+        assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId { space_id: Some(entry.id) }));
+        assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode { node_id: None }));
         assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })));
         assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
     }
@@ -231,7 +231,7 @@ mod tests {
         assert_eq!(err.code.0, "s.space.not-found");
     }
 
-    fn load_document_projection(emit: &Emit<WorkflowOperation, SpaceConfigOperation>) -> (WorkflowDocument, String) {
+    fn load_document_projection(emit: &Emit<WorkflowMutation, SpaceConfigMutation>) -> (WorkflowDocument, String) {
         let (pack, spr) = emit
             .effects
             .iter()
@@ -240,7 +240,7 @@ mod tests {
                 _ => None,
             })
             .expect("load document");
-        let parsed: store::ParsedDocumentText<WorkflowDocument, WorkflowOperation> = store::parse_document_pack(pack, spr).expect("parse document pack");
+        let parsed: store::ParsedDocumentText<WorkflowDocument, WorkflowMutation> = store::parse_document_pack(pack, spr).expect("parse document pack");
         let id = parsed.envelope.id.clone();
         (parsed.projection, id)
     }

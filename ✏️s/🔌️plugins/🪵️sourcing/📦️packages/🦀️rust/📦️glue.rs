@@ -17,8 +17,9 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as pack;
+extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
 // framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
 // lint does not fire on the trait impl itself (only on the free functions the taxonomy split
@@ -38,6 +39,23 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🗂️curate/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🗂️curate/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🗂️curate/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🗂️curate/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🗂️curate/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🗂️curate/🎒️pack/🦀️component.rs"]

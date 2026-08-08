@@ -1,0 +1,3 @@
+repo MCP server not available in this Cursor session (Server "repo" not found).
+Worked inside existing open ticket 26/08/07/OPERATIONS-TO-MUTATIONS-AND-ARTIFACT-ENGINES.
+Could not list goals via repo://goals or call ticket_reopen/ticket_close.

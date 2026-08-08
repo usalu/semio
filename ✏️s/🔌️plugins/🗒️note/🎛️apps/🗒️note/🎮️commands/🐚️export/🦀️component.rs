@@ -1,7 +1,7 @@
 //! 🐚️ Note play app commands — import/export shell effects. No operations either way.
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
-use crate::artifacts::note::op::NoteOperation;
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ pub mod save_download {
     #[dsl(keyword = "save-download")]
     pub struct SaveDownload {}
 
-    pub fn handle(_payload: &SaveDownload, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(_payload: &SaveDownload, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let data = crate::artifacts::note::dsl::print_dsl(doc.projection);
         Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "🗒️semio.note.dsl".into(), mime_type: "text/plain".into(), data, encoding: None }))
     }
@@ -29,7 +29,7 @@ pub mod load_request {
     #[dsl(keyword = "load-request")]
     pub struct LoadRequest {}
 
-    pub fn handle(_payload: &LoadRequest, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(_payload: &LoadRequest, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }))
     }
 }

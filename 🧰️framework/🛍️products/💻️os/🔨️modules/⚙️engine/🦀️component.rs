@@ -69,6 +69,23 @@ impl EngineHandles {
 }
 //#endregion 🔖️Engine
 
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent artifact state machine — every transition is a mutation.
+///
+/// Distinct from the byte-cache [`Engine`] trait above (content-addressed compute kernels).
+/// Document stores should drive apply/inverse through this surface rather than calling
+/// [`crate::os_spr::Mutation::diff`] / [`crate::os_spr::Mutation::inverse`] directly.
+pub trait ArtifactEngine: Send + Sync {
+    type Projection;
+    type Mutation: crate::os_spr::Mutation<Self::Projection>;
+    type Diff: crate::os_spr::MutationDiff<Self::Projection>;
+
+    fn projection(&self) -> &Self::Projection;
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, EngineFault>;
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation>;
+}
+//#endregion 🔖️ArtifactEngine
+
 //#region 🔖️Cache
 struct CacheEntry {
     output: Vec<u8>,

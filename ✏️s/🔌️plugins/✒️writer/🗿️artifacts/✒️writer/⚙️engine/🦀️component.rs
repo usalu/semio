@@ -952,3 +952,40 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent writer artifact engine.
+pub struct WriterEngine {
+    projection: WriterProjection,
+}
+
+impl WriterEngine {
+    pub fn new(projection: WriterProjection) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> WriterProjection {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for WriterEngine {
+    type Projection = WriterProjection;
+    type Mutation = crate::artifacts::writer::mutations::WriterMutation;
+    type Diff = crate::artifacts::writer::diff::WriterDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::writer::mutations::apply_writer_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

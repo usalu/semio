@@ -1,7 +1,7 @@
 dialect protocol
 protocol flow.spr
 version 1
-schema flow.operation
+schema flow.mutation
 start record
 framing record
 record flow.flow-add-node tag 1

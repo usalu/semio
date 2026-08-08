@@ -3,13 +3,13 @@
 //! content).
 
 use crate::artifacts::fem3d::FemCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Config
 /// 🧮️ B1: fem3d's real `DocumentApp::Config` — absorbs both former `Fem3dPlayApp` `RefCell` fields
 /// (`result_display`, `camera`); session-only view state now round-trips through the config
-/// `DocumentStore` exactly like document content, with a real `backwards` per `Fem3dConfigOperation`
+/// `DocumentStore` exactly like document content, with a real `backwards` per `Fem3dConfigMutation`
 /// instead of never being VCS'd at all. Mirrors `Fem2dConfig`'s identical B1 recipe, minus a `locale`
 /// field (fem3d never carried a `ViewModel::locale` the way fem2d did).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -107,14 +107,14 @@ store::impl_whole_record_config!(Fem3dConfig);
 // #region 🔖️ConfigOperations
 /// 🧮️ B1: `Fem3dConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `Fem3dPlayApp` `RefCell` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — mirrors `Fem2dConfigOperation`'s identical B1 pilot recipe: since a config-only dispatch is
+/// returns — mirrors `Fem2dConfigMutation`'s identical B1 pilot recipe: since a config-only dispatch is
 /// a plain `Apply` (not an `AmendLast`), each tick is its own distinct, real config edit, and "undo this
-/// tick" is exactly "restore the whole-config snapshot from just before it". `Operation::Diff` is the
+/// tick" is exactly "restore the whole-config snapshot from just before it". `Mutation::Diff` is the
 /// WHOLE `Fem3dConfig` (not a granular patch type): `diff()` returns "the full config after this op", and
-/// `OperationDiff<Fem3dConfig>::apply` for `Fem3dConfig` itself (`store::impl_whole_record_config!`) just
+/// `MutationDiff<Fem3dConfig>::apply` for `Fem3dConfig` itself (`store::impl_whole_record_config!`) just
 /// returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Fem3dConfigOperation {
+pub enum Fem3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -132,7 +132,7 @@ pub enum Fem3dConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for Fem3dConfigOperation {
+impl protocol::OpText for Fem3dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -146,7 +146,7 @@ impl protocol::OpText for Fem3dConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -157,7 +157,7 @@ impl protocol::OpText for Fem3dConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Fem3dConfigOperation {
+impl protocol::OpBinary for Fem3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -203,25 +203,25 @@ impl protocol::OpBinary for Fem3dConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<Fem3dConfig> for Fem3dConfigOperation {
+impl Mutation<Fem3dConfig> for Fem3dConfigMutation {
     type Diff = Fem3dConfig;
 
     fn diff(&self, base: &Fem3dConfig) -> Fem3dConfig {
         let mut next = base.clone();
         match self {
-            Fem3dConfigOperation::Snapshot { config } => return config.clone(),
-            Fem3dConfigOperation::SetResultDisplay { source_id, mode, mode_index } => {
+            Fem3dConfigMutation::Snapshot { config } => return config.clone(),
+            Fem3dConfigMutation::SetResultDisplay { source_id, mode, mode_index } => {
                 next.result_source_id = source_id.clone();
                 next.result_mode = mode.clone();
                 next.result_mode_index = *mode_index;
             }
-            Fem3dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            Fem3dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &Fem3dConfig) -> Vec<Self> {
-        vec![Fem3dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Fem3dConfig) -> Vec<Self> {
+        vec![Fem3dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 // #endregion 🔖️ConfigOperations
@@ -240,16 +240,16 @@ mod tests {
         assert_eq!(config.camera, FemCamera::default());
     }
 
-    /// 🧮️ `Fem3dConfig`'s `OperationDiff` is a whole-record replace, mirroring `Fem2dConfig`'s identical
+    /// 🧮️ `Fem3dConfig`'s `MutationDiff` is a whole-record replace, mirroring `Fem2dConfig`'s identical
     /// B1 pilot pattern: `apply` ignores `base` entirely.
     #[test]
     fn fem3d_config_operation_diff_is_a_whole_record_replace() {
         let base = Fem3dConfig::default();
         let replacement = Fem3dConfig { result_source_id: Some("dead".into()), result_mode: "modal".into(), result_mode_index: 2, camera: FemCamera { json: "{\"x\":1}".into() } };
-        let applied = protocol::OperationDiff::apply(&replacement, &base);
+        let applied = protocol::MutationDiff::apply(&replacement, &base);
         assert_eq!(applied, replacement);
         let mut absorbed = base.clone();
-        protocol::OperationDiff::absorb(&mut absorbed, replacement.clone());
+        protocol::MutationDiff::absorb(&mut absorbed, replacement.clone());
         assert_eq!(absorbed, replacement);
     }
 
@@ -257,18 +257,18 @@ mod tests {
     fn config_operation_backwards_always_restores_the_pre_operation_snapshot() {
         let base = Fem3dConfig::default();
         let camera = FemCamera { json: "{\"x\":1}".into() };
-        let op = Fem3dConfigOperation::SetCamera { camera: camera.clone() };
+        let op = Fem3dConfigMutation::SetCamera { camera: camera.clone() };
         let next = op.diff(&base);
         assert_eq!(next.camera, camera);
-        let backwards = op.backwards(&base);
-        assert_eq!(backwards, vec![Fem3dConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = op.inverse(&base);
+        assert_eq!(backwards, vec![Fem3dConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(backwards[0].diff(&next), base);
     }
 
     #[test]
     fn set_result_display_config_operation_round_trips() {
         let base = Fem3dConfig::default();
-        let op = Fem3dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
+        let op = Fem3dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
         let next = op.diff(&base);
         assert_eq!(next.result_source_id.as_deref(), Some("dead"));
         assert_eq!(next.result_mode, "modal");
@@ -277,9 +277,9 @@ mod tests {
 
     #[test]
     fn fem3d_config_operation_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&Fem3dConfigOperation::Snapshot { config: Fem3dConfig::default() });
-        store::test_support::assert_op_line_round_trip(&Fem3dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
-        store::test_support::assert_op_line_round_trip(&Fem3dConfigOperation::SetCamera { camera: FemCamera { json: "{\"x\":1}".into() } });
+        store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() });
+        store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
+        store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::SetCamera { camera: FemCamera { json: "{\"x\":1}".into() } });
     }
 }
 // #endregion 🧪️Tests

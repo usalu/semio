@@ -80,3 +80,36 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("jack.spr"),
     });
 }
+
+
+//#region 🔖️ArtifactEngine
+pub struct TrinityGraphEngine {
+    projection: crate::artifacts::jack::TrinityGraphDocument,
+}
+
+impl TrinityGraphEngine {
+    pub fn new(projection: crate::artifacts::jack::TrinityGraphDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for TrinityGraphEngine {
+    type Projection = crate::artifacts::jack::TrinityGraphDocument;
+    type Mutation = crate::artifacts::jack::mutations::TrinityGraphMutation;
+    type Diff = crate::artifacts::jack::diff::TrinityGraphDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::jack::mutations::apply_trinity_graph_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

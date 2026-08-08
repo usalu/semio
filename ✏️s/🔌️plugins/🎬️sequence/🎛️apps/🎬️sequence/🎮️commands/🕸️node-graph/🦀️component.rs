@@ -1,8 +1,8 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
-use crate::apps::sequence::config::{SequenceConfig, SequenceConfigOperation};
+use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::ops_from_host_mutation;
-use crate::artifacts::sequence::op::SequenceOperation;
+use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceCamera, SequenceFixture};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,7 +18,7 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.projection;
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let selected = cfg.projection.selected_step_ids.clone();
@@ -50,9 +50,9 @@ pub mod node_graph_edit {
             }
         });
         if cleared {
-            Ok(Emit { document_operations: ops, config_operations: vec![SequenceConfigOperation::SetSelection { step_ids: Vec::new() }], ..Default::default() })
+            Ok(Emit { document_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: Vec::new() }], ..Default::default() })
         } else {
-            Ok(Emit::operations(ops))
+            Ok(Emit::mutations(ops))
         }
     }
 }
@@ -69,8 +69,8 @@ pub mod set_viewport {
         pub camera: SequenceCamera,
     }
 
-    pub fn handle(payload: &SetViewport, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigOperation::SetCamera { camera: payload.camera.clone() }]))
+    pub fn handle(payload: &SetViewport, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SequenceConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
 //#endregion 🔖️SetViewport
@@ -86,13 +86,13 @@ mod tests {
 
     use super::set_viewport::SetViewport;
 
-    /// 🎥️ `SetViewport` is config-only — it must never emit a `SequenceOperation` (no VCS edit, no
+    /// 🎥️ `SetViewport` is config-only — it must never emit a `SequenceMutation` (no VCS edit, no
     /// undo entry) and instead write straight into the config store.
     #[test]
     fn set_viewport_writes_config_not_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).expect("viewport pan/zoom");
-        assert!(result.operations.is_empty(), "setViewport must not emit a VCS operation");
+        assert!(result.document_mutations.is_empty(), "setViewport must not emit a VCS operation");
         let node = app.render(crate::apps::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &ViewModel::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         assert_eq!(payload["nodeGraph"]["viewport"]["zoom"], json!(2.0));

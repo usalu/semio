@@ -12,17 +12,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::vcs::op::VcsDemoOperation;
+use crate::artifacts::vcs::op::VcsDemoMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `VcsDemoOperation` to its binary state-patch form.
-pub fn encode_op(operation: &VcsDemoOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `VcsDemoMutation` to its binary state-patch form.
+pub fn encode_op(operation: &VcsDemoMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `VcsDemoOperation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<VcsDemoOperation, protocol::ProtocolError> {
-    VcsDemoOperation::decode_op(bytes)
+/// 📖️ Decodes a `VcsDemoMutation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<VcsDemoMutation, protocol::ProtocolError> {
+    VcsDemoMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = VcsDemoOperation::SetCounter { counter: 7 };
+        let operation = VcsDemoMutation::SetCounter { counter: 7 };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

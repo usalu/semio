@@ -107,10 +107,10 @@ import {
   encodeActionWire,
   encodeBackboneMessage,
   encodeBackboneWorkerRequest,
-  encodeOperationEnvelopesPack,
+  encodeMutationEnvelopesPack,
   FRAMEWORK_SYNC_CONTROLLER_ID,
-  operationEnvelopeFromWire,
-  operationEnvelopeToWire,
+  mutationEnvelopeFromWire,
+  mutationEnvelopeToWire,
   type PersistenceBinding,
 } from "@semio-tech/framework-os";
 import {
@@ -772,21 +772,21 @@ function FrameworkOsShellInner({
       if (!entry) return;
       const { event } = message;
       if (event.kind === "status") {
-        dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingOperations: event.pendingOperations, remote: event.remote } });
+        dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingMutations: event.pendingMutations, remote: event.remote } });
       } else if (event.kind === "presence") {
         const peersJson = JSON.stringify(event.peers.map((peer) => ({ clientId: peer.actor, name: peer.label ?? peer.actor, selectionCount: 0 })));
         dispatch({
           type: "SET_SESSION",
           value: (current) => (current && current.instanceId === entry.session.instanceId ? { ...current, viewState: { ...current.viewState, presencePeersJson: peersJson } } : current),
         });
-      } else if (event.kind === "remoteOperations" && entry.plugin.applyOperations) {
-        void entry.plugin.applyOperations(entry.session.instanceId, encodeOperationEnvelopesPack(event.envelopes));
+      } else if (event.kind === "remoteMutations" && entry.plugin.applyMutations) {
+        void entry.plugin.applyMutations(entry.session.instanceId, encodeMutationEnvelopesPack(event.envelopes));
         const actorUri = `actor://${message.documentId}`;
         postPluginBackboneInbound(entry.session.pluginId, actorUri, [
           encodeBackboneMessage({
-            kind: "operations",
+            kind: "mutations",
             envelopes: event.envelopes.map((envelope, index) =>
-              operationEnvelopeToWire(envelope, { actor: 0, physical_ms: Date.now(), logical: index + 1 }),
+              mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: Date.now(), logical: index + 1 }),
             ),
           }),
         ]);
@@ -1553,10 +1553,10 @@ function FrameworkOsShellInner({
     let actorMessage: DocumentActorMsg;
     try {
       const parsed = decodeBackboneMessage(messageBytes);
-      if (parsed.kind === "operations") {
+      if (parsed.kind === "mutations") {
         actorMessage = {
-          kind: "localOperations",
-          envelopes: parsed.envelopes.map((envelope) => operationEnvelopeFromWire(envelope)),
+          kind: "localMutations",
+          envelopes: parsed.envelopes.map((envelope) => mutationEnvelopeFromWire(envelope)),
         };
       } else if (parsed.kind === "snapshot") {
         actorMessage = { kind: "localSnapshot", pack: Array.from(parsed.pack), spr: Array.from(parsed.spr) };
@@ -1704,11 +1704,6 @@ function FrameworkOsShellInner({
           .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
           .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
       );
-      {
-        const parsed = JSON.parse(contributionsJson) as Array<{ pluginId: string; contribution?: { kind?: string; extensionId?: string; appId?: string } }>;
-        const flowExt = parsed.filter((entry) => entry.contribution?.kind === "flowExtension");
-        console.log("[DEBUG] contributionsJson flowExtension count", flowExt.length, "total", parsed.length, "apps", flowExt.map((e) => `${e.pluginId}->${e.contribution?.appId}/${e.contribution?.extensionId}`));
-      }
       // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — mirrors
       // `contributionsJson` above exactly (same opt-in hint-push shape below), because the space app is
       // its own wasm component: `semio_framework_os::APP_REGISTRATIONS` (populated at native/test
@@ -2894,7 +2889,7 @@ function FrameworkOsShellInner({
 
   /** 🎬️ Applies every entry of one `TutorialSlice` (a director tick or a seek span) onto the live
    * session — UI changes first, then document-track entries through the plugin bridge: `Edit` via
-   * `applyOperations` (forward/backward per `slice.forward`), `Load` via `loadAppDocument`,
+   * `applyMutations` (forward/backward per `slice.forward`), `Load` via `loadAppDocument`,
    * `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` via the SAME History-action
    * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
    * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
@@ -2907,8 +2902,8 @@ function FrameworkOsShellInner({
         const kind: TutorialDocumentEventKind = documentEvent.kind;
         if (kind.kind === "edit") {
           documentTouched = true;
-          const operations = slice.forward ? kind.forwards : kind.backwards;
-          if (plugin?.applyOperations) await plugin.applyOperations(activeSession.instanceId, encodeOperationEnvelopesPack(operations));
+          const mutations = slice.forward ? kind.forwards : kind.backwards;
+          if (plugin?.applyMutations) await plugin.applyMutations(activeSession.instanceId, encodeMutationEnvelopesPack(mutations));
         } else if (kind.kind === "load") {
           documentTouched = true;
           const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
@@ -2984,8 +2979,8 @@ function FrameworkOsShellInner({
           const kind: TutorialDocumentEventKind = documentEvent.kind;
           if (kind.kind === "edit") {
             documentTouched = true;
-            const operations = slice.forward ? kind.forwards : kind.backwards;
-            if (plugin?.applyOperations) await plugin.applyOperations(session.instanceId, encodeOperationEnvelopesPack(operations));
+            const mutations = slice.forward ? kind.forwards : kind.backwards;
+            if (plugin?.applyMutations) await plugin.applyMutations(session.instanceId, encodeMutationEnvelopesPack(mutations));
           } else if (kind.kind === "load") {
             documentTouched = true;
             const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
@@ -5196,7 +5191,7 @@ function FrameworkOsShellInner({
           label: resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, uiTerminology, uiLocale)) + (argCarrying ? "…" : ""),
           icon: action.iconId,
           shortcut: action.keys ?? keysByActionId.get(action.id),
-          destructive: action.kind === "operation" && action.id.toLowerCase().includes("delete"),
+          destructive: action.kind === "mutation" && action.id.toLowerCase().includes("delete"),
           action: argCarrying ? "shell.openActionPane" : action.id,
           args: argCarrying ? { actionId: action.id } : undefined,
         });

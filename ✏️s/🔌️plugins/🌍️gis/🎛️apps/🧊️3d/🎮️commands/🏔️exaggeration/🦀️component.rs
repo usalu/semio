@@ -1,7 +1,7 @@
 //! 🏔️ GIS 3D play app command — vertical exaggeration, the terrain's one editable document property.
 
-use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigOperation};
-use crate::artifacts::gisterrain::op::Gis3dTerrainOperation;
+use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
+use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
 use crate::artifacts::gisterrain::Gis3dTerrainDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,8 @@ pub mod set_exaggeration {
         pub exaggeration: f64,
     }
 
-    pub fn handle(payload: &SetExaggeration, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, Fault> {
-        Ok(Emit::amend(vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: payload.exaggeration }], GIS3D_EXAGGERATION_COALESCE_KEY))
+    pub fn handle(payload: &SetExaggeration, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
+        Ok(Emit::amend(vec![Gis3dTerrainMutation::SetExaggeration { exaggeration: payload.exaggeration }], GIS3D_EXAGGERATION_COALESCE_KEY))
     }
 }
 //#endregion 🔖️SetExaggeration
@@ -57,7 +57,7 @@ mod tests {
     fn set_exaggeration_is_a_document_operation_not_config_state() {
         let mut app = app();
         let result = dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 }));
-        assert_eq!(result.operations.len(), 1, "exaggeration is undoable document state");
+        assert_eq!(result.mutations.len(), 1, "exaggeration is undoable document state");
     }
 }
 //#endregion 🧪️Tests

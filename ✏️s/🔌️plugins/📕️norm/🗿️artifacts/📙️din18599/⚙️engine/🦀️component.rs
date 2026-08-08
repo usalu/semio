@@ -1,6 +1,7 @@
 //! ⚙️ DIN V 18599 app — headless compute (constitutional: engine).
 
 use crate::artifacts::din16798::engine::part_3::residential_ventilation_rate;
+use crate::artifacts::din18599::mutations::Din18599Mutation;
 use crate::artifacts::din18599::{BalancingInputs, Document, MonthlyClimate, UseClass};
 use crate::artifacts::din4108::engine::part_2::{total_resistance, u_value_from_resistance, Layer};
 use crate::artifacts::din4108::engine::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
@@ -488,7 +489,7 @@ pub struct DinV18599Family;
 
 impl NormFamily for DinV18599Family {
     type Document = Document;
-    type Operation = crate::document::SetDocumentOperation<Document>;
+    type Mutation = Din18599Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinV18599
@@ -498,6 +499,45 @@ impl NormFamily for DinV18599Family {
         evaluate(document)
     }
 }
+
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent Din18599 artifact engine — owns the projection; every transition is a mutation.
+pub struct Din18599Engine {
+    projection: Document,
+}
+
+impl Din18599Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for Din18599Engine {
+    type Projection = Document;
+    type Mutation = Din18599Mutation;
+    type Diff = crate::artifacts::din18599::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = NormHost<DinV18599Family>;
 // #endregion 🔖️Session

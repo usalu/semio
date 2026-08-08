@@ -7329,7 +7329,7 @@ export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { read
         active={false}
         level="menu"
         stackSlot="context-menu-content"
-        className={contextMenuContentClassName(className)}
+        className={cn("z-menu w-auto min-w-[10rem] max-h-layout-command overflow-y-auto", className)}
         style={style}
         titleChips={
           <div data-slot="context-menu-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single")}>

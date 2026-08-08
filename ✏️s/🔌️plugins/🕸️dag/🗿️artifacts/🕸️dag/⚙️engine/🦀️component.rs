@@ -3,20 +3,20 @@
 //! Every function here is pure over `infinite_board_port_directed_dag` types and takes no
 //! app-runtime/config parameter — those types are app-owned (`crate::apps::dag::config::DagConfig`), and
 //! the app depends on this artifact, so a dependency the other way would be circular. Compute that
-//! constructs `DagOperation` values from config state (`remove_nodes_operations`) stays at app level,
+//! constructs `DagMutation` values from config state (`remove_nodes_operations`) stays at app level,
 //! which already depends on both this module and `crate::artifacts::dag::op`.
 
-use crate::artifacts::dag::op::DagOperation;
+use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagDocument, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Register
 /// 🗂️ Registers `DagDocument`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse DAG
-/// documents without depending on this crate's concrete `Projection`/`Operation` types. Called from the
+/// documents without depending on this crate's concrete `Projection`/`Mutation` types. Called from the
 /// plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
@@ -243,8 +243,8 @@ pub fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&
 /// Two app-level consumers (`🎮️commands/🔧️nodes::remove_node` and `🎮️commands/🕸️graph::{delete_selection,
 /// node_graph_edit}`) — takes only `DagDocument`, no app-only config type, so per the DocumentHelpers
 /// placement rule it lives here rather than being duplicated per consumer.
-pub fn remove_nodes_operations(document: &DagDocument, node_ids: &[String]) -> Vec<DagOperation> {
-    let mut operations: Vec<DagOperation> = document.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| DagOperation::Nodes(CollectionOperation::Remove { id: node.id.clone() })).collect();
+pub fn remove_nodes_operations(document: &DagDocument, node_ids: &[String]) -> Vec<DagMutation> {
+    let mut operations: Vec<DagMutation> = document.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| DagMutation::Nodes(CollectionMutation::Remove { id: node.id.clone() })).collect();
     operations.extend(
         document
             .edges
@@ -254,7 +254,7 @@ pub fn remove_nodes_operations(document: &DagDocument, node_ids: &[String]) -> V
                 let (to, _) = split_endpoint(&edge.target);
                 node_ids.iter().any(|id| id == &from || id == &to)
             })
-            .map(|edge| DagOperation::Edges(CollectionOperation::Remove { id: edge.id.clone() })),
+            .map(|edge| DagMutation::Edges(CollectionMutation::Remove { id: edge.id.clone() })),
     );
     operations
 }

@@ -13,7 +13,7 @@
 //! 🫀️ `core` is unusually large for a plugin kernel here, and deliberately so: the fifteen standards are
 //! structurally identical apps over fifteen genuinely different document schemas, so the *domain* kernel
 //! (quantities, clause identity, check results, national annexes, the `NormFamily`/`NormHost` contract,
-//! the generic whole-document operation and its text/binary codecs) and the *app-surface* kernel (the one
+//! the generic whole-document mutation and its text/binary codecs) and the *app-surface* kernel (the one
 //! shared config, the media ports, the render primitives, the manifest constructors) each exist exactly
 //! once, while every per-standard fact — schema, ids, labels, compute — lives in that standard's own
 //! artifact and app nodes.
@@ -23,7 +23,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<Operation, NormConfigOperation>, Fault>`, the exact signature `DocumentApp::handle` and
+// `Result<Emit< Mutation, NormConfigMutation>, Fault>`, the exact signature `DocumentApp::handle` and
 // `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it here
 // would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself (only
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -47,6 +47,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📕️din4108/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📕️din4108/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📕️din4108/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📕️din4108/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📕️din4108/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📕️din4108/🔧️op/🦀️component.rs"]
@@ -66,6 +83,23 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📗️din16798/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📗️din16798/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📗️din16798/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📗️din16798/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📗️din16798/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
 
         #[path = "../../🗿️artifacts/📗️din16798/🔺️diff/🦀️component.rs"]
         pub mod diff;
@@ -87,6 +121,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📙️din18599/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📙️din18599/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📙️din18599/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📙️din18599/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📙️din18599/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📙️din18599/🔧️op/🦀️component.rs"]
@@ -106,6 +157,23 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📘️en1990/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1990/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1990/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1990/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1990/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
 
         #[path = "../../🗿️artifacts/📘️en1990/🔺️diff/🦀️component.rs"]
         pub mod diff;
@@ -127,6 +195,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1991/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1991/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1991/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1991/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📘️en1991/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📘️en1991/🔧️op/🦀️component.rs"]
@@ -146,6 +231,23 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📘️en1992/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1992/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1992/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1992/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1992/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
 
         #[path = "../../🗿️artifacts/📘️en1992/🔺️diff/🦀️component.rs"]
         pub mod diff;
@@ -167,6 +269,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1993/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1993/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1993/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1993/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📘️en1993/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📘️en1993/🔧️op/🦀️component.rs"]
@@ -186,6 +305,23 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📘️en1994/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1994/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1994/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1994/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1994/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
 
         #[path = "../../🗿️artifacts/📘️en1994/🔺️diff/🦀️component.rs"]
         pub mod diff;
@@ -207,6 +343,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1995/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1995/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1995/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1995/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📘️en1995/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs"]
@@ -226,6 +379,23 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📘️en1996/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1996/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1996/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1996/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1996/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
 
         #[path = "../../🗿️artifacts/📘️en1996/🔺️diff/🦀️component.rs"]
         pub mod diff;
@@ -247,6 +417,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1997/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1997/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1997/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1997/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📘️en1997/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs"]
@@ -266,6 +453,23 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📘️en1998/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1998/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1998/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1998/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1998/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
 
         #[path = "../../🗿️artifacts/📘️en1998/🔺️diff/🦀️component.rs"]
         pub mod diff;
@@ -287,6 +491,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📘️en1999/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📘️en1999/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📘️en1999/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📘️en1999/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📘️en1999/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs"]
@@ -307,6 +528,23 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📓️iso16757/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📓️iso16757/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📓️iso16757/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📓️iso16757/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📓️iso16757/🔺️diff/🦀️component.rs"]
         pub mod diff;
         #[path = "../../🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs"]
@@ -326,6 +564,23 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📔️vdi3805/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📔️vdi3805/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/📔️vdi3805/🧬️mutations/📤️set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📔️vdi3805/🧬️mutations/📤️set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📔️vdi3805/🧬️mutations/📤️set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
 
         #[path = "../../🗿️artifacts/📔️vdi3805/🔺️diff/🦀️component.rs"]
         pub mod diff;
@@ -1026,6 +1281,10 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
+#[path = "../../🔌️plugin/🔧️setup/🦀️component.rs"]
+mod setup;
+pub use setup::register_norm_exports;
+
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);

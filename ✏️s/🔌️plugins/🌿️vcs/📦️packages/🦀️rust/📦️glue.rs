@@ -13,7 +13,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
 // error type; boxing it here would diverge from the trait it must satisfy, and the lint does not fire on
 // the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
@@ -33,6 +33,57 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_counter {
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🔢set-counter/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🔢set-counter/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_title {
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/📛set-title/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/📛set-title/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_notes {
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/📝set-notes/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/📝set-notes/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod set_status {
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🚦set-status/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🚦set-status/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod add_tag {
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🏷️add-tag/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🏷️add-tag/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+            #[path = "."]
+            pub mod remove_tag {
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🗑️remove-tag/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌿️vcs/🧬️mutations/🗑️remove-tag/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🌿️vcs/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🌿️vcs/🎒️pack/🦀️component.rs"]

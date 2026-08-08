@@ -8,17 +8,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::raster::op::RasterOperation;
+use crate::artifacts::raster::op::RasterMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `RasterOperation` to its binary command form.
-pub fn encode_op(operation: &RasterOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `RasterMutation` to its binary command form.
+pub fn encode_op(operation: &RasterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `RasterOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<RasterOperation, protocol::ProtocolError> {
-    RasterOperation::decode_op(bytes)
+/// 📖️ Decodes a `RasterMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::ProtocolError> {
+    RasterMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -31,7 +31,7 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let document = empty_raster_document();
-        let operation = RasterOperation::AddLayer {
+        let operation = RasterMutation::AddLayer {
             parent_id: None,
             index: document.layers.len(),
             layer: Box::new(RasterLayerNode::Pixel {
@@ -56,11 +56,11 @@ mod tests {
     fn raster_document_text_round_trips_store_with_applied_operation() {
         use crate::artifacts::raster::RasterProjection;
 
-        let envelope = store::create_document_envelope::<RasterProjection, RasterOperation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
+        let envelope = store::create_document_envelope::<RasterProjection, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
         let mut store = store::DocumentStore::new(envelope);
         store
             .dispatch(store::DocumentCommand::Apply {
-                operations: vec![RasterOperation::AddLayer {
+                mutations: vec![RasterMutation::AddLayer {
                     parent_id: None,
                     index: 1,
                     layer: Box::new(RasterLayerNode::Adjustment {
@@ -83,7 +83,7 @@ mod tests {
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `RasterOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this file's
+    /// `RasterMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law (same pattern as `mathematical_protocol`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
@@ -91,11 +91,11 @@ mod tests {
         use crate::artifacts::raster::RasterProjection;
         use protocol::{DocumentId, Edit, SchemaId};
 
-        let envelope = store::create_document_envelope::<RasterProjection, RasterOperation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
+        let envelope = store::create_document_envelope::<RasterProjection, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
         let mut store = store::DocumentStore::new(envelope);
         store
             .dispatch(store::DocumentCommand::Apply {
-                operations: vec![RasterOperation::AddLayer {
+                mutations: vec![RasterMutation::AddLayer {
                     parent_id: None,
                     index: 0,
                     layer: Box::new(RasterLayerNode::Pixel {
@@ -114,8 +114,8 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        let edit: &Edit<RasterOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<RasterProjection, RasterOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<RasterProjection, RasterMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

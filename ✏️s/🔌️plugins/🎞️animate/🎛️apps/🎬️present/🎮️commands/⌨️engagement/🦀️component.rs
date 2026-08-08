@@ -1,9 +1,9 @@
 //! ⌨️ Animate present app commands — the engagement bar: engagement-submit, engagement-input.
 
-use crate::apps::present::config::{PresentConfig, PresentConfigOperation};
+use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::{new_tile_id, tile_morph_prompt_effect};
 use crate::artifacts::present::engine::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
-use crate::artifacts::present::op::PresentOperation;
+use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentDeck};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,15 +18,15 @@ pub mod engagement_submit {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let trimmed = payload.value.trim();
         if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
             let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
             let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
             return Ok(Emit {
-                document_operations: vec![PresentOperation::SetTiles { tiles }],
-                config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: selected }, PresentConfigOperation::SetEngagementInput { value: String::new() }],
+                document_mutations: vec![PresentMutation::SetTiles { tiles }],
+                config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
                 ..Default::default()
             });
         }
@@ -35,17 +35,17 @@ pub mod engagement_submit {
                 let id = new_tile_id("tile");
                 let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
                 Ok(Emit {
-                    document_operations: vec![PresentOperation::Tiles(protocol::CollectionOperation::Add { index: deck.tiles.len(), item: tile })],
-                    config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: vec![id] }, PresentConfigOperation::SetEngagementInput { value: String::new() }],
+                    document_mutations: vec![PresentMutation::Tiles(protocol::CollectionMutation::Add { index: deck.tiles.len(), item: tile })],
+                    config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: vec![id] }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
                     ..Default::default()
                 })
             }
             "clear" => Ok(Emit {
-                document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }],
-                config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }, PresentConfigOperation::SetEngagementInput { value: String::new() }],
+                document_mutations: vec![PresentMutation::SetTiles { tiles: Vec::new() }],
+                config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
                 ..Default::default()
             }),
-            "copy" | "copy prompt" => Ok(Emit { config_operations: vec![PresentConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() }),
+            "copy" | "copy prompt" => Ok(Emit { config_mutations: vec![PresentConfigMutation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() }),
             _ => Ok(Emit::default()),
         }
     }
@@ -62,8 +62,8 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
-        Ok(Emit::config(vec![PresentConfigOperation::SetEngagementInput { value: payload.value.clone() }]))
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        Ok(Emit::config(vec![PresentConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -104,7 +104,7 @@ mod tests {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
         let result = app.dispatch_typed(PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "gibberish".into() }), &meta("local")).expect("unrecognized");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
 }

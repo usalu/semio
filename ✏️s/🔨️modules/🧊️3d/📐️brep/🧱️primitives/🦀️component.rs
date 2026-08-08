@@ -46,7 +46,7 @@ fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
     }
 }
 
-fn attach_face(
+pub(crate) fn attach_face(
     body: &mut Body,
     surface_id: crate::brep::arena::SurfaceId,
     members: &[(EdgeId, bool)],
@@ -60,7 +60,7 @@ fn attach_face(
     face
 }
 
-fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+pub(crate) fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let curve = body.curves3.insert(Curve3::Line { origin: a, dir: b - a });
     make_edge(body, curve, (0.0, 1.0), va, vb, tol, rec)
 }
@@ -79,13 +79,13 @@ fn circle_edge(
     make_edge(body, curve, (0.0, TAU), vertex, vertex, tol, rec)
 }
 
-fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
+pub(crate) fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
     Surface::Plane {
         frame: Frame3::from_normal(origin, normal).expect("plane frame"),
     }
 }
 
-fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
+pub(crate) fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
     let shell = add_shell(body, faces, rec);
     add_solid(body, shell, vec![], rec)
 }
@@ -272,38 +272,129 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize) -> R
             "torus minor radius ({minor}) must be less than major radius ({major})"
         )));
     }
-    if segments < 4 {
-        return Err(KernelError::InvalidInput(format!("torus needs at least 4 segments, got {segments}")));
-    }
-    let _ = segments;
+    let major_seg = segments.max(8);
+    let minor_seg = (segments / 2).max(6);
     let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
-    let seam_pt = Pnt3::new(major + minor, 0.0, 0.0);
-    let v0 = make_vertex(body, seam_pt, tol, &mut rec);
-    let long_frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
-    let e_long = {
-        let curve = body.curves3.insert(Curve3::Circle { frame: long_frame, radius: major + minor });
-        make_edge(body, curve, (0.0, TAU), v0, v0, tol, &mut rec)
-    };
-    let mer_frame = Frame3::from_x_z(Pnt3::new(major, 0.0, 0.0), Vec3::X, Vec3::Y).unwrap();
-    let e_mer = {
-        let curve = body.curves3.insert(Curve3::Circle { frame: mer_frame, radius: minor });
-        make_edge(body, curve, (0.0, TAU), v0, v0, tol, &mut rec)
-    };
-    let surface = body.surfaces.insert(Surface::Torus {
-        frame: Frame3::WORLD,
-        major_radius: major,
-        minor_radius: minor,
-    });
-    let face = attach_face(
-        body,
-        surface,
-        &[(e_long, true), (e_mer, true), (e_long, false), (e_mer, false)],
-        false,
-        tol,
-        &mut rec,
-    );
-    Ok(finish_solid(body, vec![face], &mut rec))
+
+    let mut positions = Vec::with_capacity(major_seg * minor_seg);
+    let mut verts = Vec::with_capacity(major_seg * minor_seg);
+    for i in 0..major_seg {
+        let u = TAU * i as f64 / major_seg as f64;
+        let cu = u.cos();
+        let su = u.sin();
+        for j in 0..minor_seg {
+            let v = TAU * j as f64 / minor_seg as f64;
+            let cv = v.cos();
+            let sv = v.sin();
+            let r = major + minor * cv;
+            let p = Pnt3::new(r * cu, r * su, minor * sv);
+            positions.push(p);
+            verts.push(make_vertex(body, p, tol, &mut rec));
+        }
+    }
+
+    let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
+    let mut faces = Vec::with_capacity(major_seg * minor_seg * 2);
+    for i in 0..major_seg {
+        for j in 0..minor_seg {
+            let a = i * minor_seg + j;
+            let b = ((i + 1) % major_seg) * minor_seg + j;
+            let c = ((i + 1) % major_seg) * minor_seg + ((j + 1) % minor_seg);
+            let d = i * minor_seg + ((j + 1) % minor_seg);
+            for tri in [[a, b, c], [a, c, d]] {
+                let mut members = Vec::with_capacity(3);
+                for (ia, ib) in [(tri[0], tri[1]), (tri[1], tri[2]), (tri[2], tri[0])] {
+                    let key = (ia.min(ib), ia.max(ib));
+                    let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
+                        let edge = body.edges.get(existing).unwrap();
+                        (existing, edge.v0 == verts[ia])
+                    } else {
+                        let eid = line_edge(
+                            body,
+                            positions[ia],
+                            positions[ib],
+                            verts[ia],
+                            verts[ib],
+                            tol,
+                            &mut rec,
+                        );
+                        edge_map.insert(key, eid);
+                        (eid, true)
+                    };
+                    members.push((eid, forward));
+                }
+                let pa = positions[tri[0]];
+                let pb = positions[tri[1]];
+                let pc = positions[tri[2]];
+                let mut normal = (pb - pa).cross(pc - pa).normalized().unwrap_or(Vec3::Z);
+                let u = TAU * (tri[0] / minor_seg) as f64 / major_seg as f64;
+                let center = Pnt3::new(major * u.cos(), major * u.sin(), 0.0);
+                if normal.dot(pa - center) < 0.0 {
+                    members.reverse();
+                    for m in &mut members {
+                        m.1 = !m.1;
+                    }
+                    normal = -normal;
+                }
+                let surface = body.surfaces.insert(plane_at(pa, normal));
+                faces.push(attach_face(body, surface, &members, false, tol, &mut rec));
+            }
+        }
+    }
+    Ok(finish_solid(body, faces, &mut rec))
+}
+
+
+
+/// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used when convex-hull boolean fails.
+pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]]) -> Result<SolidId, KernelError> {
+    if triangles.is_empty() {
+        return Err(KernelError::InvalidInput("triangle soup is empty".into()));
+    }
+    let mut rec = OpRecorder::new();
+    let tol = Tol::DEFAULT;
+    let quant = |v: f64| -> i64 { (v * 1e6).round() as i64 };
+    let mut key_to_idx: HashMap<(i64, i64, i64), usize> = HashMap::new();
+    let mut positions: Vec<Pnt3> = Vec::new();
+    let mut verts: Vec<VertexId> = Vec::new();
+    for tri in triangles {
+        for &p in tri {
+            let key = (quant(p.x), quant(p.y), quant(p.z));
+            if key_to_idx.contains_key(&key) {
+                continue;
+            }
+            key_to_idx.insert(key, positions.len());
+            positions.push(p);
+            verts.push(make_vertex(body, p, tol, &mut rec));
+        }
+    }
+    let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
+    let mut faces = Vec::with_capacity(triangles.len());
+    for tri in triangles {
+        let idxs = [
+            *key_to_idx.get(&(quant(tri[0].x), quant(tri[0].y), quant(tri[0].z))).unwrap(),
+            *key_to_idx.get(&(quant(tri[1].x), quant(tri[1].y), quant(tri[1].z))).unwrap(),
+            *key_to_idx.get(&(quant(tri[2].x), quant(tri[2].y), quant(tri[2].z))).unwrap(),
+        ];
+        let mut members = Vec::with_capacity(3);
+        for (ia, ib) in [(idxs[0], idxs[1]), (idxs[1], idxs[2]), (idxs[2], idxs[0])] {
+            let key = (ia.min(ib), ia.max(ib));
+            let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
+                let edge = body.edges.get(existing).unwrap();
+                (existing, edge.v0 == verts[ia])
+            } else {
+                let eid = line_edge(body, positions[ia], positions[ib], verts[ia], verts[ib], tol, &mut rec);
+                edge_map.insert(key, eid);
+                (eid, true)
+            };
+            members.push((eid, forward));
+        }
+        let normal = (tri[1] - tri[0]).cross(tri[2] - tri[0]).normalized().unwrap_or(Vec3::Z);
+        let surface = body.surfaces.insert(plane_at(tri[0], normal));
+        faces.push(attach_face(body, surface, &members, false, tol, &mut rec));
+    }
+    Ok(finish_solid(body, faces, &mut rec))
 }
 
 /// 🧱 Convex hull of a point cloud as a closed solid of planar triangles (Quickhull).
@@ -702,10 +793,10 @@ mod tests {
         let mut body = Body::new();
         let solid = make_torus(&mut body, 3.0, 1.0, 8).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
-        assert_eq!(f, 1);
-        assert_eq!(v, 1);
-        assert_eq!(e, 2);
-        assert_eq!(v as i64 - e as i64 + f as i64, 0, "torus χ must be 0");
+        // Polyhedral torus grid: genus-1 ⇒ Euler characteristic 0, with many quad faces.
+        assert!(f > 1, "polyhedral torus should expose multiple faces, got {f}");
+        assert!(v > 1 && e > 2, "polyhedral torus counts v={v} e={e}");
+        assert_eq!(v as i64 - e as i64 + f as i64, 0, "torus χ must be 0 (got V={v} E={e} F={f})");
         assert_rings_ok(&body);
         assert!(make_torus(&mut body, 1.0, 1.0, 8).is_err());
     }

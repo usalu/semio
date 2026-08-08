@@ -33,9 +33,11 @@ thiserror.workspace = true
 base64 = "0.22.1"
 png = "0.17.16"
 
-[dev-dependencies]
-# 🧪️ Test-only: `⚙️engine/🧵️media/🦀️component.rs`'s `export_concrete_forest_mesh_tests` builds a real CAD solid from a
-# fixture model to derive a lowpoly mesh export — see that module's doc comment. Carried forward from the
-# old `⚙️engine` crate's `[dev-dependencies]` verbatim (already repointed by a prior batch-1 agent from the
-# deleted `semio-s-app-cad-engine` to this crate).
-cad_plugin = { path = "../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
+[features]
+# 🧪️ Optional: CAD fixture round-trip tests in `⚙️engine/🧵️media` (Wave 4 must keep CAD compilable).
+cad-fixtures = ["dep:cad_plugin"]
+
+[dependencies.cad_plugin]
+path = "../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust"
+package = "semio-s-plugin-cad"
+optional = true

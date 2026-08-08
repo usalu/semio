@@ -2,8 +2,8 @@
 //! representations, arrangement, spacing, active utility. All config-only.
 
 pub mod set_active_representation {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -15,14 +15,14 @@ pub mod set_active_representation {
         pub representation_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetActiveRepresentation, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Block3dConfigOperation::SetActiveRepresentation { representation_id: payload.representation_id.clone() }]))
+    pub fn handle(payload: &SetActiveRepresentation, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Block3dConfigMutation::SetActiveRepresentation { representation_id: payload.representation_id.clone() }]))
     }
 }
 
 pub mod set_window_representations {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -34,14 +34,14 @@ pub mod set_window_representations {
         pub representation_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetWindowRepresentations, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Block3dConfigOperation::SetWindowRepresentations { window_id: payload.window_id.clone(), representation_ids: payload.representation_ids.clone() }]))
+    pub fn handle(payload: &SetWindowRepresentations, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Block3dConfigMutation::SetWindowRepresentations { window_id: payload.window_id.clone(), representation_ids: payload.representation_ids.clone() }]))
     }
 }
 
 pub mod toggle_window_representation {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -54,14 +54,14 @@ pub mod toggle_window_representation {
         pub visible: bool,
     }
 
-    pub fn handle(payload: &ToggleWindowRepresentation, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Block3dConfigOperation::ToggleWindowRepresentation { window_id: payload.window_id.clone(), representation_id: payload.representation_id.clone(), visible: payload.visible }]))
+    pub fn handle(payload: &ToggleWindowRepresentation, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Block3dConfigMutation::ToggleWindowRepresentation { window_id: payload.window_id.clone(), representation_id: payload.representation_id.clone(), visible: payload.visible }]))
     }
 }
 
 pub mod set_window_arrangement {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -73,14 +73,14 @@ pub mod set_window_arrangement {
         pub arrangement: String,
     }
 
-    pub fn handle(payload: &SetWindowArrangement, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Block3dConfigOperation::SetWindowArrangement { window_id: payload.window_id.clone(), arrangement: payload.arrangement.clone() }]))
+    pub fn handle(payload: &SetWindowArrangement, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Block3dConfigMutation::SetWindowArrangement { window_id: payload.window_id.clone(), arrangement: payload.arrangement.clone() }]))
     }
 }
 
 pub mod set_window_spacing {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -92,14 +92,14 @@ pub mod set_window_spacing {
         pub spacing: f64,
     }
 
-    pub fn handle(payload: &SetWindowSpacing, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Block3dConfigOperation::SetWindowSpacing { window_id: payload.window_id.clone(), spacing: payload.spacing }]))
+    pub fn handle(payload: &SetWindowSpacing, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Block3dConfigMutation::SetWindowSpacing { window_id: payload.window_id.clone(), spacing: payload.spacing }]))
     }
 }
 
 pub mod set_active_utility {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -111,7 +111,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Block3dConfigOperation::SetActiveUtility { window_id: payload.window_id.clone(), utility_id: payload.utility_id.clone() }]))
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Block3dConfigMutation::SetActiveUtility { window_id: payload.window_id.clone(), utility_id: payload.utility_id.clone() }]))
     }
 }

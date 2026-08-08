@@ -17,7 +17,7 @@ use serde_json::Value;
 //#region 🔖️Register
 /// 🗂️ Host registration for this artifact — the pack<->dsl document codec (keyed by the real
 /// `document_schema()` string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse remodel
-/// documents without reaching for concrete `Projection`/`Operation` types), every mesh exporter, the
+/// documents without reaching for concrete `Projection`/`Mutation` types), every mesh exporter, the
 /// DWG mesh handler and the PNG raster export. Moved verbatim out of the old bundle crate's
 /// `register_remodel_exports`; `semio_plugin!`'s `setup:` now points here.
 pub fn register() {
@@ -95,10 +95,8 @@ pub fn register_pilot_languages() {
 /// global monotonic counter, not VCS-tracked config state: uniqueness is all id generation needs, and
 /// the generated id itself becomes real, undoable document content the moment an operation stores it).
 pub fn next_remodel_id(prefix: &str) -> String {
-    let next = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
+    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{prefix}-{next}")
 }
 //#endregion 🔖️Ids
@@ -608,3 +606,41 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent remodel artifact engine — owns the projection; every transition is a mutation.
+pub struct RemodelEngine {
+    projection: crate::artifacts::remodel::RemodelProjection,
+}
+
+impl RemodelEngine {
+    pub fn new(projection: crate::artifacts::remodel::RemodelProjection) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::remodel::RemodelProjection {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for RemodelEngine {
+    type Projection = crate::artifacts::remodel::RemodelProjection;
+    type Mutation = crate::artifacts::remodel::mutations::RemodelMutation;
+    type Diff = crate::artifacts::remodel::diff::RemodelDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::remodel::mutations::apply_remodel_mutation_in_place(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

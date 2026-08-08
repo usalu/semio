@@ -1,0 +1,4 @@
+//! ℹ️ Program mutation — `Information` leaf.
+//#region 🔖️Mutation
+// Apply/inverse for `Information` is dispatched from the root `ProgramMutation` component.
+//#endregion 🔖️Mutation

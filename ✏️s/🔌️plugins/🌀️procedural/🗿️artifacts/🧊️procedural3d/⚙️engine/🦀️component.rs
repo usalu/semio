@@ -217,7 +217,7 @@ pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalS
 
 /// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
 /// that baseline.
-pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::artifacts::procedural3d::op::Procedural3dOperation> {
+pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::artifacts::procedural3d::op::Procedural3dMutation> {
     let baseline = host_from_fixture(before).fixture;
     crate::artifacts::procedural3d::op::procedural3d_fixture_operations(&baseline, target)
 }
@@ -364,12 +364,19 @@ pub fn preview_status_json(eval_json: &str, fixture: &FlowFixture) -> Option<Str
 fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<semio_framework_plugin::MeshData> {
     if let Some(session) = session {
         if let Some(json) = session.preview_mesh_json(handle) {
-            if let Ok(data) = serde_json::from_str::<semio_framework_plugin::MeshData>(json) {
-                return Some(data);
+            if let Ok(value) = serde_json::from_str::<Value>(json) {
+                if value.get("error").is_none() {
+                    if let Ok(data) = serde_json::from_value::<semio_framework_plugin::MeshData>(value) {
+                        if mesh_has_preview_geometry(&data) {
+                            return Some(data);
+                        }
+                    }
+                }
             }
         }
     }
-    tessellate_geometry(handle, tolerance).ok()
+    let data = tessellate_geometry(handle, tolerance).ok()?;
+    mesh_has_preview_geometry(&data).then_some(data)
 }
 
 /// 🧊 Geometry handles on preview widgets that still need an extension tessellate.
@@ -386,7 +393,15 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &FlowFixture
         }
         let id = widget_id(widget).to_string();
         for handle in geometry_handles_for_widget(&eval, &id) {
-            if session.preview_mesh_json(&handle).is_none() {
+            let ready = session.preview_mesh_json(&handle).and_then(|json| {
+                let value = serde_json::from_str::<Value>(json).ok()?;
+                if value.get("error").is_some() {
+                    return None;
+                }
+                let data = serde_json::from_value::<semio_framework_plugin::MeshData>(value).ok()?;
+                mesh_has_preview_geometry(&data).then_some(())
+            });
+            if ready.is_none() {
                 handles.push(handle);
             }
         }
@@ -885,3 +900,36 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("procedural3d.spr"),
     });
 }
+
+
+//#region 🔖️ArtifactEngine
+pub struct Procedural3dEngine {
+    projection: crate::artifacts::procedural3d::Procedural3dDocument,
+}
+
+impl Procedural3dEngine {
+    pub fn new(projection: crate::artifacts::procedural3d::Procedural3dDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Procedural3dEngine {
+    type Projection = crate::artifacts::procedural3d::Procedural3dDocument;
+    type Mutation = crate::artifacts::procedural3d::mutations::Procedural3dMutation;
+    type Diff = crate::artifacts::procedural3d::diff::Procedural3dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::procedural3d::mutations::apply_procedural3d_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

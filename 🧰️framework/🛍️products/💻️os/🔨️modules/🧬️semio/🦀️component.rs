@@ -81,7 +81,7 @@ impl SemioEnvelope {
     /// @emoji 📜️ Full preamble line for text encodings, e.g. `semio gis.gismap.dsl v1`.
     pub fn preamble_line(&self) -> String {
         format!(
-            "semio {}.{} {} v{}",
+            "semio {}.{}.{} v{}",
             self.plugin,
             self.artifact,
             self.component.as_str(),

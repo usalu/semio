@@ -1,0 +1,74 @@
+{
+  "solid": {
+    "trigger": "",
+    "meshCount": 0,
+    "keys": []
+  },
+  "ticks": [
+    {
+      "trigger": "Rectangle Wire Preview",
+      "keys": [
+        "height",
+        "rect",
+        "width"
+      ],
+      "allOk": true,
+      "meshCount": 1,
+      "meshEdges": [
+        24
+      ],
+      "effects": null,
+      "statusJsonLen": 73
+    }
+  ],
+  "logs": [
+    "[DEBUG] plugin source \"extensions\" malformed event: event.plugins is not iterable",
+    "[DEBUG] program flow-extension-text worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-text/semio_s_plugin_flow_extension_text.js?v=1786130074701",
+    "[DEBUG] program flow-extension-list worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-list/semio_s_plugin_flow_extension_list.js?v=1786130067496",
+    "[DEBUG] program flow-extension-math worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-math/semio_s_plugin_flow_extension_math.js?v=1786130071254",
+    "[DEBUG] program flow-extension-primitive worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-primitive/semio_s_plugin_flow_extension_primitive.js?v=1786130072985",
+    "[DEBUG] program flow-extension-dictionary worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary.js?v=1786130062775",
+    "[DEBUG] program flow-extension-draw worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-draw/semio_s_plugin_flow_extension_draw.js?v=1786130065776",
+    "[DEBUG] program flow-extension-logic worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-logic/semio_s_plugin_flow_extension_logic.js?v=1786130069202",
+    "[DEBUG] program flow-extension-brep worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-brep/semio_s_plugin_flow_extension_brep.js?v=1786130058555",
+    "[DEBUG] program flow-extension-bim worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-bim/semio_s_plugin_flow_extension_bim.js?v=1786130056632",
+    "[DEBUG] program load failed flow-extension-text TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-text/semio_s_plugin_flow_extension_text.js?import&v=1786130074701",
+    "[DEBUG] program load failed flow-extension-math TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-math/semio_s_plugin_flow_extension_math.js?import&v=1786130071254",
+    "[DEBUG] program load failed flow-extension-list TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-list/semio_s_plugin_flow_extension_list.js?import&v=1786130067496",
+    "[DEBUG] program load failed flow-extension-primitive TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-primitive/semio_s_plugin_flow_extension_primitive.js?import&v=1786130072985",
+    "[DEBUG] program load failed flow-extension-dictionary TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary.js?import&v=1786130062775",
+    "[DEBUG] program load failed flow-extension-draw TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-draw/semio_s_plugin_flow_extension_draw.js?import&v=1786130065776",
+    "[DEBUG] program load failed flow-extension-logic TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-logic/semio_s_plugin_flow_extension_logic.js?import&v=1786130069202",
+    "[DEBUG] program load failed flow-extension-brep TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-brep/semio_s_plugin_flow_extension_brep.js?import&v=1786130058555",
+    "[DEBUG] program load failed flow-extension-bim TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-bim/semio_s_plugin_flow_extension_bim.js?import&v=1786130056632",
+    "[DEBUG] plugin worker + procedural (10 live)",
+    "[DEBUG] setAppRegistrations push skipped action 'setAppRegistrations' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] plugin source \"extensions\" malformed event: event.plugins is not iterable",
+    "[DEBUG] program flow-extension-logic worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-logic/semio_s_plugin_flow_extension_logic.js?v=1786130069202",
+    "[DEBUG] program flow-extension-text worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-text/semio_s_plugin_flow_extension_text.js?v=1786130074701",
+    "[DEBUG] program flow-extension-draw worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-draw/semio_s_plugin_flow_extension_draw.js?v=1786130065776",
+    "[DEBUG] program flow-extension-brep worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-brep/semio_s_plugin_flow_extension_brep.js?v=1786130058555",
+    "[DEBUG] program flow-extension-list worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-list/semio_s_plugin_flow_extension_list.js?v=1786130067496",
+    "[DEBUG] program flow-extension-math worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-math/semio_s_plugin_flow_extension_math.js?v=1786130071254",
+    "[DEBUG] program flow-extension-primitive worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-primitive/semio_s_plugin_flow_extension_primitive.js?v=1786130072985",
+    "[DEBUG] program flow-extension-bim worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-bim/semio_s_plugin_flow_extension_bim.js?v=1786130056632",
+    "[DEBUG] program flow-extension-dictionary worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary.js?v=1786130062775",
+    "[DEBUG] program load failed flow-extension-logic TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-logic/semio_s_plugin_flow_extension_logic.js?import&v=1786130069202",
+    "[DEBUG] program load failed flow-extension-text TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-text/semio_s_plugin_flow_extension_text.js?import&v=1786130074701",
+    "[DEBUG] program load failed flow-extension-draw TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-draw/semio_s_plugin_flow_extension_draw.js?import&v=1786130065776",
+    "[DEBUG] program load failed flow-extension-brep TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-brep/semio_s_plugin_flow_extension_brep.js?import&v=1786130058555",
+    "[DEBUG] program load failed flow-extension-list TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-list/semio_s_plugin_flow_extension_list.js?import&v=1786130067496",
+    "[DEBUG] program load failed flow-extension-math TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-math/semio_s_plugin_flow_extension_math.js?import&v=1786130071254",
+    "[DEBUG] program load failed flow-extension-primitive TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-primitive/semio_s_plugin_flow_extension_primitive.js?import&v=1786130072985",
+    "[DEBUG] program load failed flow-extension-bim TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-bim/semio_s_plugin_flow_extension_bim.js?import&v=1786130056632",
+    "[DEBUG] program load failed flow-extension-dictionary TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6018/extensions/flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary.js?import&v=1786130062775",
+    "[DEBUG] plugin worker + procedural (10 live)",
+    "[DEBUG] setAppRegistrations push skipped action 'setAppRegistrations' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name"
+  ]
+}

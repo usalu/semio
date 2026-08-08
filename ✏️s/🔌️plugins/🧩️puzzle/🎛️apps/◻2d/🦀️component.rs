@@ -12,7 +12,7 @@
 //! the new one.
 
 use crate::apps::puzzle2d::commands::{board, brush, camera, engagement, example, grid, locale, lod, node, selection as selection_commands, utility};
-use crate::apps::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigOperation, Puzzle2dPlayRuntime};
+use crate::apps::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::apps::puzzle2d::modes::edit;
 use crate::apps::puzzle2d::modes::edit::tools::fill;
 use crate::apps::puzzle2d::modes::edit::windows::overview::utilities::{brush as brush_utility, select as select_utility};
@@ -22,11 +22,11 @@ use crate::apps::puzzle2d::terminology::{is_de_locale, puzzle2d_labels, Puzzle2d
 use crate::artifacts::puzzle2d::dsl as puzzle2d_dsl;
 use crate::artifacts::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::artifacts::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
-use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dOperation, Puzzle2dPlayProjection};
+use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlayProjection};
 use crate::artifacts::puzzle2d::Puzzle2dProjection;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
 };
@@ -616,7 +616,7 @@ pub fn puzzle2d_select_scope() -> UiDirtyScope {
 
 //#region 🔖️Puzzle2dCommand
 /// @emoji 🎯️ B1: `Puzzle2dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
-/// action (mirrors every `.operation(...)`/`.view_action(...)`/`.action_with(...)` id
+/// action (mirrors every `.mutation(...)`/`.view_action(...)`/`.action_with(...)` id
 /// `create_puzzle2d_app` registers below, plus the framework-injected `setActiveUtility` and the
 /// `setLocale`/`setTerminology` B1 additions). Each variant carries `window_id` plus `args` (the
 /// action's original `{...}` JSON payload, unchanged) — `handle` reconstructs the exact
@@ -836,6 +836,20 @@ impl Puzzle2dPlayApp {
 }
 
 impl DocumentApp for Puzzle2dPlayApp {
+    const APP_ID: &'static str = PUZZLE2D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
+    type Projection = Puzzle2dPlayProjection;
+    type Mutation = Puzzle2dMutation;
+    type Config = Puzzle2dConfig;
+    type ConfigMutation = Puzzle2dConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Command = Puzzle2dCommand;
+
+    fn initial_projection() -> Puzzle2dPlayProjection {
+        Puzzle2dPlayProjection(serde_json::to_value(crate::artifacts::puzzle2d::empty_fixture()).unwrap_or(serde_json::Value::Null))
+    }
+
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
     fn command_id(command: &Puzzle2dCommand) -> &'static str {
         command.action_id()
@@ -844,7 +858,7 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
     /// the host's own events and turn the mutated scene into the granular operation delta plus a
     /// config snapshot. No behaviour lives in this match.
-    fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
         let config = cfg.projection;
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
         let before = doc.projection.0.clone();
@@ -919,12 +933,12 @@ impl DocumentApp for Puzzle2dPlayApp {
         if !operations.is_empty() && matches!(ui_scope, UiDirtyScope::None) {
             ui_scope = UiDirtyScope::Full;
         }
-        // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigOperation` — `PartialEq` (derived)
+        // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigMutation` — `PartialEq` (derived)
         // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
-        let config_operations = if &scene.runtime != config { vec![Puzzle2dConfigOperation::Snapshot { config: scene.runtime }] } else { Vec::new() };
+        let config_mutations = if &scene.runtime != config { vec![Puzzle2dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
         // 🎥️ No action coalesces anymore: `setCamera` used to be the sole `coalesce_key` writer, but it
         // is now a View-kind action that never touches the document.
-        Ok(Emit { document_operations: operations, config_operations, coalesce_key: None, effects, ui_scope, ..Default::default() })
+        Ok(Emit { document_mutations: operations, config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() })
     }
 
     /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
@@ -961,7 +975,7 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// vocabulary — meshes, 3D vortex positions, cable/attraction kinds), unlike puzzle3d's `kit:in`,
     /// which DOES share block3d's object-kind vocabulary. There is no honest mapping to fabricate, so
     /// this always reports `NotImplemented` — no normalization is attempted.
-    fn import_media(_port: &str, _media: &Media, _doc: &DocumentView<'_, Puzzle2dPlayProjection>) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(_port: &str, _media: &Media, _doc: &DocumentView<'_, Puzzle2dPlayProjection>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
 
@@ -1032,7 +1046,6 @@ impl DocumentApp for Puzzle2dPlayApp {
     }
 
     fn context_menu(
-        &self,
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &DocumentView<'_, Puzzle2dPlayProjection>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
@@ -1087,27 +1100,27 @@ pub fn create_puzzle2d_app() -> App {
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
             // ✏️ Palette-visible content operations.
-            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🗂️ Referenced by `puzzle2d_context_menu_items` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .keybinding("delete,backspace", "deleteSelection")
-            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Operation).with_category("create"))
-            .operation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
-            .action_with(ActionDefinition::new_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Operation).with_category("view"))
+            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create"))
+            .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
+            .action_with(ActionDefinition::new_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view"))
             // 👁️ Palette-visible ephemeral view/selection commands.
             .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
             .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
             .action_with(ActionDefinition::new_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
             // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
-            .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Operation).with_category("settings"))
-            .action_with(puzzle2d_internal_action("patchInspectorNodes", LocalizedLabel::native("Patch Inspector Nodes", "Inspektorknoten aktualisieren"), ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("redrawHandles", LocalizedLabel::native("Redraw Handles", "Anschlüsse neu zeichnen"), ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"), ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("brushFillSessionStep", LocalizedLabel::native("Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"), ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("brushCommitSlot", LocalizedLabel::native("Brush Commit Slot", "Pinsel-Platz übernehmen"), ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
+            .action_with(puzzle2d_internal_action("patchInspectorNodes", LocalizedLabel::native("Patch Inspector Nodes", "Inspektorknoten aktualisieren"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("redrawHandles", LocalizedLabel::native("Redraw Handles", "Anschlüsse neu zeichnen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("brushFillSessionStep", LocalizedLabel::native("Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("brushCommitSlot", LocalizedLabel::native("Brush Commit Slot", "Pinsel-Platz übernehmen"), ActionKind::Mutation))
             // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
             // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
             .action_with(puzzle2d_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
@@ -1171,7 +1184,7 @@ fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Re
 
 /// 🗂️ Registers `Puzzle2dPlayProjection`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-2d play documents without
-/// depending on this crate's concrete `Projection`/`Operation` types, plus the 2d export/import
+/// depending on this crate's concrete `Projection`/`Mutation` types, plus the 2d export/import
 /// handlers. Called by the plugin `setup:` hook (`crate::artifacts::puzzle2d::engine::register`).
 pub fn register_puzzle2d_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle2dPlayApp>(PUZZLE2D_FIXTURE_SCHEMA);
@@ -1278,7 +1291,7 @@ mod tests {
     fn add_node_action_emits_upsert_op_and_appends_node() {
         let mut app = app();
         let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
-        assert_eq!(result.operations.len(), 1, "addNode must emit exactly one granular operation");
+        assert_eq!(result.mutations.len(), 1, "addNode must emit exactly one granular operation");
         assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 1);
     }
 
@@ -1324,8 +1337,8 @@ mod tests {
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`). Deliberately
     /// dispatches through a standalone typed `Puzzle2dStore` — NOT through `Puzzle2dPlayApp`/
     /// `Puzzle2dPlayProjection` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app still uses)
-    /// — since `Puzzle2dOperation`'s canonical `Operation<Puzzle2dProjection>` impl (not its
-    /// `Operation<Value>` bridge impl) is what the CW7 law is about.
+    /// — since `Puzzle2dMutation`'s canonical `Mutation<Puzzle2dProjection>` impl (not its
+    /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
@@ -1335,9 +1348,9 @@ mod tests {
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dProjection::default(), None));
         let node = Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() };
-        store.dispatch(DocumentCommand::Apply { operations: vec![Puzzle2dOperation::SetNode { index: 0, node }], description: None }).expect("apply");
-        let edit: &Edit<Puzzle2dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<Puzzle2dProjection, Puzzle2dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
+        let edit: &Edit<Puzzle2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<Puzzle2dProjection, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 
@@ -1349,12 +1362,12 @@ mod tests {
         let mut app = app();
         for x in [1.0, 2.0, 3.0] {
             let result = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), None).expect("camera");
-            assert!(result.operations.is_empty(), "setCamera must never produce a document operation");
+            assert!(result.mutations.is_empty(), "setCamera must never produce a document operation");
         }
         let rendered = render_body(&mut app, overview::BODY_KEY);
         assert_eq!(rendered_camera(&rendered).0, 3.0, "the camera must update immediately in the rendered scene");
         let undo = dispatch(&mut app, "undo", None, None).expect("undo");
-        assert!(undo.operations.is_empty(), "there is no document edit to undo");
+        assert!(undo.mutations.is_empty(), "there is no document edit to undo");
         let rendered_after_undo = render_body(&mut app, overview::BODY_KEY);
         assert_eq!(rendered_camera(&rendered_after_undo).0, 3.0, "the camera is session state — undo must not revert it");
     }
@@ -1398,7 +1411,7 @@ mod tests {
     fn apply_board_events_camera_event_commits() {
         let mut app = app();
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), None).expect("camera event");
-        assert!(result.operations.is_empty(), "a camera board event must never produce a document operation");
+        assert!(result.mutations.is_empty(), "a camera board event must never produce a document operation");
         let (x, y, zoom) = rendered_camera(&render_body(&mut app, overview::BODY_KEY));
         assert_eq!(x, 5.0);
         assert_eq!(y, 6.0);
@@ -1413,7 +1426,7 @@ mod tests {
         let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
-        assert!(result.operations.is_empty(), "selection must not produce document operations");
+        assert!(result.mutations.is_empty(), "selection must not produce document operations");
     }
     //#endregion 🔖️BoardEvents
 
@@ -1572,7 +1585,7 @@ mod tests {
 
         let mut envelopes = Vec::new();
         for message in far.receive().expect("receive") {
-            if let BackboneMessage::Operations { envelopes: operations } = message {
+            if let BackboneMessage::Mutations { envelopes: operations } = message {
                 envelopes.extend(operations);
             }
         }
@@ -1594,7 +1607,7 @@ mod tests {
     fn utility_switch_emits_no_ops_and_no_history() {
         let mut app = app_with_registry();
         let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).expect("switch utility");
-        assert!(result.operations.is_empty(), "a utility switch must not produce document operations");
+        assert!(result.mutations.is_empty(), "a utility switch must not produce document operations");
         let can_undo = dispatch(&mut app, "undo", None, None);
         assert!(can_undo.map_or(true, |r| r.operations.is_empty()), "a utility switch must not have created a document undo step");
     }
@@ -1631,7 +1644,7 @@ mod tests {
         for (action, args) in view_dispatches {
             let args_ref = (!args.is_null()).then_some(&args);
             let result = dispatch(&mut app, action, args_ref, None).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error:?}"));
-            assert!(result.operations.is_empty(), "view action '{action}' must not emit document operations");
+            assert!(result.mutations.is_empty(), "view action '{action}' must not emit document operations");
         }
     }
 

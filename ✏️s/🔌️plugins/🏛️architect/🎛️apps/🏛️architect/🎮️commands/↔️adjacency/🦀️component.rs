@@ -3,8 +3,8 @@
 
 pub mod set_adjacency_field {
     use crate::apps::architect::catalog::patch_register_item_operation;
-    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigOperation};
-    use crate::artifacts::program::op::ProgramOperation;
+    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, Program};
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -18,14 +18,14 @@ pub mod set_adjacency_field {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &SetAdjacencyField, _doc: &DocumentView<'_, Program>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    pub fn handle(payload: &SetAdjacencyField, _doc: &DocumentView<'_, Program>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(value) = serde_json::from_str::<Value>(&payload.value_json) else {
             return Ok(Emit::default());
         };
         let mut patch = serde_json::Map::new();
         patch.insert(payload.field.clone(), value);
         match patch_register_item_operation("adjacencies", EntityId(payload.entity_id.clone()), Value::Object(patch)) {
-            Some(operation) => Ok(Emit::operations(vec![operation])),
+            Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }
     }
@@ -33,8 +33,8 @@ pub mod set_adjacency_field {
 
 pub mod set_adjacency_kind {
     use crate::apps::architect::catalog::{adjacency_kind_from_id, find_adjacency, new_adjacency, next_adjacency_kind};
-    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigOperation};
-    use crate::artifacts::program::op::ProgramOperation;
+    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, Program};
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -48,7 +48,7 @@ pub mod set_adjacency_kind {
         pub cycle: bool,
     }
 
-    pub fn handle(payload: &SetAdjacencyKind, doc: &DocumentView<'_, Program>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    pub fn handle(payload: &SetAdjacencyKind, doc: &DocumentView<'_, Program>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.projection;
         let a = EntityId(payload.element_a_id.clone());
         let b = EntityId(payload.element_b_id.clone());
@@ -64,11 +64,11 @@ pub mod set_adjacency_kind {
                 } else {
                     new_adjacency(program, &a, &b, kind)
                 };
-                Ok(Emit::operations(vec![ProgramOperation::SetAdjacency { adjacency }]))
+                Ok(Emit::mutations(vec![ProgramMutation::SetAdjacency { adjacency }]))
             }
             None => {
                 if let Some(row) = existing {
-                    Ok(Emit::operations(vec![ProgramOperation::ClearAdjacency { id: row.header.id.clone() }]))
+                    Ok(Emit::mutations(vec![ProgramMutation::ClearAdjacency { id: row.header.id.clone() }]))
                 } else {
                     Ok(Emit::default())
                 }
@@ -79,8 +79,8 @@ pub mod set_adjacency_kind {
 
 pub mod set_adjacency_filter {
     use crate::apps::architect::catalog::adjacency_kind_from_id;
-    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigOperation};
-    use crate::artifacts::program::op::ProgramOperation;
+    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::Program;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -91,7 +91,7 @@ pub mod set_adjacency_filter {
         pub kind: Option<String>,
     }
 
-    pub fn handle(payload: &SetAdjacencyFilter, _doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    pub fn handle(payload: &SetAdjacencyFilter, _doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let mut next = cfg.projection.clone();
         next.adjacency_kind_filter = payload.kind.as_deref().and_then(adjacency_kind_from_id);
         Ok(Emit::config(snapshot(next)))

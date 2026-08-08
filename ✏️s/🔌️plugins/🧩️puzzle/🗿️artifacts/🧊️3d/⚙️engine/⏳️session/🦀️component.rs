@@ -622,7 +622,7 @@ impl Puzzle3dCollision {
 /// the old per-action JSON-string wasm-bindgen methods. Derived (not hand-written `OpText`/`OpBinary`)
 /// here — not in `📡️spr` — because the derive's generated code needs `SceneConfig`/`BrushPlacePayload`
 /// in scope by value; `📡️spr` re-exports this type and wraps `encode_op`/`decode_op`, exactly like it
-/// already does for `🔧️op`'s `Puzzle3dOperation`. Field shapes mirror the exact payload each old
+/// already does for `🔧️op`'s `Puzzle3dMutation`. Field shapes mirror the exact payload each old
 /// JSON-string method parsed: `SetScene` mirrors `set_scene`'s `SceneConfig` JSON body,
 /// `ApplyBrushPlacement` mirrors `apply_brush_placement_json`'s `BrushPlacePayload` body,
 /// `UpdateKindWeights` mirrors `update_kind_weights`'s two JSON map bodies.
@@ -657,7 +657,7 @@ impl protocol::OpText for Puzzle3dEngineCommand {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);

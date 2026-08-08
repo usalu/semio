@@ -1,8 +1,8 @@
 //! 👁️ GIS 3D play app command — the free/live viewport camera. Config-only: it emits
-//! `config_operations`, never document operations.
+//! `config_mutations`, never document operations.
 
-use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigOperation};
-use crate::artifacts::gisterrain::op::Gis3dTerrainOperation;
+use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
+use crate::artifacts::gisterrain::op::Gis3dTerrainMutation;
 use crate::artifacts::gisterrain::Gis3dTerrainDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_camera {
         pub camera_json: String,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Gis3dConfigOperation::SetCamera { camera_json: payload.camera_json.clone() }]))
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainMutation, Gis3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Gis3dConfigMutation::SetCamera { camera_json: payload.camera_json.clone() }]))
     }
 }
 //#endregion 🔖️SetCamera

@@ -12,19 +12,19 @@
 //! artifact `⚙️engine`.
 
 use crate::apps::forms::commands::{contribution, export, import, locale, option, question, selection, step, try_wizard, vector};
-use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::modes::blueprint;
 use crate::apps::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
 use crate::apps::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::forms::terminology::{forms_play_labels, FormsLabels};
 use crate::artifacts::forms::engine::{default_example_json, forms_io, onboarding_example_json};
-use crate::artifacts::forms::op::FormOperation;
+use crate::artifacts::forms::op::FormMutation;
 // 🧷️ Aliased: `app_commands!` below derives `dsl::DslOps` off the EXTERN `dsl` crate — importing the
 // artifact's own `dsl` submodule under the bare name would shadow it (see the identical note in the
 // artifact's `⚙️engine/🦀️component.rs`).
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{FormQuestion, FormSpec, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Contribution, DocumentApp, DocumentView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
 };
@@ -67,8 +67,8 @@ pub fn effective_try_values(spec: &FormSpec, config: &FormsConfig) -> Map<String
 /// 🌱️ Building block for every `handle()` arm that must both clear the Try wizard's answers and reset its
 /// active step — was `reset_try_runtime`'s effect on the old `FormsPlayRuntime`, now two config operations
 /// instead of two field writes.
-pub fn reset_try_config_operations() -> Vec<FormsConfigOperation> {
-    vec![FormsConfigOperation::SetTryValues { json: "{}".into() }, FormsConfigOperation::SetStepIndex { index: 0 }]
+pub fn reset_try_config_mutations() -> Vec<FormsConfigMutation> {
+    vec![FormsConfigMutation::SetTryValues { json: "{}".into() }, FormsConfigMutation::SetStepIndex { index: 0 }]
 }
 
 /// 🔠️ Parses a command's JSON-blob payload field (`value_json`/`values_json`/…), falling back to
@@ -80,11 +80,13 @@ pub fn parse_value_json(value_json: &str) -> Value {
 //#endregion 🔖️Values
 
 //#region 🔖️Contributions
-pub use semio_framework::{parse_contributions, ProgramContributionEntry};
+pub use semio_framework::ProgramContributionEntry;
 
-pub fn parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
+pub fn forms_parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
     semio_framework::parse_contributions(&config.contributions_json)
 }
+
+pub use forms_parse_contributions as parse_contributions;
 
 fn question_kind_match<'a>(contribution: &'a Contribution, kind: &str) -> Option<(&'a str, &'a str, &'a str)> {
     match contribution {
@@ -185,7 +187,7 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the codec uses) — they are genuinely different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
-    pub enum FormsCommand for FormSpec, FormOperation, FormsConfig, FormsConfigOperation {
+    pub enum FormsCommand for FormSpec, FormMutation, FormsConfig, FormsConfigMutation {
         "setSelection" as "selection" => set_selection::SetSelection,
         "setTryValue" as "try-value" => set_try_value::SetTryValue,
         "setTryValues" as "try-values" => set_try_values::SetTryValues,
@@ -238,17 +240,17 @@ use vector::{add_vector_field, patch_vector_field, remove_vector_field};
 
 //#region 🔖️FormsPlayApp
 /// 🧪️ B1: unit struct — every former `FormsPlayRuntime` field now lives in `FormsConfig`, written through
-/// `FormsConfigOperation`s.
+/// `FormsConfigMutation`s.
 #[derive(Default)]
 pub struct FormsPlayApp;
 
 impl DocumentApp for FormsPlayApp {
     type Projection = FormSpec;
-    type Operation = FormOperation;
+    type Mutation = FormMutation;
     type Config = FormsConfig;
-    type ConfigOperation = FormsConfigOperation;
+    type ConfigMutation = FormsConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = FormsCommand;
 
@@ -270,7 +272,7 @@ impl DocumentApp for FormsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FormsCommand, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormOperation, FormsConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &FormsCommand, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -342,26 +344,26 @@ pub fn create_forms_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
-            .operation("addQuestion", LocalizedLabel::native("Add Question", "Frage hinzufügen"))
-            .operation("removeQuestion", LocalizedLabel::native("Remove Question", "Frage entfernen"))
-            .operation("patchQuestions", LocalizedLabel::native("Patch Questions", "Fragen aktualisieren"))
-            .operation("patchQuestionOptions", LocalizedLabel::native("Patch Question Options", "Fragenoptionen aktualisieren"))
-            .operation("addQuestionOption", LocalizedLabel::native("Add Question Option", "Fragenoption hinzufügen"))
-            .operation("removeQuestionOption", LocalizedLabel::native("Remove Question Option", "Fragenoption entfernen"))
-            .operation("patchVectorField", LocalizedLabel::native("Patch Vector Field", "Vektorfeld aktualisieren"))
-            .operation("addVectorField", LocalizedLabel::native("Add Vector Field", "Vektorfeld hinzufügen"))
-            .operation("removeVectorField", LocalizedLabel::native("Remove Vector Field", "Vektorfeld entfernen"))
-            .operation("moveQuestion", LocalizedLabel::native("Move Question", "Frage verschieben"))
-            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
-            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
-            .operation("patchStep", LocalizedLabel::native("Patch Step", "Schritt aktualisieren"))
-            .operation("updateForm", LocalizedLabel::native("Update Form", "Formular aktualisieren"))
-            .operation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
-            .operation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .mutation("addQuestion", LocalizedLabel::native("Add Question", "Frage hinzufügen"))
+            .mutation("removeQuestion", LocalizedLabel::native("Remove Question", "Frage entfernen"))
+            .mutation("patchQuestions", LocalizedLabel::native("Patch Questions", "Fragen aktualisieren"))
+            .mutation("patchQuestionOptions", LocalizedLabel::native("Patch Question Options", "Fragenoptionen aktualisieren"))
+            .mutation("addQuestionOption", LocalizedLabel::native("Add Question Option", "Fragenoption hinzufügen"))
+            .mutation("removeQuestionOption", LocalizedLabel::native("Remove Question Option", "Fragenoption entfernen"))
+            .mutation("patchVectorField", LocalizedLabel::native("Patch Vector Field", "Vektorfeld aktualisieren"))
+            .mutation("addVectorField", LocalizedLabel::native("Add Vector Field", "Vektorfeld hinzufügen"))
+            .mutation("removeVectorField", LocalizedLabel::native("Remove Vector Field", "Vektorfeld entfernen"))
+            .mutation("moveQuestion", LocalizedLabel::native("Move Question", "Frage verschieben"))
+            .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .mutation("patchStep", LocalizedLabel::native("Patch Step", "Schritt aktualisieren"))
+            .mutation("updateForm", LocalizedLabel::native("Update Form", "Formular aktualisieren"))
+            .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
+            .mutation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
             .view_action("setTryValues", LocalizedLabel::native("Set Try Values", "Testwerte festlegen"))

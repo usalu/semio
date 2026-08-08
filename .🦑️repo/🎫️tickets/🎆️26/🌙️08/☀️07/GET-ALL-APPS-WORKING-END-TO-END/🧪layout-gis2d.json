@@ -1,0 +1,68 @@
+{
+  "label": "gis2d",
+  "url": "http://127.0.0.1:6016/",
+  "dump": {
+    "title": "semio · gis · 2d",
+    "body": {
+      "scrollH": 900,
+      "clientH": 900,
+      "scrollW": 1440,
+      "clientW": 1440
+    },
+    "hasRenderError": false,
+    "bodySample": [
+      "Document",
+      "Catalogue",
+      "Inspection",
+      "Fullscreen",
+      "semio · gis · 2d",
+      "Example",
+      "Reuse Map",
+      "Map",
+      "Close",
+      "Window Options",
+      "Actions",
+      "Utilities",
+      "Display",
+      "Sync",
+      "Settings",
+      "Keybindings",
+      "Theme",
+      "Plugins",
+      "Extensions",
+      "History",
+      "Command",
+      "Search",
+      "Search for items",
+      "Find",
+      "Find items in this view"
+    ],
+    "layout": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "hidden",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "relative flex flex-col overflow-hidden ui-surface h-screen w-screen"
+    },
+    "scope": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "visible",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "semio-scope"
+    },
+    "host": {
+      "w": 1427,
+      "h": 807,
+      "overflow": "hidden",
+      "flex": "0 1 auto",
+      "height": "807.266px",
+      "className": "semio-tiled-map-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none"
+    }
+  },
+  "consoleErrors": [
+    "NoCompatibleDevice"
+  ]
+}

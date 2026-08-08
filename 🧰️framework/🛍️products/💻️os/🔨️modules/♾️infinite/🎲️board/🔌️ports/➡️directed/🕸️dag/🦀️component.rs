@@ -7261,7 +7261,7 @@ mod tests {
 // #endregion 🔖️Tests
 
 // #region 🔖️DocumentVcs
-use crate::os_spr::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, OpText, Operation, OperationDiff, Patchable};
+use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, OpText, Mutation, MutationDiff, Patchable};
 #[cfg(test)]
 use crate::os_spr::{DocumentId, Edit, SchemaId};
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -7358,7 +7358,7 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
     }
 
     /// 🧮️ `self`-relative-to-`other` diff (crate::os_spr::Patchable convention) — used by
-    /// `invert_collection_operation` as `after.diff_patch(&prior)` to recover the pre-patch state.
+    /// `inverse_collection_mutation` as `after.diff_patch(&prior)` to recover the pre-patch state.
     /// Always returns `Some` (even an all-`None` patch) per that function's no-op-patch guidance.
     fn diff_patch(&self, other: &Self) -> Option<DagNodePatch> {
         Some(DagNodePatch {
@@ -7431,18 +7431,18 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 }
 //#endregion 🔖️CollectionSupport
 
-/// 📦️ Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionOperation}
+/// 📦️ Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionMutation}
 /// for granular convergence; `SetNodes`/`SetEdges` are bulk writes (relayout/rename) and `SetDocument`
 /// replaces the whole projection (import/reset).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and s/plugin/dag/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
+    reason = "boxing `Nodes`'s CollectionMutation would require rewrapping every construction/match site across this crate and s/plugin/dag/rs (10+ call sites, out of this crate's scope); DagMutation values are short-lived per-dispatch operations, not stored in bulk"
 )]
-pub enum DagOperation {
-    Nodes(CollectionOperation<String, DagNodeSpec, DagNodePatch>),
-    Edges(CollectionOperation<String, DagFixtureEdge, DagEdgePatch>),
+pub enum DagMutation {
+    Nodes(CollectionMutation<String, DagNodeSpec, DagNodePatch>),
+    Edges(CollectionMutation<String, DagFixtureEdge, DagEdgePatch>),
     SetNodes { nodes: Vec<DagNodeSpec> },
     SetEdges { edges: Vec<DagFixtureEdge> },
     SetDocument { document: DagDocument },
@@ -7458,7 +7458,7 @@ pub struct DagDiff {
     pub set_edges: Option<Vec<DagFixtureEdge>>,
 }
 
-impl OperationDiff<DagDocument> for DagDiff {
+impl MutationDiff<DagDocument> for DagDiff {
     fn apply(&self, projection: &DagDocument) -> DagDocument {
         if let Some(document) = &self.document {
             return document.clone();
@@ -7495,32 +7495,32 @@ impl OperationDiff<DagDocument> for DagDiff {
     }
 }
 
-impl Operation<DagDocument> for DagOperation {
+impl Mutation<DagDocument> for DagMutation {
     type Diff = DagDiff;
 
     fn diff(&self, projection: &DagDocument) -> DagDiff {
         match self {
-            DagOperation::Nodes(operation) => DagDiff { nodes: Some(collection_diff_from_operation(&projection.nodes, operation)), ..Default::default() },
-            DagOperation::Edges(operation) => DagDiff { edges: Some(collection_diff_from_operation(&projection.edges, operation)), ..Default::default() },
-            DagOperation::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
-            DagOperation::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
-            DagOperation::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
+            DagMutation::Nodes(operation) => DagDiff { nodes: Some(collection_diff_from_mutation(&projection.nodes, operation)), ..Default::default() },
+            DagMutation::Edges(operation) => DagDiff { edges: Some(collection_diff_from_mutation(&projection.edges, operation)), ..Default::default() },
+            DagMutation::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
+            DagMutation::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
+            DagMutation::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
         }
     }
 
-    fn backwards(&self, projection: &DagDocument) -> Vec<Self> {
+    fn inverse(&self, projection: &DagDocument) -> Vec<Self> {
         match self {
-            DagOperation::Nodes(operation) => vec![DagOperation::Nodes(invert_collection_operation(&projection.nodes, operation))],
-            DagOperation::Edges(operation) => vec![DagOperation::Edges(invert_collection_operation(&projection.edges, operation))],
-            DagOperation::SetNodes { .. } => vec![DagOperation::SetNodes { nodes: projection.nodes.clone() }],
-            DagOperation::SetEdges { .. } => vec![DagOperation::SetEdges { edges: projection.edges.clone() }],
-            DagOperation::SetDocument { .. } => vec![DagOperation::SetDocument { document: projection.clone() }],
+            DagMutation::Nodes(operation) => vec![DagMutation::Nodes(inverse_collection_mutation(&projection.nodes, operation))],
+            DagMutation::Edges(operation) => vec![DagMutation::Edges(inverse_collection_mutation(&projection.edges, operation))],
+            DagMutation::SetNodes { .. } => vec![DagMutation::SetNodes { nodes: projection.nodes.clone() }],
+            DagMutation::SetEdges { .. } => vec![DagMutation::SetEdges { edges: projection.edges.clone() }],
+            DagMutation::SetDocument { .. } => vec![DagMutation::SetDocument { document: projection.clone() }],
         }
     }
 }
 
-pub type DagEnvelope = DocumentEnvelope<DagDocument, DagOperation>;
-pub type DagStore = DocumentStore<DagDocument, DagOperation>;
+pub type DagEnvelope = DocumentEnvelope<DagDocument, DagMutation>;
+pub type DagStore = DocumentStore<DagDocument, DagMutation>;
 
 //#region 🔖️Dsl
 // 🧬️ `.dag` document DSL via the `crate::os_dsl::` derive engine (see `🔖️DslMirror` below) — every persisted
@@ -7540,8 +7540,8 @@ pub type DagStore = DocumentStore<DagDocument, DagOperation>;
 // which needs a `Box` wrapper the REAL `DagNodeKind`/`DagNodeSpec` fields deliberately don't carry
 // (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
 // `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
-// outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeOperationDsl`
-// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagDocumentDsl`/`DagOperationDsl` are
+// outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeMutationDsl`
+// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagDocumentDsl`/`DagMutationDsl` are
 // LOCAL structural twins that box only where the derive requires it; the real domain types keep their
 // original unboxed shape and never leave this crate — conversion happens right at this boundary.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
@@ -7826,12 +7826,12 @@ impl crate::os_store::DocumentPack for DagDocument {
 //#region 🔖️OpText
 
 //#region 🔖️OpTextMirror
-/// 🧬️ Mirror of {@link DagOperation} — see `🔖️DslMirror`'s doc comment for why `DagNodeSpec`/
+/// 🧬️ Mirror of {@link DagMutation} — see `🔖️DslMirror`'s doc comment for why `DagNodeSpec`/
 /// `DagNodePatch` need their own Dsl twins here too. `DagFixtureEdge`/`DagEdgePatch` are used
 /// directly (no twin needed): neither has a boxed-tagged-enum field, so both already implement
 /// `dsl::DslField` from their own direct `#[derive(dsl::DslRecord)]` above.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
-enum DagOperationDsl {
+enum DagMutationDsl {
     NodesAdd {
         index: usize,
         item: DagNodeSpecDsl,
@@ -7876,44 +7876,44 @@ enum DagOperationDsl {
     },
 }
 
-fn dag_operation_to_dsl(operation: &DagOperation) -> DagOperationDsl {
+fn dag_mutation_to_dsl(operation: &DagMutation) -> DagMutationDsl {
     match operation {
-        DagOperation::Nodes(CollectionOperation::Add { index: at, item }) => DagOperationDsl::NodesAdd { index: *at, item: dag_node_spec_to_dsl(item) },
-        DagOperation::Nodes(CollectionOperation::Remove { id }) => DagOperationDsl::NodesRemove { id: id.clone() },
-        DagOperation::Nodes(CollectionOperation::Move { id, to_index: to }) => DagOperationDsl::NodesMove { id: id.clone(), to_index: *to },
-        DagOperation::Nodes(CollectionOperation::Patch { id, patch }) => DagOperationDsl::NodesPatch { id: id.clone(), patch: dag_node_patch_to_dsl(patch) },
-        DagOperation::Edges(CollectionOperation::Add { index: at, item }) => DagOperationDsl::EdgesAdd { index: *at, item: item.clone() },
-        DagOperation::Edges(CollectionOperation::Remove { id }) => DagOperationDsl::EdgesRemove { id: id.clone() },
-        DagOperation::Edges(CollectionOperation::Move { id, to_index: to }) => DagOperationDsl::EdgesMove { id: id.clone(), to_index: *to },
-        DagOperation::Edges(CollectionOperation::Patch { id, patch }) => DagOperationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
-        DagOperation::SetNodes { nodes } => DagOperationDsl::SetNodes { nodes: nodes.iter().map(dag_node_spec_to_dsl).collect() },
-        DagOperation::SetEdges { edges } => DagOperationDsl::SetEdges { edges: edges.clone() },
-        DagOperation::SetDocument { document } => DagOperationDsl::SetDocument { document: dag_document_to_dsl(document) },
+        DagMutation::Nodes(CollectionMutation::Add { index: at, item }) => DagMutationDsl::NodesAdd { index: *at, item: dag_node_spec_to_dsl(item) },
+        DagMutation::Nodes(CollectionMutation::Remove { id }) => DagMutationDsl::NodesRemove { id: id.clone() },
+        DagMutation::Nodes(CollectionMutation::Move { id, to_index: to }) => DagMutationDsl::NodesMove { id: id.clone(), to_index: *to },
+        DagMutation::Nodes(CollectionMutation::Patch { id, patch }) => DagMutationDsl::NodesPatch { id: id.clone(), patch: dag_node_patch_to_dsl(patch) },
+        DagMutation::Edges(CollectionMutation::Add { index: at, item }) => DagMutationDsl::EdgesAdd { index: *at, item: item.clone() },
+        DagMutation::Edges(CollectionMutation::Remove { id }) => DagMutationDsl::EdgesRemove { id: id.clone() },
+        DagMutation::Edges(CollectionMutation::Move { id, to_index: to }) => DagMutationDsl::EdgesMove { id: id.clone(), to_index: *to },
+        DagMutation::Edges(CollectionMutation::Patch { id, patch }) => DagMutationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
+        DagMutation::SetNodes { nodes } => DagMutationDsl::SetNodes { nodes: nodes.iter().map(dag_node_spec_to_dsl).collect() },
+        DagMutation::SetEdges { edges } => DagMutationDsl::SetEdges { edges: edges.clone() },
+        DagMutation::SetDocument { document } => DagMutationDsl::SetDocument { document: dag_document_to_dsl(document) },
     }
 }
 
-fn dag_operation_from_dsl(mirror: DagOperationDsl) -> DagOperation {
+fn dag_mutation_from_dsl(mirror: DagMutationDsl) -> DagMutation {
     match mirror {
-        DagOperationDsl::NodesAdd { index, item } => {
+        DagMutationDsl::NodesAdd { index, item } => {
             let item = dag_node_spec_from_dsl(item);
-            DagOperation::Nodes(CollectionOperation::Add { index: index, item })
+            DagMutation::Nodes(CollectionMutation::Add { index: index, item })
         }
-        DagOperationDsl::NodesRemove { id } => DagOperation::Nodes(CollectionOperation::Remove { id }),
-        DagOperationDsl::NodesMove { id, to_index } => DagOperation::Nodes(CollectionOperation::Move { id, to_index }),
-        DagOperationDsl::NodesPatch { id, patch } => DagOperation::Nodes(CollectionOperation::Patch { id, patch: dag_node_patch_from_dsl(patch) }),
-        DagOperationDsl::EdgesAdd { index, item } => DagOperation::Edges(CollectionOperation::Add { index: index, item }),
-        DagOperationDsl::EdgesRemove { id } => DagOperation::Edges(CollectionOperation::Remove { id }),
-        DagOperationDsl::EdgesMove { id, to_index } => DagOperation::Edges(CollectionOperation::Move { id, to_index }),
-        DagOperationDsl::EdgesPatch { id, patch } => DagOperation::Edges(CollectionOperation::Patch { id, patch }),
-        DagOperationDsl::SetNodes { nodes } => DagOperation::SetNodes { nodes: nodes.into_iter().map(dag_node_spec_from_dsl).collect() },
-        DagOperationDsl::SetEdges { edges } => DagOperation::SetEdges { edges },
-        DagOperationDsl::SetDocument { document } => DagOperation::SetDocument { document: dag_document_from_dsl(document) },
+        DagMutationDsl::NodesRemove { id } => DagMutation::Nodes(CollectionMutation::Remove { id }),
+        DagMutationDsl::NodesMove { id, to_index } => DagMutation::Nodes(CollectionMutation::Move { id, to_index }),
+        DagMutationDsl::NodesPatch { id, patch } => DagMutation::Nodes(CollectionMutation::Patch { id, patch: dag_node_patch_from_dsl(patch) }),
+        DagMutationDsl::EdgesAdd { index, item } => DagMutation::Edges(CollectionMutation::Add { index: index, item }),
+        DagMutationDsl::EdgesRemove { id } => DagMutation::Edges(CollectionMutation::Remove { id }),
+        DagMutationDsl::EdgesMove { id, to_index } => DagMutation::Edges(CollectionMutation::Move { id, to_index }),
+        DagMutationDsl::EdgesPatch { id, patch } => DagMutation::Edges(CollectionMutation::Patch { id, patch }),
+        DagMutationDsl::SetNodes { nodes } => DagMutation::SetNodes { nodes: nodes.into_iter().map(dag_node_spec_from_dsl).collect() },
+        DagMutationDsl::SetEdges { edges } => DagMutation::SetEdges { edges },
+        DagMutationDsl::SetDocument { document } => DagMutation::SetDocument { document: dag_document_from_dsl(document) },
     }
 }
 
 
 /// 🎙️ Handcrafted OpText (P6): derive no longer emits OpText/OpBinary.
-impl crate::os_spr::OpText for DagOperationDsl {
+impl crate::os_spr::OpText for DagMutationDsl {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -7937,7 +7937,7 @@ impl crate::os_spr::OpText for DagOperationDsl {
     }
 }
 
-impl crate::os_spr::OpBinary for DagOperationDsl {
+impl crate::os_spr::OpBinary for DagMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -7946,25 +7946,25 @@ impl crate::os_spr::OpBinary for DagOperationDsl {
     }
 }
 
-impl crate::os_spr::OpText for DagOperation {
+impl crate::os_spr::OpText for DagMutation {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
-        Ok(dag_operation_from_dsl(<DagOperationDsl as crate::os_spr::OpText>::parse_op(line)?))
+        Ok(dag_mutation_from_dsl(<DagMutationDsl as crate::os_spr::OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        <DagOperationDsl as crate::os_spr::OpText>::print_op(&dag_operation_to_dsl(self))
+        <DagMutationDsl as crate::os_spr::OpText>::print_op(&dag_mutation_to_dsl(self))
     }
 }
 
-/// ⚡️ Binary mirror of the `OpText` bridge above — `DagOperationDsl` already derives `OpBinary`
+/// ⚡️ Binary mirror of the `OpText` bridge above — `DagMutationDsl` already derives `OpBinary`
 /// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
-impl crate::os_spr::OpBinary for DagOperation {
+impl crate::os_spr::OpBinary for DagMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        dag_operation_to_dsl(self).encode_op()
+        dag_mutation_to_dsl(self).encode_op()
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        Ok(dag_operation_from_dsl(DagOperationDsl::decode_op(bytes)?))
+        Ok(dag_mutation_from_dsl(DagMutationDsl::decode_op(bytes)?))
     }
 }
 //#endregion 🔖️OpTextMirror
@@ -8032,32 +8032,32 @@ mod dag_vcs_tests {
         DagNodeSpec { id: id.into(), name: id.into(), ..Default::default() }
     }
 
-    fn round_trip(document: &DagDocument, operation: &DagOperation) -> DagDocument {
-        let forward = vcs::apply_operation(document, operation);
+    fn round_trip(document: &DagDocument, operation: &DagMutation) -> DagDocument {
+        let forward = vcs::apply_mutation(document, operation);
         let mut restored = forward.clone();
-        for back in operation.backwards(document) {
-            restored = vcs::apply_operation(&restored, &back);
+        for back in operation.inverse(document) {
+            restored = vcs::apply_mutation(&restored, &back);
         }
-        assert_eq!(&restored, document, "backwards() must exactly restore the pre-operation document");
+        assert_eq!(&restored, document, "inverse() must exactly restore the pre-operation document");
         forward
     }
 
     #[test]
     fn dag_document_vcs_replays_node_operations() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").nodes.len(), 1);
     }
 
     #[test]
     fn node_add_patch_remove_round_trip() {
         let document = empty_dag_document();
-        let added = round_trip(&document, &DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") }));
+        let added = round_trip(&document, &DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") }));
         assert_eq!(added.nodes.len(), 1);
-        let patched = round_trip(&added, &DagOperation::Nodes(CollectionOperation::Patch { id: "n1".into(), patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() } }));
+        let patched = round_trip(&added, &DagMutation::Nodes(CollectionMutation::Patch { id: "n1".into(), patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() } }));
         assert_eq!(patched.nodes[0].name, "Renamed");
         assert_eq!(patched.nodes[0].x, 42.0);
-        let removed = round_trip(&patched, &DagOperation::Nodes(CollectionOperation::Remove { id: "n1".into() }));
+        let removed = round_trip(&patched, &DagMutation::Nodes(CollectionMutation::Remove { id: "n1".into() }));
         assert!(removed.nodes.is_empty());
     }
 
@@ -8066,9 +8066,9 @@ mod dag_vcs_tests {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
         let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        let added = round_trip(&document, &DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
+        let added = round_trip(&document, &DagMutation::Edges(CollectionMutation::Add { index: 0, item: edge }));
         assert_eq!(added.edges.len(), 1);
-        let removed = round_trip(&added, &DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
+        let removed = round_trip(&added, &DagMutation::Edges(CollectionMutation::Remove { id: "e1".into() }));
         assert!(removed.edges.is_empty());
     }
 
@@ -8161,22 +8161,22 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_nodes_add() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") }));
     }
 
     #[test]
     fn op_text_round_trips_nodes_remove() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Remove { id: "n1".into() }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Remove { id: "n1".into() }));
     }
 
     #[test]
     fn op_text_round_trips_nodes_move() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Move { id: "n1".into(), to_index: 2 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Move { id: "n1".into(), to_index: 2 }));
     }
 
     #[test]
     fn op_text_round_trips_nodes_patch() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Patch {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Patch {
             id: "n1".into(),
             patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), y: None, width: None, height: Some(10.0), kind: Some(DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") }) },
         }));
@@ -8185,58 +8185,58 @@ mod dag_vcs_tests {
     #[test]
     fn op_text_round_trips_edges_add() {
         let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Add { index: 0, item: edge }));
     }
 
     #[test]
     fn op_text_round_trips_edges_remove() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Remove { id: "e1".into() }));
     }
 
     #[test]
     fn op_text_round_trips_edges_move() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Move { id: "e1".into(), to_index: 3 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Move { id: "e1".into(), to_index: 3 }));
     }
 
     #[test]
     fn op_text_round_trips_edges_patch() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a@out".into()), target: None } }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a@out".into()), target: None } }));
     }
 
     #[test]
     fn op_text_round_trips_set_nodes() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::SetNodes { nodes: vec![sample_node("n1"), sample_node("n2")] });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetNodes { nodes: vec![sample_node("n1"), sample_node("n2")] });
     }
 
     #[test]
     fn op_text_round_trips_set_edges() {
         let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::SetEdges { edges: vec![edge] });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetEdges { edges: vec![edge] });
     }
 
     #[test]
     fn op_text_round_trips_set_document() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagOperation::SetDocument { document: kitchen_sink_document() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetDocument { document: kitchen_sink_document() });
     }
 
     #[test]
     fn document_text_round_trips_a_store_with_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
         crate::os_store::test_support::assert_document_text_round_trip(&store);
         crate::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 
-    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `DagOperation`
-    /// already implements `crate::os_spr::OpBinary` (forwarded through the derived `DagOperationDsl`
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `DagMutation`
+    /// already implements `crate::os_spr::OpBinary` (forwarded through the derived `DagMutationDsl`
     /// mirror, see `🔖️OpTextMirror` above), so this closes the missing coverage rather than adding
     /// any new codec.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
-        let edit: &Edit<DagOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        crate::os_store::test_support::assert_command_envelope_round_trip::<DagDocument, DagOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
+        let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        crate::os_store::test_support::assert_command_envelope_round_trip::<DagDocument, DagMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️DslTests
 }

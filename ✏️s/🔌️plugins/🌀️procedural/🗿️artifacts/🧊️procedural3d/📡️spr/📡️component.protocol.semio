@@ -1,7 +1,7 @@
 dialect protocol
 protocol procedural3d.spr
 version 1
-schema procedural.3d.operation
+schema procedural.3d.mutation
 start record
 framing record
 record procedural.procedural3d-add-vertex tag 1

@@ -6,6 +6,7 @@
 
 use crate::brep::mat::Trsf;
 use crate::brep::vec::Pnt3;
+use crate::brep::topo::Body;
 
 // #region 🔖️Sdf
 
@@ -192,7 +193,24 @@ pub fn watertightness_from_boundary_edge_count(boundary_edges: usize) -> Waterti
     WatertightnessReport { verdict }
 }
 
-/// 🔮️ Placeholder until mesh/topo oracles feed edge statistics; always [`WatertightnessVerdict::NotChecked`].
+/// 🔮️ Count edges whose coedge valence is not exactly two (boundary or non-manifold).
+pub fn count_boundary_edges(body: &Body) -> usize {
+    let mut count = 0usize;
+    for (edge_id, _) in body.edges.iter() {
+        let valence = body.edge_coedges(edge_id).len();
+        if valence != 2 {
+            count += 1;
+        }
+    }
+    count
+}
+
+/// 🔮️ Real watertightness probe from body topology (boundary/non-manifold edge valence).
+pub fn watertightness_of_body(body: &Body) -> WatertightnessReport {
+    watertightness_from_boundary_edge_count(count_boundary_edges(body))
+}
+
+/// 🔮️ Compatibility alias retained for older call sites; prefer [`watertightness_of_body`].
 pub fn watertightness_stub_unchecked() -> WatertightnessReport {
     WatertightnessReport {
         verdict: WatertightnessVerdict::NotChecked,
@@ -295,4 +313,15 @@ mod tests {
         assert_eq!(watertightness_stub_unchecked().verdict, WatertightnessVerdict::NotChecked);
     }
 }
+
+    #[test]
+    fn watertightness_of_box_is_watertight() {
+        use crate::brep::primitives::make_box;
+        let mut body = Body::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let _ = solid;
+        let report = watertightness_of_body(&body);
+        assert_eq!(report.verdict, WatertightnessVerdict::Watertight);
+    }
+
 // #endregion 🔖️Tests

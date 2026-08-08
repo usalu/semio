@@ -8,7 +8,7 @@ pub const PROCEDURAL_3D_PLAY_LAYOUT_GENERATE: &str = "procedural3d-generate";
 
 //#region 🔖️Definition
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: PROCEDURAL_3D_PLAY_MODE_GENERATE.into(), label: LocalizedLabel::native("Generate", "Generieren"), icon_id: "sparkles".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: PROCEDURAL_3D_PLAY_MODE_GENERATE.into(), label: LocalizedLabel::native("Generate", "Generieren"), icon_id: "sparkles".into(), tools: Vec::new(), layout_id: Some(PROCEDURAL_3D_PLAY_LAYOUT_GENERATE.into()), commands: Vec::new() }
 }
 
 pub fn layout() -> NamedLayout {

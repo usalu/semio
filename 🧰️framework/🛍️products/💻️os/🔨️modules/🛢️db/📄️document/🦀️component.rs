@@ -2,7 +2,7 @@
 //! base-resolve → authz → deps → validate → conflict → execute → WAL append → durability →
 //! publish → project → vcs → preview-reconcile → receipt. Composes `db_state` (materialized
 //! overlay), `db_wal` (durability), `db_storage` (the pluggable substrate), and `protocol`
-//! (`OperationEnvelope`/`OperationDiff`) into `DocumentEngine`, the crate's central type, plus a
+//! (`MutationEnvelope`/`MutationDiff`) into `DocumentEngine`, the crate's central type, plus a
 //! thin `db_actor`-mailbox wrapper (`DocumentAuthority`) around it. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_document` row).
@@ -27,7 +27,7 @@
 //! observed, `db_projection` registration is also wired in as a `projections` factory field (see
 //! `🔖️Engine`'s doc for why a factory, not a stored engine).
 //!
-//! 🎯️ Design choice (diff convention, unchanged): `protocol::OperationEnvelope`'s `diff`/`inverse`
+//! 🎯️ Design choice (diff convention, unchanged): `protocol::MutationEnvelope`'s `diff`/`inverse`
 //! payloads are schema-erased `dsl::DslValue` pathmaps encoded with `store::pack_rt::encode_wire_value`
 //! — `db_document` has no compile-time knowledge of
 //! any concrete document schema, so it adopts one generic convention for BOTH: a JSON *object*
@@ -35,8 +35,8 @@
 //! value to set at that path, or JSON `null` as an explicit tombstone (path deleted). This is a
 //! real, documented limitation, not a workaround: a legitimate application-level `null` value is
 //! indistinguishable from a delete under this convention. `envelope_from_operation` (new this
-//! revision) is the generic ingestion boundary that actually exercises `protocol::Operation`/
-//! `OperationDiff` (`diff`/`apply`/`operation_id`/`dependencies`/`author_id`/`timestamp`) to build
+//! revision) is the generic ingestion boundary that actually exercises `protocol::Mutation`/
+//! `MutationDiff` (`diff`/`apply`/`mutation_id`/`dependencies`/`author_id`/`timestamp`) to build
 //! an envelope in this same convention from a typed operation — the one place in the `db` family
 //! below `db_document` allowed to interpret operation semantics at all (per the contract's hard
 //! dependency rule).
@@ -45,7 +45,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 
 use DbError;
-use protocol::OperationDiff as _;
+use protocol::MutationDiff as _;
 
 use dsl::DslValue;
 
@@ -80,15 +80,15 @@ fn dsl_err(err: String) -> DbError {
 /// document — the unit `DocumentEngine::submit` accepts. Every envelope must target the same
 /// `document_id` (checked at construction, and again against the engine's own document at submit
 /// time); the batch's `command_id` (for dedupe/the returned `CommandReceipt`) is its LAST
-/// envelope's `operation_id`, since `OperationEnvelope` has no separate batch-level id of its own.
+/// envelope's `mutation_id`, since `MutationEnvelope` has no separate batch-level id of its own.
 pub struct CommandBatch {
-    pub envelopes: Vec<protocol::OperationEnvelope>,
+    pub envelopes: Vec<protocol::MutationEnvelope>,
 }
 
 impl CommandBatch {
     /// @emoji 🏗️ Builds a batch, rejecting an empty one or one whose envelopes disagree on
     /// `document_id`.
-    pub fn new(envelopes: Vec<protocol::OperationEnvelope>) -> Result<CommandBatch, DbError> {
+    pub fn new(envelopes: Vec<protocol::MutationEnvelope>) -> Result<CommandBatch, DbError> {
         let first = envelopes.first().ok_or_else(|| DbError::InvalidArgument("command batch must contain at least one operation".to_string()))?;
         let document_id = first.document_id.clone();
         if envelopes.iter().any(|envelope| envelope.document_id != document_id) {
@@ -114,7 +114,7 @@ impl Default for SubmitOptions {
 
 //#region 🔖️Diff
 /// @emoji 🧬️ The schema tag `db_document` reserves for its own generic path-value diff
-/// convention (see module doc) — the only `DocumentDiff`/`InverseOperation` shape this crate
+/// convention (see module doc) — the only `DocumentDiff`/`InverseMutation` shape this crate
 /// knows how to interpret. 🎯️ W5: `diff`/`inverse` payloads are opaque `Vec<u8>` on the wire now;
 /// `db_document` still only understands ITS OWN JSON-object-of-paths convention, tagged with this
 /// schema so `diff_entries`/`inverse_entries` can distinguish "our own pathmap bytes" from a
@@ -152,7 +152,7 @@ fn diff_entries(diff: &protocol::DocumentDiff) -> Result<Vec<(String, Option<Dsl
 
 /// @emoji ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source) — same
 /// foreign-schema handling as `diff_entries`.
-fn inverse_entries(inverse: &protocol::InverseOperation) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
+fn inverse_entries(inverse: &protocol::InverseMutation) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     if inverse.schema.0 != DB_PATHMAP_SCHEMA {
         return Ok(Vec::new());
     }
@@ -178,10 +178,10 @@ fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::TouchedS
 //#endregion 🔖️Diff
 
 //#region 🔖️Bridge
-/// @emoji 🌉️ The generic ingestion boundary: builds an `OperationEnvelope` (in this crate's own
-/// path-value diff convention) from a typed `protocol::Operation<P>` against a serializable
-/// projection `P`, writing the whole post-state at `path`. Genuinely exercises `Operation`/
-/// `OperationDiff`'s trait methods (`diff`/`apply`/`operation_id`/`dependencies`/`author_id`/
+/// @emoji 🌉️ The generic ingestion boundary: builds an `MutationEnvelope` (in this crate's own
+/// path-value diff convention) from a typed `protocol::Mutation<P>` against a serializable
+/// projection `P`, writing the whole post-state at `path`. Genuinely exercises `Mutation`/
+/// `MutationDiff`'s trait methods (`diff`/`apply`/`mutation_id`/`dependencies`/`author_id`/
 /// `timestamp`) — see the module doc's design-choice note on why this crate is allowed to. A
 /// caller wanting per-sub-path granularity builds the JSON object directly via
 /// `CommandBatch::new`/`entries_to_value` instead of this whole-projection convenience.
@@ -191,25 +191,25 @@ pub fn envelope_from_operation<P, Op>(
     op: &Op,
     base: &P,
     default_actor: protocol::ActorId,
-    default_operation_id: protocol::OperationId,
+    default_mutation_id: protocol::MutationId,
     default_timestamp: protocol::HybridLogicalTimestamp,
-) -> Result<protocol::OperationEnvelope, DbError>
+) -> Result<protocol::MutationEnvelope, DbError>
 where
     P: serde::Serialize,
-    Op: protocol::Operation<P>,
+    Op: protocol::Mutation<P>,
 {
     let diff = op.diff(base);
     let post = diff.apply(base);
     let forward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(&post).map_err(dsl_err)?)]);
     let backward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(base).map_err(dsl_err)?)]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
-    Ok(protocol::OperationEnvelope {
-        operation_id: op.operation_id().unwrap_or(default_operation_id),
+    Ok(protocol::MutationEnvelope {
+        mutation_id: op.mutation_id().unwrap_or(default_mutation_id),
         document_id: document,
         actor: op.author_id().unwrap_or(default_actor),
         dependencies: op.dependencies(),
         diff: protocol::DocumentDiff { schema: schema.clone(), payload: encode_pathmap(&forward) },
-        inverse: protocol::InverseOperation { schema, payload: encode_pathmap(&backward) },
+        inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward) },
         timestamp: op.timestamp().unwrap_or(default_timestamp),
     })
 }
@@ -227,19 +227,19 @@ where
 /// `preview_conflicts` (below) is the real, additive `db_conflict::ConflictDetector` integration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ConflictRecord {
-    pub command_id: protocol::OperationId,
-    pub conflicting_with: protocol::OperationId,
+    pub command_id: protocol::MutationId,
+    pub conflicting_with: protocol::MutationId,
     pub path: String,
 }
 
 /// @emoji ⚔️ Builds the `db_conflict::CommandTouch` `envelope` would produce, without applying it —
 /// shared by `submit`'s recent-history bookkeeping and `preview_conflicts`'s real `db_conflict::
 /// ConflictDetector` use. `conflict_rule` defaults uniformly to `Merge(LwwRegister)`: a raw
-/// `OperationEnvelope` carries no per-operation `ConflictRule` of its own (that lives on
-/// `protocol::Operation`, one layer up — see `envelope_from_operation`'s doc).
-fn command_touch(envelope: &protocol::OperationEnvelope, touched: &db_state::TouchedSet) -> db_conflict::CommandTouch {
+/// `MutationEnvelope` carries no per-operation `ConflictRule` of its own (that lives on
+/// `protocol::Mutation`, one layer up — see `envelope_from_operation`'s doc).
+fn command_touch(envelope: &protocol::MutationEnvelope, touched: &db_state::TouchedSet) -> db_conflict::CommandTouch {
     let touch = db_conflict::CommandTouch::new(
-        envelope.operation_id.clone(),
+        envelope.mutation_id.clone(),
         envelope.actor.clone(),
         db_conflict::CommandKind::from(envelope.diff.schema.0.as_str()),
         protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister),
@@ -258,7 +258,7 @@ fn command_touch(envelope: &protocol::OperationEnvelope, touched: &db_state::Tou
 /// its own boundary (see module doc's bridge note).
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandReceipt {
-    pub command_id: protocol::OperationId,
+    pub command_id: protocol::MutationId,
     pub frontier: Frontier,
     pub durability: DurabilityClass,
     pub conflicts: Vec<ConflictRecord>,
@@ -270,7 +270,7 @@ pub struct CommandReceipt {
 /// crate only accumulates and hands them out via `DocumentEngine::drain_outbox`).
 #[derive(Clone, Debug)]
 pub struct OutboxEntry {
-    pub operation_id: protocol::OperationId,
+    pub mutation_id: protocol::MutationId,
     pub bytes: Vec<u8>,
 }
 
@@ -281,7 +281,7 @@ pub struct OutboxEntry {
 #[derive(Clone, Debug)]
 pub struct CommitNotification {
     pub frontier: Frontier,
-    pub operation_ids: Vec<protocol::OperationId>,
+    pub operation_ids: Vec<protocol::MutationId>,
     pub touched: db_state::TouchedSet,
 }
 //#endregion 🔖️Receipt
@@ -295,7 +295,7 @@ pub struct CommitNotification {
 /// and so `PMap::iter` gives `snapshot_now`/`query` a cheap, complete enumeration.
 struct DocumentState {
     values: db_state::PMap<String, Vec<u8>>,
-    last_writer: db_state::PMap<String, protocol::OperationId>,
+    last_writer: db_state::PMap<String, protocol::MutationId>,
 }
 
 impl DocumentState {
@@ -312,17 +312,17 @@ impl DocumentState {
     }
 
     /// @emoji ✍️ Applies one envelope's flattened path-value entries, returning the new state, the
-    /// `TouchedSet` it wrote, and any conflicts (a path whose last writer is neither `operation_id`
+    /// `TouchedSet` it wrote, and any conflicts (a path whose last writer is neither `mutation_id`
     /// itself nor a declared `dependencies` member).
-    fn apply_entries(&self, operation_id: &protocol::OperationId, dependencies: &[protocol::OperationId], entries: &[(String, Option<DslValue>)]) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
+    fn apply_entries(&self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)]) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
         let mut values = self.values.clone();
         let mut last_writer = self.last_writer.clone();
         let mut touched = db_state::TouchedSet::new();
         let mut conflicts = Vec::new();
         for (path, value) in entries {
             if let Some(previous_writer) = self.last_writer.get(path) {
-                if previous_writer != operation_id && !dependencies.contains(previous_writer) {
-                    conflicts.push(ConflictRecord { command_id: operation_id.clone(), conflicting_with: previous_writer.clone(), path: path.clone() });
+                if previous_writer != mutation_id && !dependencies.contains(previous_writer) {
+                    conflicts.push(ConflictRecord { command_id: mutation_id.clone(), conflicting_with: previous_writer.clone(), path: path.clone() });
                 }
             }
             match value {
@@ -333,7 +333,7 @@ impl DocumentState {
                 None => values = values.remove(path),
             }
             touched.record(db_state::TouchedRegion::write(path.clone()));
-            last_writer = last_writer.insert(path.clone(), operation_id.clone());
+            last_writer = last_writer.insert(path.clone(), mutation_id.clone());
         }
         Ok((DocumentState { values, last_writer }, touched, conflicts))
     }
@@ -346,7 +346,7 @@ impl DocumentState {
 /// real deployment supplies whatever backend it wants at `DocumentEngineConfig` construction time.
 /// `db_engine`'s `SecurityAuthzHook` is the real `db_security::SecurityGate`-backed implementation.
 pub trait AuthzHook: Send + Sync {
-    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::OperationEnvelope) -> Result<(), DbError>;
+    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> Result<(), DbError>;
 }
 
 /// @emoji 🟢️ The default `AuthzHook`: authorizes everything. Correct for a single-tenant/test
@@ -356,7 +356,7 @@ pub trait AuthzHook: Send + Sync {
 pub struct AllowAll;
 
 impl AuthzHook for AllowAll {
-    fn authorize(&self, _actor: &protocol::ActorId, _envelope: &protocol::OperationEnvelope) -> Result<(), DbError> {
+    fn authorize(&self, _actor: &protocol::ActorId, _envelope: &protocol::MutationEnvelope) -> Result<(), DbError> {
         Ok(())
     }
 }
@@ -423,7 +423,7 @@ pub struct DocumentEngine {
     wal: db_wal::DocumentWal,
     state: DocumentState,
     vcs_head: Option<String>,
-    applied: HashMap<String, protocol::OperationEnvelope>,
+    applied: HashMap<String, protocol::MutationEnvelope>,
     applied_receipts: HashMap<String, CommandReceipt>,
     actor_seq: HashMap<String, u64>,
     frontier: Frontier,
@@ -495,11 +495,11 @@ impl DocumentEngine {
                     let mut pos = 0usize;
                     let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
                     seen += 1;
-                    batch_ids.insert(envelope.operation_id.0.clone());
+                    batch_ids.insert(envelope.mutation_id.0.clone());
                     if seen <= applied_head_seq {
                         // Already folded into the loaded snapshot — replay the causal bookkeeping
                         // (`applied`) but not the state mutation itself.
-                        engine.applied.insert(envelope.operation_id.0.clone(), envelope);
+                        engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
                         continue;
                     }
                     let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids)?;
@@ -548,22 +548,22 @@ impl DocumentEngine {
     /// WAL write) and `open`'s replay (after it). `batch_ids` is the set of operation ids already
     /// seen earlier in the SAME transaction (a multi-envelope batch may reference its own earlier
     /// members as dependencies). Returns `(touched, conflicts, applied_now)`; `applied_now` is
-    /// `false` (with empty touched/conflicts) if `envelope.operation_id` was already applied in an
+    /// `false` (with empty touched/conflicts) if `envelope.mutation_id` was already applied in an
     /// earlier commit — the per-envelope half of this crate's dedupe law.
-    fn apply_one(&mut self, envelope: &protocol::OperationEnvelope, batch_ids: &HashSet<String>) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>, bool), DbError> {
-        if self.applied.contains_key(&envelope.operation_id.0) {
+    fn apply_one(&mut self, envelope: &protocol::MutationEnvelope, batch_ids: &HashSet<String>) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>, bool), DbError> {
+        if self.applied.contains_key(&envelope.mutation_id.0) {
             return Ok((db_state::TouchedSet::new(), Vec::new(), false));
         }
         for dependency in &envelope.dependencies {
             if !self.applied.contains_key(&dependency.0) && !batch_ids.contains(&dependency.0) {
-                return Err(DbError::InvalidArgument(format!("operation {} depends on unseen operation {}", envelope.operation_id.0, dependency.0)));
+                return Err(DbError::InvalidArgument(format!("operation {} depends on unseen operation {}", envelope.mutation_id.0, dependency.0)));
             }
         }
         let entries = diff_entries(&envelope.diff)?;
         check_len(entries.len() as u64, self.config.limits.max_batch_commands as u64, "db_document::diff_entries")?;
-        let (new_state, touched, conflicts) = self.state.apply_entries(&envelope.operation_id, &envelope.dependencies, &entries)?;
+        let (new_state, touched, conflicts) = self.state.apply_entries(&envelope.mutation_id, &envelope.dependencies, &entries)?;
         self.state = new_state;
-        self.applied.insert(envelope.operation_id.0.clone(), envelope.clone());
+        self.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
         let actor_seq = self.actor_seq.entry(envelope.actor.0.clone()).or_insert(0);
         *actor_seq += 1;
         Ok((touched, conflicts, true))
@@ -586,7 +586,7 @@ impl DocumentEngine {
                 return Err(DbError::InvalidArgument(format!("envelope targets document {:?} but this actor owns {:?}", envelope.document_id, self.protocol_document)));
             }
         }
-        let command_id = batch.envelopes.last().expect("CommandBatch::new guarantees at least one envelope").operation_id.clone();
+        let command_id = batch.envelopes.last().expect("CommandBatch::new guarantees at least one envelope").mutation_id.clone();
 
         // dedupe (whole-batch, keyed by the batch's designated command_id)
         if let Some(cached) = self.applied_receipts.get(&command_id.0) {
@@ -597,7 +597,7 @@ impl DocumentEngine {
         let mut records: Vec<db_wal::WalRecord> = Vec::new();
         let mut touched_all = db_state::TouchedSet::new();
         let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
-        let mut newly_applied: Vec<(protocol::OperationEnvelope, db_state::TouchedSet)> = Vec::new();
+        let mut newly_applied: Vec<(protocol::MutationEnvelope, db_state::TouchedSet)> = Vec::new();
 
         for envelope in &batch.envelopes {
             // authz: the `AuthzHook` seam (defaults to `AllowAll`; `db_engine`'s `SecurityAuthzHook`
@@ -608,7 +608,7 @@ impl DocumentEngine {
             // permissive principal synthesized from the envelope's own actor (see
             // `DocumentEngineConfig::security`'s doc) — additive, does not replace `authz` above.
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
-            self.config.security.admit_command(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &envelope.actor, &envelope.operation_id, now_ms)?;
+            self.config.security.admit_command(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &envelope.actor, &envelope.mutation_id, now_ms)?;
 
             // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
             // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
@@ -621,7 +621,7 @@ impl DocumentEngine {
 
             // base-resolve/deps + validate + conflict + execute
             let (touched, conflicts, applied_now) = self.apply_one(envelope, &batch_ids)?;
-            batch_ids.insert(envelope.operation_id.0.clone());
+            batch_ids.insert(envelope.mutation_id.0.clone());
             if !applied_now {
                 continue;
             }
@@ -647,7 +647,7 @@ impl DocumentEngine {
             // ever reconstruct state from `WalRecord::Command`), a pure redundant JSON duplicate.
             records.push(db_wal::WalRecord::Command(envelope_bytes.clone()));
             records.push(db_wal::WalRecord::Outbox(envelope_bytes.clone()));
-            self.outbox.push(OutboxEntry { operation_id: envelope.operation_id.clone(), bytes: envelope_bytes });
+            self.outbox.push(OutboxEntry { mutation_id: envelope.mutation_id.clone(), bytes: envelope_bytes });
         }
 
         if newly_applied.is_empty() {
@@ -694,14 +694,14 @@ impl DocumentEngine {
 
         // preview-reconcile
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all.clone() }, &db_preview::DbConflictOracle::default());
-        self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _)| envelope.operation_id.clone()).collect(), touched: touched_all });
+        self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _)| envelope.mutation_id.clone()).collect(), touched: touched_all });
 
         // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
         // vcs feature supplies `NullVersionGraph`, whose `Unimplemented` is tolerated here)
         for (envelope, _) in &newly_applied {
             match self.config.version_graph.record_change(
                 &self.document,
-                ChangeRecord { parent: None, content_hash: self.state.content_hash(), author: to_core_actor_id(&envelope.actor), message: format!("operation {}", envelope.operation_id.0), timestamp_ms: now_ms },
+                ChangeRecord { parent: None, content_hash: self.state.content_hash(), author: to_core_actor_id(&envelope.actor), message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
             ) {
                 Ok(_) | Err(DbError::Unimplemented(_)) => {}
                 Err(other) => return Err(other),
@@ -722,17 +722,17 @@ impl DocumentEngine {
     /// envelope's OWN inverse can re-undo the undo), and submits it as a fresh, ordinary command
     /// depending on `target` — undo is just another commit, not a WAL rewrite. This is the crate's
     /// "inverse undo, using protocol's inverse-operation machinery".
-    pub fn undo(&mut self, target: &protocol::OperationId, undo_operation_id: protocol::OperationId, actor: protocol::ActorId, now_ms: u64) -> Result<CommandReceipt, DbError> {
+    pub fn undo(&mut self, target: &protocol::MutationId, undo_mutation_id: protocol::MutationId, actor: protocol::ActorId, now_ms: u64) -> Result<CommandReceipt, DbError> {
         let original = self.applied.get(&target.0).cloned().ok_or_else(|| DbError::NotFound(format!("operation {} not found for undo", target.0)))?;
         let undo_diff_entries = inverse_entries(&original.inverse)?;
         let redo_inverse_entries = diff_entries(&original.diff)?;
-        let compensating = protocol::OperationEnvelope {
-            operation_id: undo_operation_id,
+        let compensating = protocol::MutationEnvelope {
+            mutation_id: undo_mutation_id,
             document_id: self.protocol_document.clone(),
             actor,
             dependencies: vec![target.clone()],
             diff: protocol::DocumentDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)) },
-            inverse: protocol::InverseOperation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)) },
+            inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
         };
         self.submit(CommandBatch::new(vec![compensating])?, SubmitOptions::default(), now_ms)
@@ -854,13 +854,13 @@ impl DocumentEngine {
     pub fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
         let dsl_entries: Vec<(String, Option<DslValue>)> = entries.iter().map(|(path, value)| Ok((path.clone(), value.as_ref().map(|json| dsl::to_dsl_value(json).map_err(dsl_err)).transpose()?))).collect::<Result<Vec<_>, DbError>>()?;
         let touched = entries_touched(&dsl_entries);
-        let envelope = protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(format!("preview-{}", entries.len())),
+        let envelope = protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(format!("preview-{}", entries.len())),
             document_id: self.protocol_document.clone(),
             actor: protocol::ActorId("preview".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)) },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
         };
         self.previews.publish(db_preview::PublishPreviewRequest {
@@ -1141,15 +1141,15 @@ mod tests {
         dsl::from_dsl_value(dsl).expect("stored json value")
     }
 
-    fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::OperationEnvelope {
+    fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
         let object: Vec<(String, DslValue)> = entries.iter().map(|(path, value)| (path.to_string(), dsl::to_dsl_value(value).expect("test envelope dsl"))).collect();
-        protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(id.to_string()),
+        protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(id.to_string()),
             document_id: document_id(),
             actor: protocol::ActorId(actor.to_string()),
-            dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
+            dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)) },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -1175,7 +1175,7 @@ mod tests {
         #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
         struct AddDiff(i64);
 
-        impl protocol::OperationDiff<Counter> for AddDiff {
+        impl protocol::MutationDiff<Counter> for AddDiff {
             fn apply(&self, base: &Counter) -> Counter {
                 Counter(base.0 + self.0)
             }
@@ -1187,12 +1187,12 @@ mod tests {
         #[derive(Clone, serde::Serialize, serde::Deserialize)]
         struct Add(i64);
 
-        impl protocol::Operation<Counter> for Add {
+        impl protocol::Mutation<Counter> for Add {
             type Diff = AddDiff;
             fn diff(&self, _base: &Counter) -> Self::Diff {
                 AddDiff(self.0)
             }
-            fn backwards(&self, _base: &Counter) -> Vec<Self> {
+            fn inverse(&self, _base: &Counter) -> Vec<Self> {
                 vec![Add(-self.0)]
             }
         }
@@ -1201,7 +1201,7 @@ mod tests {
         fn envelope_from_operation_uses_operation_and_diff_traits() {
             let base = Counter(10);
             let op = Add(5);
-            let envelope = envelope_from_operation(document_id(), "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::OperationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).unwrap();
+            let envelope = envelope_from_operation(document_id(), "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).unwrap();
             let entries = diff_entries(&envelope.diff).unwrap();
             assert_eq!(entries.len(), 1);
             let (path, value) = &entries[0];
@@ -1221,7 +1221,7 @@ mod tests {
         let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))])]).unwrap();
         let receipt = engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync }, 1).unwrap();
 
-        assert_eq!(receipt.command_id, protocol::OperationId("op-1".to_string()));
+        assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.head_seq, 1);
         assert_eq!(receipt.frontier.commit_seq, 1);
         assert!(receipt.conflicts.is_empty());
@@ -1333,7 +1333,7 @@ mod tests {
         // write from `op-2`'s author's point of view.
         let receipt = engine.submit(CommandBatch::new(vec![envelope("op-2", &[], "bob", &[("x", serde_json::json!(2))])]).unwrap(), SubmitOptions::default(), 1).unwrap();
         assert_eq!(receipt.conflicts.len(), 1);
-        assert_eq!(receipt.conflicts[0].conflicting_with, protocol::OperationId("op-1".to_string()));
+        assert_eq!(receipt.conflicts[0].conflicting_with, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.conflicts[0].path, "x");
         // Last-writer-wins: the conflicting write still applies.
         let x: serde_json::Value = stored_json(&engine.get("x").unwrap());
@@ -1366,19 +1366,19 @@ mod tests {
     fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
         let storage = storage();
         let mut engine = DocumentEngine::create(document_id(), storage, DocumentEngineConfig::default(), 0).unwrap();
-        let original = protocol::OperationEnvelope {
-            operation_id: protocol::OperationId("op-1".to_string()),
+        let original = protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId("op-1".to_string()),
             document_id: document_id(),
             actor: protocol::ActorId("alice".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")) },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")) },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         };
         engine.submit(CommandBatch::new(vec![original]).unwrap(), SubmitOptions::default(), 0).unwrap();
         assert!(engine.get("x").is_some());
 
-        let receipt = engine.undo(&protocol::OperationId("op-1".to_string()), protocol::OperationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1).unwrap();
+        let receipt = engine.undo(&protocol::MutationId("op-1".to_string()), protocol::MutationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1).unwrap();
         assert_eq!(receipt.frontier.head_seq, 2);
         assert!(engine.get("x").is_none(), "undo must have applied the recorded inverse (delete x)");
     }
@@ -1387,7 +1387,7 @@ mod tests {
     fn undo_of_an_unknown_operation_errs_not_found() {
         let storage = storage();
         let mut engine = DocumentEngine::create(document_id(), storage, DocumentEngineConfig::default(), 0).unwrap();
-        let result = engine.undo(&protocol::OperationId("never-applied".to_string()), protocol::OperationId("undo-1".to_string()), protocol::ActorId("alice".to_string()), 0);
+        let result = engine.undo(&protocol::MutationId("never-applied".to_string()), protocol::MutationId("undo-1".to_string()), protocol::ActorId("alice".to_string()), 0);
         assert!(matches!(result, Err(DbError::NotFound(_))));
     }
     //#endregion 🔖️Undo
@@ -1472,11 +1472,11 @@ mod tests {
         engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
 
         assert_eq!(engine.commit_log().len(), 1);
-        assert_eq!(engine.commit_log()[0].operation_ids, vec![protocol::OperationId("op-1".to_string())]);
+        assert_eq!(engine.commit_log()[0].operation_ids, vec![protocol::MutationId("op-1".to_string())]);
 
         let drained = engine.drain_outbox();
         assert_eq!(drained.len(), 1);
-        assert_eq!(drained[0].operation_id, protocol::OperationId("op-1".to_string()));
+        assert_eq!(drained[0].mutation_id, protocol::MutationId("op-1".to_string()));
         assert!(engine.drain_outbox().is_empty(), "drain must clear the outbox");
     }
     //#endregion 🔖️Outbox + CommitLog

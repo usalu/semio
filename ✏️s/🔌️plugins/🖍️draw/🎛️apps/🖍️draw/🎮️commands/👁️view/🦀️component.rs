@@ -2,9 +2,9 @@
 //! `ui`'s `ConfigOnly` region, plus `engagementSubmit`, a content-mutating rename command).
 
 use crate::apps::draw::commands::canvas::DrawSession;
-use crate::apps::draw::config::{DrawConfig, DrawConfigOperation};
+use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::artifacts::draw::engine::{flatten_draw_layers, layer_id};
-use crate::artifacts::draw::op::DrawOperation;
+use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawCamera, DrawDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -22,14 +22,14 @@ pub mod engagement_submit {
     /// ✏️ Renames the single selected layer to the submitted engagement-input text (or the config's
     /// own in-progress `engagement_input` if the caller doesn't pass one) — the one `Config`-only
     /// row that actually mutates the document, mirroring the pre-migration behaviour exactly.
-    pub fn handle(payload: &EngagementSubmit, _doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, _doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let config = cfg.projection;
         let value = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());
         let value = value.trim();
         if value.is_empty() || config.selected_ids.len() != 1 {
             return Ok(Emit::default());
         }
-        Ok(Emit::operations(vec![DrawOperation::SetLayerName { layer_id: config.selected_ids[0].clone(), name: value.into() }]))
+        Ok(Emit::mutations(vec![DrawMutation::SetLayerName { layer_id: config.selected_ids[0].clone(), name: value.into() }]))
     }
 }
 //#endregion 🔖️EngagementSubmit
@@ -46,11 +46,11 @@ pub mod set_active_utility {
 
     /// 🧰️ Host-owned utility switch: clear any in-progress gesture scratch (discarding any
     /// document-op the FSM would produce — `UtilityChanged` never carries one).
-    pub fn handle(payload: &SetActiveUtility, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         session.step_gesture(crate::apps::draw::commands::canvas::draw_gesture::Event::UtilityChanged, document, &mut config);
-        Ok(Emit::config(vec![DrawConfigOperation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
+        Ok(Emit::config(vec![DrawConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
     }
 }
 //#endregion 🔖️SetActiveUtility
@@ -67,8 +67,8 @@ pub mod set_camera {
     }
 
     /// 📷️ Camera — session-only runtime pose, never a document operation.
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DrawConfigOperation::SetCamera { camera: payload.camera.clone() }]))
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DrawConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
 //#endregion 🔖️SetCamera
@@ -83,10 +83,10 @@ pub mod set_camera_zoom {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetCameraZoom, _doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(payload: &SetCameraZoom, _doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let config = cfg.projection;
         let camera = DrawCamera { zoom: payload.value, ..config.camera.clone() };
-        Ok(Emit::config(vec![DrawConfigOperation::SetCamera { camera }]))
+        Ok(Emit::config(vec![DrawConfigMutation::SetCamera { camera }]))
     }
 }
 //#endregion 🔖️SetCameraZoom
@@ -101,8 +101,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DrawConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DrawConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -117,8 +117,8 @@ pub mod set_hover {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DrawConfigOperation::SetHovered { id: payload.id.clone() }]))
+    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DrawConfigMutation::SetHovered { id: payload.id.clone() }]))
     }
 }
 //#endregion 🔖️SetHover
@@ -131,10 +131,10 @@ pub mod select_all {
     #[dsl(keyword = "select-all")]
     pub struct SelectAll {}
 
-    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
+    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.projection;
         let ids = flatten_draw_layers(&document.layers).into_iter().map(|layer| layer_id(layer).to_string()).collect();
-        Ok(Emit::config(vec![DrawConfigOperation::SetSelection { ids }]))
+        Ok(Emit::config(vec![DrawConfigMutation::SetSelection { ids }]))
     }
 }
 //#endregion 🔖️SelectAll
@@ -147,8 +147,8 @@ pub mod clear_selection {
     #[dsl(keyword = "clear-selection")]
     pub struct ClearSelection {}
 
-    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DrawConfigOperation::SetSelection { ids: Vec::new() }]))
+    pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DrawConfigMutation::SetSelection { ids: Vec::new() }]))
     }
 }
 //#endregion 🔖️ClearSelection
@@ -163,8 +163,8 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DrawConfigOperation::SetEngagementInput { value: payload.value.clone() }]))
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DrawConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -179,8 +179,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DrawConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DrawConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

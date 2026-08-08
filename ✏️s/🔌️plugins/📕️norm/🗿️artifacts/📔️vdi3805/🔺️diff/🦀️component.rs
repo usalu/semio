@@ -1,8 +1,8 @@
-//! 🔺️ VDI 3805 artifact — the operation diff and its `OperationDiff` law.
+//! 🔺️ VDI 3805 artifact — the operation diff and its `MutationDiff` law.
 //!
 //! 📌️ Every norm artifact's sole mutation is a whole-document replace, so its diff is
-//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentOperation<D>`
-//! names as its `Operation::Diff`, with the `OperationDiff` impl (apply = "take the replacement,
+//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentMutation<D>`
+//! names as its `Vdi3805Mutation::Diff`, with the `MutationDiff` impl (apply = "take the replacement,
 //! otherwise keep the projection"; absorb = "the later replacement wins") living beside it in
 //! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
 //! binding for this artifact and proves the law against this artifact's own `Document`.
@@ -26,14 +26,14 @@ pub type Diff = crate::document::DocumentDiff<Document>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::vdi3805::op::Operation;
-    use protocol::{Operation as _, OperationDiff};
+    use crate::artifacts::vdi3805::op::Vdi3805Mutation;
+    use protocol::{Mutation as _, MutationDiff};
 
     #[test]
     fn set_document_diff_replaces_the_whole_projection() {
         let base = Document::default();
-        let operation = Operation::SetDocument { document: Document::default() };
-        let diff: Diff = operation.diff(&base);
+        let mutation = Vdi3805Mutation::SetDocument { document: Document::default() };
+        let diff: Diff = mutation.diff(&base);
         assert_eq!(diff.apply(&base), Document::default());
     }
 

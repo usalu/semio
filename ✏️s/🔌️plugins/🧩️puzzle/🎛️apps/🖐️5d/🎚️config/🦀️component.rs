@@ -1,7 +1,7 @@
 //! 🎛️ Puzzle 5d play app — its `DocumentApp::Config`: every piece of view state the app owns but the
 //! document must never carry (the two projections' cameras, selection, hover, brush/fill scratch,
 //! distribution weights, per-window engagement input and active utility, sun, locale/terminology),
-//! plus the whole-snapshot `ConfigOperation` that patches it.
+//! plus the whole-snapshot `ConfigMutation` that patches it.
 //!
 //! 🪟️ Unlike puzzle3d, puzzle5d's two window KINDS are each single-instance, so there is no
 //! per-instance `load_window`/`save_window` swap here — every field is flat and shared across the
@@ -181,7 +181,7 @@ impl Default for Puzzle5dRuntime {
 /// 🧮️ B1: puzzle5d's real `DocumentApp::Config` — `Puzzle5dRuntime` itself doubles as the config
 /// record (an alias, not a new type), mirroring `Puzzle3dConfig`'s identical recipe, so every helper
 /// taking `&Puzzle5dRuntime`/`&mut Puzzle5dRuntime` keeps working unchanged; every read comes from
-/// `cfg.projection`, every write flows out as a `Puzzle5dConfigOperation` in the returned `Emit`
+/// `cfg.projection`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`
 /// instead of a silent `self` mutation.
 pub type Puzzle5dConfig = Puzzle5dRuntime;
 
@@ -211,29 +211,29 @@ impl store::DocumentPack for Puzzle5dRuntime {
 store::impl_whole_record_config!(Puzzle5dRuntime);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperation
+//#region 🔖️ConfigMutation
 /// 🧮️ B1: `Puzzle5dConfig`'s operation enum. Every real config edit is captured as "the whole config
 /// after this edit"; `backwards()` is the same one-liner regardless of what changed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum Puzzle5dConfigOperation {
+pub enum Puzzle5dConfigMutation {
     Snapshot { config: Puzzle5dConfig },
 }
 
-impl protocol::Operation<Puzzle5dConfig> for Puzzle5dConfigOperation {
+impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
     type Diff = Puzzle5dConfig;
 
     fn diff(&self, _base: &Puzzle5dConfig) -> Puzzle5dConfig {
         match self {
-            Puzzle5dConfigOperation::Snapshot { config } => config.clone(),
+            Puzzle5dConfigMutation::Snapshot { config } => config.clone(),
         }
     }
 
-    fn backwards(&self, base: &Puzzle5dConfig) -> Vec<Self> {
-        vec![Puzzle5dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Puzzle5dConfig) -> Vec<Self> {
+        vec![Puzzle5dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
-impl protocol::OpBinary for Puzzle5dConfigOperation {
+impl protocol::OpBinary for Puzzle5dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
@@ -242,7 +242,7 @@ impl protocol::OpBinary for Puzzle5dConfigOperation {
     }
 }
 
-impl protocol::OpText for Puzzle5dConfigOperation {
+impl protocol::OpText for Puzzle5dConfigMutation {
     fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
@@ -250,4 +250,4 @@ impl protocol::OpText for Puzzle5dConfigOperation {
         serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }
-//#endregion 🔖️ConfigOperation
+//#endregion 🔖️ConfigMutation

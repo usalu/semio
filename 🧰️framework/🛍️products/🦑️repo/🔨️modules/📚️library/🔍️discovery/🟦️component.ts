@@ -94,10 +94,12 @@ export interface Taxonomy {
   readonly appsDirName: string;
   readonly modesDirName: string;
   readonly windowsDirName: string;
-  /** ✅️ COMPLETENESS set: every `🗿️artifacts/<a>/` must carry each of these as a leaf. Never merge with `artifactChildDirs`. */
+  /** ✅️ COMPLETENESS set: every `🗿️artifacts/<a>/` must carry each of these as a leaf. Never merge with `artifactChildDirs`. Includes `🧬️mutations` and `⚙️engine`. */
   readonly artifactComponentDirs: readonly string[];
-  /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the extra member is `⚙️engine`, allowed but not required). */
+  /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the structural-only extra is `📚️examples`). */
   readonly artifactChildDirs: readonly string[];
+  /** 🧬️ Required children of each `🧬️mutations/<mutation>/` dir: mutation struct, per-mutation diff, inverse. */
+  readonly mutationChildDirs: readonly string[];
   readonly exampleAssetsDirName: string;
   readonly exampleTestsDirName: string;
   readonly exampleSlugPattern: string;
@@ -152,7 +154,8 @@ export function loadTaxonomy(): Taxonomy {
 
 /**
  * 🚦️ Internal-consistency audit of the vocabulary itself: the completeness/structural artifact lists must
- * stay in their superset relation, every declared area state and every projection map (`taxonomyLeafFilenames`,
+ * stay in their superset relation, `mutationChildDirs` must be declared and covered by `taxonomyLeafParentDirs`,
+ * every declared area state and every projection map (`taxonomyLeafFilenames`,
  * `entryFilenames`) must agree with `ecosystems`/`targets`, and every lang must be described. Returns human
  * readable problems (empty = healthy) so a vocabulary edit can never silently blind or flood the rules that
  * consume it.
@@ -209,6 +212,34 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   for (const dir of taxonomy.artifactComponentDirs) {
     if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);
   }
+  //#region MutationFacetContract
+  for (const required of ["🧬️mutations", "⚙️engine"] as const) {
+    if (!taxonomy.artifactComponentDirs.includes(required)) {
+      problems.push(`artifactComponentDirs must include "${required}".`);
+    }
+    if (!taxonomy.artifactChildDirs.includes(required)) {
+      problems.push(`artifactChildDirs must include "${required}".`);
+    }
+  }
+  if (!Array.isArray(taxonomy.mutationChildDirs) || taxonomy.mutationChildDirs.length === 0) {
+    problems.push(`mutationChildDirs must be a non-empty array.`);
+  } else {
+    for (const dir of taxonomy.mutationChildDirs) {
+      if (!dir) {
+        problems.push(`mutationChildDirs contains an empty entry.`);
+        continue;
+      }
+      if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+        problems.push(`mutationChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
+      }
+    }
+  }
+  for (const required of ["🧬️mutations", "🦠️mutation", "↩️inverse"] as const) {
+    if (!taxonomy.taxonomyLeafParentDirs.includes(required)) {
+      problems.push(`taxonomyLeafParentDirs must include "${required}".`);
+    }
+  }
+  //#endregion MutationFacetContract
   for (const lang of taxonomy.langs) {
     const ecosystem = taxonomy.ecosystems[lang];
     if (!ecosystem) {

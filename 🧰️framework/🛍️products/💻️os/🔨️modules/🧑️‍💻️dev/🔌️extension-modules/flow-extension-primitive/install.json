@@ -1,0 +1,9 @@
+{
+  "extensionId": "flow-extension-primitive",
+  "version": "0.0.0-dev",
+  "label": "flow-extension-primitive",
+  "extends": "flow",
+  "moduleUrl": "/extensions/flow-extension-primitive/semio_s_plugin_flow_extension_primitive.js",
+  "packageHash": "dev:1786197681697",
+  "installedAt": 1786197681697
+}

@@ -1,4 +1,4 @@
-//! 🧮️ Writer play app — view state (`WriterConfig`) and its operation enum (`WriterConfigOperation`).
+//! 🧮️ Writer play app — view state (`WriterConfig`) and its operation enum (`WriterConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.writer` document. It still round-trips through a real
@@ -8,7 +8,7 @@
 //! survives into the document either.
 
 use crate::artifacts::writer::WriterCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
@@ -166,7 +166,7 @@ store::impl_whole_record_config!(WriterConfig);
 /// returns — mirrors `shooting_op::ShootingConfigOperation` exactly (see that type's doc comment for the
 /// whole-config-snapshot inverse rationale).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum WriterConfigOperation {
+pub enum WriterConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -206,7 +206,7 @@ pub enum WriterConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for WriterConfigOperation {
+impl protocol::OpText for WriterConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -231,7 +231,7 @@ impl protocol::OpText for WriterConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for WriterConfigOperation {
+impl protocol::OpBinary for WriterConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -277,30 +277,30 @@ impl protocol::OpBinary for WriterConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<WriterConfig> for WriterConfigOperation {
+impl Mutation<WriterConfig> for WriterConfigMutation {
     type Diff = WriterConfig;
 
     fn diff(&self, base: &WriterConfig) -> WriterConfig {
         let mut next = base.clone();
         match self {
-            WriterConfigOperation::Snapshot { config } => return config.clone(),
-            WriterConfigOperation::SetSelectedAstIds { ids } => next.selected_ast_ids = ids.clone(),
-            WriterConfigOperation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
-            WriterConfigOperation::SetFormatSignal { value } => next.format_signal = *value,
-            WriterConfigOperation::SetLintSignal { value } => next.lint_signal = *value,
-            WriterConfigOperation::SetRevision { value } => next.revision = *value,
-            WriterConfigOperation::SetEditorSettings { settings } => next.editor_settings = settings.clone(),
-            WriterConfigOperation::SetTreeHoveredAstId { id } => next.tree_hovered_ast_id = id.clone(),
-            WriterConfigOperation::SetEditorHoverOffset { offset } => next.editor_hover_offset = *offset,
-            WriterConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            WriterConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            WriterConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            WriterConfigMutation::Snapshot { config } => return config.clone(),
+            WriterConfigMutation::SetSelectedAstIds { ids } => next.selected_ast_ids = ids.clone(),
+            WriterConfigMutation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
+            WriterConfigMutation::SetFormatSignal { value } => next.format_signal = *value,
+            WriterConfigMutation::SetLintSignal { value } => next.lint_signal = *value,
+            WriterConfigMutation::SetRevision { value } => next.revision = *value,
+            WriterConfigMutation::SetEditorSettings { settings } => next.editor_settings = settings.clone(),
+            WriterConfigMutation::SetTreeHoveredAstId { id } => next.tree_hovered_ast_id = id.clone(),
+            WriterConfigMutation::SetEditorHoverOffset { offset } => next.editor_hover_offset = *offset,
+            WriterConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            WriterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            WriterConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &WriterConfig) -> Vec<Self> {
-        vec![WriterConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &WriterConfig) -> Vec<Self> {
+        vec![WriterConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -329,15 +329,15 @@ mod tests {
     #[test]
     fn writer_config_operation_backwards_restores_pre_state() {
         let pre = WriterConfig::default();
-        store::test_support::assert_operation_round_trip(&pre, WriterConfigOperation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_operation_round_trip(&pre, WriterConfigOperation::SetSelectedAstIds { ids: vec!["a".into()] });
-        store::test_support::assert_operation_round_trip(&pre, WriterConfigOperation::SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } });
+        store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetSelectedAstIds { ids: vec!["a".into()] });
+        store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } });
     }
 
     #[test]
     fn writer_config_operation_binary_matches_text() {
-        store::test_support::assert_op_text_binary_equivalence(&WriterConfigOperation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_text_binary_equivalence(&WriterConfigOperation::Snapshot { config: WriterConfig::default() });
+        store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::Snapshot { config: WriterConfig::default() });
     }
 
     #[test]

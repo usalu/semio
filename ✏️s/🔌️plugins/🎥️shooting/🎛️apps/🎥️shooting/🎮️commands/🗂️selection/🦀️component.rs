@@ -1,8 +1,8 @@
 //! 🗂️ Shooting play app commands — the viewport selection/hover/transform-utility surface. All
 //! CONFIG-only: they mutate `ShootingConfig` and never emit document operations.
 
-use crate::apps::shooting::config::{ShootingConfig, ShootingConfigOperation};
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingFixture;
 use semio_framework_plugin::{merge_world_selection_ids, ConfigView, DocumentView, Emit, Fault, SelectionSet};
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,8 @@ pub mod set_selection {
         pub asset_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: payload.shot_ids.clone(), asset_ids: payload.asset_ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ShootingConfigMutation::SetSelection { shot_ids: payload.shot_ids.clone(), asset_ids: payload.asset_ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -34,8 +34,8 @@ pub mod set_selection_method {
         pub method: String,
     }
 
-    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigOperation::SetSelectionMethod { method: payload.method.clone() }]))
+    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ShootingConfigMutation::SetSelectionMethod { method: payload.method.clone() }]))
     }
 }
 //#endregion 🔖️SetSelectionMethod
@@ -51,10 +51,10 @@ pub mod world_select {
         pub merge: String,
     }
 
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.projection;
         let merged = merge_world_selection_ids(&SelectionSet::from_ids(config.selected_asset_ids.clone()), &payload.ids, &payload.merge).to_vec();
-        Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }]))
+        Ok(Emit::config(vec![ShootingConfigMutation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }]))
     }
 }
 //#endregion 🔖️WorldSelect
@@ -69,8 +69,8 @@ pub mod set_hover {
         pub asset_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigOperation::SetHoveredAsset { asset_id: payload.asset_id.clone() }]))
+    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ShootingConfigMutation::SetHoveredAsset { asset_id: payload.asset_id.clone() }]))
     }
 }
 //#endregion 🔖️SetHover
@@ -87,15 +87,15 @@ pub mod world_pick {
         pub merge: String,
     }
 
-    pub fn handle(payload: &WorldPick, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &WorldPick, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.projection;
         let resolved = payload.asset_index.and_then(|index| doc.projection.assets.get(index as usize)).map(|asset| asset.id.clone()).or_else(|| payload.asset_id.clone());
         match resolved {
-            None if payload.merge == "replace" => Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: Vec::new() }])),
+            None if payload.merge == "replace" => Ok(Emit::config(vec![ShootingConfigMutation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: Vec::new() }])),
             None => Ok(Emit::default()),
             Some(id) => {
                 let merged = merge_world_selection_ids(&SelectionSet::from_ids(config.selected_asset_ids.clone()), &[id], &payload.merge).to_vec();
-                Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }]))
+                Ok(Emit::config(vec![ShootingConfigMutation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }]))
             }
         }
     }
@@ -110,7 +110,7 @@ pub mod world_pointer_down {
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {}
 
-    pub fn handle(_payload: &WorldPointerDown, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(_payload: &WorldPointerDown, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -124,7 +124,7 @@ pub mod world_pointer_move {
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {}
 
-    pub fn handle(_payload: &WorldPointerMove, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(_payload: &WorldPointerMove, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -140,14 +140,14 @@ pub mod set_center_model {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetCenterModel, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &SetCenterModel, _doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.projection;
         let next = payload.pressed.unwrap_or(!config.center_model);
-        let mut config_operations = vec![ShootingConfigOperation::SetCenterModel { value: next }];
+        let mut config_mutations = vec![ShootingConfigMutation::SetCenterModel { value: next }];
         if next && !config.center_model {
-            config_operations.push(ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 });
+            config_mutations.push(ShootingConfigMutation::SetFitRevision { value: config.fit_revision + 1 });
         }
-        Ok(Emit::config(config_operations))
+        Ok(Emit::config(config_mutations))
     }
 }
 //#endregion 🔖️SetCenterModel
@@ -162,8 +162,8 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigOperation::SetActiveUtility { utility_id: payload.utility_id.clone() }, ShootingConfigOperation::SetHoveredAsset { asset_id: None }]))
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ShootingConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }, ShootingConfigMutation::SetHoveredAsset { asset_id: None }]))
     }
 }
 //#endregion 🔖️SetActiveUtility
@@ -183,18 +183,18 @@ mod tests {
 
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::WorldPick(world_pick::WorldPick { asset_id: None, asset_index: Some(0), merge: "replace".into() }));
-        assert!(result.operations.is_empty(), "worldPick mutates only ephemeral selection, never the document");
+        assert!(result.mutations.is_empty(), "worldPick mutates only ephemeral selection, never the document");
         let payload: Value = serde_json::from_str(&render(&mut app, SHOOTING_PLAY_BODY_SCENE)).unwrap();
         let selection: Value = serde_json::from_str(payload["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
         assert_eq!(selection["ids"], json!(["base"]), "the picked asset becomes the config selection");
     }
 
     #[test]
-    fn set_active_utility_clears_hover_and_emits_no_document_operations() {
+    fn set_active_utility_clears_hover_and_emits_no_document_mutations() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetHover(set_hover::SetHover { asset_id: Some("base".into()) }));
         let result = dispatch(&mut app, ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));
-        assert!(result.operations.is_empty(), "utility switching never emits document operations");
+        assert!(result.mutations.is_empty(), "utility switching never emits document operations");
     }
 
     #[test]
@@ -205,7 +205,7 @@ mod tests {
         // fit_revision itself is asserted end-to-end (render fitJson) in the scene window's own tests;
         // here we just assert the command round-trips without error under both edges.
         let result = dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: None }));
-        assert!(result.operations.is_empty(), "center-model is config-only");
+        assert!(result.mutations.is_empty(), "center-model is config-only");
     }
 }
 //#endregion 🧪️Tests

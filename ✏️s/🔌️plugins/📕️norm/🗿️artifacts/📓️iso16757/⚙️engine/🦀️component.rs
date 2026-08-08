@@ -1,6 +1,7 @@
 //! ⚙️ ISO 16757 app — headless compute (constitutional: engine).
 
 use crate::artifacts::iso16757::{CatalogueValue, Document};
+use crate::artifacts::iso16757::mutations::Iso16757Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity, QuantityKind};
 use std::collections::{HashMap, HashSet};
 
@@ -625,7 +626,7 @@ pub struct Iso16757Family;
 
 impl crate::document::NormFamily for Iso16757Family {
     type Document = Document;
-    type Operation = crate::artifacts::iso16757::op::Operation;
+    type Mutation = crate::artifacts::iso16757::mutations::Iso16757Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::Iso16757
@@ -635,6 +636,44 @@ impl crate::document::NormFamily for Iso16757Family {
         evaluate(document)
     }
 }
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent Iso16757 artifact engine — owns the projection; every transition is a mutation.
+pub struct Iso16757Engine {
+    projection: Document,
+}
+
+impl Iso16757Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for Iso16757Engine {
+    type Projection = Document;
+    type Mutation = Iso16757Mutation;
+    type Diff = crate::artifacts::iso16757::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = crate::document::NormHost<Iso16757Family>;
 // #endregion 🔖️Session
@@ -1149,54 +1188,54 @@ mod tests {
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "iso16757.document",
         extension: Some("iso16757"),
-        role: dsl::LanguageRole::Document,
+        role: crate::dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("iso16757.document"),
+        hooks: crate::dsl::passthrough_hooks("iso16757.document"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "iso16757.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: crate::dsl::LanguageRole::Ops,
         grammar: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("iso16757.op"),
+        hooks: crate::dsl::passthrough_hooks("iso16757.op"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "iso16757.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: crate::dsl::LanguageRole::Diff,
         grammar: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("iso16757.diff"),
+        hooks: crate::dsl::passthrough_hooks("iso16757.diff"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "iso16757.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: crate::dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("iso16757.pack"),
+        hooks: crate::dsl::passthrough_hooks("iso16757.pack"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    crate::dsl::register_language(crate::dsl::LanguageSpec {
         id: "iso16757.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: crate::dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("iso16757.spr"),
+        hooks: crate::dsl::passthrough_hooks("iso16757.spr"),
     });
 }

@@ -1,5 +1,5 @@
 //! ⚙️ S Home launcher app — `DocumentApp::Config` + its operation enum (constitutional: engine + op,
-//! merged at app level per the per-app recipe: `Config`/`ConfigOperation` are inherently app-scoped,
+//! merged at app level per the per-app recipe: `Config`/`ConfigMutation` are inherently app-scoped,
 //! never artifact-scoped).
 //!
 //! 🕳️ `SHomeDocument` is a two-field counter document (`schema` + `catalog_generation`) with no tree
@@ -97,10 +97,10 @@ store::impl_whole_record_config!(HomeConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// @emoji 🧮️ `HomeConfig`'s operation enum — mirrors `apps::space::config::SpaceConfigOperation`'s
+/// @emoji 🧮️ `HomeConfig`'s operation enum — mirrors `apps::space::config::SpaceConfigMutation`'s
 /// whole-record-diff design (see its doc comment for the full rationale).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum HomeConfigOperation {
+pub enum HomeConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -113,7 +113,7 @@ pub enum HomeConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for HomeConfigOperation {
+impl protocol::OpText for HomeConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -127,7 +127,7 @@ impl protocol::OpText for HomeConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -138,7 +138,7 @@ impl protocol::OpText for HomeConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for HomeConfigOperation {
+impl protocol::OpBinary for HomeConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -184,21 +184,21 @@ impl protocol::OpBinary for HomeConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl protocol::Operation<HomeConfig> for HomeConfigOperation {
+impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     type Diff = HomeConfig;
 
     fn diff(&self, base: &HomeConfig) -> HomeConfig {
         let mut next = base.clone();
         match self {
-            HomeConfigOperation::Snapshot { config } => return config.clone(),
-            HomeConfigOperation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
-            HomeConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            HomeConfigMutation::Snapshot { config } => return config.clone(),
+            HomeConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
+            HomeConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &HomeConfig) -> Vec<Self> {
-        vec![HomeConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &HomeConfig) -> Vec<Self> {
+        vec![HomeConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -207,7 +207,7 @@ impl protocol::Operation<HomeConfig> for HomeConfigOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::Operation;
+    use protocol::Mutation;
 
     #[test]
     fn home_config_default_locale_is_english() {
@@ -223,18 +223,18 @@ mod tests {
 
     #[test]
     fn home_config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&HomeConfigOperation::Snapshot { config: HomeConfig::default() });
-        store::test_support::assert_op_line_round_trip(&HomeConfigOperation::SetActivePanelTab { tab_id: "tab-1".into() });
-        store::test_support::assert_op_line_round_trip(&HomeConfigOperation::SetLocale { value: "de".into() });
+        store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
+        store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
+        store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetLocale { value: "de".into() });
     }
 
     #[test]
     fn home_config_operation_round_trips_via_apply_and_backwards() {
         let config = HomeConfig::default();
-        let operation = HomeConfigOperation::SetLocale { value: "de".into() };
+        let operation = HomeConfigMutation::SetLocale { value: "de".into() };
         let next = operation.diff(&config);
         assert_eq!(next.locale, "de");
-        let backwards = operation.backwards(&config);
+        let backwards = operation.inverse(&config);
         let restored = backwards[0].diff(&next);
         assert_eq!(restored, config);
     }

@@ -540,3 +540,36 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("3d.spr"),
     });
 }
+
+
+//#region 🔖️ArtifactEngine
+pub struct Puzzle3dEngine {
+    projection: crate::artifacts::puzzle3d::Puzzle3dProjection,
+}
+
+impl Puzzle3dEngine {
+    pub fn new(projection: crate::artifacts::puzzle3d::Puzzle3dProjection) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Puzzle3dEngine {
+    type Projection = crate::artifacts::puzzle3d::Puzzle3dProjection;
+    type Mutation = crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
+    type Diff = crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::puzzle3d::mutations::apply_puzzle3d_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

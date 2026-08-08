@@ -1,7 +1,7 @@
 //! 🗣️ Playbook play app commands — host-pushed locale.
 
-use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigOperation};
-use crate::artifacts::playbook::{op::PlaybookOperation, PlaybookSpec};
+use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
+use crate::artifacts::playbook::{op::PlaybookMutation, PlaybookSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PlaybookSpec>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation>, Fault> {
-        Ok(Emit::config(vec![PlaybookConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, PlaybookSpec>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+        Ok(Emit::config(vec![PlaybookConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -32,7 +32,7 @@ mod tests {
     fn set_locale_is_a_view_command_without_operations() {
         let mut app = playbook_app();
         let result = app.dispatch_typed(PlaybookCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
-        assert!(result.operations.is_empty(), "locale is host-pushed ephemeral config state, not a document operation");
+        assert!(result.mutations.is_empty(), "locale is host-pushed ephemeral config state, not a document operation");
     }
 
     #[test]

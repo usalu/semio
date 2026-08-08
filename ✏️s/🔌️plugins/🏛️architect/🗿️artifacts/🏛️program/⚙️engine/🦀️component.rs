@@ -24,6 +24,11 @@ pub fn register() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::architect::ArchitectPlayApp>(crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA);
 }
 
+/// 🗂️ Plugin setup entry — same as `register`, named for `Plugin::builder(...).setup(...)`.
+pub fn register_architect_exports() {
+    register();
+}
+
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
@@ -102,3 +107,38 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent program artifact engine — owns the projection; every transition is a mutation.
+pub struct ProgramEngine {
+    projection: crate::artifacts::program::Program,
+}
+
+impl ProgramEngine {
+    pub fn new(projection: crate::artifacts::program::Program) -> Self {
+        Self { projection }
+    }
+    pub fn into_projection(self) -> crate::artifacts::program::Program {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for ProgramEngine {
+    type Projection = crate::artifacts::program::Program;
+    type Mutation = crate::artifacts::program::mutations::ProgramMutation;
+    type Diff = crate::artifacts::program::diff::ProgramDiff;
+
+    fn projection(&self) -> &Self::Projection { &self.projection }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::program::mutations::apply_program_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

@@ -4,10 +4,10 @@
 //! session-only runtime state, never a document field (see `ShootingConfig::camera`). `SetShotCamera` and
 //! `SaveCamera` ARE real document mutations.
 
-use crate::apps::shooting::config::{ShootingConfig, ShootingConfigOperation};
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingCamera, ShootingFixture, ShootingSavedCamera};
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -26,8 +26,8 @@ pub mod set_shot_camera {
         pub camera: ShootingCamera,
     }
 
-    pub fn handle(payload: &SetShotCamera, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![ShootingOperation::SetShotCamera { shot_id: payload.shot_id.clone(), camera: payload.camera.clone() }]))
+    pub fn handle(payload: &SetShotCamera, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![ShootingMutation::SetShotCamera { shot_id: payload.shot_id.clone(), camera: payload.camera.clone() }]))
     }
 }
 //#endregion 🔖️SetShotCamera
@@ -41,15 +41,15 @@ pub mod save_camera {
     #[dsl(keyword = "save-camera")]
     pub struct SaveCamera {}
 
-    pub fn handle(_payload: &SaveCamera, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(_payload: &SaveCamera, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         let draft = config.camera_draft_label.trim().to_string();
         let label = if draft.is_empty() { format!("Camera {}", fixture.saved_cameras.len() + 1) } else { draft };
         let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: config.camera.clone() };
         Ok(Emit {
-            document_operations: vec![ShootingOperation::SavedCameras(CollectionOperation::Add { index: fixture.saved_cameras.len(), item: saved_camera })],
-            config_operations: vec![ShootingConfigOperation::SetCameraDraftLabel { value: String::new() }],
+            document_mutations: vec![ShootingMutation::SavedCameras(CollectionMutation::Add { index: fixture.saved_cameras.len(), item: saved_camera })],
+            config_mutations: vec![ShootingConfigMutation::SetCameraDraftLabel { value: String::new() }],
             ..Default::default()
         })
     }
@@ -66,9 +66,9 @@ pub mod load_saved_camera {
         pub id: String,
     }
 
-    pub fn handle(payload: &LoadSavedCamera, doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &LoadSavedCamera, doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match doc.projection.saved_cameras.iter().find(|entry| entry.id == payload.id) {
-            Some(saved) => Ok(Emit::config(vec![ShootingConfigOperation::SetCamera { camera: saved.camera.clone() }])),
+            Some(saved) => Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: saved.camera.clone() }])),
             None => Ok(Emit::default()),
         }
     }
@@ -85,8 +85,8 @@ pub mod set_camera_draft_label {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetCameraDraftLabel, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigOperation::SetCameraDraftLabel { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetCameraDraftLabel, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ShootingConfigMutation::SetCameraDraftLabel { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetCameraDraftLabel
@@ -102,8 +102,8 @@ pub mod set_camera {
         pub camera: ShootingCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigOperation::SetCamera { camera: payload.camera.clone() }]))
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, ShootingFixture>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
 //#endregion 🔖️SetCamera
@@ -120,14 +120,14 @@ mod tests {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() }));
         let result = dispatch(&mut app, ShootingCommand::SaveCamera(save_camera::SaveCamera {}));
-        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.mutations.len(), 1);
     }
 
     #[test]
     fn set_camera_never_touches_the_document() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } }));
-        assert!(result.operations.is_empty(), "the free/live camera is config-only");
+        assert!(result.mutations.is_empty(), "the free/live camera is config-only");
     }
 }
 //#endregion 🧪️Tests

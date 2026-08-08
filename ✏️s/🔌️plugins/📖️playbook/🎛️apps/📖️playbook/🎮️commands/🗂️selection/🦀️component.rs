@@ -1,7 +1,7 @@
 //! 🗂️ Playbook play app commands — builder selection.
 
-use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigOperation};
-use crate::artifacts::playbook::{op::PlaybookOperation, PlaybookSpec};
+use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
+use crate::artifacts::playbook::{op::PlaybookMutation, PlaybookSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, PlaybookSpec>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation>, Fault> {
-        Ok(Emit::config(vec![PlaybookConfigOperation::SetSelectedIds { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, PlaybookSpec>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+        Ok(Emit::config(vec![PlaybookConfigMutation::SetSelectedIds { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -32,7 +32,7 @@ mod tests {
     fn set_selection_is_a_view_command_without_operations() {
         let mut app = playbook_app();
         let result = app.dispatch_typed(PlaybookCommand::SetSelection(set_selection::SetSelection { ids: vec!["block-1".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("set selection");
-        assert!(result.operations.is_empty(), "selection is ephemeral config state, not a document operation");
+        assert!(result.mutations.is_empty(), "selection is ephemeral config state, not a document operation");
     }
 
     #[test]

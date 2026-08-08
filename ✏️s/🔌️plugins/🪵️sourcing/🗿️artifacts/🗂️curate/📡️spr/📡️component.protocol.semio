@@ -1,7 +1,7 @@
 dialect protocol
 protocol curate.spr
 version 1
-schema sourcing.curate.operation
+schema sourcing.curate.mutation
 start record
 framing record
 record sourcing.curate-add-stock tag 1

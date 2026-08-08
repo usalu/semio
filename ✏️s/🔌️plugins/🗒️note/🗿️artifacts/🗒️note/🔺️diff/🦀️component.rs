@@ -1,8 +1,8 @@
 //! 🔺️ Note artifact — the operation diff (constitutional: diff).
 
-use crate::artifacts::note::op::{apply_note_operation, NoteOperation};
+use crate::artifacts::note::op::{apply_note_mutation, NoteMutation};
 use crate::artifacts::note::NoteDocument;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
@@ -13,19 +13,19 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 //#region 🔖️Diff
-/// 🧩️ Snapshot diff wrapping the forward `NoteOperation` — `apply` replays it, `absorb` keeps the latest
+/// 🧩️ Snapshot diff wrapping the forward `NoteMutation` — `apply` replays it, `absorb` keeps the latest
 /// (coalescing a whole gesture's `SetBlocks` stream into one edit).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
 pub struct NoteDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[dsl(statements)]
-    pub operation: Option<NoteOperation>,
+    pub operation: Option<NoteMutation>,
 }
 
-impl OperationDiff<NoteDocument> for NoteDiff {
+impl MutationDiff<NoteDocument> for NoteDiff {
     fn apply(&self, projection: &NoteDocument) -> NoteDocument {
         match &self.operation {
-            Some(operation) => apply_note_operation(projection, operation),
+            Some(operation) => apply_note_mutation(projection, operation),
             None => projection.clone(),
         }
     }
@@ -50,8 +50,8 @@ mod tests {
     fn note_diff_print_parse_round_trips() {
         use protocol::DiffCodec;
         let diffs = vec![
-            NoteDiff { operation: Some(NoteOperation::SetGridSpacing { spacing: Some(48.0) }) },
-            NoteDiff { operation: Some(NoteOperation::SetDocument { document: crate::artifacts::note::engine::empty_note_document() }) },
+            NoteDiff { operation: Some(NoteMutation::SetGridSpacing { spacing: Some(48.0) }) },
+            NoteDiff { operation: Some(NoteMutation::SetDocument { document: crate::artifacts::note::engine::empty_note_document() }) },
             NoteDiff::default(),
         ];
         for diff in diffs {
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn note_diff_encode_decode_round_trips() {
         use protocol::DiffCodec;
-        let diffs = vec![NoteDiff { operation: Some(NoteOperation::SetGridSpacing { spacing: Some(48.0) }) }, NoteDiff::default()];
+        let diffs = vec![NoteDiff { operation: Some(NoteMutation::SetGridSpacing { spacing: Some(48.0) }) }, NoteDiff::default()];
         for diff in diffs {
             let bytes = diff.encode_diff().expect("encode_diff");
             let decoded = NoteDiff::decode_diff(&bytes).expect("decode_diff");

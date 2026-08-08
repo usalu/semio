@@ -1,0 +1,1 @@
+error: could not compile `semio-s-plugin-dag` (lib) due to 25 previous errors

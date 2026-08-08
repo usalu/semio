@@ -1,0 +1,71 @@
+{
+  "label": "procedural3d",
+  "url": "http://127.0.0.1:6018/",
+  "dump": {
+    "title": "semio · procedural · 3d",
+    "body": {
+      "scrollH": 900,
+      "clientH": 900,
+      "scrollW": 1440,
+      "clientW": 1440
+    },
+    "hasRenderError": false,
+    "bodySample": [
+      "Document",
+      "Catalogue",
+      "Inspection",
+      "Fullscreen",
+      "semio · procedural · 3d",
+      "Example",
+      "Hexagonal Mushroom Column",
+      "Edit",
+      "Generate",
+      "Flow",
+      "Focus",
+      "Close",
+      "Window Options",
+      "Actions",
+      "Utilities",
+      "Preview",
+      "Focus",
+      "Close",
+      "Projection",
+      "Window Options",
+      "Actions",
+      "Utilities",
+      "Display",
+      "Sync",
+      "Settings",
+      "Keybindings",
+      "Theme",
+      "Plugins",
+      "Extensions",
+      "History"
+    ],
+    "layout": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "hidden",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "relative flex flex-col overflow-hidden ui-surface h-screen w-screen"
+    },
+    "scope": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "visible",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "semio-scope"
+    },
+    "host": {
+      "w": 966,
+      "h": 807,
+      "overflow": "hidden",
+      "flex": "0 1 auto",
+      "height": "807.266px",
+      "className": "semio-node-graph-host relative h-full min-h-0 w-full overflow-hidden"
+    }
+  },
+  "consoleErrors": []
+}

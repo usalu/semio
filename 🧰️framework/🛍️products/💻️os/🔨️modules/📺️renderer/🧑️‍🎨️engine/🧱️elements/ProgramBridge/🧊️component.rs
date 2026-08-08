@@ -170,7 +170,7 @@ mod wasm_program_exchange {
         expect_done(&frames, seq)
     }
 
-    pub fn apply_operations(runtime: &WasmPluginRuntime, instance_id: u32, operations: &[u8]) -> Result<(), String> {
+    pub fn apply_mutations(runtime: &WasmPluginRuntime, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let frames = exchange(runtime, instance_id, vec![AppCommand::ApplyEnvelopes { seq, envelopes }])?;
@@ -407,11 +407,11 @@ impl ProgramBridgeEntry {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn apply_operations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
+    pub fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::apply_operations(runtime, instance_id, operations),
+            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::apply_mutations(runtime, instance_id, operations),
             #[cfg(target_arch = "wasm32")]
-            _ => Err("apply_operations unavailable".into()),
+            _ => Err("apply_mutations unavailable".into()),
         }
     }
 }

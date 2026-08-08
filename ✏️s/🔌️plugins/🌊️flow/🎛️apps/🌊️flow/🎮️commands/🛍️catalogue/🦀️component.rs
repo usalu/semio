@@ -1,8 +1,8 @@
 //! 🛍️ Flow play app commands — host-supplied extra catalogue sections.
 //! The sections themselves are rendered by `📌️panels/🛍️catalogue`.
 
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_catalogue_sections {
         pub sections_json: String,
     }
 
-    pub fn handle(payload: &SetCatalogueSections, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        Ok(Emit::config(vec![FlowConfigOperation::SetCatalogueSections { sections_json: payload.sections_json.clone() }]))
+    pub fn handle(payload: &SetCatalogueSections, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FlowConfigMutation::SetCatalogueSections { sections_json: payload.sections_json.clone() }]))
     }
 }
 //#endregion 🔖️SetCatalogueSections
@@ -31,10 +31,10 @@ mod tests {
     use crate::apps::flow::FlowCommand;
 
     #[test]
-    fn setting_catalogue_sections_emits_no_document_operations() {
+    fn setting_catalogue_sections_emits_no_document_mutations() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::SetCatalogueSections(set_catalogue_sections::SetCatalogueSections { sections_json: "[]".into() }));
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

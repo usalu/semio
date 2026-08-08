@@ -1,5 +1,5 @@
 @import "../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css";
-@source "../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react";
-@source "../ui";
-@source "../sketchpad";
-@source "../js";
+@source ".";
+@source "..";
+@source "../../lib/sketchpad";
+@source "../../lib/js";

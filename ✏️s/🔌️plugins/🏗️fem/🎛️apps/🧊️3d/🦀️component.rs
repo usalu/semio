@@ -9,13 +9,13 @@
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
 use crate::apps::fem3d::commands::{analysis, camera, example, loads, model, results, selection};
-use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigOperation};
+use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::apps::fem3d::modes::edit;
 use crate::apps::fem3d::modes::edit::windows::{model as window_model, results as window_results};
-use crate::artifacts::fem3d::op::Fem3dOperation;
+use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dDocument;
 use crate::model::{Dof, ElementResult};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     create_default_layout, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UiNode,
 };
 use store::EngineHandles;
@@ -40,7 +40,7 @@ semio_framework_plugin::app_commands! {
     /// `result-display`. **Row order is the binary variant ordinal: appending is safe, reordering is a
     /// wire-format break.** Unlike fem2d, there is NO `setLocale`/`SetLocale` row — fem3d's pre-migration
     /// `Fem3dCommand` enum never had one (a pre-existing, intentional asymmetry between the two apps).
-    pub enum Fem3dCommand for Fem3dDocument, Fem3dOperation, Fem3dConfig, Fem3dConfigOperation {
+    pub enum Fem3dCommand for Fem3dDocument, Fem3dMutation, Fem3dConfig, Fem3dConfigMutation {
         "addNode" as "add-node" => add_node::AddNode,
         "addBar" as "add-bar" => add_bar::AddBar,
         "addFrame" as "add-frame" => add_frame::AddFrame,
@@ -123,17 +123,17 @@ fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 //#region 🔖️Fem3dPlayApp
 /// 🧮️ v0 design: results are recomputed fresh inside `render()`, no cache, no `RunAnalysis` operation.
 /// Unit struct — every former `RefCell` field lives in `Fem3dConfig`, written through
-/// `Fem3dConfigOperation`s.
+/// `Fem3dConfigMutation`s.
 #[derive(Default)]
 pub struct Fem3dPlayApp;
 
 impl DocumentApp for Fem3dPlayApp {
     type Projection = Fem3dDocument;
-    type Operation = Fem3dOperation;
+    type Mutation = Fem3dMutation;
     type Config = Fem3dConfig;
-    type ConfigOperation = Fem3dConfigOperation;
+    type ConfigMutation = Fem3dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Fem3dCommand;
 
@@ -173,8 +173,8 @@ impl DocumentApp for Fem3dPlayApp {
         }
     }
 
-    fn whole_document_operation(projection: Fem3dDocument) -> Option<Fem3dOperation> {
-        Some(Fem3dOperation::SetDocument { document: projection })
+    fn whole_document_operation(projection: Fem3dDocument) -> Option<Fem3dMutation> {
+        Some(Fem3dMutation::SetDocument { document: projection })
     }
 
     /// 🎞️ `"document:in"` reproduces the trait's default whole-document-pack importer (overriding
@@ -183,7 +183,7 @@ impl DocumentApp for Fem3dPlayApp {
     /// usize}` extruded-footprint contract into a new `FemSolid`, defaulted to the document's first
     /// existing material if any, else an `"unassigned"` placeholder id — the solid simply won't solve
     /// until a real material is assigned.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -192,7 +192,7 @@ impl DocumentApp for Fem3dPlayApp {
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let projection = <Fem3dDocument as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
-                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
             }
@@ -213,7 +213,7 @@ impl DocumentApp for Fem3dPlayApp {
                 let id = crate::app_surface::next_id(doc.projection.solids.iter().map(|s| s.id.clone()), "sol");
                 let index = doc.projection.solids.len();
                 let solid = crate::artifacts::fem3d::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
-                Ok(Emit::operations(vec![Fem3dOperation::SetSolid { index, solid }]))
+                Ok(Emit::mutations(vec![Fem3dMutation::SetSolid { index, solid }]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -230,7 +230,7 @@ impl DocumentApp for Fem3dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -265,28 +265,28 @@ pub fn create_fem3d_app() -> App {
                 Some(&[50.0, 50.0]),
                 Some(&["Model".into(), "Results".into()]),
             ))
-            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .action_args("addNode", vec![
                 ActionArgDef::number("x", LocalizedLabel::data("X")).required(),
                 ActionArgDef::number("y", LocalizedLabel::data("Y")).required(),
                 ActionArgDef::number("z", LocalizedLabel::data("Z")).required(),
             ])
-            .operation("addBar", LocalizedLabel::native("Add Bar", "Stab hinzufügen"))
-            .operation("addFrame", LocalizedLabel::native("Add Frame", "Rahmen hinzufügen"))
-            .operation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
-            .operation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
-            .operation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
-            .operation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
+            .mutation("addBar", LocalizedLabel::native("Add Bar", "Stab hinzufügen"))
+            .mutation("addFrame", LocalizedLabel::native("Add Frame", "Rahmen hinzufügen"))
+            .mutation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
+            .mutation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
+            .mutation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
+            .mutation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
             .action_args("addNodalLoad", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
-            .operation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
+            .mutation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
             .action_args("addMemberUdl", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
-            .operation("addAreaLoad", LocalizedLabel::native("Add Area Load", "Flächenlast hinzufügen"))
+            .mutation("addAreaLoad", LocalizedLabel::native("Add Area Load", "Flächenlast hinzufügen"))
             .action_args("addAreaLoad", vec![
                 ActionArgDef::text("solidId", LocalizedLabel::native("Solid", "Volumenkörper")).required(),
                 ActionArgDef::number("pressure", LocalizedLabel::native("Pressure", "Druck")).required(),
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
             ])
-            .operation("addSolid", LocalizedLabel::native("Add Solid", "Volumenkörper hinzufügen"))
+            .mutation("addSolid", LocalizedLabel::native("Add Solid", "Volumenkörper hinzufügen"))
             .action_args("addSolid", vec![
                 ActionArgDef::number("x", LocalizedLabel::data("X")).required(),
                 ActionArgDef::number("y", LocalizedLabel::data("Y")).required(),
@@ -298,30 +298,30 @@ pub fn create_fem3d_app() -> App {
                 ActionArgDef::number("layers", LocalizedLabel::native("Layers", "Schichten")).default_value(1),
                 ActionArgDef::number("meshSize", LocalizedLabel::native("Mesh Size", "Netzgröße")).default_value(0.5),
             ])
-            .operation("addLoadCase", LocalizedLabel::native("Add Load Case", "Lastfall hinzufügen"))
+            .mutation("addLoadCase", LocalizedLabel::native("Add Load Case", "Lastfall hinzufügen"))
             .action_args("addLoadCase", vec![
                 ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
                 ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(false),
             ])
-            .operation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
+            .mutation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
             .action_args("addCombination", vec![
                 ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
                 ActionArgDef::text("terms", LocalizedLabel::native("Terms", "Terme")).required(),
             ])
-            .operation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
+            .mutation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
             .action_args("setSelfWeight", vec![
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")).required(),
                 ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).required(),
             ])
-            .operation("setAnalysisSettings", LocalizedLabel::native("Set Analysis Settings", "Analyseeinstellungen festlegen"))
+            .mutation("setAnalysisSettings", LocalizedLabel::native("Set Analysis Settings", "Analyseeinstellungen festlegen"))
             .action_args("setAnalysisSettings", vec![
                 ActionArgDef::number("modalCount", LocalizedLabel::native("Modal Count", "Anzahl Moden")),
                 ActionArgDef::number("bucklingCount", LocalizedLabel::native("Buckling Count", "Anzahl Beulmoden")),
                 ActionArgDef::number("deformationScale", LocalizedLabel::native("Deformation Scale", "Verformungsmaßstab")),
             ])
-            .operation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
+            .mutation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard"))]).default_value("default"),
             ])
@@ -586,9 +586,9 @@ mod tests {
         .to_string();
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any }, payload: MediaPayload::Structured { schema: "geometry".into(), json } };
         let emit = Fem3dPlayApp.import_media("geometry:in", &media, &doc).expect("geometry:in imports");
-        assert_eq!(emit.document_operations.len(), 1);
-        match &emit.document_operations[0] {
-            Fem3dOperation::SetSolid { solid, .. } => {
+        assert_eq!(emit.document_mutations.len(), 1);
+        match &emit.document_mutations[0] {
+            Fem3dMutation::SetSolid { solid, .. } => {
                 assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
                 assert_eq!(solid.base_z, 0.5);
                 assert_eq!(solid.height, 3.0);

@@ -1,0 +1,427 @@
+CMD: bunx vitest run --config 🧪️vitest.config.ts --reporter default --testTimeout 60000 --hookTimeout 60000
+CWD: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+stderr | 🧪️index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:3726:13)
+    at Object.react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+    at beginWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:35) {
+  [stack]: [Getter/Setter],
+  [message]: 'boom'
+}
+
+The above error occurred in the <FaultyChild> component.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ShellFaultBoundary.
+
+[DEBUG] shell fault test Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:3726:13)
+    at Object.react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+    at beginWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:35) 
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:3196:13)
+    at ShellFaultBoundary (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx:465:5)
+
+stderr | 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > runRequestMediaFrames (D5): Tier 2 failure (video element throws mid-seek) ⇒ dispatches fallbackAction exactly once with raw bytes as a data URL, no frame/done calls
+[os-shell] requestMediaFrames: decode failed, falling back to raw bytes Error: decode failed
+    at HTMLVideoElement.set (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4796:15)
+    at runTier2VideoFrames (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/ð¦ï¸component.tsx:832:11)
+    at runRequestMediaFrames (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/ð¦ï¸component.tsx:906:13)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4799:11
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+
+ ❯ |@semio-tech/framework-renderer-react| 🧪️index.test.ts (302 tests | 5 failed) 726ms
+     ✓ builds three sync backbone toggles 2ms
+     ✓ has no active toggle when detached 0ms
+     ✓ groups File, Folder, and Remote under a single Sync category collection 1ms
+     ✓ serializes document updates and skips stale slider values 52ms
+     ✓ coalesces straight slider movement but preserves a down-up reversal 102ms
+     ✓ caps queued direction reversals so a jittery drag cannot grow the queue unbounded 103ms
+     ✓ notifies only same-group subscribers and reflects the latest set value 0ms
+     ✓ isRevealCutoffHidden hides instances at or past the live cutoff, and never instances without a revealIndex 0ms
+     ✓ isRevealCutoffHidden treats a JSON null revealIndex as untagged, even at the boot cutoff of 0 0ms
+     ✓ committed reveal cutoff reconciliation ignores same-value identity churn so a live fill drag is not reset by fillBuildTick 0ms
+     ✓ drops overlapping ticks instead of queueing them behind a slow run 0ms
+     ✓ dedupes unchanged values and keeps at most one in-flight dispatch 0ms
+     ✓ starts every panel anchor at the same 300px width 0ms
+     ✓ toggles the overlays slice via a direct value without touching unrelated slices 0ms
+     ✓ starts, advances, and dismisses an introduction via SET_INTRODUCTION_STEP without touching unrelated slices 0ms
+     ✓ COMPLETE_INTRODUCTION_INTERACTION appends and dedupes indices; SET_INTRODUCTION_STEP resets them 0ms
+     ✓ opens, replaces, and closes a dialog via SET_DIALOG without touching unrelated slices 0ms
+     ✓ toggles the layout slice via an updater function 0ms
+     ✓ toggles a middle anchor via SET_PANEL_VISIBLE the same way as a corner 0ms
+     ✓ rewrites window icons via SET_WINDOW_ICON for extras and base kinds 0ms
+     ✓ rewrites window titles via SET_WINDOW_TITLE for extras and base kinds 0ms
+     ✓ resets the dock override, every anchor's active path/visible/size, drill-down memory, and tree expansion via RESET_DOCK 0ms
+     ✓ HYDRATE_DOCK_UI restores a persisted size for the top-middle anchor 0ms
+     ✓ updates the uiPrefs slice and leaves the sync slice referentially unchanged 0ms
+     ✓ action-panel slice: fold/expand/stage/reset/active-utility update only their own keys and preserve identity on no-operations 0ms
+     ✓ actionPane slice: SET_ACTIVE_TOOL updates only activeToolId and preserves identity on no-operations (mode-scoped, not per-window) 0ms
+     ✓ commandPanel slice: expand/collapse and stage/reset update only their own keys and preserve identity on no-operations (category active/fold state now lives in layout.panels['bottom-middle'], not this slice) 0ms
+     ✓ command palette category is the bottom-middle anchor's own SET_PANEL_PATH; the UI's category-switch handler additionally dispatches SET_COMMAND_EXPANDED:null (reproducing the old single-action collapse-on-switch behavior across two actions) 0ms
+     ✓ tutorial slice: SET_TUTORIAL starts a tutorial, resets rate/deviated, and clears an active introduction (mutual exclusivity) 0ms
+     ✓ tutorial slice: SET_INTRODUCTION_STEP (non-null) clears an active tutorial (mutual exclusivity, reverse direction) 0ms
+     ✓ tutorial slice: play/pause resets deviated only when transitioning to playing; rate/muted/captions/recording/deviated update independently 0ms
+     ✓ APPLY_TUTORIAL_UI_SNAPSHOT atomically restores layout/panels/tree/utility/tool/dialog/search across their owning slices 0ms
+     ✓ UPSERT_LOADED_PLUGIN inserts a new pluginId and replaces an existing one in place (order preserved) 0ms
+     ✓ REMOVE_LOADED_PLUGIN drops only the matching pluginId 0ms
+     ✓ SET_PLUGIN_STATUS tracks per-pluginId status independent of loadedPlugins membership 0ms
+     ✓ preserveJsonIdentity reuses the previous reference for structurally-equal values 0ms
+     ✓ preserveJsonIdentity returns the new reference when content actually differs 0ms
+     ✓ preserveJsonIdentity treats nested arrays/objects structurally, not just top-level fields 0ms
+     ✓ preserveJsonIdentity treats undefined previous as always-changed 0ms
+     ✓ mergeRecordPreservingIdentity reuses the whole previous record when every key is unchanged 0ms
+     ✓ mergeRecordPreservingIdentity reuses per-key references, replacing only the changed key 0ms
+     ✓ mergeRecordPreservingIdentity treats a key being added or removed as a change 0ms
+     ✓ buildActiveUtilityByWindowId omits null utilities for batched refresh 0ms
+     ✓ buildUiRefreshRequest forwards per-window utility map on viewState without a focused-window singular leak 0ms
+     ✓ buildActiveUtilityByWindowId makes a just-activated transform visible to refresh before the next React render 0ms
+     ✓ buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a plugin section) 0ms
+     ✓ buildUiRefreshRequest for none returns null 0ms
+     ✓ buildUiRefreshRequest for a partial scope requests only the listed window/panel bodies and flags 0ms
+     ✓ buildUiRefreshRequest returns null for a partial scope that matches nothing in this app 0ms
+     ✓ buildUiRefreshRequest attaches the cached hash for a section that was already fetched once 0ms
+     ✓ buildUiRefreshRequest gives two instances of the same window kind distinct keys and independent cached hashes 0ms
+     ✓ applyUiRefreshResponseToCache writes changed sections and ignores hash-only (unchanged) ones 0ms
+     ✓ buildUiRefreshRequest for a full scope also requests the mode-level tools section (keyed by tool id, not a window) 0ms
+     ✓ buildUiRefreshRequest for a partial scope requests tools only when the scope's `tools` flag is set 0ms
+     ✓ applyUiRefreshResponseToCache caches the tools section same as measures/engagements/labels 0ms
+     ✓ preserves batched UI refreshes through the React program adapter 2ms
+     ✓ loads plugin modules through framework-core, refcounted 1ms
+     ✓ parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response 0ms
+     ✓ falls back to an empty InvocationResponse for malformed handle-action JSON 0ms
+     ✓ serializes concurrent program wasm handle calls 19ms
+     ✓ adaptPluginHandle.handleAction round-trips an action through AppCommand::Command and reassembles requestedEffects/uiScope-free InvocationResponse 1ms
+     ✓ detects jco payload-shaped plugin instance busy errors 0ms
+     ✓ keeps window tabs concise while retaining the app fallback 0ms
+     ✓ flattens a recursive panelTabs tree to its leaves, depth-first 0ms
+     ✓ accepts component scene nodes 0ms
+     ✓ accepts graph-timeline component scene nodes 0ms
+     ✓ degrades a resolvable external slot to 'unavailable' until the binary-channel render path lands 0ms
+     ✓ renders external slot fallback text when unresolved 4ms
+     ✓ renders declarative text with appearance-aware foreground 0ms
+     ✓ dag overlay label fills resolve to Canvas2D-safe hex for appearance 1ms
+     ✓ renders field description, required marker and inline error 3ms
+     ✓ renders slider unit readout 5ms
+     ✓ renders numberStepper as a single-border Stepper control, not hand-rolled double-bordered buttons 2ms
+     ✓ shows the mixed-values placeholder on a non-uniform numberStepper 1ms
+     ✓ renders a group node as a labeled section nesting its child controls (Origin > X/Y/Z steppers) 1ms
+     ✓ tokenizes stack node gap/padding instead of hardcoded rem inline styles, and keeps separators off raw border-border 0ms
+     ✓ passes number bounds and file accept to inputs 1ms
+     ✓ disables gated wizard buttons 1ms
+     × renders selectable builder cards with selection ring 10ms
+     ✓ renders image nodes from url sources 0ms
+     ✓ dispatches the tree drop action with payload, target and position 0ms
+     ✓ renders node graph host from workflow scene json 7ms
+     ✓ renders editable node graph host with find items 2ms
+     ✓ uses the live session camera for node graph wheel viewport actions 0ms
+     ✓ encodes node graph scenes as pack bytes for wasm sync 0ms
+     ✓ parses slider overlay state json for flow graph hosts 0ms
+     ✓ renders graph slider overlays as track-only controls without a nested value readout 2ms
+     ✓ scales graph slider overlay chrome with canvas zoom so the knob matches other elements 2ms
+     ✓ renders canvas 2d host with infinite canvas session 1ms
+     ✓ renders canvas 2d host with draw gradient/blend/overlay/meta scene records 0ms
+     ✓ renders puzzle 2d board host shell 1ms
+     ✓ uses the live puzzle 2d board camera for wheel persistence actions 0ms
+     ✓ coalesces puzzle 2d board events: drops transients, keeps the latest camera, coalesces nodeMove per id 0ms
+     ✓ coalesces puzzle 2d board events: drops nodeMove rows once a nodeDragEnd follows 0ms
+     ✓ flushes puzzle 2d board events immediately for select/brushPlace/edge/delete rows, not for camera/nodeMove alone 0ms
+     ✓ collects live mirror mutations: coalesces nodeMove to the latest per id, ignores unrelated rows 0ms
+     ✓ collects live mirror mutations: nodeDragEnd.moves produce final positions 0ms
+     ✓ collects live mirror mutations: preselect sets the live highlight, select/preselectCancel commit selection and clear it 0ms
+     ✓ peer registry: registers/unregisters, excludes own surfaceId and other controllerIds 0ms
+     ✓ peer gesture ownership: begin/end tracks the owning surfaceId; a pane never defers against its own gesture 0ms
+     ✓ pushes live mirror mutations into peer sessions, skipping the source pane 0ms
+     ✓ notifies peers when a gesture ends, skipping the source pane, passing whether it flushed 0ms
+     ✓ maps context menu specs onto UI items with icons, colors, hover, and select handlers 1ms
+     ✓ maps suggestion-style specs without a color swatch field 0ms
+     ✓ enriches context menu shortcuts from app keybindings 0ms
+     ✓ formats keybinding chords for menu shortcut labels 0ms
+     ✓ numbers suggestion menu rows with digit shortcuts for the first nine candidates 0ms
+     ✓ enriches context menu shortcuts from app keybindings via mapContextMenuSpecs 0ms
+     ✓ parses a catalogue drag payload and builds a drop-preview JSON 0ms
+     ✓ rejects a catalogue drag payload without a kindId 0ms
+     ✓ parses a puzzle 3d catalogue drag payload and snaps drop origins to the grid 0ms
+     ✓ raycasts the Z=0 ground under orthographic top and perspective cameras 1ms
+     ✓ shares the world catalogue drop preview across all registered hosts 0ms
+     ✓ shares live world selection previews across sibling panes without allowing an idle pane to clear the active gesture 0ms
+     ✓ pushes fixture-drop previews to every board2d peer on the same controller 0ms
+     ✓ inverts the canonical screen-to-world transform for a fixture drop 0ms
+     ✓ puzzle2dWorldToScreen is the exact inverse of puzzle2dScreenToWorld 0ms
+     ✓ maps a world-centered node inside the viewport with canonical camera math 0ms
+     ✓ canvas-2d surface colors follow the light theme canvas token instead of a hardcoded dark fill 0ms
+     ✓ renders world 3d empty state without mounting r3f canvas 3ms
+     ✓ marks every non-empty world-3d host with the bottom-right orbit view gizmo 6ms
+     ✓ keeps world-3d orbit camera seed local per viewport once detached 0ms
+     ✓ buildWorldCameraDispatchArgs carries position/target/zoom/up but never a projection field 0ms
+     ✓ worldCameraSetCameraDispatchArgs nests the camera pose under a `camera` key, never flat alongside windowId 0ms
+     ✓ worldCameraPoseApproxEqual matches exact poses and float-noise, rejects a genuinely different pose 0ms
+     ✓ shouldReattachWorldViewportCamera suppresses a self-echo of the last dispatched camera but not a genuinely different pose 0ms
+     ✓ preserves projectionSpec.view from gizmo snaps instead of clobbering to top 0ms
+     ✓ accepts extended world 3d scene fields 0ms
+     ✓ parses GIS 3D terrain style JSON, defaulting missing fields, and rejects a missing tileUrlTemplate 0ms
+     ✓ blocks instance picking for fill, brush, and volume brush engagements but not move 0ms
+     ✓ resolves vortex pointer-down to select in brush or vertex mode and click-or-drag otherwise 0ms
+     ✓ scopes suggestion menu ownership to the opening world window so sibling panes stay interactive 0ms
+     ✓ revisions vortex materials when selection or hover state changes 0ms
+     ✓ revisions world mesh materials when style kind changes so deselection clears selected paint 0ms
+     ✓ uses the world surface selection mode instead of a stale shared invertive mode 0ms
+     ✓ resolves mesh style by priority: disabled > celebrated > selected > highlighted > hovered > neutral 0ms
+     ✓ celebrateWorldInstances stamps ids and cancel clears them so paint prefers celebrated over selected 0ms
+     ✓ maps edge hover to line paint so coplanar edges stay distinct from face hover fill 0ms
+     ✓ treats centerline meshes without shaded triangles as curve-only instances 0ms
+     ✓ derives marquee bounds from edge samples when positions are empty 0ms
+     ✓ renders the new group selection as active and only objects leaving the old selection as highlighted 0ms
+     ✓ builds addBrushObject args from a parsed brush preview, or null when there is nothing to place 0ms
+     ✓ defaults sourceVortexIndex to 0 when the brush preview omits it 0ms
+     ✓ resolves brush/suggestion ghost mesh URLs even when the kind is not yet among scene meshes 0ms
+     ✓ resolves the right-click context menu target by priority: vortex, then object, then reference 0ms
+     ✓ renders text editor host 1ms
+     ✓ renders text editor host with hover/newline/rename scene fields 1ms
+     ✓ multiSpanReplace renames every occurrence and remaps spans 0ms
+     ✓ lineRangeAt finds the line containing an offset 0ms
+     ✓ renders table host with ui-react table 2ms
+     ✓ renders vcs history host with an ancestor graph fork 4ms
+     ✓ renders paint-2d host canvas surface from document sync scene 1ms
+     ✓ renders paint-2d navigator host with the composite viewport overlay channel 0ms
+     ✓ renders paint-2d host empty fallback without a scene 0ms
+     × interprets virtual file system component scenes 2ms
+     ✓ computes a rect overlay with numeric bounds for the rectangle method 0ms
+     ✓ computes a rect overlay from the rust tuple-array wire format 0ms
+     ✓ computes a lasso overlay carrying the raw points for the lasso method 0ms
+     ✓ computes a lasso overlay from the rust tuple-array wire format 0ms
+     ✓ infers lasso from a non-rectangular path when method is omitted 0ms
+     ✓ infers rectangle from four axis-aligned corner points when method is omitted 0ms
+     ✓ returns null for fewer than two points 0ms
+     ✓ returns null for malformed point entries 0ms
+     ✓ renders a rect overlay from a computeDagMarqueeOverlay rect result without crashing 0ms
+     ✓ renders a polygon overlay from a computeDagMarqueeOverlay lasso result without crashing 0ms
+     ✓ renders the semio example composite scene with rich text, table, and math fallback 6ms
+     ✓ shows the grid pattern in composite mode but not in navigator mode 3ms
+     ✓ resizes with a minimum size and scales ink points when a group is resized 0ms
+     ✓ splits an ink stroke into fragments when erasing its middle point 0ms
+     ✓ round-trips bold and link marks between paragraphs and html 0ms
+     ✓ round-trips a clipboard payload of note blocks 0ms
+     ✓ computes ink block bounds from its local points 0ms
+     ✓ applies the canonical wheel-zoom camera formula symmetrically for screen<->world conversion 0ms
+     ✓ builds spawned engagement and measures chrome from program contributions 4ms
+     ✓ unwraps a tagged group's children into utilityOptions only when its utility is active 0ms
+     ✓ drops a tagged group from both buckets when a different or no utility is active 0ms
+     ✓ keeps untagged groups and non-group measures in general, unaffected by the active utility 0ms
+     ✓ wires a utility-scoped group into spawnedWindowChromeForKind's utilityOptions slot only when its utility is active 3ms
+     ✓ parses the real ui_wgpu camelCase wire JSON and unwraps a utility-scoped fill group into flat utilityOptions (snake_case divergence regression guard) 0ms
+     ✓ sorts utility nodes by order 0ms
+     ✓ recurses into a collection level only when the path names one of its collections 0ms
+     ✓ ignores a path entry that no longer names an enabled collection at that level 0ms
+     ✓ emits a picker segment alongside loose leaves at the same depth 0ms
+     ✓ reconciles an active path by truncating at the first stale entry instead of substituting a default 0ms
+     ✓ buckets top-level utility nodes into ordered category collections (uncategorized nodes default to tools now that the Actions category is gone) 0ms
+     ✓ drops separator-only category buckets so an empty group never appears as a picker option 0ms
+     ✓ reuses a category's single already-meaningful collection instead of re-wrapping it, avoiding a duplicate-looking picker level 0ms
+     ✓ still wraps a category with multiple top-level nodes in a synthetic collection 0ms
+     ✓ scopes grouping to the given categories only 0ms
+     ✓ deduplicates utility nodes by id across window utility lists for a single shared footer entry 0ms
+     ✓ renders utility ribbon with picker and batched toggles 4ms
+     ✓ stacks the window utility bar ribbon upward, showing only the base picker row until a group is activated 3ms
+     ✓ renders UtilityTree with a custom id for per-window namespacing 1ms
+     ✓ renders utilityOptions as an extra ribbon row when direction is up 3ms
+     ✓ selects the flow engine for scenes with engine flow capabilities 0ms
+     ✓ renders presence peers from the scene payload 2ms
+     ✓ parses a catalogue app drag payload, ignoring extra keys 0ms
+     ✓ rejects catalogue app drag payloads missing pluginId/appId, and garbage 0ms
+     ✓ builds a ghost neuron descriptor, preferring label over appId 0ms
+     ✓ builds addWidget descriptors from catalogue items 0ms
+     ✓ ranks catalogue suggestions by exact/prefix match with neurons first 9ms
+     ✓ returns every catalogue item for empty query without a 20-item cap 0ms
+     ✓ enables overflow scrolling only when spotlight suggestions are expanded 0ms
+     ✓ attaches a drag-and-drop controller to tree panels whose items carry drag data 0ms
+     ✓ omits the drag-and-drop controller for tree panels without drag data 0ms
+     ✓ resolves a fixture widget id to its workflow instance id, independent of selection state 0ms
+     ✓ parses studio and studio+instance shell paths, and rejects non-studio routes 0ms
+     ✓ classifies shell routes into landing, space, and notFound 0ms
+     × isolates render faults in ShellFaultBoundary 42ms
+     ✓ folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId 1ms
+     ✓ UISearch renders all items and fuzzy-filters them via the shared Fuse re-export 38ms
+     ✓ UIFind renders and fuzzy-filters items registered on its context via the shared Fuse re-export 20ms
+     ✓ stages both args locally, dispatches nothing until Execute, then fires exactly one merged descriptor and keeps staged values 55ms
+     ✓ gates Execute on required args, but a default-satisfied required arg counts without staging 60ms
+     ✓ Reset restores defaults while keeping the form expanded 32ms
+     ✓ a zero-arg action row fires immediately with no args object 9ms
+     ✓ renders every row disabled when an active utility gates actions 8ms
+     ✓ groups actions into category sections like the command panel 14ms
+     ✓ only arg-carrying actions redirect to a staged form (P3 decision) 0ms
+     ✓ keybinding intent: arg-less fires, arg-action opens unless already expanded and valid then executes (P4) 0ms
+     ✓ resolveUtilities scopes to the window kind's refs, falling back to all app utilities when unset 0ms
+     ✓ derives grouped utility nodes with the active utility pressed and a setActiveUtility onChange tagged by window 0ms
+     ✓ deriveUtilityNodes twin marks exactly the active utility pressed 0ms
+     ✓ deriveUtilityNodes hoists a single-child group to a top-level toggle 0ms
+     ✓ resolveUtilityActivation toggles: click activates, re-click or empty deactivates 0ms
+     ✓ findPressedUtilityLeafId walks nested collections 0ms
+     ✓ isWorldTransformGumballMode requires an explicit move/rotate/scale/transform mode 0ms
+     ✓ worldGumballConfigForProjection intersects transform mode with planar window projections 0ms
+     ✓ gumballTransformDeltaBetweenPoses emits incremental translate/rotate/scale args 0ms
+     ✓ gumballLivePreviewDeltaBetweenPoses applies local start→current deltas for instant mid-drag preview 0ms
+     ✓ resolveWindowActions surfaces panel-eligible actions and excludes history/setActiveUtility orphans 0ms
+     ✓ panelTabDefinitionToNode maps the framework-injected History panel tab through its rendered body 0ms
+     ✓ aggregates os + program + app-scope + active-mode's mode-scope commands, excluding other modes' mode-scope commands 0ms
+     ✓ switching the active mode swaps which mode-scope commands resolve 0ms
+     ✓ resolves only os commands with no session (null program manifest / app) 0ms
+     ✓ commandCategories orders and dedupes categories by first appearance 0ms
+     ✓ resolves the active mode's tools in declared order 0ms
+     ✓ tools are opt-in per mode — no orphan fallback for a mode that declares none 0ms
+     ✓ resolves nothing for an app/mode that doesn't exist 0ms
+     ✓ buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures 0ms
+     ✓ buildToolTabs' activation toggle dispatches setActiveTool with this tool's id 0ms
+     ✓ toolIdFromPanelTabId extracts the mode tool id from a tool leaf tab id 0ms
+     ✓ is available only for apps with an introduction 1ms
+     ✓ starts the introduction at its first step 0ms
+     ✓ os.playTutorial appears only when at least one tutorial is declared, offering each as a Select option 1ms
+     ✓ os.recordTutorial appears only when the recorder is available (dev/studio), independent of declared tutorials 1ms
+     ✓ os-scope Play/Record Tutorial commands are NOT handled by dispatchOsCommand (routed earlier, through the shell's own startTutorialRef/toggleTutorialRecordingRef bridge) 0ms
+     ✓ resolves valid locale/appearance and falls back with a warning on invalid values while staying locked 0ms
+     ✓ accepts any non-empty terminology id verbatim (app-declared ids can't be validated at boot) 0ms
+     ✓ returns an empty object for undefined locks 0ms
+     ✓ initialShellState applies locked values over stored/default prefs 0ms
+     ✓ mergeShellLockSources keeps brand locks locked and lets a defined env lock win per key 0ms
+     ✓ resolveShellDefaults prefers env defaults over brand defaults and initialShellState seeds without locking 0ms
+     ✓ resolveBootExampleId seeds the first registered example when nothing is active or defaulted 0ms
+     ✓ shouldReplayIntroductionOnLoad opts a brand into replaying its tour after every window refresh 0ms
+     ✓ isEphemeralShellBrand skips durable shell state so a refresh boots from brand defaults only 0ms
+     ✓ registers all six Entwerfen mit Bestand demonstrator shell brands 0ms
+     × ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out 2ms
+     × mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text 4ms
+     ✓ buildOsCommands omits only the commands for locked prefs 0ms
+     ✓ dispatchOsCommand is a no-operation for a locked pref even if invoked directly 0ms
+     ✓ a zero-arg command row fires onExecute directly on click; only one command-list section is present when nothing is expanded 0ms
+     ✓ auto-expands a singleton arg-carrying category into a flat form with section actions and no disclosure list 1ms
+     ✓ an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded 1ms
+     ✓ Execute is disabled until the required arg is staged, and calling it passes the effective (staged) args; Reset dispatches onResetArgs 0ms
+     ✓ buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands 0ms
+     ✓ scheduleDispatchAction (D2): fires dispatchOne with action/args only after delayMs elapses 1ms
+     ✓ scheduleDispatchAction (D2): delayMs 0 still defers to a scheduled tick, not a synchronous call 0ms
+     ✓ dispatchOpenedFiles (D3): single-file (multiple=false) makes exactly one call with {payload, name} and no index/total 0ms
+     ✓ dispatchOpenedFiles (D3): multiple=true dispatches once per file, in order, each extended with {index, total} 0ms
+     ✓ sampleMediaFrameTimestampsMs (D5): steps by sampleStride/fpsHint seconds, capped at maxFrames 0ms
+     ✓ runTier2VideoFrames (D5): dispatches frameAction once per sampled timestamp, in order, then doneAction exactly once 1ms
+     ✓ runRequestMediaFrames (D5): Tier 2 failure (video element throws mid-seek) ⇒ dispatches fallbackAction exactly once with raw bytes as a data URL, no frame/done calls 5ms
+     ✓ runRequestMediaFrames (D5): payload bytes in hand ⇒ Tier 2 seek-capture runs, ending in doneAction (no picker needed) 0ms
+     ✓ shows window kind icons on section headers and kind rows 0ms
+     ✓ nests the full Parallel/Perspective projection taxonomy under a world-3d window kind 1ms
+     ✓ keeps a flat single drag entry for non-world-3d window kinds 0ms
+     ✓ pre-reverses every level so the bottom-anchored (direction="up") Tree's own sibling-reversal renders Parallel children top-to-bottom 0ms
+     ✓ each projection leaf's drag payload decodes back to its WorldProjectionSpec 0ms
+     ✓ shows an unavailable placeholder when no host is mounted yet 0ms
+     ✓ groups plugins into one section per source, sorted by pluginId within a source 0ms
+     ✓ marks installing/reloading rows as loading, and every status is reflected in the row label 1ms
+     ✓ routes install/uninstall/reload clicks for one row back through the host without touching others 3ms
+     ✓ disables uninstall for the host/primary plugin and the active session's plugin (canUninstall: false) 2ms
+     ✓ matches both the window kind and every open instance of that kind 0ms
+     ✓ matches action-rail segments against the kind and its instances 0ms
+     ✓ finds nested measure ids used as introduction targets 0ms
+     ✓ puts toggle icons before labels and uses checkboxes instead of icon toggles 1ms
+     ✓ does not infer focus when an app has no explicit layout 0ms
+     ✓ hydrates Top (1/3) + Perspective (2/3) instances and projection templates 0ms
+     ✓ treats instance-id panes as extras so the host fetches bodies keyed by instance id, not only by kind 0ms
+     ✓ re-derives window titles from localized windowKind labels on locale/terminology switch 0ms
+     ✓ re-derives titles for extra window instances based on their windowKindId 0ms
+     ✓ returns null when the layout is identical (deep-equal, not just same reference) 0ms
+     ✓ returns null for a pure active-window-flag change (skeleton and sizes both unchanged) 0ms
+     ✓ returns 'resize' when only pane sizes differ 0ms
+     ✓ returns 'rearrange' when window ids/nesting structure differ (drag-to-new-position, split, close) 0ms
+     ✓ returns null when both are null 0ms
+     ✓ buildNoteShellCommandAction builds a noteShellCommand action descriptor targeting the given controller, carrying detail only when provided 0ms
+     ✓ is excluded from tutorial recording, alongside world-navigation/introduction/tutorial-control action ids 0ms
+     ✓ synthesizeLocalizedLabel broadcasts a string across all 4 cells (native/reuse x en/de) 0ms
+     ✓ TutorialRecorder synthesizes LocalizedLabel for addChapter and build titles 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > declarative forms parity > renders selectable builder cards with selection ring
+AssertionError: expected '<div class="relative flex min-h-0 min…' to contain 'ring-primary'
+
+Expected: "ring-primary"
+Received: "<div class="relative flex min-h-0 min-w-0 flex-1 flex-col gap-double p-double semio-ui-stack semio-ui-stack--vertical border-element border cursor-pointer rounded-md" data-ui-path="stack[0]#forms-blueprint.card.q1" role="button"><div class="flex-auto"><p class="text-foreground text-sm" data-ui-path="stack[0]#forms-blueprint.card.q1/text[0]">text · q1</p></div></div>"
+
+ ❯ ð§ªï¸index.test.ts:1455:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > framework renderer hosts > interprets virtual file system component scenes
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object.
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:11
+ ❯ finishFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5106:13
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5552:11
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:11
+ ❯ renderNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6905:18
+ ❯ renderChildrenArray ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6674:11
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6441:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: Invalid Chai property: toHaveTextContent
+ ❯ ð§ªï¸index.test.ts:3735:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️bmwsb.png"
+
+ ❯ ð§ªï¸index.test.ts:4526:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️luh.png"
+
+ ❯ ð§ªï¸index.test.ts:4561:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 297 passed (302)
+   Start at  20:30:48
+   Duration  6.17s (transform 2.11s, setup 0ms, import 4.86s, tests 726ms, environment 399ms)
+
+
+EXIT:1

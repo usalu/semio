@@ -1,11 +1,11 @@
 //! 📝️ Imperative text module: string action operators.
 
-use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
 // #region 🔖️TextConcat
 pub struct TextConcat;
 
-impl Operation for TextConcat {
+impl Operator for TextConcat {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left = read_string(input, "left")?;
         let right = read_string(input, "right")?;
@@ -17,7 +17,7 @@ impl Operation for TextConcat {
 // #region 🔖️TextUppercase
 pub struct TextUppercase;
 
-impl Operation for TextUppercase {
+impl Operator for TextUppercase {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let text = read_string(input, "text")?;
         write_into(input, Value::Atom(Atom::String(text.to_uppercase())))
@@ -28,7 +28,7 @@ impl Operation for TextUppercase {
 // #region 🔖️TextLength
 pub struct TextLength;
 
-impl Operation for TextLength {
+impl Operator for TextLength {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let text = read_string(input, "text")?;
         write_into(input, Value::Atom(Atom::Decimal(text.chars().count() as f64)))
@@ -54,8 +54,8 @@ fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs
     OperatorInfo { id: id.into(), extension: "text".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:📝️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operation }], &[]);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
 }
 
 pub fn register(registry: &mut Registry) {

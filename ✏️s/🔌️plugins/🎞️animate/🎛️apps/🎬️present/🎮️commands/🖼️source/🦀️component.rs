@@ -1,7 +1,7 @@
 //! 🖼️ Animate present app commands — source media: set-source, set-frame, set-active-example.
 
-use crate::apps::present::config::{PresentConfig, PresentConfigOperation};
-use crate::artifacts::present::op::PresentOperation;
+use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
+use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_deck, FigureTileFrame, FigureTileSource, PresentDeck};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,16 +17,16 @@ pub mod set_source {
         pub source: FigureTileSource,
     }
 
-    pub fn handle(payload: &SetSource, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSource, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let replaced = payload.source.src != deck.source.src;
-        let mut operations = vec![PresentOperation::SetSource { source: payload.source.clone() }];
-        let mut config_operations = Vec::new();
+        let mut operations = vec![PresentMutation::SetSource { source: payload.source.clone() }];
+        let mut config_mutations = Vec::new();
         if replaced {
-            operations.push(PresentOperation::SetTiles { tiles: Vec::new() });
-            config_operations.push(PresentConfigOperation::SetSelectedIds { ids: Vec::new() });
+            operations.push(PresentMutation::SetTiles { tiles: Vec::new() });
+            config_mutations.push(PresentConfigMutation::SetSelectedIds { ids: Vec::new() });
         }
-        Ok(Emit { document_operations: operations, config_operations, ..Default::default() })
+        Ok(Emit { document_mutations: operations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetSource
@@ -42,11 +42,11 @@ pub mod set_frame {
         pub frame: FigureTileFrame,
     }
 
-    pub fn handle(payload: &SetFrame, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFrame, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let mut source = deck.source.clone();
         source.frame = payload.frame.clone();
-        Ok(Emit::operations(vec![PresentOperation::SetSource { source }]))
+        Ok(Emit::mutations(vec![PresentMutation::SetSource { source }]))
     }
 }
 //#endregion 🔖️SetFrame
@@ -61,9 +61,9 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         if payload.example_id == "demo" || payload.example_id.is_empty() {
-            Ok(Emit { document_operations: vec![PresentOperation::SetDeck { deck: default_present_deck() }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
+            Ok(Emit { document_mutations: vec![PresentMutation::SetDeck { deck: default_present_deck() }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
         } else {
             Ok(Emit::default())
         }

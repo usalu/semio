@@ -2,10 +2,10 @@
 //! `CadPlayRuntime` (selection, hover, engagement session, per-pane cameras, sun, dislocate handles)
 //! plus the locale/terminology/active-utility the shell used to push through the deleted `ViewModel`.
 //! Session view state round-trips through the config `DocumentStore` exactly like document content,
-//! with a real `backwards` via `CadConfigOperation` at the bottom of this file.
+//! with a real `backwards` via `CadConfigMutation` at the bottom of this file.
 
 use crate::artifacts::cad::CadCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -303,10 +303,10 @@ store::impl_whole_record_config!(CadConfig);
 
 //#region 🔖️ConfigOperations
 /// @emoji 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `CadConfig`'s
-/// operation enum. Unlike `CadOperation` (many narrow document-mutating variants), this is a single
+/// operation enum. Unlike `CadMutation` (many narrow document-mutating variants), this is a single
 /// whole-record `Snapshot`: `cad_ui`'s pure `handle()` converts its (former `RefCell`-backed)
 /// `CadPlayRuntime` scratch struct into the next `CadConfig` once per dispatch and diffs it against the
-/// pre-command config, exactly like `CadOperation::SetScene`'s existing "whole-document replace"
+/// pre-command config, exactly like `CadMutation::SetScene`'s existing "whole-document replace"
 /// pattern — session state (selection/hover/camera/engagement/…) mutates in tight clusters (e.g.
 /// `worldSelect` touches 5+ fields together), so per-field variants would just be wide-argument
 /// snapshots in miniature with none of a real granular diff's benefit. `backwards()` restores the
@@ -314,7 +314,7 @@ store::impl_whole_record_config!(CadConfig);
 /// bookkeeping — the same justification `shooting_op::ShootingConfigOperation` documents for its own
 /// `Snapshot` fallback, generalized here to the sole variant.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum CadConfigOperation {
+pub enum CadConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -325,7 +325,7 @@ pub enum CadConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for CadConfigOperation {
+impl protocol::OpText for CadConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -339,7 +339,7 @@ impl protocol::OpText for CadConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -350,7 +350,7 @@ impl protocol::OpText for CadConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for CadConfigOperation {
+impl protocol::OpBinary for CadConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -396,13 +396,13 @@ impl protocol::OpBinary for CadConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<CadConfig> for CadConfigOperation {
+impl Mutation<CadConfig> for CadConfigMutation {
     type Diff = CadConfig;
 
     fn diff(&self, base: &CadConfig) -> CadConfig {
         match self {
-            CadConfigOperation::Snapshot { config } => config.clone(),
-            CadConfigOperation::SetContributions { json } => {
+            CadConfigMutation::Snapshot { config } => config.clone(),
+            CadConfigMutation::SetContributions { json } => {
                 let mut next = base.clone();
                 next.contributions_json = json.clone();
                 crate::artifacts::cad::engine::sync_cad_computer_contributions(json);
@@ -411,8 +411,8 @@ impl Operation<CadConfig> for CadConfigOperation {
         }
     }
 
-    fn backwards(&self, base: &CadConfig) -> Vec<Self> {
-        vec![CadConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &CadConfig) -> Vec<Self> {
+        vec![CadConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -472,11 +472,11 @@ mod tests {
     fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
         let base = CadConfig { selection_method: "lasso".into(), active_utility_id: "move".into(), ..CadConfig::default() };
         let next = CadConfig { selection_method: "lasso".into(), active_utility_id: "rotate".into(), selected_object_ids: vec!["object-1".into()], ..CadConfig::default() };
-        let operation = CadConfigOperation::Snapshot { config: next.clone() };
+        let operation = CadConfigMutation::Snapshot { config: next.clone() };
         let forward = operation.diff(&base);
         assert_eq!(forward, next);
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![CadConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![CadConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
         assert_eq!(restored, base);
         store::test_support::assert_op_line_round_trip(&operation);
@@ -486,7 +486,7 @@ mod tests {
     fn cad_config_set_contributions_round_trips() {
         let base = CadConfig::default();
         let json = r#"[{"pluginId":"cad-extension-spatial-shape","contribution":{"kind":"cadComputer","appId":"cad-play","moduleId":"spatial-shape","label":"Spatial Shape","iconId":"box","computersJson":"{}"}}]"#;
-        let operation = CadConfigOperation::SetContributions { json: json.into() };
+        let operation = CadConfigMutation::SetContributions { json: json.into() };
         let next = operation.diff(&base);
         assert_eq!(next.contributions_json, json);
         store::test_support::assert_op_line_round_trip(&operation);

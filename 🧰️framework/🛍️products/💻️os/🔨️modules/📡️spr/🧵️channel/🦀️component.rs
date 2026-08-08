@@ -72,7 +72,7 @@ pub enum AppCommand {
     },
     ApplyEnvelopes {
         seq: u64,
-        envelopes: Vec<crate::os_spr::causal::OperationEnvelope>,
+        envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
     },
     LoadDocument {
         seq: u64,
@@ -138,10 +138,10 @@ pub enum AppFrame {
     UiSection { in_reply_to: Option<u64>, kind: u8, key: String, hash: u64, body: Option<Vec<u8>> },
     Effects { in_reply_to: Option<u64>, effects: Vec<Vec<u8>> },
     Events { in_reply_to: Option<u64>, events: Vec<Vec<u8>> },
-    DocumentChanged { envelopes: Vec<crate::os_spr::causal::OperationEnvelope>, origin: String },
+    DocumentChanged { envelopes: Vec<crate::os_spr::causal::MutationEnvelope>, origin: String },
     Document { in_reply_to: u64, pack: Vec<u8>, spr: Vec<u8>, ops: String },
     Config { in_reply_to: u64, pack: Vec<u8>, spr: Vec<u8>, ops: String },
-    ConfigChanged { envelopes: Vec<crate::os_spr::causal::OperationEnvelope>, origin: String },
+    ConfigChanged { envelopes: Vec<crate::os_spr::causal::MutationEnvelope>, origin: String },
     ContextMenu { in_reply_to: u64, items: Vec<u8> },
     Media { in_reply_to: u64, port: String, descriptor: Vec<u8>, data: Vec<u8> },
     MediaFingerprint { in_reply_to: u64, port: String, fingerprint: Vec<u8> },
@@ -217,14 +217,14 @@ fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::
     (0..count).map(|_| crate::os_spr::read_bytes(bytes, pos)).collect()
 }
 
-fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::OperationEnvelope]) {
+fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::MutationEnvelope]) {
     crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
         crate::os_spr::causal::encode_envelope(value, out);
     }
 }
 
-fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::OperationEnvelope>, crate::os_spr::ProtocolError> {
+fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::MutationEnvelope>, crate::os_spr::ProtocolError> {
     let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     (0..count).map(|_| crate::os_spr::causal::decode_envelope(bytes, pos)).collect()
 }
@@ -570,14 +570,14 @@ mod tests {
     use super::*;
 
     //#region 🧸️Fixtures
-    fn sample_envelope(id: &str) -> crate::os_spr::causal::OperationEnvelope {
-        crate::os_spr::causal::OperationEnvelope {
-            operation_id: crate::os_spr::ids::OperationId(id.to_string()),
+    fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
+        crate::os_spr::causal::MutationEnvelope {
+            mutation_id: crate::os_spr::ids::MutationId(id.to_string()),
             document_id: crate::os_spr::ids::DocumentId("document-1".to_string()),
             actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
             diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-            inverse: crate::os_spr::causal::InverseOperation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+            inverse: crate::os_spr::causal::InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }

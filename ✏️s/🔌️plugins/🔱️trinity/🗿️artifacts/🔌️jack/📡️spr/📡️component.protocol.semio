@@ -1,7 +1,7 @@
 dialect protocol
 protocol jack.spr
 version 1
-schema jack.operation
+schema jack.mutation
 start record
 framing record
 record trinity.jack-add-node tag 1

@@ -9,19 +9,19 @@
 //!
 //! 🧪️ B1: `Process3dPlayApp` is a unit struct — every former `Process3dRuntime` field (selection, hover,
 //! face pick, selection method, engagement input, camera, sun) lives in `config::Process3dConfig`,
-//! written via `config::Process3dConfigOperation`s; every action dispatches through the single typed
+//! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `DocumentApp::handle`.
 
 use crate::apps::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, selection, step, stock, sun, utility, workshop, world};
-use crate::apps::process3d::config::{Process3dConfig, Process3dConfigOperation};
+use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::apps::process3d::modes::edit;
 use crate::apps::process3d::modes::edit::windows::workpiece;
 use crate::apps::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use crate::apps::process3d::terminology::process3d_labels;
-use crate::artifacts::process3d::op::Process3dOperation;
+use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dDocument;
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
     OsMediaFormat, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
@@ -75,7 +75,7 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`) and the `dsl` wire keyword (the kebab `#[dsl(key = ..)]` the codec uses) — copied
     /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match. **Row order is the binary
     /// variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Process3dCommand for Process3dDocument, Process3dOperation, Process3dConfig, Process3dConfigOperation {
+    pub enum Process3dCommand for Process3dDocument, Process3dMutation, Process3dConfig, Process3dConfigMutation {
         "setDocument" as "document" => set_document::SetDocument,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addStep" as "add-step" => add_step::AddStep,
@@ -136,17 +136,17 @@ use world::{world_face_drag_end, world_pick, world_pointer_down};
 
 //#region 🔖️Process3dPlayApp
 /// 🧪️ B1: unit struct — every former `Process3dRuntime` field now lives in `config::Process3dConfig`
-/// (see `DocumentApp::Config`), written through `config::Process3dConfigOperation`s.
+/// (see `DocumentApp::Config`), written through `config::Process3dConfigMutation`s.
 #[derive(Default)]
 pub struct Process3dPlayApp;
 
 impl DocumentApp for Process3dPlayApp {
     type Projection = Process3dDocument;
-    type Operation = Process3dOperation;
+    type Mutation = Process3dMutation;
     type Config = Process3dConfig;
-    type ConfigOperation = Process3dConfigOperation;
+    type ConfigMutation = Process3dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Process3dCommand;
 
@@ -187,14 +187,14 @@ impl DocumentApp for Process3dPlayApp {
         }
     }
 
-    fn whole_document_operation(projection: Process3dDocument) -> Option<Process3dOperation> {
-        Some(Process3dOperation::SetDocument { document: projection })
+    fn whole_document_operation(projection: Process3dDocument) -> Option<Process3dMutation> {
+        Some(Process3dMutation::SetDocument { document: projection })
     }
 
     /// 📥️ `geometry:in` (best-effort STEP-text import) plus the inherited `document:in` default (base64
     /// pack via `whole_document_operation`, replicated inline — overriding `import_media` shadows the
     /// trait's provided body for every port).
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &DocumentView<'_, Process3dDocument>) -> Result<Emit<Process3dOperation, Process3dConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &DocumentView<'_, Process3dDocument>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -209,7 +209,7 @@ impl DocumentApp for Process3dPlayApp {
                 use base64::Engine;
                 let data_url = format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(json.as_bytes()));
                 match crate::artifacts::process3d::engine::import_process3d_model("geometry-in.step", &data_url) {
-                    Some(document) => Ok(Emit::operations(vec![Process3dOperation::SetDocument { document }])),
+                    Some(document) => Ok(Emit::mutations(vec![Process3dMutation::SetDocument { document }])),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
                 }
             }
@@ -220,7 +220,7 @@ impl DocumentApp for Process3dPlayApp {
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let projection = <Process3dDocument as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
-                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
             }
@@ -235,7 +235,7 @@ impl DocumentApp for Process3dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dOperation, Process3dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -300,33 +300,33 @@ pub fn create_process3d_app() -> App {
             .panel_tab_def(workshop_panel::definition())
             .panel_tab_def(inspection::definition())
             // 🔧️ Palette-visible create/mutate actions (staged arg forms attached below).
-            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
-            .operation("setStock", LocalizedLabel::native("Set Stock", "Rohteil festlegen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("removeSelectedStep", LocalizedLabel::native("Remove Selected Step", "Ausgewählten Schritt entfernen"))
+            .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .mutation("setStock", LocalizedLabel::native("Set Stock", "Rohteil festlegen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("removeSelectedStep", LocalizedLabel::native("Remove Selected Step", "Ausgewählten Schritt entfernen"))
             // 🐚️ Palette-visible host round-trips.
             .shell_action("exportModel", LocalizedLabel::native("Export Model", "Modell exportieren"))
             .shell_action("loadModelRequest", LocalizedLabel::native("Load Model…", "Modell laden…"))
             // 🔧️ Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
-            .action_with(internal_action("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Operation))
-            .action_with(internal_action("addWorkshopMachine", LocalizedLabel::native("Add Machine", "Maschine hinzufügen"), ActionKind::Operation))
-            .action_with(internal_action("removeWorkshopMachine", LocalizedLabel::native("Remove Machine", "Maschine entfernen"), ActionKind::Operation))
-            .action_with(internal_action("updateWorkshopMachine", LocalizedLabel::native("Update Machine", "Maschine aktualisieren"), ActionKind::Operation))
-            .action_with(internal_action("importModelFile", LocalizedLabel::native("Import Model File", "Modelldatei importieren"), ActionKind::Operation))
-            .action_with(internal_action("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"), ActionKind::Operation))
-            .action_with(internal_action("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"), ActionKind::Operation))
-            .action_with(internal_action("updateStep", LocalizedLabel::native("Update Step", "Schritt aktualisieren"), ActionKind::Operation))
-            .action_with(internal_action("setStepEnabled", LocalizedLabel::native("Set Step Enabled", "Schrittaktivierung festlegen"), ActionKind::Operation))
-            .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Operation))
-            .action_with(internal_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Operation))
-            .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Operation))
+            .action_with(internal_action("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
+            .action_with(internal_action("addWorkshopMachine", LocalizedLabel::native("Add Machine", "Maschine hinzufügen"), ActionKind::Mutation))
+            .action_with(internal_action("removeWorkshopMachine", LocalizedLabel::native("Remove Machine", "Maschine entfernen"), ActionKind::Mutation))
+            .action_with(internal_action("updateWorkshopMachine", LocalizedLabel::native("Update Machine", "Maschine aktualisieren"), ActionKind::Mutation))
+            .action_with(internal_action("importModelFile", LocalizedLabel::native("Import Model File", "Modelldatei importieren"), ActionKind::Mutation))
+            .action_with(internal_action("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"), ActionKind::Mutation))
+            .action_with(internal_action("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"), ActionKind::Mutation))
+            .action_with(internal_action("updateStep", LocalizedLabel::native("Update Step", "Schritt aktualisieren"), ActionKind::Mutation))
+            .action_with(internal_action("setStepEnabled", LocalizedLabel::native("Set Step Enabled", "Schrittaktivierung festlegen"), ActionKind::Mutation))
+            .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Mutation))
+            .action_with(internal_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Mutation))
+            .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Mutation))
             // ⏱️ Document-cursor navigation operations (NOT framework History — they move the replay cursor).
-            .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::Operation))
-            .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::Operation))
-            .action_with(internal_action("stepCursorBack", LocalizedLabel::native("Step Cursor Back", "Cursor zurück"), ActionKind::Operation))
-            .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::Operation))
+            .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::Mutation))
+            .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::Mutation))
+            .action_with(internal_action("stepCursorBack", LocalizedLabel::native("Step Cursor Back", "Cursor zurück"), ActionKind::Mutation))
+            .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::Mutation))
             // 🎛️ Engagement session command line (a separate system from utility selection).
-            .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Operation))
+            .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
             .action_with(internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_with(internal_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View))
             // 👁️ Ephemeral view state — selection, hover, camera, face picking, sun.
@@ -621,7 +621,7 @@ mod tests {
     fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }));
-        assert!(!result.operations.is_empty(), "the setStock arg form must materialize into document operations");
+        assert!(!result.mutations.is_empty(), "the setStock arg form must materialize into document operations");
         let document = app.projection().expect("projection");
         assert!(matches!(document.stock.solid, crate::artifacts::process3d::SolidSpec::Cylinder { .. }), "setStock kind=cylinder must swap the stock solid");
         assert!(document.steps.is_empty(), "swapping stock resets the step timeline");
@@ -642,7 +642,7 @@ mod tests {
         let mut app = app();
         set_utility(&mut app, "cut");
         let result = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }));
-        assert!(!result.operations.is_empty(), "worldPointerDown must read the position the renderer actually sends");
+        assert!(!result.mutations.is_empty(), "worldPointerDown must read the position the renderer actually sends");
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
         assert_eq!(step_pose(last), [1.0, 2.0, 3.0]);
@@ -677,7 +677,7 @@ mod tests {
         dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "box".into() }));
         let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.projection().expect("projection")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
-        assert!(!result.operations.is_empty());
+        assert!(!result.mutations.is_empty());
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 1);
         assert!(matches!(document.steps[0].measure, crate::artifacts::process3d::ProcessMeasure::Cut { .. }));
@@ -691,7 +691,7 @@ mod tests {
         dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "box".into() }));
         let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.projection().expect("projection")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
-        assert!(!result.operations.is_empty());
+        assert!(!result.mutations.is_empty());
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 1);
         assert!(matches!(document.steps[0].measure, crate::artifacts::process3d::ProcessMeasure::Attach { .. }));
@@ -704,7 +704,7 @@ mod tests {
         let mut app = app();
         set_utility(&mut app, "cut");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: None }));
-        assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
+        assert!(result.mutations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
     }
 
     #[test]
@@ -749,7 +749,7 @@ mod tests {
     fn registry_enforced_app_accepts_a_declared_operation_action() {
         let mut app = app_with_registry();
         let result = dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
-        assert!(!result.operations.is_empty());
+        assert!(!result.mutations.is_empty());
     }
 
     //#region 🔖️MediaTests

@@ -7,11 +7,11 @@
 //! fixed here as part of the port, not a behavior change.
 
 use crate::artifacts::dag::engine;
-use crate::artifacts::dag::op::DagOperation;
+use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagDocument;
-use crate::apps::dag::config::{DagConfig, DagConfigOperation};
+use crate::apps::dag::config::{DagConfig, DagConfigMutation};
 use infinite_board_port_directed_dag::{DagFixtureEdge, DagNodeSpec};
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -27,13 +27,13 @@ pub mod add_node {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         let id = engine::next_node_id(document);
         let node = engine::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
         Ok(Emit {
-            document_operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: document.nodes.len(), item: node })],
-            config_operations: vec![DagConfigOperation::SetSelection { node_ids: vec![id] }],
+            document_mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: document.nodes.len(), item: node })],
+            config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![id] }],
             ..Default::default()
         })
     }
@@ -50,14 +50,14 @@ pub mod remove_node {
         pub node_id: String,
     }
 
-    pub fn handle(payload: &RemoveNode, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveNode, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         let removes = engine::remove_nodes_operations(document, std::slice::from_ref(&payload.node_id));
         if removes.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit { document_operations: removes, config_operations: vec![DagConfigOperation::SetSelection { node_ids: config.selected_node_ids.iter().filter(|id| *id != &payload.node_id).cloned().collect() }], ..Default::default() })
+            Ok(Emit { document_mutations: removes, config_mutations: vec![DagConfigMutation::SetSelection { node_ids: config.selected_node_ids.iter().filter(|id| *id != &payload.node_id).cloned().collect() }], ..Default::default() })
         }
     }
 }
@@ -74,7 +74,7 @@ pub mod rename_dag_node {
         pub value: String,
     }
 
-    pub fn handle(payload: &RenameDagNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &RenameDagNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         let trimmed = payload.value.trim();
         if trimmed.is_empty() || trimmed == payload.old_id.as_str() || document.nodes.iter().any(|node| node.id == trimmed) {
@@ -94,7 +94,7 @@ pub mod rename_dag_node {
                 }
             })
             .collect();
-        Ok(Emit { document_operations: vec![DagOperation::SetNodes { nodes }, DagOperation::SetEdges { edges }], config_operations: vec![DagConfigOperation::SetSelection { node_ids: vec![trimmed.to_string()] }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![DagMutation::SetNodes { nodes }, DagMutation::SetEdges { edges }], config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![trimmed.to_string()] }], ..Default::default() })
     }
 }
 //#endregion 🔖️RenameDagNode
@@ -111,13 +111,13 @@ pub mod patch_dag_nodes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchDagNodes, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchDagNodes, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
-        let operations: Vec<DagOperation> = document
+        let operations: Vec<DagMutation> = document
             .nodes
             .iter()
             .filter(|node| payload.node_ids.contains(&node.id))
-            .filter_map(|node| engine::node_patch_for_field(node, &payload.field, Some(payload.value.as_str())).map(|patch| DagOperation::Nodes(CollectionOperation::Patch { id: node.id.clone(), patch })))
+            .filter_map(|node| engine::node_patch_for_field(node, &payload.field, Some(payload.value.as_str())).map(|patch| DagMutation::Nodes(CollectionMutation::Patch { id: node.id.clone(), patch })))
             .collect();
         if operations.is_empty() {
             Ok(Emit::default())
@@ -166,9 +166,9 @@ mod tests {
             (projection.nodes[0].id.clone(), projection.nodes[1].id.clone())
         };
         let result = app.dispatch_typed(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: first_id.clone(), value: "   ".into() }), &semio_framework_plugin::testkit::meta("local")).expect("rename blank");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
         let result = app.dispatch_typed(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: first_id, value: second_id }), &semio_framework_plugin::testkit::meta("local")).expect("rename duplicate");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
     }
 
     #[test]

@@ -1,0 +1,808 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1
+  |
+8 | extern crate self as store;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+8 - extern crate self as store;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1
+  |
+9 | extern crate self as protocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate self as protocol;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1
+   |
+10 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+10 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unused imports: `Limits` and `TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33
+  |
+5 | use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
+  |                                 ^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self::span::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11
+   |
+41 |   pub use self::span::*;
+   |           ^^^^^^^^^^^^^
+
+warning: unused import: `self::diagnostic::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11
+   |
+42 |   pub use self::diagnostic::*;
+   |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::token::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11
+   |
+43 |   pub use self::token::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::lexer::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11
+   |
+44 |   pub use self::lexer::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::trust::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11
+   |
+45 |   pub use self::trust::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5
+   |
+18 |     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |     ^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^             ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+19 |     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27
+  |
+4 | use crate::os_pack::ids::{ByteRange, ChunkId, CodecId, ContentHash};
+  |                           ^^^^^^^^^  ^^^^^^^           ^^^^^^^^^^^
+
+warning: unused imports: `SignatureVerifier` and `Signer`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76
+   |
+11 | pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+   |                                                                            ^^^^^^^^^^^^^^^^^  ^^^^^^
+
+warning: unused imports: `ActorId`, `ConflictRule`, `DocumentId`, `DocumentVersion`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:30:31
+   |
+30 | ...::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+   |       ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31
+   |
+32 | ...::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
+   |       ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `self::ids::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11
+    |
+191 |   pub use self::ids::*;
+    |           ^^^^^^^^^^^^
+
+warning: unused import: `self::dictionary::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11
+    |
+192 |   pub use self::dictionary::*;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::crypto::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11
+    |
+193 |   pub use self::crypto::*;
+    |           ^^^^^^^^^^^^^^^
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+244 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+255 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ids` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `ids` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `OPTIONAL_CANONICAL` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `REQUIRED_ENCRYPTED` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:260:9
+    |
+244 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:261:25
+    |
+261 | pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+    |                         ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:333:21
+    |
+333 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2283:19
+     |
+2177 | / impl<P, Mutation> DocumentStore<P, Mutation>
+2178 | | where
+2179 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+2180 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2283 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 45 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 22 suggestions)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+7 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3599:61
+     |
+3599 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3599 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3599 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5312:41
+     |
+5312 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5312 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+5312 +         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5312:96
+     |
+5312 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5312 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+5312 +         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(HashMap::new());
+     |
+
+warning: unnecessary `unsafe` block
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5433:17
+     |
+5433 |                 unsafe {
+     |                 ^^^^^^ unnecessary `unsafe` block
+     |
+     = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5189:34
+     |
+5189 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5139:34
+     |
+5139 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5150:34
+     |
+5150 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5164:34
+     |
+5164 |             let VcsDocumentApp { app, cache, registry, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4886:38
+     |
+4886 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5174:34
+     |
+5174 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4850:38
+     |
+4850 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1705:17
+     |
+1705 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4766:42
+     |
+4766 |                     let VcsDocumentApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5108:34
+     |
+5108 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: `semio-framework-plugin` (lib) generated 16 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 15 suggestions)
+warning: unused imports: `CoedgeId` and `VertexId`
+ --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📏️measure/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
+  |                          ^^^^^^^^                           ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::brep::curve::Curve3`
+ --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📏️measure/🦀️component.rs:4:5
+  |
+4 | use crate::brep::curve::Curve3;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Vec3`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🖋️imprint/🦀️component.rs:15:36
+   |
+15 | use crate::brep::vec::{Pnt2, Pnt3, Vec3};
+   |                                    ^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🔀️boolean/🦀️component.rs:96:24
+   |
+96 |     let mut edge_ids = std::collections::HashSet::new();
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+96 -     let mut edge_ids = std::collections::HashSet::new();
+96 +     let mut edge_ids = HashSet::new();
+   |
+
+warning: unused import: `Vec3`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧵️sew/🦀️component.rs:15:30
+   |
+15 | use crate::brep::vec::{Pnt3, Vec3};
+   |                              ^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/➡️sweep/🦀️component.rs:465:29
+    |
+465 |         let angle = turns * std::f64::consts::TAU * t;
+    |                             ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+465 -         let angle = turns * std::f64::consts::TAU * t;
+465 +         let angle = turns * TAU * t;
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/➡️sweep/🦀️component.rs:527:24
+    |
+527 | fn curve_point(curve: &crate::brep::curve::Curve3, u: f64) -> Pnt3 {
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+527 - fn curve_point(curve: &crate::brep::curve::Curve3, u: f64) -> Pnt3 {
+527 + fn curve_point(curve: &Curve3, u: f64) -> Pnt3 {
+    |
+
+warning: unused import: `solid_volume`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:13:41
+   |
+13 | use crate::brep::measure::{edge_length, solid_volume};
+   |                                         ^^^^^^^^^^^^
+
+warning: unused import: `make_box`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:14:31
+   |
+14 | use crate::brep::primitives::{make_box, make_convex_hull};
+   |                               ^^^^^^^^
+
+warning: unused import: `Vec3`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:16:39
+   |
+16 |     ParamDomain, PointClassification, Vec3, Vec3 as EVec3,
+   |                                       ^^^^
+
+warning: unused import: `ArenaId`
+ --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🌳️bvh/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{ArenaId, EdgeId, FaceId, SolidId};
+  |                          ^^^^^^^
+
+warning: unused variable: `tolerance`
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1109:55
+     |
+1109 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `loop_uv_polygon` is never used
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:152:4
+    |
+152 | fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: trait `Midpoint` is never used
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:449:7
+    |
+449 | trait Midpoint {
+    |       ^^^^^^^^
+
+warning: method `triangle_count` is never used
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📦️mesh-io/🦀️component.rs:429:8
+    |
+428 | impl TriangleMesh {
+    | ----------------- method in this implementation
+429 |     fn triangle_count(&self) -> usize {
+    |        ^^^^^^^^^^^^^^
+
+warning: variant `Edge` is never constructed
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:55:5
+   |
+53 | enum Entity {
+   |      ------ variant in this enum
+54 |     Vertex(VertexId),
+55 |     Edge(EdgeId),
+   |     ^^^^
+   |
+   = note: `Entity` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: `semio-s-3d` (lib) generated 16 warnings (run `cargo fix --lib -p semio-s-3d` to apply 11 suggestions)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:5:1
+  |
+5 | extern crate semio_framework_os_kernel as protocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+5 - extern crate semio_framework_os_kernel as protocol;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as dsl;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as dsl;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:8:1
+  |
+8 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+8 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:9:1
+  |
+9 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2533:53
+     |
+2533 |     static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, OsMediaFormat), OsMediaExportHandler>>> =
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2533 -     static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, OsMediaFormat), OsMediaExportHandler>>> =
+2533 +     static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<HashMap<(String, OsMediaFormat), OsMediaExportHandler>>> =
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2534:37
+     |
+2534 |         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2534 -         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+2534 +         LazyLock::new(|| Mutex::new(HashMap::new()));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2535:53
+     |
+2535 |     static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, OsMediaFormat), OsMediaImportHandler>>> =
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2535 -     static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, OsMediaFormat), OsMediaImportHandler>>> =
+2535 +     static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<HashMap<(String, OsMediaFormat), OsMediaImportHandler>>> =
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2536:37
+     |
+2536 |         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2536 -         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+2536 +         LazyLock::new(|| Mutex::new(HashMap::new()));
+     |
+
+warning: the `#![feature]` attribute can only be used at the crate root
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4:1
+  |
+4 | #![feature(linkage)]
+  | ^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: the crate root is at `🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs`
+  = note: `#[warn(unused_attributes)]` (part of `#[warn(unused)]`) on by default
+
+warning: feature `linkage` is declared but not used
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:2:12
+  |
+2 | #![feature(linkage)]
+  |            ^^^^^^^
+  |
+  = note: `#[warn(unused_features)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 10 warnings (run `cargo fix --lib -p semio-framework-os` to apply 8 suggestions)
+warning: unused extern crate
+  --> ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/📦️glue.rs:17:1
+   |
+17 | extern crate semio_framework_os_kernel as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+   = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+   = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+   |
+17 - extern crate semio_framework_os_kernel as pack;
+   |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/./././../../🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:614:17
+    |
+614 |     projection: crate::artifacts::remodel::RemodelProjection,
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+614 -     projection: crate::artifacts::remodel::RemodelProjection,
+614 +     projection: RemodelProjection,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/./././../../🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:618:28
+    |
+618 |     pub fn new(projection: crate::artifacts::remodel::RemodelProjection) -> Self {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+618 -     pub fn new(projection: crate::artifacts::remodel::RemodelProjection) -> Self {
+618 +     pub fn new(projection: RemodelProjection) -> Self {
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/./././../../🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:622:37
+    |
+622 |     pub fn into_projection(self) -> crate::artifacts::remodel::RemodelProjection {
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+622 -     pub fn into_projection(self) -> crate::artifacts::remodel::RemodelProjection {
+622 +     pub fn into_projection(self) -> RemodelProjection {
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/./././../../🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:628:23
+    |
+628 |     type Projection = crate::artifacts::remodel::RemodelProjection;
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+628 -     type Projection = crate::artifacts::remodel::RemodelProjection;
+628 +     type Projection = RemodelProjection;
+    |
+
+warning: `semio-s-plugin-remodel` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-remodel` to apply 5 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.23s

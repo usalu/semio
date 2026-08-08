@@ -9,7 +9,7 @@
 //!
 //! B1: `ReasoningWiresPlayApp` is a unit struct — every former `WiresPlayRuntime` field (selection,
 //! in-flight drag) lives in `crate::apps::wires::config::WiresConfig`, written via
-//! `crate::apps::wires::config::WiresConfigOperation`s (real `backwards`, no ad hoc runtime `RefCell`);
+//! `crate::apps::wires::config::WiresConfigMutation`s (real `backwards`, no ad hoc runtime `RefCell`);
 //! every action dispatches through the single typed `WiresCommand` channel via `DocumentApp::handle`.
 
 use crate::apps::wires::commands::delete::delete_selection;
@@ -20,12 +20,12 @@ use crate::apps::wires::commands::node::add_node;
 use crate::apps::wires::commands::pointer::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
 use crate::apps::wires::commands::relationship::add_relationship;
 use crate::apps::wires::commands::selection::{document_select, set_selection};
-use crate::apps::wires::config::{WiresConfig, WiresConfigOperation};
+use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::wires::op::MindmapWiresOperation;
+use crate::artifacts::wires::op::MindmapWiresMutation;
 use crate::artifacts::wires::MindmapWiresDocument;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -51,7 +51,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
     /// vocabularies; `setLocale`/`locale` is the row that proves it. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum WiresCommand for MindmapWiresDocument, MindmapWiresOperation, WiresConfig, WiresConfigOperation {
+    pub enum WiresCommand for MindmapWiresDocument, MindmapWiresMutation, WiresConfig, WiresConfigMutation {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addNode" as "add-node" => add_node::AddNode,
         "addRelationship" as "add-relationship" => add_relationship::AddRelationship,
@@ -70,17 +70,17 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️ReasoningWiresPlayApp
 /// 🧪️ B1: unit struct — every former `WiresPlayRuntime` field now lives in `WiresConfig`, written
-/// through `WiresConfigOperation`s.
+/// through `WiresConfigMutation`s.
 #[derive(Default)]
 pub struct ReasoningWiresPlayApp;
 
 impl DocumentApp for ReasoningWiresPlayApp {
     type Projection = MindmapWiresDocument;
-    type Operation = MindmapWiresOperation;
+    type Mutation = MindmapWiresMutation;
     type Config = WiresConfig;
-    type ConfigOperation = WiresConfigOperation;
+    type ConfigMutation = WiresConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = WiresCommand;
 
@@ -97,7 +97,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -131,13 +131,13 @@ pub fn create_wires_app() -> App {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-            .operation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
-            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-            .operation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
-            .operation("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"))
-            .operation("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .mutation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
+            .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
+            .mutation("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"))
+            .mutation("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
             // 👁️ Ephemeral view state — selection and in-flight drag.
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("documentSelect", LocalizedLabel::native("Document Select", "Dokument auswählen"))
@@ -173,7 +173,7 @@ pub(crate) mod testkit {
     pub fn metabolism_app() -> WiresApp {
         let mut app = new_app();
         let document = crate::artifacts::wires::engine::metabolism_wires_example_document();
-        let envelope = store::create_document_envelope::<MindmapWiresDocument, MindmapWiresOperation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        let envelope = store::create_document_envelope::<MindmapWiresDocument, MindmapWiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
         let files = store::print_document_pack(&envelope).expect("print document pack");
         app.load_document_pack(&files).expect("load metabolism");
         app
@@ -347,9 +347,9 @@ mod tests {
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
         let seed_node = |id: &str| dsl::to_dsl_value(&serde_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
         let mut base = crate::artifacts::wires::empty_mindmap_wires_document();
-        base = store::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-1") });
-        base = store::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-2") });
-        let base_envelope = store::create_document_envelope::<MindmapWiresDocument, MindmapWiresOperation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
+        base = store::apply_mutation(&base, &MindmapWiresMutation::AddNode { node: seed_node("node-1") });
+        base = store::apply_mutation(&base, &MindmapWiresMutation::AddNode { node: seed_node("node-2") });
+        let base_envelope = store::create_document_envelope::<MindmapWiresDocument, MindmapWiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
         instance_a.load_document_pack(&base_files).expect("load a");
         instance_b.load_document_pack(&base_files).expect("load b");

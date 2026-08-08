@@ -1,11 +1,11 @@
 //! 🀄️ Animate present app commands — tile CRUD: add, delete, delete-selection, rename, patch-crops.
 
-use crate::apps::present::config::{PresentConfig, PresentConfigOperation};
+use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::{new_tile_id, valid_tile_ids};
 use crate::artifacts::present::engine::clamp_tile_crop;
-use crate::artifacts::present::op::PresentOperation;
+use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, PresentDeck};
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -21,14 +21,14 @@ pub mod add_tile {
         pub crop: Option<FigureTileFrame>,
     }
 
-    pub fn handle(payload: &AddTile, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &AddTile, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let id = new_tile_id("tile");
         let crop = payload.crop.clone().unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
         let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
         Ok(Emit {
-            document_operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: deck.tiles.len(), item: tile })],
-            config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: vec![id] }],
+            document_mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: deck.tiles.len(), item: tile })],
+            config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: vec![id] }],
             ..Default::default()
         })
     }
@@ -45,7 +45,7 @@ pub mod delete_tile {
         pub id: String,
     }
 
-    pub fn handle(payload: &DeleteTile, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &DeleteTile, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let config = cfg.projection;
         let targets = valid_tile_ids(deck, vec![payload.id.clone()]);
@@ -54,8 +54,8 @@ pub mod delete_tile {
         }
         let remaining: Vec<String> = config.selected_ids.iter().filter(|selected| !targets.contains(selected)).cloned().collect();
         Ok(Emit {
-            document_operations: targets.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect(),
-            config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: remaining }],
+            document_mutations: targets.into_iter().map(|id| PresentMutation::Tiles(CollectionMutation::Remove { id })).collect(),
+            config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: remaining }],
             ..Default::default()
         })
     }
@@ -70,7 +70,7 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let config = cfg.projection;
         let targets = valid_tile_ids(deck, config.selected_ids.clone());
@@ -78,8 +78,8 @@ pub mod delete_selection {
             return Ok(Emit::default());
         }
         Ok(Emit {
-            document_operations: targets.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect(),
-            config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }],
+            document_mutations: targets.into_iter().map(|id| PresentMutation::Tiles(CollectionMutation::Remove { id })).collect(),
+            config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }],
             ..Default::default()
         })
     }
@@ -97,7 +97,7 @@ pub mod rename_tiles {
         pub value: String,
     }
 
-    pub fn handle(payload: &RenameTiles, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &RenameTiles, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let name = payload.value.trim();
         if name.is_empty() {
@@ -107,7 +107,7 @@ pub mod rename_tiles {
         if valid.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit::operations(valid.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect()))
+        Ok(Emit::mutations(valid.into_iter().map(|id| PresentMutation::Tiles(CollectionMutation::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect()))
     }
 }
 //#endregion 🔖️RenameTiles
@@ -124,10 +124,10 @@ pub mod patch_tile_crops {
         pub value: f64,
     }
 
-    pub fn handle(payload: &PatchTileCrops, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchTileCrops, doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.projection;
         let targets: HashSet<&str> = payload.ids.iter().map(String::as_str).collect();
-        let operations: Vec<PresentOperation> = deck
+        let operations: Vec<PresentMutation> = deck
             .tiles
             .iter()
             .filter(|tile| targets.contains(tile.id.as_str()))
@@ -140,13 +140,13 @@ pub mod patch_tile_crops {
                     "height" => crop.height = payload.value,
                     _ => {}
                 }
-                PresentOperation::Tiles(CollectionOperation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(&crop)) } })
+                PresentMutation::Tiles(CollectionMutation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(&crop)) } })
             })
             .collect();
         if operations.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::operations(operations))
+            Ok(Emit::mutations(operations))
         }
     }
 }
@@ -257,7 +257,7 @@ mod tests {
     fn app_manifest_declares_expected_operations() {
         use semio_framework_plugin::ActionKind;
         let definition = crate::apps::present::create_animate_present_app().definition;
-        let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Operation)).map(|action| action.id.as_str()).collect();
+        let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
         for expected in ["addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops"] {
             assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
         }

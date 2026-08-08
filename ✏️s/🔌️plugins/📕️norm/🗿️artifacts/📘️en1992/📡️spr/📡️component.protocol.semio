@@ -1,7 +1,7 @@
 dialect protocol
 protocol en1992.spr
 version 1
-schema norm.en1992.operation
+schema norm.en1992.mutation
 start record
 framing record
 field format u8

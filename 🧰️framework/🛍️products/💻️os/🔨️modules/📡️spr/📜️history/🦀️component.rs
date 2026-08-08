@@ -17,7 +17,7 @@ use std::collections::HashMap;
 //#region 🔖️Model
 // Every field of crate::os_store::OpsHeaderLine (Doc/Edit/Change/Checkpoint/Alternative/Active) has exactly
 // one slot below. Op lines are opaque exact `print_op` strings (one per line, no '\n' inside).
-// Derived data (backwards, sequence_number, unless explicitly captured via `meta`) is excluded.
+// Derived data (inverse, sequence_number, unless explicitly captured via `meta`) is excluded.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoryLog {
     pub doc_id: String,
@@ -43,13 +43,13 @@ pub struct HistoryEdit {
     pub description: Option<String>,
     pub ops: Vec<OpPayload>,
     /// @emoji 🔙️ The edit's inverse operations, in apply order (mirrors `crate::os_spr::command::Edit
-    /// ::backwards`). Empty for text-compiled/imported logs — a decoder recomputing them from a
+    /// ::inverse`). Empty for text-compiled/imported logs — a decoder recomputing them from a
     /// fresh replay never touches this field; when non-empty, `write_backwards_section` persisted
     /// them explicitly (only the `.spr` binary path ever sets this — the `.ops` text mirror stays
     /// forwards-only, see `crate::os_store::print_document_spr`/`parse_document_spr`).
-    pub backwards: Vec<OpPayload>,
+    pub inverse: Vec<OpPayload>,
     /// @emoji 🧮️ Present iff the caller supplied it; absent for text-compiled/imported logs. Not
-    /// required for round-trip — a decoder recomputing backwards/meta from a fresh replay never
+    /// required for round-trip — a decoder recomputing inverse/meta from a fresh replay never
     /// touches this field.
     pub meta: Option<Vec<HistoryOpMeta>>,
 }
@@ -273,7 +273,7 @@ fn text_error_to_protocol(err: crate::os_dsl::TextError) -> ProtocolError {
 /// @emoji 📥️ Parses the full `.ops` text into a `HistoryLog`. Blank lines and `#`-comments
 /// normalize away; a two-space-indented line under a pending `edit` header is an opaque forward
 /// op line (never interpreted). Unlike `crate::os_store::replay_ops`, this never replays operation semantics
-/// (ops are opaque here) — `HistoryEdit::meta`/backwards are simply never populated from text.
+/// (ops are opaque here) — `HistoryEdit::meta`/inverse are simply never populated from text.
 pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     struct PendingEdit {
         id: String,
@@ -298,7 +298,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 coalesce_key: header.coalesce_key,
                 description: header.description,
                 ops: std::mem::take(forwards),
-                backwards: Vec::new(),
+                inverse: Vec::new(),
                 meta: None,
             });
         }
@@ -383,7 +383,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
 /// same section order `crate::os_store::print_ops_log` uses. Errors if any op payload carries no text
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
-/// concrete `Operation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
+/// concrete `Mutation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
 pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     let mut out = String::new();
 
@@ -486,15 +486,15 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
 // - `encode_change`'s `edit_ordinal_of` is the only place besides `encode_edit` that genuinely
 //   references edit ids (`HistoryChange::edit_ids`); `encode_checkpoint`/`encode_alternative`/
 //   `encode_active` take no `edit_ordinal_of` since they never reference an edit.
-// - `encode_edit` itself is data-driven: it writes presence bit5 + the backwards section iff
-//   `edit.backwards` is non-empty — real op payloads, using the same op-payload wire shape as
+// - `encode_edit` itself is data-driven: it writes presence bit5 + the inverse section iff
+//   `edit.inverse` is non-empty — real op payloads, using the same op-payload wire shape as
 //   `edit.ops` (op_tag bit1 flags a binary payload; both tags are per-payload, not per-edit, so
 //   text-only and binary-carrying ops may mix freely within one edit). `EncodeOptions::
 //   write_backwards_section` is the batch-level policy switch `encode_history` applies on top
-//   (stripping `edit.backwards` before encoding when false, even if the caller's `HistoryLog`
+//   (stripping `edit.inverse` before encoding when false, even if the caller's `HistoryLog`
 //   has it populated) — `encode_edit`/`HistoryAppender::append_edit` have no such switch; a
 //   streaming caller controls persistence per edit via the data it hands in. A decoder never
-//   assumes backwards are present and always recomputes them via replay when the section (or the
+//   assumes inverse are present and always recomputes them via replay when the section (or the
 //   whole `HistoryLog`) is absent.
 // - Every `Option<T>` field not already covered by a record-level presence bitmask (i.e. every
 //   field inside one `HistoryOpMeta` entry) gets its own bitmask byte, described per-function.
@@ -554,13 +554,13 @@ pub fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, String),
 // [finished(ts)], [key(str)], [description(str)], op_count varint, op_count x op-payload (see
 // write_op_payload: op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary] + text_len varint
 // + utf8 + [binary_len varint + bytes iff bit1]), [iff bit5: back_count varint + back_count x
-// op-payload (backwards, in apply order)], [explicit_meta iff bit4: op_count x op-meta entry (see
+// op-payload (inverse, in apply order)], [explicit_meta iff bit4: op_count x op-meta entry (see
 // write_op_meta) — always keyed by op_count, never back_count, since meta describes the forward
 // ops only].
 
 /// @emoji 🎯️ Writes one op payload: `op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary]
 /// + text_len varint + utf8 + [binary_len varint + bytes iff bit1]`. Used for both `edit.ops`
-/// and `edit.backwards` — the two sections share this exact wire shape.
+/// and `edit.inverse` — the two sections share this exact wire shape.
 fn write_op_payload(out: &mut ByteWriter, op: &OpPayload) -> Result<(), ProtocolError> {
     if op.text.is_none() && op.binary.is_none() {
         return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "requires text or binary".to_string() });
@@ -674,7 +674,7 @@ pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: 
     if edit.meta.is_some() {
         presence |= 1 << 4;
     }
-    if !edit.backwards.is_empty() {
+    if !edit.inverse.is_empty() {
         presence |= 1 << 5;
     }
     out.write_u8(presence);
@@ -700,9 +700,9 @@ pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: 
     for op in &edit.ops {
         write_op_payload(&mut out, op)?;
     }
-    if !edit.backwards.is_empty() {
-        out.write_varint_u64(edit.backwards.len() as u64);
-        for op in &edit.backwards {
+    if !edit.inverse.is_empty() {
+        out.write_varint_u64(edit.inverse.len() as u64);
+        for op in &edit.inverse {
             write_op_payload(&mut out, op)?;
         }
     }
@@ -747,10 +747,10 @@ pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl
     for _ in 0..op_count {
         ops.push(read_op_payload(&mut input)?);
     }
-    let backwards = if presence & (1 << 5) != 0 {
+    let inverse = if presence & (1 << 5) != 0 {
         let back_count = input.read_varint_u64()?;
         if back_count > max_ops {
-            return Err(ProtocolError::LimitExceeded("edit backwards op count exceeds ProtocolLimits::max_op_count_per_edit"));
+            return Err(ProtocolError::LimitExceeded("edit inverse op count exceeds ProtocolLimits::max_op_count_per_edit"));
         }
         let mut backs = Vec::with_capacity(back_count as usize);
         for _ in 0..back_count {
@@ -769,7 +769,7 @@ pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl
     } else {
         None
     };
-    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, backwards, meta })
+    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta })
 }
 //#endregion 🔖️Edit
 
@@ -1073,19 +1073,19 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
     // 🎯️ Built incrementally (an edit's own id is inserted only AFTER it is encoded), matching
     // `HistoryAppender::append_edit`'s streaming semantics and the decoder's causal resolution
     // (`EditIter`/`prescan_full` only ever know edits already decoded). A one-shot, whole-list
-    // `ordinals` map would let an edit's own `operation_meta[i].operation_id` — legitimately equal
+    // `ordinals` map would let an edit's own `mutation_meta[i].mutation_id` — legitimately equal
     // to `edit.id` for a single-op edit — resolve to a self-referencing ordinal at encode time,
     // which the decoder can never resolve (it hasn't registered the current edit's id yet).
     let mut ordinals: HashMap<&str, u64> = HashMap::new();
     for (index, edit) in log.edits.iter().enumerate() {
-        // 🎯️ `write_backwards_section` is a batch-level policy switch: even when `edit.backwards`
+        // 🎯️ `write_backwards_section` is a batch-level policy switch: even when `edit.inverse`
         // is populated (e.g. by a live store that always computes it), a caller can opt out of
         // persisting it here. `HistoryAppender::append_edit` has no such switch — its streaming,
         // one-edit-at-a-time API gives the caller direct per-edit control via the data itself.
         let payload = if options.write_backwards_section {
             encode_edit(edit, &mut dict, |id| ordinals.get(id).copied())?
         } else {
-            let stripped = HistoryEdit { backwards: Vec::new(), ..edit.clone() };
+            let stripped = HistoryEdit { inverse: Vec::new(), ..edit.clone() };
             encode_edit(&stripped, &mut dict, |id| ordinals.get(id).copied())?
         };
         flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
@@ -1619,7 +1619,7 @@ mod tests {
                     coalesce_key: Some("typing".to_string()),
                     description: Some("first edit".to_string()),
                     ops: vec![OpPayload { text: Some("set foo=1".to_string()), binary: None }, OpPayload { text: Some("set bar=2".to_string()), binary: None }],
-                    backwards: Vec::new(),
+                    inverse: Vec::new(),
                     meta: None,
                 },
                 HistoryEdit {
@@ -1630,7 +1630,7 @@ mod tests {
                     coalesce_key: None,
                     description: None,
                     ops: vec![OpPayload { text: Some("set baz=3".to_string()), binary: None }],
-                    backwards: Vec::new(),
+                    inverse: Vec::new(),
                     meta: Some(vec![HistoryOpMeta {
                         op_id: Some("op-1".to_string()),
                         dependencies: vec!["edit-1".to_string()],
@@ -1754,7 +1754,7 @@ mod tests {
 
     #[test]
     fn edit_payload_round_trips_minimal_edit() {
-        let edit = HistoryEdit { id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, ops: Vec::new(), backwards: Vec::new(), meta: None };
+        let edit = HistoryEdit { id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, ops: Vec::new(), inverse: Vec::new(), meta: None };
         let mut dict = DictBuilder::new();
         let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
         let mut reader = DictReader::new();
@@ -1819,7 +1819,7 @@ mod tests {
             coalesce_key: None,
             description: None,
             ops: vec![OpPayload { text: Some("set n=1".to_string()), binary: Some(vec![1, 2, 3]) }, OpPayload { text: Some("set n=2".to_string()), binary: None }],
-            backwards: vec![OpPayload { text: Some("set n=0".to_string()), binary: Some(vec![0]) }, OpPayload { text: Some("set n=1".to_string()), binary: None }],
+            inverse: vec![OpPayload { text: Some("set n=0".to_string()), binary: Some(vec![0]) }, OpPayload { text: Some("set n=1".to_string()), binary: None }],
             meta: None,
         };
         let mut dict = DictBuilder::new();
@@ -1829,7 +1829,7 @@ mod tests {
         let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
         assert_eq!(decoded, edit);
         assert_eq!(decoded.ops[0].binary, Some(vec![1, 2, 3]));
-        assert_eq!(decoded.backwards[0].binary, Some(vec![0]));
+        assert_eq!(decoded.inverse[0].binary, Some(vec![0]));
     }
 
     #[test]
@@ -1842,17 +1842,17 @@ mod tests {
             coalesce_key: None,
             description: None,
             ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
-            backwards: Vec::new(),
+            inverse: Vec::new(),
             meta: None,
         };
         let mut dict = DictBuilder::new();
         let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
-        // presence byte is the 2nd byte (offset 1); bit5 (0x20) must be unset when backwards is empty.
-        assert_eq!(payload[1] & 0b0010_0000, 0, "bit5 must be unset for empty backwards");
+        // presence byte is the 2nd byte (offset 1); bit5 (0x20) must be unset when inverse is empty.
+        assert_eq!(payload[1] & 0b0010_0000, 0, "bit5 must be unset for empty inverse");
         let mut reader = DictReader::new();
         reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
         let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
-        assert_eq!(decoded.backwards, Vec::new());
+        assert_eq!(decoded.inverse, Vec::new());
     }
 
     #[test]
@@ -1933,14 +1933,14 @@ mod tests {
     #[test]
     fn history_round_trips_backwards_and_binary_payloads_and_cursor_when_write_backwards_section_is_set() {
         let mut log = sample_log();
-        log.edits[0].backwards = vec![OpPayload { text: Some("unset foo".to_string()), binary: Some(vec![9, 9]) }, OpPayload { text: Some("unset bar".to_string()), binary: None }];
+        log.edits[0].inverse = vec![OpPayload { text: Some("unset foo".to_string()), binary: Some(vec![9, 9]) }, OpPayload { text: Some("unset bar".to_string()), binary: None }];
         log.edits[1].ops[0].binary = Some(vec![7]);
         log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: Some("ck-1".to_string()) });
         let options = EncodeOptions { write_backwards_section: true, ..EncodeOptions::default() };
         let bytes = encode_history(&log, &options).unwrap();
         let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
         assert_eq!(decoded, log);
-        assert_eq!(decoded.edits[0].backwards[0].binary, Some(vec![9, 9]));
+        assert_eq!(decoded.edits[0].inverse[0].binary, Some(vec![9, 9]));
         assert_eq!(decoded.edits[1].ops[0].binary, Some(vec![7]));
         assert_eq!(decoded.cursor, log.cursor);
     }
@@ -1948,10 +1948,10 @@ mod tests {
     #[test]
     fn history_strips_backwards_when_write_backwards_section_is_unset_even_if_populated() {
         let mut log = sample_log();
-        log.edits[0].backwards = vec![OpPayload { text: Some("unset foo".to_string()), binary: None }];
+        log.edits[0].inverse = vec![OpPayload { text: Some("unset foo".to_string()), binary: None }];
         let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
         let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
-        assert_eq!(decoded.edits[0].backwards, Vec::new(), "write_backwards_section defaults false and must strip populated backwards");
+        assert_eq!(decoded.edits[0].inverse, Vec::new(), "write_backwards_section defaults false and must strip populated inverse");
     }
     //#endregion 🔖️Codec
 

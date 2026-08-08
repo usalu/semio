@@ -7,8 +7,10 @@
 //! that is the shallowest taxonomy node common to every consumer — the same "put shared declarations at
 //! the shallowest common ancestor" rule the migration template states for shared window options.
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
+
+pub use crate::document::NormHost;
 
 //#region 🔖️Config
 /// 🧮️ The shared `DocumentApp::Config` for every norm family app — one field: which
@@ -88,9 +90,9 @@ impl store::DocumentPack for NormConfig {
 
 impl store::ConfigRecord for NormConfig {}
 
-/// 🧮️ Whole-record diff for `NormConfigOperation` — `apply` ignores `base` entirely, since
-/// `NormConfigOperation::Snapshot` already carries the full post-op config.
-impl protocol::OperationDiff<NormConfig> for NormConfig {
+/// 🧮️ Whole-record diff for `NormConfigMutation` — `apply` ignores `base` entirely, since
+/// `NormConfigMutation::Snapshot` already carries the full post-op config.
+impl protocol::MutationDiff<NormConfig> for NormConfig {
     fn apply(&self, _base: &NormConfig) -> NormConfig {
         self.clone()
     }
@@ -100,12 +102,12 @@ impl protocol::OperationDiff<NormConfig> for NormConfig {
 }
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
-/// 🧮️ `NormConfig`'s operation enum — `Snapshot` is the generic whole-config inverse every other
-/// variant's `backwards()` returns (the simplest correct inverse for a config this small);
+//#region 🔖️ConfigMutations
+/// 🧮️ `NormConfig`'s mutation enum — `Snapshot` is the generic whole-config inverse every other
+/// variant's `inverse()` returns (the simplest correct inverse for a config this small);
 /// `SetSelectedCheckIndex` is the one real per-field edit every norm family app dispatches.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum NormConfigOperation {
+pub enum NormConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -116,7 +118,7 @@ pub enum NormConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for NormConfigOperation {
+impl protocol::OpText for NormConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -141,7 +143,7 @@ impl protocol::OpText for NormConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for NormConfigOperation {
+impl protocol::OpBinary for NormConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -187,21 +189,21 @@ impl protocol::OpBinary for NormConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<NormConfig> for NormConfigOperation {
+impl Mutation<NormConfig> for NormConfigMutation {
     type Diff = NormConfig;
 
     fn diff(&self, _base: &NormConfig) -> NormConfig {
         match self {
-            NormConfigOperation::Snapshot { config } => config.clone(),
-            NormConfigOperation::SetSelectedCheckIndex { index } => NormConfig { selected_check_index: *index },
+            NormConfigMutation::Snapshot { config } => config.clone(),
+            NormConfigMutation::SetSelectedCheckIndex { index } => NormConfig { selected_check_index: *index },
         }
     }
 
-    fn backwards(&self, base: &NormConfig) -> Vec<Self> {
-        vec![NormConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &NormConfig) -> Vec<Self> {
+        vec![NormConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -223,31 +225,31 @@ mod tests {
     #[test]
     fn norm_config_operation_snapshot_is_a_real_inverse() {
         let base = NormConfig { selected_check_index: Some(1) };
-        let op = NormConfigOperation::SetSelectedCheckIndex { index: Some(5) };
+        let op = NormConfigMutation::SetSelectedCheckIndex { index: Some(5) };
         let next = op.diff(&base);
         assert_eq!(next.selected_check_index, Some(5));
-        let backwards = op.backwards(&base);
-        assert_eq!(backwards, vec![NormConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = op.inverse(&base);
+        assert_eq!(backwards, vec![NormConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&next);
         assert_eq!(restored, base);
     }
 
     #[test]
     fn norm_config_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&NormConfigOperation::SetSelectedCheckIndex { index: Some(2) });
-        store::test_support::assert_op_line_round_trip(&NormConfigOperation::SetSelectedCheckIndex { index: None });
-        store::test_support::assert_op_line_round_trip(&NormConfigOperation::Snapshot { config: NormConfig { selected_check_index: Some(9) } });
+        store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: Some(2) });
+        store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: None });
+        store::test_support::assert_op_line_round_trip(&NormConfigMutation::Snapshot { config: NormConfig { selected_check_index: Some(9) } });
     }
 
     /// 🧷️ Pins the config operations' exact pre-migration wire bytes (from the ticket's
     /// `🧪️wire-baseline-before.txt`) — `NormConfig` moved file but must not move format.
     #[test]
-    fn config_operations_keep_their_pre_migration_bytes() {
-        let hex = |op: &NormConfigOperation| protocol::OpBinary::encode_op(op).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        assert_eq!(hex(&NormConfigOperation::Snapshot { config: NormConfig::default() }), "01000001000e0d00");
-        assert_eq!(hex(&NormConfigOperation::Snapshot { config: NormConfig { selected_check_index: Some(9) } }), "01000001000e0d01000409");
-        assert_eq!(hex(&NormConfigOperation::SetSelectedCheckIndex { index: Some(2) }), "01010001000402");
-        assert_eq!(hex(&NormConfigOperation::SetSelectedCheckIndex { index: None }), "01010000");
+    fn config_mutations_keep_their_pre_migration_bytes() {
+        let hex = |op: &NormConfigMutation| protocol::OpBinary::encode_op(op).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        assert_eq!(hex(&NormConfigMutation::Snapshot { config: NormConfig::default() }), "01000001000e0d00");
+        assert_eq!(hex(&NormConfigMutation::Snapshot { config: NormConfig { selected_check_index: Some(9) } }), "01000001000e0d01000409");
+        assert_eq!(hex(&NormConfigMutation::SetSelectedCheckIndex { index: Some(2) }), "01010001000402");
+        assert_eq!(hex(&NormConfigMutation::SetSelectedCheckIndex { index: None }), "01010000");
     }
 }
 //#endregion 🧪️Tests

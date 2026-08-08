@@ -1,8 +1,8 @@
 //! 👁️ Procedural3d play app commands — LOD/show-mode display toggles, the preview camera, and the
 //! transform-gumball active-utility switch (all config-only; never document operations).
 
-use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation, Procedural3dPreviewCamera};
-use crate::artifacts::procedural3d::op::Procedural3dOperation;
+use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation, Procedural3dPreviewCamera};
+use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -18,8 +18,8 @@ pub mod set_lod_mode {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLodMode, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural3dConfigOperation::SetLodMode { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLodMode, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural3dConfigMutation::SetLodMode { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLodMode
@@ -34,8 +34,8 @@ pub mod set_show_mode {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetShowMode, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural3dConfigOperation::SetShowMode { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetShowMode, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural3dConfigMutation::SetShowMode { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetShowMode
@@ -51,8 +51,8 @@ pub mod set_camera {
         pub camera: Procedural3dPreviewCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural3dConfigOperation::SetPreviewCamera { camera: payload.camera.clone() }]))
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural3dConfigMutation::SetPreviewCamera { camera: payload.camera.clone() }]))
     }
 }
 //#endregion 🔖️SetCamera
@@ -69,8 +69,8 @@ pub mod set_active_utility {
 
     /// 🧰️ Host-owned active-utility switch — clears in-progress hover scratch, never emits document
     /// operations.
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural3dConfigOperation::SetActiveUtility { utility_id: payload.utility_id.clone() }, Procedural3dConfigOperation::SetHover { node_id: None }]))
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }, Procedural3dConfigMutation::SetHover { node_id: None }]))
     }
 }
 //#endregion 🔖️SetActiveUtility
@@ -83,7 +83,7 @@ mod tests {
     use crate::apps::procedural3d::Procedural3dCommand;
 
     #[test]
-    fn set_lod_mode_is_a_view_action_with_no_document_operations() {
+    fn set_lod_mode_is_a_view_action_with_no_document_mutations() {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         let before = app.projection().expect("projection");
@@ -97,7 +97,7 @@ mod tests {
         let mut app = app_with_registry();
         let before = app.projection().expect("projection");
         let result = app.dispatch_typed(Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }), &semio_framework_plugin::testkit::meta("local")).expect("switch utility");
-        assert!(result.operations.is_empty(), "utility switching never emits document operations");
+        assert!(result.mutations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.projection().expect("projection"), before, "utility switching records no history entry");
     }
 }

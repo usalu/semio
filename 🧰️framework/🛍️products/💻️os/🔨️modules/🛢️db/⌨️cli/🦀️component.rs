@@ -12,7 +12,7 @@
 //! `db::actor`, `db::core`, …) — the facade's own re-exports, verified complete against `db/rs/
 //! lib.rs`. This crate's `Cargo.toml` accordingly depends on nothing but `db` itself plus two
 //! siblings that are NOT `db_*` crates: `protocol` (every frozen `Database`/`DocumentHandle` entry
-//! point is typed against `protocol::DocumentId`/`OperationEnvelope`/…, which the facade exposes
+//! point is typed against `protocol::DocumentId`/`MutationEnvelope`/…, which the facade exposes
 //! without re-exporting a path to) and `pack` (`SnapshotManager::verify`'s `VerificationLevel` is
 //! pack's own type, snapshots being pack files). No `db_storage`/`db_wal`/`db_snapshot`/… path
 //! dependency of its own — `wal-inspect`/`snapshot-inspect`/`replay`/`repair` still need
@@ -745,7 +745,7 @@ fn describe_resolution_plan(plan: db::conflict::ResolutionPlan) -> String {
 }
 
 fn touched_command(command_id: &str, actor: &str, kind: &str, rule: protocol::ConflictRule, hlc_actor: u64, paths: &str) -> db::conflict::CommandTouch {
-    let touch = db::conflict::CommandTouch::new(protocol::OperationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), rule, protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms()));
+    let touch = db::conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), rule, protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms()));
     paths.split(',').map(str::trim).filter(|path| !path.is_empty()).fold(touch, |touch, path| touch.touch(db::state::TouchedRegion::write(path)))
 }
 
@@ -939,13 +939,13 @@ fn cmd_profile(rest: &[String]) -> i32 {
         forward.insert("cli/profile/counter".to_string(), serde_json::json!(counter));
         let mut backward = serde_json::Map::with_capacity(1);
         backward.insert("cli/profile/counter".to_string(), serde_json::Value::Null);
-        let envelope = protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(format!("profile-{}-{counter}", now_ms())),
+        let envelope = protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(format!("profile-{}-{counter}", now_ms())),
             document_id: document_id.clone(),
             actor: protocol::ActorId("profiler".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(forward)).unwrap_or_default() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(backward)).unwrap_or_default() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(backward)).unwrap_or_default() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms()),
         };
         let batch = match db::document::CommandBatch::new(vec![envelope]) {
@@ -1042,14 +1042,14 @@ mod tests {
         dir
     }
 
-    fn test_envelope(id: &str, document: &protocol::DocumentId) -> protocol::OperationEnvelope {
-        protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(id.to_string()),
+    fn test_envelope(id: &str, document: &protocol::DocumentId) -> protocol::MutationEnvelope {
+        protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: protocol::ActorId("tester".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": "hello"})).unwrap() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": null})).unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": null})).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }

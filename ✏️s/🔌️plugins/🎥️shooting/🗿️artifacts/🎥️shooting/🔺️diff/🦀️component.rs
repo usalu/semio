@@ -9,10 +9,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingFixture, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShot, ShootingShotPatch};
-use protocol::{CollectionDiff, Identified, OperationDiff, Patchable};
+use protocol::{CollectionDiff, Identified, MutationDiff, Patchable};
 
 //#region 🔖️CollectionSupport
-/// ▶️ Applies a `CollectionDiff` (removed → modified → added, matching `apply_collection_operation`'s
+/// ▶️ Applies a `CollectionDiff` (removed → modified → added, matching `apply_collection_mutation`'s
 /// ordering) to an owned `Vec` — `protocol::CollectionDiff` has no generic apply helper of its own since
 /// `modified` patches require the item's `Patchable` impl.
 fn apply_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
@@ -112,7 +112,7 @@ pub struct ShootingDiff {
     pub fixture: Option<ShootingFixture>,
 }
 
-impl OperationDiff<ShootingFixture> for ShootingDiff {
+impl MutationDiff<ShootingFixture> for ShootingDiff {
     fn apply(&self, projection: &ShootingFixture) -> ShootingFixture {
         if let Some(fixture) = &self.fixture {
             return fixture.clone();

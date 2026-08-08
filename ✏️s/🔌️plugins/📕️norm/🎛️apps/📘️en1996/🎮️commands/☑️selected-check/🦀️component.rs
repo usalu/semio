@@ -1,12 +1,12 @@
 //! ☑️ EN 1996 play app command — point the inspection panel at a different computed check.
 //!
-//! 📌️ Config-only: it emits `config_operations`, never document operations — the selected row is view
+//! 📌️ Config-only: it emits `config_mutations`, never document operations — the selected row is view
 //! state, not compliance content. Declared as a `view_action`, so the registry's kind discipline
 //! actively rejects it if it ever starts emitting document operations.
 
-use crate::artifacts::en1996::op::Operation;
+use crate::artifacts::en1996::op::En1996Mutation;
 use crate::artifacts::en1996::Document;
-use crate::config::{NormConfig, NormConfigOperation};
+use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub struct SetSelectedCheckIndex {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
+pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1996Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_selected_check_index(payload.index)
 }
 //#endregion 🔖️Handler
@@ -41,8 +41,8 @@ mod tests {
             &ConfigView { projection: &config },
         )
         .expect("handle");
-        assert!(emit.document_operations.is_empty(), "a view action must never emit document operations");
-        assert_eq!(emit.config_operations, vec![NormConfigOperation::SetSelectedCheckIndex { index: Some(4) }]);
+        assert!(emit.document_mutations.is_empty(), "a view action must never emit document operations");
+        assert_eq!(emit.config_mutations, vec![NormConfigMutation::SetSelectedCheckIndex { index: Some(4) }]);
     }
 }
 //#endregion 🧪️Tests

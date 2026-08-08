@@ -2,8 +2,8 @@
 //!
 //! Lane 5-blend of ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`.
 //! Exact rolling-ball topology surgery is deferred; selected edges are blunted by sampling
-//! inset / quarter-circle points in the adjacent-face bisector frame, then rebuilding via
-//! [`crate::brep::primitives::make_convex_hull`].
+//! inset / quarter-circle strips in the adjacent-face frame, stitched via triangle soup
+//! (convex hull only if soup construction fails).
 
 use std::collections::HashSet;
 use std::f64::consts::FRAC_PI_2;
@@ -11,14 +11,14 @@ use std::f64::consts::FRAC_PI_2;
 use crate::brep::arena::{EdgeId, FaceId, SolidId, VertexId};
 use crate::brep::error::KernelError;
 use crate::brep::measure::{edge_length, solid_volume};
-use crate::brep::primitives::{make_box, make_convex_hull};
+use crate::brep::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
 use crate::brep::surface::Surface;
 use crate::brep::topo::Body;
 use crate::brep::vec::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
-/// 🎨️ Constant-radius fillet on `edges` of `solid` (MVP hull of arc-sampled blunt points).
+/// 🎨️ Constant-radius fillet on `edges` of `solid` (MVP arc-strip triangle soup).
 pub fn fillet_edges(
     body: &mut Body,
     solid: SolidId,
@@ -26,11 +26,11 @@ pub fn fillet_edges(
     radius: f64,
 ) -> Result<SolidId, KernelError> {
     validate_blend_request(body, solid, edges, radius)?;
-    let points = sample_blunt_points(body, solid, edges, BlendKind::Fillet { radius })?;
-    make_convex_hull(body, &points)
+    let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Fillet { radius })?;
+    solid_from_blend_samples(body, &points, &tris)
 }
 
-/// 🎨️ Linearly varying fillet radius `r0→r1` along a single `edge` (MVP hull approximation).
+/// 🎨️ Linearly varying fillet radius `r0→r1` along a single `edge` (MVP arc-strip triangle soup).
 pub fn fillet_variable(
     body: &mut Body,
     solid: SolidId,
@@ -44,16 +44,16 @@ pub fn fillet_variable(
         ));
     }
     validate_blend_request(body, solid, &[edge], r0.max(r1))?;
-    let points = sample_blunt_points(
+    let (points, tris) = sample_blunt_geometry(
         body,
         solid,
         &[edge],
         BlendKind::Variable { r0, r1 },
     )?;
-    make_convex_hull(body, &points)
+    solid_from_blend_samples(body, &points, &tris)
 }
 
-/// 🎨️ Constant-distance chamfer on `edges` of `solid` (MVP hull of face-inset samples).
+/// 🎨️ Constant-distance chamfer on `edges` of `solid` (MVP inset-strip triangle soup).
 pub fn chamfer_edges(
     body: &mut Body,
     solid: SolidId,
@@ -61,8 +61,8 @@ pub fn chamfer_edges(
     distance: f64,
 ) -> Result<SolidId, KernelError> {
     validate_blend_request(body, solid, edges, distance)?;
-    let points = sample_blunt_points(body, solid, edges, BlendKind::Chamfer { distance })?;
-    make_convex_hull(body, &points)
+    let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Chamfer { distance })?;
+    solid_from_blend_samples(body, &points, &tris)
 }
 
 // #endregion 🔖️Api
@@ -214,12 +214,25 @@ fn face_outward_normal(body: &Body, face: FaceId) -> Result<Vec3, KernelError> {
         .ok_or_else(|| KernelError::Operation("degenerate face normal".into()))
 }
 
-fn sample_blunt_points(
+fn solid_from_blend_samples(
+    body: &mut Body,
+    points: &[Pnt3],
+    tris: &[[Pnt3; 3]],
+) -> Result<SolidId, KernelError> {
+    if !tris.is_empty() {
+        if let Ok(id) = solid_from_triangle_soup(body, tris) {
+            return Ok(id);
+        }
+    }
+    make_convex_hull(body, points)
+}
+
+fn sample_blunt_geometry(
     body: &Body,
     solid: SolidId,
     edges: &[EdgeId],
     kind: BlendKind,
-) -> Result<Vec<Pnt3>, KernelError> {
+) -> Result<(Vec<Pnt3>, Vec<[Pnt3; 3]>), KernelError> {
     let selected: HashSet<EdgeId> = edges.iter().copied().collect();
     let mut endpoint_verts: HashSet<VertexId> = HashSet::new();
     for &edge in edges {
@@ -241,6 +254,7 @@ fn sample_blunt_points(
         }
     }
 
+    let mut tris: Vec<[Pnt3; 3]> = Vec::new();
     for &edge in &selected {
         let ent = body
             .edges
@@ -260,6 +274,7 @@ fn sample_blunt_points(
         let n0 = face_outward_normal(body, f0)?;
         let n1 = face_outward_normal(body, f1)?;
 
+        let mut stations: Vec<Vec<Pnt3>> = Vec::with_capacity(EDGE_STATIONS);
         for si in 0..EDGE_STATIONS {
             let t = if EDGE_STATIONS == 1 {
                 0.5
@@ -272,14 +287,17 @@ fn sample_blunt_points(
                 BlendKind::Variable { r0, r1 } => r0 * (1.0 - t) + r1 * t,
                 BlendKind::Chamfer { distance } => distance,
             };
+            let mut ring = Vec::new();
             match kind {
                 BlendKind::Chamfer { .. } => {
-                    points.push(p - n0 * amount);
-                    points.push(p - n1 * amount);
+                    let p0 = p - n0 * amount;
+                    let p1 = p - n1 * amount;
+                    ring.push(p0);
+                    ring.push(p1);
+                    points.push(p0);
+                    points.push(p1);
                 }
                 BlendKind::Fillet { .. } | BlendKind::Variable { .. } => {
-                    // Quarter-circle in the plane spanned by the two outward normals:
-                    // center sits inward from both faces; samples replace the sharp edge.
                     let center = p - n0 * amount - n1 * amount;
                     for ai in 0..ARC_SAMPLES {
                         let theta = if ARC_SAMPLES == 1 {
@@ -288,19 +306,35 @@ fn sample_blunt_points(
                             (ai as f64) * FRAC_PI_2 / (ARC_SAMPLES - 1) as f64
                         };
                         let pt = center + n0 * (amount * theta.cos()) + n1 * (amount * theta.sin());
+                        ring.push(pt);
                         points.push(pt);
                     }
                 }
+            }
+            stations.push(ring);
+        }
+
+        for si in 0..stations.len().saturating_sub(1) {
+            let a_ring = &stations[si];
+            let b_ring = &stations[si + 1];
+            let n = a_ring.len().min(b_ring.len());
+            for i in 0..n.saturating_sub(1) {
+                let a0 = a_ring[i];
+                let a1 = a_ring[i + 1];
+                let b0 = b_ring[i];
+                let b1 = b_ring[i + 1];
+                tris.push([a0, b0, a1]);
+                tris.push([a1, b0, b1]);
             }
         }
     }
 
     if points.len() < 4 {
         return Err(KernelError::Operation(
-            "blend produced too few sample points for a solid hull".into(),
+            "blend produced too few sample points for a solid".into(),
         ));
     }
-    Ok(points)
+    Ok((points, tris))
 }
 
 // #endregion 🔧Helpers

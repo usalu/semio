@@ -817,7 +817,7 @@ mod tests {
             coalesce_key: coalesce_key.map(str::to_string),
             description: description.map(str::to_string),
             ops: vec![crate::os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
-            backwards: Vec::new(),
+            inverse: Vec::new(),
             meta: None,
         }
     }

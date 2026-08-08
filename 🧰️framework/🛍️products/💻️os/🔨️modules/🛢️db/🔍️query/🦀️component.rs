@@ -24,7 +24,7 @@
 //! (`QuerySource`) this crate's `execute`/planner/`LiveQuery` machinery runs over unmodified. It
 //! deliberately takes raw bytes rather than holding a `&ProjectionEngine` reference itself:
 //! constructing/registering a real `db_projection::ErasedProjection` requires naming
-//! `protocol::OperationEnvelope` in its `apply`/`apply_bytes` signature, and this crate's frozen
+//! `protocol::MutationEnvelope` in its `apply`/`apply_bytes` signature, and this crate's frozen
 //! dependency list grants it `db_projection` but not `protocol` (only `db_document`, which already
 //! owns envelope interpretation, has both) — so the layer that calls `state_at`/`preview_augmented`
 //! hands this crate only the resulting bytes, never the engine or the envelope.
@@ -694,7 +694,7 @@ fn decode_value(cursor: &mut ValueCursor<'_>) -> Result<Value, DbError> {
 }
 
 /// @emoji 🔌️ `Value`'s `db_projection::ProjectionState` impl — lets any `db_projection::ProjectionClass`
-/// (registered by a higher layer, e.g. `db_document`, which owns the `protocol::OperationEnvelope`
+/// (registered by a higher layer, e.g. `db_document`, which owns the `protocol::MutationEnvelope`
 /// interpretation this crate deliberately never touches — see the module doc) declare `State = Value`
 /// and get this crate's query/planner/live-diff machinery for free over its checkpointed state, via
 /// `projection_query_source` below.
@@ -1162,7 +1162,7 @@ mod tests {
         /// @emoji ⚖️ The end-to-end law this bridge exists for: bytes a caller retrieved from
         /// `db_projection::ProjectionEngine::state_at`/`preview_augmented` (simulated here by
         /// `ProjectionState::encode` on a hand-built row set, since this crate cannot construct a
-        /// real `ProjectionEngine` without a `protocol::OperationEnvelope` — see the module doc)
+        /// real `ProjectionEngine` without a `protocol::MutationEnvelope` — see the module doc)
         /// decode through `projection_query_source` into a `QuerySource` this crate's ordinary
         /// `execute` runs over identically to any other source.
         #[test]

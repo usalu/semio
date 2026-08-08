@@ -1,7 +1,7 @@
 //! 📸️ Remodel play app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch. `RemodelPlayApp` is a unit struct; every former `RemodelPlayRuntime` field
 //! (camera/selection/layers/frame cursor/report table) lives in `crate::apps::remodel::config`, written
-//! via `RemodelConfigOperation`s (real `backwards`, no ad hoc runtime mutation); every action dispatches
+//! via `RemodelConfigMutation`s (real `backwards`, no ad hoc runtime mutation); every action dispatches
 //! through the single typed `RemodelCommand` channel via `DocumentApp::handle`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window scenes in
@@ -11,15 +11,15 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::remodel::commands::{calibration, ingest, params, reset, shell, view};
-use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
+use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::apps::remodel::modes::{analyze, capture, model};
 use crate::apps::remodel::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
 use crate::apps::remodel::terminology::remodel_labels;
 use crate::artifacts::remodel::engine::decode_still_image;
-use crate::artifacts::remodel::op::RemodelOperation;
+use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelProjection, REMODEL_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, MeshExporter, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
@@ -51,7 +51,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
     /// `"setSelection" as "selection"` and `"setLocale" as "locale"` are the rows that prove it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum RemodelCommand for RemodelProjection, RemodelOperation, RemodelConfig, RemodelConfigOperation {
+    pub enum RemodelCommand for RemodelProjection, RemodelMutation, RemodelConfig, RemodelConfigMutation {
         // 🚀️ Staged reconstruction — fully synchronous; there is no advance/cancel tick.
         "runReconstruction" as "run-reconstruction" => run_reconstruction::RunReconstruction,
         "retryStage" as "retry-stage" => retry_stage::RetryStage,
@@ -87,7 +87,7 @@ semio_framework_plugin::app_commands! {
         "clearTracks" as "clear-tracks" => clear_tracks::ClearTracks,
         "clearGeoProducts" as "clear-geo-products" => clear_geo_products::ClearGeoProducts,
         "clearResult" as "clear-result" => clear_result::ClearResult,
-        // 👁️ Config-only — emit `config_operations`, never document operations.
+        // 👁️ Config-only — emit `config_mutations`, never document operations.
         "setSelection" as "selection" => set_selection::SetSelection,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setLayerVisibility" as "layer-visibility" => set_layer_visibility::SetLayerVisibility,
@@ -326,11 +326,11 @@ pub struct RemodelPlayApp;
 
 impl DocumentApp for RemodelPlayApp {
     type Projection = RemodelProjection;
-    type Operation = RemodelOperation;
+    type Mutation = RemodelMutation;
     type Config = RemodelConfig;
-    type ConfigOperation = RemodelConfigOperation;
+    type ConfigMutation = RemodelConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = RemodelCommand;
 
@@ -367,9 +367,9 @@ impl DocumentApp for RemodelPlayApp {
     /// 🎞️ `photos:in` — inserts an incoming photo as one new frame on the well-known
     /// `REMODEL_WORKFLOW_PHOTOS_STREAM_ID` image-sequence stream (creating it on the first import).
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodel
-    /// has no whole-document-replace `Operation` variant to satisfy `whole_document_operation`
-    /// (`RemodelOperation` is deliberately field-granular — see that enum's doc comment).
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelProjection>) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, MediaError> {
+    /// has no whole-document-replace `Mutation` variant to satisfy `whole_document_mutation`
+    /// (`RemodelMutation` is deliberately field-granular — see that enum's doc comment).
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelProjection>) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -396,7 +396,7 @@ impl DocumentApp for RemodelPlayApp {
                         source: None,
                     }),
                 }
-                Ok(Emit::operations(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }]))
+                Ok(Emit::mutations(vec![RemodelMutation::SetAsset { key: asset_key, value: Some(asset) }, RemodelMutation::SetStreams { streams }]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -419,7 +419,7 @@ impl DocumentApp for RemodelPlayApp {
         args_bridge::command_from_action(action, args)
     }
 
-    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -486,9 +486,9 @@ pub fn create_remodel_app() -> App {
             .panel_tab_def(quality::definition())
             // 🚀️ Staged reconstruction — fully synchronous (see the module doc comment); there is no
             // `advanceReconstruction`/`cancelReconstruction` action.
-            .operation("runReconstruction", LocalizedLabel::native("Run Reconstruction", "Rekonstruktion starten"))
-            .operation("retryStage", LocalizedLabel::native("Retry", "Wiederholen"))
-            .operation("runStage", LocalizedLabel::native("Run Stage", "Stufe ausführen"))
+            .mutation("runReconstruction", LocalizedLabel::native("Run Reconstruction", "Rekonstruktion starten"))
+            .mutation("retryStage", LocalizedLabel::native("Retry", "Wiederholen"))
+            .mutation("runStage", LocalizedLabel::native("Run Stage", "Stufe ausführen"))
             .action_args("runStage", vec![ActionArgDef::select(
                 "stage",
                 LocalizedLabel::native("Stage", "Stufe"),
@@ -506,23 +506,23 @@ pub fn create_remodel_app() -> App {
             .default_value("extracting-features")])
             // 📥️ Ingestion.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Mutation) })
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importVideo", LocalizedLabel::native("Import Video", "Video importieren"), ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoFramePayload", LocalizedLabel::native("Import Video Frame Payload", "Video-Frame-Payload importieren"), ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoDone", LocalizedLabel::native("Import Video Done", "Video-Import abgeschlossen"), ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Operation) })
-            .operation("addStream", LocalizedLabel::native("Add Stream", "Stream hinzufügen"))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoFramePayload", LocalizedLabel::native("Import Video Frame Payload", "Video-Frame-Payload importieren"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoDone", LocalizedLabel::native("Import Video Done", "Video-Import abgeschlossen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Mutation) })
+            .mutation("addStream", LocalizedLabel::native("Add Stream", "Stream hinzufügen"))
             .action_args("addStream", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Stream"),
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("image-sequence", LocalizedLabel::native("Image Sequence", "Bildsequenz")), ActionArgOption::new("video", LocalizedLabel::native("Video", "Video"))]).default_value("image-sequence"),
                 ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).default_value("cam-0"),
             ])
-            .operation("removeStream", LocalizedLabel::native("Remove Stream", "Stream entfernen"))
+            .mutation("removeStream", LocalizedLabel::native("Remove Stream", "Stream entfernen"))
             .action_args("removeStream", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required()])
-            .operation("setStreamSync", LocalizedLabel::native("Set Stream Sync", "Stream-Synchronisation festlegen"))
+            .mutation("setStreamSync", LocalizedLabel::native("Set Stream Sync", "Stream-Synchronisation festlegen"))
             .action_args("setStreamSync", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(), ActionArgDef::number("syncOffsetMs", LocalizedLabel::native("Sync Offset (ms)", "Sync-Versatz (ms)")).default_value(0)])
             // 🎯️ Calibration / GCPs.
-            .operation("editCalibration", LocalizedLabel::native("Edit Calibration", "Kalibrierung bearbeiten"))
+            .mutation("editCalibration", LocalizedLabel::native("Edit Calibration", "Kalibrierung bearbeiten"))
             .action_args("editCalibration", vec![
                 ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).required(),
                 ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")),
@@ -539,17 +539,17 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::number("p2", LocalizedLabel::native("p2", "p2")).default_value(0),
                 ActionArgDef::toggle("locked", LocalizedLabel::native("Locked", "Gesperrt")).default_value(false),
             ])
-            .operation("calibrateCameras", LocalizedLabel::native("Calibrate Cameras", "Kameras kalibrieren"))
-            .operation("addGcp", LocalizedLabel::native("Add Ground Control Point", "Passpunkt hinzufügen"))
+            .mutation("calibrateCameras", LocalizedLabel::native("Calibrate Cameras", "Kameras kalibrieren"))
+            .mutation("addGcp", LocalizedLabel::native("Add Ground Control Point", "Passpunkt hinzufügen"))
             .action_args("addGcp", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("GCP"),
                 ActionArgDef::number("worldX", LocalizedLabel::native("World X", "Welt X")).default_value(0),
                 ActionArgDef::number("worldY", LocalizedLabel::native("World Y", "Welt Y")).default_value(0),
                 ActionArgDef::number("worldZ", LocalizedLabel::native("World Z", "Welt Z")).default_value(0),
             ])
-            .operation("removeGcp", LocalizedLabel::native("Remove Ground Control Point", "Passpunkt entfernen"))
+            .mutation("removeGcp", LocalizedLabel::native("Remove Ground Control Point", "Passpunkt entfernen"))
             .action_args("removeGcp", vec![ActionArgDef::text("gcpId", LocalizedLabel::native("GCP Id", "Passpunkt-Id")).required()])
-            .operation("placeGcpObservation", LocalizedLabel::native("Place GCP Observation", "Passpunkt-Beobachtung setzen"))
+            .mutation("placeGcpObservation", LocalizedLabel::native("Place GCP Observation", "Passpunkt-Beobachtung setzen"))
             .action_args("placeGcpObservation", vec![
                 ActionArgDef::text("gcpId", LocalizedLabel::native("GCP Id", "Passpunkt-Id")).required(),
                 ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(),
@@ -558,21 +558,21 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::number("pixelY", LocalizedLabel::native("Pixel Y", "Pixel Y")).required(),
             ])
             // ⚙️ 8 param-group setters, one per `ReconstructionParams` sub-struct.
-            .operation("setIngestParams", LocalizedLabel::native("Set Ingest Params", "Ingest-Parameter festlegen"))
+            .mutation("setIngestParams", LocalizedLabel::native("Set Ingest Params", "Ingest-Parameter festlegen"))
             .action_args("setIngestParams", vec![
                 ActionArgDef::number("frameSampleStride", LocalizedLabel::native("Frame Sample Stride", "Frame-Abtastschrittweite")).default_value(5),
                 ActionArgDef::number("maxFrames", LocalizedLabel::native("Max Frames", "Max. Frames")).default_value(200),
                 ActionArgDef::number("downscaleLongEdgePx", LocalizedLabel::native("Downscale Long Edge (px)", "Verkleinerung lange Kante (px)")).default_value(1600),
                 ActionArgDef::slider("minSharpness", LocalizedLabel::native("Min Sharpness", "Min. Schärfe"), 0.0, 1.0).default_value(0.3),
             ])
-            .operation("setFeatureParams", LocalizedLabel::native("Set Feature Params", "Feature-Parameter festlegen"))
+            .mutation("setFeatureParams", LocalizedLabel::native("Set Feature Params", "Feature-Parameter festlegen"))
             .action_args("setFeatureParams", vec![
                 ActionArgDef::select("detector", LocalizedLabel::native("Detector", "Detektor"), vec![ActionArgOption::new("orb", LocalizedLabel::native("ORB", "ORB")), ActionArgOption::new("akaze", LocalizedLabel::native("AKAZE", "AKAZE")), ActionArgOption::new("harris", LocalizedLabel::native("Harris", "Harris"))]).default_value("orb"),
                 ActionArgDef::number("targetCount", LocalizedLabel::native("Target Count", "Ziel-Anzahl")).default_value(4000),
                 ActionArgDef::number("octaves", LocalizedLabel::native("Octaves", "Oktaven")).default_value(4),
                 ActionArgDef::slider("edgeThreshold", LocalizedLabel::native("Edge Threshold", "Kanten-Schwelle"), 1.0, 50.0).default_value(10.0),
             ])
-            .operation("setMatchParams", LocalizedLabel::native("Set Match Params", "Match-Parameter festlegen"))
+            .mutation("setMatchParams", LocalizedLabel::native("Set Match Params", "Match-Parameter festlegen"))
             .action_args("setMatchParams", vec![
                 ActionArgDef::select("matcher", LocalizedLabel::native("Matcher", "Matcher"), vec![ActionArgOption::new("brute-force", LocalizedLabel::native("Brute Force", "Brute Force")), ActionArgOption::new("kd-tree", LocalizedLabel::native("KD-Tree", "KD-Baum"))]).default_value("brute-force"),
                 ActionArgDef::slider("ratioTest", LocalizedLabel::native("Ratio Test", "Verhältnistest"), 0.1, 1.0).default_value(0.8),
@@ -581,7 +581,7 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::number("maxPairsPerFrame", LocalizedLabel::native("Max Pairs Per Frame", "Max. Paare pro Frame")).default_value(16),
                 ActionArgDef::toggle("loopClosure", LocalizedLabel::native("Loop Closure", "Schleifenschluss")).default_value(true),
             ])
-            .operation("setSfmParams", LocalizedLabel::native("Set SfM Params", "SfM-Parameter festlegen"))
+            .mutation("setSfmParams", LocalizedLabel::native("Set SfM Params", "SfM-Parameter festlegen"))
             .action_args("setSfmParams", vec![
                 ActionArgDef::number("ransacIterations", LocalizedLabel::native("RANSAC Iterations", "RANSAC-Iterationen")).default_value(1000),
                 ActionArgDef::slider("ransacThresholdPx", LocalizedLabel::native("RANSAC Threshold (px)", "RANSAC-Schwelle (px)"), 0.1, 10.0).default_value(2.0),
@@ -590,7 +590,7 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::select("robustLoss", LocalizedLabel::native("Robust Loss", "Robuster Verlust"), vec![ActionArgOption::new("l2", LocalizedLabel::native("L2", "L2")), ActionArgOption::new("huber", LocalizedLabel::native("Huber", "Huber")), ActionArgOption::new("cauchy", LocalizedLabel::native("Cauchy", "Cauchy"))]).default_value("huber"),
                 ActionArgDef::slider("huberDeltaPx", LocalizedLabel::native("Huber Delta (px)", "Huber-Delta (px)"), 0.1, 10.0).default_value(1.5),
             ])
-            .operation("setDenseParams", LocalizedLabel::native("Set Dense Params", "Dense-Parameter festlegen"))
+            .mutation("setDenseParams", LocalizedLabel::native("Set Dense Params", "Dense-Parameter festlegen"))
             .action_args("setDenseParams", vec![
                 ActionArgDef::select("resolution", LocalizedLabel::native("Resolution", "Auflösung"), vec![ActionArgOption::new("low", LocalizedLabel::native("Low", "Niedrig")), ActionArgOption::new("medium", LocalizedLabel::native("Medium", "Mittel")), ActionArgOption::new("high", LocalizedLabel::native("High", "Hoch"))]).default_value("medium"),
                 ActionArgDef::number("windowRadiusPx", LocalizedLabel::native("Window Radius (px)", "Fensterradius (px)")).default_value(3),
@@ -598,7 +598,7 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::slider("confidenceThreshold", LocalizedLabel::native("Confidence Threshold", "Konfidenzschwelle"), 0.0, 1.0).default_value(0.5),
                 ActionArgDef::number("maxPoints", LocalizedLabel::native("Max Points", "Max. Punkte")).default_value(500_000),
             ])
-            .operation("setMeshParams", LocalizedLabel::native("Set Mesh Params", "Mesh-Parameter festlegen"))
+            .mutation("setMeshParams", LocalizedLabel::native("Set Mesh Params", "Mesh-Parameter festlegen"))
             .action_args("setMeshParams", vec![
                 ActionArgDef::slider("tsdfVoxelSizeMm", LocalizedLabel::native("TSDF Voxel Size (mm)", "TSDF-Voxelgröße (mm)"), 1.0, 20.0).default_value(5.0),
                 ActionArgDef::slider("tsdfTruncationMm", LocalizedLabel::native("TSDF Truncation (mm)", "TSDF-Trunkierung (mm)"), 2.0, 60.0).default_value(20.0),
@@ -610,7 +610,7 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::number("holeFillMaxBoundaryVerts", LocalizedLabel::native("Hole Fill Max Boundary Verts", "Max. Randpunkte für Lochfüllung")).default_value(512),
                 ActionArgDef::toggle("selfIntersectionCheck", LocalizedLabel::native("Self-Intersection Check", "Selbstüberschneidungsprüfung")).default_value(false),
             ])
-            .operation("setMotionParams", LocalizedLabel::native("Set Motion Params", "Bewegungs-Parameter festlegen"))
+            .mutation("setMotionParams", LocalizedLabel::native("Set Motion Params", "Bewegungs-Parameter festlegen"))
             .action_args("setMotionParams", vec![
                 ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(false),
                 ActionArgDef::number("maxTracks", LocalizedLabel::native("Max Tracks", "Max. Spuren")).default_value(64),
@@ -618,7 +618,7 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::slider("minTrackQuality", LocalizedLabel::native("Min Track Quality", "Min. Spurqualität"), 0.0, 1.0).default_value(0.3),
                 ActionArgDef::number("minTrackLengthFrames", LocalizedLabel::native("Min Track Length (frames)", "Min. Spurlänge (Frames)")).default_value(5),
             ])
-            .operation("setGeoParams", LocalizedLabel::native("Set Geo Params", "Geo-Parameter festlegen"))
+            .mutation("setGeoParams", LocalizedLabel::native("Set Geo Params", "Geo-Parameter festlegen"))
             .action_args("setGeoParams", vec![
                 ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(false),
                 ActionArgDef::number("originLon", LocalizedLabel::native("Origin Longitude", "Ursprung Längengrad")).default_value(0),
@@ -630,13 +630,13 @@ pub fn create_remodel_app() -> App {
                 ActionArgDef::number("orthoMaxPx", LocalizedLabel::native("Ortho Max (px)", "Ortho Max. (px)")).default_value(4096),
             ])
             // 🧹️ Clear/reset.
-            .operation("resetPlaceholderMesh", LocalizedLabel::native("Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"))
-            .operation("clearSparse", LocalizedLabel::native("Clear Sparse Cloud", "Dünne Punktwolke löschen"))
-            .operation("clearDense", LocalizedLabel::native("Clear Dense Cloud", "Dichte Punktwolke löschen"))
-            .operation("clearMeshResult", LocalizedLabel::native("Clear Mesh", "Mesh löschen"))
-            .operation("clearTracks", LocalizedLabel::native("Clear Tracks", "Spuren löschen"))
-            .operation("clearGeoProducts", LocalizedLabel::native("Clear Geo Products", "Geo-Produkte löschen"))
-            .operation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
+            .mutation("resetPlaceholderMesh", LocalizedLabel::native("Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"))
+            .mutation("clearSparse", LocalizedLabel::native("Clear Sparse Cloud", "Dünne Punktwolke löschen"))
+            .mutation("clearDense", LocalizedLabel::native("Clear Dense Cloud", "Dichte Punktwolke löschen"))
+            .mutation("clearMeshResult", LocalizedLabel::native("Clear Mesh", "Mesh löschen"))
+            .mutation("clearTracks", LocalizedLabel::native("Clear Tracks", "Spuren löschen"))
+            .mutation("clearGeoProducts", LocalizedLabel::native("Clear Geo Products", "Geo-Produkte löschen"))
+            .mutation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
             // 👁️ View-only runtime actions.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View) })
@@ -979,15 +979,15 @@ mod tests {
             },
         };
         let emit = inner.import_media("photos:in", &media, &doc).expect("photos:in import");
-        assert_eq!(emit.document_operations.len(), 2, "one SetAsset + one SetStreams");
-        let next = emit.document_operations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_operation(&scene, operation));
+        assert_eq!(emit.document_mutations.len(), 2, "one SetAsset + one SetStreams");
+        let next = emit.document_mutations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next.streams.len(), 1);
         assert_eq!(next.streams[0].id, REMODEL_WORKFLOW_PHOTOS_STREAM_ID);
         assert_eq!(next.streams[0].frames.len(), 1);
 
         let doc2 = DocumentView { projection: &next, history: &HistoryView::empty() };
         let emit2 = inner.import_media("photos:in", &media, &doc2).expect("second photos:in import");
-        let next2 = emit2.document_operations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_operation(&scene, operation));
+        let next2 = emit2.document_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
         assert_eq!(next2.streams[0].frames.len(), 2, "second import appends a second frame");
     }

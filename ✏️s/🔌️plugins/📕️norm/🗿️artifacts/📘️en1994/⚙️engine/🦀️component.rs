@@ -1,7 +1,7 @@
 //! ⚙️ EN 1994 design of composite steel and concrete structures — headless compute (constitutional: engine).
 
 use crate::artifacts::en1994::Document;
-use crate::artifacts::en1994::op::Operation;
+use crate::artifacts::en1994::mutations::En1994Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity, QuantityKind};
 
 // #region 🔖️AnnexParams
@@ -245,6 +245,44 @@ pub fn check_full_composite(
 }
 
 // #region 🔖️Session
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1994 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1994Engine {
+    projection: Document,
+}
+
+impl En1994Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1994Engine {
+    type Projection = Document;
+    type Mutation = En1994Mutation;
+    type Diff = crate::artifacts::en1994::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
 pub type Host = NormHost<En1994Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
@@ -278,7 +316,7 @@ pub struct En1994Family;
 
 impl NormFamily for En1994Family {
     type Document = Document;
-    type Operation = Operation;
+    type Mutation = En1994Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1994

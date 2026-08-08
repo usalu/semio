@@ -4,34 +4,34 @@
 //! `DagNodeGraphEditOp` (the batched sub-operation enum for `nodeGraphEdit`, mirroring the pre-B1
 //! `nodeGraphEdit` action's `operations` JSON array) moved here from the old `📡️protocol` crate — it's a
 //! field of `NodeGraphEdit`'s payload, so it lives beside the command it belongs to rather than in
-//! `📡️spr` (which now only carries the artifact-level `DagOperation` wire codec).
+//! `📡️spr` (which now only carries the artifact-level `DagMutation` wire codec).
 //!
 //! Ported from the pre-migration `dag_ui::DocumentApp::handle` match arms — several of those arms were
 //! found with unbalanced `Ok(` wraps (the repo-wide corruption pattern documented in the migration
 //! TEMPLATE §12.3); fixed here as part of the port, not a behavior change.
 
-use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigOperation};
+use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::artifacts::dag::engine;
-use crate::artifacts::dag::op::DagOperation;
+use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagDocument;
 use infinite_board_port_directed_dag::{dag_document_from_fixture, dag_fixture_from_document, DagFixture, DagHost, DagLayoutOptions, DagNodePatch};
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
-/// 🗑️ Builds the removal `DagOperation`s plus the config op that CLEARS the whole selection, or `None`
+/// 🗑️ Builds the removal `DagMutation`s plus the config op that CLEARS the whole selection, or `None`
 /// when nothing in `node_ids` exists to remove — shared by `delete_selection::DeleteSelection` and
 /// `node_graph_edit::DagNodeGraphEditOp::DeleteSelection` (both were the same `handle_action`
 /// "deleteSelection" logic, reachable from two different action ids pre-migration).
 /// `remove_node::RemoveNode` deliberately does NOT use this helper: it only pulls the removed id out of
 /// the selection, never clears it outright.
-fn delete_selection_result(document: &DagDocument, node_ids: &[String]) -> Option<(Vec<DagOperation>, DagConfigOperation)> {
+fn delete_selection_result(document: &DagDocument, node_ids: &[String]) -> Option<(Vec<DagMutation>, DagConfigMutation)> {
     let removes = engine::remove_nodes_operations(document, node_ids);
     if removes.is_empty() {
         None
     } else {
-        Some((removes, DagConfigOperation::SetSelection { node_ids: Vec::new() }))
+        Some((removes, DagConfigMutation::SetSelection { node_ids: Vec::new() }))
     }
 }
 //#endregion 🔖️Shared
@@ -44,11 +44,11 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match delete_selection_result(document, &config.selected_node_ids) {
-            Some((removes, clear_selection)) => Ok(Emit { document_operations: removes, config_operations: vec![clear_selection], ..Default::default() }),
+            Some((removes, clear_selection)) => Ok(Emit { document_mutations: removes, config_mutations: vec![clear_selection], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
@@ -79,33 +79,33 @@ pub mod node_graph_edit {
         pub operations: Vec<DagNodeGraphEditOp>,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
-        let mut document_operations: Vec<DagOperation> = Vec::new();
-        let mut config_operations: Vec<DagConfigOperation> = Vec::new();
+        let mut document_mutations: Vec<DagMutation> = Vec::new();
+        let mut config_mutations: Vec<DagConfigMutation> = Vec::new();
         for sub_operation in &payload.operations {
             match sub_operation {
                 DagNodeGraphEditOp::SetFixture { fixture_json } => {
                     if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
-                        config_operations.push(DagConfigOperation::SetCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom });
-                        document_operations.push(DagOperation::SetDocument { document: dag_document_from_fixture(&fixture) });
+                        config_mutations.push(DagConfigMutation::SetCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom });
+                        document_mutations.push(DagMutation::SetDocument { document: dag_document_from_fixture(&fixture) });
                     }
                 }
                 DagNodeGraphEditOp::DeleteSelection => {
                     if let Some((removes, clear_selection)) = delete_selection_result(document, &config.selected_node_ids) {
-                        document_operations.extend(removes);
-                        config_operations.push(clear_selection);
+                        document_mutations.extend(removes);
+                        config_mutations.push(clear_selection);
                     }
                 }
                 DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
                     if let Ok(edge) = engine::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
-                        document_operations.push(DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge }));
+                        document_mutations.push(DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge }));
                     }
                 }
             }
         }
-        Ok(Emit { document_operations, config_operations, ..Default::default() })
+        Ok(Emit { document_mutations, config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -123,10 +123,10 @@ pub mod connect_media_ports {
         pub target_port_id: String,
     }
 
-    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         match engine::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
-            Ok(edge) => Ok(Emit::operations(vec![DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge })])),
+            Ok(edge) => Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge })])),
             Err(_) => Ok(Emit::default()),
         }
     }
@@ -143,10 +143,10 @@ pub mod disconnect {
         pub edge_id: String,
     }
 
-    pub fn handle(payload: &Disconnect, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &Disconnect, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         if document.edges.iter().any(|edge| edge.id == payload.edge_id) {
-            Ok(Emit::operations(vec![DagOperation::Edges(CollectionOperation::Remove { id: payload.edge_id.clone() })]))
+            Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Remove { id: payload.edge_id.clone() })]))
         } else {
             Ok(Emit::default())
         }
@@ -166,10 +166,10 @@ pub mod move_media_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         if document.nodes.iter().any(|node| node.id == payload.node_id) {
-            Ok(Emit::amend(vec![DagOperation::Nodes(CollectionOperation::Patch { id: payload.node_id.clone(), patch: DagNodePatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() } })], format!("move-{}", payload.node_id)))
+            Ok(Emit::amend(vec![DagMutation::Nodes(CollectionMutation::Patch { id: payload.node_id.clone(), patch: DagNodePatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() } })], format!("move-{}", payload.node_id)))
         } else {
             Ok(Emit::default())
         }
@@ -185,7 +185,7 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         let camera = dag_config_camera(config);
@@ -193,7 +193,7 @@ pub mod reorganize {
             let _ = host.reorganize(&DagLayoutOptions::default());
             if let Ok(json) = host.fixture_json() {
                 if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
-                    return Ok(Emit::operations(vec![DagOperation::SetNodes { nodes: fixture.nodes }]));
+                    return Ok(Emit::mutations(vec![DagMutation::SetNodes { nodes: fixture.nodes }]));
                 }
             }
         }
@@ -223,7 +223,7 @@ mod tests {
         };
         let edges_before = app.projection().expect("projection").edges.len();
         app.dispatch_typed(
-            DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
+            DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { mutations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
             &semio_framework_plugin::testkit::meta("local"),
         )
         .expect("batched connect");
@@ -231,7 +231,7 @@ mod tests {
 
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![source_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         let nodes_before = app.projection().expect("projection").nodes.len();
-        app.dispatch_typed(DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] }), &semio_framework_plugin::testkit::meta("local")).expect("batched delete");
+        app.dispatch_typed(DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { mutations: vec![DagNodeGraphEditOp::DeleteSelection] }), &semio_framework_plugin::testkit::meta("local")).expect("batched delete");
         assert_eq!(app.projection().expect("projection").nodes.len(), nodes_before - 1);
     }
 
@@ -259,7 +259,7 @@ mod tests {
             assert_eq!(app.projection().expect("projection").edges.len(), edges_before - 1);
         }
         let result = app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id: "nonexistent".into() }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect unknown");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
     }
 
     #[test]

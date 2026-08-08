@@ -1,0 +1,14 @@
+$ bun ./📜️script.ts nx run @semio-tech/plugin-registry:generate
+
+> nx run @semio-tech/plugin-registry:generate
+
+> bun ./📜️script.ts generate
+
+plugin registry catalog refreshed (58 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated
+.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json
+
+
+
+ NX   Successfully ran target generate for project @semio-tech/plugin-registry
+
+

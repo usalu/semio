@@ -8,8 +8,8 @@
 //!
 //! 🎯️ Design choice: this crate sits BELOW `db_document` per the dependency table, so per the
 //! contract's "command payloads are opaque ... below `db_document`" rule it never interprets
-//! operation/diff *semantics*. It does read `protocol::OperationEnvelope`'s routing fields
-//! (`operation_id`/`document_id`/`actor`/`timestamp`) for replay/authz addressing — those are
+//! operation/diff *semantics*. It does read `protocol::MutationEnvelope`'s routing fields
+//! (`mutation_id`/`document_id`/`actor`/`timestamp`) for replay/authz addressing — those are
 //! envelope plumbing, not payload interpretation — and it walks a `serde_json::Value` payload
 //! purely structurally (field paths in, redacted value out) for field-level redaction, never
 //! reasoning about what the payload means. `serde_json` is added as a genuine dependency beyond
@@ -52,7 +52,7 @@ impl From<String> for TenantId {
 /// @emoji 🪪️ The authenticated caller a `SecurityGate` decision is made against: which actor,
 /// which tenant they belong to, and which roles `RoleBasedPolicy` grants are matched against.
 /// Deliberately carries `protocol::ActorId` (not `ActorId`) — see module doc: this crate
-/// authorizes the same actor identity that flows through `protocol::OperationEnvelope`.
+/// authorizes the same actor identity that flows through `protocol::MutationEnvelope`.
 #[derive(Clone, Debug)]
 pub struct Principal {
     pub actor: protocol::ActorId,
@@ -338,7 +338,7 @@ pub fn verify_signature(verifier: &dyn protocol::SignatureVerifier, signature: &
 //#endregion 🔖️Signing
 
 //#region 🔖️Replay
-/// @emoji 🩹️ A bounded, per-actor sliding-time-window replay guard: rejects an `OperationId` a
+/// @emoji 🩹️ A bounded, per-actor sliding-time-window replay guard: rejects an `MutationId` a
 /// given actor has already submitted within `window_ms`. Deliberately NOT a permanent ledger —
 /// bounded by both `window_ms` (time) and `capacity_per_actor` (space, oldest-evicted-first) so
 /// memory never grows unboundedly under a hostile or buggy high-volume actor; durable dedupe
@@ -349,8 +349,8 @@ pub fn verify_signature(verifier: &dyn protocol::SignatureVerifier, signature: &
 pub struct ReplayGuard {
     window_ms: u64,
     capacity_per_actor: usize,
-    order: std::collections::HashMap<protocol::ActorId, std::collections::VecDeque<(protocol::OperationId, u64)>>,
-    seen: std::collections::HashMap<protocol::ActorId, std::collections::HashSet<protocol::OperationId>>,
+    order: std::collections::HashMap<protocol::ActorId, std::collections::VecDeque<(protocol::MutationId, u64)>>,
+    seen: std::collections::HashMap<protocol::ActorId, std::collections::HashSet<protocol::MutationId>>,
 }
 
 impl ReplayGuard {
@@ -359,10 +359,10 @@ impl ReplayGuard {
     }
 
     /// @emoji 🔍️ Evicts `actor`'s entries older than `window_ms` relative to `physical_ms`, then
-    /// rejects with `DbError::Conflict` if `operation_id` is still tracked; otherwise records it
+    /// rejects with `DbError::Conflict` if `mutation_id` is still tracked; otherwise records it
     /// (evicting the oldest entry first if `capacity_per_actor` would be exceeded) and returns
     /// `Ok`.
-    pub fn check_and_record(&mut self, actor: &protocol::ActorId, operation_id: &protocol::OperationId, physical_ms: u64) -> Result<(), DbError> {
+    pub fn check_and_record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
         let deque = self.order.entry(actor.clone()).or_default();
         let set = self.seen.entry(actor.clone()).or_default();
 
@@ -376,8 +376,8 @@ impl ReplayGuard {
             }
         }
 
-        if set.contains(operation_id) {
-            return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}' within {}ms window", operation_id.0, actor.0, self.window_ms)));
+        if set.contains(mutation_id) {
+            return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}' within {}ms window", mutation_id.0, actor.0, self.window_ms)));
         }
 
         if deque.len() >= self.capacity_per_actor {
@@ -385,8 +385,8 @@ impl ReplayGuard {
                 set.remove(&evicted_id);
             }
         }
-        deque.push_back((operation_id.clone(), physical_ms));
-        set.insert(operation_id.clone());
+        deque.push_back((mutation_id.clone(), physical_ms));
+        set.insert(mutation_id.clone());
         Ok(())
     }
 }
@@ -525,12 +525,12 @@ pub fn audit_decision(emit: &dyn Emit, principal: &Principal, scope: &AuthzScope
 /// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_command` calls this
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
-pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, operation_id: &protocol::OperationId, document: &protocol::DocumentId) {
+pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::DocumentId) {
     emit.emit(
         EmitEvent::new("security.replay_rejected")
             .with_document(DocumentId::from(document.0.clone()))
             .field("actor", EmitField::Text(actor.0.clone()))
-            .field("operation_id", EmitField::Text(operation_id.0.clone())),
+            .field("mutation_id", EmitField::Text(mutation_id.0.clone())),
     );
 }
 
@@ -587,7 +587,7 @@ impl SecurityGate {
         document: &protocol::DocumentId,
         kind: &str,
         envelope_actor: &protocol::ActorId,
-        operation_id: &protocol::OperationId,
+        mutation_id: &protocol::MutationId,
         physical_ms: u64,
     ) -> Result<(), DbError> {
         check_tenant(principal, resource_tenant)?;
@@ -596,9 +596,9 @@ impl SecurityGate {
             audit_budget_exceeded(self.emit.as_ref(), &principal.actor.0, document);
             return Err(DbError::LimitExceeded("dos budget exceeded"));
         }
-        if lock(&self.replay).check_and_record(envelope_actor, operation_id, physical_ms).is_err() {
-            audit_replay_rejected(self.emit.as_ref(), envelope_actor, operation_id, document);
-            return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}'", operation_id.0, envelope_actor.0)));
+        if lock(&self.replay).check_and_record(envelope_actor, mutation_id, physical_ms).is_err() {
+            audit_replay_rejected(self.emit.as_ref(), envelope_actor, mutation_id, document);
+            return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}'", mutation_id.0, envelope_actor.0)));
         }
         Ok(())
     }
@@ -622,8 +622,8 @@ mod tests {
     fn actor(id: &str) -> protocol::ActorId {
         protocol::ActorId(id.to_string())
     }
-    fn op(id: &str) -> protocol::OperationId {
-        protocol::OperationId(id.to_string())
+    fn op(id: &str) -> protocol::MutationId {
+        protocol::MutationId(id.to_string())
     }
     fn principal(role: &str) -> Principal {
         Principal::new(actor("alice"), TenantId::from("tenant-1"), vec![role.to_string()])

@@ -1,7 +1,7 @@
 //! 🗣️ Note play app command — the host-pushed locale switch. Config-only.
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
-use crate::artifacts::note::op::NoteOperation;
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        Ok(Emit::config(vec![NoteConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(Emit::config(vec![NoteConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

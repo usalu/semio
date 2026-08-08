@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { createWriteStream, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { createWriteStream, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,11 +47,17 @@ import {
   transpilePluginComponent,
   type PluginWebMaterializeContext,
 } from "../../../🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
+import {
+  defaultExtensionInstallRoot,
+  EXTENSION_INSTALL_META,
+  EXTENSION_WATCH_MARKER,
+} from "../../../🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
+const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
 const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🤖️generated/🟦️session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
@@ -726,6 +732,50 @@ function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: 
   }
 }
 
+
+/** @emoji 🧩️ Mirrors a just-built extension crate from `plugin-modules/` into the runtime `/extensions` install root so catalog loads resolve without a separate `.sxt` install step. */
+function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string): void {
+  if (target.role !== "extension") return;
+  if (!existsSync(builtOutDir)) return;
+  mkdirSync(extensionOutRoot, { recursive: true });
+  const outDir = join(extensionOutRoot, target.pluginId);
+  const stagingDir = join(extensionOutRoot, `.staging-${target.pluginId}-${Date.now()}`);
+  const retiredDir = join(extensionOutRoot, `.retired-${target.pluginId}-${Date.now()}`);
+  cpSync(builtOutDir, stagingDir, { recursive: true });
+  const jsBase = target.wasmOut.replace(/\.wasm$/, "");
+  const moduleUrl = `/extensions/${target.pluginId}/${jsBase}.js`;
+  const installedAt = Date.now();
+  const record = {
+    extensionId: target.pluginId,
+    version: "0.0.0-dev",
+    label: target.pluginId,
+    extends: target.extends ?? "",
+    moduleUrl,
+    packageHash: `dev:${installedAt}`,
+    installedAt,
+  };
+  writeFileSync(join(stagingDir, EXTENSION_INSTALL_META), `${JSON.stringify(record, null, 2)}\n`);
+  if (existsSync(outDir)) renameSync(outDir, retiredDir);
+  renameSync(stagingDir, outDir);
+  if (existsSync(retiredDir)) rmSync(retiredDir, { recursive: true, force: true });
+  writeFileSync(
+    join(extensionOutRoot, EXTENSION_WATCH_MARKER),
+    `${JSON.stringify({ kind: "installed", extensionId: target.pluginId, version: record.version, installedAt, emittedAt: Date.now() })}\n`,
+  );
+  console.log(`[DEBUG] published extension ${target.pluginId} -> ${moduleUrl}`);
+}
+
+/** @emoji 🧩️ Seeds `/extensions` from any extension crates already present under `plugin-modules/` (covers restart without rebuild). */
+function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistryEntry[]): void {
+  for (const target of entries) {
+    if (target.role !== "extension") continue;
+    const builtOutDir = join(pluginOutRoot, target.pluginId);
+    const jsBase = target.wasmOut.replace(/\.wasm$/, "");
+    if (!existsSync(join(builtOutDir, `${jsBase}.js`))) continue;
+    publishBuiltExtension(target, builtOutDir);
+  }
+}
+
 async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
@@ -747,6 +797,9 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
   writeFileSync(join(outDir, "🟨️plugin-worker.js"), pluginWorkerSource());
+  // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/extensions/...`
+  // from the SSE event, so the install root must already serve the new files.
+  publishBuiltExtension(target, outDir);
   const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
   console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${profile}) -> ${outDir}`);
@@ -796,6 +849,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
     rmSync(stalePublicPlugins, { recursive: true, force: true });
   }
   const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
+  syncBuiltExtensionsToInstallRoot(targets);
   if (filterPlugin && !isStudioPluginFilter(filterPlugin)) {
     console.log(`[DEBUG] program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {
@@ -1144,9 +1198,9 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
   if (process.env.FORCE_ENGINE_BUILD !== "1") {
     const surfacePkgJs = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg/framework_surface.js");
-    const editorPkgJs = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js");
+    const editorPkgWasm = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor_bg.wasm");
     const flowPkgWasm = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm");
-    if (existsSync(surfacePkgJs) && existsSync(editorPkgJs) && existsSync(flowPkgWasm)) {
+    if (existsSync(surfacePkgJs) && existsSync(editorPkgWasm) && existsSync(flowPkgWasm)) {
       console.log("[DEBUG] reusing existing engine wasm pkg/ (set FORCE_ENGINE_BUILD=1 to rebuild)");
       return;
     }

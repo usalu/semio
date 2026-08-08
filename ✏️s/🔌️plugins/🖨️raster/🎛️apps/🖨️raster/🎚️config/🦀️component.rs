@@ -2,11 +2,11 @@
 //! former `RasterPlayRuntime` (`ui`-crate `RefCell`) field (selection, hover, brush size/opacity,
 //! navigator composite-viewport size, the session-only free camera) plus the two former `ViewModel`-
 //! driven fields the raster UI actually reads (`active_utility_id`/`locale` — mirrors
-//! `shooting_engine::ShootingConfig`'s identical B1 migration). `RasterConfigOperation` lives here too,
+//! `shooting_engine::ShootingConfig`'s identical B1 migration). `RasterConfigMutation` lives here too,
 //! next to the `RasterConfig` it patches (TEMPLATE.md §4).
 
 use crate::artifacts::raster::RasterCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -117,12 +117,12 @@ impl Default for RasterConfig {
 store::impl_whole_record_config!(RasterConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
+//#region 🔖️ConfigMutations
 /// @emoji 🧮️ B1: `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the
 /// pre-B1 `RasterPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — mirrors `shooting_op::ShootingConfigOperation`'s identical shape.
+/// returns — mirrors `shooting_op::ShootingConfigMutation`'s identical shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum RasterConfigOperation {
+pub enum RasterConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -153,7 +153,7 @@ pub enum RasterConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for RasterConfigOperation {
+impl protocol::OpText for RasterConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -167,7 +167,7 @@ impl protocol::OpText for RasterConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -178,7 +178,7 @@ impl protocol::OpText for RasterConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for RasterConfigOperation {
+impl protocol::OpBinary for RasterConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -224,30 +224,30 @@ impl protocol::OpBinary for RasterConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<RasterConfig> for RasterConfigOperation {
+impl Mutation<RasterConfig> for RasterConfigMutation {
     type Diff = RasterConfig;
 
     fn diff(&self, base: &RasterConfig) -> RasterConfig {
         let mut next = base.clone();
         match self {
-            RasterConfigOperation::Snapshot { config } => return config.clone(),
-            RasterConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            RasterConfigOperation::SetHovered { id } => next.hovered_id = id.clone(),
-            RasterConfigOperation::SetBrushSize { value } => next.brush_size = *value,
-            RasterConfigOperation::SetBrushOpacity { value } => next.brush_opacity = value.clamp(0.0, 1.0),
-            RasterConfigOperation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
-            RasterConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            RasterConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            RasterConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            RasterConfigMutation::Snapshot { config } => return config.clone(),
+            RasterConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            RasterConfigMutation::SetHovered { id } => next.hovered_id = id.clone(),
+            RasterConfigMutation::SetBrushSize { value } => next.brush_size = *value,
+            RasterConfigMutation::SetBrushOpacity { value } => next.brush_opacity = value.clamp(0.0, 1.0),
+            RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
+            RasterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            RasterConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            RasterConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &RasterConfig) -> Vec<Self> {
-        vec![RasterConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &RasterConfig) -> Vec<Self> {
+        vec![RasterConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -257,27 +257,27 @@ mod tests {
     #[test]
     fn raster_config_operation_round_trips_and_backwards_restores_snapshot() {
         let base = RasterConfig { selected_ids: vec!["a".into()], ..Default::default() };
-        let operation = RasterConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] };
+        let operation = RasterConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] };
         let forward = operation.diff(&base);
         assert_eq!(forward.selected_ids, vec!["a".to_string(), "b".to_string()]);
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![RasterConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![RasterConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(backwards[0].diff(&forward), base);
     }
 
     #[test]
     fn raster_config_operation_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::Snapshot { config: RasterConfig::default() });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetHovered { id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetHovered { id: None });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetBrushSize { value: 40.0 });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetBrushOpacity { value: 0.5 });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetCompositeViewport { viewport: None });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetActiveUtility { utility_id: "paintBrush".into() });
-        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::Snapshot { config: RasterConfig::default() });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: None });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize { value: 40.0 });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushOpacity { value: 0.5 });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: None });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetActiveUtility { utility_id: "paintBrush".into() });
+        store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     #[test]

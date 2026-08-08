@@ -1,12 +1,12 @@
 //! 📚️ Flow dictionary module: operators for dictionary manipulation.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, VariadicSpec};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value, VariadicSpec};
 
 // #region 🔖️Pack
 /// 📦️ Wraps input into a dictionary schema.
 pub struct Pack;
 
-impl Operation for Pack {
+impl Operator for Pack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("dictionary", Dictionary::with_schema("dictionary").merge(input)))
     }
@@ -17,7 +17,7 @@ impl Operation for Pack {
 /// 📤️ Forwards a dictionary.
 pub struct Unpack;
 
-impl Operation for Unpack {
+impl Operator for Unpack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("dictionary", read_dict(input, "dictionary")?.clone()))
     }
@@ -28,7 +28,7 @@ impl Operation for Unpack {
 /// 🔍️ Reads a value from a dictionary by key.
 pub struct Get;
 
-impl Operation for Get {
+impl Operator for Get {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
@@ -44,7 +44,7 @@ impl Operation for Get {
 /// ✏️ Inserts or replaces a key in a dictionary.
 pub struct Set;
 
-impl Operation for Set {
+impl Operator for Set {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
@@ -58,7 +58,7 @@ impl Operation for Set {
 /// 🗑️ Removes a key from a dictionary.
 pub struct Remove;
 
-impl Operation for Remove {
+impl Operator for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
@@ -71,7 +71,7 @@ impl Operation for Remove {
 /// ❓️ Reports whether a key exists in a dictionary.
 pub struct Has;
 
-impl Operation for Has {
+impl Operator for Has {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
@@ -84,7 +84,7 @@ impl Operation for Has {
 /// 🔑️ Lists dictionary keys as comma-separated text.
 pub struct Keys;
 
-impl Operation for Keys {
+impl Operator for Keys {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("keys", text_dictionary(read_dict(input, "dictionary")?.keys().map(String::as_str).filter(|key| *key != "$schema").collect::<Vec<_>>().join(","))))
     }
@@ -95,7 +95,7 @@ impl Operation for Keys {
 /// 📏️ Reports the number of keys in a dictionary.
 pub struct Size;
 
-impl Operation for Size {
+impl Operator for Size {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let count = read_dict(input, "dictionary")?.keys().filter(|key| key.as_str() != "$schema").count();
         Ok(channel_output("count", number_dictionary(count as f64)))
@@ -107,7 +107,7 @@ impl Operation for Size {
 /// 🔀️ Merges ordered dictionary inputs; later keys override earlier ones.
 pub struct Merge;
 
-impl Operation for Merge {
+impl Operator for Merge {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let items = read_dict(input, "items")?;
         let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
@@ -170,8 +170,8 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: C
     OperatorInfo { id: id.into(), extension: "dictionary".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📚️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }], produces);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
 }
 
 // #endregion 🔖️Helpers
@@ -239,7 +239,7 @@ pub fn register(registry: &mut Registry) {
             variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
             ..info("dictionary.merge", "Merge", "Merges ordered dictionary inputs", vec![], ChannelSpec::named("D", "Dic", "dictionary", "MergedDictionary"))
         },
-        vec![OperatorImpl { schemas: vec!["dictionary".into(), "dictionary".into()], operation: Box::new(Merge) }],
+        vec![OperatorImpl { schemas: vec!["dictionary".into(), "dictionary".into()], operator: Box::new(Merge) }],
         &["dictionary"],
     );
     registry.finalize();

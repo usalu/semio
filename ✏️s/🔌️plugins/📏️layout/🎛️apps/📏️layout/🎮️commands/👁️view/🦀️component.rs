@@ -1,8 +1,8 @@
 //! 👁️ Layout play app commands — pure view interactions: selection, active page, hover, preflight
 //! focus, engagement draft text and locale. All config-only.
 
-use crate::apps::layout::config::{LayoutConfig, LayoutConfigOperation};
-use crate::artifacts::layout::{op::LayoutOperation, LayoutDocument};
+use crate::apps::layout::config::{LayoutConfig, LayoutConfigMutation};
+use crate::artifacts::layout::{op::LayoutMutation, LayoutDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,8 +16,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LayoutConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LayoutConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -32,8 +32,8 @@ pub mod set_active_page {
         pub page_id: String,
     }
 
-    pub fn handle(payload: &SetActivePage, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LayoutConfigOperation::SetActivePage { page_id: payload.page_id.clone() }]))
+    pub fn handle(payload: &SetActivePage, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LayoutConfigMutation::SetActivePage { page_id: payload.page_id.clone() }]))
     }
 }
 //#endregion 🔖️SetActivePage
@@ -48,8 +48,8 @@ pub mod set_hover {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LayoutConfigOperation::SetHover { id: payload.id.clone() }]))
+    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LayoutConfigMutation::SetHover { id: payload.id.clone() }]))
     }
 }
 //#endregion 🔖️SetHover
@@ -65,15 +65,15 @@ pub mod focus_preflight_issue {
         pub page_id: Option<String>,
     }
 
-    pub fn handle(payload: &FocusPreflightIssue, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
-        let mut config_operations = Vec::new();
+    pub fn handle(payload: &FocusPreflightIssue, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        let mut config_mutations = Vec::new();
         if let Some(object_id) = &payload.object_id {
-            config_operations.push(LayoutConfigOperation::SetSelection { ids: vec![object_id.clone()] });
+            config_mutations.push(LayoutConfigMutation::SetSelection { ids: vec![object_id.clone()] });
         }
         if let Some(page_id) = &payload.page_id {
-            config_operations.push(LayoutConfigOperation::SetActivePage { page_id: page_id.clone() });
+            config_mutations.push(LayoutConfigMutation::SetActivePage { page_id: page_id.clone() });
         }
-        Ok(Emit::config(config_operations))
+        Ok(Emit::config(config_mutations))
     }
 }
 //#endregion 🔖️FocusPreflightIssue
@@ -88,8 +88,8 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LayoutConfigOperation::SetEngagementInput { value: payload.value.clone() }]))
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LayoutConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -108,8 +108,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
-        Ok(Emit::config(vec![LayoutConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+        Ok(Emit::config(vec![LayoutConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -132,7 +132,7 @@ mod tests {
     fn focus_preflight_issue_sets_selection_and_active_page() {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::FocusPreflightIssue(focus_preflight_issue::FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-2".into()) }));
-        assert!(result.operations.is_empty(), "preflight focus is config-only");
+        assert!(result.document_mutations.is_empty(), "preflight focus is config-only");
     }
 
     #[test]

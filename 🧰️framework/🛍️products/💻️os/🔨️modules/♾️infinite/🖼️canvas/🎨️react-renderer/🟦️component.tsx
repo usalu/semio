@@ -147,7 +147,8 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       canvas.height = Math.round(initH * dpr);
       canvas.style.width = `${initW}px`;
       canvas.style.height = `${initH}px`;
-      void session.attachCanvas(canvas, initW, initH, dpr).then(() => {
+      const attachResult = typeof session.attachCanvas === "function" ? session.attachCanvas(canvas, initW, initH, dpr) : Promise.resolve();
+      void Promise.resolve(attachResult).then(() => {
         if (torndown) return;
         const resize = () => {
           const rect = container.getBoundingClientRect();

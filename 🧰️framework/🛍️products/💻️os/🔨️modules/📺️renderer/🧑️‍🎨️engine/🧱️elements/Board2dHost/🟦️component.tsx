@@ -121,7 +121,7 @@ export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonl
 }
 
 /** @emoji 🐢️ Live cross-pane mirror payload extracted from a batch of freshly-drained rows — positions/selection/preselect only, everything else (camera, brush/link chrome, hover) stays pane-local. */
-export type Puzzle2dLiveMirrorOperations = {
+export type Puzzle2dLiveMirrorMutations = {
   readonly positions: readonly { readonly id: string; readonly x: number; readonly y: number }[];
   readonly selectionIds: readonly string[] | null;
   readonly preselect: { readonly ids: readonly string[]; readonly removedIds: readonly string[] } | null;
@@ -140,7 +140,7 @@ function stringArray(value: unknown): readonly string[] {
  * preselect; `preselect` sets the live marquee highlight). Multiple rows of the same kind in one batch
  * collapse to the latest.
  */
-export function collectPuzzle2dLiveMirrorOperations(rows: readonly BoardEventRow[]): Puzzle2dLiveMirrorOperations {
+export function collectPuzzle2dLiveMirrorMutations(rows: readonly BoardEventRow[]): Puzzle2dLiveMirrorMutations {
   const positionsById = new Map<string, { readonly id: string; readonly x: number; readonly y: number }>();
   let selectionIds: readonly string[] | null = null;
   let preselect: { readonly ids: readonly string[]; readonly removedIds: readonly string[] } | null = null;
@@ -309,13 +309,13 @@ export function puzzle2dPeerOwnsGesture(controllerId: string, surfaceId: string)
   return owner !== undefined && owner !== surfaceId;
 }
 
-export function pushPuzzle2dLiveMirrorOperations(controllerId: string, surfaceId: string, operations: Puzzle2dLiveMirrorOperations): void {
-  if (operations.positions.length === 0 && !operations.selectionIds && !operations.preselect && !operations.clearPreselect) return;
+export function pushPuzzle2dLiveMirrorMutations(controllerId: string, surfaceId: string, mutations: Puzzle2dLiveMirrorMutations): void {
+  if (mutations.positions.length === 0 && !mutations.selectionIds && !mutations.preselect && !mutations.clearPreselect) return;
   const peers = board2dPeers(controllerId, surfaceId);
   if (peers.length === 0) return;
-  const positionsJson = operations.positions.length > 0 ? JSON.stringify(operations.positions) : null;
-  const selectionJson = operations.selectionIds ? JSON.stringify(operations.selectionIds) : null;
-  const preselectJson = operations.preselect ? JSON.stringify(operations.preselect) : operations.clearPreselect ? JSON.stringify({ ids: [], removedIds: [] }) : null;
+  const positionsJson = mutations.positions.length > 0 ? JSON.stringify(mutations.positions) : null;
+  const selectionJson = mutations.selectionIds ? JSON.stringify(mutations.selectionIds) : null;
+  const preselectJson = mutations.preselect ? JSON.stringify(mutations.preselect) : mutations.clearPreselect ? JSON.stringify({ ids: [], removedIds: [] }) : null;
   for (const peer of peers) {
     try {
       if (positionsJson) peer.session.setNodePositionsJson?.(positionsJson);
@@ -440,7 +440,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (!json || json === "[]") return;
       const rows = JSON.parse(json) as BoardEventRow[];
       pendingEventRowsRef.current.push(...rows);
-      pushPuzzle2dLiveMirrorOperations(node.controllerId, node.surfaceId, collectPuzzle2dLiveMirrorOperations(rows));
+      pushPuzzle2dLiveMirrorMutations(node.controllerId, node.surfaceId, collectPuzzle2dLiveMirrorMutations(rows));
     } catch {
       /* session not ready */
     }

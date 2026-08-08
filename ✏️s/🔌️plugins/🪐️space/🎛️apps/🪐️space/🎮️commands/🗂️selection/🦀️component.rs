@@ -1,7 +1,7 @@
 //! 🗂️ S Studio app — node/instance selection commands.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
-use semio_framework_os::{WorkflowDocument, WorkflowOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{WorkflowDocument, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️SelectInstance
@@ -15,9 +15,9 @@ pub mod select_instance {
         pub node_id: Option<String>,
     }
 
-    pub fn handle(payload: &SelectInstance, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &SelectInstance, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let node_ids = payload.node_id.iter().cloned().collect();
-        Ok(Emit::config(vec![SpaceConfigOperation::SetActiveNode { node_id: payload.node_id.clone() }, SpaceConfigOperation::SetSelection { node_ids }]))
+        Ok(Emit::config(vec![SpaceConfigMutation::SetActiveNode { node_id: payload.node_id.clone() }, SpaceConfigMutation::SetSelection { node_ids }]))
     }
 }
 //#endregion 🔖️SelectInstance
@@ -26,13 +26,13 @@ pub mod select_instance {
 /// 🔁️ Shared body for `node_graph_select` and `set_media_node_selection` — both replace the node
 /// selection wholesale (optionally "select all"), publish presence, and set a single active node when
 /// exactly one is selected.
-fn select_nodes(node_ids: Vec<String>, select_all: bool, projection: &WorkflowDocument, _config: &SpaceConfig) -> Emit<WorkflowOperation, SpaceConfigOperation> {
+fn select_nodes(node_ids: Vec<String>, select_all: bool, projection: &WorkflowDocument, _config: &SpaceConfig) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let node_ids = if select_all { projection.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { node_ids };
-    let mut config_operations = vec![SpaceConfigOperation::SetSelection { node_ids: node_ids.clone() }];
+    let mut config_mutations = vec![SpaceConfigMutation::SetSelection { node_ids: node_ids.clone() }];
     if node_ids.len() == 1 {
-        config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: node_ids.first().cloned() });
+        config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: node_ids.first().cloned() });
     }
-    Emit::config(config_operations)
+    Emit::config(config_mutations)
 }
 
 pub mod node_graph_select {
@@ -46,7 +46,7 @@ pub mod node_graph_select {
         pub select_all: bool,
     }
 
-    pub fn handle(payload: &NodeGraphSelect, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &NodeGraphSelect, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
     }
 }
@@ -62,7 +62,7 @@ pub mod set_media_node_selection {
         pub select_all: bool,
     }
 
-    pub fn handle(payload: &SetMediaNodeSelection, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &SetMediaNodeSelection, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
     }
 }
@@ -79,12 +79,12 @@ pub mod set_app_instance_selection {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetAppInstanceSelection, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        let mut config_operations = vec![SpaceConfigOperation::SetSelection { node_ids: payload.node_ids.clone() }];
+    pub fn handle(payload: &SetAppInstanceSelection, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        let mut config_mutations = vec![SpaceConfigMutation::SetSelection { node_ids: payload.node_ids.clone() }];
         if payload.node_ids.len() == 1 {
-            config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: payload.node_ids.first().cloned() });
+            config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: payload.node_ids.first().cloned() });
         }
-        Ok(Emit::config(config_operations))
+        Ok(Emit::config(config_mutations))
     }
 }
 //#endregion 🔖️SetAppInstanceSelection
@@ -112,7 +112,7 @@ mod tests {
         let config = SpaceConfig::default();
         let first_node_id = projection.graph.nodes[0].id.clone();
         let select_emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec![first_node_id], select_all: false })).expect("handle");
-        let config_after_select = apply_config(&config, &select_emit.config_operations);
+        let config_after_select = apply_config(&config, &select_emit.config_mutations);
         let _ = studio_emit(
             &projection,
             &config_after_select,

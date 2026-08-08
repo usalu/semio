@@ -1,12 +1,4 @@
-//! ⚡️ EN 1992 design of concrete structures — operation enum + laws (constitutional: op).
-//!
-//! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
-//! (`crate::document::SetDocumentOperation<D>`) so this slot only needs to bind that generic operation to
-//! `crate::artifacts::en1992::Document`.
-
-use crate::artifacts::en1992::Document;
-
-pub type Operation = crate::document::SetDocumentOperation<Document>;
+//! ⚡️ EN 1992 design of concrete structures — OpText/OpBinary via shared `SetDocumentMutation`.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -14,12 +6,17 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use crate::artifacts::en1992::mutations::En1992Mutation;
+
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::en1992::Document;
 
     #[test]
     fn set_document_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+        store::test_support::assert_op_line_round_trip(&En1992Mutation::SetDocument { document: Document::default() });
     }
 }
+//#endregion 🧪️Tests

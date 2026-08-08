@@ -1,8 +1,8 @@
 //! 🖱️ Wires play app commands — canvas pointer interactions (down/move/up) that drive node dragging.
 
-use crate::apps::wires::config::{WiresConfig, WiresConfigOperation};
+use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::{fixture_camera, find_board_node, node_position};
-use crate::artifacts::wires::op::MindmapWiresOperation;
+use crate::artifacts::wires::op::MindmapWiresMutation;
 use crate::artifacts::wires::MindmapWiresDocument;
 use dsl::DslValue;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -21,10 +21,10 @@ pub mod canvas_pointer_down {
         pub y: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.projection;
         match payload.id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
-            Some(id) => Ok(Emit::config(vec![WiresConfigOperation::SetSelection { ids: vec![id.to_string()] }, WiresConfigOperation::SetDrag { node_id: Some(id.to_string()), last_x: payload.x, last_y: payload.y }])),
+            Some(id) => Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: vec![id.to_string()] }, WiresConfigMutation::SetDrag { node_id: Some(id.to_string()), last_x: payload.x, last_y: payload.y }])),
             None => Ok(Emit::default()),
         }
     }
@@ -42,7 +42,7 @@ pub mod canvas_pointer_move {
         pub y: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         let Some(drag_node_id) = config.drag_node_id.clone() else { return Ok(Emit::default()) };
@@ -54,8 +54,8 @@ pub mod canvas_pointer_move {
         patch.insert("x".into(), dsl::to_dsl_value(&(cur_x + dx)).unwrap_or(DslValue::Null));
         patch.insert("y".into(), dsl::to_dsl_value(&(cur_y + dy)).unwrap_or(DslValue::Null));
         Ok(Emit {
-            document_operations: vec![MindmapWiresOperation::PatchNode { node_id: drag_node_id.clone(), patch }],
-            config_operations: vec![WiresConfigOperation::SetDrag { node_id: Some(drag_node_id.clone()), last_x: payload.x, last_y: payload.y }],
+            document_mutations: vec![MindmapWiresMutation::PatchNode { node_id: drag_node_id.clone(), patch }],
+            config_mutations: vec![WiresConfigMutation::SetDrag { node_id: Some(drag_node_id.clone()), last_x: payload.x, last_y: payload.y }],
             coalesce_key: Some(format!("drag:{drag_node_id}")),
             ..Default::default()
         })
@@ -71,8 +71,8 @@ pub mod canvas_pointer_up {
     #[dsl(keyword = "pointer-up")]
     pub struct CanvasPointerUp {}
 
-    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
-        Ok(Emit::config(vec![WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }]))
+    pub fn handle(_payload: &CanvasPointerUp, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+        Ok(Emit::config(vec![WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }]))
     }
 }
 //#endregion 🔖️CanvasPointerUp

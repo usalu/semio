@@ -1,9 +1,9 @@
 //! 🗂️ Wires play app commands — everything that only moves the selection. Both are CONFIG-only (they
 //! were ephemeral `WiresPlayRuntime` fields before the typed-command conversion): they emit
-//! `config_operations` and never document operations.
+//! `config_mutations` and never document operations.
 
-use crate::apps::wires::config::{WiresConfig, WiresConfigOperation};
-use crate::artifacts::wires::op::MindmapWiresOperation;
+use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
+use crate::artifacts::wires::op::MindmapWiresMutation;
 use crate::artifacts::wires::MindmapWiresDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
-        Ok(Emit::config(vec![WiresConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+        Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -34,8 +34,8 @@ pub mod document_select {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &DocumentSelect, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
-        Ok(Emit::config(vec![WiresConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &DocumentSelect, _doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+        Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️DocumentSelect
@@ -48,17 +48,17 @@ mod tests {
     use crate::apps::wires::WiresCommand;
 
     #[test]
-    fn set_selection_is_config_state_and_emits_no_document_operations() {
+    fn set_selection_is_config_state_and_emits_no_document_mutations() {
         let mut app = new_app();
         let result = dispatch(&mut app, WiresCommand::SetSelection(set_selection::SetSelection { ids: vec!["node-1".into()] }));
-        assert!(result.operations.is_empty(), "selection must not produce document operations");
+        assert!(result.mutations.is_empty(), "selection must not produce document operations");
     }
 
     #[test]
-    fn document_select_is_config_state_and_emits_no_document_operations() {
+    fn document_select_is_config_state_and_emits_no_document_mutations() {
         let mut app = new_app();
         let result = dispatch(&mut app, WiresCommand::DocumentSelect(document_select::DocumentSelect { ids: vec!["node-1".into()] }));
-        assert!(result.operations.is_empty(), "document select must not produce document operations");
+        assert!(result.mutations.is_empty(), "document select must not produce document operations");
     }
 }
 //#endregion 🧪️Tests

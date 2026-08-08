@@ -55,7 +55,7 @@ pub fn render(deck: &PresentDeck, labels: &AnimatePresentLabels) -> UiNode {
                         value: deck.source.src.clone(),
                         placeholder: None,
                         commit: None,
-                        on_change: animate_present_action("noOperation", None),
+                        on_change: animate_present_action("noMutation", None),
                         min: None,
                         max: None,
                         step: None,

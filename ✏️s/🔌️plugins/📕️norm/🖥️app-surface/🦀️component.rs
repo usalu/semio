@@ -187,14 +187,14 @@ where
 /// own `Document` shape becomes a whole-document replace; anything else is accepted but inert (no norm
 /// family document has a generic "raw model" field to stash a foreign shape into yet). `"document:in"`
 /// replicates the SDK default (decodes the base64 pack).
-pub fn import_media<D>(port: &str, media: &Media) -> Result<Emit<crate::document::SetDocumentOperation<D>, crate::config::NormConfigOperation>, MediaError>
+pub fn import_media<D>(port: &str, media: &Media) -> Result<Emit<crate::document::SetDocumentMutation<D>, crate::config::NormConfigMutation>, MediaError>
 where
     D: Clone + Default + PartialEq + Serialize + DeserializeOwned + store::DocumentPack,
 {
     if port == "model:in" {
         if let MediaPayload::Structured { json, .. } = &media.payload {
             if let Ok(document) = serde_json::from_str::<D>(json) {
-                return Ok(Emit::operations(vec![crate::document::SetDocumentOperation::SetDocument { document }]));
+                return Ok(Emit::mutations(vec![crate::document::SetDocumentMutation::SetDocument { document }]));
             }
         }
         return Ok(Emit::default());
@@ -207,20 +207,20 @@ where
     };
     let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
     let document = <D as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-    Ok(Emit::operations(vec![crate::document::SetDocumentOperation::SetDocument { document }]))
+    Ok(Emit::mutations(vec![crate::document::SetDocumentMutation::SetDocument { document }]))
 }
 //#endregion 🔖️MediaPorts
 
 //#region 🔖️Commands
 /// 📤️ The whole-document replace every app's `set-document` and `evaluate` commands emit — `description`
 /// is the manifest action id the command was declared under, which the command log labels the edit with.
-pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetDocumentOperation<D>, crate::config::NormConfigOperation>, Fault> {
-    Ok(Emit::commit(vec![crate::document::SetDocumentOperation::SetDocument { document }], description))
+pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetDocumentMutation<D>, crate::config::NormConfigMutation>, Fault> {
+    Ok(Emit::commit(vec![crate::document::SetDocumentMutation::SetDocument { document }], description))
 }
 
 /// ☑️ The one config-only edit every app's `selected-check` command emits.
-pub fn commit_selected_check_index<D>(index: Option<u32>) -> Result<Emit<crate::document::SetDocumentOperation<D>, crate::config::NormConfigOperation>, Fault> {
-    Ok(Emit::config(vec![crate::config::NormConfigOperation::SetSelectedCheckIndex { index }]))
+pub fn commit_selected_check_index<D>(index: Option<u32>) -> Result<Emit<crate::document::SetDocumentMutation<D>, crate::config::NormConfigMutation>, Fault> {
+    Ok(Emit::config(vec![crate::config::NormConfigMutation::SetSelectedCheckIndex { index }]))
 }
 
 /// 🎯️ Builds the args-side of an app's `command_from_action` bridge for `selected-check` — the shells

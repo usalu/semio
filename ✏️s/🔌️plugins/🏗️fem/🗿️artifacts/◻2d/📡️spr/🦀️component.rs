@@ -1,10 +1,10 @@
 //! ⚖️ FEM 2D artifact — binary operation protocol surface + laws (constitutional: spr).
 //!
-//! Renamed from the pre-migration `📡️protocol` crate: only `encode_op`/`decode_op` for `Fem2dOperation`
+//! Renamed from the pre-migration `📡️protocol` crate: only `encode_op`/`decode_op` for `Fem2dMutation`
 //! live here. The old crate's hand-rolled `Fem2dCommand` enum does NOT move here — it is rebuilt by
 //! `app_commands!` in the app's `🦀️component.rs` (see `crate::apps::fem2d::Fem2dCommand`).
 
-use crate::artifacts::fem2d::op::Fem2dOperation;
+use crate::artifacts::fem2d::op::Fem2dMutation;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
@@ -14,14 +14,14 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-/// 📦️ Encodes a `Fem2dOperation` to its binary command form.
-pub fn encode_op(operation: &Fem2dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `Fem2dMutation` to its binary command form.
+pub fn encode_op(operation: &Fem2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `Fem2dOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Fem2dOperation, protocol::ProtocolError> {
-    Fem2dOperation::decode_op(bytes)
+/// 📖️ Decodes a `Fem2dMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Fem2dMutation, protocol::ProtocolError> {
+    Fem2dMutation::decode_op(bytes)
 }
 
 // #region 🧪️Tests
@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = Fem2dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
+        let operation = Fem2dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -60,7 +60,7 @@ mod tests {
     /// pass on a silently rewritten format, so this pin is the only real proof.
     #[test]
     fn operation_bytes_match_the_pre_migration_baseline() {
-        let operation = Fem2dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
+        let operation = Fem2dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "01100001000e0d0300040501040202050000000000002440");
     }
@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn fem2d_document_text_round_trips_through_the_store() {
         let mut store = crate::artifacts::fem2d::op::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_projection(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![Fem2dOperation::SetDocument { document: simply_supported_beam_doc() }], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem2dMutation::SetDocument { document: simply_supported_beam_doc() }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -89,7 +89,7 @@ mod semio_protocol_conformance {
 
     #[test]
     fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = Fem2dOperation::SetAnalysisSettings {
+        let operation = Fem2dMutation::SetAnalysisSettings {
             settings: crate::artifacts::fem2d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
         };
         let bytes = encode_op(&operation).expect("encode op");

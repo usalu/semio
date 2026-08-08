@@ -1,12 +1,12 @@
 //! 🔀️ Flow logic module: boolean operators over schema dictionaries.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
 // #region 🔖️Greater
 /// 📈️ Compares two numbers.
 pub struct Greater;
 
-impl Operation for Greater {
+impl Operator for Greater {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?)))
     }
@@ -17,7 +17,7 @@ impl Operation for Greater {
 /// 🔄️ Inverts a boolean.
 pub struct Not;
 
-impl Operation for Not {
+impl Operator for Not {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(!read_channel_bool(input, "boolean")?)))
     }
@@ -60,12 +60,12 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: C
 pub fn register(registry: &mut Registry) {
     registry.register_operator(
         info("logic.greater", "Greater", "True when a > b", vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")], ChannelSpec::named("B", "Boo", "boolean", "Greater")),
-        vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Greater) }],
+        vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Greater) }],
         &["boolean"],
     );
     registry.register_operator(
         info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean", "logic.not")], ChannelSpec::named("B", "Boo", "boolean", "Negated")),
-        vec![OperatorImpl { schemas: vec!["boolean".into()], operation: Box::new(Not) }],
+        vec![OperatorImpl { schemas: vec!["boolean".into()], operator: Box::new(Not) }],
         &["boolean"],
     );
     registry.finalize();

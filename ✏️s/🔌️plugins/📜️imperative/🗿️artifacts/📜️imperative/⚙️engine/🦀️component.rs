@@ -11,7 +11,6 @@ use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_m
 pub fn register() {
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::imperative::ImperativePlayApp>(crate::artifacts::imperative::IMPERATIVE_DOCUMENT_SCHEMA);
-    imperative_engine::bootstrap_linked_modules();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -388,3 +387,41 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent document engine — every transition is a `ImperativeMutation`.
+pub struct ImperativeEngine {
+    projection: crate::artifacts::imperative::ImperativeDocument,
+}
+
+impl ImperativeEngine {
+    pub fn new(projection: crate::artifacts::imperative::ImperativeDocument) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::imperative::ImperativeDocument {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for ImperativeEngine {
+    type Projection = crate::artifacts::imperative::ImperativeDocument;
+    type Mutation = crate::artifacts::imperative::mutations::ImperativeMutation;
+    type Diff = crate::artifacts::imperative::diff::ImperativeDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = protocol::MutationDiff::apply(&diff, &self.projection);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

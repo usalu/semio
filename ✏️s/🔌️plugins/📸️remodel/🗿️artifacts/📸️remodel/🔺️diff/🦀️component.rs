@@ -1,4 +1,4 @@
-//! 🔺️ Remodel artifact — the durable operation diff (`Operation::Diff`) and its `OperationDiff` law.
+//! 🔺️ Remodel artifact — the durable mutation diff (`Mutation::Diff`) and its `MutationDiff` law.
 
 
 //#region 📖️SemioGrammar
@@ -8,12 +8,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::remodel::op::{apply_remodel_operation, RemodelOperation};
+use crate::artifacts::remodel::mutations::{apply_remodel_mutation, RemodelMutation};
 use crate::artifacts::remodel::{
     CalibrationState, CameraTrajectory, DenseCloud, DenseParams, FeatureParams, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams, MatchParams, MediaStream, MeshParams, MotionParams, MotionTrackSummary, QcReportSnapshot,
     ReconstructionJob, RemodelMesh, RemodelProjection, SfmParams, SparseCloud,
 };
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -91,32 +91,32 @@ pub enum RemodelDiff {
     },
 }
 
-impl OperationDiff<RemodelProjection> for RemodelDiff {
+impl MutationDiff<RemodelProjection> for RemodelDiff {
     fn apply(&self, projection: &RemodelProjection) -> RemodelProjection {
         let operation = match self {
             RemodelDiff::Empty => return projection.clone(),
-            RemodelDiff::SetStreams { streams } => RemodelOperation::SetStreams { streams: streams.clone() },
-            RemodelDiff::SetAsset { key, value } => RemodelOperation::SetAsset { key: key.clone(), value: value.clone() },
-            RemodelDiff::SetCalibration { calibration } => RemodelOperation::SetCalibration { calibration: calibration.clone() },
-            RemodelDiff::SetGcps { gcps } => RemodelOperation::SetGcps { gcps: gcps.clone() },
-            RemodelDiff::SetIngestParams { params } => RemodelOperation::SetIngestParams { params: params.clone() },
-            RemodelDiff::SetFeatureParams { params } => RemodelOperation::SetFeatureParams { params: params.clone() },
-            RemodelDiff::SetMatchParams { params } => RemodelOperation::SetMatchParams { params: params.clone() },
-            RemodelDiff::SetSfmParams { params } => RemodelOperation::SetSfmParams { params: params.clone() },
-            RemodelDiff::SetDenseParams { params } => RemodelOperation::SetDenseParams { params: params.clone() },
-            RemodelDiff::SetMeshParams { params } => RemodelOperation::SetMeshParams { params: params.clone() },
-            RemodelDiff::SetMotionParams { params } => RemodelOperation::SetMotionParams { params: params.clone() },
-            RemodelDiff::SetGeoParams { params } => RemodelOperation::SetGeoParams { params: params.clone() },
-            RemodelDiff::SetJob { job } => RemodelOperation::SetJob { job: job.clone() },
-            RemodelDiff::SetSparse { sparse } => RemodelOperation::SetSparse { sparse: sparse.clone() },
-            RemodelDiff::SetDense { dense } => RemodelOperation::SetDense { dense: dense.clone() },
-            RemodelDiff::SetMeshResult { mesh } => RemodelOperation::SetMeshResult { mesh: mesh.clone() },
-            RemodelDiff::SetTrajectory { trajectory } => RemodelOperation::SetTrajectory { trajectory: trajectory.clone() },
-            RemodelDiff::SetTracks { tracks } => RemodelOperation::SetTracks { tracks: tracks.clone() },
-            RemodelDiff::SetGeoProducts { geo } => RemodelOperation::SetGeoProducts { geo: geo.clone() },
-            RemodelDiff::SetQc { qc } => RemodelOperation::SetQc { qc: qc.clone() },
+            RemodelDiff::SetStreams { streams } => RemodelMutation::SetStreams { streams: streams.clone() },
+            RemodelDiff::SetAsset { key, value } => RemodelMutation::SetAsset { key: key.clone(), value: value.clone() },
+            RemodelDiff::SetCalibration { calibration } => RemodelMutation::SetCalibration { calibration: calibration.clone() },
+            RemodelDiff::SetGcps { gcps } => RemodelMutation::SetGcps { gcps: gcps.clone() },
+            RemodelDiff::SetIngestParams { params } => RemodelMutation::SetIngestParams { params: params.clone() },
+            RemodelDiff::SetFeatureParams { params } => RemodelMutation::SetFeatureParams { params: params.clone() },
+            RemodelDiff::SetMatchParams { params } => RemodelMutation::SetMatchParams { params: params.clone() },
+            RemodelDiff::SetSfmParams { params } => RemodelMutation::SetSfmParams { params: params.clone() },
+            RemodelDiff::SetDenseParams { params } => RemodelMutation::SetDenseParams { params: params.clone() },
+            RemodelDiff::SetMeshParams { params } => RemodelMutation::SetMeshParams { params: params.clone() },
+            RemodelDiff::SetMotionParams { params } => RemodelMutation::SetMotionParams { params: params.clone() },
+            RemodelDiff::SetGeoParams { params } => RemodelMutation::SetGeoParams { params: params.clone() },
+            RemodelDiff::SetJob { job } => RemodelMutation::SetJob { job: job.clone() },
+            RemodelDiff::SetSparse { sparse } => RemodelMutation::SetSparse { sparse: sparse.clone() },
+            RemodelDiff::SetDense { dense } => RemodelMutation::SetDense { dense: dense.clone() },
+            RemodelDiff::SetMeshResult { mesh } => RemodelMutation::SetMeshResult { mesh: mesh.clone() },
+            RemodelDiff::SetTrajectory { trajectory } => RemodelMutation::SetTrajectory { trajectory: trajectory.clone() },
+            RemodelDiff::SetTracks { tracks } => RemodelMutation::SetTracks { tracks: tracks.clone() },
+            RemodelDiff::SetGeoProducts { geo } => RemodelMutation::SetGeoProducts { geo: geo.clone() },
+            RemodelDiff::SetQc { qc } => RemodelMutation::SetQc { qc: qc.clone() },
         };
-        apply_remodel_operation(projection, &operation)
+        apply_remodel_mutation(projection, &operation)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -135,7 +135,7 @@ mod tests {
 
     /// 🫙️ `Empty` is the identity diff, and `absorb` is last-writer-wins over any non-`Empty` value —
     /// the two laws that are the diff node's own (every other diff behaviour is exercised through
-    /// `Operation::diff` in the `🔧️op` node's tests).
+    /// `Mutation::diff` in the `🔧️op` node's tests).
     #[test]
     fn empty_diff_is_the_identity_and_absorb_is_last_writer_wins() {
         let scene = default_remodel_scene();

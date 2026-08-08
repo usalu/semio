@@ -1114,7 +1114,8 @@ describe("resolveCargoPackageName", () => {
 describe("loadTaxonomy", () => {
   test("parses 🔣️taxonomy.json into the expected shape", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.artifactComponentDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"]);
+    expect(taxonomy.artifactComponentDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine"]);
+    expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
     expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
     expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
     expect(taxonomy.taxonomyLeafFilenames["🟦️typescript"]).toBe("🟦️component.ts");
@@ -1127,10 +1128,9 @@ describe("loadTaxonomy", () => {
 
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
     const taxonomy = loadTaxonomy();
-    // ⚙️ The disagreement this vocabulary exists to settle: registry's validateTaxonomyTree requires 5
-    // components, root script's POLICY_ARTIFACT_COMPONENT_DIRS allows 6. Both are right — different questions.
-    expect(taxonomy.artifactChildDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
-    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["⚙️engine", "📚️examples"]);
+    // ⚙️ Completeness includes 🧬️mutations + ⚙️engine; structural-only extra is 📚️examples.
+    expect(taxonomy.artifactChildDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
+    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples"]);
   });
 
   test("describes the per-example assets/tests shape instead of plural facet dirs", () => {
@@ -1169,6 +1169,10 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("📡️sprs");
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🖼️assets");
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🧪️tests");
+    expect(taxonomy.taxonomyLeafParentDirs).toContain("🧬️mutations");
+    expect(taxonomy.taxonomyLeafParentDirs).toContain("🦠️mutation");
+    expect(taxonomy.taxonomyLeafParentDirs).toContain("↩️inverse");
+    expect(taxonomy.taxonomyLeafParentDirs).toContain("🔺️diff");
     expect("exampleComponentDirs" in taxonomy).toBe(false);
   });
 
@@ -1224,6 +1228,21 @@ describe("validateTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
     expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
+  });
+
+  test("reports mutationChildDirs missing from taxonomyLeafParentDirs", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = {
+      ...taxonomy,
+      taxonomyLeafParentDirs: taxonomy.taxonomyLeafParentDirs.filter((dir) => dir !== "🦠️mutation"),
+    };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("🦠️mutation"))).toBe(true);
+  });
+
+  test("reports empty mutationChildDirs", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, mutationChildDirs: [] };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("mutationChildDirs"))).toBe(true);
   });
 
   test("rejects plural example component dirs in taxonomyLeafParentDirs", () => {

@@ -421,8 +421,49 @@ fn triangulate_uv(positions: &[Pnt3], uvs: &[(f64, f64)], outer_count: usize, ho
     if holes.is_empty() && positions.len() > outer_count {
         return Ok(fan_from_centroid(uvs, outer_count));
     }
-    let _ = positions;
-    Err(KernelError::Operation("tessellate: faces with holes require CDT (wave follow-up)".into()))
+    // Bridge each hole into the outer ring (simple CDT stand-in) then ear-clip the result.
+    Ok(constrained_triangulate(uvs, outer_count, holes_uv_counts(holes)))
+}
+
+fn holes_uv_counts(holes: &[Vec<Pnt3>]) -> Vec<usize> {
+    holes.iter().map(Vec::len).collect()
+}
+
+fn constrained_triangulate(uvs: &[(f64, f64)], outer_count: usize, hole_counts: Vec<usize>) -> Vec<u32> {
+    if outer_count < 3 {
+        return Vec::new();
+    }
+    let mut ring: Vec<usize> = (0..outer_count).collect();
+    let mut offset = outer_count;
+    for count in hole_counts {
+        if count < 3 || offset + count > uvs.len() {
+            offset += count;
+            continue;
+        }
+        // Bridge: connect nearest outer vertex to nearest hole vertex.
+        let mut best = (f64::MAX, 0usize, 0usize);
+        for (oi, &ov) in ring.iter().enumerate() {
+            for hi in 0..count {
+                let d = (uvs[ov].0 - uvs[offset + hi].0).hypot(uvs[ov].1 - uvs[offset + hi].1);
+                if d < best.0 {
+                    best = (d, oi, hi);
+                }
+            }
+        }
+        let (_, oi, hi) = best;
+        let mut spliced = Vec::with_capacity(ring.len() + count + 2);
+        spliced.extend_from_slice(&ring[..=oi]);
+        for k in 0..=count {
+            spliced.push(offset + ((hi + k) % count));
+        }
+        spliced.push(ring[oi]);
+        spliced.extend_from_slice(&ring[oi + 1..]);
+        ring = spliced;
+        offset += count;
+    }
+    let bridged: Vec<(f64, f64)> = ring.iter().map(|&i| uvs[i]).collect();
+    let local = ear_clip(&bridged);
+    local.into_iter().map(|i| ring[i as usize] as u32).collect()
 }
 
 fn ear_clip(uvs: &[(f64, f64)]) -> Vec<u32> {
@@ -719,6 +760,17 @@ mod tests {
         let body = Body::new();
         let err = tessellate_solid(&body, SolidId::from_raw(9, 0), 0.1).unwrap_err();
         assert!(matches!(err, KernelError::MissingEntity(_)));
+    }
+
+    #[test]
+    fn tessellate_rectangle_wire_emits_edge_segments() {
+        use crate::brep::primitives::make_rectangle_wire;
+        let mut body = Body::new();
+        let wire = make_rectangle_wire(&mut body, 2.0, 1.5).expect("wire");
+        let mesh = tessellate_wire(&body, &wire, 0.1).expect("tessellate wire");
+        assert!(mesh.edges.len() >= 24, "expected closed rectangle edge polylines, got {}", mesh.edges.len());
+        assert!(mesh.position.is_empty());
+        assert!(mesh.index.is_empty());
     }
 }
 

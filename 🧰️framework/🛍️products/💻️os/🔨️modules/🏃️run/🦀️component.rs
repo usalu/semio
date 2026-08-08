@@ -37,7 +37,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
 use store::BlobStore;
-use workflow::{MediaContract, PortFingerprint, RunNodeRecord, RunNodeStatus, RunOperation, RunOutputArtifact, RunParameterValue, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
+use workflow::{MediaContract, PortFingerprint, RunNodeRecord, RunNodeStatus, RunMutation, RunOutputArtifact, RunParameterValue, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
 #[derive(Debug, thiserror::Error)]
@@ -392,17 +392,17 @@ pub struct RunSink {
     /// sequence through a real `store::DocumentStore` to produce persistable pack+spr bytes for
     /// `SpaceBundle::write_run_document` (the same "build an envelope, `Apply`, `snapshot_pack`"
     /// pattern every other document in this codebase persists through).
-    pub operations: Vec<RunOperation>,
+    pub mutations: Vec<RunMutation>,
     pub node_documents: BTreeMap<String, (Vec<u8>, Vec<u8>)>,
     pub node_configs: BTreeMap<String, (Vec<u8>, Vec<u8>)>,
 }
 
 impl RunSink {
     pub fn new(document: workflow::RunDocument) -> Self {
-        Self { document, operations: Vec::new(), node_documents: BTreeMap::new(), node_configs: BTreeMap::new() }
+        Self { document, mutations: Vec::new(), node_documents: BTreeMap::new(), node_configs: BTreeMap::new() }
     }
 
-    pub fn record(&mut self, operation: RunOperation) -> Result<(), RunError> {
+    pub fn record(&mut self, operation: RunMutation) -> Result<(), RunError> {
         self.document = workflow::apply_run_operation_checked(&self.document, operation.clone()).map_err(RunError::Sealed)?;
         self.operations.push(operation);
         Ok(())
@@ -455,7 +455,7 @@ fn node_fingerprints(node_id: &str, document_spr: &[u8], config_spr: &[u8], bind
 /// stale leftovers from the dissolved `OsDocument`):
 /// - root: `space.space.pack`+`space.space.spr` — the space manifest slot (the `OsDocument` VCS
 ///   envelope's binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`; today this
-///   still carries a `workflow::WorkflowDocument`/`WorkflowOperation` pair per the os-core dissolve's
+///   still carries a `workflow::WorkflowDocument`/`WorkflowMutation` pair per the os-core dissolve's
 ///   `## The inversion`, not yet a real `space::SpaceProjection` manifest — wiring the ROOT slot's
 ///   actual decoded type to `SpaceProjection` is later-wave work, this rewrite is the path/filename
 ///   convention only, see `read_space_document`/`write_space_document`),
@@ -1092,11 +1092,11 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                 let previous_record = previous.expect("dirty=false implies a prior record exists").clone();
                 let node_record = RunNodeRecord { status: RunNodeStatus::CacheHit, ..previous_record };
                 current_run_records.insert(node_id.clone(), node_record.clone());
-                sink.record(RunOperation::NodeFinished { node_record })?;
+                sink.record(RunMutation::NodeFinished { node_record })?;
                 continue;
             }
             report.recomputed.push(node_id.clone());
-            sink.record(RunOperation::NodeStarted { node_id: node_id.clone() })?;
+            sink.record(RunMutation::NodeStarted { node_id: node_id.clone() })?;
 
             let mut input_media: BTreeMap<String, Media> = BTreeMap::new();
             for edge in incoming.get(node_id.as_str()).into_iter().flatten() {
@@ -1157,7 +1157,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                 duration_ms,
             };
             current_run_records.insert(node_id.clone(), node_record.clone());
-            sink.record(RunOperation::NodeFinished { node_record })?;
+            sink.record(RunMutation::NodeFinished { node_record })?;
         }
 
         Ok(report)
@@ -1373,7 +1373,7 @@ mod tests {
     /// across two runs matters) seals it and extracts `prior_node_records_from` for the second `run()`.
     fn fresh_sink() -> RunSink {
         let mut sink = RunSink::new(workflow::empty_run_document());
-        sink.record(RunOperation::Start {
+        sink.record(RunMutation::Start {
             workflow_ref: "test.workflow".into(),
             workflow_checkpoint_id: String::new(),
             input_collection_ref: String::new(),
@@ -1420,7 +1420,7 @@ mod tests {
         let report_1 = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
         assert_eq!(report_1.recomputed, vec!["node-a".to_string(), "node-b".to_string()]);
         assert!(report_1.clean.is_empty());
-        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
+        sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
 
         // 🔒️ Non-destructive: the SOURCE `documents`/`configs` maps `run()` read are byte-identical to
         // what was passed in — nothing was written back into them (the load-bearing proof for this wave).
@@ -1446,7 +1446,7 @@ mod tests {
         let configs = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
         runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
-        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
+        sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
 
         let mut documents_2 = documents.clone();
         // 🧮️ Fingerprints are still `.spr`-bytes hashes (see `node_fingerprints`) — editing the op log
@@ -1476,7 +1476,7 @@ mod tests {
         let configs_1 = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
         runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
-        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
+        sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
         let plan_unchanged = plan(&graph, &documents, &configs_1, &[], &[], &prior).expect("plan with unchanged config");
@@ -1510,7 +1510,7 @@ mod tests {
 
         let mut sink_1 = fresh_sink();
         runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
-        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
+        sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
         let plan_unchanged = plan(&graph, &documents, &configs, &[], &bindings, &prior).expect("plan with no parameter values yet");

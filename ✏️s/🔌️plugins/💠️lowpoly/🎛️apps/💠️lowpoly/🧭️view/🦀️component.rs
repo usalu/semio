@@ -113,7 +113,7 @@ pub fn selection_keys_for(projection: &LowpolyProjection, config: &LowpolyConfig
 
 /// 🎯️ The pure, typed-command counterpart of the pre-B1 `apply_component_selection` — computes the new
 /// selection mode/ids/keys/targets after selecting `incoming` at `mode` granularity, for the caller to
-/// translate into `LowpolyConfigOperation`s (never mutates `config` directly).
+/// translate into `LowpolyConfigMutation`s (never mutates `config` directly).
 pub fn apply_component_selection(config: &LowpolyConfig, projection: &LowpolyProjection, mode: &str, incoming: &[u32], merge: &str) -> (String, Vec<u32>, Vec<String>, LowpolySelectionTargets) {
     let normalized = LowpolyDocument::normalize_selection_mode(mode);
     let mut targets = selection_targets_from_config(config);

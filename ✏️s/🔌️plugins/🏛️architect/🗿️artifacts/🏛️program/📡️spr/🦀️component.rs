@@ -9,17 +9,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::program::op::ProgramOperation;
+use crate::artifacts::program::op::ProgramMutation;
 use protocol::OpBinary;
 
 /// 📡️ Encodes an Architect operation for transport or persistence.
-pub fn encode_op(operation: &ProgramOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &ProgramMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📥️ Decodes an Architect operation from its transport representation.
-pub fn decode_op(bytes: &[u8]) -> Result<ProgramOperation, protocol::ProtocolError> {
-    ProgramOperation::decode_op(bytes)
+pub fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolError> {
+    ProgramMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -27,33 +27,33 @@ pub fn decode_op(bytes: &[u8]) -> Result<ProgramOperation, protocol::ProtocolErr
 mod tests {
     use super::*;
     use crate::artifacts::program::kernel::EntityId;
-    use protocol::CollectionOperation;
+    use protocol::CollectionMutation;
 
     #[test]
     fn clear_adjacency_round_trips_through_the_binary_codec() {
-        let operation = ProgramOperation::ClearAdjacency { id: EntityId("adjacency-1".into()) };
+        let operation = ProgramMutation::ClearAdjacency { id: EntityId("adjacency-1".into()) };
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
     }
 
     #[test]
     fn a_collection_operation_round_trips_through_the_binary_codec() {
-        let operation = ProgramOperation::Elements(CollectionOperation::Remove { id: EntityId("element-1".into()) });
+        let operation = ProgramMutation::Elements(CollectionMutation::Remove { id: EntityId("element-1".into()) });
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
     }
 
     /// 🧷️ Pins the exact pre-migration bytes of the JSON-bridge op codec — copied verbatim out of the
-    /// ticket's `🧪️wire-baseline-before.txt`, so a future refactor of `ProgramOperation`'s serde shape
+    /// ticket's `🧪️wire-baseline-before.txt`, so a future refactor of `ProgramMutation`'s serde shape
     /// cannot silently change the on-the-wire representation.
     #[test]
     fn operation_rows_keep_their_pre_migration_bytes() {
-        let hex = |operation: &ProgramOperation| encode_op(operation).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        assert_eq!(hex(&ProgramOperation::ClearAdjacency { id: EntityId("adjacency-1".into()) }), "7b226f7065726174696f6e223a22636c65617241646a6163656e6379222c226964223a2261646a6163656e63792d31227d");
+        let hex = |operation: &ProgramMutation| encode_op(operation).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        assert_eq!(hex(&ProgramMutation::ClearAdjacency { id: EntityId("adjacency-1".into()) }), "7b226f7065726174696f6e223a22636c65617241646a6163656e6379222c226964223a2261646a6163656e63792d31227d");
         assert_eq!(
-            hex(&ProgramOperation::Elements(CollectionOperation::Remove { id: EntityId("element-1".into()) })),
+            hex(&ProgramMutation::Elements(CollectionMutation::Remove { id: EntityId("element-1".into()) })),
             "7b226f7065726174696f6e223a22656c656d656e7473222c226b696e64223a2272656d6f7665222c226964223a22656c656d656e742d31227d"
         );
         assert_eq!(
-            hex(&ProgramOperation::Elements(CollectionOperation::Move { id: EntityId("element-1".into()), to_index: 2 })),
+            hex(&ProgramMutation::Elements(CollectionMutation::Move { id: EntityId("element-1".into()), to_index: 2 })),
             "7b226f7065726174696f6e223a22656c656d656e7473222c226b696e64223a226d6f7665222c226964223a22656c656d656e742d31222c22746f223a327d"
         );
     }

@@ -1,8 +1,8 @@
 //! 🔗️ Sequence play app commands — connect/disconnect steps.
 
-use crate::apps::sequence::config::{SequenceConfig, SequenceConfigOperation};
+use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::ops_from_host_mutation;
-use crate::artifacts::sequence::op::SequenceOperation;
+use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceFixture;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,8 @@ pub mod connect_steps {
         pub target_node_id: String,
     }
 
-    pub fn handle(payload: &ConnectSteps, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
-        Ok(Emit::operations(ops_from_host_mutation(doc.projection, |host| {
+    pub fn handle(payload: &ConnectSteps, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::mutations(ops_from_host_mutation(doc.projection, |host| {
             let _ = host.connect_steps(&payload.source_node_id, &payload.target_node_id);
         })))
     }
@@ -37,8 +37,8 @@ pub mod disconnect_steps {
         pub to_id: String,
     }
 
-    pub fn handle(payload: &DisconnectSteps, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
-        Ok(Emit::operations(ops_from_host_mutation(doc.projection, |host| {
+    pub fn handle(payload: &DisconnectSteps, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::mutations(ops_from_host_mutation(doc.projection, |host| {
             host.disconnect_steps(&payload.from_id, &payload.to_id);
         })))
     }

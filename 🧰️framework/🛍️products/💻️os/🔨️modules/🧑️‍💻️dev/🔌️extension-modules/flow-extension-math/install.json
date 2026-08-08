@@ -1,0 +1,9 @@
+{
+  "extensionId": "flow-extension-math",
+  "version": "0.0.0-dev",
+  "label": "flow-extension-math",
+  "extends": "flow",
+  "moduleUrl": "/extensions/flow-extension-math/semio_s_plugin_flow_extension_math.js",
+  "packageHash": "dev:1786197681693",
+  "installedAt": 1786197681693
+}

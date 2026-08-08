@@ -1,5 +1,5 @@
 //! 📡️ Puzzle 5d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! `Puzzle5dOperation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
+//! `Puzzle5dMutation`'s binary wire form, plus the `DocumentEnvelope`/`DocumentStore` aliases every
 //! puzzle-5d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
@@ -11,24 +11,24 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::puzzle5d::op::Puzzle5dOperation;
+use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
 use crate::artifacts::puzzle5d::Puzzle5dProjection;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
 
-/// 📦️ Encodes a `Puzzle5dOperation` to its binary command form.
-pub fn encode_op(operation: &Puzzle5dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `Puzzle5dMutation` to its binary command form.
+pub fn encode_op(operation: &Puzzle5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `Puzzle5dOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Puzzle5dOperation, protocol::ProtocolError> {
-    Puzzle5dOperation::decode_op(bytes)
+/// 📖️ Decodes a `Puzzle5dMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Puzzle5dMutation, protocol::ProtocolError> {
+    Puzzle5dMutation::decode_op(bytes)
 }
 
 //#region 🔖️Store
-pub type Puzzle5dEnvelope = DocumentEnvelope<Puzzle5dProjection, Puzzle5dOperation>;
-pub type Puzzle5dStore = DocumentStore<Puzzle5dProjection, Puzzle5dOperation>;
+pub type Puzzle5dEnvelope = DocumentEnvelope<Puzzle5dProjection, Puzzle5dMutation>;
+pub type Puzzle5dStore = DocumentStore<Puzzle5dProjection, Puzzle5dMutation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
@@ -45,7 +45,7 @@ mod tests {
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![Puzzle5dOperation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
+                mutations: vec![Puzzle5dMutation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
                 description: None,
             })
             .expect("apply");
@@ -67,18 +67,18 @@ mod wire_format_guard {
     use protocol::OpText;
     use serde_json::json;
 
-    fn ops() -> Vec<Puzzle5dOperation> {
+    fn ops() -> Vec<Puzzle5dMutation> {
         let part: puzzle_5d::Puzzle5dPart = serde_json::from_value(json!({"id":"p1","partKind":"Capsule","2d":{"x":1.0,"y":2.0,"shape":"circle","radius":3.0,"text":"t","iconKind":"i","hidden":false,"locked":false},"3d":{"origin":[1.0,2.0,3.0],"meshUrl":"/m.glb","orientation":[0.0,0.0,0.0,1.0],"scale":[2.0,3.0,4.0],"label":"L"},"grips":[{"id":"g0","gripKind":"k","2d":{"angle":0.5,"gripKind":"k","radius":3.0},"3d":{"position":[0.0,0.0,0.0],"direction":[0.0,0.0,1.0],"radius":3.0,"label":"g"}}]})).unwrap();
         let fastener: puzzle_5d::Puzzle5dFastener = serde_json::from_value(json!({"id":"f1","source":"p1:g0","target":"p2:g0","fastenerKind":"fk","gap":1.0,"shift":2.0,"rise":3.0,"rotation":4.0,"turn":5.0,"tilt":6.0})).unwrap();
         let meta: puzzle_5d::Puzzle5dMeta = serde_json::from_value(json!({"description":"a scene"})).unwrap();
         let document = Puzzle5dProjection::default();
         vec![
-            Puzzle5dOperation::SetPart { index: 0, part },
-            Puzzle5dOperation::RemovePart { id: "p1".into() },
-            Puzzle5dOperation::SetFastener { index: 1, fastener },
-            Puzzle5dOperation::RemoveFastener { id: "f1".into() },
-            Puzzle5dOperation::SetMeta { meta },
-            Puzzle5dOperation::SetDocument { document },
+            Puzzle5dMutation::SetPart { index: 0, part },
+            Puzzle5dMutation::RemovePart { id: "p1".into() },
+            Puzzle5dMutation::SetFastener { index: 1, fastener },
+            Puzzle5dMutation::RemoveFastener { id: "f1".into() },
+            Puzzle5dMutation::SetMeta { meta },
+            Puzzle5dMutation::SetDocument { document },
         ]
     }
 

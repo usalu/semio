@@ -1,4 +1,4 @@
-//! 🧮️ DAG play app — view state (`DagConfig`) and its operation enum (`DagConfigOperation`).
+//! 🧮️ DAG play app — view state (`DagConfig`) and its operation enum (`DagConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.dag` document. It absorbs everything that used to live in the old
@@ -6,10 +6,10 @@
 //! the deleted host-pushed `ViewModel` (`locale`, via `dag_play_labels`/`app_labels`/`context_menu`): the
 //! selected node ids, the free/live node-graph viewport camera, and the BCP-47 locale tag — session-only
 //! view state round-trips through the config `DocumentStore` exactly like document content, with a real
-//! `backwards` per `DagConfigOperation` instead of never being VCS'd at all.
+//! `backwards` per `DagConfigMutation` instead of never being VCS'd at all.
 
 use infinite_board_port_directed_dag::DagCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -119,15 +119,15 @@ pub fn dag_config_camera(config: &DagConfig) -> DagCamera {
 }
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
+//#region 🔖️ConfigMutations
 /// 🧮️ `DagConfig`'s operation enum — one variant per settled interaction (mirrors the pre-migration
 /// `DagPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()` returns: since
 /// a config-only "View" dispatch is a plain `Apply` (not an `AmendLast`), each tick is its own distinct,
 /// real config edit, and "undo this tick" is exactly "restore the whole-config snapshot from just before
 /// it" — the simplest correct inverse, needing no per-field reverse-patch bookkeeping. Mirrors
-/// `shooting_op::ShootingConfigOperation` exactly.
+/// `shooting_op::ShootingConfigMutation` exactly.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum DagConfigOperation {
+pub enum DagConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -142,7 +142,7 @@ pub enum DagConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for DagConfigOperation {
+impl protocol::OpText for DagConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -167,7 +167,7 @@ impl protocol::OpText for DagConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for DagConfigOperation {
+impl protocol::OpBinary for DagConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -213,29 +213,29 @@ impl protocol::OpBinary for DagConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<DagConfig> for DagConfigOperation {
+impl Mutation<DagConfig> for DagConfigMutation {
     type Diff = DagConfig;
 
     fn diff(&self, base: &DagConfig) -> DagConfig {
         let mut next = base.clone();
         match self {
-            DagConfigOperation::Snapshot { config } => return config.clone(),
-            DagConfigOperation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
-            DagConfigOperation::SetCamera { x, y, zoom } => {
+            DagConfigMutation::Snapshot { config } => return config.clone(),
+            DagConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
+            DagConfigMutation::SetCamera { x, y, zoom } => {
                 next.camera_x = *x;
                 next.camera_y = *y;
                 next.camera_zoom = *zoom;
             }
-            DagConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            DagConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &DagConfig) -> Vec<Self> {
-        vec![DagConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &DagConfig) -> Vec<Self> {
+        vec![DagConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -260,21 +260,21 @@ mod tests {
 
     #[test]
     fn dag_config_operation_text_binary_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&DagConfigOperation::Snapshot { config: DagConfig { selected_node_ids: vec!["n1".into()], camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
-        store::test_support::assert_op_line_round_trip(&DagConfigOperation::SetSelection { node_ids: vec!["n1".into(), "n2".into()] });
-        store::test_support::assert_op_line_round_trip(&DagConfigOperation::SetSelection { node_ids: Vec::new() });
-        store::test_support::assert_op_line_round_trip(&DagConfigOperation::SetCamera { x: 12.5, y: -3.0, zoom: 2.25 });
-        store::test_support::assert_op_line_round_trip(&DagConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&DagConfigMutation::Snapshot { config: DagConfig { selected_node_ids: vec!["n1".into()], camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
+        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: vec!["n1".into(), "n2".into()] });
+        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: Vec::new() });
+        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetCamera { x: 12.5, y: -3.0, zoom: 2.25 });
+        store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     #[test]
     fn dag_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = DagConfig { selected_node_ids: vec!["n1".into()], camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "en-US".into() };
-        let operation = DagConfigOperation::SetSelection { node_ids: vec!["n2".into()] };
+        let operation = DagConfigMutation::SetSelection { node_ids: vec!["n2".into()] };
         let forward = operation.diff(&base);
         assert_eq!(forward.selected_node_ids, vec!["n2".to_string()]);
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![DagConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![DagConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
         assert_eq!(restored, base);
     }

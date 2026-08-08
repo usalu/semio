@@ -1,0 +1,13 @@
+semio-s-plugin-writer	FAIL	error[E0432]: unresolved import `crate::artifacts::jack::TrinityGraphDocument`
+semio-s-plugin-procedural	PASS
+semio-s-plugin-flow	FAIL	error[E0425]: cannot find function `default_contributions_json` in this scope
+semio-s-plugin-gis	FAIL	error[E0425]: cannot find value `register_gis_exports` in the crate root
+semio-s-plugin-animate	FAIL	error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::QualityPreset`
+semio-s-plugin-demonstrator	FAIL	error[E0425]: cannot find value `register_gis_exports` in the crate root
+semio-s-plugin-sequence	FAIL	error[E0432]: unresolved imports `dag::EdgeRouteStyle`, `dag::PortShape`
+semio-s-plugin-reasoning-mindmap	FAIL	error[E0277]: the trait bound `DefaultWiresExtension: semio_s_mindmap::GraphExtension` is not satisfied
+semio-s-plugin-forms	FAIL	error[E0433]: cannot find module or crate `playbook` in this scope
+semio-s-plugin-trinity	FAIL	error[E0432]: unresolved import `crate::artifacts::jack::TrinityGraphDocument`
+semio-s-plugin-dag	FAIL	error[E0599]: no method named `apply` found for struct `DagDiff` in the current scope
+semio-s-plugin-puzzle	FAIL	error[E0433]: cannot find module or crate `semio_framework_core` in this scope
+semio-s-plugin-space	FAIL	error[E0432]: unresolved import `crate::store_sync`

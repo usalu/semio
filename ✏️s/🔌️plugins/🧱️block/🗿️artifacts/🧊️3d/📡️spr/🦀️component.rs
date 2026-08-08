@@ -9,17 +9,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::block3d::op::Block3dOperation;
+use crate::artifacts::block3d::op::Block3dMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `Block3dOperation` to its binary command form.
-pub fn encode_op(operation: &Block3dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `Block3dMutation` to its binary command form.
+pub fn encode_op(operation: &Block3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `Block3dOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Block3dOperation, protocol::ProtocolError> {
-    Block3dOperation::decode_op(bytes)
+/// 📖️ Decodes a `Block3dMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolError> {
+    Block3dMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -36,7 +36,7 @@ mod tests {
 
         let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dDefinition::default(), None));
         store
-            .dispatch(DocumentCommand::Apply { operations: vec![Block3dOperation::SetObjectKind { object_kind: BlockKindIdentity { id: "o1".into(), name: "o1".into(), label: "O1".into(), ..Default::default() } }], description: None })
+            .dispatch(DocumentCommand::Apply { mutations: vec![Block3dMutation::SetObjectKind { object_kind: BlockKindIdentity { id: "o1".into(), name: "o1".into(), label: "O1".into(), ..Default::default() } }], description: None })
             .expect("apply");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.object_kind.id, "o1");
@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn block3d_operation_binary_round_trips() {
-        let operation = Block3dOperation::RemoveVortex { id: "v0".into() };
+        let operation = Block3dMutation::RemoveVortex { id: "v0".into() };
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }

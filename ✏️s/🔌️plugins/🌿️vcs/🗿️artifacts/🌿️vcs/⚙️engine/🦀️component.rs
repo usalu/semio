@@ -11,7 +11,7 @@ pub fn empty_vcs_demo_projection() -> VcsDemoProjection {
 //#region 🔖️Register
 /// 🗂️ Registers `VcsDemoProjection`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse vcs-play
-/// documents without depending on this crate's concrete `Projection`/`Operation` types. Called by
+/// documents without depending on this crate's concrete `Projection`/`Mutation` types. Called by
 /// `semio_plugin!`'s `setup:` hook — was the old bundle crate's `register_vcs_exports()`.
 pub fn register() {
     register_pilot_languages();
@@ -87,3 +87,35 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+pub struct VcsDemoEngine {
+    projection: VcsDemoProjection,
+}
+
+impl VcsDemoEngine {
+    pub fn new(projection: VcsDemoProjection) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for VcsDemoEngine {
+    type Projection = VcsDemoProjection;
+    type Mutation = crate::artifacts::vcs::mutations::VcsDemoMutation;
+    type Diff = crate::artifacts::vcs::diff::VcsDemoDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::vcs::mutations::apply_vcs_demo_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

@@ -231,7 +231,7 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::Ha
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
+#[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum Effect {
     Assign {
         target: ExprPathTarget,

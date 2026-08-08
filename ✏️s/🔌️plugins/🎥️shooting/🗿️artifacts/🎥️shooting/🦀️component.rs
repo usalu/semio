@@ -391,7 +391,7 @@ impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
 }
 
 /// 🩹️ The scene-lighting patch — needed both by `op`'s `PatchScene` operation and by the DSL/OpText
-/// mirror in `op` (`ShootingOperationDsl::PatchScene`), so it lives here alongside the other `*Patch`
+/// mirror in `op` (`ShootingMutationDsl::PatchScene`), so it lives here alongside the other `*Patch`
 /// records rather than in `op` itself.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, DslRecord)]
 #[serde(rename_all = "camelCase")]

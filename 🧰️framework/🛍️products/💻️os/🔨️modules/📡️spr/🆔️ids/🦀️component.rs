@@ -7,7 +7,7 @@
 /// @emoji 🆔️ A stable identifier for one operation instance (an `Edit`'s forward/backward op).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
-pub struct OperationId(pub String);
+pub struct MutationId(pub String);
 
 /// @emoji 🧑️ A stable identifier for one collaborating actor.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]

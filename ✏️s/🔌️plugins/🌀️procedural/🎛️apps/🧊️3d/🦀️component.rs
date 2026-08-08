@@ -6,17 +6,17 @@
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
 use crate::apps::procedural3d::commands::{eval, example, generation, graph, gumball, locale, selection, sun, view, widget};
-use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation};
+use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::apps::procedural3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
 use crate::apps::procedural3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use crate::apps::procedural3d::modes::{edit, generate};
 use crate::apps::procedural3d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::procedural3d::terminology::procedural3d_labels;
 use crate::artifacts::procedural3d::engine::procedural3d_io;
-use crate::artifacts::procedural3d::op::Procedural3dOperation;
+use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -36,7 +36,7 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `Procedural3dPlayApp::Command` — the SOLE dispatch surface for procedural3d's own behavior,
     /// covering EVERY declared action. Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.
-    pub enum Procedural3dCommand for Procedural3dDocument, Procedural3dOperation, Procedural3dConfig, Procedural3dConfigOperation, ctx = FlowEvalSession {
+    pub enum Procedural3dCommand for Procedural3dDocument, Procedural3dMutation, Procedural3dConfig, Procedural3dConfigMutation, ctx = FlowEvalSession {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "nodeGraphEdit" as "graph-edit" => node_graph_edit::NodeGraphEdit,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
@@ -95,7 +95,7 @@ use widget::{add_widget, delete_selection, patch_flow_widgets, remove_widget};
 
 //#region 🔖️Procedural3dPlayApp
 /// 🧪️ Unit struct apart from `eval_session`: every former runtime field lives in [`Procedural3dConfig`],
-/// written through [`Procedural3dConfigOperation`]s.
+/// written through [`Procedural3dConfigMutation`]s.
 #[derive(Default)]
 pub struct Procedural3dPlayApp;
 
@@ -123,11 +123,11 @@ fn parse_preview_camera_json(args: &Value) -> crate::apps::procedural3d::config:
 
 impl DocumentApp for Procedural3dPlayApp {
     type Projection = Procedural3dDocument;
-    type Operation = Procedural3dOperation;
+    type Mutation = Procedural3dMutation;
     type Config = Procedural3dConfig;
-    type ConfigOperation = Procedural3dConfigOperation;
+    type ConfigMutation = Procedural3dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Procedural3dCommand;
 
@@ -161,7 +161,7 @@ impl DocumentApp for Procedural3dPlayApp {
 
     /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
     /// object; unmatched keys/non-slider widgets are silently ignored.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural3dDocument>) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural3dDocument>) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "params:in" => {
                 let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
@@ -174,10 +174,10 @@ impl DocumentApp for Procedural3dPlayApp {
                     let Some(number) = value.as_f64() else { continue };
                     let Some((index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
                     if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
-                        operations.push(Procedural3dOperation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
+                        operations.push(Procedural3dMutation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
                     }
                 }
-                Ok(Emit::operations(operations))
+                Ok(Emit::mutations(operations))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -307,7 +307,7 @@ impl DocumentApp for Procedural3dPlayApp {
         }
     }
 
-    fn handle(command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
@@ -396,21 +396,21 @@ pub fn create_procedural3d_app() -> App {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"))
-            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-            .action_with(ActionDefinition::new_catalog("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"), ActionKind::Operation).with_category("targets"))
-            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-            .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Operation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("patchFlowWidgets", LocalizedLabel::native("Patch Flow Widgets", "Flow-Elemente aktualisieren"), ActionKind::Operation).with_category("methods"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Operation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::Operation).with_category("targets"))
-            .action_with(ActionDefinition::new_catalog("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Operation).with_category("methods"))
-            .action_with(ActionDefinition::new_catalog("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Operation).with_category("methods"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"))
+            .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .action_with(ActionDefinition::new_catalog("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"), ActionKind::Mutation).with_category("targets"))
+            .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("patchFlowWidgets", LocalizedLabel::native("Patch Flow Widgets", "Flow-Elemente aktualisieren"), ActionKind::Mutation).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::Mutation).with_category("targets"))
+            .action_with(ActionDefinition::new_catalog("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Mutation).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Mutation).with_category("methods"))
             // 👁️ Ephemeral view actions — selection, hover, world picking, graph camera, sun/LOD/show-mode display toggles, preview camera.
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))

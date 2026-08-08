@@ -19,11 +19,12 @@ use std::sync::{Mutex, OnceLock};
 use semio_framework_plugin::{mesh_from_kind, MeshData, OsMediaFormat, WorldProjectionConfig};
 use serde_json::Value;
 use std::collections::HashSet;
-use std::sync::OnceLock;
 use crate::artifacts::cad::engine::transformation::solid_for_object;
 
 //#region 🔖️Compute
 pub const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
+
+pub const CAD_DEFAULT_TYPOLOGY_EXTENT: [f64; 3] = [1.0, 1.0, 1.0];
 
 /// @emoji 🗂️ Indices into the quad play fixture's `models[]` array — one model definition per pane.
 const CAD_MODEL_INDEX_SHAPE: usize = 0;
@@ -64,7 +65,8 @@ const CAD_BREP_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
 
 /// @emoji 🖥️ Host-owned brep session (`EngineHost` + compute-scoped kernel registry).
 pub fn cad_brep_host() -> &'static BrepEngineHost {
-    (|| BrepEngineHost::new(CAD_BREP_CACHE_BUDGET_BYTES)())
+    static HOST: OnceLock<BrepEngineHost> = OnceLock::new();
+    HOST.get_or_init(|| BrepEngineHost::new(CAD_BREP_CACHE_BUDGET_BYTES))
 }
 
 /// @emoji 🔩 Lock the cad brep kernel for synchronous `BrepKernel` calls.
@@ -175,7 +177,7 @@ fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadOb
     let Ok(mut kernel) = cad_brep_kernel() else {
         return (Vec::new(), geometry);
     };
-    let objects = objects_from_fixture_model(&mut **kernel, objects_value, &geometry);
+    let objects = objects_from_fixture_model(&mut *kernel, objects_value, &geometry);
     (objects, geometry)
 }
 
@@ -274,10 +276,8 @@ pub fn forest_play_scene() -> CadProjection {
 }
 
 pub fn next_cad_id(prefix: &str) -> String {
-    let next = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
+    static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let next = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{prefix}-{next}")
 }
 
@@ -409,21 +409,21 @@ pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 pub fn import_step_object(text: &str) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().ok()?;
     let handle = block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
-    Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-step"), "Imported STEP", "spatial.shape.imported", handle))
+    Some(cad_object_from_solid_handle(&mut *kernel, next_cad_id("object-step"), "Imported STEP", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `CadObject`.
 pub fn import_obj_object(text: &str) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().ok()?;
     let handle = block_on(kernel.import_obj(text, 0.01)).ok()?;
-    Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-obj"), "Imported OBJ", "spatial.shape.imported", handle))
+    Some(cad_object_from_solid_handle(&mut *kernel, next_cad_id("object-obj"), "Imported OBJ", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `CadObject`.
 pub fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().ok()?;
     let handle = block_on(kernel.import_stl(bytes, 0.01)).ok()?;
-    Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-stl"), "Imported STL", "spatial.shape.imported", handle))
+    Some(cad_object_from_solid_handle(&mut *kernel, next_cad_id("object-stl"), "Imported STL", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊️ Imports a GLB payload by decoding it to a tessellated mesh (via the shared
@@ -432,7 +432,7 @@ pub fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
 pub fn import_glb_object(bytes: &[u8]) -> Option<CadObject> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
     let mut kernel = cad_brep_kernel().ok()?;
-    Some(cad_object_from_mesh(&mut **kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", &mesh))
+    Some(cad_object_from_mesh(&mut *kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", &mesh))
 }
 
 /// @emoji 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
@@ -478,7 +478,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadProjection> {
             let model_definition_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("");
             let objects_value = entry.pointer("/model/objects")?;
             let geometry = parse_geometry(entry.pointer("/model/geometry"));
-            let objects = objects_value.as_array().map(|objects| objects_from_fixture_model(&mut **kernel, objects, &geometry)).filter(|objects| !objects.is_empty()).or_else(|| serde_json::from_value(objects_value.clone()).ok())?;
+            let objects = objects_value.as_array().map(|objects| objects_from_fixture_model(&mut *kernel, objects, &geometry)).filter(|objects| !objects.is_empty()).or_else(|| serde_json::from_value(objects_value.clone()).ok())?;
             match model_definition_id {
                 CAD_MODEL_DEFINITION_SHAPE => {
                     scene.objects = objects;
@@ -513,7 +513,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadProjection> {
                 let Ok(mut kernel) = cad_brep_kernel() else {
                     return Vec::new();
                 };
-                objects_from_fixture_model(&mut **kernel, objects, &geometry)
+                objects_from_fixture_model(&mut *kernel, objects, &geometry)
             })
             .filter(|objects| !objects.is_empty())
             .or_else(|| serde_json::from_value(payload.get("objects")?.clone()).ok())?;
@@ -554,7 +554,7 @@ pub fn primary_primitive_kind(object: &CadObject) -> &str {
 pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
     let kind = primary_primitive_kind(object);
     if let Ok(mut kernel) = cad_brep_kernel() {
-        let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_fixture(&mut **kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut **kernel, object, kind));
+        let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_fixture(&mut *kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut *kernel, object, kind));
         if let Some(mut mesh) = mesh {
             if let Some(geometry) = geometry {
                 align_mesh_to_fixture_centroid(&mut mesh, geometry, &object.primitives);
@@ -611,7 +611,7 @@ pub fn cad_document_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<Va
                 return None;
             }
             let mesh = semio_framework::dwg_drawing_to_mesh(&layer_drawing);
-            Some(cad_object_from_mesh(&mut **kernel, format!("object-{}", layer.name), layer.name.clone(), "spatial.shape.imported", &mesh))
+            Some(cad_object_from_mesh(&mut *kernel, format!("object-{}", layer.name), layer.name.clone(), "spatial.shape.imported", &mesh))
         })
         .collect();
     if !objects.is_empty() {
@@ -625,7 +625,7 @@ pub fn cad_document_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<Va
 pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let mut scene = default_document();
     let mut kernel = cad_brep_kernel().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
-    let object = cad_object_from_mesh(&mut **kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", mesh);
+    let object = cad_object_from_mesh(&mut *kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", mesh);
     scene.objects = vec![object];
     serde_json::to_value(&scene).map_err(|err| err.to_string())
 }
@@ -732,3 +732,41 @@ pub fn register() {
     semio_framework_os::register_dwg_import_handler("3d.cad", cad_document_from_dwg);
 }
 //#endregion 🔖️Register
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent artifact engine — owns the projection; every transition is a mutation.
+pub struct CadEngine {
+    projection: crate::artifacts::cad::CadProjection,
+}
+
+impl CadEngine {
+    pub fn new(projection: crate::artifacts::cad::CadProjection) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::cad::CadProjection {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for CadEngine {
+    type Projection = crate::artifacts::cad::CadProjection;
+    type Mutation = crate::artifacts::cad::mutations::CadMutation;
+    type Diff = crate::artifacts::cad::diff::CadDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = <Self::Diff as protocol::MutationDiff<Self::Projection>>::apply(&diff, &self.projection);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

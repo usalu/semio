@@ -111,7 +111,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGe
 /// two end nodes, `ρ·thickness·triangleArea` split evenly at each region triangle's 3 nodes, summed
 /// per node. A simple document-bridge translation feeding ONLY the frozen `fem2d_solve`/`build_model`
 /// path (which has no native self-weight concept) — `fem2d_solve_all` never calls this helper, since it
-/// gets self-weight natively through `crate::model::analyses`' own `element.mass()`-based pipeline for
+/// gets self-weight natively through `crate::analyses`' own `element.mass()`-based pipeline for
 /// EVERY massed element (`Bar2`/`BeamEb2` and now `Tri3Cst` regions too), so the two paths never overlap.
 pub(crate) fn self_weight_nodal_loads(doc: &Fem2dDocument, regions: &[MeshedRegion]) -> Vec<NodalLoad> {
     let mut totals: HashMap<String, f64> = HashMap::new();

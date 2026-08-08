@@ -122,7 +122,7 @@ pub struct LowpolyProjection {
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
 impl store::DocumentDsl for LowpolyProjection {
     const EXTENSION: &'static str = "lowpoly";
-    fn envelope_id() -> &'static str { "lowpoly" }
+    fn envelope_id() -> &'static str { "lowpoly.lowpoly" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,

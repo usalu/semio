@@ -6,13 +6,13 @@
 //! compute in the artifact's `⚙️engine`. This file is a routing table: `handle` → `SourcingCurateCommand::
 //! dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigOperation};
+use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::apps::curate::modes::curate;
 use crate::apps::curate::modes::curate::windows::{curated, grid, pool, preview};
 use crate::apps::curate::terminology::sourcing_curate_labels;
-use crate::artifacts::curate::op::SourcingOperation;
+use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::{CurateDocument, SOURCING_CURATE_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, UiNode,
 };
@@ -40,7 +40,7 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`) and the `dsl` wire keyword (the kebab-case `#[dsl(key = ..)]` the codec uses) —
     /// they are genuinely different vocabularies, and `setLocale`/`locale` is the row that proves it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum SourcingCurateCommand for CurateDocument, SourcingOperation, SourcingCurateConfig, SourcingCurateConfigOperation {
+    pub enum SourcingCurateCommand for CurateDocument, SourcingMutation, SourcingCurateConfig, SourcingCurateConfigMutation {
         "setDocument" as "document-json" => set_document_json::SetDocumentJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "stockFromCatalogue" as "stock-from-catalogue" => stock_from_catalogue::StockFromCatalogue,
@@ -73,17 +73,17 @@ use crate::apps::curate::commands::selection::{select_row, world_select};
 
 //#region 🔖️SourcingCurateApp
 /// 🧪️ Unit struct — every former app-struct field lives in `crate::apps::curate::config::
-/// SourcingCurateConfig`, written through `SourcingCurateConfigOperation`s.
+/// SourcingCurateConfig`, written through `SourcingCurateConfigMutation`s.
 #[derive(Default)]
 pub struct SourcingCurateApp;
 
 impl DocumentApp for SourcingCurateApp {
     type Projection = CurateDocument;
-    type Operation = SourcingOperation;
+    type Mutation = SourcingMutation;
     type Config = SourcingCurateConfig;
-    type ConfigOperation = SourcingCurateConfigOperation;
+    type ConfigMutation = SourcingCurateConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = SourcingCurateCommand;
 
@@ -116,8 +116,8 @@ impl DocumentApp for SourcingCurateApp {
         }
     }
 
-    fn whole_document_operation(projection: CurateDocument) -> Option<SourcingOperation> {
-        Some(SourcingOperation::SetDocument { document: projection })
+    fn whole_document_operation(projection: CurateDocument) -> Option<SourcingMutation> {
+        Some(SourcingMutation::SetDocument { document: projection })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -127,7 +127,7 @@ impl DocumentApp for SourcingCurateApp {
         command.command_id()
     }
 
-    fn handle(command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -151,10 +151,10 @@ impl DocumentApp for SourcingCurateApp {
 /// 🙈️ An internal document operation kept out of the command palette — the curate/DnD arms that mutate
 /// the persisted `CurateDocument` but are only ever dispatched from window chrome.
 fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Operation) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Mutation) }
 }
 
-/// 🙈️👁️ The filter/sort/selection/world-pick arms emit ONLY `config_operations`, so (unlike
+/// 🙈️👁️ The filter/sort/selection/world-pick arms emit ONLY `config_mutations`, so (unlike
 /// `hidden_operation` above) they're declared `ActionKind::View`, letting `VcsDocumentApp`'s
 /// kind-discipline check actually enforce "must not emit document operations".
 fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
@@ -203,9 +203,9 @@ pub fn create_sourcing_curate_app() -> App {
             .window_kind_def(grid::definition())
             .default_layout(curate::layout())
             // 🔧️ Curation counts/stock edits are persisted in `CurateDocument`, so each arm emits a
-            // whole-document `SetDocument` operation and is declared as an Operation, never a View.
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
+            // whole-document `SetDocument` operation and is declared as a Mutation, never a View.
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
             .action_with(hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
             .action_with(hidden_operation("curateAdd", LocalizedLabel::native("Curate Add", "Kuratierung hinzufügen")))
             .action_with(hidden_operation("curateSetCount", LocalizedLabel::native("Curate Set Count", "Kuratierte Anzahl festlegen")))
@@ -287,7 +287,7 @@ mod tests {
         // 🧬️ A registry-backed wrapper so the View-kind declarations actually get enforced.
         let mut app = new_app_with_registry();
         let result = app.dispatch_typed(SourcingCurateCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() }), &testkit::meta("local")).expect("filter query");
-        assert!(result.operations.is_empty(), "setFilterQuery is config-only, no document operations");
+        assert!(result.mutations.is_empty(), "setFilterQuery is config-only, no document operations");
     }
 
     //#region 🔖️CommandSurface

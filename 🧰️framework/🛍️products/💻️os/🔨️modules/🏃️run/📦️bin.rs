@@ -136,10 +136,10 @@ fn main() {
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
-    let envelope = store::create_document_envelope::<workflow::RunDocument, workflow::RunOperation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
+    let envelope = store::create_document_envelope::<workflow::RunDocument, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
     let mut document_store = store::DocumentStore::new(envelope);
     if !sink.operations.is_empty() {
-        document_store.dispatch(store::DocumentCommand::Apply { operations: sink.operations.clone(), description: None }).map_err(|error| error.to_string())?;
+        document_store.dispatch(store::DocumentCommand::Apply { mutations: sink.operations.clone(), description: None }).map_err(|error| error.to_string())?;
     }
     let snapshot = document_store.snapshot_pack().map_err(|error| error.to_string())?;
     bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;
@@ -155,13 +155,13 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     register_builtin_converters();
     let bundle = SpaceBundle::open(&args.bundle);
     let (space_pack, space_spr) = bundle.read_space_document()?;
-    // 🧬️ `OsProjection`/`OsOperation` are dissolved (os-core dissolve, `## The inversion`) — the
+    // 🧬️ `OsProjection`/`OsMutation` are dissolved (os-core dissolve, `## The inversion`) — the
     // studio bundle's root `space.space.pack`/`.spr` files (renamed from `space.os.pack`/`.spr` by
     // W4's canonical on-disk layout rewrite, see `SpaceBundle`'s own doc comment) carry a
-    // `workflow::WorkflowDocument`/`WorkflowOperation` pair (the `s.workflow` artifact document)
+    // `workflow::WorkflowDocument`/`WorkflowMutation` pair (the `s.workflow` artifact document)
     // instead — only the typed decode target moved, wiring the root slot to a real
     // `space::SpaceProjection` manifest is later-wave work.
-    let parsed: store::ParsedDocumentText<semio_framework_os::WorkflowDocument, semio_framework_os::WorkflowOperation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
+    let parsed: store::ParsedDocumentText<semio_framework_os::WorkflowDocument, semio_framework_os::WorkflowMutation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
     let projection = parsed.projection;
 
     let mut graph = projection.graph.clone();
@@ -189,7 +189,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         if run_pack.is_empty() {
             BTreeMap::new()
         } else {
-            let parsed: store::ParsedDocumentText<workflow::RunDocument, workflow::RunOperation> = store::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
+            let parsed: store::ParsedDocumentText<workflow::RunDocument, workflow::RunMutation> = store::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
             parsed.projection.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };
@@ -211,7 +211,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let mut cache = bundle.media_cache();
 
     let mut sink = RunSink::new(workflow::empty_run_document());
-    sink.record(workflow::RunOperation::Start {
+    sink.record(workflow::RunMutation::Start {
         workflow_ref: args.bundle.display().to_string(),
         workflow_checkpoint_id: String::new(),
         input_collection_ref: String::new(),
@@ -226,15 +226,15 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         Ok(report) => {
             println!("recomputed: {:?}", report.recomputed);
             println!("clean:      {:?}", report.clean);
-            sink.record(workflow::RunOperation::Seal { status: workflow::RunStatus::Succeeded }).map_err(|error| error.to_string())?;
+            sink.record(workflow::RunMutation::Seal { status: workflow::RunStatus::Succeeded }).map_err(|error| error.to_string())?;
             persist_run(&bundle, &sink)?;
             Ok(())
         }
         Err(error) => {
             // 🧾️ A failed run still gets a real, sealed audit trail — readonly-over-source holds even
             // on failure, and a later invocation can see WHY the last run failed.
-            let _ = sink.record(workflow::RunOperation::Log { node_id: String::new(), level: "error".into(), message: error.to_string(), at: store::now_iso() });
-            let _ = sink.record(workflow::RunOperation::Seal { status: workflow::RunStatus::Failed });
+            let _ = sink.record(workflow::RunMutation::Log { node_id: String::new(), level: "error".into(), message: error.to_string(), at: store::now_iso() });
+            let _ = sink.record(workflow::RunMutation::Seal { status: workflow::RunStatus::Failed });
             persist_run(&bundle, &sink)?;
             Err(error.into())
         }

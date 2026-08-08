@@ -1,7 +1,7 @@
 //! 🔍️ Sourcing curate app commands — pool-table filter/sort chrome (session-only config, never document).
 
-use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigOperation};
-use crate::artifacts::curate::op::SourcingOperation;
+use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::{CurateDocument, SortDirection, TableSort};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ pub mod set_filter_query {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetFilterQuery, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterQuery { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetFilterQuery, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterQuery { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetFilterQuery
@@ -33,7 +33,7 @@ pub mod set_filter_module {
         pub enabled: bool,
     }
 
-    pub fn handle(payload: &SetFilterModule, _doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFilterModule, _doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut module_ids = cfg.projection.filters.module_ids.clone();
         if payload.enabled {
             if !module_ids.iter().any(|id| id == &payload.module_id) {
@@ -42,7 +42,7 @@ pub mod set_filter_module {
         } else {
             module_ids.retain(|id| id != &payload.module_id);
         }
-        Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterModules { module_ids }]))
+        Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterModules { module_ids }]))
     }
 }
 //#endregion 🔖️SetFilterModule
@@ -57,9 +57,9 @@ pub mod set_filter_typology {
         pub path: String,
     }
 
-    pub fn handle(payload: &SetFilterTypology, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFilterTypology, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let path = if payload.path.is_empty() { Vec::new() } else { payload.path.split('/').map(String::from).collect() };
-        Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterTypology { path }]))
+        Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterTypology { path }]))
     }
 }
 //#endregion 🔖️SetFilterTypology
@@ -75,10 +75,10 @@ pub mod set_filter_min_availability {
         pub value: Option<f64>,
     }
 
-    pub fn handle(payload: &SetFilterMinAvailability, _doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFilterMinAvailability, _doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let current = cfg.projection.filters.min_availability as f64;
         let next = payload.delta.map(|d| current + d).or(payload.value).unwrap_or(current);
-        Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterMinAvailability { value: next.max(0.0) as u32 }]))
+        Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterMinAvailability { value: next.max(0.0) as u32 }]))
     }
 }
 //#endregion 🔖️SetFilterMinAvailability
@@ -94,9 +94,9 @@ pub mod sort_table {
         pub direction: String,
     }
 
-    pub fn handle(payload: &SortTable, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &SortTable, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let sort = TableSort { column_id: payload.column_id.clone(), direction: if payload.direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } };
-        Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSort { sort: Some(sort) }]))
+        Ok(Emit::config(vec![SourcingCurateConfigMutation::SetSort { sort: Some(sort) }]))
     }
 }
 //#endregion 🔖️SortTable

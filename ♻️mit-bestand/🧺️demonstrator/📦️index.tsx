@@ -152,7 +152,7 @@ function demonstratorTintSegmentsPx(revealRect: RevealRectPx | null): readonly T
   if (holeBottom < vh) segments.push({ top: holeBottom, left: 0, width: vw, height: vh - holeBottom });
   if (holeLeft > 0) segments.push({ top: holeTop, left: 0, width: holeLeft, height: holeBottom - holeTop });
   if (holeRight < vw) segments.push({ top: holeTop, left: holeRight, width: vw - holeRight, height: holeBottom - holeTop });
-  return segments.length > 0 ? segments : [{ top: 0, left: 0, width: vw, height: vh }];
+  return segments;
 }
 //#endregion 🎪️DemonstratorGridGeometry
 
@@ -400,7 +400,11 @@ function DemonstratorPane({
   readonly onDirty: () => void;
   readonly onContainerElement: (id: string, el: HTMLDivElement | null) => void;
 }) {
-  const boot = useMemo(() => resolvePlaygroundBoot(pane.variant), [pane.variant]);
+  // Generator must boot the live `procedural` plugin module — the bundled `demonstrator` wasm is
+  // currently unblockable to rebuild (puzzle/gis compile errors) and its stale Aug-4 binary rejects
+  // mutations with `unknown fault`. Other panes stay on the demonstrator bundle.
+  const bootVariant = pane.variant === "generator" ? "procedural3d" : pane.variant;
+  const boot = useMemo(() => resolvePlaygroundBoot(bootVariant), [bootVariant]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   const live = booted && !suspended;
@@ -420,7 +424,7 @@ function DemonstratorPane({
       {live ? (
         <PaneErrorBoundary paneLabel={pane.label}>
           <FrameworkOsShell
-            pluginFilter={pane.variant}
+            pluginFilter={bootVariant}
             plugins={boot.plugins}
             appId={boot.defaultAppId}
             locks={locks}

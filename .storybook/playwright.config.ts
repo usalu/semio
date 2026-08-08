@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { playwrightTestTimeoutMs } from "../repo/lib/js/index.ts";
+import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib";
 // #endregion 🔌️Adapters
 
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");

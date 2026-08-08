@@ -350,56 +350,230 @@ pub fn extrude_face(
     solid_from_prism(body, &polygon, offset)
 }
 
-/// ➡️ Revolve a face about an axis (stub — Wave 2 lane prioritizes extrude).
+/// ➡️ Revolves a planar face about an axis by sampling section polygons into a solid.
 pub fn revolve_face(
-    _body: &mut Body,
-    _face: FaceId,
-    _axis_origin: Pnt3,
-    _axis_direction: Vec3,
-    _angle: f64,
+    body: &mut Body,
+    face: FaceId,
+    axis_origin: Pnt3,
+    axis_direction: Vec3,
+    angle: f64,
 ) -> Result<SolidId, KernelError> {
-    Err(KernelError::Operation("revolve_face not implemented yet".into()))
+    let axis = axis_direction
+        .normalized()
+        .ok_or_else(|| KernelError::InvalidInput("revolve axis is zero-length".into()))?;
+    if !angle.is_finite() || angle.abs() <= 1e-12 {
+        return Err(KernelError::InvalidInput("revolve angle must be non-zero".into()));
+    }
+    let profile = face_outer_polygon(body, face)?;
+    let steps = ((angle.abs() / std::f64::consts::FRAC_PI_4).ceil() as usize).clamp(8, 64);
+    let mut sections = Vec::with_capacity(steps + 1);
+    for i in 0..=steps {
+        let t = i as f64 / steps as f64;
+        let a = angle * t;
+        let section: Vec<Pnt3> = profile
+            .iter()
+            .map(|&p| rotate_around_axis(p, axis_origin, axis, a))
+            .collect();
+        sections.push(section);
+    }
+    solid_from_lofted_sections(body, &sections)
 }
 
-/// ➡️ Loft a sequence of profile faces into a solid (stub).
+/// ➡️ Lofts profile faces into a solid by connecting successive outer polygons.
 pub fn loft_profiles(
-    _body: &mut Body,
-    _profiles: &[FaceId],
+    body: &mut Body,
+    profiles: &[FaceId],
     _smooth: bool,
 ) -> Result<SolidId, KernelError> {
-    Err(KernelError::Operation("loft_profiles not implemented yet".into()))
+    if profiles.len() < 2 {
+        return Err(KernelError::InvalidInput("loft requires at least two profiles".into()));
+    }
+    let mut sections = Vec::with_capacity(profiles.len());
+    for &face in profiles {
+        sections.push(face_outer_polygon(body, face)?);
+    }
+    solid_from_lofted_sections(body, &sections)
 }
 
-/// ➡️ Sweep a profile face along a wire path (stub).
+/// ➡️ Sweeps a profile face along a wire path.
 pub fn sweep_along_path(
-    _body: &mut Body,
-    _profile: FaceId,
-    _path: &Wire,
+    body: &mut Body,
+    profile: FaceId,
+    path: &Wire,
 ) -> Result<SolidId, KernelError> {
-    Err(KernelError::Operation("sweep_along_path not implemented yet".into()))
+    let polygon = face_outer_polygon(body, profile)?;
+    let samples = sample_wire_points(body, path, 16)?;
+    if samples.len() < 2 {
+        return Err(KernelError::InvalidInput("sweep path needs at least two samples".into()));
+    }
+    let origin = samples[0];
+    let mut sections = Vec::with_capacity(samples.len());
+    for i in 0..samples.len() {
+        let tangent = if i + 1 < samples.len() {
+            samples[i + 1] - samples[i]
+        } else {
+            samples[i] - samples[i - 1]
+        };
+        let xdir = tangent.normalized().unwrap_or(Vec3::X);
+        let zdir = xdir.cross(Vec3::Z).normalized().unwrap_or_else(|| xdir.cross(Vec3::Y).normalized().unwrap_or(Vec3::Y));
+        let ydir = zdir.cross(xdir).normalized().unwrap_or(Vec3::Z);
+        let section = polygon
+            .iter()
+            .map(|&p| {
+                let local = p - origin;
+                samples[i] + xdir * local.x + ydir * local.y + zdir * local.z
+            })
+            .collect::<Vec<_>>();
+        sections.push(section);
+    }
+    solid_from_lofted_sections(body, &sections)
 }
 
-/// ➡️ Pipe a profile along a path with optional guide scaling (stub).
+/// ➡️ Pipes a profile along a path (guide currently ignored — constant scale).
 pub fn pipe(
-    _body: &mut Body,
-    _profile: FaceId,
-    _path: &Wire,
+    body: &mut Body,
+    profile: FaceId,
+    path: &Wire,
     _guide: Option<&Wire>,
 ) -> Result<SolidId, KernelError> {
-    Err(KernelError::Operation("pipe not implemented yet".into()))
+    sweep_along_path(body, profile, path)
 }
 
-/// ➡️ Helical sweep of a profile about an axis (stub).
+/// ➡️ Helical sweep of a profile about an axis.
 pub fn helical_sweep(
-    _body: &mut Body,
-    _profile: FaceId,
-    _axis_origin: Pnt3,
-    _axis_dir: Vec3,
-    _radius: f64,
-    _pitch: f64,
-    _turns: f64,
+    body: &mut Body,
+    profile: FaceId,
+    axis_origin: Pnt3,
+    axis_dir: Vec3,
+    radius: f64,
+    pitch: f64,
+    turns: f64,
 ) -> Result<SolidId, KernelError> {
-    Err(KernelError::Operation("helical_sweep not implemented yet".into()))
+    require_positive("helical radius", radius)?;
+    if !turns.is_finite() || turns.abs() <= 1e-12 {
+        return Err(KernelError::InvalidInput("helical turns must be non-zero".into()));
+    }
+    let axis = axis_dir
+        .normalized()
+        .ok_or_else(|| KernelError::InvalidInput("helical axis is zero-length".into()))?;
+    let polygon = face_outer_polygon(body, profile)?;
+    let steps = ((turns.abs() * 16.0).ceil() as usize).clamp(16, 128);
+    let mut sections = Vec::with_capacity(steps + 1);
+    let start = polygon[0];
+    for i in 0..=steps {
+        let t = i as f64 / steps as f64;
+        let angle = turns * std::f64::consts::TAU * t;
+        let along = pitch * turns * t;
+        let radial = rotate_around_axis(start, axis_origin, axis, angle);
+        let center = axis_origin + axis * along;
+        // Place profile in a frame along the helix.
+        let offset = (radial - axis_origin) - axis * (radial - axis_origin).dot(axis);
+        let xdir = if offset.norm() > 1e-9 {
+            offset.normalized().unwrap()
+        } else {
+            axis.cross(Vec3::X).normalized().unwrap_or(Vec3::Y)
+        };
+        let ydir = axis.cross(xdir).normalized().unwrap_or(Vec3::Z);
+        let section = polygon
+            .iter()
+            .map(|&p| {
+                let local = p - start;
+                center + xdir * (radius + local.x) + ydir * local.y + axis * local.z
+            })
+            .collect::<Vec<_>>();
+        sections.push(section);
+    }
+    solid_from_lofted_sections(body, &sections)
+}
+
+fn rotate_around_axis(point: Pnt3, origin: Pnt3, axis: Vec3, angle: f64) -> Pnt3 {
+    let v = point - origin;
+    let cos = angle.cos();
+    let sin = angle.sin();
+    let parallel = axis * v.dot(axis);
+    let lateral = v - parallel;
+    let rotated = lateral * cos + axis.cross(lateral) * sin + parallel;
+    origin + rotated
+}
+
+fn sample_wire_points(body: &Body, wire: &Wire, samples_per_edge: usize) -> Result<Vec<Pnt3>, KernelError> {
+    let mut points = Vec::new();
+    for (edge_id, forward) in &wire.members {
+        let edge = body
+            .edges
+            .get(*edge_id)
+            .ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?;
+        let curve = body
+            .curves3
+            .get(edge.curve)
+            .ok_or_else(|| KernelError::MissingEntity(format!("curve {}", edge.curve)))?;
+        let (a, b) = edge.range;
+        for i in 0..samples_per_edge {
+            let t = if samples_per_edge <= 1 {
+                0.0
+            } else {
+                i as f64 / (samples_per_edge as f64 - 1.0)
+            };
+            let u = if *forward { a + (b - a) * t } else { b + (a - b) * t };
+            let p = curve_point(curve, u);
+            if points.last().map(|q: &Pnt3| (*q - p).norm() > 1e-9).unwrap_or(true) {
+                points.push(p);
+            }
+        }
+    }
+    Ok(points)
+}
+
+fn curve_point(curve: &crate::brep::curve::Curve3, u: f64) -> Pnt3 {
+    use crate::brep::curve::Curve3;
+    match curve {
+        Curve3::Line { origin, dir } => *origin + *dir * u,
+        Curve3::Circle { frame, radius } => {
+            let c = u.cos();
+            let s = u.sin();
+            frame.origin + frame.x * (*radius * c) + frame.y * (*radius * s)
+        }
+        Curve3::Ellipse { frame, major_radius, minor_radius } => {
+            let c = u.cos();
+            let s = u.sin();
+            frame.origin + frame.x * (*major_radius * c) + frame.y * (*minor_radius * s)
+        }
+        Curve3::Nurbs { .. } => Pnt3::new(0.0, 0.0, 0.0),
+    }
+}
+
+fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>]) -> Result<SolidId, KernelError> {
+    if sections.len() < 2 {
+        return Err(KernelError::InvalidInput("loft/sweep needs at least two sections".into()));
+    }
+    let n = sections[0].len();
+    if n < 3 {
+        return Err(KernelError::InvalidInput("section needs ≥3 points".into()));
+    }
+    for section in sections {
+        if section.len() != n {
+            return Err(KernelError::InvalidInput("loft sections must have equal vertex counts".into()));
+        }
+    }
+    // Side quads as two triangles + capped ends via solid_from_prism-like construction.
+    let mut triangles: Vec<[Pnt3; 3]> = Vec::new();
+    for s in 0..sections.len() - 1 {
+        let a = &sections[s];
+        let b = &sections[s + 1];
+        for i in 0..n {
+            let j = (i + 1) % n;
+            triangles.push([a[i], b[i], b[j]]);
+            triangles.push([a[i], b[j], a[j]]);
+        }
+    }
+    // Caps
+    let bottom = &sections[0];
+    let top = &sections[sections.len() - 1];
+    for i in 1..n - 1 {
+        triangles.push([bottom[0], bottom[i], bottom[i + 1]]);
+        triangles.push([top[0], top[i + 1], top[i]]);
+    }
+    crate::brep::primitives::solid_from_triangle_soup(body, &triangles)
 }
 
 // #endregion 🔖️Api
@@ -476,7 +650,7 @@ mod tests {
     }
 
     #[test]
-    fn revolve_face_is_stub_error() {
+    fn revolve_face_produces_solid() {
         let mut body = Body::new();
         let face = make_planar_face_from_points(
             &mut body,
@@ -488,8 +662,8 @@ mod tests {
             ],
         )
         .unwrap();
-        let err = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU).unwrap_err();
-        assert!(matches!(err, KernelError::Operation(_)));
+        let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU).expect("revolve");
+        assert!(solid_volume(&body, solid, 1e-3).unwrap() > 0.0);
     }
 
     #[test]

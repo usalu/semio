@@ -1,8 +1,8 @@
 //! 🎥️ FEM 3D app commands — the world-3d camera, config-only view state that never touches the
 //! document.
 
-use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigOperation};
-use crate::artifacts::fem3d::op::Fem3dOperation;
+use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_camera {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Fem3dConfigOperation::SetCamera { camera: FemCamera { json: payload.json.clone() } }]))
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Fem3dConfigMutation::SetCamera { camera: FemCamera { json: payload.json.clone() } }]))
     }
 }
 //#endregion 🔖️SetCamera
@@ -31,7 +31,7 @@ mod tests {
     use crate::apps::fem3d::Fem3dCommand;
 
     #[test]
-    fn set_camera_action_writes_config_not_document_operations() {
+    fn set_camera_action_writes_config_not_document_mutations() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetCamera(set_camera::SetCamera { json: "{\"x\":1}".into() }));
         // 🎥️ `VcsDocumentApp` exposes no config accessor — assert the config-only effect through render

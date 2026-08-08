@@ -8,30 +8,30 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::layout::op::LayoutOperation;
+use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutDocument;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
-/// 📦️ Operation-list diff: layout operations fold sequentially over a cloned projection. `absorb`
+/// 📦️ Mutation-list diff: layout mutations fold sequentially over a cloned projection. `absorb`
 /// concatenates — sequential edits replay forwards in order.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LayoutDiff {
-    pub operations: Vec<LayoutOperation>,
+    pub mutations: Vec<LayoutMutation>,
 }
 
-impl OperationDiff<LayoutDocument> for LayoutDiff {
+impl MutationDiff<LayoutDocument> for LayoutDiff {
     fn apply(&self, projection: &LayoutDocument) -> LayoutDocument {
         let mut next = projection.clone();
-        for operation in &self.operations {
-            crate::artifacts::layout::op::apply_layout_operation(&mut next, operation);
+        for mutation in &self.mutations {
+            crate::artifacts::layout::mutations::apply_layout_mutation(&mut next, mutation);
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.operations.extend(other.operations);
+        self.mutations.extend(other.mutations);
     }
 }
 //#endregion 🔖️Diff
@@ -40,7 +40,7 @@ impl OperationDiff<LayoutDocument> for LayoutDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::Operation;
+    use protocol::Mutation;
 
     /// ⚖️ LAW: `op.diff(base)` applied to `base` equals applying the operation directly.
     #[test]
@@ -59,18 +59,18 @@ mod tests {
             print_target: None,
             data_fields_json: None,
         };
-        let operation = LayoutOperation::SetDataFields { json: Some("{}".into()) };
+        let operation = LayoutMutation::SetDataFields { json: Some("{}".into()) };
         let diff: LayoutDiff = operation.diff(&base);
-        assert_eq!(diff.operations.len(), 1);
+        assert_eq!(diff.mutations.len(), 1);
         let applied = diff.apply(&base);
         assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));
     }
 
     #[test]
     fn absorb_concatenates_operations_in_order() {
-        let mut diff = LayoutDiff { operations: vec![LayoutOperation::SetDataFields { json: Some("a".into()) }] };
-        diff.absorb(LayoutDiff { operations: vec![LayoutOperation::SetDataFields { json: Some("b".into()) }] });
-        assert_eq!(diff.operations.len(), 2);
+        let mut diff = LayoutDiff { mutations: vec![LayoutMutation::SetDataFields { json: Some("a".into()) }] };
+        diff.absorb(LayoutDiff { mutations: vec![LayoutMutation::SetDataFields { json: Some("b".into()) }] });
+        assert_eq!(diff.mutations.len(), 2);
     }
 }
 //#endregion 🧪️Tests

@@ -292,3 +292,37 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+use crate::artifacts::mathematical::MathProjection;
+
+pub struct MathEngine {
+    projection: MathProjection,
+}
+
+impl MathEngine {
+    pub fn new(projection: MathProjection) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for MathEngine {
+    type Projection = MathProjection;
+    type Mutation = crate::artifacts::mathematical::mutations::MathMutation;
+    type Diff = crate::artifacts::mathematical::diff::MathDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::mathematical::mutations::apply_math_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

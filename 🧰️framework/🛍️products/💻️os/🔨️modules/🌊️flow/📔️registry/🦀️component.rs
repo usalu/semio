@@ -94,7 +94,7 @@ struct ContributedExtensionStub {
     operator_id: String,
 }
 
-impl neural::Operation for ContributedExtensionStub {
+impl neural::Operator for ContributedExtensionStub {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let node_hash = neural::node_hash(&self.operator_id, input);
         Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
@@ -116,7 +116,7 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         let operator_id = info.id.clone();
         registry.register_operator(
             info,
-            vec![OperatorImpl { schemas: vec![], operation: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
+            vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
             &[],
         );
     }

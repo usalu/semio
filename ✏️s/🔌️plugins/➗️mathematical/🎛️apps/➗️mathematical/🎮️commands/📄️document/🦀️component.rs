@@ -1,8 +1,8 @@
 //! 📄️ Mathematical play app commands — replacing the whole document (graph + geometry) in one go.
 
-use crate::apps::mathematical::config::{MathConfig, MathConfigOperation};
+use crate::apps::mathematical::config::{MathConfig, MathConfigMutation};
 use crate::artifacts::mathematical::dsl::MathGraphDsl;
-use crate::artifacts::mathematical::op::MathOperation;
+use crate::artifacts::mathematical::op::MathMutation;
 use crate::artifacts::mathematical::{MathGeometry, MathProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,19 +20,19 @@ pub mod set_document {
         pub geometry: MathGeometry,
     }
 
-    pub fn handle(payload: &SetDocument, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
+    pub fn handle(payload: &SetDocument, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
         let projection = doc.projection;
         let Ok(graph) = crate::artifacts::mathematical::dsl::math_graph_from_dsl(payload.graph.clone()) else {
             return Ok(Emit::default());
         };
         let mut operations = Vec::new();
         if graph != projection.graph {
-            operations.push(MathOperation::SetGraph { graph });
+            operations.push(MathMutation::SetGraph { graph });
         }
         if payload.geometry != projection.geometry {
-            operations.push(MathOperation::SetGeometry { geometry: payload.geometry.clone() });
+            operations.push(MathMutation::SetGeometry { geometry: payload.geometry.clone() });
         }
-        Ok(Emit::operations(operations))
+        Ok(Emit::mutations(operations))
     }
 }
 //#endregion 🔖️SetDocument

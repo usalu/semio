@@ -1,5 +1,5 @@
 //! 📡️ `trinity.rewrite.rule` artifact — binary command protocol surface + laws (constitutional:
-//! spr, renamed from the old `📡️protocol` — no `📡️protocol` segment survives). `RewriteRuleOperation`
+//! spr, renamed from the old `📡️protocol` — no `📡️protocol` segment survives). `RewriteRuleMutation`
 //! already derives `dsl::DslOps` directly (see `🔧️op`), so this file is a pure wrapper, unlike
 //! `jack`'s `📡️spr` which needs a full DSL mirror.
 
@@ -11,15 +11,15 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::rewrite::op::RewriteRuleOperation;
+use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `RewriteRuleOperation` to its binary command form.
-pub fn encode_op(operation: &RewriteRuleOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `RewriteRuleMutation` to its binary command form.
+pub fn encode_op(operation: &RewriteRuleMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `RewriteRuleOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<RewriteRuleOperation, protocol::ProtocolError> {
-    RewriteRuleOperation::decode_op(bytes)
+/// 📖️ Decodes a `RewriteRuleMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<RewriteRuleMutation, protocol::ProtocolError> {
+    RewriteRuleMutation::decode_op(bytes)
 }

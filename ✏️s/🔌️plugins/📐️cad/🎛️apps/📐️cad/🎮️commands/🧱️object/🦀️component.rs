@@ -1,12 +1,12 @@
 //! 🧱️ CAD play app commands — object lifecycle: create, patch (single and multi-selection), delete, duplicate.
 
-use crate::apps::cad::config::{CadConfig, CadConfigOperation};
+use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::op::CadOperation;
+use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use crate::apps::cad::{command_value_json, ids_or_selection, make_object_for_typology, patch_objects_operations, runtime_of, snapshot_of};
+use crate::apps::cad::{command_value_json, ids_or_selection, make_object_for_typology, patch_objects_mutations, runtime_of, snapshot_of};
 use crate::artifacts::cad::engine::next_cad_id;
 use crate::artifacts::cad::{cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects, CadPaneId};
 use semio_framework_plugin::SelectionSet;
@@ -23,15 +23,15 @@ pub mod add_object {
         pub typology: Option<String>,
     }
 
-    pub fn handle(payload: &AddObject, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &AddObject, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.projection;
         let mut runtime = runtime_of(cfg);
         let typology = payload.typology.as_deref().unwrap_or("spatial.shape.primitive.box");
         let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
         let object = make_object_for_typology(typology, cad_pane_objects(document, pane).len(), pane);
         runtime.selected_object_ids = SelectionSet::from(vec![object.id.clone()]);
-        let mut emit = Emit::operations(vec![CadOperation::AddObject { pane, object }]);
-        emit.config_operations = vec![snapshot_of(&runtime, cfg.projection)];
+        let mut emit = Emit::mutations(vec![CadMutation::AddObject { pane, object }]);
+        emit.config_mutations = vec![snapshot_of(&runtime, cfg.projection)];
         Ok(emit)
     }
 }
@@ -50,10 +50,10 @@ pub mod patch_object {
         pub delta: Option<f64>,
     }
 
-    pub fn handle(payload: &PatchObject, doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchObject, doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
         let delta_json = payload.delta.map(|entry| json!(entry));
-        Ok(Emit::operations(patch_objects_operations(doc.projection, std::slice::from_ref(&payload.object_id), &payload.field, value_json.as_ref(), delta_json.as_ref())))
+        Ok(Emit::mutations(patch_objects_mutations(doc.projection, std::slice::from_ref(&payload.object_id), &payload.field, value_json.as_ref(), delta_json.as_ref())))
     }
 }
 //#endregion 🔖️PatchObject
@@ -71,12 +71,12 @@ pub mod patch_selection {
         pub delta: Option<f64>,
     }
 
-    pub fn handle(payload: &PatchSelection, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchSelection, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let runtime = runtime_of(cfg);
         let ids = ids_or_selection(&payload.object_ids, runtime.selected_object_ids.as_slice());
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
         let delta_json = payload.delta.map(|entry| json!(entry));
-        Ok(Emit::operations(patch_objects_operations(doc.projection, &ids, &payload.field, value_json.as_ref(), delta_json.as_ref())))
+        Ok(Emit::mutations(patch_objects_mutations(doc.projection, &ids, &payload.field, value_json.as_ref(), delta_json.as_ref())))
     }
 }
 //#endregion 🔖️PatchSelection
@@ -91,13 +91,13 @@ pub mod delete_object {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &DeleteObject, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &DeleteObject, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.projection;
         let mut runtime = runtime_of(cfg);
         if let Some(pane) = cad_find_object_pane(document, &payload.object_id) {
             runtime.selected_object_ids.remove_id(&payload.object_id);
-            let mut emit = Emit::operations(vec![CadOperation::RemoveObject { pane, object_id: payload.object_id.clone() }]);
-            emit.config_operations = vec![snapshot_of(&runtime, cfg.projection)];
+            let mut emit = Emit::mutations(vec![CadMutation::RemoveObject { pane, object_id: payload.object_id.clone() }]);
+            emit.config_mutations = vec![snapshot_of(&runtime, cfg.projection)];
             return Ok(emit);
         }
         Ok(Emit::default())
@@ -115,7 +115,7 @@ pub mod duplicate_object {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &DuplicateObject, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &DuplicateObject, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.projection;
         let mut runtime = runtime_of(cfg);
         let duplicate_target = cad_all_objects(document).find(|(object, _)| object.id == payload.object_id).map(|(object, pane)| (object.clone(), pane));
@@ -123,8 +123,8 @@ pub mod duplicate_object {
             duplicate.id = next_cad_id("object");
             duplicate.label = format!("{} copy", duplicate.label);
             runtime.selected_object_ids = SelectionSet::from(vec![duplicate.id.clone()]);
-            let mut emit = Emit::operations(vec![CadOperation::AddObject { pane, object: duplicate }]);
-            emit.config_operations = vec![snapshot_of(&runtime, cfg.projection)];
+            let mut emit = Emit::mutations(vec![CadMutation::AddObject { pane, object: duplicate }]);
+            emit.config_mutations = vec![snapshot_of(&runtime, cfg.projection)];
             return Ok(emit);
         }
         Ok(Emit::default())

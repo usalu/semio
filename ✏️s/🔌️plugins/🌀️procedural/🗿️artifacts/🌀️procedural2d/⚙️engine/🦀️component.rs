@@ -61,7 +61,7 @@ pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalS
 /// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
 /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
 /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
-pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::artifacts::procedural2d::op::Procedural2dOperation> {
+pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::artifacts::procedural2d::op::Procedural2dMutation> {
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();
     mutate(&mut host);
@@ -329,3 +329,36 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("procedural2d.spr"),
     });
 }
+
+
+//#region 🔖️ArtifactEngine
+pub struct Procedural2dEngine {
+    projection: crate::artifacts::procedural2d::Procedural2dDocument,
+}
+
+impl Procedural2dEngine {
+    pub fn new(projection: crate::artifacts::procedural2d::Procedural2dDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Procedural2dEngine {
+    type Projection = crate::artifacts::procedural2d::Procedural2dDocument;
+    type Mutation = crate::artifacts::procedural2d::mutations::Procedural2dMutation;
+    type Diff = crate::artifacts::procedural2d::diff::Procedural2dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::procedural2d::mutations::apply_procedural2d_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

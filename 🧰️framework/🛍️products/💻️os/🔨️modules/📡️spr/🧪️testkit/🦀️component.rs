@@ -155,7 +155,7 @@ impl HistoryLogGen {
             for _ in 0..op_count {
                 ops.push(crate::os_spr::OpPayload { text: Some(next_text(&mut rng, profile.adversarial)), binary: None });
             }
-            edits.push(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, backwards: Vec::new(), meta: None });
+            edits.push(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse: Vec::new(), meta: None });
         }
 
         let mut changes: Vec<crate::os_spr::HistoryChange> = Vec::new();
@@ -234,25 +234,25 @@ impl OpDagGen {
     /// strictly earlier-indexed operations — dependencies always reference a smaller index, so the
     /// result is by construction a closed, acyclic dependency graph over exactly this returned set
     /// (every id a dependency names is itself present in the returned `Vec`).
-    pub fn generate(&mut self, node_count: usize) -> Vec<crate::os_spr::OperationEnvelope> {
+    pub fn generate(&mut self, node_count: usize) -> Vec<crate::os_spr::MutationEnvelope> {
         let mut rng = SplitMix64(self.state);
         let mut envelopes = Vec::with_capacity(node_count);
         for i in 0..node_count {
             let dep_count = if i == 0 { 0 } else { rng.next_range(3.min(i as u64 + 1)) as usize };
-            let mut dependencies: Vec<crate::os_spr::OperationId> = Vec::with_capacity(dep_count);
+            let mut dependencies: Vec<crate::os_spr::MutationId> = Vec::with_capacity(dep_count);
             for _ in 0..dep_count {
-                let dep_id = crate::os_spr::OperationId(format!("op-{}", rng.next_range(i as u64)));
+                let dep_id = crate::os_spr::MutationId(format!("op-{}", rng.next_range(i as u64)));
                 if !dependencies.contains(&dep_id) {
                     dependencies.push(dep_id);
                 }
             }
-            envelopes.push(crate::os_spr::OperationEnvelope {
-                operation_id: crate::os_spr::OperationId(format!("op-{i}")),
+            envelopes.push(crate::os_spr::MutationEnvelope {
+                mutation_id: crate::os_spr::MutationId(format!("op-{i}")),
                 document_id: crate::os_spr::DocumentId("doc-1".to_string()),
                 actor: crate::os_spr::ActorId(format!("actor-{}", rng.next_range(4))),
                 dependencies,
                 diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
-                inverse: crate::os_spr::InverseOperation { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: Vec::new() },
+                inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: Vec::new() },
                 timestamp: crate::os_spr::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),
             });
         }
@@ -507,29 +507,29 @@ fn fisher_yates_shuffle(rng: &mut SplitMix64, items: &mut [usize]) {
     }
 }
 
-/// ✅️ LAW: `OpDag` converges to the same fully-applied set regardless of insertion order, for
+/// ✅️ LAW: `MutationDag` converges to the same fully-applied set regardless of insertion order, for
 /// `permutation_count` random shuffles of `envelopes` (which must form a closed dependency set —
 /// see `OpDagGen::generate`).
-pub fn assert_op_dag_convergence(envelopes: &[crate::os_spr::OperationEnvelope], seed: u64, permutation_count: usize) {
-    let expected: std::collections::BTreeSet<String> = envelopes.iter().map(|envelope| envelope.operation_id.0.clone()).collect();
+pub fn assert_op_dag_convergence(envelopes: &[crate::os_spr::MutationEnvelope], seed: u64, permutation_count: usize) {
+    let expected: std::collections::BTreeSet<String> = envelopes.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
     let mut rng = SplitMix64(seed);
     for _ in 0..permutation_count.max(1) {
         let mut order: Vec<usize> = (0..envelopes.len()).collect();
         fisher_yates_shuffle(&mut rng, &mut order);
 
-        let mut dag = crate::os_spr::OpDag::new();
+        let mut dag = crate::os_spr::MutationDag::new();
         for index in order {
             dag.insert(envelopes[index].clone()).expect("a closed dependency set inserted with unique ids must never duplicate");
         }
-        let applied: std::collections::BTreeSet<String> = dag.drain_applied_envelopes().iter().map(|envelope| envelope.operation_id.0.clone()).collect();
-        assert_eq!(applied, expected, "OpDag must converge to the same fully-applied set regardless of insertion order");
+        let applied: std::collections::BTreeSet<String> = dag.drain_applied_envelopes().iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
+        assert_eq!(applied, expected, "MutationDag must converge to the same fully-applied set regardless of insertion order");
     }
 }
 
 /// ✅️ LAW: `merge_concurrent_diffs(strategy, a, b, ..) == merge_concurrent_diffs(strategy, b, a, ..)`.
-pub fn assert_crdt_commutative<P, D>(strategy: crate::os_spr::MergeStrategyKind, a: D, b: D, meta_a: &crate::os_spr::OperationMeta, meta_b: &crate::os_spr::OperationMeta)
+pub fn assert_crdt_commutative<P, D>(strategy: crate::os_spr::MergeStrategyKind, a: D, b: D, meta_a: &crate::os_spr::MutationMeta, meta_b: &crate::os_spr::MutationMeta)
 where
-    D: crate::os_spr::OperationDiff<P> + PartialEq + std::fmt::Debug,
+    D: crate::os_spr::MutationDiff<P> + PartialEq + std::fmt::Debug,
 {
     let forward = crate::os_spr::merge_concurrent_diffs(strategy, a.clone(), b.clone(), meta_a, meta_b);
     let backward = crate::os_spr::merge_concurrent_diffs(strategy, b, a, meta_b, meta_a);
@@ -537,9 +537,9 @@ where
 }
 
 /// ✅️ LAW: `merge_concurrent_diffs(strategy, a, a, ..) == a`.
-pub fn assert_crdt_idempotent<P, D>(strategy: crate::os_spr::MergeStrategyKind, a: &D, meta_a: &crate::os_spr::OperationMeta)
+pub fn assert_crdt_idempotent<P, D>(strategy: crate::os_spr::MergeStrategyKind, a: &D, meta_a: &crate::os_spr::MutationMeta)
 where
-    D: crate::os_spr::OperationDiff<P> + PartialEq + std::fmt::Debug,
+    D: crate::os_spr::MutationDiff<P> + PartialEq + std::fmt::Debug,
 {
     let merged = crate::os_spr::merge_concurrent_diffs(strategy, a.clone(), a.clone(), meta_a, meta_a);
     assert_eq!(&merged, a, "merge_concurrent_diffs must be idempotent for {strategy:?}");
@@ -672,9 +672,9 @@ mod tests {
     fn op_dag_gen_produces_a_closed_topologically_orderable_set() {
         let envelopes = OpDagGen::new(11).generate(30);
         assert_eq!(envelopes.len(), 30);
-        let known: std::collections::HashSet<String> = envelopes.iter().map(|envelope| envelope.operation_id.0.clone()).collect();
+        let known: std::collections::HashSet<String> = envelopes.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
         for (index, envelope) in envelopes.iter().enumerate() {
-            assert_eq!(envelope.operation_id.0, format!("op-{index}"));
+            assert_eq!(envelope.mutation_id.0, format!("op-{index}"));
             for dependency in &envelope.dependencies {
                 assert!(known.contains(&dependency.0), "every dependency must reference a node within the generated set");
                 let dep_index: usize = dependency.0.strip_prefix("op-").unwrap().parse().unwrap();
@@ -812,13 +812,13 @@ mod tests {
     //#endregion 🏃️exhaustive
 
     //#region 🧸️Fixtures
-    // Dummy (P=i64, Op=AddOp) pair, the smallest possible Operation/OperationDiff/OpText impl —
+    // Dummy (P=i64, Op=AddOp) pair, the smallest possible Mutation/MutationDiff/OpText impl —
     // mirrors the fixture pattern `protocol_command`/`protocol_causal`'s own inline tests use.
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
     struct AddDiff {
         delta: i64,
     }
-    impl crate::os_spr::OperationDiff<i64> for AddDiff {
+    impl crate::os_spr::MutationDiff<i64> for AddDiff {
         fn apply(&self, base: &i64) -> i64 {
             base + self.delta
         }
@@ -831,12 +831,12 @@ mod tests {
     struct AddOp {
         delta: i64,
     }
-    impl crate::os_spr::Operation<i64> for AddOp {
+    impl crate::os_spr::Mutation<i64> for AddOp {
         type Diff = AddDiff;
         fn diff(&self, _base: &i64) -> AddDiff {
             AddDiff { delta: self.delta }
         }
-        fn backwards(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![AddOp { delta: -self.delta }]
         }
     }
@@ -858,7 +858,7 @@ mod tests {
         field_a: Option<i64>,
         field_b: Option<i64>,
     }
-    impl crate::os_spr::OperationDiff<(i64, i64)> for RegisterDiff {
+    impl crate::os_spr::MutationDiff<(i64, i64)> for RegisterDiff {
         fn apply(&self, base: &(i64, i64)) -> (i64, i64) {
             (self.field_a.unwrap_or(base.0), self.field_b.unwrap_or(base.1))
         }
@@ -872,9 +872,9 @@ mod tests {
         }
     }
 
-    fn meta_at(actor: u64, physical_ms: u64) -> crate::os_spr::OperationMeta {
-        crate::os_spr::OperationMeta {
-            operation_id: None,
+    fn meta_at(actor: u64, physical_ms: u64) -> crate::os_spr::MutationMeta {
+        crate::os_spr::MutationMeta {
+            mutation_id: None,
             dependencies: Vec::new(),
             base_version: 0,
             author_id: None,
@@ -894,12 +894,12 @@ mod tests {
 
     #[test]
     fn operation_diff_apply_matches_backwards_inverse() {
-        use crate::os_spr::{Operation, OperationDiff};
+        use crate::os_spr::{Mutation, MutationDiff};
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
         let forward = op.diff(&base).apply(&base);
         assert_eq!(forward, 15);
-        let [undo] = <[AddOp; 1]>::try_from(op.backwards(&base)).unwrap();
+        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
         assert_eq!(undo.diff(&forward).apply(&forward), base);
     }
 

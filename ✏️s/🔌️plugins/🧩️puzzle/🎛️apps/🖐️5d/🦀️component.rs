@@ -13,24 +13,25 @@
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
 use crate::apps::puzzle5d::commands::{board, brush, camera, engagement, example, fill, grid, hover, lod, part, patch, selection as selection_commands, sun, transform, utility};
-use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigOperation, Puzzle5dRuntime, Puzzle5dSelection};
+use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime, Puzzle5dSelection};
 use crate::apps::puzzle5d::modes::edit;
 use crate::apps::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::apps::puzzle5d::panels::{catalogue, document as document_panel, inspection};
 use crate::apps::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
 use crate::artifacts::puzzle5d::engine::{BrushPlacePayload, Puzzle5dPrecomputeSession};
-use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dOperation, Puzzle5dPlayProjection};
+use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlayProjection};
 use crate::artifacts::puzzle5d::Puzzle5dProjection;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DraftView, NoDraft, NoDraftMutation, DocumentView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, SelectionSet, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
 };
-use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::LazyLock;
 
 //#region 🔖️Constants
 pub const PUZZLE5D_PLAY_APP_ID: &str = "puzzle5d-play";
@@ -38,8 +39,8 @@ pub const PUZZLE5D_PLAY_CONTROLLER_ID: &str = "puzzle5d-play";
 pub const PUZZLE5D_PLAY_WINDOWS: [&str; 2] = [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID];
 pub const PUZZLE5D_SCHEMA: &str = "puzzle.5d";
 pub const PUZZLE5D_BOARD_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
-pub const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = crate::examples::puzzle5d::concrete_forest::ID;
-pub const PUZZLE5D_EXAMPLE_NAKAGIN: &str = crate::examples::puzzle5d::nakagin_capsule_tower::ID;
+pub const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
+pub const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
 
 pub const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
 /// 🧰️ Host-owned active utility (`Puzzle5dConfig::active_utility_by_window_id`) when the host hasn't set one yet — the first declared utility.
@@ -58,32 +59,27 @@ pub const PUZZLE5D_PROXIMITY_RADIUS: f64 = 0.75;
 /// `crate::artifacts::puzzle5d::Puzzle5dProjection` — see that artifact's `🔖️ValueBridge` region — so
 /// the DSL-text example fixtures are parsed once into the typed projection and re-serialized to the
 /// JSON string this module's `document_from_json`/`.example(...)` call sites expect.
-fn concrete_forest_example_json() -> String { parse_example_dsl(crate::examples::puzzle5d::concrete_forest::DSL_TEXT, "concrete-forest") }
-pub(crate) fn nakagin_example_json() -> String { parse_example_dsl(crate::examples::puzzle5d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
+pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
+pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle5dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     serde_json::to_string(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"))
 }
 
+static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 pub fn next_part_id() -> String {
-    let next = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
+    let next = PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("part-{next}")
 }
 
 pub fn next_fastener_id() -> String {
-    let next = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
+    let next = PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("fastener-{next}")
 }
 //#endregion 🔖️Constants
@@ -230,14 +226,14 @@ pub fn document_from_json(json_text: &str) -> Puzzle5dDocument {
 }
 
 pub fn default_document() -> Puzzle5dDocument {
-    document_from_json(concrete_forest_example_json().as_str())
+    document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str())
 }
 
 /// 🧮️ Document ops for a document mutation — normalizes `before` through the same typed
 /// round-trip as `after` so View-kind actions that only touch runtime never trip the
 /// "must not emit operations" guard when the live store still holds a typed-projection-shaped
 /// projection from a prior op apply.
-pub fn puzzle5d_operations_from_document_change(before: &Value, after_document: &Puzzle5dDocument) -> Vec<Puzzle5dOperation> {
+pub fn puzzle5d_operations_from_document_change(before: &Value, after_document: &Puzzle5dDocument) -> Vec<Puzzle5dMutation> {
     let before_normalized = serde_json::to_value(serde_json::from_value::<Puzzle5dDocument>(before.clone()).unwrap_or_else(|_| empty_document())).unwrap_or_else(|_| before.clone());
     let after = serde_json::to_value(after_document).unwrap_or_else(|_| before_normalized.clone());
     puzzle5d_document_delta_operations(&before_normalized, &after)
@@ -1120,7 +1116,7 @@ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels
 
 //#region 🔖️Puzzle5dCommand
 /// @emoji 🎯️ B1: `Puzzle5dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
-/// action (mirrors every `.operation(...)`/`.view_action(...)` id `create_puzzle5d_app` registers,
+/// action (mirrors every `.mutation(...)`/`.view_action(...)` id `create_puzzle5d_app` registers,
 /// plus the framework-injected `SET_ACTIVE_UTILITY_ACTION_ID`). Each variant carries `window_id` (was
 /// host-pushed `view_state.window_id`) plus `args` (the action's original `{...}` JSON payload,
 /// unchanged) — `handle` reconstructs the exact `(action, args, window_id)` triple every
@@ -1266,28 +1262,52 @@ pub struct Puzzle5dActionCtx<'a> {
 /// per-call scratch, never VCS-tracked; the persisted document (bare `Puzzle5dDocument` json) lives in
 /// the wrapping `VcsDocumentApp`'s document store, and the ephemeral view state lives in the wrapping
 /// store's real, VCS-tracked `Puzzle5dConfig` artifact (see `🦀️config.rs`) — every read comes from
-/// `cfg.projection`, every write flows out as a `Puzzle5dConfigOperation` in the returned `Emit`.
+/// `cfg.projection`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`.
 /// Each action mutates a transient {@link Puzzle5dScene}, then emits the granular operation delta.
 /// Undo/redo/checkpoints are handled by the wrapper.
-pub #[derive(Default, Clone, Copy)]
-struct Puzzle5dPlayApp;
-
-impl Default for Puzzle5dPlayApp
+thread_local! {
+    /// 🧠 Long-lived play session — `DocumentApp` methods are associated fns (no `&self`),
+    /// so the precompute session lives here until `EngineHandles` carries it.
+    static PUZZLE5D_PLAY_SESSION: RefCell<Puzzle5dPlayApp> = RefCell::new(Puzzle5dPlayApp::default());
 }
 
-impl Puzzle5dPlayApp
+fn with_puzzle5d_app<R>(f: impl FnOnce(&Puzzle5dPlayApp) -> R) -> R {
+    PUZZLE5D_PLAY_SESSION.with(|app| f(&app.borrow()))
+}
+
+pub struct Puzzle5dPlayApp {
+    pub precompute: RefCell<Puzzle5dPrecomputeSession>,
+    pub registered_mesh_urls: RefCell<HashSet<String>>,
+}
+
+impl Default for Puzzle5dPlayApp {
+    fn default() -> Self {
+        Self { precompute: RefCell::new(Puzzle5dPrecomputeSession::new()), registered_mesh_urls: RefCell::new(HashSet::new()) }
+    }
+}
+
+impl Puzzle5dPlayApp {
+    pub fn drive_precompute(&self, envelope: &Puzzle5dScene) {
+        let _ = self.precompute.borrow_mut().set_scene(&scene_config_json(envelope));
+        // 🧊️ Guarded by `has_mesh` (mirrors the puzzle3d path): `register_mesh` now invalidates the
+        // precompute cache, so re-registering the same fallback body on every drive would wipe
+        // suggestion/fill progress every call and defeat `set_scene`'s idempotence above.
+        if !self.precompute.borrow_mut().has_mesh(PUZZLE5D_FALLBACK_MESH_KIND) {
+            let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
+            self.precompute.borrow_mut().register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+        }
         for url in collect_mesh_urls(&envelope.document) {
-            if !(std::cell::RefCell::new(std::collections::HashSet::<String>::new())).borrow_mut().contains(&url) && !(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().has_mesh(&url) {
+            if !self.registered_mesh_urls.borrow_mut().contains(&url) && !self.precompute.borrow_mut().has_mesh(&url) {
                 let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
-                (std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().register_mesh(&url, &fallback.positions, &fallback.indices);
+                self.precompute.borrow_mut().register_mesh(&url, &fallback.positions, &fallback.indices);
             }
         }
-        let _ = (std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().precompute_step(8);
+        let _ = self.precompute.borrow_mut().precompute_step(8);
     }
 
     pub fn apply_engine_brush_placement(&self, envelope: &Puzzle5dScene, payload: &Value) -> Option<Puzzle5dScene> {
         let brush_payload = serde_json::from_value::<BrushPlacePayload>(payload.clone()).ok()?;
-        let fixture_json = (std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
+        let fixture_json = self.precompute.borrow_mut().apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
         merge_engine_fixture(envelope, &fixture_json)
     }
 
@@ -1297,7 +1317,7 @@ impl Puzzle5dPlayApp
         let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("Part").to_string();
         let source_grip = payload.get("sourceHandleId").and_then(|value| value.as_str()).map(str::to_string).or_else(|| puzzle5d_brush_target_grip(envelope));
         if let Some(source_grip) = source_grip.as_ref() {
-            let candidates = parse_brush_candidates_free(&(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow().brush_candidates(source_grip));
+            let candidates = parse_brush_candidates_free(&self.precompute.borrow().brush_candidates(source_grip));
             let candidate_index =
                 candidates.iter().position(|candidate| candidate.get("objectKindId").or_else(|| candidate.get("objectKind")).and_then(|value| value.as_str()) == Some(node_kind.as_str())).unwrap_or(envelope.runtime.brush_candidate_index);
             let engine_payload = json!({ "objectKindId": node_kind, "targetVortexFullId": source_grip, "candidateIndex": candidate_index });
@@ -1421,7 +1441,7 @@ impl Puzzle5dPlayApp
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, config: &Puzzle5dConfig) -> Emit<Puzzle5dOperation, Puzzle5dConfigOperation> {
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, config: &Puzzle5dConfig) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
         let before = doc.projection.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
@@ -1452,10 +1472,10 @@ impl Puzzle5dPlayApp
         } else {
             Vec::new()
         };
-        // 🧮️ B1: only a REAL config change becomes a `Puzzle5dConfigOperation` — `PartialEq` (derived)
+        // 🧮️ B1: only a REAL config change becomes a `Puzzle5dConfigMutation` — `PartialEq` (derived)
         // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
-        let config_operations = if &scene.runtime != config { vec![Puzzle5dConfigOperation::Snapshot { config: scene.runtime }] } else { Vec::new() };
-        Emit { document_operations: operations, config_operations, coalesce_key, effects, ..Default::default() }
+        let config_mutations = if &scene.runtime != config { vec![Puzzle5dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
+        Emit { document_mutations: operations, config_mutations, coalesce_key, effects, ..Default::default() }
     }
 }
 
@@ -1517,13 +1537,28 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
     }
 }
 
-impl DocumentApp for Puzzle5dPlayApp
+impl DocumentApp for Puzzle5dPlayApp {
+    const APP_ID: &'static str = PUZZLE5D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
+    type Projection = Puzzle5dPlayProjection;
+    type Mutation = Puzzle5dMutation;
+    type Config = Puzzle5dConfig;
+    type ConfigMutation = Puzzle5dConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Command = Puzzle5dCommand;
+
+
+
+    fn initial_projection() -> Puzzle5dPlayProjection {
+        Puzzle5dPlayProjection(serde_json::to_value(default_document()).unwrap_or(Value::Null))
+    }
 
     fn clipboard_media_type() -> Option<MediaType> {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    fn copy_fragment(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.projection.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let selection = &cfg.projection.selection;
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
@@ -1533,7 +1568,7 @@ impl DocumentApp for Puzzle5dPlayApp
         let fragment_value = json!({ "schema": PUZZLE5D_SCHEMA, "parts": parts, "fasteners": fasteners });
         Ok(ClipboardFragment {
             schema: PUZZLE5D_SCHEMA.to_string(),
-            media_type: self.clipboard_media_type().expect("declared above"),
+            media_type: Self::clipboard_media_type().expect("declared above"),
             dsl_text: serde_json::to_string_pretty(&fragment_value).unwrap_or_default(),
             pack_bytes: None,
             source_app: PUZZLE5D_PLAY_APP_ID.to_string(),
@@ -1542,11 +1577,11 @@ impl DocumentApp for Puzzle5dPlayApp
     }
 
     /// @emoji ✂️ B1: `DocumentApp::cut_operations`'s signature carries no config output channel (it
-    /// returns a bare `Vec<Self::Operation>`, not an `Emit`), so this can only emit the document
+    /// returns a bare `Vec<Self::Mutation>`, not an `Emit`), so this can only emit the document
     /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
     /// them is inert until the next real selection action overwrites it).
-    fn cut_operations(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dOperation> {
+    fn cut_operations( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dMutation> {
         let before = doc.projection.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
@@ -1568,8 +1603,8 @@ impl DocumentApp for Puzzle5dPlayApp
     /// `fragment`/`placement`), so the new selection can't be threaded through this call; a following
     /// `setSelection` command (which the host already issues after a paste in practice) is what
     /// actually selects the pasted parts now.
-    fn paste_operations(doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
-        let expected = self.clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
+    fn paste_operations( doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dMutation>, ClipboardError> {
+        let expected = Self::clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
         if fragment.media_type != expected {
             return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
         }
@@ -1593,8 +1628,8 @@ impl DocumentApp for Puzzle5dPlayApp
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
-    fn handle(command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation, Self::DraftOperation>, Fault> {
-        Ok(self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection))
+    fn handle(command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
+        Ok(Self::handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection))
     }
 
     /// 🔌️ Declares puzzle5d's typed media I/O surface: the implicit document ports (from
@@ -1638,7 +1673,7 @@ impl DocumentApp for Puzzle5dPlayApp
     /// fan-in from several producers), then bridges the before/after document through
     /// `puzzle5d_operations_from_document_change` exactly like every other document-mutating action —
     /// this never mutates anything directly, only real, undoable operations.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlayProjection>) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media( port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlayProjection>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -1699,26 +1734,28 @@ impl DocumentApp for Puzzle5dPlayApp
         }
 
         let operations = puzzle5d_operations_from_document_change(&doc.projection.0, &document);
-        Ok(Emit::operations(operations))
+        Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode {
-        let config = cfg.projection;
-        let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
-        let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
-        let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
-        let labels = puzzle5d_labels(config);
-        match body_key {
-            board2d::BODY_KEY => board2d::render(&envelope),
-            world3d::BODY_KEY => world3d::render(&envelope, &(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow()),
-            document_panel::BODY_KEY => document_panel::render(&envelope, labels),
-            catalogue::BODY_KEY => catalogue::render(&envelope, labels),
-            inspection::BODY_KEY => inspection::render(&envelope, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+    fn render( body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode  {
+        with_puzzle5d_app(|app| {
+                    let config = cfg.projection;
+                    let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
+                    let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
+                    let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
+                    let labels = puzzle5d_labels(config);
+                    match body_key {
+                        board2d::BODY_KEY => board2d::render(&envelope),
+                        world3d::BODY_KEY => world3d::render(&envelope, &app.precompute.borrow()),
+                        document_panel::BODY_KEY => document_panel::render(&envelope, labels),
+                        catalogue::BODY_KEY => catalogue::render(&envelope, labels),
+                        inspection::BODY_KEY => inspection::render(&envelope, labels),
+                        _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+                    }
+            })
     }
 
-    fn window_engagements(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let labels = puzzle5d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
@@ -1736,28 +1773,29 @@ impl DocumentApp for Puzzle5dPlayApp
             .collect()
     }
 
-    fn window_measures(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
-        let labels = puzzle5d_labels(config);
-        PUZZLE5D_PLAY_WINDOWS
-            .iter()
-            .flat_map(|window| {
-                window_instance_ids(window).into_iter().map(|wid| {
-                    let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
-                    let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
-                    let measures = if *window == board2d::WINDOW_KIND_ID {
-                        board2d::window_measures(&envelope, &(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow(), labels)
-                    } else {
-                        world3d::window_measures(&envelope, &(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow(), labels)
-                    };
-                    (wid, measures)
-                })
+    fn window_measures( doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
+        with_puzzle5d_app(|app| {
+                    let config = cfg.projection;
+                    let labels = puzzle5d_labels(config);
+                    PUZZLE5D_PLAY_WINDOWS
+                        .iter()
+                        .flat_map(|window| {
+                            window_instance_ids(window).into_iter().map(|wid| {
+                                let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
+                                let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
+                                let measures = if *window == board2d::WINDOW_KIND_ID {
+                                    board2d::window_measures(&envelope, &app.precompute.borrow(), labels)
+                                } else {
+                                    world3d::window_measures(&envelope, &app.precompute.borrow(), labels)
+                                };
+                                (wid, measures)
+                            })
+                        })
+                        .collect()
             })
-            .collect()
     }
 
     fn context_menu(
-        &self,
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &DocumentView<'_, Puzzle5dPlayProjection>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
@@ -1803,28 +1841,28 @@ pub fn create_puzzle5d_app() -> App {
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after document delta).
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation) })
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-            .operation("addPartKind", LocalizedLabel::native("Add Part", "Teil hinzufügen"))
-            .operation("addBrushPart", LocalizedLabel::native("Add Brush Part", "Pinselteil hinzufügen"))
-            .operation("addBrushObject", LocalizedLabel::native("Add Brush Object", "Pinselobjekt hinzufügen"))
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Operation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Operation).with_category("settings"))
-            .action_with(ActionDefinition::new_catalog("zoomToSelection", LocalizedLabel::native("Zoom To Selection", "Auf Auswahl zoomen"), ActionKind::Operation).with_category("view"))
-            .operation("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
-            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
-            .operation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
-            .operation("patchPart", LocalizedLabel::native("Patch Part", "Teil aktualisieren"))
-            .operation("patchGrip", LocalizedLabel::native("Patch Grip", "Griff aktualisieren"))
-            .operation("patchFastener", LocalizedLabel::native("Patch Fastener", "Verbinder aktualisieren"))
-            .operation("importComposeKit", LocalizedLabel::native("Import Compose Kit", "Compose-Kit importieren"))
-            .operation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
-            .operation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
-            .operation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
-            .operation("worldRelocate", LocalizedLabel::native("Relocate Part", "Teil verlagern"))
-            .operation("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .mutation("addPartKind", LocalizedLabel::native("Add Part", "Teil hinzufügen"))
+            .mutation("addBrushPart", LocalizedLabel::native("Add Brush Part", "Pinselteil hinzufügen"))
+            .mutation("addBrushObject", LocalizedLabel::native("Add Brush Object", "Pinselobjekt hinzufügen"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
+            .action_with(ActionDefinition::new_catalog("zoomToSelection", LocalizedLabel::native("Zoom To Selection", "Auf Auswahl zoomen"), ActionKind::Mutation).with_category("view"))
+            .mutation("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
+            .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .mutation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
+            .mutation("patchPart", LocalizedLabel::native("Patch Part", "Teil aktualisieren"))
+            .mutation("patchGrip", LocalizedLabel::native("Patch Grip", "Griff aktualisieren"))
+            .mutation("patchFastener", LocalizedLabel::native("Patch Fastener", "Verbinder aktualisieren"))
+            .mutation("importComposeKit", LocalizedLabel::native("Import Compose Kit", "Compose-Kit importieren"))
+            .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
+            .mutation("worldRelocate", LocalizedLabel::native("Relocate Part", "Teil verlagern"))
+            .mutation("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"))
             // 👁️ Ephemeral view state — selection, hover, utility parameters, brush cycling, camera pose.
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("setCamera2d", LocalizedLabel::native("Set Camera 2D", "Kamera 2D festlegen"))
@@ -1881,8 +1919,8 @@ pub fn create_puzzle5d_app() -> App {
             .utility(board2d::utilities::fill::definition(puzzle5d_localized(|l| l.fill)))
             .utility(world3d::utilities::world_relocate::definition()),
     )
-    .example_source(&*crate::examples::puzzle5d::concrete_forest::SOURCE)
-    .example_source(&*crate::examples::puzzle5d::nakagin_capsule_tower::SOURCE)
+    .example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, puzzle5d_localized(|l| l.example_concrete_forest), CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
+    .example(PUZZLE5D_EXAMPLE_NAKAGIN, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), NAKAGIN_EXAMPLE_JSON.clone(), "building")
     .workflow("puzzle5d", "Puzzle 5D", "model")
 }
 
@@ -1894,7 +1932,7 @@ fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Resu
 
 /// 🗂️ Registers `Puzzle5dPlayProjection`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-5d play documents without
-/// depending on this crate's concrete `Projection`/`Operation` types, plus the 5d mesh export/import
+/// depending on this crate's concrete `Projection`/`Mutation` types, plus the 5d mesh export/import
 /// handlers. Called by the plugin `setup:` hook (`crate::artifacts::puzzle2d::engine::register`).
 pub fn register_puzzle5d_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle5dPlayApp>(PUZZLE5D_SCHEMA);
@@ -1918,7 +1956,7 @@ pub fn register_puzzle5d_exports() {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewState};
 
     pub type Puzzle5dApp = VcsDocumentApp<Puzzle5dPlayApp>;
 
@@ -1950,7 +1988,7 @@ pub(crate) mod testkit {
 
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
     pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("serialize rendered node")
+        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("serialize rendered node")
     }
 
     pub fn projection_of(app: &Puzzle5dApp) -> Value {
@@ -1989,7 +2027,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
-    use protocol::OperationDiff;
+    use protocol::MutationDiff;
     use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
 
     //#region 🔖️Rendering
@@ -2115,23 +2153,23 @@ mod tests {
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `Puzzle5dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s. Deliberately
+    /// `Puzzle5dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s. Deliberately
     /// dispatches through a standalone typed `Puzzle5dStore` — NOT through `Puzzle5dPlayApp`/
     /// `Puzzle5dPlayProjection` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app's real
-    /// `DocumentApp` still uses) — since `Puzzle5dOperation`'s canonical `Operation<Puzzle5dProjection>`
-    /// impl (not its `Operation<Value>` bridge impl) is what the CW7 law is about.
+    /// `DocumentApp` still uses) — since `Puzzle5dMutation`'s canonical `Mutation<Puzzle5dProjection>`
+    /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
         use protocol::{DocumentId, Edit, SchemaId};
-        use store::create_document_envelope;
+        use store::{create_document_envelope, EngineHandles};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dProjection::default(), None));
         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-        store.dispatch(store::DocumentCommand::Apply { operations: vec![Puzzle5dOperation::SetPart { index: 0, part }], description: None }).expect("apply");
-        let edit: &Edit<Puzzle5dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<Puzzle5dProjection, Puzzle5dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
+        let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<Puzzle5dProjection, Puzzle5dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 
@@ -2143,7 +2181,7 @@ mod tests {
         let first_part_id = first_part_id(&app);
         dispatch(&mut app, "setSelection", Some(&json!({ "partIds": [first_part_id] })), None).expect("select");
         let result = app.handle_action("copy", None, &meta("local")).expect("copy");
-        assert!(result.operations.is_empty(), "copy must not record an undo entry");
+        assert!(result.mutations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
         let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         assert_eq!(fragment.source_app, PUZZLE5D_PLAY_APP_ID);
@@ -2155,7 +2193,7 @@ mod tests {
     fn copy_with_no_selection_is_a_benign_no_operation() {
         let mut app = app();
         let result = app.handle_action("copy", None, &meta("local")).expect("copy");
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
 
@@ -2204,7 +2242,7 @@ mod tests {
         let mut app = app();
         let before_count = part_count(&app);
         let result = app.handle_action("paste", None, &meta("local")).expect("paste");
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
         assert_eq!(part_count(&app), before_count);
     }
     //#endregion 🔖️Clipboard
@@ -2336,7 +2374,7 @@ mod tests {
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
         let before = part_count(&app);
         let result = dispatch(&mut app, "addPartKind", None, None).expect("addPartKind");
-        assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits operations");
+        assert!(!result.mutations.is_empty(), "addPartKind is a Mutation that emits mutations");
         assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
         let projection = projection_of(&app);
         let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
@@ -2349,7 +2387,7 @@ mod tests {
         let mut app = app_with_registry();
         let before = projection_of(&app);
         let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), None).expect("switch utility");
-        assert!(result.operations.is_empty(), "utility switching never emits document operations");
+        assert!(result.mutations.is_empty(), "utility switching never emits document operations");
         assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
         assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
     }
@@ -2362,12 +2400,12 @@ mod tests {
         let mut app = app();
         let before = projection_of(&app);
         let camera2d_result = dispatch(&mut app, "setCamera2d", Some(&json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), None).expect("setCamera2d");
-        assert!(camera2d_result.operations.is_empty(), "setCamera2d is a View action and must never emit a document operation");
+        assert!(camera2d_result.mutations.is_empty(), "setCamera2d is a View action and must never emit a document operation");
         assert_eq!(projection_of(&app), before, "setCamera2d must not mutate the document");
         let board = render_body(&mut app, board2d::BODY_KEY);
         assert!(board.contains("12.5") && board.contains("-6.5"), "the new 2D camera pose must be reflected in the rendered runtime state");
         let camera3d_result = dispatch(&mut app, "setCamera3d", Some(&json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), None).expect("setCamera3d");
-        assert!(camera3d_result.operations.is_empty(), "setCamera3d is a View action and must never emit a document operation");
+        assert!(camera3d_result.mutations.is_empty(), "setCamera3d is a View action and must never emit a document operation");
         assert_eq!(projection_of(&app), before, "setCamera3d must not mutate the document");
         let world = render_body(&mut app, world3d::BODY_KEY);
         assert!(world.contains("42.5") && world.contains("7.5") && world.contains("1.5"), "the new 3D camera pose must be reflected in the rendered runtime state");
@@ -2482,11 +2520,11 @@ mod tests {
         let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
         let emit = app.import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
-        assert!(!emit.document_operations.is_empty(), "importing a non-empty fragment must emit real operations");
+        assert!(!emit.document_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
 
         let mut next_projection = projection.0.clone();
-        for operation in &emit.document_operations {
-            next_projection = protocol::Operation::<Value>::diff(operation, &next_projection).apply(&next_projection);
+        for operation in &emit.document_mutations {
+            next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).apply(&next_projection);
         }
 
         let parts = next_projection.pointer("/kindCatalogs/parts").and_then(Value::as_array).expect("parts catalog present");
@@ -2527,8 +2565,8 @@ mod tests {
             let doc_projection = Puzzle5dPlayProjection(current.clone());
             let doc = DocumentView { projection: &doc_projection, history: &history };
             let emit = app.import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
-            for operation in &emit.document_operations {
-                current = protocol::Operation::<Value>::diff(operation, &current).apply(&current);
+            for operation in &emit.document_mutations {
+                current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current);
             }
         }
 

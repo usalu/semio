@@ -1,6 +1,6 @@
 //! 🔁️ Local-first sync actor layer: a schema-agnostic per-document backbone actor that runs all IO
 //! (persist, semio_hub WebSocket sync, file watching) off the UI thread, plus the causal {@link SyncSession}
-//! that feeds remote {@link OperationEnvelope}s into a document's vcs edit timeline.
+//! that feeds remote {@link MutationEnvelope}s into a document's vcs edit timeline.
 //!
 //! # Threading model
 //! - **Native** (wgpu native host, tests): {@link DocumentHost::open} spawns a dedicated `std::thread`
@@ -13,8 +13,8 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame};
-use crate::os_spr::{ActorId, OperationId};
+use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, MutationEnvelope, ServerFrame};
+use crate::os_spr::{ActorId, MutationId};
 use crate::os_spr::PresencePeer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -32,13 +32,13 @@ pub enum SyncError {
 //#endregion 🔖️Errors
 
 //#region 🔖️EnvelopeSerde
-/// @emoji 🧵️ JSON worker seam: `OperationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
+/// @emoji 🧵️ JSON worker seam: `MutationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
 mod envelope_serde {
-    use crate::os_spr::{decode_envelopes, encode_envelopes, OperationEnvelope};
+    use crate::os_spr::{decode_envelopes, encode_envelopes, MutationEnvelope};
     use serde::ser::SerializeSeq;
     use serde::{Deserializer, Serializer};
 
-    pub fn serialize<S>(envelopes: &[OperationEnvelope], serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(envelopes: &[MutationEnvelope], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -50,7 +50,7 @@ mod envelope_serde {
         seq.end()
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<OperationEnvelope>, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<MutationEnvelope>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -120,9 +120,9 @@ pub struct DocumentActorConfig {
 pub enum DocumentActorMsg {
     /// @emoji ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
     /// direct-injection fallback used only when no store is attached to the channel (empty = pure wake).
-    LocalOperations {
+    LocalMutations {
         #[serde(with = "envelope_serde")]
-        envelopes: Vec<OperationEnvelope>,
+        envelopes: Vec<MutationEnvelope>,
     },
     /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
     PresenceHeartbeat { peer: PresencePeer },
@@ -151,13 +151,13 @@ pub enum RemoteState {
 #[serde(rename_all = "camelCase")]
 pub struct DocumentSyncStatus {
     pub persisted: bool,
-    pub pendingOperations: usize,
+    pub pendingMutations: usize,
     pub remote: RemoteState,
 }
 
 impl Default for DocumentSyncStatus {
     fn default() -> Self {
-        Self { persisted: false, pendingOperations: 0, remote: RemoteState::Detached }
+        Self { persisted: false, pendingMutations: 0, remote: RemoteState::Detached }
     }
 }
 
@@ -167,9 +167,9 @@ impl Default for DocumentSyncStatus {
 pub enum DocumentEvent {
     /// @emoji 🕸️ Remote operations (semio_hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
-    RemoteOperations {
+    RemoteMutations {
         #[serde(with = "envelope_serde")]
-        envelopes: Vec<OperationEnvelope>,
+        envelopes: Vec<MutationEnvelope>,
     },
     /// @emoji 📸️ The whole document was replaced (divergent external history / semio_hub snapshot swap),
     /// as real pack+spr bytes — no JSON envelope anywhere in this actor's own path.
@@ -185,7 +185,7 @@ pub enum DocumentEvent {
     /// @emoji 📮️ The semio_hub's terminal disposition for one outbound `Commands` batch
     /// (`crate::os_spr::wire::ServerFrame::Ack`'s `Applied` stage) — accepted as-is, transformed against
     /// concurrent history (the transformed envelope is already delivered as a
-    /// {@link DocumentEvent::RemoteOperations} replacing the speculative local one), or rejected
+    /// {@link DocumentEvent::RemoteMutations} replacing the speculative local one), or rejected
     /// (the speculative local head is rolled back via {@link rollback_envelope} before this fires).
     CommandOutcome { batch_id: u64, outcome: CommandAckOutcome },
     /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / semio_hub CAS reject).
@@ -193,7 +193,7 @@ pub enum DocumentEvent {
 }
 
 /// @emoji ⚖️ The client-side twin of `crate::os_spr::wire::ApplyOutcome`, minus the `Transformed`
-/// envelope payload (already delivered separately as {@link DocumentEvent::RemoteOperations} by
+/// envelope payload (already delivered separately as {@link DocumentEvent::RemoteMutations} by
 /// the time this fires — see {@link DocumentEvent::CommandOutcome}).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -285,12 +285,12 @@ pub mod backbone_worker_wire {
 
 //#region 🔖️Endpoints
 // 🧱️ `DocumentId` is used only by native-only test helpers below (the wire bridge and production
-// folder-reconstruction path move `crate::os_spr::OperationEnvelope`s without spelling this type), so it
+// folder-reconstruction path move `crate::os_spr::MutationEnvelope`s without spelling this type), so it
 // stays a native-only import to avoid an unused-import warning on the wasm32 build.
 #[cfg(not(target_arch = "wasm32"))]
 use crate::os_spr::DocumentId;
 
-/// @emoji 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::operation_envelope_from_edit`'s own
+/// @emoji 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::mutation_envelope_from_edit`'s own
 /// fallback convention (`meta[i].op_id` when present, else `"{edit.id}#{i}"`) so this is the SAME
 /// id a live-dispatched envelope for this edit already carries. This is the ONE id domain the
 /// actor's dedup set uses — computed here and ONLY here, so a locally-flushed edit's spr entry
@@ -328,52 +328,52 @@ fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
     Ok(ids)
 }
 
-/// @emoji 📦️ Rebuilds real {@link OperationEnvelope}s (one per forward op, genuine `OpBinary`
+/// @emoji 📦️ Rebuilds real {@link MutationEnvelope}s (one per forward op, genuine `OpBinary`
 /// payloads straight from the edit's own binary `OpPayload`s — no codec, no JSON) from one
 /// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
 /// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
 #[cfg(not(target_arch = "wasm32"))]
-fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<OperationEnvelope>, String> {
+fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
     let op_ids = op_ids_of(edit);
     let mut envelopes = Vec::with_capacity(edit.ops.len());
     for (index, op) in edit.ops.iter().enumerate() {
         let payload = op.binary.clone().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id))?;
         let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
-        let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(OperationId).collect()).unwrap_or_default();
+        let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(MutationId).collect()).unwrap_or_default();
         let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| edit.actor.clone()).unwrap_or_else(|| "unknown".to_string());
         let timestamp = meta.and_then(|m| m.hlt).map(|(actor, physical_ms, logical)| crate::os_spr::HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical }).unwrap_or_else(|| crate::os_spr::HybridLogicalTimestamp::new(0, 0));
-        let inverse_payload = edit.backwards.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
-        envelopes.push(OperationEnvelope {
-            operation_id: OperationId(op_ids[index].clone()),
+        let inverse_payload = edit.inverse.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
+        envelopes.push(MutationEnvelope {
+            mutation_id: MutationId(op_ids[index].clone()),
             document_id: DocumentId(document_id.to_string()),
             actor: ActorId(actor),
             dependencies,
             diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
-            inverse: crate::os_spr::InverseOperation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
         });
     }
     Ok(envelopes)
 }
 
-/// @emoji 📦️ The inverse of {@link envelopes_from_history_edit}: one `OperationEnvelope` -> one
+/// @emoji 📦️ The inverse of {@link envelopes_from_history_edit}: one `MutationEnvelope` -> one
 /// `HistoryEdit` with a real binary `OpPayload` and populated meta (`op_id` == the envelope's own
 /// id, so a later `op_ids_of` re-read agrees) — the byte-level twin of
 /// `crate::os_store::edit_from_operation_envelope`, for appending a locally-flushed envelope to the spr log.
 #[cfg(not(target_arch = "wasm32"))]
-fn history_edit_from_envelope(envelope: &OperationEnvelope) -> crate::os_spr::HistoryEdit {
+fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::HistoryEdit {
     crate::os_spr::HistoryEdit {
-        id: envelope.operation_id.0.clone(),
+        id: envelope.mutation_id.0.clone(),
         actor: Some(envelope.actor.0.clone()),
         started_at: now_ms().to_string(),
         finished_at: None,
         coalesce_key: None,
         description: None,
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
-        backwards: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
+        inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
         meta: Some(vec![crate::os_spr::HistoryOpMeta {
-            op_id: Some(envelope.operation_id.0.clone()),
+            op_id: Some(envelope.mutation_id.0.clone()),
             dependencies: envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect(),
             base_version: 0,
             author_id: Some(envelope.actor.0.clone()),
@@ -396,9 +396,9 @@ fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str) -> String {
 
 //#region 🔖️WireBridge
 // 🎯️ W6 kernel unification: `to_wire_envelope`/`from_wire_envelope` are DELETED — this actor's
-// local envelope shape (`LocalOperations`/`RemoteOperations`/`ChannelBackbone`) and the wire shape
+// local envelope shape (`LocalMutations`/`RemoteMutations`/`ChannelBackbone`) and the wire shape
 // (`crate::os_spr::wire::ClientFrame::Commands`/`ServerFrame::Commands`) are now the SAME type,
-// `crate::os_spr::OperationEnvelope`, throughout: `crate::os_store::BackboneMessage::Operations` already carries
+// `crate::os_spr::MutationEnvelope`, throughout: `crate::os_store::BackboneMessage::Mutations` already carries
 // it natively (W6's `store` repoint), so there is no local/wire boundary left to bridge across.
 // The old local-only fields (`payload_hash`, `schema_version` separate from `diff.schema`) are
 // dropped, not replaced — a repo-wide grep confirmed neither was ever read outside this
@@ -408,23 +408,23 @@ fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str) -> String {
 /// @emoji ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed
 /// `inverse`, so a semio_hub `Ack::Applied::{Rejected,Transformed}` outcome can roll back (or replace)
 /// the local speculative head without a second round trip. This actor stays JSON-payload-typed end
-/// to end (never touches `vcs`/`protocol_command`'s typed `Operation`/`OperationDiff` trait
+/// to end (never touches `vcs`/`protocol_command`'s typed `Mutation`/`MutationDiff` trait
 /// machinery — see the crate doc), so "the inverse machinery" it uses is simply replaying the
 /// envelope's own already-computed inverse payload as a synthetic remote operation, the same path
 /// {@link DocumentActor::deliver_remote_operations} already uses for any other remote edit. 🎯️ W6:
 /// re-emits `envelope.inverse` as the rollback's forward diff; the rollback's OWN inverse is the
-/// original forward diff (inverse-of-inverse) — `crate::os_spr::causal::InverseOperation` carries no
-/// `target_operation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
+/// original forward diff (inverse-of-inverse) — `crate::os_spr::causal::InverseMutation` carries no
+/// `target_mutation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
 /// than the old kernel-local one), so those are gone, not defaulted.
-fn rollback_envelope(envelope: &OperationEnvelope) -> OperationEnvelope {
-    let undo_id = OperationId(format!("{}~undo", envelope.operation_id.0));
-    OperationEnvelope {
-        operation_id: undo_id.clone(),
+fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
+    let undo_id = MutationId(format!("{}~undo", envelope.mutation_id.0));
+    MutationEnvelope {
+        mutation_id: undo_id.clone(),
         document_id: envelope.document_id.clone(),
         actor: envelope.actor.clone(),
-        dependencies: vec![envelope.operation_id.clone()],
+        dependencies: vec![envelope.mutation_id.clone()],
         diff: crate::os_spr::DocumentDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
-        inverse: crate::os_spr::InverseOperation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
+        inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
     }
 }
@@ -477,23 +477,23 @@ fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalT
 /// @emoji 🔁️ Pairs a document's vcs store with the causal DAG that reconciles remote envelopes into
 /// it. Extended into the actor world via {@link SyncSession::attach}: it holds the actor command
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
-pub struct SyncSession<P, Operation>
+pub struct SyncSession<P, Mutation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::DocumentPack,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Operation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
-    pub store: DocumentStore<P, Operation>,
+    pub store: DocumentStore<P, Mutation>,
     cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
     events: Option<broadcast::Receiver<DocumentEvent>>,
     status: DocumentSyncStatus,
 }
 
-impl<P, Operation> SyncSession<P, Operation>
+impl<P, Mutation> SyncSession<P, Mutation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::DocumentPack,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Operation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
-    pub fn new(store: DocumentStore<P, Operation>) -> Self {
+    pub fn new(store: DocumentStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: DocumentSyncStatus::default() }
     }
 
@@ -519,7 +519,7 @@ where
     /// @emoji 🔔️ Nudges the actor to drain the store's outbound queue without waiting for its poll tick.
     pub fn wake(&self) {
         if let Some(cmd_tx) = &self.cmd_tx {
-            let _ = cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() });
+            let _ = cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() });
         }
     }
 
@@ -551,7 +551,7 @@ where
 
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub fn receive(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<(), SyncError> {
+    pub fn receive(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), SyncError> {
         self.store.dispatch(crate::os_store::DocumentCommand::IngestRemote { envelope }).map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
@@ -770,7 +770,7 @@ mod native_actor {
         reconnect_at: Option<Instant>,
         /// @emoji 🧺️ Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`, so `Rejected`/
         /// `Transformed` can roll back exactly the envelopes that batch sent.
-        pending_batches: std::collections::HashMap<u64, Vec<OperationEnvelope>>,
+        pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         next_batch_id: u64,
         /// @emoji ⏰️ This actor's `HybridLogicalTimestamp` seed (derived from `actor`) + logical tick
         /// counter, for {@link next_timestamp} on every outbound wire envelope.
@@ -913,7 +913,7 @@ mod native_actor {
         /// @emoji 📨️ Handles a caller control message. Returns `true` when the actor should stop.
         async fn handle_cmd(&mut self, message: DocumentActorMsg) -> bool {
             match message {
-                DocumentActorMsg::LocalOperations { envelopes } => {
+                DocumentActorMsg::LocalMutations { envelopes } => {
                     let drained = self.drain_and_relay().await;
                     if !drained && !envelopes.is_empty() {
                         self.persist_operations(&envelopes);
@@ -947,7 +947,7 @@ mod native_actor {
             let drained = !messages.is_empty();
             for message in messages {
                 match message {
-                    BackboneMessage::Operations { envelopes } => {
+                    BackboneMessage::Mutations { envelopes } => {
                         let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
                         self.persist_operations(&envelopes);
                         self.relay_operations_to_hub(&envelopes).await;
@@ -998,12 +998,12 @@ mod native_actor {
 
         /// @emoji ➕️ Appends locally-applied operations to the persisted spr log (append-only),
         /// keeping the on-disk copy coherent so self-writes are never mistaken for external edits.
-        fn persist_operations(&mut self, envelopes: &[OperationEnvelope]) {
+        fn persist_operations(&mut self, envelopes: &[MutationEnvelope]) {
             if self.folder.is_none() {
                 return;
             }
             let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
-            let new_edits: Vec<crate::os_spr::HistoryEdit> = envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.operation_id.0.clone())).map(history_edit_from_envelope).collect();
+            let new_edits: Vec<crate::os_spr::HistoryEdit> = envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.mutation_id.0.clone())).map(history_edit_from_envelope).collect();
             if new_edits.is_empty() {
                 return;
             }
@@ -1013,7 +1013,7 @@ mod native_actor {
             self.current_spr = Some(new_spr);
         }
 
-        /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteOperations`,
+        /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteMutations`,
         /// divergence → `SnapshotReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
         fn handle_external_change(&mut self) {
@@ -1181,7 +1181,7 @@ mod native_actor {
                         self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
                     }
                     ApplyOutcome::Transformed { envelope } => {
-                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.persist_operations(&rollbacks);
                         self.deliver_remote_operations(rollbacks);
                         let converted = *envelope;
@@ -1190,7 +1190,7 @@ mod native_actor {
                         self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
                     ApplyOutcome::Rejected { reason } => {
-                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.persist_operations(&rollbacks);
                         self.deliver_remote_operations(rollbacks);
                         self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
@@ -1200,13 +1200,13 @@ mod native_actor {
             self.emit_status_if_changed();
         }
 
-        async fn relay_operations_to_hub(&mut self, envelopes: &[OperationEnvelope]) {
+        async fn relay_operations_to_hub(&mut self, envelopes: &[MutationEnvelope]) {
             if self.semio_hub.is_none() || envelopes.is_empty() {
                 return;
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<crate::os_spr::OperationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+            let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
             self.emit_status_if_changed();
@@ -1233,12 +1233,12 @@ mod native_actor {
 
         //#region 🔖️Deliver
         /// @emoji 🕸️ Pushes remote operations into the store's inbound queue and notifies subscribers.
-        fn deliver_remote_operations(&mut self, envelopes: Vec<OperationEnvelope>) {
+        fn deliver_remote_operations(&mut self, envelopes: Vec<MutationEnvelope>) {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Operations { envelopes: encode_envelopes(&envelopes) });
-            self.emit(DocumentEvent::RemoteOperations { envelopes });
+            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) });
+            self.emit(DocumentEvent::RemoteMutations { envelopes });
         }
 
         /// @emoji 📸️ Pushes a full pack+spr snapshot into the store's inbound queue and notifies subscribers.
@@ -1252,7 +1252,7 @@ mod native_actor {
         }
 
         fn status(&self) -> DocumentSyncStatus {
-            DocumentSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pendingOperations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
+            DocumentSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pendingMutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
         }
 
         fn set_remote_state(&mut self, state: RemoteState) {
@@ -1371,7 +1371,7 @@ mod wasm_actor {
         ws: Option<WebSocket>,
         server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
         resume_token: Option<String>,
-        pending_batches: std::collections::HashMap<u64, Vec<OperationEnvelope>>,
+        pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         next_batch_id: u64,
         hlc_seed: u64,
         hlc_counter: u64,
@@ -1429,13 +1429,13 @@ mod wasm_actor {
 
         /// @emoji 🧺️ Builds + sends one `Commands` batch, tracking it in `pending_batches` for
         /// {@link WasmActor::handle_ack}. Mirrors the native actor's `relay_operations_to_hub`.
-        fn relay_operations(&mut self, envelopes: &[OperationEnvelope]) {
+        fn relay_operations(&mut self, envelopes: &[MutationEnvelope]) {
             if envelopes.is_empty() {
                 return;
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<crate::os_spr::OperationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+            let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command);
         }
@@ -1445,7 +1445,7 @@ mod wasm_actor {
             let drained = !messages.is_empty();
             for message in messages {
                 match message {
-                    BackboneMessage::Operations { envelopes } => {
+                    BackboneMessage::Mutations { envelopes } => {
                         let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
                         self.relay_operations(&envelopes);
                     }
@@ -1461,7 +1461,7 @@ mod wasm_actor {
 
         fn handle_cmd(&mut self, message: DocumentActorMsg) {
             match message {
-                DocumentActorMsg::LocalOperations { envelopes } => {
+                DocumentActorMsg::LocalMutations { envelopes } => {
                     let drained = self.drain_and_relay();
                     if !drained && !envelopes.is_empty() {
                         self.relay_operations(&envelopes);
@@ -1528,14 +1528,14 @@ mod wasm_actor {
                         let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
                     }
                     ApplyOutcome::Transformed { envelope } => {
-                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.deliver_remote_operations(rollbacks);
                         let converted = *envelope;
                         self.deliver_remote_operations(vec![converted]);
                         let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
                     ApplyOutcome::Rejected { reason } => {
-                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.deliver_remote_operations(rollbacks);
                         let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
                     }
@@ -1543,12 +1543,12 @@ mod wasm_actor {
             }
         }
 
-        fn deliver_remote_operations(&self, envelopes: Vec<OperationEnvelope>) {
+        fn deliver_remote_operations(&self, envelopes: Vec<MutationEnvelope>) {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Operations { envelopes: encode_envelopes(&envelopes) });
-            let _ = self.events.send(DocumentEvent::RemoteOperations { envelopes });
+            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) });
+            let _ = self.events.send(DocumentEvent::RemoteMutations { envelopes });
         }
     }
 
@@ -1779,7 +1779,7 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 //#region 🔖️FolderStorage
 /// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
 /// are keyed by document id: `document(id, schema, pack, spr, updated_at)` — `pack` (initial
-/// projection) + `spr` (real backwards/binary op payloads/cursor, see `crate::os_store::print_document_spr`)
+/// projection) + `spr` (real inverse/binary op payloads/cursor, see `crate::os_store::print_document_spr`)
 /// are the AUTHORITATIVE pair, both `NOT NULL`; there is no JSON column (a greenfield rule — every
 /// row is written pack+spr together, never one without the other). No `Backbone` impl: the actor
 /// layer drives this from its own thread; this crate only owns the sqlite schema.
@@ -2026,7 +2026,7 @@ impl crate::os_store::BlobStore for FolderSqliteStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_spr::{Edit, OpBinary, OpText, Operation, OperationDiff};
+    use crate::os_spr::{Edit, OpBinary, OpText, Mutation, MutationDiff};
     use serde::{Deserialize, Serialize};
     use crate::os_store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, DocumentCodec, DocumentCommand, DocumentDsl, ParsedDocumentText};
 
@@ -2041,7 +2041,7 @@ mod tests {
         n: Option<i32>,
     }
 
-    impl OperationDiff<DemoProjection> for DemoDiff {
+    impl MutationDiff<DemoProjection> for DemoDiff {
         fn apply(&self, projection: &DemoProjection) -> DemoProjection {
             DemoProjection { n: self.n.unwrap_or(projection.n) }
         }
@@ -2055,22 +2055,22 @@ mod tests {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslOps)]
     #[serde(tag = "operation")]
-    enum DemoOperation {
+    enum DemoMutation {
         #[dsl(key = "set-n")]
         SetN { n: i32 },
     }
 
-    impl Operation<DemoProjection> for DemoOperation {
+    impl Mutation<DemoProjection> for DemoMutation {
         type Diff = DemoDiff;
 
         fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
             match self {
-                DemoOperation::SetN { n } => DemoDiff { n: Some(*n) },
+                DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
             }
         }
 
-        fn backwards(&self, projection: &DemoProjection) -> Vec<Self> {
-            vec![DemoOperation::SetN { n: projection.n }]
+        fn inverse(&self, projection: &DemoProjection) -> Vec<Self> {
+            vec![DemoMutation::SetN { n: projection.n }]
         }
     }
 
@@ -2081,17 +2081,17 @@ mod tests {
     fn ensure_demo_codec_registered() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            register_document_codec(DocumentCodec::of::<DemoProjection, DemoOperation>("demo/v1"));
+            register_document_codec(DocumentCodec::of::<DemoProjection, DemoMutation>("demo/v1"));
         });
     }
 
-    fn sample_operation_envelope(edit_id: &str, n: i32) -> crate::os_spr::OperationEnvelope {
+    fn sample_operation_envelope(edit_id: &str, n: i32) -> crate::os_spr::MutationEnvelope {
         let edit = Edit {
             id: edit_id.into(),
             actor: None,
-            forwards: vec![DemoOperation::SetN { n }],
-            backwards: vec![DemoOperation::SetN { n: 0 }],
-            operation_meta: Vec::new(),
+            forwards: vec![DemoMutation::SetN { n }],
+            inverse: vec![DemoMutation::SetN { n: 0 }],
+            mutation_meta: Vec::new(),
             description: None,
             coalesce_key: None,
             sequence_number: 1,
@@ -2100,14 +2100,14 @@ mod tests {
         };
         let document_id = crate::os_spr::DocumentId("demo".to_string());
         let schema = crate::os_spr::SchemaId("demo/v1".to_string());
-        let mut envelopes = crate::os_spr::operation_envelope_from_edit::<DemoProjection, DemoOperation>(&edit, &document_id, &schema).expect("operation envelope");
+        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoProjection, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
         envelopes.pop().expect("exactly one op envelope for a single-op edit")
     }
 
     //#region 🧪️SyncSession
     #[test]
     fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: crate::os_store::DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: crate::os_store::DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         session.receive(sample_operation_envelope("edit-1", 5)).expect("receive");
@@ -2117,12 +2117,12 @@ mod tests {
 
     #[test]
     fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: crate::os_store::DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: crate::os_store::DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         let first = sample_operation_envelope("edit-1", 5);
         let mut second = sample_operation_envelope("edit-2", 9);
-        second.dependencies = vec![first.operation_id.clone()];
+        second.dependencies = vec![first.mutation_id.clone()];
         session.receive(second).expect("receive second first");
         assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
         session.receive(first).expect("receive first");
@@ -2143,15 +2143,15 @@ mod tests {
     //#region 🧪️WireBridge
     // 🎯️ W6: `wire_bridge_round_trips_identity_and_diff_through_protocol_causal` is DELETED — the
     // local/wire bridge it tested (`to_wire_envelope`/`from_wire_envelope`) no longer exists; local
-    // and wire envelopes are the same `crate::os_spr::OperationEnvelope` type now, an identity the type
+    // and wire envelopes are the same `crate::os_spr::MutationEnvelope` type now, an identity the type
     // system enforces, not something a round-trip test needs to prove.
     #[test]
     fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
         let envelope = sample_operation_envelope("edit-1", 5);
         let rollback = rollback_envelope(&envelope);
-        assert_eq!(rollback.dependencies, vec![envelope.operation_id.clone()], "the undo depends on the operation it undoes");
+        assert_eq!(rollback.dependencies, vec![envelope.mutation_id.clone()], "the undo depends on the operation it undoes");
         assert_eq!(rollback.diff.payload, envelope.inverse.payload, "the undo's forward diff IS the original's inverse");
-        assert_ne!(rollback.operation_id, envelope.operation_id, "the undo gets its own operation id");
+        assert_ne!(rollback.mutation_id, envelope.mutation_id, "the undo gets its own operation id");
     }
 
     /// @emoji 🎬️ Canonical wire-frame byte fixtures shared with `🟦️backbone-worker.ts`'s vitest suite
@@ -2191,13 +2191,13 @@ mod tests {
         }
 
         let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::DocumentId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
-        let wire_envelope = crate::os_spr::OperationEnvelope {
-            operation_id: crate::os_spr::OperationId("op-1".to_string()),
+        let wire_envelope = crate::os_spr::MutationEnvelope {
+            mutation_id: crate::os_spr::MutationId("op-1".to_string()),
             document_id: crate::os_spr::DocumentId("doc-1".to_string()),
             actor: crate::os_spr::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoOperation::SetN { n: 5 }).expect("encode demo op") },
-            inverse: crate::os_spr::InverseOperation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoOperation::SetN { n: 0 }).expect("encode demo op") },
+            diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         };
 
@@ -2265,17 +2265,17 @@ mod tests {
         //#endregion 🔖️ServerFrame
     }
 
-    /// @emoji 🧸️ A second, distinct `OperationEnvelope` for `📦️server-ack-transformed.bin`'s
+    /// @emoji 🧸️ A second, distinct `MutationEnvelope` for `📦️server-ack-transformed.bin`'s
     /// `ApplyOutcome::Transformed` payload — must differ from the primary `wire_envelope` fixture so
     /// the vitest canary can assert it decodes as its own value, not an accidental copy.
-    fn sample_wire_envelope_for_fixtures() -> crate::os_spr::OperationEnvelope {
-        crate::os_spr::OperationEnvelope {
-            operation_id: crate::os_spr::OperationId("op-2".to_string()),
+    fn sample_wire_envelope_for_fixtures() -> crate::os_spr::MutationEnvelope {
+        crate::os_spr::MutationEnvelope {
+            mutation_id: crate::os_spr::MutationId("op-2".to_string()),
             document_id: crate::os_spr::DocumentId("doc-1".to_string()),
             actor: crate::os_spr::ActorId("actor-2".to_string()),
-            dependencies: vec![crate::os_spr::OperationId("op-1".to_string())],
-            diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoOperation::SetN { n: 6 }).expect("encode demo op") },
-            inverse: crate::os_spr::InverseOperation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoOperation::SetN { n: 5 }).expect("encode demo op") },
+            dependencies: vec![crate::os_spr::MutationId("op-1".to_string())],
+            diff: crate::os_spr::DocumentDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         }
     }
@@ -2293,15 +2293,15 @@ mod tests {
             finished_at: None,
             coalesce_key: None,
             description: None,
-            ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 42 }.encode_op().expect("encode")) }],
-            backwards: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 0 }.encode_op().expect("encode")) }],
+            ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+            inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
             meta: None,
         };
         let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").expect("envelopes from history edit");
         assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
-        assert_eq!(envelopes[0].operation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
-        let recovered = <DemoOperation as crate::os_spr::OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
-        assert_eq!(recovered, DemoOperation::SetN { n: 42 });
+        assert_eq!(envelopes[0].mutation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
+        let recovered = <DemoMutation as crate::os_spr::OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
+        assert_eq!(recovered, DemoMutation::SetN { n: 42 });
     }
     //#endregion 🧪️Helpers
 
@@ -2316,7 +2316,7 @@ mod tests {
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-        fn demo_envelope(document_id: &str) -> crate::os_store::DocumentEnvelope<DemoProjection, DemoOperation> {
+        fn demo_envelope(document_id: &str) -> crate::os_store::DocumentEnvelope<DemoProjection, DemoMutation> {
             create_document_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
         }
 
@@ -2358,7 +2358,7 @@ mod tests {
             }
         }
 
-        // 🔬️ External folder edit → RemoteOperations event + the store timeline grows on tick().
+        // 🔬️ External folder edit → RemoteMutations event + the store timeline grows on tick().
         #[tokio::test]
         async fn folder_external_edit_delivers_remote_operations() {
             ensure_demo_codec_registered();
@@ -2370,8 +2370,8 @@ mod tests {
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
 
             // A local apply establishes a persisted edit on disk.
-            store.dispatch(crate::os_store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
-            channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
+            store.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            channels.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
@@ -2394,8 +2394,8 @@ mod tests {
                 finished_at: None,
                 coalesce_key: None,
                 description: None,
-                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 42 }.encode_op().expect("encode")) }],
-                backwards: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 1 }.encode_op().expect("encode")) }],
+                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+                inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
                 meta: None,
             };
             let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &[external_edit]).expect("append external edit");
@@ -2404,13 +2404,13 @@ mod tests {
             // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
             channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
 
-            let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
+            let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
             match event {
-                DocumentEvent::RemoteOperations { envelopes } => {
+                DocumentEvent::RemoteMutations { envelopes } => {
                     assert_eq!(envelopes.len(), 1);
-                    assert_eq!(envelopes[0].operation_id.0, "external-1#0", "single-op edit -> operation_id is edit.id#0 (crate::os_spr::operation_envelope_from_edit's ordinal-suffix convention)");
+                    assert_eq!(envelopes[0].mutation_id.0, "external-1#0", "single-op edit -> mutation_id is edit.id#0 (crate::os_spr::mutation_envelope_from_edit's ordinal-suffix convention)");
                 }
-                other => panic!("expected RemoteOperations, got {other:?}"),
+                other => panic!("expected RemoteMutations, got {other:?}"),
             }
 
             // The store ingests the pushed operation on tick(); the timeline grows and projection updates.
@@ -2428,7 +2428,7 @@ mod tests {
         /// `Welcome` then a follow-up `Commands`), but with a placeholder `chain_hash`/`resume_token`
         /// (this mock has no durable log to derive a real chain hash from).
         struct MockHub {
-            log: Arc<Mutex<Vec<(u64, crate::os_spr::OperationEnvelope)>>>,
+            log: Arc<Mutex<Vec<(u64, crate::os_spr::MutationEnvelope)>>>,
             broadcast: tokio_broadcast::Sender<ServerFrame>,
         }
 
@@ -2469,7 +2469,7 @@ mod tests {
             let (frontier, backlog) = {
                 let log = semio_hub.log.lock().await;
                 let ordinal = log.last().map_or(0, |(ordinal, _)| *ordinal);
-                let backlog: Vec<crate::os_spr::OperationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
+                let backlog: Vec<crate::os_spr::MutationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
                 (mock_frontier(ordinal), backlog)
             };
             let welcome = ServerFrame::Welcome { session_id: "mock-session".to_string(), resume_token: "mock-resume".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
@@ -2567,13 +2567,13 @@ mod tests {
             // Give both actors time to connect + Hello.
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(crate::os_store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None }).expect("apply on a");
-            channels_a.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake a");
+            store_a.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply on a");
+            channels_a.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
+            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
             match event {
-                DocumentEvent::RemoteOperations { envelopes } => assert_eq!(envelopes.len(), 1),
-                other => panic!("expected RemoteOperations on B, got {other:?}"),
+                DocumentEvent::RemoteMutations { envelopes } => assert_eq!(envelopes.len(), 1),
+                other => panic!("expected RemoteMutations on B, got {other:?}"),
             }
             store_b.tick().expect("tick b");
             assert_eq!(store_b.projection().expect("projection b").n, 7, "B converged on A's operation");
@@ -2603,8 +2603,8 @@ mod tests {
 
             // A applies two operations while nobody else is connected.
             for n in [3, 4] {
-                store_a.dispatch(crate::os_store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n }], description: None }).expect("apply on a");
-                channels_a.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake a");
+                store_a.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).expect("apply on a");
+                channels_a.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
                 tokio::time::sleep(Duration::from_millis(80)).await;
             }
 
@@ -2616,8 +2616,8 @@ mod tests {
             let mut store_b = DocumentStore::new(demo_envelope("catchup"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
-            if let DocumentEvent::RemoteOperations { envelopes } = event {
+            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
+            if let DocumentEvent::RemoteMutations { envelopes } = event {
                 assert_eq!(envelopes.len(), 2, "backlog replays both missed operations");
             }
             store_b.tick().expect("tick b");
@@ -2654,12 +2654,12 @@ mod tests {
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(crate::os_store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 5 }], description: None }).expect("apply on a");
+            store_a.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply on a");
             // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
             host_a.close("drain");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
-            if let DocumentEvent::RemoteOperations { envelopes } = event {
+            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteMutations { .. })).await;
+            if let DocumentEvent::RemoteMutations { envelopes } = event {
                 assert_eq!(envelopes.len(), 1, "the operation applied before detach was not lost");
             }
             store_b.tick().expect("tick b");
@@ -2681,8 +2681,8 @@ mod tests {
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store.dispatch(crate::os_store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
-            channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
+            store.dispatch(crate::os_store::DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            channels.cmd_tx.send(DocumentActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::CommandOutcome { .. })).await;
             match event {
@@ -2748,7 +2748,7 @@ mod tests {
             let channels =
                 host.open(DocumentActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe(&fixture.document_id);
-            let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
+            let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || storage.read(&fixture.document_id).expect("read").is_some()).await;
@@ -2771,7 +2771,7 @@ mod tests {
                                     .iter()
                                     .map(|op| {
                                         let text = op.text.as_deref().unwrap_or_else(|| panic!("fixture {} op line has no text", fixture.name));
-                                        let concrete = DemoOperation::parse_op(text).unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
+                                        let concrete = DemoMutation::parse_op(text).unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
                                         crate::os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().expect("encode demo op")) }
                                     })
                                     .collect();
@@ -2805,7 +2805,7 @@ mod tests {
 
         fn document_event_tag(event: &DocumentEvent) -> &'static str {
             match event {
-                DocumentEvent::RemoteOperations { .. } => "remoteOperations",
+                DocumentEvent::RemoteMutations { .. } => "remoteMutations",
                 DocumentEvent::SnapshotReplaced { .. } => "snapshotReplaced",
                 DocumentEvent::Status(_) => "status",
                 DocumentEvent::Presence { .. } => "presence",
@@ -2849,10 +2849,10 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
 
-        let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "doc-a", DemoProjection { n: 0 }, None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply e1");
+        let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "doc-a", DemoProjection { n: 0 }, None));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
         let post_e1 = store.projection().expect("post-e1");
-        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply e2");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
         store.dispatch(DocumentCommand::Undo).expect("undo e2");
         assert_eq!(store.projection().expect("live"), post_e1, "precondition: live store is back at post-e1");
 
@@ -2860,7 +2860,7 @@ mod tests {
         storage.write("doc-a", "demo/v1", &files.pack, &files.spr).expect("write");
 
         let (pack, spr) = storage.read("doc-a").expect("read").expect("some");
-        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
+        let parsed: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.projection, post_e1, "loaded projection must equal post-e1 through the folder storage layer");
         let mut reloaded = DocumentStore::new(parsed.envelope);
         assert_eq!(reloaded.projection().expect("reloaded"), post_e1);
@@ -2881,21 +2881,21 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
 
-        let seed = DocumentStore::<DemoProjection, DemoOperation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let seed = DocumentStore::<DemoProjection, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
         let files = print_document_text(seed.envelope()).expect("print document text");
         storage.write("demo", "demo", &files).expect("write");
 
         let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
 
-        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply 2");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
         let second_edit = store.envelope().vcs.edits.last().expect("second edit");
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 
         let reloaded = storage.read("demo", "demo").expect("read").expect("some");
-        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
+        let parsed: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.projection.n, 2, "write + append reconstructs every edit in order");
 
         assert_eq!(storage.document_ids("demo").expect("document ids"), vec!["demo".to_string()]);
@@ -2916,29 +2916,29 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
 
-        let seed = DocumentStore::<DemoProjection, DemoOperation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let seed = DocumentStore::<DemoProjection, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
         let files = print_document_pack(seed.envelope()).expect("print document pack");
         let dsl_mirror = seed.envelope().vcs.initial_projection.print_dsl();
         storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
 
         let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
 
-        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply 2");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
         let second_edit = store.envelope().vcs.edits.last().expect("second edit");
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 
         // Text mirror is current (both edits landed via append_ops).
         let reloaded_text = storage.read("demo", "demo").expect("read text").expect("some text");
-        let parsed_text: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
+        let parsed_text: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
         assert_eq!(parsed_text.projection.n, 2, "the .ops text mirror reflects every appended edit");
 
         // pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
         // the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
         let reloaded_pack = storage.read_pack("demo", "demo").expect("read pack").expect("some pack");
-        let parsed_pack: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
+        let parsed_pack: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
         assert_eq!(parsed_pack.projection.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
 
         // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
@@ -2947,7 +2947,7 @@ mod tests {
         let dsl_mirror2 = store.envelope().vcs.initial_projection.print_dsl();
         storage.write_pack("demo", "demo", &files2, &dsl_mirror2).expect("write pack 2");
         let reloaded_pack2 = storage.read_pack("demo", "demo").expect("read pack 2").expect("some pack 2");
-        let parsed_pack2: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+        let parsed_pack2: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
         assert_eq!(parsed_pack2.projection.n, 2, "a fresh write_pack brings pack+spr current with the live store");
 
         // The always-written DSL mirror must also be on disk and agree with the initial-projection.

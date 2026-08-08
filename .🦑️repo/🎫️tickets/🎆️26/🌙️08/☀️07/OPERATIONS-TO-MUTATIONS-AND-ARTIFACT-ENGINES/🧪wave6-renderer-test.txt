@@ -1,0 +1,43 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-renderer-react:test -- --run "--reporter=dot"
+
+> nx run @semio-tech/framework-renderer-react:test --run --reporter=dot
+
+> bun ./📜️script.ts test --run --reporter=dot
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+stderr | 🧪️index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+························································stderr | 🧪️index.test.ts > framework plugin runtime > loads plugin modules through framework-core, refcounted
+[DEBUG] program worker mock unresponsive for 10000ms: init
+
+[budget] /Users/ueli/.bun/bin/bun /Users/ueli/Documents/semio/node_modules/vitest/vitest.mjs run --config 🧪️vitest.config.ts --passWithNoTests --testTimeout 15000 --hookTimeout 15000 --teardownTimeout 15000 --run --reporter=dot exceeded 15000ms — killed. Trim it, or assign it to a higher level (quick/long/exhaustive).
+Warning: command "bun ./📜️script.ts test --run --reporter=dot" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/framework-renderer-react failed
+
+Failed tasks:
+
+- @semio-tech/framework-renderer-react:test
+
+Hint: run the command with --verbose for more details.
+
+1371 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1372 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1373 |  */
+1374 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1375 |   const status = runCmdInternal(cmd, args, opts);
+1376 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-renderer-react:test -- --run --reporter=dot exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1376:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:599:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:815:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:850:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:5435:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

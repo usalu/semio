@@ -1,12 +1,12 @@
 //! 🎨️ Procedural3d play app commands — loading a bundled example fixture (document-mutating; clears
 //! generations and resets ephemeral view state).
 
-use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation};
+use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::engine::{default_projection, example_projection, is_procedural3d_example_id};
-use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dOperation};
+use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow::{CameraJson, FlowEvalSession};
-use flow::playbook::GenerationOperation;
+use flow::playbook::GenerationMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -41,7 +41,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         session.set_eval_json(String::new());
         let fixture = &doc.projection.fixture;
         let target = if payload.example_id.is_empty() {
@@ -51,9 +51,9 @@ pub mod set_active_example {
         } else {
             return Ok(Emit::default());
         };
-        let mut operations: Vec<Procedural3dOperation> = doc.projection.generation.generations.iter().map(|generation| Procedural3dOperation::Generation(GenerationOperation::Remove { id: generation.id.clone() })).collect();
+        let mut operations: Vec<Procedural3dMutation> = doc.projection.generation.generations.iter().map(|generation| Procedural3dMutation::Generation(GenerationMutation::Remove { id: generation.id.clone() })).collect();
         operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
-        Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::Snapshot { config: config_after_example_load(cfg.projection, &target.fixture.camera) }], ..Default::default() })
+        Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::Snapshot { config: config_after_example_load(cfg.projection, &target.fixture.camera) }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

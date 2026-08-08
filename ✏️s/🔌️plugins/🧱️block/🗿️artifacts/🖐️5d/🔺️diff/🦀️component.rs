@@ -1,4 +1,4 @@
-//! 🔺️ Block 5D artifact — the operation diff and its `OperationDiff` law, plus the id-keyed collection
+//! 🔺️ Block 5D artifact — the operation diff and its `MutationDiff` law, plus the id-keyed collection
 //! diff plumbing shared with `🔧️op`'s `backwards()` (split out of the old constitutional `op` crate).
 
 
@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::block5d::{Block5dDefinition, Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Collections
@@ -72,7 +72,7 @@ fn apply_block5d_collection_diff<T: Block5dHasId + Clone>(items: &mut Vec<T>, re
     }
 }
 
-/// 🔍️ Reused by `🔧️op`'s `Operation::backwards` to look up a row's pre-operation state.
+/// 🔍️ Reused by `🔧️op`'s `Mutation::inverse` to look up a row's pre-operation state.
 pub(crate) fn block5d_index_of<T: Block5dHasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
 }
@@ -135,7 +135,7 @@ fn block5d_diff_absorb(diff: &mut Block5dDiff, other: Block5dDiff) {
     }
 }
 
-impl OperationDiff<Block5dDefinition> for Block5dDiff {
+impl MutationDiff<Block5dDefinition> for Block5dDiff {
     fn apply(&self, projection: &Block5dDefinition) -> Block5dDefinition {
         if let Some(document) = &self.document {
             return document.clone();

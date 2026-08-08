@@ -14,7 +14,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<CadOperation, CadConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<CadMutation, CadConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing
 // it here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl
 // itself (only on the free functions the taxonomy split creates), so this is a pure artefact of
@@ -38,6 +38,154 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/📐️cad/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod add_object {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➕️add-object/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➕️add-object/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➕️add-object/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_object {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➖️remove-object/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➖️remove-object/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➖️remove-object/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod patch_object {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🩹patch-object/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🩹patch-object/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🩹patch-object/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod translate_objects {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/↕️translate-objects/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/↕️translate-objects/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/↕️translate-objects/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod rotate_objects {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🔄rotate-objects/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🔄rotate-objects/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🔄rotate-objects/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod scale_objects {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/↔️scale-objects/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/↔️scale-objects/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/↔️scale-objects/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_pane_objects {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🖼️set-pane-objects/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🖼️set-pane-objects/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🖼️set-pane-objects/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod add_node {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➕️add-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➕️add-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➕️add-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_node {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➖️remove-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➖️remove-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/➖️remove-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod rename_node {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🏷️rename-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🏷️rename-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🏷️rename-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod patch_reference {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🩹patch-reference/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🩹patch-reference/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🩹patch-reference/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_references {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/📎set-references/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/📎set-references/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/📎set-references/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_active_model_definition {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎯set-active-model-definition/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎯set-active-model-definition/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎯set-active-model-definition/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_scene {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎬️set-scene/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎬️set-scene/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎬️set-scene/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+        }
+
         #[path = "../../🗿️artifacts/📐️cad/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/📐️cad/🎒️pack/🦀️component.rs"]

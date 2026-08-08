@@ -173,7 +173,7 @@ impl protocol::Identified<String> for SequenceEdge {
 
 /// 🩹️ Sparse patch for a step — only the fields user actions ever mutate after creation (kind/slot
 /// are fixed for a step's lifetime, so add/remove carries those instead). Only ever embedded
-/// `#[dsl(block)]`-wrapped (on `SequenceOperation::StepsPatch`, in `🔧️op`), so it carries no
+/// `#[dsl(block)]`-wrapped (on `SequenceMutation::StepsPatch`, in `🔧️op`), so it carries no
 /// `#[dsl(keyword = "...")]` of its own.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
@@ -212,7 +212,7 @@ impl protocol::Patchable<SequenceStepPatch> for SequenceStep {
 }
 
 /// 🩹️ Sparse patch for an edge endpoint rewire. Only ever embedded `#[dsl(block)]`-wrapped (on
-/// `SequenceOperation::EdgesPatch`, in `🔧️op`), so it carries no `#[dsl(keyword = "...")]` of its
+/// `SequenceMutation::EdgesPatch`, in `🔧️op`), so it carries no `#[dsl(keyword = "...")]` of its
 /// own.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]

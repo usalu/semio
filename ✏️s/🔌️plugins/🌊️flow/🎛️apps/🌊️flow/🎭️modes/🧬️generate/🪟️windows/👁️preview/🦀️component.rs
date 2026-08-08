@@ -2,7 +2,7 @@
 
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
-use playbook::render_generation_preview_text;
+use crate::playbook::render_generation_preview_text;
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

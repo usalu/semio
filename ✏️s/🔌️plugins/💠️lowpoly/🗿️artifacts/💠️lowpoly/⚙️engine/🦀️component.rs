@@ -8,7 +8,7 @@ use semio_s_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, Vert
 use serde_json::Value;
 
 //#region ⚠️ Errors
-/// ⚠️ `LowpolyDocument` compute-session and mesh-operation failure.
+/// ⚠️ `LowpolyDocument` compute-session and mesh-mutation / compute-session failure.
 #[derive(Debug, thiserror::Error)]
 pub enum LowpolyCoreError {
     #[error(transparent)]
@@ -132,24 +132,63 @@ pub fn register_pilot_languages() {
 /// unit box until the handcrafted mesh DSL codec replaces derive-based `parse_dsl` (the reuse
 /// `.lowpoly` example is already structured half-edge text without `mesh-json`).
 pub fn default_projection() -> LowpolyProjection {
-    let mesh_json = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json");
+    let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim");
+    let _ = mesh.unwrap_uv();
+    let mesh_json = mesh.to_json().expect("mesh json");
     crate::artifacts::lowpoly::projection_from_mesh_json(&mesh_json, "obj-1", "Unit Box")
 }
 //#endregion 🔖️DefaultProjection
 
 //#region 🔖️ProjectionHelpers
-/// 🔧️ Shared by the compute session and `op`'s `apply_lowpoly_operation`/`invert_lowpoly_operation` — a
+/// 🔧️ Shared by the compute session and `op`'s `apply_lowpoly_mutation`/`inverse_lowpoly_mutation` — a
 /// mutable lookup of an object by id within a projection.
 pub fn object_mut<'a>(projection: &'a mut LowpolyProjection, object_id: &str) -> Option<&'a mut LowpolyObject> {
     projection.objects.iter_mut().find(|object| object.id == object_id)
 }
 
-/// 🔧️ Shared by the compute session and `op`'s `invert_lowpoly_operation` (`PaintStroke` inverse reads
+/// 🔧️ Shared by the compute session and `op`'s `inverse_lowpoly_mutation` (`PaintStroke` inverse reads
 /// the currently-stored bytes at each run's offset).
 pub fn layer_pixels_at<'a>(projection: &'a LowpolyProjection, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
     projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
 //#endregion 🔖️ProjectionHelpers
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent lowpoly artifact engine — owns the projection; every transition is a mutation.
+pub struct LowpolyEngine {
+    projection: LowpolyProjection,
+}
+
+impl LowpolyEngine {
+    pub fn new(projection: LowpolyProjection) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> LowpolyProjection {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for LowpolyEngine {
+    type Projection = LowpolyProjection;
+    type Mutation = crate::artifacts::lowpoly::mutations::LowpolyMutation;
+    type Diff = crate::artifacts::lowpoly::diff::LowpolyDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::lowpoly::mutations::apply_lowpoly_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 //#region 🔖️ComputeSession
 /// @emoji 🛠️ Mutable compute session built from a projection clone plus ephemeral editing context
@@ -530,7 +569,44 @@ mod tests {
         assert_eq!(restored, projection);
     }
 
-    //#region 🔖️ComputeSessionCoverage
+    //#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent lowpoly artifact engine — owns the projection; every transition is a mutation.
+pub struct LowpolyEngine {
+    projection: LowpolyProjection,
+}
+
+impl LowpolyEngine {
+    pub fn new(projection: LowpolyProjection) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> LowpolyProjection {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for LowpolyEngine {
+    type Projection = LowpolyProjection;
+    type Mutation = crate::artifacts::lowpoly::mutations::LowpolyMutation;
+    type Diff = crate::artifacts::lowpoly::diff::LowpolyDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::lowpoly::mutations::apply_lowpoly_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
+//#region 🔖️ComputeSessionCoverage
     #[test]
     fn add_primitive_supports_every_known_kind() {
         let mut doc = LowpolyDocument::new(default_projection()).unwrap();
@@ -710,6 +786,24 @@ mod tests {
         doc.fill_bucket(&object_id, 0, 0.5, 0.5, [10, 20, 30, 255]).unwrap();
         assert_eq!(doc.sample_pixel(&object_id, 0.5, 0.5).unwrap(), [10, 20, 30, 255]);
     }
+    
+    #[test]
+    fn artifact_engine_apply_and_inverse_round_trip() {
+        use crate::artifacts::lowpoly::mutations::LowpolyMutation;
+        use crate::artifacts::lowpoly::LowpolyObjectPatch;
+        use protocol::ArtifactEngine;
+        let mut engine = LowpolyEngine::new(default_projection());
+        let object_id = engine.projection().objects[0].id.clone();
+        let mutation = LowpolyMutation::ObjectsPatch { id: object_id, patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } };
+        let inverse = ArtifactEngine::inverse(&engine, &mutation);
+        ArtifactEngine::apply(&mut engine, &mutation).expect("apply");
+        assert_eq!(engine.projection().objects[0].name, "Renamed");
+        for step in &inverse {
+            ArtifactEngine::apply(&mut engine, step).expect("inverse apply");
+        }
+        assert_eq!(engine.projection().objects[0].name, "Unit Box");
+    }
+
     //#endregion 🔖️ComputeSessionCoverage
 }
 //#endregion 🧪️Tests

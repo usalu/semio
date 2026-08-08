@@ -1,7 +1,7 @@
 dialect protocol
 protocol home.spr
 version 1
-schema s.home.operation
+schema s.home.mutation
 start record
 framing record
 record space.home-add-stock tag 1

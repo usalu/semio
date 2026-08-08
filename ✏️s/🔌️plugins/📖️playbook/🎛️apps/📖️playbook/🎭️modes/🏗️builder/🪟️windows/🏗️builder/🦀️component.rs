@@ -51,15 +51,15 @@ fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, String, St
 
 fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
     let builtins = builtin_palette_tuples();
-    playbook::build_palette(&builtins, &extension_palette_entries(config))
+    crate::playbook::build_palette(&builtins, &extension_palette_entries(config))
 }
 
-fn playbook_builder_config() -> playbook::PlaybookBuilderConfig {
-    playbook::PlaybookBuilderConfig { action_namespace: "playbook-builder", controller_id: PLAYBOOK_PLAY_CONTROLLER_ID, labels: playbook::PLAYBOOK_BUILDER_LABELS_EN }
+fn playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
+    crate::playbook::PlaybookBuilderConfig { action_namespace: "playbook-builder", controller_id: PLAYBOOK_PLAY_CONTROLLER_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
 pub fn render(spec: &PlaybookSpec, config: &PlaybookConfig) -> UiNode {
-    playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, spec, &build_palette(config), config.selected_ids.first().map(String::as_str), &playbook_builder_config())
+    crate::playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, spec, &build_palette(config), config.selected_ids.first().map(String::as_str), &playbook_builder_config())
 }
 //#endregion 🔖️Render
 

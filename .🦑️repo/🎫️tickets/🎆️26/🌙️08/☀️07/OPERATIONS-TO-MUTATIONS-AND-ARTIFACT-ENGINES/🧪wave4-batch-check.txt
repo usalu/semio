@@ -1,0 +1,102 @@
+=== semio-s-plugin-raster ===
+error[E0433]: cannot find module or crate `blake3` in this scope
+error: could not compile `semio-s-plugin-raster` (lib) due to 1 previous error; 1 warning emitted
+=== semio-s-plugin-sequence ===
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0432]: unresolved import `protocol::OperationDiff`
+error[E0432]: unresolved imports `protocol::collection_diff_from_operation`, `protocol::invert_collection_operation`, `protocol::Operation`
+=== semio-s-plugin-animate ===
+error[E0432]: unresolved import `protocol::OperationDiff`
+error[E0432]: unresolved imports `protocol::collection_diff_from_operation`, `protocol::invert_collection_operation`, `protocol::Operation`
+error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::QualityPreset`
+error[E0432]: unresolved import `crate::artifacts::present::engine::animate::Section`
+error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::preview_scene_loop`, `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::Scene`, `crate::artifacts::present::engine::animate::SceneFrame`
+error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::compile_animations`, `crate::artifacts::present::engine::animate::interpolate_at`, `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::Animation`, `crate::artifacts::present::engine::animate::Camera`, `crate::artifacts::present::engine::animate::Scene`, `crate::artifacts::present::engine::animate::SectionList`, `crate::artifacts::present::engine::animate::Sobject`, `crate::artifacts::present::engine::animate::Wait`
+error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::Camera`, `crate::artifacts::present::engine::animate::Color`, `crate::artifacts::present::engine::animate::Sobject`
+error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::BasicStage`, `crate::artifacts::present::engine::animate::Camera`, `crate::artifacts::present::engine::animate::Scene`, `crate::artifacts::present::engine::animate::Section`, `crate::artifacts::present::engine::animate::SectionList`, `crate::artifacts::present::engine::animate::Sobject`, `crate::artifacts::present::engine::animate::VSobject`
+error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::SectionList`
+error[E0405]: cannot find trait `MutationDiff` in this scope
+error[E0405]: cannot find trait `Mutation` in this scope
+error[E0425]: cannot find value `TYPST_FONTS` in this scope
+error[E0433]: cannot find module or crate `blake3` in this scope
+error[E0433]: cannot find module or crate `blake3` in this scope
+error[E0433]: cannot find module or crate `blake3` in this scope
+=== semio-s-plugin-imperative ===
+error[E0425]: cannot find function `apply_collection_operation` in crate `protocol`
+error[E0405]: cannot find trait `Operation` in crate `protocol`
+error[E0425]: cannot find function `invert_collection_operation` in crate `protocol`
+error[E0425]: cannot find type `conversion` in this scope
+error[E0425]: cannot find function `parse` in module `dsl`
+error[E0422]: cannot find struct, variant or union type `ParseOptions` in module `dsl`
+error[E0433]: cannot find `Limits` in `dsl`
+error[E0433]: cannot find `SourceMode` in `dsl`
+error[E0425]: cannot find function `print` in module `dsl`
+error[E0433]: cannot find `JoinMode` in `dsl`
+error[E0425]: cannot find type `conversion` in this scope
+error[E0425]: cannot find type `RecordSpec` in module `dsl`
+error[E0425]: cannot find function `bootstrap_linked_modules` in crate `imperative_engine`
+error[E0405]: cannot find trait `Operation` in crate `protocol`
+error[E0277]: the trait bound `op::ImperativeMutation: dsl::Mutation<artifacts::imperative::component::ImperativeDocument>` is not satisfied
+=== semio-s-plugin-layout ===
+error: couldn't read `✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././../../🗿️artifacts/📏️layout/⚙️engine/🎬️scene/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/🖼️assets/🔤️MapLabelSans.ttf`: No such file or directory (os error 2)
+error[E0432]: unresolved imports `protocol::apply_collection_operation`, `protocol::invert_collection_operation`, `protocol::Operation`
+error[E0405]: cannot find trait `Mutation` in this scope
+error[E0277]: the trait bound `op::LayoutMutation: dsl::Mutation<artifacts::layout::component::LayoutDocument>` is not satisfied
+error: could not compile `semio-s-plugin-layout` (lib) due to 4 previous errors; 7 warnings emitted
+=== semio-s-plugin-dag ===
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0753]: expected outer doc comment
+error[E0432]: unresolved imports `infinite_board_port_directed_dag::DagDocument`, `infinite_board_port_directed_dag::DAG_DOCUMENT_SCHEMA`
+error[E0432]: unresolved import `infinite_board_port_directed_dag::DagDiff`
+error[E0432]: unresolved import `infinite_board_port_directed_dag::DagMutation`
+error[E0432]: unresolved import `infinite_board_port_directed_dag::DagDocument`
+=== semio-s-plugin-flow ===
+error[E0432]: unresolved import `playbook`
+error[E0432]: unresolved import `playbook`
+error[E0432]: unresolved import `playbook`
+error[E0432]: unresolved import `playbook`
+error[E0432]: unresolved import `playbook`
+error[E0425]: cannot find function `default_contributions_json` in this scope
+error[E0599]: no method named `apply` found for struct `FlowDiff` in the current scope
+error[E0599]: no method named `inverse` found for reference `&semio_framework_os_flow::FlowMutation` in the current scope
+error[E0599]: no method named `inverse` found for reference `&semio_framework_os_flow::FlowMutation` in the current scope
+error[E0599]: no method named `inverse` found for reference `&semio_framework_os_flow::FlowMutation` in the current scope
+error[E0599]: no method named `inverse` found for reference `&semio_framework_os_flow::FlowMutation` in the current scope
+error: could not compile `semio-s-plugin-flow` (lib) due to 11 previous errors; 1 warning emitted
+=== semio-s-plugin-forms ===
+error[E0255]: the name `parse_contributions` is defined multiple times
+error[E0432]: unresolved import `playbook`
+error[E0432]: unresolved import `playbook`
+error[E0432]: unresolved import `playbook`
+error[E0433]: cannot find module or crate `playbook` in this scope
+error[E0433]: cannot find module or crate `playbook` in this scope
+error[E0433]: cannot find module or crate `playbook` in this scope
+error[E0433]: cannot find module or crate `playbook` in this scope
+error[E0277]: the trait bound `PlaybookMutation: OpBinary` is not satisfied
+error[E0277]: the trait bound `PlaybookMutation: OpText` is not satisfied
+error[E0433]: cannot find module or crate `blake3` in this scope
+error[E0599]: no method named `inverse` found for reference `&PlaybookMutation` in the current scope
+error[E0599]: no method named `inverse` found for reference `&PlaybookMutation` in the current scope
+error[E0599]: no method named `inverse` found for reference `&PlaybookMutation` in the current scope
+error[E0599]: no method named `inverse` found for reference `&PlaybookMutation` in the current scope

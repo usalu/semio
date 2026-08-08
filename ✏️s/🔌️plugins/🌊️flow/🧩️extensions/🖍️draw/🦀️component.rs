@@ -1,7 +1,7 @@
 //! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`semio_s_2d::DrawingStore`].
 
 use semio_s_2d::{block_on, DrawingError, DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use flow_extension_sdk::with_drawing_kernel as with_kernel;
 
 // #region 🔖️Helpers
@@ -124,9 +124,9 @@ fn module_registry() -> Registry {
 }
 // #endregion 🔖️Helpers
 
-// #region 🔖️ShapeOperations
+// #region 🔖️ShapeMutations
 struct ShapeRect;
-impl Operation for ShapeRect {
+impl Operator for ShapeRect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x = read_channel_number(input, "x")?;
@@ -140,7 +140,7 @@ impl Operation for ShapeRect {
 }
 
 struct ShapeEllipse;
-impl Operation for ShapeEllipse {
+impl Operator for ShapeEllipse {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let cx = read_channel_number(input, "cx")?;
@@ -154,7 +154,7 @@ impl Operation for ShapeEllipse {
 }
 
 struct ShapeCircle;
-impl Operation for ShapeCircle {
+impl Operator for ShapeCircle {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let cx = read_channel_number(input, "cx")?;
@@ -167,7 +167,7 @@ impl Operation for ShapeCircle {
 }
 
 struct ShapeLine;
-impl Operation for ShapeLine {
+impl Operator for ShapeLine {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x1 = read_channel_number(input, "x1")?;
@@ -181,7 +181,7 @@ impl Operation for ShapeLine {
 }
 
 struct ShapePolygon;
-impl Operation for ShapePolygon {
+impl Operator for ShapePolygon {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let points = read_point_list(input, "points")?;
@@ -190,11 +190,11 @@ impl Operation for ShapePolygon {
         })
     }
 }
-// #endregion 🔖️ShapeOperations
+// #endregion 🔖️ShapeMutations
 
-// #region 🔖️PathOperations
+// #region 🔖️PathMutations
 struct PathPolyline;
-impl Operation for PathPolyline {
+impl Operator for PathPolyline {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let points = read_point_list(input, "points")?;
@@ -205,7 +205,7 @@ impl Operation for PathPolyline {
 }
 
 struct PathRect;
-impl Operation for PathRect {
+impl Operator for PathRect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x = read_channel_number(input, "x")?;
@@ -217,11 +217,11 @@ impl Operation for PathRect {
         })
     }
 }
-// #endregion 🔖️PathOperations
+// #endregion 🔖️PathMutations
 
-// #region 🔖️StyleOperations
+// #region 🔖️StyleMutations
 struct StyleFill;
-impl Operation for StyleFill {
+impl Operator for StyleFill {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
@@ -233,7 +233,7 @@ impl Operation for StyleFill {
 }
 
 struct StyleStroke;
-impl Operation for StyleStroke {
+impl Operator for StyleStroke {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
@@ -245,11 +245,11 @@ impl Operation for StyleStroke {
         })
     }
 }
-// #endregion 🔖️StyleOperations
+// #endregion 🔖️StyleMutations
 
-// #region 🔖️XformOperations
+// #region 🔖️XformMutations
 struct XformTranslate;
-impl Operation for XformTranslate {
+impl Operator for XformTranslate {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
@@ -262,7 +262,7 @@ impl Operation for XformTranslate {
 }
 
 struct XformRotate;
-impl Operation for XformRotate {
+impl Operator for XformRotate {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
@@ -274,7 +274,7 @@ impl Operation for XformRotate {
 }
 
 struct XformScale;
-impl Operation for XformScale {
+impl Operator for XformScale {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
@@ -285,11 +285,11 @@ impl Operation for XformScale {
         })
     }
 }
-// #endregion 🔖️XformOperations
+// #endregion 🔖️XformMutations
 
-// #region 🔖️GroupOperations
+// #region 🔖️GroupMutations
 struct GroupMerge;
-impl Operation for GroupMerge {
+impl Operator for GroupMerge {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
@@ -299,11 +299,11 @@ impl Operation for GroupMerge {
         })
     }
 }
-// #endregion 🔖️GroupOperations
+// #endregion 🔖️GroupMutations
 
-// #region 🔖️BoolOperations
+// #region 🔖️BoolMutations
 struct BoolUnion;
-impl Operation for BoolUnion {
+impl Operator for BoolUnion {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
@@ -315,7 +315,7 @@ impl Operation for BoolUnion {
 }
 
 struct BoolDifference;
-impl Operation for BoolDifference {
+impl Operator for BoolDifference {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
@@ -327,7 +327,7 @@ impl Operation for BoolDifference {
 }
 
 struct BoolIntersection;
-impl Operation for BoolIntersection {
+impl Operator for BoolIntersection {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
@@ -337,11 +337,11 @@ impl Operation for BoolIntersection {
         })
     }
 }
-// #endregion 🔖️BoolOperations
+// #endregion 🔖️BoolMutations
 
-// #region 🔖️TextOperations
+// #region 🔖️TextMutations
 struct DrawText;
-impl Operation for DrawText {
+impl Operator for DrawText {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x = read_channel_number(input, "x")?;
@@ -353,11 +353,11 @@ impl Operation for DrawText {
         })
     }
 }
-// #endregion 🔖️TextOperations
+// #endregion 🔖️TextMutations
 
-// #region 🔖️GradientOperations
+// #region 🔖️GradientMutations
 struct GradientLinear;
-impl Operation for GradientLinear {
+impl Operator for GradientLinear {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
@@ -371,11 +371,11 @@ impl Operation for GradientLinear {
         })
     }
 }
-// #endregion 🔖️GradientOperations
+// #endregion 🔖️GradientMutations
 
-// #region 🔖️ClipOperations
+// #region 🔖️ClipMutations
 struct ClipApply;
-impl Operation for ClipApply {
+impl Operator for ClipApply {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let target = read_drawing(input, "target")?;
@@ -385,7 +385,7 @@ impl Operation for ClipApply {
         })
     }
 }
-// #endregion 🔖️ClipOperations
+// #endregion 🔖️ClipMutations
 
 /// 📦️ Registers all draw operators.
 pub fn register(registry: &mut Registry) {
@@ -411,7 +411,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("Rectangle")],
             shape,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeRect) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(ShapeRect) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -425,7 +425,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("Ellipse")],
             shape,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeEllipse) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(ShapeEllipse) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -439,7 +439,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("Circle")],
             shape,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeCircle) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(ShapeCircle) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -453,17 +453,17 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("Line")],
             shape,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeLine) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(ShapeLine) }],
         &["draw.drawing"],
     );
     registry.register_operator(
         operator_info("draw.shape.polygon", "Polygon", "Pol", "emoji:⬡️", "Closed polygon", vec![list_channel("points", "draw.shape.polygon")], vec![out_drawing("Polygon")], shape),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapePolygon) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(ShapePolygon) }],
         &["draw.drawing"],
     );
     registry.register_operator(
         operator_info("draw.path.polyline", "Polyline", "Pln", "emoji:〰", "Open polyline path", vec![list_channel("points", "draw.path.polyline")], vec![out_drawing("PolylinePath")], paths),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(PathPolyline) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(PathPolyline) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -477,7 +477,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("RectPath")],
             paths,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(PathRect) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(PathRect) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -497,7 +497,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("FilledDrawing")],
             style,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(StyleFill) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(StyleFill) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -518,7 +518,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("StrokedDrawing")],
             style,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(StyleStroke) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(StyleStroke) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -532,12 +532,12 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("TranslatedDrawing")],
             xform,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(XformTranslate) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(XformTranslate) }],
         &["draw.drawing"],
     );
     registry.register_operator(
         operator_info("draw.xform.rotate", "Rotate", "Rot", "emoji:🔄️", "Rotate drawing", vec![drawing_channel("drawing", "draw.xform.rotate"), number_channel("angle", "draw.xform.rotate", 0.0)], vec![out_drawing("RotatedDrawing")], xform),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(XformRotate) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(XformRotate) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -551,22 +551,22 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("ScaledDrawing")],
             xform,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(XformScale) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(XformScale) }],
         &["draw.drawing"],
     );
     registry.register_operator(
         operator_info("draw.group.merge", "Merge", "Mrg", "emoji:🗂️", "Merge drawings into a group", vec![drawing_channel("a", "draw.group.merge"), drawing_channel("b", "draw.group.merge")], vec![out_drawing("MergedGroup")], group),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(GroupMerge) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(GroupMerge) }],
         &["draw.drawing"],
     );
     registry.register_operator(
         operator_info("draw.bool.union", "Union", "Uni", "emoji:∪", "Boolean union", vec![drawing_channel("a", "draw.bool.union"), drawing_channel("b", "draw.bool.union")], vec![out_drawing("UnionDrawing")], boolean),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(BoolUnion) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(BoolUnion) }],
         &["draw.drawing"],
     );
     registry.register_operator(
         operator_info("draw.bool.difference", "Difference", "Dif", "emoji:−", "Boolean difference", vec![drawing_channel("a", "draw.bool.difference"), drawing_channel("b", "draw.bool.difference")], vec![out_drawing("DifferenceDrawing")], boolean),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(BoolDifference) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(BoolDifference) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -580,7 +580,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("IntersectionDrawing")],
             boolean,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(BoolIntersection) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(BoolIntersection) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -594,7 +594,7 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("TextDrawing")],
             text,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(DrawText) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(DrawText) }],
         &["draw.drawing"],
     );
     registry.register_operator(
@@ -622,12 +622,12 @@ pub fn register(registry: &mut Registry) {
             vec![out_drawing("GradientDrawing")],
             gradient,
         ),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(GradientLinear) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(GradientLinear) }],
         &["draw.drawing"],
     );
     registry.register_operator(
         operator_info("draw.clip.apply", "Clip", "Clp", "emoji:✂️", "Apply clip path", vec![drawing_channel("target", "draw.clip.apply"), drawing_channel("clip", "draw.clip.apply")], vec![out_drawing("ClippedDrawing")], clip),
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(ClipApply) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(ClipApply) }],
         &["draw.drawing"],
     );
     registry.finalize();

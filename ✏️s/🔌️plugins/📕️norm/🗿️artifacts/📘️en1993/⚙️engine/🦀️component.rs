@@ -1,7 +1,7 @@
 //! ⚙️ EN 1993 design of steel structures — headless compute (constitutional: engine).
 
 use crate::artifacts::en1993::Document;
-use crate::artifacts::en1993::op::Operation;
+use crate::artifacts::en1993::mutations::En1993Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormFamily, NormFamilyId, NormHost, Quantity};
 
 // #region 🔖️AnnexParams
@@ -818,9 +818,12 @@ pub fn check_full_steel_member(document: &Document) -> CheckReport {
 }
 
 // #region 🔖️Fem
+#[cfg(feature = "cross-fem")]
 use fem::core::elements2d::BeamEb2;
+#[cfg(feature = "cross-fem")]
 use fem::core::{Dof, MemberUdl, Model, Node, Support};
 
+#[cfg(feature = "cross-fem")]
 fn max_beam_moment_knm(result: &fem::core::StaticResult, element_id: &str) -> f64 {
     let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
@@ -828,6 +831,7 @@ fn max_beam_moment_knm(result: &fem::core::StaticResult, element_id: &str) -> f6
     stations.iter().map(|s| s.m.abs()).fold(0.0_f64, f64::max) / 1000.0
 }
 
+#[cfg(feature = "cross-fem")]
 fn max_beam_shear_kn(result: &fem::core::StaticResult, element_id: &str) -> f64 {
     let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
@@ -836,6 +840,7 @@ fn max_beam_shear_kn(result: &fem::core::StaticResult, element_id: &str) -> f64 
 }
 
 /// 🏗️ Solve a simply supported steel beam with `fem_core` and run EN 1993 ULS checks.
+#[cfg(feature = "cross-fem")]
 pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_mm3: f64, a_v_mm2: f64, f_y_mpa: f64, chi: f64) -> Result<CheckReport, fem::core::FemError> {
     let mut model = Model::default();
     model.nodes.push(Node { id: "n0".into(), pos: [0.0, 0.0, 0.0] });
@@ -865,6 +870,44 @@ pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_
 // #endregion 🔖️Fem
 
 // #region 🔖️Session
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1993 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1993Engine {
+    projection: Document,
+}
+
+impl En1993Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1993Engine {
+    type Projection = Document;
+    type Mutation = En1993Mutation;
+    type Diff = crate::artifacts::en1993::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
 pub type Host = NormHost<En1993Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
@@ -875,7 +918,7 @@ pub struct En1993Family;
 
 impl NormFamily for En1993Family {
     type Document = Document;
-    type Operation = Operation;
+    type Mutation = En1993Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1993
@@ -922,6 +965,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "cross-fem")]
     fn steel_member_from_fem_e2e() {
         let report = check_steel_member_from_fem(6.0, 20.0, 5000.0, 500_000.0, 2500.0, 355.0, 0.75).expect("fem solve");
         assert_eq!(report.checks.len(), 4);

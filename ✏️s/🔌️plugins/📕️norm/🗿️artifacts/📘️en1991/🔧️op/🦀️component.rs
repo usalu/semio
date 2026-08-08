@@ -1,7 +1,7 @@
 //! ⚡️ EN 1991 actions on structures — operation enum + laws (constitutional: op).
 //!
 //! 🧩️ Every norm family document shares the same one-shot whole-document replacement operation
-//! (`crate::document::SetDocumentOperation<D>`) so this slot only needs to bind that generic operation to
+//! (`crate::document::SetDocumentMutation<D>`) so this slot only needs to bind that generic operation to
 //! `crate::artifacts::en1991::Document`.
 
 
@@ -14,14 +14,5 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::en1991::Document;
 
-pub type Operation = crate::document::SetDocumentOperation<Document>;
+pub use crate::artifacts::en1991::mutations::En1991Mutation;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn set_document_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
-    }
-}

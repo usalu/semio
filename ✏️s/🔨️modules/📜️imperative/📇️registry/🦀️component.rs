@@ -1,7 +1,7 @@
 //! 📇 Runtime imperative operator registry composed from `imperative.module` contributions.
 
 use imperative_extension_sdk::ImperativeExtensionManifest;
-use neural_engine::{node_hash, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry};
+use neural_engine::{node_hash, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry};
 use semio_framework::{parse_contributions, Contribution, ProgramContributionEntry};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
@@ -57,7 +57,7 @@ struct ContributedExtensionStub {
     operator_id: String,
 }
 
-impl Operation for ContributedExtensionStub {
+impl Operator for ContributedExtensionStub {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let node_hash = node_hash(&self.operator_id, input);
         Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
@@ -73,7 +73,7 @@ fn register_manifest_operators(registry: &mut Registry, plugin_id: &str, manifes
         let operator_id = info.id.clone();
         registry.register_operator(
             info.clone(),
-            vec![OperatorImpl { schemas: vec![], operation: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
+            vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
             &[],
         );
     }

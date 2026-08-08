@@ -2,10 +2,10 @@
 //! All real, undoable document mutations except `setLayerVisible`/`toggleLayerVisible`/`deleteLayer`/
 //! `duplicateLayer`/`moveLayer`, which also touch selection as a config side effect.
 
-use crate::apps::raster::config::{RasterConfig, RasterConfigOperation};
+use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::apps::raster::layer_id_from_tree_row_id;
 use crate::artifacts::raster::engine::{clone_layer, create_layer_of_kind, find_layer, layer_node_id, layer_patch_for_field, layer_visible};
-use crate::artifacts::raster::op::RasterOperation;
+use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -14,13 +14,13 @@ use serde_json::Value;
 //#region 🔖️Shared
 /// 🩹️ Builds `PatchLayer` operations for a `patchLayer`/`patchLayers` field write across ids — shared by
 /// both payloads below (the only two consumers).
-fn raster_patch_layer_operations(document: &RasterProjection, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterOperation> {
+fn raster_patch_layer_operations(document: &RasterProjection, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterMutation> {
     layer_ids
         .iter()
         .filter_map(|layer_id| {
             let prior = find_layer(&document.layers, layer_id)?;
             let patch = layer_patch_for_field(field, value, prior)?;
-            Some(RasterOperation::PatchLayer { layer_id: layer_id.clone(), patch })
+            Some(RasterMutation::PatchLayer { layer_id: layer_id.clone(), patch })
         })
         .collect()
 }
@@ -42,13 +42,13 @@ pub mod add_layer {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &AddLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let document = doc.projection;
         let layer = create_layer_of_kind(&payload.kind);
         let select_id = layer_node_id(&layer).to_string();
         Ok(Emit {
-            document_operations: vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }],
-            config_operations: vec![RasterConfigOperation::SetSelection { ids: vec![select_id] }],
+            document_mutations: vec![RasterMutation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }],
+            config_mutations: vec![RasterConfigMutation::SetSelection { ids: vec![select_id] }],
             ..Default::default()
         })
     }
@@ -65,13 +65,13 @@ pub mod drop_layer_kind {
         pub kind: String,
     }
 
-    pub fn handle(payload: &DropLayerKind, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &DropLayerKind, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let document = doc.projection;
         let layer = create_layer_of_kind(&payload.kind);
         let select_id = layer_node_id(&layer).to_string();
         Ok(Emit {
-            document_operations: vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }],
-            config_operations: vec![RasterConfigOperation::SetSelection { ids: vec![select_id] }],
+            document_mutations: vec![RasterMutation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }],
+            config_mutations: vec![RasterConfigMutation::SetSelection { ids: vec![select_id] }],
             ..Default::default()
         })
     }
@@ -89,11 +89,11 @@ pub mod set_layer_visible {
         pub visible: Option<bool>,
     }
 
-    pub fn handle(payload: &SetLayerVisible, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &SetLayerVisible, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let document = doc.projection;
         let Some(layer) = find_layer(&document.layers, &payload.layer_id) else { return Ok(Emit::default()) };
         let resolved = payload.visible.unwrap_or_else(|| !layer_visible(layer));
-        Ok(Emit::operations(vec![RasterOperation::PatchLayer { layer_id: payload.layer_id.clone(), patch: RasterLayerPatch { visible: Some(resolved), ..Default::default() } }]))
+        Ok(Emit::mutations(vec![RasterMutation::PatchLayer { layer_id: payload.layer_id.clone(), patch: RasterLayerPatch { visible: Some(resolved), ..Default::default() } }]))
     }
 }
 //#endregion 🔖️SetLayerVisible
@@ -108,11 +108,11 @@ pub mod toggle_layer_visible {
         pub layer_id: String,
     }
 
-    pub fn handle(payload: &ToggleLayerVisible, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &ToggleLayerVisible, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let document = doc.projection;
         let Some(layer) = find_layer(&document.layers, &payload.layer_id) else { return Ok(Emit::default()) };
         let resolved = !layer_visible(layer);
-        Ok(Emit::operations(vec![RasterOperation::PatchLayer { layer_id: payload.layer_id.clone(), patch: RasterLayerPatch { visible: Some(resolved), ..Default::default() } }]))
+        Ok(Emit::mutations(vec![RasterMutation::PatchLayer { layer_id: payload.layer_id.clone(), patch: RasterLayerPatch { visible: Some(resolved), ..Default::default() } }]))
     }
 }
 //#endregion 🔖️ToggleLayerVisible
@@ -127,13 +127,13 @@ pub mod delete_layer {
         pub layer_id: String,
     }
 
-    pub fn handle(payload: &DeleteLayer, doc: &DocumentView<'_, RasterProjection>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &DeleteLayer, doc: &DocumentView<'_, RasterProjection>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let document = doc.projection;
         if find_layer(&document.layers, &payload.layer_id).is_none() {
             return Ok(Emit::default());
         }
         let remaining: Vec<String> = cfg.projection.selected_ids.iter().filter(|id| **id != payload.layer_id).cloned().collect();
-        Ok(Emit { document_operations: vec![RasterOperation::RemoveLayer { layer_id: payload.layer_id.clone() }], config_operations: vec![RasterConfigOperation::SetSelection { ids: remaining }], ..Default::default() })
+        Ok(Emit { document_mutations: vec![RasterMutation::RemoveLayer { layer_id: payload.layer_id.clone() }], config_mutations: vec![RasterConfigMutation::SetSelection { ids: remaining }], ..Default::default() })
     }
 }
 //#endregion 🔖️DeleteLayer
@@ -148,15 +148,15 @@ pub mod duplicate_layer {
         pub layer_id: String,
     }
 
-    pub fn handle(payload: &DuplicateLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &DuplicateLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let document = doc.projection;
         match find_layer(&document.layers, &payload.layer_id) {
             Some(layer) => {
                 let copy = clone_layer(layer);
                 let select_id = layer_node_id(&copy).to_string();
                 Ok(Emit {
-                    document_operations: vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) }],
-                    config_operations: vec![RasterConfigOperation::SetSelection { ids: vec![select_id] }],
+                    document_mutations: vec![RasterMutation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) }],
+                    config_mutations: vec![RasterConfigMutation::SetSelection { ids: vec![select_id] }],
                     ..Default::default()
                 })
             }
@@ -178,13 +178,13 @@ pub mod patch_layer {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let json_value = patch_value_json(&payload.value);
         let operations = raster_patch_layer_operations(doc.projection, std::slice::from_ref(&payload.layer_id), &payload.field, &json_value);
         if operations.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::operations(operations))
+            Ok(Emit::mutations(operations))
         }
     }
 }
@@ -202,13 +202,13 @@ pub mod patch_layers {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchLayers, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchLayers, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let json_value = patch_value_json(&payload.value);
         let operations = raster_patch_layer_operations(doc.projection, &payload.layer_ids, &payload.field, &json_value);
         if operations.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::operations(operations))
+            Ok(Emit::mutations(operations))
         }
     }
 }
@@ -226,7 +226,7 @@ pub mod move_layer {
         pub drop_position: String,
     }
 
-    pub fn handle(payload: &MoveLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(payload: &MoveLayer, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let document = doc.projection;
         if find_layer(&document.layers, &payload.layer_id).is_none() {
             return Ok(Emit::default());
@@ -242,7 +242,7 @@ pub mod move_layer {
         } else {
             document.layers.len()
         };
-        Ok(Emit::operations(vec![RasterOperation::MoveLayer { layer_id: payload.layer_id.clone(), parent_id, index }]))
+        Ok(Emit::mutations(vec![RasterMutation::MoveLayer { layer_id: payload.layer_id.clone(), parent_id, index }]))
     }
 }
 //#endregion 🔖️MoveLayer

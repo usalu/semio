@@ -1,8 +1,8 @@
 //! 🕸️ Mathematical play app commands — the graph window's algorithm/direction controls, the node-graph
 //! canvas edit gestures, and its viewport.
 
-use crate::apps::mathematical::config::{MathConfig, MathConfigOperation};
-use crate::artifacts::mathematical::op::MathOperation;
+use crate::apps::mathematical::config::{MathConfig, MathConfigMutation};
+use crate::artifacts::mathematical::op::MathMutation;
 use crate::artifacts::mathematical::{MathCamera, MathEdge, MathNode, MathProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,11 +18,11 @@ pub mod set_algorithm {
         pub seed: Option<String>,
     }
 
-    pub fn handle(payload: &SetAlgorithm, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
+    pub fn handle(payload: &SetAlgorithm, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
         let mut graph = doc.projection.graph.clone();
         graph.algorithm = payload.algorithm.clone();
         graph.algorithm_seed = payload.seed.clone();
-        Ok(Emit::commit(vec![MathOperation::SetGraph { graph }], "setAlgorithm"))
+        Ok(Emit::commit(vec![MathMutation::SetGraph { graph }], "setAlgorithm"))
     }
 }
 //#endregion 🔖️SetAlgorithm
@@ -37,10 +37,10 @@ pub mod set_directed {
         pub directed: bool,
     }
 
-    pub fn handle(payload: &SetDirected, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
+    pub fn handle(payload: &SetDirected, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
         let mut graph = doc.projection.graph.clone();
         graph.directed = payload.directed;
-        Ok(Emit::operations(vec![MathOperation::SetGraph { graph }]))
+        Ok(Emit::mutations(vec![MathMutation::SetGraph { graph }]))
     }
 }
 //#endregion 🔖️SetDirected
@@ -61,7 +61,7 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
         let edit_operations: Vec<serde_json::Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let mut graph = doc.projection.graph.clone();
         let mut changed = false;
@@ -101,7 +101,7 @@ pub mod node_graph_edit {
             }
         }
         if changed {
-            Ok(Emit::operations(vec![MathOperation::SetGraph { graph }]))
+            Ok(Emit::mutations(vec![MathMutation::SetGraph { graph }]))
         } else {
             Ok(Emit::default())
         }
@@ -122,8 +122,8 @@ pub mod node_graph_viewport {
         pub camera: MathCamera,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
-        Ok(Emit::config(vec![MathConfigOperation::SetCamera { camera: payload.camera.clone() }]))
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathMutation, MathConfigMutation>, Fault> {
+        Ok(Emit::config(vec![MathConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
 //#endregion 🔖️NodeGraphViewport
@@ -156,11 +156,11 @@ mod tests {
     }
 
     #[test]
-    fn node_graph_viewport_writes_config_not_document_operations() {
+    fn node_graph_viewport_writes_config_not_document_mutations() {
         let mut app: MathApp = math_app();
         let camera = MathCamera { x: 5.0, y: 6.0, zoom: 2.0 };
         let result = app.dispatch_typed(MathCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }), &semio_framework_plugin::testkit::meta("local")).expect("viewport");
-        assert!(result.operations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
+        assert!(result.document_mutations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
     }
 
     #[test]
@@ -203,9 +203,9 @@ mod tests {
     fn node_graph_edit_unknown_operation_and_empty_array_emit_no_operations() {
         let mut app = math_app();
         let result = app.dispatch_typed(node_graph_edit(serde_json::json!({ "operation": "unknownTag" })), &semio_framework_plugin::testkit::meta("local")).expect("no-op tag");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
         let result = app.dispatch_typed(MathCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::testkit::meta("local")).expect("empty array");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
     }
 
     #[test]

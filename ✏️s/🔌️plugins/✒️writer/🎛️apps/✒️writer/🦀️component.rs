@@ -14,14 +14,14 @@ use crate::apps::writer::commands::inspect::{lint_document, request_completions}
 use crate::apps::writer::commands::locale::set_locale;
 use crate::apps::writer::commands::selection::{select_ast_node, set_ast_hover, set_ast_selection, set_editor_selection, text_hover, text_select};
 use crate::apps::writer::commands::text::{commit_rename, format_document, open_document, set_active_example, set_document, set_document_json, set_fixture_json, set_text, text_edit};
-use crate::apps::writer::config::{WriterConfig, WriterConfigOperation};
+use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::apps::writer::modes::edit;
 use crate::apps::writer::modes::edit::windows::main;
 use crate::apps::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::writer::terminology::writer_play_labels;
-use crate::artifacts::writer::op::WriterOperation;
+use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, Fault, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
 };
@@ -46,7 +46,7 @@ pub fn writer_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
 fn writer_hidden_operation(id: &str, label: LocalizedLabel) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Operation) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Mutation) }
 }
 
 /// 🙈️ An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
@@ -89,7 +89,7 @@ semio_framework_plugin::app_commands! {
     /// payload types — mirrors the pre-migration `WriterCommand::command_id()` match arm that mapped all
     /// three variants to the same `"setEditorSetting"` string. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum WriterCommand for WriterProjection, WriterOperation, WriterConfig, WriterConfigOperation {
+    pub enum WriterCommand for WriterProjection, WriterMutation, WriterConfig, WriterConfigMutation {
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "setText" as "set-text" => set_text::SetText,
         "setDocument" as "document" => set_document::SetDocument,
@@ -175,17 +175,17 @@ fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&Context
 
 //#region 🔖️WriterPlayApp
 /// 🧪️ B1: unit struct — every former `WriterPlayRuntime` field now lives in [`WriterConfig`], written
-/// through [`WriterConfigOperation`]s.
+/// through [`WriterConfigMutation`]s.
 #[derive(Default)]
 pub struct WriterPlayApp;
 
 impl DocumentApp for WriterPlayApp {
     type Projection = WriterProjection;
-    type Operation = WriterOperation;
+    type Mutation = WriterMutation;
     type Config = WriterConfig;
-    type ConfigOperation = WriterConfigOperation;
+    type ConfigMutation = WriterConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = WriterCommand;
 
@@ -200,8 +200,8 @@ impl DocumentApp for WriterPlayApp {
         Some(crate::artifacts::writer::engine::writer_io())
     }
 
-    fn whole_document_operation(projection: WriterProjection) -> Option<WriterOperation> {
-        Some(WriterOperation::SetDocument { document: projection })
+    fn whole_document_mutation(projection: WriterProjection) -> Option<WriterMutation> {
+        Some(WriterMutation::SetDocument { document: projection })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -210,7 +210,7 @@ impl DocumentApp for WriterPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterOperation, WriterConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -311,13 +311,13 @@ pub fn create_writer_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Operation), lint re-runs
+            // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Mutation), lint re-runs
             // diagnostics into runtime (View — an effect, not a document operation). Categorized for
             // `Menu::group`'s ribbon-parent taxonomy (GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS).
-            .action_with(ActionDefinition::new_catalog("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Mutation).with_category("transform"))
             .action_with(ActionDefinition::new_catalog("lintDocument", LocalizedLabel::native("Lint Document", "Dokument prüfen"), ActionKind::View).with_category("tools"))
             // 🔧️ P1 example switch (whole-document load) with a staged example choice.
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten")))
@@ -638,11 +638,11 @@ mod tests {
     }
 
     #[test]
-    fn whole_document_operation_replaces_the_projection() {
+    fn whole_document_mutation_replaces_the_projection() {
         let app = WriterPlayApp;
         let replacement = jack_projection();
-        let operation = app.whole_document_operation(replacement.clone()).expect("whole document operation");
-        assert_eq!(operation, WriterOperation::SetDocument { document: replacement });
+        let operation = app.whole_document_mutation(replacement.clone()).expect("whole document operation");
+        assert_eq!(operation, WriterMutation::SetDocument { document: replacement });
     }
 
     #[test]

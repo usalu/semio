@@ -19,7 +19,7 @@ use crate::artifacts::sequence::{SequenceEdge, SequenceFixture};
 /// is completely untouched. `SequenceEdgePatch` stays a plain sparse two-`Option<String>` patch
 /// rather than a `Wire` — a `Wire`'s two endpoints are not independently optional, but `EdgesPatch`
 /// legitimately needs to rewire only `from` OR only `to`. `pub` (unlike the document-only
-/// `SequenceFixtureDsl` below) because `🔧️op`'s `SequenceOperationDsl::EdgesAdd` embeds it too.
+/// `SequenceFixtureDsl` below) because `🔧️op`'s `SequenceMutationDsl::EdgesAdd` embeds it too.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct SequenceEdgeDsl {
     pub id: String,

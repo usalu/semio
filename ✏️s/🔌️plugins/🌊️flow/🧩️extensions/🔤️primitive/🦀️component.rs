@@ -1,12 +1,12 @@
 //! 🧱️ Flow core module: schema constructors for primitive dictionaries.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 
 // #region 🔖️Number
 /// 🔢️ Emits a number dictionary.
 pub struct Number;
 
-impl Operation for Number {
+impl Operator for Number {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("number", number_dictionary(read_number(input, "value").or_else(|_| read_number(input, "number"))?)))
     }
@@ -17,7 +17,7 @@ impl Operation for Number {
 /// 📝️ Emits a text dictionary.
 pub struct Text;
 
-impl Operation for Text {
+impl Operator for Text {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("text", text_dictionary(read_text(input, "value").or_else(|_| read_text(input, "text"))?)))
     }
@@ -28,7 +28,7 @@ impl Operation for Text {
 /// 🔀️ Emits a boolean dictionary.
 pub struct Boolean;
 
-impl Operation for Boolean {
+impl Operator for Boolean {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(read_bool(input, "value").or_else(|_| read_bool(input, "boolean")).unwrap_or(false))))
     }
@@ -39,7 +39,7 @@ impl Operation for Boolean {
 /// 🖼️ Emits an image dictionary.
 pub struct Image;
 
-impl Operation for Image {
+impl Operator for Image {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("image", Dictionary::with_schema("image").insert("dataUrl", Value::Atom(Atom::String(read_text(input, "dataUrl").unwrap_or_default())))))
     }
@@ -50,7 +50,7 @@ impl Operation for Image {
 /// 🔣️ Forwards a named dictionary channel unchanged.
 pub struct VariableRelay;
 
-impl Operation for VariableRelay {
+impl Operator for VariableRelay {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let name = read_text(input, "name")?;
         let schema = read_text(input, "schema").unwrap_or_else(|_| "dictionary".into());
@@ -94,10 +94,10 @@ fn schema(id: &str, name: &str, summary: &str, fields: Vec<FieldSpec>) -> Schema
     Schema { id: id.into(), module: "core".into(), name: name.into(), icon: "emoji:🧱️".into(), summary: summary.into(), fields }
 }
 
-fn operator(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, operation: Box<dyn Operation>) -> (OperatorInfo, Vec<OperatorImpl>) {
+fn operator(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, operation: Box<dyn Operator>) -> (OperatorInfo, Vec<OperatorImpl>) {
     (
         OperatorInfo { id: id.into(), extension: "core".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🧱️".into(), summary: summary.into(), inputs: vec![], outputs, ..Default::default() },
-        vec![OperatorImpl { schemas: vec![], operation }],
+        vec![OperatorImpl { schemas: vec![], operator: operation }],
     )
 }
 
@@ -132,7 +132,7 @@ pub fn register(registry: &mut Registry) {
             outputs: vec![ChannelSpec::wildcard()],
             ..Default::default()
         },
-        vec![OperatorImpl { schemas: vec![], operation: Box::new(VariableRelay) }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(VariableRelay) }],
         &[],
     );
     registry.finalize();

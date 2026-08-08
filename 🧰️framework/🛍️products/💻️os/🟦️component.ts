@@ -1,7 +1,7 @@
 // #region Header
 /**
  * 🖥️ `@semio-tech/framework-os` — JS sync/backbone protocol surface (backbone URIs, document
- * envelopes, `🟦️backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OperationEnvelope`,
+ * envelopes, `🟦️backbone-worker.ts` request/response wire types, `PersistenceBinding`/`MutationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/os/renderer/js/react/index.tsx` and
  * `framework/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
  * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
@@ -149,7 +149,7 @@ export function wrapDocumentEnvelope(_document: unknown, _documentId: string, _u
 //#region 🔀️ApplyBackboneMessage
 export type BinaryBackboneMessage =
   | { readonly kind: "snapshot"; readonly pack: Uint8Array; readonly spr: Uint8Array }
-  | { readonly kind: "operations"; readonly envelopes: readonly WireOperationEnvelope[] }
+  | { readonly kind: "mutations"; readonly envelopes: readonly WireMutationEnvelope[] }
   | { readonly kind: "ack"; readonly opIds: readonly string[] };
 
 /** @emoji 🎯️ TS twin of `store::encode_backbone_message`. */
@@ -159,7 +159,7 @@ export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Arra
     out.push(0);
     writeBytes(out, Array.from(message.pack));
     writeBytes(out, Array.from(message.spr));
-  } else if (message.kind === "operations") {
+  } else if (message.kind === "mutations") {
     out.push(1);
     writeVecEnvelope(out, message.envelopes);
   } else {
@@ -180,7 +180,7 @@ export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage 
     return { kind: "snapshot", pack, spr };
   }
   if (tag === 1) {
-    return { kind: "operations", envelopes: readVecEnvelope(bytes, pos) };
+    return { kind: "mutations", envelopes: readVecEnvelope(bytes, pos) };
   }
   if (tag === 2) {
     return { kind: "ack", opIds: readVecStr(bytes, pos) };
@@ -195,7 +195,7 @@ export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage 
 export function applyBackboneMessage(storedBundle: Uint8Array | null, messageBytes: Uint8Array): Uint8Array {
   const message = decodeBackboneMessage(messageBytes);
   if (message.kind === "snapshot") return encodeDocumentPackBytes(message.pack, message.spr);
-  if (message.kind === "operations") {
+  if (message.kind === "mutations") {
     if (storedBundle == null) throw new Error("cannot append operations before a snapshot exists");
     throw new Error("backbone operations apply requires native store — ingest envelopes through the sync actor");
   }
@@ -284,7 +284,7 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
  * stays plausible across both runtimes even though this file is a deliberately dumb TS twin (no
  * materialization — it only relays queues, exactly like the Rust actor's `ChannelBackbone` side).
  */
-export type OperationEnvelope = {
+export type MutationEnvelope = {
   readonly id: string;
   readonly actor: string;
   readonly document: string;
@@ -301,11 +301,11 @@ export type OperationEnvelope = {
   };
 };
 
-/** 🌉️ Maps the actor-protocol {@link OperationEnvelope} into a {@link WireOperationEnvelope}. */
-export function operationEnvelopeToWire(envelope: OperationEnvelope, timestamp: WireOperationEnvelope["timestamp"]): WireOperationEnvelope {
+/** 🌉️ Maps the actor-protocol {@link MutationEnvelope} into a {@link WireMutationEnvelope}. */
+export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: WireMutationEnvelope["timestamp"]): WireMutationEnvelope {
   const packPayload = (value: unknown) => Array.from(encodePackValue(value));
   return {
-    operation_id: envelope.id,
+    mutation_id: envelope.id,
     document_id: envelope.document,
     actor: envelope.actor,
     dependencies: [...(envelope.deps ?? [])],
@@ -315,13 +315,13 @@ export function operationEnvelopeToWire(envelope: OperationEnvelope, timestamp: 
   };
 }
 
-/** 🌉️ Inverse of {@link operationEnvelopeToWire}. */
-export function operationEnvelopeFromWire(envelope: WireOperationEnvelope): OperationEnvelope {
+/** 🌉️ Inverse of {@link mutationEnvelopeToWire}. */
+export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope): MutationEnvelope {
   const decodePayload = (bytes: readonly number[]) => decodePackValue(new Uint8Array(bytes));
   const payload = decodePayload(envelope.diff.payload);
   const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
   return {
-    id: envelope.operation_id,
+    id: envelope.mutation_id,
     actor: envelope.actor,
     document: envelope.document_id,
     schemaVersion: envelope.diff.schema,
@@ -329,7 +329,7 @@ export function operationEnvelopeFromWire(envelope: WireOperationEnvelope): Oper
     payloadHash: "",
     diff: { schemaId: envelope.diff.schema, payload },
     inverse: {
-      targetOperation: envelope.operation_id,
+      targetOperation: envelope.mutation_id,
       inverseDiff: { schemaId: envelope.inverse.schema, payload: decodePayload(envelope.inverse.payload) },
       baseVersion: Number.isFinite(sequenceNumber) ? Math.max(0, sequenceNumber) : 0,
       dependencies: [],
@@ -352,15 +352,15 @@ export type DocumentPresencePeer = {
 };
 
 /** 🌐️ One causally-ordered operation crossing the wire — mirrors Rust `protocol_causal::
- * OperationEnvelope` byte-for-byte. Wire-only shape, distinct from {@link OperationEnvelope} (this
+ * MutationEnvelope` byte-for-byte. Wire-only shape, distinct from {@link MutationEnvelope} (this
  * file's postMessage/actor-protocol shape, camelCase-tagged): this type crosses `protocol_wire`'s
  * binary codec (see `encodeClientFrame`/`decodeClientFrame` below), where Rust field names are
  * plain (not renamed), so it stays snake_case like the Rust source. 🎯️ W5: `diff`/`inverse` payloads
  * are opaque bytes now (a JSON number array here, matching every other `Vec<u8>` field on this
- * boundary), not a schema-erased JSON value — `protocol_causal::DocumentDiff`/`InverseOperation`
+ * boundary), not a schema-erased JSON value — `protocol_causal::DocumentDiff`/`InverseMutation`
  * both flipped from `serde_json::Value` to `Vec<u8>`. */
-export type WireOperationEnvelope = {
-  readonly operation_id: string;
+export type WireMutationEnvelope = {
+  readonly mutation_id: string;
   readonly document_id: string;
   readonly actor: string;
   readonly dependencies: readonly string[];
@@ -387,7 +387,7 @@ export type WireBootstrap = "None" | { readonly Snapshot: { readonly pack_hash: 
 
 /** ⚖️ How the hub resolved one submitted batch against concurrent history — mirrors Rust
  * `protocol_wire::ApplyOutcome`. */
-export type WireApplyOutcome = "Accepted" | { readonly Transformed: { readonly envelope: WireOperationEnvelope } } | { readonly Rejected: { readonly reason: string } };
+export type WireApplyOutcome = "Accepted" | { readonly Transformed: { readonly envelope: WireMutationEnvelope } } | { readonly Rejected: { readonly reason: string } };
 
 /** 🪜️ One stage of a submitted batch's lifecycle — mirrors Rust `protocol_wire::AckStage`. */
 export type WireAckStage = "Received" | "Persisted" | { readonly Applied: { readonly outcome: WireApplyOutcome } };
@@ -410,7 +410,7 @@ export type ClientFrame =
         readonly frontier: WireFrontierSummary | null;
       };
     }
-  | { readonly Commands: { readonly batch_id: number; readonly envelopes: readonly WireOperationEnvelope[] } }
+  | { readonly Commands: { readonly batch_id: number; readonly envelopes: readonly WireMutationEnvelope[] } }
   | { readonly FrontierAdvertise: { readonly frontier: WireFrontierSummary } }
   | { readonly PreviewPublish: { readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
   | { readonly Presence: { readonly peer: readonly number[] } }
@@ -423,7 +423,7 @@ export type ServerFrame =
   | { readonly Welcome: { readonly session_id: string; readonly resume_token: string; readonly server_frontier: WireFrontierSummary; readonly bootstrap: WireBootstrap } }
   | { readonly SnapshotChunk: { readonly seq: number; readonly bytes: readonly number[] } }
   | { readonly SnapshotDone: { readonly seq_count: number } }
-  | { readonly Commands: { readonly envelopes: readonly WireOperationEnvelope[]; readonly origin: string; readonly frontier: WireFrontierSummary } }
+  | { readonly Commands: { readonly envelopes: readonly WireMutationEnvelope[]; readonly origin: string; readonly frontier: WireFrontierSummary } }
   | { readonly Ack: { readonly batch_id: number; readonly stages: readonly WireAckStage[]; readonly frontier: WireFrontierSummary } }
   | { readonly Preview: { readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
   | { readonly Presence: { readonly peers: readonly (readonly number[])[] } }
@@ -633,13 +633,13 @@ function readVecStr(bytes: Uint8Array, pos: [number]): string[] {
   for (let i = 0; i < count; i++) result.push(readStr(bytes, pos));
   return result;
 }
-function writeVecEnvelope(out: number[], values: readonly WireOperationEnvelope[]): void {
+function writeVecEnvelope(out: number[], values: readonly WireMutationEnvelope[]): void {
   writeVarintU64(out, values.length);
   for (const value of values) encodeEnvelope(out, value);
 }
-function readVecEnvelope(bytes: Uint8Array, pos: [number]): WireOperationEnvelope[] {
+function readVecEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEnvelope[] {
   const count = readVarintU64(bytes, pos);
-  const result: WireOperationEnvelope[] = [];
+  const result: WireMutationEnvelope[] = [];
   for (let i = 0; i < count; i++) result.push(decodeEnvelope(bytes, pos));
   return result;
 }
@@ -660,11 +660,11 @@ function decodeHlc(bytes: Uint8Array, pos: [number]): { readonly actor: number; 
   return { actor, physical_ms, logical };
 }
 
-/** 🎯️ `operation_id str | document_id str | actor str | dependencies vec<str> | diff.schema str |
+/** 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> | diff.schema str |
  * diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc` — the TS twin of Rust
  * `protocol_causal::encode_envelope`. */
-function encodeEnvelope(out: number[], envelope: WireOperationEnvelope): void {
-  writeStr(out, envelope.operation_id);
+function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
+  writeStr(out, envelope.mutation_id);
   writeStr(out, envelope.document_id);
   writeStr(out, envelope.actor);
   writeVecStr(out, envelope.dependencies);
@@ -676,8 +676,8 @@ function encodeEnvelope(out: number[], envelope: WireOperationEnvelope): void {
 }
 
 /** 🎯️ Inverse of {@link encodeEnvelope} — the TS twin of Rust `protocol_causal::decode_envelope`. */
-function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireOperationEnvelope {
-  const operation_id = readStr(bytes, pos);
+function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEnvelope {
+  const mutation_id = readStr(bytes, pos);
   const document_id = readStr(bytes, pos);
   const actor = readStr(bytes, pos);
   const dependencies = readVecStr(bytes, pos);
@@ -686,7 +686,7 @@ function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireOperationEnvelope
   const inverseSchema = readStr(bytes, pos);
   const inversePayload = readBytes(bytes, pos);
   const timestamp = decodeHlc(bytes, pos);
-  return { operation_id, document_id, actor, dependencies, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp };
+  return { mutation_id, document_id, actor, dependencies, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp };
 }
 
 /** 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq varint |
@@ -708,41 +708,41 @@ function decodeFrontier(bytes: Uint8Array, pos: [number]): WireFrontierSummary {
   const chain_hash = readHash32(bytes, pos);
   return { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash };
 }
-function decodeCausalEnvelopeBatch(bytes: readonly number[]): OperationEnvelope[] {
+function decodeCausalEnvelopeBatch(bytes: readonly number[]): MutationEnvelope[] {
   const pos: [number] = [0];
-  return readVecEnvelope(new Uint8Array(bytes), pos).map(operationEnvelopeFromWire);
+  return readVecEnvelope(new Uint8Array(bytes), pos).map(mutationEnvelopeFromWire);
 }
 
-function encodeCausalEnvelopeBatch(envelopes: readonly OperationEnvelope[]): readonly number[] {
+function encodeCausalEnvelopeBatch(envelopes: readonly MutationEnvelope[]): readonly number[] {
   const out: number[] = [];
-  writeVecEnvelope(out, envelopes.map((envelope, index) => operationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })));
+  writeVecEnvelope(out, envelopes.map((envelope, index) => mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })));
   return out;
 }
 
 function wireDocumentActorMsg(message: DocumentActorMsg): unknown {
-  if (message.kind === "localOperations") {
-    return { kind: "localOperations", envelopes: encodeCausalEnvelopeBatch(message.envelopes) };
+  if (message.kind === "localMutations") {
+    return { kind: "localMutations", envelopes: encodeCausalEnvelopeBatch(message.envelopes) };
   }
   return message;
 }
 
 function parseDocumentActorMsg(message: Record<string, unknown>): DocumentActorMsg {
-  if (message.kind === "localOperations" && Array.isArray(message.envelopes) && message.envelopes.every((entry) => typeof entry === "number")) {
-    return { kind: "localOperations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[]) };
+  if (message.kind === "localMutations" && Array.isArray(message.envelopes) && message.envelopes.every((entry) => typeof entry === "number")) {
+    return { kind: "localMutations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[]) };
   }
   return message as DocumentActorMsg;
 }
 
 function wireDocumentEvent(event: DocumentEvent): unknown {
-  if (event.kind === "remoteOperations") {
-    return { kind: "remoteOperations", envelopes: encodeCausalEnvelopeBatch(event.envelopes) };
+  if (event.kind === "remoteMutations") {
+    return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes) };
   }
   return event;
 }
 
 function parseDocumentEvent(event: Record<string, unknown>): DocumentEvent {
-  if (event.kind === "remoteOperations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
-    return { kind: "remoteOperations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[]) };
+  if (event.kind === "remoteMutations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
+    return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[]) };
   }
   return event as DocumentEvent;
 }
@@ -1034,7 +1034,7 @@ export type DocumentActorConfig = {
 
 /** 📨️ Caller→actor control messages — mirrors Rust `DocumentActorMsg`. */
 export type DocumentActorMsg =
-  | { readonly kind: "localOperations"; readonly envelopes: readonly OperationEnvelope[] }
+  | { readonly kind: "localMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "localSnapshot"; readonly pack: readonly number[]; readonly spr: readonly number[] }
   | { readonly kind: "presenceHeartbeat"; readonly peer: DocumentPresencePeer }
   | { readonly kind: "publishPreview"; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
@@ -1047,7 +1047,7 @@ export type RemoteState = { readonly kind: "detached" } | { readonly kind: "conn
 /** 🚦️ Sync health snapshot for status badges — mirrors Rust `DocumentSyncStatus`. */
 export type DocumentSyncStatus = {
   readonly persisted: boolean;
-  readonly pendingOperations: number;
+  readonly pendingMutations: number;
   readonly remote: RemoteState;
 };
 
@@ -1056,13 +1056,13 @@ export type DocumentSyncStatus = {
 export type SyncConflict = { readonly message?: string } & Record<string, unknown>;
 
 /** 📮️ The client-side twin of `protocol_wire::ApplyOutcome`, minus the `Transformed` envelope
- * payload (already delivered separately as a `remoteOperations` event by the time this fires) —
+ * payload (already delivered separately as a `remoteMutations` event by the time this fires) —
  * mirrors Rust `CommandAckOutcome`. */
 export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind: "transformed" } | { readonly kind: "rejected"; readonly reason: string };
 
 /** 📬️ Actor→subscriber events — mirrors Rust `DocumentEvent`. */
 export type DocumentEvent =
-  | { readonly kind: "remoteOperations"; readonly envelopes: readonly OperationEnvelope[] }
+  | { readonly kind: "remoteMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "snapshotReplaced"; readonly pack: readonly number[]; readonly spr: readonly number[] }
   | ({ readonly kind: "status" } & DocumentSyncStatus)
   | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
@@ -1557,16 +1557,16 @@ export function decodeScenePackField(encoded: string): unknown {
   return packValueFromBase64(encoded);
 }
 
-/** @emoji 📤️ `protocol::encode_envelopes` batch as a {@link packValueToBase64} string for `applyOperations`. */
-export function encodeOperationEnvelopesPack(envelopes: readonly OperationEnvelope[]): string {
+/** @emoji 📤️ `protocol::encode_envelopes` batch as a {@link packValueToBase64} string for `applyMutations`. */
+export function encodeMutationEnvelopesPack(envelopes: readonly MutationEnvelope[]): string {
   return packValueToBase64(Array.from(encodeCausalEnvelopeBatch(envelopes)));
 }
 
-/** @emoji 📥️ Inverse of {@link encodeOperationEnvelopesPack}. */
-export function decodeOperationEnvelopesPack(pack: string): OperationEnvelope[] {
+/** @emoji 📥️ Inverse of {@link encodeMutationEnvelopesPack}. */
+export function decodeMutationEnvelopesPack(pack: string): MutationEnvelope[] {
   const wire = packValueFromBase64(pack);
   if (!Array.isArray(wire) || !wire.every((entry) => typeof entry === "number")) {
-    throw new Error("decodeOperationEnvelopesPack: expected pack byte array");
+    throw new Error("decodeMutationEnvelopesPack: expected pack byte array");
   }
   return decodeCausalEnvelopeBatch(wire as readonly number[]);
 }
@@ -1581,8 +1581,8 @@ export function decodeOperationEnvelopesPack(pack: string): OperationEnvelope[] 
  * built in parallel (WP-0A of `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`) and may
  * not exist on disk yet, so this mirrors the AGREED WIRE CONTRACT, not that crate's source —
  * `envelopes`/`config`/`command`/`descriptor`/etc. all stay OPAQUE `bytes` here (never a decoded
- * `protocol_causal::OperationEnvelope` or app-specific payload shape), exactly like
- * {@link WireOperationEnvelope}'s `diff`/`inverse` payloads above. `Option<T>` fields use the same
+ * `protocol_causal::MutationEnvelope` or app-specific payload shape), exactly like
+ * {@link WireMutationEnvelope}'s `diff`/`inverse` payloads above. `Option<T>` fields use the same
  * `0x00`/`0x01` presence-byte convention as {@link writeOptStr}/{@link writeOptBytes} elsewhere in
  * this file. ⚠️ Round-trip-tested against itself only (no `protocol_channel` Rust crate exists yet
  * to source hex fixtures from) — cross-language hex-fixture reconciliation is follow-up work once
@@ -1602,7 +1602,7 @@ export type AppCommandValue =
   | { readonly RefreshUi: { readonly seq: number; readonly sections: readonly SectionProbe[]; readonly view_state: readonly number[] } }
   | { readonly ContextMenu: { readonly seq: number; readonly request: readonly number[] } }
   | { readonly DocumentCommand: { readonly seq: number; readonly command: readonly number[] } }
-  | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly OperationEnvelope[] } }
+  | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly MutationEnvelope[] } }
   | { readonly LoadDocument: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadDocument: { readonly seq: number } }
   | { readonly LoadConfig: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
@@ -1720,7 +1720,7 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     writeVarintU64(out, cmd.ApplyEnvelopes.seq);
     writeVecEnvelope(
       out,
-      cmd.ApplyEnvelopes.envelopes.map((envelope, index) => operationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })),
+      cmd.ApplyEnvelopes.envelopes.map((envelope, index) => mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })),
     );
   } else if ("LoadDocument" in cmd) {
     out.push(APP_COMMAND_TAGS.LoadDocument);
@@ -1801,7 +1801,7 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     case APP_COMMAND_TAGS.ApplyEnvelopes: {
       const seq = readVarintU64(bytes, pos);
       const wire = readVecEnvelope(bytes, pos);
-      return { ApplyEnvelopes: { seq, envelopes: wire.map(operationEnvelopeFromWire) } };
+      return { ApplyEnvelopes: { seq, envelopes: wire.map(mutationEnvelopeFromWire) } };
     }
     case APP_COMMAND_TAGS.LoadDocument: {
       const seq = readVarintU64(bytes, pos);
@@ -2139,8 +2139,8 @@ export class AppChannelClient {
     return decodePackValue(new Uint8Array(menuFrame.ContextMenu.items));
   }
 
-  /** @emoji 📥️ Force-applies remote `OperationEnvelope`s through `AppCommand::ApplyEnvelopes`. */
-  async applyEnvelopes(envelopes: readonly OperationEnvelope[]): Promise<AppFrameValue[]> {
+  /** @emoji 📥️ Force-applies remote `MutationEnvelope`s through `AppCommand::ApplyEnvelopes`. */
+  async applyEnvelopes(envelopes: readonly MutationEnvelope[]): Promise<AppFrameValue[]> {
     return this.exchangeOne({ ApplyEnvelopes: { seq: this.nextSeq(), envelopes } });
   }
 
@@ -2196,12 +2196,12 @@ if (import.meta.vitest) {
     });
 
     it("throws when applying operations without native store", () => {
-      const message = encodeBackboneMessage({ kind: "operations", envelopes: [] });
+      const message = encodeBackboneMessage({ kind: "mutations", envelopes: [] });
       expect(() => applyBackboneMessage(encodeDocumentPackBytes(new Uint8Array(), new Uint8Array()), message)).toThrow("native store");
     });
 
     it("throws when applying operations before a snapshot exists", () => {
-      const message = encodeBackboneMessage({ kind: "operations", envelopes: [] });
+      const message = encodeBackboneMessage({ kind: "mutations", envelopes: [] });
       expect(() => applyBackboneMessage(null, message)).toThrow("cannot append operations before a snapshot exists");
     });
 

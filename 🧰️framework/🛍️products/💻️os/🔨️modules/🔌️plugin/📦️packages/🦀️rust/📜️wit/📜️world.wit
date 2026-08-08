@@ -33,7 +33,7 @@ interface plugin {
   /// since the previous call (pending effects, backbone-ingested `DocumentChanged`). `exchange(id, [])`
   /// is a pure drain — the heartbeat that replaces the old poll-backbone + refresh-ui tick. This
   /// subsumes and replaces the previous per-verb surface (`handle-action`, `handle-command`,
-  /// `update-window`, `refresh-ui`, `context-menu`, `apply-operations[-text]`,
+  /// `update-window`, `refresh-ui`, `context-menu`, `apply-mutations[-text]`,
   /// `read/load-app-document-{text,pack}`, `attach/detach-backbone`, `consume/produce-media`) — every
   /// UI interaction and every headless-runner interaction is just a forwarded `AppCommand` on this one
   /// call, so a workflow that wires apps together never needs a UI-mock API: it drives the exact same

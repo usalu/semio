@@ -14,7 +14,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<...Operation, ...ConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<...Mutation, ...ConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -33,6 +33,93 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_widget {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-widget/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-widget/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-widget/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_widget {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-widget/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-widget/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-widget/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_synapse {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-synapse/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-synapse/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-synapse/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_synapse {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-synapse/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-synapse/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-synapse/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layout {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-layout/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-layout/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-layout/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_layout {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-layout/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-layout/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-layout/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_camera {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-camera/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-camera/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-camera/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_schema {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-schema/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-schema/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-schema/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🌀️procedural2d/🎒️pack/🦀️component.rs"]
@@ -53,6 +140,93 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🧊️procedural3d/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_widget {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-widget/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-widget/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-widget/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_widget {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-widget/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-widget/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-widget/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_synapse {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-synapse/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-synapse/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-synapse/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_synapse {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-synapse/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-synapse/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-synapse/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layout {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-layout/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-layout/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-layout/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_layout {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-layout/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-layout/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/➖remove-layout/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_camera {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-camera/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-camera/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-camera/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_schema {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-schema/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-schema/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🧬️mutations/🎛set-schema/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🧊️procedural3d/🎒️pack/🦀️component.rs"]

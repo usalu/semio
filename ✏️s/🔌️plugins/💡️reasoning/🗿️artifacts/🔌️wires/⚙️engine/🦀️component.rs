@@ -12,7 +12,7 @@ use serde_json::Value;
 //#region 🔖️Register
 /// 🗂️ Registers `MindmapWiresDocument`'s pack↔dsl codec so `framework/sync`'s `FolderEndpoint::Pack`
 /// (and any other schema-string-keyed caller) can print/parse it without depending on this crate's
-/// concrete `Projection`/`Operation` types. Called from the plugin root's `semio_plugin!{ setup: … }`.
+/// concrete `Projection`/`Mutation` types. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::wires::ReasoningWiresPlayApp>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA);
@@ -374,3 +374,36 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+pub struct MindmapWiresEngine {
+    projection: crate::artifacts::wires::MindmapWiresDocument,
+}
+
+impl MindmapWiresEngine {
+    pub fn new(projection: crate::artifacts::wires::MindmapWiresDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for MindmapWiresEngine {
+    type Projection = crate::artifacts::wires::MindmapWiresDocument;
+    type Mutation = crate::artifacts::wires::mutations::MindmapWiresMutation;
+    type Diff = crate::artifacts::wires::diff::MindmapWiresDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::wires::mutations::apply_mindmap_wires_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

@@ -1,6 +1,7 @@
 //! ⚙️ DIN 4108 app — headless compute (constitutional: engine).
 
 use crate::artifacts::din4108::Document;
+use crate::artifacts::din4108::mutations::Din4108Mutation;
 use crate::document::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity, TableEntry1D};
 
 pub const R_SI_WALL_M2K_W: f64 = 0.13;
@@ -734,7 +735,7 @@ pub struct Din4108Family;
 
 impl NormFamily for Din4108Family {
     type Document = Document;
-    type Operation = crate::document::SetDocumentOperation<Document>;
+    type Mutation = Din4108Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::Din4108
@@ -744,6 +745,45 @@ impl NormFamily for Din4108Family {
         evaluate(document)
     }
 }
+
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent Din4108 artifact engine — owns the projection; every transition is a mutation.
+pub struct Din4108Engine {
+    projection: Document,
+}
+
+impl Din4108Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for Din4108Engine {
+    type Projection = Document;
+    type Mutation = Din4108Mutation;
+    type Diff = crate::artifacts::din4108::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = NormHost<Din4108Family>;
 // #endregion 🔖️Session

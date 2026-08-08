@@ -1,6 +1,6 @@
 //! 🔺️ Flow artifact — the operation diff (constitutional: diff).
 //!
-//! `FlowDiff` and its `protocol::OperationDiff<FlowFixture>` impl are implemented directly in the flow
+//! `FlowDiff` and its `protocol::MutationDiff<FlowFixture>` impl are implemented directly in the flow
 //! kernel crate (`flow`, `🔖️Operations` region) alongside the `FlowFixture` projection they patch —
 //! see `🗿️artifacts/🌊️flow/🦀️component.rs` for why. Re-exported here so the artifact's diff slot names an
 //! artifact-owned symbol.
@@ -21,15 +21,15 @@ pub use flow::FlowDiff;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
-    use protocol::{Operation, OperationDiff};
+    use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
+    use protocol::{Mutation, MutationDiff};
 
     /// ⚖️ LAW: `op.diff(base)` applied to `base` equals applying the operation, and the diff carries only
-    /// the touched slot — the `OperationDiff` contract undo/redo rides on.
+    /// the touched slot — the `MutationDiff` contract undo/redo rides on.
     #[test]
     fn set_layout_diff_applies_onto_the_base_projection() {
         let base = FlowFixture::default();
-        let operation = FlowOperation::SetLayout { entries: Vec::new() };
+        let operation = FlowMutation::SetLayout { entries: Vec::new() };
         let diff: FlowDiff = operation.diff(&base);
         assert!(diff.layout.is_some(), "SetLayout must produce a layout diff: {diff:?}");
         assert!(diff.fixture.is_none() && diff.widgets.is_none() && diff.synapses.is_none(), "SetLayout must touch only the layout slot: {diff:?}");

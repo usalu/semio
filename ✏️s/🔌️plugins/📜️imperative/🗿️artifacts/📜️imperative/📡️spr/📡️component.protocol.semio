@@ -1,7 +1,7 @@
 dialect protocol
 protocol imperative.spr
 version 1
-schema imperative.document.operation
+schema imperative.document.mutation
 start record
 framing record
 record imperative.imperative-insert-text tag 1

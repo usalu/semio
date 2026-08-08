@@ -1,10 +1,10 @@
-//! 🔺️ CAD artifact — the `OperationDiff` half of the op/diff pair: the materialized `CadDiff` shape
-//! `CadOperation::diff` produces and the `apply`/`absorb` laws the store folds it onto a `CadProjection`
+//! 🔺️ CAD artifact — the `MutationDiff` half of the op/diff pair: the materialized `CadDiff` shape
+//! `CadMutation::diff` produces and the `apply`/`absorb` laws the store folds it onto a `CadProjection`
 //! with.
 
-use crate::artifacts::cad::op::{CadNodePatch, CadObjectPatch, CadReferencePatch};
+use crate::artifacts::cad::mutations::{CadNodePatch, CadObjectPatch, CadReferencePatch};
 use crate::artifacts::cad::{CadNode, CadObject, CadReference, CadProjection};
-use protocol::{CollectionDiff, OperationDiff};
+use protocol::{CollectionDiff, MutationDiff};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -108,7 +108,7 @@ pub fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferenceP
     }
 }
 
-impl OperationDiff<CadProjection> for CadDiff {
+impl MutationDiff<CadProjection> for CadDiff {
     fn apply(&self, projection: &CadProjection) -> CadProjection {
         if let Some(scene) = &self.scene {
             return (**scene).clone();
@@ -200,16 +200,16 @@ fn absorb_object_diff(target: &mut Option<CollectionDiff<String, CadObjectPatch,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::op::CadOperation;
+    use crate::artifacts::cad::op::CadMutation;
     use crate::artifacts::cad::testkit::{sample_object, sample_scene};
     use crate::artifacts::cad::CadPaneId;
-    use protocol::Operation;
+    use protocol::Mutation;
 
     #[test]
     fn whole_scene_diff_replaces_the_projection_and_absorbs_every_earlier_edit() {
         let base = sample_scene();
-        let mut diff = CadOperation::RemoveObject { pane: CadPaneId::Shape, object_id: "object-1".into() }.diff(&base);
-        let replacement = CadOperation::SetScene { scene: Box::new(base.clone()) }.diff(&base);
+        let mut diff = CadMutation::RemoveObject { pane: CadPaneId::Shape, object_id: "object-1".into() }.diff(&base);
+        let replacement = CadMutation::SetScene { scene: Box::new(base.clone()) }.diff(&base);
         diff.absorb(replacement);
         assert_eq!(diff.apply(&base), base, "a whole-scene diff wins over anything absorbed before it");
     }
@@ -217,8 +217,8 @@ mod tests {
     #[test]
     fn object_collection_diffs_absorb_into_one_apply() {
         let base = sample_scene();
-        let mut diff = CadOperation::AddObject { pane: CadPaneId::Shape, object: sample_object("object-9") }.diff(&base);
-        diff.absorb(CadOperation::PatchObject { pane: CadPaneId::Shape, object_id: "object-1".into(), patch: CadObjectPatch { label: Some("Renamed".into()), ..Default::default() } }.diff(&base));
+        let mut diff = CadMutation::AddObject { pane: CadPaneId::Shape, object: sample_object("object-9") }.diff(&base);
+        diff.absorb(CadMutation::PatchObject { pane: CadPaneId::Shape, object_id: "object-1".into(), patch: CadObjectPatch { label: Some("Renamed".into()), ..Default::default() } }.diff(&base));
         let next = diff.apply(&base);
         assert!(next.objects.iter().any(|object| object.id == "object-9"));
         assert_eq!(next.objects.iter().find(|object| object.id == "object-1").expect("object-1").label, "Renamed");

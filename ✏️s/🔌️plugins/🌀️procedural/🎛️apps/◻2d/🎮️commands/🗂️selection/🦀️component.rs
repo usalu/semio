@@ -1,7 +1,7 @@
 //! 🗂️ Procedural2d play app commands — ephemeral selection (config-only, never document operations).
 
-use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOperation};
-use crate::artifacts::procedural2d::op::Procedural2dOperation;
+use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
+use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -17,8 +17,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural2dConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -33,8 +33,8 @@ pub mod select_node {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural2dConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SelectNode

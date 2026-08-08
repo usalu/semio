@@ -12,7 +12,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -31,6 +31,104 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod objects_add {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➕️objects-add/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➕️objects-add/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➕️objects-add/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod objects_remove {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➖️objects-remove/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➖️objects-remove/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➖️objects-remove/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod objects_move {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/↔️objects-move/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/↔️objects-move/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/↔️objects-move/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod objects_patch {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🩹objects-patch/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🩹objects-patch/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🩹objects-patch/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod add_paint_layer {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➕️add-paint-layer/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➕️add-paint-layer/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➕️add-paint-layer/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_paint_layer {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➖️remove-paint-layer/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➖️remove-paint-layer/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/➖️remove-paint-layer/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod patch_paint_layer {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🩹patch-paint-layer/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🩹patch-paint-layer/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🩹patch-paint-layer/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod paint_stroke {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖌️paint-stroke/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖌️paint-stroke/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖌️paint-stroke/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_projection {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-projection/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-projection/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-projection/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/💠️lowpoly/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/💠️lowpoly/🎒️pack/🦀️component.rs"]
@@ -166,6 +264,10 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
+#[path = "../../🔌️plugin/🔧️setup/🦀️component.rs"]
+mod setup;
+pub use setup::register_lowpoly_exports;
+
 #[path = "../../🔌️plugin/🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);

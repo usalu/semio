@@ -29,7 +29,7 @@
 
 use {check_len, ActorId, DbError, DbLimits, DocumentId, Frontier};
 use db_state::TouchedSet;
-use protocol::OperationEnvelope;
+use protocol::MutationEnvelope;
 use std::collections::HashMap;
 
 //#region 🔖️Identity
@@ -145,7 +145,7 @@ pub struct Preview {
     pub actor: ActorId,
     pub key: String,
     pub base: Frontier,
-    pub envelope: OperationEnvelope,
+    pub envelope: MutationEnvelope,
     pub touched: TouchedSet,
     pub state: PreviewState,
     pub sequence: u64,
@@ -165,7 +165,7 @@ pub struct PublishPreviewRequest {
     pub actor: ActorId,
     pub key: String,
     pub base: Frontier,
-    pub envelope: OperationEnvelope,
+    pub envelope: MutationEnvelope,
     pub touched: TouchedSet,
     /// @emoji ⏳️ `None` uses `PreviewBudgets::default_ttl_ms`; either way the result is capped at
     /// `PreviewBudgets::max_ttl_ms`.
@@ -255,7 +255,7 @@ impl ConflictOracle for DbConflictOracle {
     fn conflicts(&self, preview_touched: &TouchedSet, landed_touched: &TouchedSet) -> bool {
         let synthetic_rule = protocol::ConflictRule::Commutes;
         let mut preview_command = db_conflict::CommandTouch::new(
-            protocol::OperationId(ORACLE_PREVIEW_TAG.to_string()),
+            protocol::MutationId(ORACLE_PREVIEW_TAG.to_string()),
             protocol::ActorId(ORACLE_PREVIEW_TAG.to_string()),
             db_conflict::CommandKind::from(ORACLE_PREVIEW_TAG),
             synthetic_rule,
@@ -264,7 +264,7 @@ impl ConflictOracle for DbConflictOracle {
         preview_command.touched = preview_touched.clone();
 
         let mut landed_command = db_conflict::CommandTouch::new(
-            protocol::OperationId(ORACLE_LANDED_TAG.to_string()),
+            protocol::MutationId(ORACLE_LANDED_TAG.to_string()),
             protocol::ActorId(ORACLE_LANDED_TAG.to_string()),
             db_conflict::CommandKind::from(ORACLE_LANDED_TAG),
             synthetic_rule,
@@ -511,14 +511,14 @@ mod tests {
         Frontier { document: document.into(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 }
     }
 
-    fn sample_envelope(actor: &str) -> OperationEnvelope {
-        OperationEnvelope {
-            operation_id: protocol::OperationId(format!("op-{actor}")),
+    fn sample_envelope(actor: &str) -> MutationEnvelope {
+        MutationEnvelope {
+            mutation_id: protocol::MutationId(format!("op-{actor}")),
             document_id: protocol::DocumentId("doc-1".to_string()),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }

@@ -12,14 +12,14 @@ use crate::apps::block2d::commands::handle::{add_handle, remove_handle};
 use crate::apps::block2d::commands::handle_kind::{add_handle_kind, remove_handle_kind};
 use crate::apps::block2d::commands::kind::patch_node_kind;
 use crate::apps::block2d::commands::selection::set_selection;
-use crate::apps::block2d::config::{Block2dConfig, Block2dConfigOperation};
+use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use crate::apps::block2d::modes::edit as edit_mode;
 use crate::apps::block2d::modes::edit::windows::board;
 use crate::apps::block2d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::block2d::terminology::block2d_labels;
-use crate::artifacts::block2d::op::Block2dOperation;
+use crate::artifacts::block2d::op::Block2dMutation;
 use crate::artifacts::block2d::{artifact_kind, Block2dDefinition, BLOCK_2D_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use store::EngineHandles;
@@ -45,7 +45,7 @@ semio_framework_plugin::app_commands! {
     /// is safe, reordering is a wire-format break. Every id/key pair here is IDENTICAL (the pre-migration
     /// `#[dsl(key)]` already used the camelCase action id, not kebab-case) — preserved verbatim, not
     /// "fixed" to kebab, so the wire format stays byte-identical.
-    pub enum Block2dCommand for Block2dDefinition, Block2dOperation, Block2dConfig, Block2dConfigOperation {
+    pub enum Block2dCommand for Block2dDefinition, Block2dMutation, Block2dConfig, Block2dConfigMutation {
         "patchNodeKind" as "patchNodeKind" => patch_node_kind::PatchNodeKind,
         "addHandleKind" as "addHandleKind" => add_handle_kind::AddHandleKind,
         "removeHandleKind" as "removeHandleKind" => remove_handle_kind::RemoveHandleKind,
@@ -62,17 +62,17 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️Block2dPlayApp
 /// 🧪️ B1: unit struct — the former `selected_ids` `RefCell` field now lives in
-/// `crate::apps::block2d::config::Block2dConfig`, written through `Block2dConfigOperation`s.
+/// `crate::apps::block2d::config::Block2dConfig`, written through `Block2dConfigMutation`s.
 #[derive(Default)]
 pub struct Block2dPlayApp;
 
 impl DocumentApp for Block2dPlayApp {
     type Projection = Block2dDefinition;
-    type Operation = Block2dOperation;
+    type Mutation = Block2dMutation;
     type Config = Block2dConfig;
-    type ConfigOperation = Block2dConfigOperation;
+    type ConfigMutation = Block2dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Block2dCommand;
 
@@ -120,7 +120,7 @@ impl DocumentApp for Block2dPlayApp {
         }
     }
 
-    fn handle(command: &Block2dCommand, doc: &DocumentView<'_, Block2dDefinition>, cfg: &ConfigView<'_, Block2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dOperation, Block2dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Block2dCommand, doc: &DocumentView<'_, Block2dDefinition>, cfg: &ConfigView<'_, Block2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -185,15 +185,15 @@ pub fn create_block2d_app() -> App {
             .default_layout(edit_mode::layout())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .operation("patchNodeKind", LocalizedLabel::native("Patch Node Kind", "Knotenart bearbeiten"))
-            .operation("addHandleKind", LocalizedLabel::native("Add Handle Kind", "Griffart hinzufügen"))
-            .operation("removeHandleKind", LocalizedLabel::native("Remove Handle Kind", "Griffart entfernen"))
-            .operation("addHandle", LocalizedLabel::native("Add Handle", "Griff hinzufügen"))
-            .operation("removeHandle", LocalizedLabel::native("Remove Handle", "Griff entfernen"))
-            .operation("addCompatibilityRule", LocalizedLabel::native("Add Compatibility Rule", "Kompatibilitätsregel hinzufügen"))
-            .operation("removeCompatibilityRule", LocalizedLabel::native("Remove Compatibility Rule", "Kompatibilitätsregel entfernen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .mutation("patchNodeKind", LocalizedLabel::native("Patch Node Kind", "Knotenart bearbeiten"))
+            .mutation("addHandleKind", LocalizedLabel::native("Add Handle Kind", "Griffart hinzufügen"))
+            .mutation("removeHandleKind", LocalizedLabel::native("Remove Handle Kind", "Griffart entfernen"))
+            .mutation("addHandle", LocalizedLabel::native("Add Handle", "Griff hinzufügen"))
+            .mutation("removeHandle", LocalizedLabel::native("Remove Handle", "Griff entfernen"))
+            .mutation("addCompatibilityRule", LocalizedLabel::native("Add Compatibility Rule", "Kompatibilitätsregel hinzufügen"))
+            .mutation("removeCompatibilityRule", LocalizedLabel::native("Remove Compatibility Rule", "Kompatibilitätsregel entfernen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .io(crate::artifacts::block2d::engine::block2d_io()),
     )
@@ -374,7 +374,7 @@ mod tests {
     fn set_selection_writes_config_not_document() {
         let mut app = new_app();
         let result = app.dispatch_typed(Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["handle-kind:b-l".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        assert!(result.operations.is_empty(), "setSelection is config-only and must emit no document operations");
+        assert!(result.mutations.is_empty(), "setSelection is config-only and must emit no document operations");
     }
 
     /// 🌉️ `puzzle2d_manifest_fragment`'s new caller round-trips through the `"catalog:out"` media port.
@@ -404,10 +404,10 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_operations_under_the_real_registry() {
+    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] }));
-        assert!(result.operations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
     }
     //#endregion 🔖️Behavior
 }

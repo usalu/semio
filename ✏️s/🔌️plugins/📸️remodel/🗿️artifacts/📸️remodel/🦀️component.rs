@@ -802,7 +802,7 @@ impl dsl::DslField for RemodelMesh {
 
 /// 🌉️ `Box<T>` is a `#[fundamental]` std type, so implementing the foreign `dsl::DslField` trait for
 /// `Box<RemodelMesh>` (a local type parameter) here is coherence-legal — needed because
-/// `RemodelOperation::SetMeshResult`/`RemodelDiff::SetMeshResult` carry `mesh: Box<RemodelMesh>`
+/// `RemodelMutation::SetMeshResult`/`RemodelDiff::SetMeshResult` carry `mesh: Box<RemodelMesh>`
 /// (boxed only to shrink the enum's overall size; `RemodelMesh` itself is a plain record, not a
 /// `DslEnum`, so the derive's `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't
 /// apply — this is the ordinary boxed-scalar case instead).

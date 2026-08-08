@@ -1,4 +1,4 @@
-//! 🧮️ Wires play app — view state (`WiresConfig`) and its operation enum (`WiresConfigOperation`).
+//! 🧮️ Wires play app — view state (`WiresConfig`) and its operation enum (`WiresConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.wires` document. It still round-trips through a real
@@ -7,7 +7,7 @@
 //! ephemeral `WiresPlayRuntime` (selection + in-flight pointer drag of one board node) plus the `locale`
 //! the deleted `ViewModel` used to carry.
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -105,16 +105,16 @@ store::impl_whole_record_config!(WiresConfig);
 //#region 🔖️ConfigOperations
 /// 🧮️ [`WiresConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `WiresPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()` returns —
-/// mirrors `shooting_op::ShootingConfigOperation`'s identical "undo is the whole-config snapshot from
+/// mirrors `shooting_op::ShootingConfigMutation`'s identical "undo is the whole-config snapshot from
 /// just before this tick" shape: since a config-only dispatch is a plain `Apply` (not an `AmendLast`,
 /// except when explicitly coalesced via `Emit::amend`/`Emit::amend_config` — see
 /// `crate::apps::wires::commands::pointer`), each tick is its own distinct, real config edit, and the
-/// simplest correct inverse needs no per-field reverse-patch bookkeeping. `Operation::Diff` is the WHOLE
+/// simplest correct inverse needs no per-field reverse-patch bookkeeping. `Mutation::Diff` is the WHOLE
 /// `WiresConfig` (not a granular patch type): `diff()` returns "the full config after this op", and
-/// `store::impl_whole_record_config!` supplies the `OperationDiff<WiresConfig>` that returns that
+/// `store::impl_whole_record_config!` supplies the `MutationDiff<WiresConfig>` that returns that
 /// snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum WiresConfigOperation {
+pub enum WiresConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -129,7 +129,7 @@ pub enum WiresConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for WiresConfigOperation {
+impl protocol::OpText for WiresConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -143,7 +143,7 @@ impl protocol::OpText for WiresConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -154,7 +154,7 @@ impl protocol::OpText for WiresConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for WiresConfigOperation {
+impl protocol::OpBinary for WiresConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -200,26 +200,26 @@ impl protocol::OpBinary for WiresConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<WiresConfig> for WiresConfigOperation {
+impl Mutation<WiresConfig> for WiresConfigMutation {
     type Diff = WiresConfig;
 
     fn diff(&self, base: &WiresConfig) -> WiresConfig {
         let mut next = base.clone();
         match self {
-            WiresConfigOperation::Snapshot { config } => return config.clone(),
-            WiresConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            WiresConfigOperation::SetDrag { node_id, last_x, last_y } => {
+            WiresConfigMutation::Snapshot { config } => return config.clone(),
+            WiresConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            WiresConfigMutation::SetDrag { node_id, last_x, last_y } => {
                 next.drag_node_id = node_id.clone();
                 next.drag_last_x = *last_x;
                 next.drag_last_y = *last_y;
             }
-            WiresConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            WiresConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &WiresConfig) -> Vec<Self> {
-        vec![WiresConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &WiresConfig) -> Vec<Self> {
+        vec![WiresConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -249,30 +249,30 @@ mod tests {
     //#region 🔖️ConfigOperationTests
     #[test]
     fn config_snapshot_and_selection_op_text_round_trip() {
-        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::Snapshot { config: WiresConfig::default() });
-        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] });
+        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::Snapshot { config: WiresConfig::default() });
+        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] });
     }
 
     #[test]
     fn config_drag_op_text_round_trip() {
-        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
-        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
+        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
+        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
     }
 
     #[test]
     fn config_locale_op_text_round_trip() {
-        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     /// ⏪️ `backwards()` always returns a single whole-config `Snapshot` of the pre-op state, regardless
     /// of which field the forward op touched — the same "undo restores the prior snapshot" law
-    /// `shooting_op::ShootingConfigOperation` establishes.
+    /// `shooting_op::ShootingConfigMutation` establishes.
     #[test]
     fn config_backwards_always_snapshots_the_base() {
         let base = WiresConfig { selected_ids: vec!["node-1".into()], ..Default::default() };
-        let forward = WiresConfigOperation::SetSelection { ids: vec!["node-2".into()] };
-        let inverse = forward.backwards(&base);
-        assert_eq!(inverse, vec![WiresConfigOperation::Snapshot { config: base.clone() }]);
+        let forward = WiresConfigMutation::SetSelection { ids: vec!["node-2".into()] };
+        let inverse = forward.inverse(&base);
+        assert_eq!(inverse, vec![WiresConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(forward.diff(&base), WiresConfig { selected_ids: vec!["node-2".into()], ..base });
     }
     //#endregion 🔖️ConfigOperationTests

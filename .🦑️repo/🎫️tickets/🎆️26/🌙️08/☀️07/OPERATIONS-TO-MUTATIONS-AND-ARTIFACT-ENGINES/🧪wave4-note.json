@@ -1,0 +1,8 @@
+{
+  "pluginRel": "✏️s/🔌️plugins/🗒️note",
+  "artFolder": "🗒️note",
+  "artMod": "note",
+  "prefix": "Note",
+  "applyFrom": "apply_note_operation",
+  "applyTo": "apply_note_mutation"
+}

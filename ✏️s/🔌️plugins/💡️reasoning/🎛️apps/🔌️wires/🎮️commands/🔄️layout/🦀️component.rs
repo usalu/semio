@@ -1,9 +1,9 @@
 //! 🔄️ Wires play app commands — force-directed board re-layout (`forceLayout`/`reorganize` share the
 //! exact same effect, mirroring the old `WiresCommand::ForceLayout | WiresCommand::Reorganize` match arm).
 
-use crate::apps::wires::config::{WiresConfig, WiresConfigOperation};
+use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::engine::{fixture_nodes, force_layout_board, node_position};
-use crate::artifacts::wires::op::MindmapWiresOperation;
+use crate::artifacts::wires::op::MindmapWiresMutation;
 use crate::artifacts::wires::MindmapWiresDocument;
 use dsl::DslValue;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `PatchNode` operations — shared by both
 /// `ForceLayout` and `Reorganize`.
-fn force_layout_operations(document: &MindmapWiresDocument) -> Vec<MindmapWiresOperation> {
+fn force_layout_operations(document: &MindmapWiresDocument) -> Vec<MindmapWiresMutation> {
     let mut board = document.board_fixture.clone();
     force_layout_board(&mut board);
     fixture_nodes(&board)
@@ -27,7 +27,7 @@ fn force_layout_operations(document: &MindmapWiresDocument) -> Vec<MindmapWiresO
             let mut patch = BTreeMap::new();
             patch.insert("x".into(), dsl::to_dsl_value(&nx).unwrap_or(DslValue::Null));
             patch.insert("y".into(), dsl::to_dsl_value(&ny).unwrap_or(DslValue::Null));
-            Some(MindmapWiresOperation::PatchNode { node_id: id.to_string(), patch })
+            Some(MindmapWiresMutation::PatchNode { node_id: id.to_string(), patch })
         })
         .collect()
 }
@@ -40,8 +40,8 @@ pub mod force_layout {
     #[dsl(keyword = "force-layout")]
     pub struct ForceLayout {}
 
-    pub fn handle(_payload: &ForceLayout, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
-        Ok(Emit::operations(force_layout_operations(doc.projection)))
+    pub fn handle(_payload: &ForceLayout, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+        Ok(Emit::mutations(force_layout_operations(doc.projection)))
     }
 }
 //#endregion 🔖️ForceLayout
@@ -54,8 +54,8 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
-        Ok(Emit::operations(force_layout_operations(doc.projection)))
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault> {
+        Ok(Emit::mutations(force_layout_operations(doc.projection)))
     }
 }
 //#endregion 🔖️Reorganize

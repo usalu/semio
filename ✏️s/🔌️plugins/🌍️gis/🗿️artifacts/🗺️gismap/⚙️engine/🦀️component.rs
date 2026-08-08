@@ -6,9 +6,9 @@
 //! app.
 
 use crate::artifacts::gismap::dsl::REUSE_MAP_EXAMPLE_TEXT;
-use crate::artifacts::gismap::op::GisMapOperation;
+use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch, GIS_MAP_SCHEMA};
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -70,36 +70,36 @@ pub fn default_document() -> GisMapDocument {
 //#region 🔖️CollectionDiffing
 /// 🌉️ Diffs one feature collection before/after an in-place edit into granular id-keyed
 /// add/remove/patch operations — used by `patchPositions` and the `features:in` import (whole-array
-/// replacements still converge per-feature). `wrap` picks which `GisMapOperation` variant
+/// replacements still converge per-feature). `wrap` picks which `GisMapMutation` variant
 /// (`Positions`/`Routes`/`Regions`) the diff belongs to.
-fn feature_collection_operations(before: &[MapFeature], after: &[MapFeature], wrap: impl Fn(CollectionOperation<String, MapFeature, MapFeaturePatch>) -> GisMapOperation) -> Vec<GisMapOperation> {
+fn feature_collection_operations(before: &[MapFeature], after: &[MapFeature], wrap: impl Fn(CollectionMutation<String, MapFeature, MapFeaturePatch>) -> GisMapMutation) -> Vec<GisMapMutation> {
     let mut operations = Vec::new();
     let after_ids: HashSet<&str> = after.iter().map(|feature| feature.id.as_str()).collect();
     for feature in before {
         if !after_ids.contains(feature.id.as_str()) {
-            operations.push(wrap(CollectionOperation::Remove { id: feature.id.clone() }));
+            operations.push(wrap(CollectionMutation::Remove { id: feature.id.clone() }));
         }
     }
     for (index, feature) in after.iter().enumerate() {
         match before.iter().find(|entry| entry.id == feature.id) {
-            None => operations.push(wrap(CollectionOperation::Add { index: index, item: feature.clone() })),
-            Some(prev) if prev.data != feature.data => operations.push(wrap(CollectionOperation::Patch { id: feature.id.clone(), patch: MapFeaturePatch { data: Some(feature.data.clone()) } })),
+            None => operations.push(wrap(CollectionMutation::Add { index: index, item: feature.clone() })),
+            Some(prev) if prev.data != feature.data => operations.push(wrap(CollectionMutation::Patch { id: feature.id.clone(), patch: MapFeaturePatch { data: Some(feature.data.clone()) } })),
             Some(_) => {}
         }
     }
     operations
 }
 
-pub fn positions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapOperation> {
-    feature_collection_operations(before, after, GisMapOperation::Positions)
+pub fn positions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+    feature_collection_operations(before, after, GisMapMutation::Positions)
 }
 
-pub fn routes_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapOperation> {
-    feature_collection_operations(before, after, GisMapOperation::Routes)
+pub fn routes_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+    feature_collection_operations(before, after, GisMapMutation::Routes)
 }
 
-pub fn regions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapOperation> {
-    feature_collection_operations(before, after, GisMapOperation::Regions)
+pub fn regions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+    feature_collection_operations(before, after, GisMapMutation::Regions)
 }
 //#endregion 🔖️CollectionDiffing
 
@@ -263,9 +263,9 @@ mod tests {
         let before = vec![feature("keep", "a"), feature("gone", "b")];
         let after = vec![feature("keep", "changed"), feature("new", "c")];
         let operations = positions_operations(&before, &after);
-        assert!(operations.iter().any(|operation| matches!(operation, GisMapOperation::Positions(CollectionOperation::Remove { id }) if id == "gone")));
-        assert!(operations.iter().any(|operation| matches!(operation, GisMapOperation::Positions(CollectionOperation::Patch { id, .. }) if id == "keep")));
-        assert!(operations.iter().any(|operation| matches!(operation, GisMapOperation::Positions(CollectionOperation::Add { id, .. }) if id == "new")));
+        assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Remove { id }) if id == "gone")));
+        assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Patch { id, .. }) if id == "keep")));
+        assert!(operations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Add { id, .. }) if id == "new")));
         assert!(routes_operations(&before, &before).is_empty(), "an unchanged collection produces no operations");
         assert!(regions_operations(&before, &before).is_empty());
     }
@@ -326,3 +326,36 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("gismap.spr"),
     });
 }
+
+
+//#region 🔖️ArtifactEngine
+pub struct GisMapEngine {
+    projection: crate::artifacts::gismap::GisMapDocument,
+}
+
+impl GisMapEngine {
+    pub fn new(projection: crate::artifacts::gismap::GisMapDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for GisMapEngine {
+    type Projection = crate::artifacts::gismap::GisMapDocument;
+    type Mutation = crate::artifacts::gismap::mutations::GisMapMutation;
+    type Diff = crate::artifacts::gismap::diff::GisMapDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::gismap::mutations::apply_gis_map_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

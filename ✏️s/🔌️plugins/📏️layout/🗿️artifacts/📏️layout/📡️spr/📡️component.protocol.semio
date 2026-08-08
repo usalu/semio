@@ -1,7 +1,7 @@
 dialect protocol
 protocol layout.spr
 version 1
-schema layout.fixture.operation
+schema layout.fixture.mutation
 start record
 framing record
 record layout.layout-add-layer tag 1

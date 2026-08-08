@@ -50,7 +50,7 @@ import {
   Board2dHost,
   board2dCameraActionArgs,
   beginPuzzle2dPeerGesture,
-  collectPuzzle2dLiveMirrorOperations,
+  collectPuzzle2dLiveMirrorMutations,
   coalesceBoard2dEvents,
   endPuzzle2dPeerGesture,
   mapContextMenuSpecs,
@@ -62,7 +62,7 @@ import {
   puzzle2dPeerOwnsGesture,
   puzzle2dScreenToWorld,
   puzzle2dWorldToScreen,
-  pushPuzzle2dLiveMirrorOperations,
+  pushPuzzle2dLiveMirrorMutations,
   registerBoard2dPeer,
   unregisterBoard2dPeer,
   NodeGraphHost,
@@ -739,7 +739,7 @@ describe("shell store reducer", () => {
       manifest,
       createApp: async () => 0,
       destroyApp: async () => {},
-      handleAction: async () => ({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] }, diagnostics: [], requestedEffects: [], events: [] }),
+      handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, diagnostics: [], requestedEffects: [], events: [] }),
       refreshUi: async () => ({}),
       contextMenu: async () => [],
       dispose: () => {},
@@ -1029,19 +1029,19 @@ describe("framework plugin runtime", () => {
     const response = parseInvocationResponse(
       JSON.stringify({
         output: null,
-        operations: [{ diff: { payload: { schemaId: "draw.operation", document: { id: "forest" } } } }],
-        inverseGroup: { invocationId: "setActiveExample:1:0", operations: [], inverseOperations: [] },
+        mutations: [{ diff: { payload: { schemaId: "draw.operation", document: { id: "forest" } } } }],
+        inverseGroup: { invocationId: "setActiveExample:1:0", mutations: [], inverseMutations: [] },
         requestedEffects: [{ navigate: { uri: "/spaces/forest" } }],
       }),
     );
-    expect(response.operations).toHaveLength(1);
+    expect(response.mutations).toHaveLength(1);
     expect(response.requestedEffects).toEqual([{ navigate: { uri: "/spaces/forest" } }]);
   });
 
   it("falls back to an empty InvocationResponse for malformed handle-action JSON", async () => {
     const { parseInvocationResponse } = await import("@semio-tech/framework");
-    expect(parseInvocationResponse("not json")).toEqual({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } });
-    expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } });
+    expect(parseInvocationResponse("not json")).toEqual({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } });
+    expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } });
   });
 
   it("serializes concurrent program wasm handle calls", async () => {
@@ -1823,25 +1823,25 @@ describe("framework renderer hosts", () => {
     }
   });
 
-  it("collects live mirror operations: coalesces nodeMove to the latest per id, ignores unrelated rows", () => {
-    const operations = collectPuzzle2dLiveMirrorOperations([
+  it("collects live mirror mutations: coalesces nodeMove to the latest per id, ignores unrelated rows", () => {
+    const mutations = collectPuzzle2dLiveMirrorMutations([
       { name: "camera", payload: { x: 1, y: 1, zoom: 1 } },
       { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
       { name: "brushPreview", payload: {} },
       { name: "nodeMove", payload: { id: "alpha", x: 9, y: 9 } },
       { name: "nodeMove", payload: { id: "beta", x: 2, y: 2 } },
     ]);
-    expect(operations.positions).toEqual([
+    expect(mutations.positions).toEqual([
       { id: "alpha", x: 9, y: 9 },
       { id: "beta", x: 2, y: 2 },
     ]);
-    expect(operations.selectionIds).toBeNull();
-    expect(operations.preselect).toBeNull();
-    expect(operations.clearPreselect).toBe(false);
+    expect(mutations.selectionIds).toBeNull();
+    expect(mutations.preselect).toBeNull();
+    expect(mutations.clearPreselect).toBe(false);
   });
 
-  it("collects live mirror operations: nodeDragEnd.moves produce final positions", () => {
-    const operations = collectPuzzle2dLiveMirrorOperations([
+  it("collects live mirror mutations: nodeDragEnd.moves produce final positions", () => {
+    const mutations = collectPuzzle2dLiveMirrorMutations([
       { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
       {
         name: "nodeDragEnd",
@@ -1853,24 +1853,24 @@ describe("framework renderer hosts", () => {
         },
       },
     ]);
-    expect(operations.positions).toEqual([
+    expect(mutations.positions).toEqual([
       { id: "alpha", x: 20, y: 20 },
       { id: "beta", x: 5, y: 5 },
     ]);
   });
 
-  it("collects live mirror operations: preselect sets the live highlight, select/preselectCancel commit selection and clear it", () => {
-    expect(collectPuzzle2dLiveMirrorOperations([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: ["c"] } }])).toMatchObject({
+  it("collects live mirror mutations: preselect sets the live highlight, select/preselectCancel commit selection and clear it", () => {
+    expect(collectPuzzle2dLiveMirrorMutations([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: ["c"] } }])).toMatchObject({
       preselect: { ids: ["a", "b"], removedIds: ["c"] },
       clearPreselect: false,
       selectionIds: null,
     });
-    expect(collectPuzzle2dLiveMirrorOperations([{ name: "select", payload: { ids: ["a"] } }])).toMatchObject({
+    expect(collectPuzzle2dLiveMirrorMutations([{ name: "select", payload: { ids: ["a"] } }])).toMatchObject({
       selectionIds: ["a"],
       preselect: null,
       clearPreselect: true,
     });
-    expect(collectPuzzle2dLiveMirrorOperations([{ name: "preselectCancel", payload: { ids: ["a", "b"] } }])).toMatchObject({
+    expect(collectPuzzle2dLiveMirrorMutations([{ name: "preselectCancel", payload: { ids: ["a", "b"] } }])).toMatchObject({
       selectionIds: ["a", "b"],
       preselect: null,
       clearPreselect: true,
@@ -1905,7 +1905,7 @@ describe("framework renderer hosts", () => {
     expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.b")).toBe(false);
   });
 
-  it("pushes live mirror operations into peer sessions, skipping the source pane", () => {
+  it("pushes live mirror mutations into peer sessions, skipping the source pane", () => {
     const calls: { pane: string; method: string; arg: string }[] = [];
     const makePeer = (pane: string) => ({
       session: {
@@ -1918,7 +1918,7 @@ describe("framework renderer hosts", () => {
     registerBoard2dPeer("mirror-test", "pane.source", makePeer("pane.source"));
     registerBoard2dPeer("mirror-test", "pane.sibling", makePeer("pane.sibling"));
 
-    pushPuzzle2dLiveMirrorOperations("mirror-test", "pane.source", {
+    pushPuzzle2dLiveMirrorMutations("mirror-test", "pane.source", {
       positions: [{ id: "alpha", x: 1, y: 2 }],
       selectionIds: ["alpha"],
       preselect: null,
@@ -3813,9 +3813,9 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
 
   const numberArg = (id: string, required: boolean, def?: number): ActionArgDef => ({ id, label: id[0]!.toUpperCase() + id.slice(1), control: { kind: "number" }, required, ...(def === undefined ? {} : { default: def }) });
 
-  const twoArgAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "operation", inPalette: true, args: [numberArg("depth", true), numberArg("segments", true)] };
-  const zeroArgAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "operation", inPalette: true, args: [] };
-  const defaultedAction: ActionDefinition = { id: "bevel", label: "Bevel", kind: "operation", inPalette: true, args: [numberArg("radius", true, 2)] };
+  const twoArgAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [numberArg("depth", true), numberArg("segments", true)] };
+  const zeroArgAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "mutation", inPalette: true, args: [] };
+  const defaultedAction: ActionDefinition = { id: "bevel", label: "Bevel", kind: "mutation", inPalette: true, args: [numberArg("radius", true, 2)] };
 
   function Harness({ actions, onExecute, disabled }: { actions: readonly ActionDefinition[]; onExecute: (descriptor: unknown) => void; disabled?: boolean }): ReactElement {
     const [expanded, setExpanded] = useState<string | null>(null);
@@ -3921,10 +3921,10 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   });
 
   it("groups actions into category sections like the command panel", () => {
-    const createAction: ActionDefinition = { id: "box", label: "Box", kind: "operation", inPalette: true, category: "create", args: [] };
-    const transformAction: ActionDefinition = { id: "move", label: "Move", kind: "operation", inPalette: true, category: "transform", args: [] };
+    const createAction: ActionDefinition = { id: "box", label: "Box", kind: "mutation", inPalette: true, category: "create", args: [] };
+    const transformAction: ActionDefinition = { id: "move", label: "Move", kind: "mutation", inPalette: true, category: "transform", args: [] };
     const historyAction: ActionDefinition = { id: "undo", label: "Undo", kind: "history", inPalette: true, args: [] };
-    const uncategorizedAction: ActionDefinition = { id: "flatten2", label: "Flatten2", kind: "operation", inPalette: true, args: [] };
+    const uncategorizedAction: ActionDefinition = { id: "flatten2", label: "Flatten2", kind: "mutation", inPalette: true, args: [] };
     const { container } = render(createElement(Harness, { actions: [createAction, transformAction, historyAction, uncategorizedAction], onExecute: vi.fn() }));
     const textOf = (text: string) => [...container.querySelectorAll("*")].some((el) => el.textContent?.trim() === text && el.children.length === 0);
     expect(textOf("Create")).toBe(true);
@@ -3939,8 +3939,8 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
 });
 
 describe("palette redirect and keybinding rule (P3/P4)", () => {
-  const argAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "operation", inPalette: true, args: [{ id: "depth", label: "Depth", control: { kind: "number" }, required: true }] };
-  const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "operation", inPalette: true, args: [] };
+  const argAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [{ id: "depth", label: "Depth", control: { kind: "number" }, required: true }] };
+  const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "mutation", inPalette: true, args: [] };
 
   it("only arg-carrying actions redirect to a staged form (P3 decision)", () => {
     expect(actionRequiresStagedForm(argAction)).toBe(true);
@@ -4144,7 +4144,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     const actionsApp = {
       controllerId: "draw",
       actions: [
-        { id: "extrude", label: "Extrude", kind: "operation", inPalette: true, args: [] },
+        { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [] },
         { id: "undo", label: "Undo", kind: "history", iconId: "undo", inPalette: true, args: [] },
         { id: "setActiveUtility", label: "Set Active Utility", kind: "view", inPalette: false, args: [] },
       ] as ActionDefinition[],

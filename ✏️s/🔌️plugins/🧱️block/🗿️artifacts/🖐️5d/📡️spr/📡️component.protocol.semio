@@ -1,7 +1,7 @@
 dialect protocol
 protocol 5d.spr
 version 1
-schema block.5d.operation
+schema block.5d.mutation
 start record
 framing record
 record block.5d-add-vertex tag 1

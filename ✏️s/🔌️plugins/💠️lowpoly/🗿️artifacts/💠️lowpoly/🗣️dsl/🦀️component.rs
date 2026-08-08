@@ -31,7 +31,7 @@ mod tests {
     #[test]
     fn dsl_round_trips_the_default_projection() {
         let projection = crate::artifacts::lowpoly::engine::default_projection();
-        store::test_support::assert_dsl_round_trip(&projection);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[test]
@@ -39,7 +39,7 @@ mod tests {
         let mut projection = crate::artifacts::lowpoly::engine::default_projection();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
-        store::test_support::assert_dsl_round_trip(&projection);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[test]

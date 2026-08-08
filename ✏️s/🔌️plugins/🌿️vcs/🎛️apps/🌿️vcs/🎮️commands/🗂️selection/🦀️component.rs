@@ -1,7 +1,7 @@
 //! 🗂️ VCS play app commands — the document-tree checkpoint selection (config-only).
 
-use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigOperation};
-use crate::artifacts::vcs::{op::VcsDemoOperation, VcsDemoProjection};
+use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
+use crate::artifacts::vcs::{op::VcsDemoMutation, VcsDemoProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault> {
-        Ok(Emit::config(vec![VcsDemoConfigOperation::SetSelection { checkpoint_ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+        Ok(Emit::config(vec![VcsDemoConfigMutation::SetSelection { checkpoint_ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -37,11 +37,11 @@ mod tests {
     /// 👁️ `setSelection` is config-only: it must drive `cfg.selected_checkpoint_ids` (rendered into the
     /// document tree's `selected` ids) without ever touching the document store.
     #[test]
-    fn set_selection_drives_config_and_emits_no_document_operations() {
+    fn set_selection_drives_config_and_emits_no_document_mutations() {
         let mut instance = app();
         let checkpoint_id = crate::apps::vcs::testkit::seeded_envelope(&instance).vcs.checkpoints[0].id.clone();
         let result = dispatch(&mut instance, VcsCommand::SetSelection(set_selection::SetSelection { ids: vec![checkpoint_id.clone()] }));
-        assert!(result.operations.is_empty(), "setSelection mutates only ephemeral config, never the document");
+        assert!(result.document_mutations.is_empty(), "setSelection mutates only ephemeral config, never the document");
         let json = render(&mut instance, VCS_PLAY_BODY_DOCUMENT);
         assert!(json.contains(&checkpoint_id));
     }

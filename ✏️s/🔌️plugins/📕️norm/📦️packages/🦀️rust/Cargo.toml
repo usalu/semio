@@ -93,12 +93,16 @@ ports = { react = 6105, wgpu = 6205 }
 crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
+[features]
+default = []
+cross-fem = ["dep:fem"]
+
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 # 🏗️ Cross-plugin: EN 1992/EN 1993 solve a simply supported beam with the FEM plugin's shared kernel
-# own registrar pass — see this plugin's ticket handoff.
-fem = { path = "../../../🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem" }
+# (optional until `semio-s-plugin-fem` completes Wave 4 mutations migration).
+fem = { path = "../../../🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem", optional = true }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

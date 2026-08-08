@@ -398,10 +398,33 @@ function splitRootWithStack(layout: WindowLayoutNode, stack: WindowLayoutStackNo
 }
 
 /** @emoji 🪟️ Writes resizable panel percentages back onto axis children. */
+function safePanelGroupSetLayout(group: ResizablePrimitive.GroupImperativeHandle, layout: Record<string, number>): void {
+  try {
+    group.setLayout(layout);
+  } catch (error) {
+    // Stale resize payloads (e.g. edit 68/32 after switching to generate's 3 panels) must not crash the shell.
+    console.warn("[DEBUG] ignored panel group setLayout mismatch", error);
+  }
+}
+
 function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, sizes: Record<string, number> | readonly number[]): WindowLayoutNode {
   return updateLayoutAtPath(layout, axisPath, (node) => {
     if (node.kind !== "row" && node.kind !== "column") return node;
     const sizesRecord = sizes as Record<string | number, number>;
+    const arraySizes = Array.isArray(sizes) ? (sizes as readonly number[]) : null;
+    if (arraySizes && arraySizes.length !== node.children.length) {
+      const even = 100 / node.children.length;
+      return { ...node, children: node.children.map((child) => ({ ...child, size: even })) };
+    }
+    if (!arraySizes) {
+      const expectedKeys = node.children.map((_, index) => modeJoinPath(axisPath, index));
+      const matched = expectedKeys.filter((key) => typeof sizesRecord[key] === "number").length;
+      // Stale edit-mode resize events (2 keys) must not partially overwrite a 3-panel generate dock.
+      if (matched > 0 && matched !== node.children.length) {
+        const even = 100 / node.children.length;
+        return { ...node, children: node.children.map((child) => ({ ...child, size: even })) };
+      }
+    }
     const children = node.children.map((child, index) => {
       const panelKey = modeJoinPath(axisPath, index);
       const size = sizesRecord[panelKey] ?? sizesRecord[index] ?? sizesRecord[String(index)] ?? child.size;
@@ -1187,38 +1210,47 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
   const orientation = node.kind === "row" ? "horizontal" : "vertical";
   const childCount = node.children.length;
   const rawSizes = node.children.map((child) => child.size);
-  const hasAllDefinedSizes = rawSizes.every((s) => typeof s === "number" && s > 0);
-  let defaultLayout: number[];
+  const hasAllDefinedSizes = rawSizes.length === childCount && rawSizes.every((s) => typeof s === "number" && s > 0);
+  let sizeList: number[];
   if (hasAllDefinedSizes) {
     const sum = (rawSizes as number[]).reduce((a, b) => a + b, 0);
     if (Math.abs(sum - 100) < 0.01 && sum > 0) {
-      defaultLayout = rawSizes as number[];
+      sizeList = rawSizes as number[];
     } else if (sum > 0) {
-      defaultLayout = (rawSizes as number[]).map((s) => (s / sum) * 100);
+      sizeList = (rawSizes as number[]).map((s) => (s / sum) * 100);
     } else {
-      defaultLayout = node.children.map(() => 100 / childCount);
+      sizeList = node.children.map(() => 100 / childCount);
     }
   } else {
-    defaultLayout = node.children.map(() => 100 / childCount);
+    sizeList = node.children.map(() => 100 / childCount);
   }
+  // react-resizable-panels requires Layout = Record<panelId, number>; arrays only work when ids are "0","1",…
+  // and a stale 2-size edit layout applied to a 3-panel generate dock throws Invalid N panel layout.
+  if (sizeList.length !== childCount) {
+    sizeList = node.children.map(() => 100 / childCount);
+  }
+  const defaultLayout: Record<string, number> = {};
   const panels: React.ReactNode[] = [];
   node.children.forEach((child, index) => {
     const childPath = modeJoinPath(path, index);
+    const size = sizeList[index] ?? 100 / childCount;
+    defaultLayout[childPath] = size;
     if (index > 0) {
       const prevChild = node.children[index - 1]!;
       const joinCorners = [...modeJoinCornerSpecsForSeparator(path, node.kind, index, prevChild, child), ...(parentAxis ? modeJoinCornerSpecsForCrossSeparator(path, node.kind, index, parentAxis) : [])];
       panels.push(<ResizableHandle key={`sep-${childPath}`} joinCorners={joinCorners} onJoinCornerResize={ctx.onJoinCornerResize} orientation={orientation} />);
     }
     panels.push(
-      <ResizablePanel key={childPath} id={childPath} defaultSize={defaultLayout[index] ?? 100 / childCount} minSize={8} className="box-border min-h-0 min-w-0 overflow-hidden">
+      <ResizablePanel key={childPath} id={childPath} defaultSize={size} minSize={8} className="box-border min-h-0 min-w-0 overflow-hidden">
         {renderModeDockNode(child, childPath, ctx, { path, kind: node.kind, panelIndex: index })}
       </ResizablePanel>,
     );
   });
+  const axisIdentity = `${path || "root"}-n${childCount}-${sizeList.map((s) => Math.round(s)).join(".")}`;
   return (
     <ResizablePanelGroup
-      key={`${path || "root-axis"}-${childCount}`}
-      id={`mode-axis-${path || "root"}`}
+      key={`root-axis-${axisIdentity}`}
+      id={`mode-axis-${axisIdentity}`}
       elementRef={(element) => ctx.registerAxisElement(path, element)}
       groupRef={(group) => ctx.registerAxisGroup(path, group)}
       orientation={orientation}
@@ -1515,7 +1547,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     const liveMainLayout = mainGroup.getLayout();
     const currentMainLayout = Object.keys(liveMainLayout).length > 0 ? liveMainLayout : modeAxisGroupLayout(current, spec.mainAxisPath);
     const mainLayout = applyAxisGroupLayoutDelta(currentMainLayout, spec.mainAxisPath, spec.mainSeparatorIndex, deltas.mainDeltaPct);
-    mainGroup.setLayout(mainLayout);
+    safePanelGroupSetLayout(mainGroup, mainLayout);
     const peerLayouts: { path: ModeLayoutPath; layout: Record<string, number> }[] = [];
     for (const peer of peers) {
       const peerGroup = axisGroupRefsRef.current.get(peer.path);
@@ -1523,7 +1555,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       const livePeerLayout = peerGroup.getLayout();
       const currentPeerLayout = Object.keys(livePeerLayout).length > 0 ? livePeerLayout : modeAxisGroupLayout(current, peer.path);
       const peerLayout = applyAxisGroupLayoutDelta(currentPeerLayout, peer.path, peer.separatorIndex, deltas.crossDeltaPct);
-      peerGroup.setLayout(peerLayout);
+      safePanelGroupSetLayout(peerGroup, peerLayout);
       peerLayouts.push({ path: peer.path, layout: peerLayout });
     }
     setLayoutState((prev) => peerLayouts.reduce((next, peer) => applyAxisSizes(next, peer.path, peer.layout), applyAxisSizes(prev, spec.mainAxisPath, mainLayout)));

@@ -1,10 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/compose-js` policy/test router: `bun ./📜️script.ts policy|test [level]`. */
 import type { FileLinter } from "@semio-tech/repo-lib";
-import { dependencyBoundaryBreachesForFile } from "@semio-tech/repo-lib";
-import { getWorkspaceRoot } from "@semio-tech/repo-lib";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel } from "@semio-tech/repo-lib";
-import { defineLint } from "@semio-tech/repo-lib";
+import { BundleScript, ScriptRouter, defineLint, dependencyBoundaryBreachesForFile, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runVitest } from "@semio-tech/repo-lib";
 
 export const policyFile = "index.ts";
 

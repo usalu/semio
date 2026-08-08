@@ -1,4 +1,4 @@
-//! 🔺️ Process3d artifact — the `Process3dDiff` projection-patch type + its `OperationDiff` impl,
+//! 🔺️ Process3d artifact — the `Process3dDiff` projection-patch type + its `MutationDiff` impl,
 //! extracted from the old `🔧️op` crate's combined operation+diff region.
 
 
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::process3d::{Process3dDocument, ProcessStep, ProcessStepPatch, Stock, WorkshopMachine, WorkshopMachinePatch};
-use protocol::{apply_collection_operation, CollectionOperation, OperationDiff};
+use protocol::{apply_collection_mutation, CollectionMutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -18,9 +18,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Process3dDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub steps: Option<CollectionOperation<String, ProcessStep, ProcessStepPatch>>,
+    pub steps: Option<CollectionMutation<String, ProcessStep, ProcessStepPatch>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub machines: Option<CollectionOperation<String, WorkshopMachine, WorkshopMachinePatch>>,
+    pub machines: Option<CollectionMutation<String, WorkshopMachine, WorkshopMachinePatch>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stock: Option<Stock>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -29,17 +29,17 @@ pub struct Process3dDiff {
     pub document: Option<Process3dDocument>,
 }
 
-impl OperationDiff<Process3dDocument> for Process3dDiff {
+impl MutationDiff<Process3dDocument> for Process3dDiff {
     fn apply(&self, projection: &Process3dDocument) -> Process3dDocument {
         if let Some(document) = &self.document {
             return document.clone();
         }
         let mut next = projection.clone();
-        if let Some(operation) = &self.steps {
-            apply_collection_operation(&mut next.steps, operation);
+        if let Some(mutation) = &self.steps {
+            apply_collection_mutation(&mut next.steps, mutation);
         }
-        if let Some(operation) = &self.machines {
-            apply_collection_operation(&mut next.workshop.machines, operation);
+        if let Some(mutation) = &self.machines {
+            apply_collection_mutation(&mut next.workshop.machines, mutation);
         }
         if let Some(stock) = &self.stock {
             next.stock = stock.clone();

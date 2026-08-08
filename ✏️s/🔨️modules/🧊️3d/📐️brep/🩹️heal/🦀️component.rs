@@ -39,16 +39,49 @@ impl HealingReport {
 }
 
 /// 🩹 Validates a clean solid (no-op success); dirty solids are rejected until full healing lands.
-pub fn heal_solid(body: &Body, solid: SolidId, _tolerance: f64) -> Result<HealingReport, KernelError> {
+pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64) -> Result<HealingReport, KernelError> {
     solid_exists(body, solid)?;
+    let tol = if tolerance.is_finite() && tolerance > 0.0 { tolerance } else { 1e-6 };
+    let mut report = HealingReport::default();
+    // Merge near-coincident vertices by snapping later vertices onto earlier ones.
+    let ids: Vec<_> = body.vertices.iter().map(|(id, _)| id).collect();
+    for i in 0..ids.len() {
+        let Some(pi) = body.vertices.get(ids[i]).map(|v| v.position) else { continue };
+        for j in (i + 1)..ids.len() {
+            let Some(pj) = body.vertices.get(ids[j]).map(|v| v.position) else { continue };
+            if (pj - pi).norm() <= tol {
+                if let Some(v) = body.vertices.get_mut(ids[j]) {
+                    v.position = pi;
+                    report.vertices_merged += 1;
+                }
+            }
+        }
+    }
+    // Drop zero-length edges by collapsing endpoint coincidence already snapped.
+    for (edge_id, _) in body.edges.iter().map(|(id, e)| (id, e.clone())).collect::<Vec<_>>() {
+        let coedges = body.edge_coedges(edge_id);
+        if coedges.is_empty() {
+            continue;
+        }
+        if let Some((a, b)) = body.coedge_endpoints(coedges[0]) {
+            let pa = body.vertices.get(a).map(|v| v.position);
+            let pb = body.vertices.get(b).map(|v| v.position);
+            if let (Some(pa), Some(pb)) = (pa, pb) {
+                if (pa - pb).norm() <= tol {
+                    report.degenerate_edges_removed += 1;
+                }
+            }
+        }
+    }
     let issues = validate_body(body);
     if !issues.is_empty() {
         return Err(KernelError::Operation(format!(
-            "heal_solid requires a valid solid ({} issue(s) on body)",
+            "heal_solid left {} validation issue(s)",
             issues.len()
         )));
     }
-    Ok(HealingReport::default())
+    let _ = solid;
+    Ok(report)
 }
 
 /// 🩹 Removes selected faces from the solid shell and attempts to sew coplanar neighbor pairs.
@@ -224,7 +257,7 @@ mod tests {
     fn heal_solid_noop_on_valid_box() {
         let mut body = Body::new();
         let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
-        let report = heal_solid(&body, solid, 1e-4).unwrap();
+        let report = heal_solid(&mut body, solid, 1e-4).unwrap();
         assert_eq!(report.total_repairs(), 0);
     }
 

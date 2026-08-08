@@ -4,13 +4,13 @@
 
 use crate::artifacts::program::engine::adjacency::{normalize_pair, set_adjacency};
 use crate::artifacts::program::kernel::{EntityHeader, EntityId, TextField};
-use crate::artifacts::program::op::ProgramOperation;
+use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::Program;
 use crate::artifacts::program::registers::{
     Activity, Adjacency, AdjacencyKind, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile,
     ValidationStatus,
 };
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️TemplateApply
@@ -23,8 +23,8 @@ pub struct TemplateApplyResult {
     pub messages: Vec<String>,
 }
 
-/// @emoji 🧩️ Applies a template record and returns replayable `ProgramOperation`s.
-pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<ProgramOperation> {
+/// @emoji 🧩️ Applies a template record and returns replayable `ProgramMutation`s.
+pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<ProgramMutation> {
     let mut operations = Vec::new();
     let mut element_ids = Vec::new();
     for field in &template.default_fields {
@@ -58,7 +58,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     communication_channels: Vec::new(),
                     success_metrics: Vec::new(),
                 };
-                operations.push(ProgramOperation::Stakeholders(CollectionOperation::Add { index: program.stakeholders.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Stakeholders(CollectionMutation::Add { index: program.stakeholders.len(), item: item.clone() }));
                 program.stakeholders.push(item);
             }
             "user" => {
@@ -89,7 +89,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     validated: false,
                     stakeholder_ids: Vec::new(),
                 };
-                operations.push(ProgramOperation::Users(CollectionOperation::Add { index: program.users.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Users(CollectionMutation::Add { index: program.users.len(), item: item.clone() }));
                 program.users.push(item);
             }
             "activity" => {
@@ -120,7 +120,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     temporal_pattern: None,
                     supervision_level: None,
                 };
-                operations.push(ProgramOperation::Activities(CollectionOperation::Add { index: program.activities.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Activities(CollectionMutation::Add { index: program.activities.len(), item: item.clone() }));
                 program.activities.push(item);
             }
             "function" => {
@@ -149,7 +149,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     hierarchy_parent_id: None,
                     conflict_ids: Vec::new(),
                 };
-                operations.push(ProgramOperation::Functions(CollectionOperation::Add { index: program.functions.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Functions(CollectionMutation::Add { index: program.functions.len(), item: item.clone() }));
                 program.functions.push(item);
             }
             "element" | "room" => {
@@ -181,7 +181,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     adjacency_preferences: Vec::new(),
                     environmental_zone: None,
                 };
-                operations.push(ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Elements(CollectionMutation::Add { index: program.elements.len(), item: item.clone() }));
                 program.elements.push(item);
                 element_ids.push(id.clone());
             }
@@ -209,7 +209,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     trace_links: Vec::new(),
                     superseded_by: None,
                 };
-                operations.push(ProgramOperation::Requirements(CollectionOperation::Add { index: program.requirements.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Requirements(CollectionMutation::Add { index: program.requirements.len(), item: item.clone() }));
                 program.requirements.push(item);
             }
             "risk" => {
@@ -235,7 +235,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     escalation_path: Vec::new(),
                     monitoring_plan: None,
                 };
-                operations.push(ProgramOperation::Risks(CollectionOperation::Add { index: program.risks.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Risks(CollectionMutation::Add { index: program.risks.len(), item: item.clone() }));
                 program.risks.push(item);
             }
             "process" => {
@@ -265,7 +265,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     handoff_points: Vec::new(),
                     quality_gates: Vec::new(),
                 };
-                operations.push(ProgramOperation::Processes(CollectionOperation::Add { index: program.processes.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Processes(CollectionMutation::Add { index: program.processes.len(), item: item.clone() }));
                 program.processes.push(item);
             }
             "equipment" => {
@@ -296,7 +296,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     commissioning_notes: Vec::new(),
                     spare_parts: Vec::new(),
                 };
-                operations.push(ProgramOperation::Equipment(CollectionOperation::Add { index: program.equipment.len(), item: item.clone() }));
+                operations.push(ProgramMutation::Equipment(CollectionMutation::Add { index: program.equipment.len(), item: item.clone() }));
                 program.equipment.push(item);
             }
             "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
@@ -324,7 +324,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     source_relationship_id: None,
                     internal_external_access: None,
                 };
-                operations.push(ProgramOperation::SetAdjacency { adjacency: adjacency.clone() });
+                operations.push(ProgramMutation::SetAdjacency { adjacency: adjacency.clone() });
                 set_adjacency(program, adjacency);
             }
             _ => {}
@@ -341,7 +341,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::op::apply_plugin_operation;
+    use crate::artifacts::program::op::apply_program_mutation;
     use crate::artifacts::program::empty_plugin;
     use crate::artifacts::program::registers::TemplateRecord;
 
@@ -405,7 +405,7 @@ mod tests {
         let operations = apply_template(&mut source, &template);
         let mut target = empty_plugin();
         for operation in &operations {
-            apply_plugin_operation(&mut target, operation);
+            apply_program_mutation(&mut target, operation);
         }
         assert_eq!(target.functions.len(), 1);
     }

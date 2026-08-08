@@ -1,7 +1,7 @@
 //! 🔗️ S Studio app — media port connect/disconnect commands.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
-use semio_framework_os::{WorkflowDocument, WorkflowOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{WorkflowDocument, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️ConnectMediaPorts
@@ -18,9 +18,9 @@ pub mod connect_media_ports {
         pub target_port_id: String,
     }
 
-    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         match crate::apps::space::negotiate_connect_or_notify(doc.projection, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
-            Ok(contract) => Ok(Emit::operations(vec![crate::apps::space::connect_edge_operation(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id, contract)])),
+            Ok(contract) => Ok(Emit::mutations(vec![crate::apps::space::connect_edge_operation(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id, contract)])),
             Err(effect) => Ok(Emit::effect(effect)),
         }
     }
@@ -38,8 +38,8 @@ pub mod disconnect_media_edge {
         pub edge_id: String,
     }
 
-    pub fn handle(payload: &DisconnectMediaEdge, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![WorkflowOperation::DisconnectEdge { edge_id: payload.edge_id.clone() }]))
+    pub fn handle(payload: &DisconnectMediaEdge, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![WorkflowMutation::DisconnectEdge { edge_id: payload.edge_id.clone() }]))
     }
 }
 //#endregion 🔖️DisconnectMediaEdge
@@ -48,7 +48,7 @@ pub mod disconnect_media_edge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::space::testkit::{apply_operations, studio_emit};
+    use crate::apps::space::testkit::{apply_mutations, studio_emit};
     use crate::apps::space::SpaceCommand;
     use crate::demo_space_projection;
     use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, OsMediaFormat};
@@ -97,7 +97,7 @@ mod tests {
             &SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "contract-src".into(), source_port_id: "contract-src:out:out".into(), target_node_id: "contract-dst".into(), target_port_id: "contract-dst:in:in".into() }),
         )
         .expect("handle");
-        assert!(emit.document_operations.is_empty(), "an incompatible connect must not push WorkflowOperation::ConnectPorts");
+        assert!(emit.document_mutations.is_empty(), "an incompatible connect must not push WorkflowMutation::ConnectPorts");
         assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
     }
 
@@ -145,17 +145,17 @@ mod tests {
         )
         .expect("handle");
         let edge = emit
-            .document_operations
+            .document_mutations
             .iter()
             .find_map(|operation| match operation {
-                WorkflowOperation::ConnectPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
+                WorkflowMutation::ConnectPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
                 _ => None,
             })
-            .expect("a compatible connect must push WorkflowOperation::ConnectPorts with a negotiated contract");
+            .expect("a compatible connect must push WorkflowMutation::ConnectPorts with a negotiated contract");
         assert_eq!(edge.contract.kind_id, "test.contract.doc-b");
         assert_eq!(edge.contract.wire, MediaWireFormat::Document { schema: "test.contract.doc.schema".into() });
         assert!(edge.contract.conversion.is_none());
-        let next = apply_operations(&projection, &emit.document_operations);
+        let next = apply_mutations(&projection, &emit.document_mutations);
         assert!(semio_framework_os::validate_workflow(&next.graph).ok, "a freshly negotiated edge must pass validate_workflow's contract-consistency check");
     }
 }

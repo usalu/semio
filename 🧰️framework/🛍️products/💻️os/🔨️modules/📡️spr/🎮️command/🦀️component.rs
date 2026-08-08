@@ -1,24 +1,24 @@
-//! 🎞️ Protocol command/collaboration-semantics layer: the `Operation`/`OperationDiff`/`OpText`
-//! trait family, `OperationMeta`/`Edit`, generic collection-operation plumbing, the runtime
-//! `OperationDescriptor` registry, the upcast seam, and the five-channel `CommandOutcome`. Moved
+//! 🎞️ Protocol command/collaboration-semantics layer: the `Mutation`/`MutationDiff`/`OpText`
+//! trait family, `MutationMeta`/`Edit`, generic collection-operation plumbing, the runtime
+//! `MutationDescriptor` registry, the upcast seam, and the five-channel `CommandOutcome`. Moved
 //! (with two defaulted trait methods and a `reconcile` return-type change, both called out inline)
-//! from `vcs/rs/lib.rs`'s `🔖️Operation`/`🔖️CollectionDiff`/`🔖️CollectionOperation` regions and
+//! from `vcs/rs/lib.rs`'s `🔖️Mutation`/`🔖️CollectionDiff`/`🔖️CollectionMutation` regions and
 //! `framework/core`. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_command`.
 //!
 //! Op payloads stay schema-opaque here exactly like `protocol_history`: this crate never parses or
 //! interprets an `Op`'s fields, only threads it through the trait seams a technology implements.
 
-//#region 🔖️Operation
+//#region 🔖️Mutation
 /// @emoji 📦️ Centralized projection mutation — one `apply` per technology. Moved from
-/// `crate::os_store::OperationDiff` verbatim (only the parameter name `projection` → `base`).
-pub trait OperationDiff<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
+/// `crate::os_store::MutationDiff` verbatim (only the parameter name `projection` → `base`).
+pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
     fn apply(&self, base: &P) -> P;
     fn absorb(&mut self, other: Self);
 }
 
-/// @emoji 🔁️ Stored operation: emits a diff and computes backwards from pre-state. Moved from
-/// `crate::os_store::Operation` verbatim except: `operation_id`/`dependencies`/`author_id` now return the
+/// @emoji 🔁️ Stored operation: emits a diff and computes inverse from pre-state. Moved from
+/// `crate::os_store::Mutation` verbatim except: `mutation_id`/`dependencies`/`author_id` now return the
 /// `protocol_core` id newtypes (were bare `String`) and `base_version` now returns
 /// `Option<crate::os_spr::ids::DocumentVersion>` (was a bare `u64` defaulting to `0`, which conflated
 /// "no base" with "based on version 0" — `None` fixes that); `conflict_rule`/`state_class` are new
@@ -26,16 +26,16 @@ pub trait OperationDiff<P>: Clone + Default + serde::Serialize + serde::de::Dese
 /// method (`&self`) returning this crate's own `ReconcileReport` instead of `crate::os_store::SpaceConflict`,
 /// so `vcs` maps `ReconcileReport -> SpaceConflict` at its own edge instead of this crate knowing
 /// about space types.
-pub trait Operation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
-    type Diff: OperationDiff<P>;
+pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
+    type Diff: MutationDiff<P>;
 
     fn diff(&self, base: &P) -> Self::Diff;
-    fn backwards(&self, base: &P) -> Vec<Self>;
+    fn inverse(&self, base: &P) -> Vec<Self>;
 
-    fn operation_id(&self) -> Option<crate::os_spr::ids::OperationId> {
+    fn mutation_id(&self) -> Option<crate::os_spr::ids::MutationId> {
         None
     }
-    fn dependencies(&self) -> Vec<crate::os_spr::ids::OperationId> {
+    fn dependencies(&self) -> Vec<crate::os_spr::ids::MutationId> {
         Vec::new()
     }
     fn base_version(&self) -> Option<crate::os_spr::ids::DocumentVersion> {
@@ -88,11 +88,11 @@ pub enum ReconcileSeverity {
     Warning,
     Blocking,
 }
-//#endregion 🔖️Operation
+//#endregion 🔖️Mutation
 
 //#region 🔖️OpText
 /// @emoji ⚡️ Handcrafted ONE-LINE textual representation of an operation, implemented once per
-/// technology next to its `Operation` enum. Moved verbatim from `crate::os_store::OpText` (method order
+/// technology next to its `Mutation` enum. Moved verbatim from `crate::os_store::OpText` (method order
 /// flipped to match the frozen contract; behavior unchanged). LAWS: `print_op` output never
 /// contains `\n`; `Op::parse_op` recovers an equal operation from `op.print_op()`.
 pub trait OpText: Sized {
@@ -104,7 +104,7 @@ pub trait OpText: Sized {
 //#region 🔖️OpBinary
 /// @emoji 🎞️ Binary twin of [`OpText`]: the maximum-token-efficient one-line grammar and this
 /// byte encoding are two renderings of the same operation, implemented per technology next to its
-/// `Operation` enum (in practice emitted by `#[derive(crate::os_dsl::DslOps)]` through `crate::os_dsl::op_rt`, the
+/// `Mutation` enum (in practice emitted by `#[derive(crate::os_dsl::DslOps)]` through `crate::os_dsl::op_rt`, the
 /// exact mirror of the `DocumentDsl`/`DocumentPack` pairing). Layout (owned by the runtime, not
 /// by implementors): `format u8 (=1) | variant ordinal varint | record body`. LAWS:
 /// `Op::decode_op(op.encode_op()) == op == Op::parse_op(op.print_op())`, and encoding is
@@ -116,14 +116,14 @@ pub trait OpBinary: Sized {
 //#endregion 🔖️OpBinary
 
 //#region 🔖️DiffCodec
-/// @emoji 🧬️ Grammared twin of [`OpText`]/[`OpBinary`], but for a technology's `OperationDiff::Diff`
-/// value rather than its `Operation`: the W1 foundation of the `handcrafted-grammar-for-every-artifact`
+/// @emoji 🧬️ Grammared twin of [`OpText`]/[`OpBinary`], but for a technology's `MutationDiff::Diff`
+/// value rather than its `Mutation`: the W1 foundation of the `handcrafted-grammar-for-every-artifact`
 /// program's diff track (design ruling B-R4 at `.claude/plans/the-final-goal-for-jolly-spindle.md`) —
 /// today every `*Diff` type is serde-only, this trait promotes a diff to a first-class grammared value
 /// exactly like `OpText`/`OpBinary` already did for operations. In practice emitted by
 /// `#[derive(crate::os_dsl::DslDiff)]` through the same `RecordSpec`-generation machinery `DslRecord`/
 /// `DslDocument` already use (a diff is structurally just another record). Schema id convention:
-/// `"<doc-schema>#diff"`. Deliberately NOT (yet) a supertrait bound of [`OperationDiff`] — W1 only
+/// `"<doc-schema>#diff"`. Deliberately NOT (yet) a supertrait bound of [`MutationDiff`] — W1 only
 /// proves the mechanism on a handful of real diff types (tracked in `script.ts`'s
 /// `POLICY_DIFF_COMPLETENESS_ALLOWLIST`); wiring it as a hard bound across all diff types is deferred
 /// to wave 6 (`## Master wave plan` `W6 — Lane C (B5)`), once every type is covered.
@@ -139,16 +139,16 @@ pub trait DiffCodec: Sized {
 
 //#region 🔖️Meta
 /// @emoji 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
-/// `crate::os_store::OperationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
+/// `crate::os_store::MutationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
 /// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
 /// `Option<HybridLogicalTimestamp>` to a required field (an edit's op always has a tick by the time
 /// it is durable).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct OperationMeta {
+pub struct MutationMeta {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub operation_id: Option<crate::os_spr::ids::OperationId>,
+    pub mutation_id: Option<crate::os_spr::ids::MutationId>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub dependencies: Vec<crate::os_spr::ids::OperationId>,
+    pub dependencies: Vec<crate::os_spr::ids::MutationId>,
     pub base_version: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub author_id: Option<crate::os_spr::ids::ActorId>,
@@ -167,9 +167,9 @@ pub struct Edit<Op> {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<String>,
     pub forwards: Vec<Op>,
-    pub backwards: Vec<Op>,
+    pub inverse: Vec<Op>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub operation_meta: Vec<OperationMeta>,
+    pub mutation_meta: Vec<MutationMeta>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -184,8 +184,8 @@ pub struct Edit<Op> {
 //#region 🔖️Collection
 /// 🧬️ Collection identity/patch/diff/ops — single source of truth in VCS (`crate::os_vcs`).
 pub use crate::os_vcs::{
-    apply_collection_operation, collection_diff_from_operation, invert_collection_operation, CollectionDiff,
-    CollectionOperation, Identified, ItemPatch, Patchable,
+    apply_collection_mutation, collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff,
+    CollectionMutation, Identified, ItemPatch, Patchable,
 };
 
 //#endregion 🔖️Collection
@@ -194,7 +194,7 @@ pub use crate::os_vcs::{
 /// @emoji 🪪️ A registered operation kind's runtime descriptor: schema identity/version, its
 /// `StateClass`/`ConflictRule`, and a content-addressed `fingerprint` over those four fields.
 #[derive(Clone, Debug, PartialEq)]
-pub struct OperationDescriptor {
+pub struct MutationDescriptor {
     pub id: crate::os_spr::ids::SchemaId,
     pub schema_version: crate::os_spr::ids::SchemaVersion,
     pub state_class: crate::os_spr::StateClass,
@@ -202,7 +202,7 @@ pub struct OperationDescriptor {
     pub fingerprint: [u8; 32],
 }
 
-impl OperationDescriptor {
+impl MutationDescriptor {
     /// @emoji 🏗️ Constructs a descriptor, computing `fingerprint` deterministically from the other
     /// four fields. The contract fixes the struct's shape but not how `fingerprint` is derived; our
     /// choice is a canonical-JSON encoding of `(id, schema_version, state_class, conflict_rule)`
@@ -226,22 +226,22 @@ fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: cra
     *blake3::hash(&bytes).as_bytes()
 }
 
-static OPERATION_DESCRIPTOR_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::HashMap<String, OperationDescriptor>>> = std::sync::OnceLock::new();
+static MUTATION_DESCRIPTOR_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::HashMap<String, MutationDescriptor>>> = std::sync::OnceLock::new();
 
-fn operation_descriptor_registry() -> &'static std::sync::RwLock<std::collections::HashMap<String, OperationDescriptor>> {
-    OPERATION_DESCRIPTOR_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::HashMap::new()))
+fn mutation_descriptor_registry() -> &'static std::sync::RwLock<std::collections::HashMap<String, MutationDescriptor>> {
+    MUTATION_DESCRIPTOR_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::HashMap::new()))
 }
 
 /// @emoji 📝️ Registers (or overwrites) a descriptor by `descriptor.id`. Mirrors
 /// `crate::os_store::CodecRegistry`'s `OnceLock<RwLock<HashMap>>` pattern; idempotent, safe to call repeatedly.
-pub fn register_operation_descriptor(descriptor: OperationDescriptor) {
-    let mut registry = operation_descriptor_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
+pub fn register_mutation_descriptor(descriptor: MutationDescriptor) {
+    let mut registry = mutation_descriptor_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.insert(descriptor.id.0.clone(), descriptor);
 }
 
 /// @emoji 🔎️ Looks up the descriptor registered for `schema`, if any.
-pub fn operation_descriptor(schema: &str) -> Option<OperationDescriptor> {
-    let registry = operation_descriptor_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
+pub fn mutation_descriptor(schema: &str) -> Option<MutationDescriptor> {
+    let registry = mutation_descriptor_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.get(schema).cloned()
 }
 //#endregion 🔖️Descriptor
@@ -249,7 +249,7 @@ pub fn operation_descriptor(schema: &str) -> Option<OperationDescriptor> {
 //#region 🔖️Upcast
 /// @emoji ⬆️ Rewrites an operation authored at an older schema version into today's shape.
 /// LAW: `upcast(upcast(x)) == upcast(x)` — idempotence at the target version.
-pub trait OperationUpcaster<Op> {
+pub trait MutationUpcaster<Op> {
     fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
 }
 //#endregion 🔖️Upcast
@@ -257,8 +257,8 @@ pub trait OperationUpcaster<Op> {
 //#region 🔖️Events
 /// @emoji 📡️ One side-effect-channel event emitted alongside a persistent/UI diff.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct OperationEvent {
-    pub operation_id: crate::os_spr::ids::OperationId,
+pub struct MutationEvent {
+    pub mutation_id: crate::os_spr::ids::MutationId,
     pub state_class: crate::os_spr::StateClass,
     pub payload: serde_json::Value,
 }
@@ -273,7 +273,7 @@ pub struct CommandOutcome<Diff> {
     pub shared_ui: Vec<Diff>,
     pub local_ui: Vec<Diff>,
     pub preview: Vec<Diff>,
-    pub effects: Vec<OperationEvent>,
+    pub effects: Vec<MutationEvent>,
 }
 //#endregion 🔖️Outcome
 
@@ -283,13 +283,13 @@ mod tests {
     use super::*;
 
     //#region 🧸️Fixtures
-    // Dummy (P=i64, Op=AddOp) pair: the smallest possible Operation/OperationDiff/OpText impl,
+    // Dummy (P=i64, Op=AddOp) pair: the smallest possible Mutation/MutationDiff/OpText impl,
     // used across every law test below instead of a real technology's op set.
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
     struct AddDiff {
         delta: i64,
     }
-    impl OperationDiff<i64> for AddDiff {
+    impl MutationDiff<i64> for AddDiff {
         fn apply(&self, base: &i64) -> i64 {
             base + self.delta
         }
@@ -302,12 +302,12 @@ mod tests {
     struct AddOp {
         delta: i64,
     }
-    impl Operation<i64> for AddOp {
+    impl Mutation<i64> for AddOp {
         type Diff = AddDiff;
         fn diff(&self, _base: &i64) -> AddDiff {
             AddDiff { delta: self.delta }
         }
-        fn backwards(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![AddOp { delta: -self.delta }]
         }
     }
@@ -347,14 +347,14 @@ mod tests {
     }
     //#endregion 🧸️Fixtures
 
-    //#region 🧪️OperationLaws
+    //#region 🧪️MutationLaws
     #[test]
     fn operation_diff_apply_matches_backwards_inverse() {
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
         let forward = op.diff(&base).apply(&base);
         assert_eq!(forward, 15);
-        let [undo] = <[AddOp; 1]>::try_from(op.backwards(&base)).unwrap();
+        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
         let restored = undo.diff(&forward).apply(&forward);
         assert_eq!(restored, base);
     }
@@ -369,7 +369,7 @@ mod tests {
     #[test]
     fn operation_defaults_are_stable() {
         let op = AddOp { delta: 1 };
-        assert_eq!(op.operation_id(), None);
+        assert_eq!(op.mutation_id(), None);
         assert!(op.dependencies().is_empty());
         assert_eq!(op.base_version(), None);
         assert_eq!(op.author_id(), None);
@@ -383,7 +383,7 @@ mod tests {
         assert_eq!(projection, 42);
         assert!(reports.is_empty());
     }
-    //#endregion 🧪️OperationLaws
+    //#endregion 🧪️MutationLaws
 
     //#region 🧪️OpTextLaws
     #[test]
@@ -405,9 +405,9 @@ mod tests {
     //#region 🧪️MetaSerde
     #[test]
     fn operation_meta_serde_round_trip() {
-        let meta = OperationMeta {
-            operation_id: Some(crate::os_spr::ids::OperationId("op-1".into())),
-            dependencies: vec![crate::os_spr::ids::OperationId("op-0".into())],
+        let meta = MutationMeta {
+            mutation_id: Some(crate::os_spr::ids::MutationId("op-1".into())),
+            dependencies: vec![crate::os_spr::ids::MutationId("op-0".into())],
             base_version: 3,
             author_id: Some(crate::os_spr::ids::ActorId("actor-1".into())),
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 1000),
@@ -415,7 +415,7 @@ mod tests {
             payload_hash: Some(crate::os_spr::ids::PayloadHash([7u8; 32])),
         };
         let json = serde_json::to_string(&meta).expect("serialize");
-        let round_tripped: OperationMeta = serde_json::from_str(&json).expect("deserialize");
+        let round_tripped: MutationMeta = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(round_tripped, meta);
     }
 
@@ -425,9 +425,9 @@ mod tests {
             id: "edit-1".into(),
             actor: Some("actor-1".into()),
             forwards: vec![AddOp { delta: 1 }, AddOp { delta: 2 }],
-            backwards: vec![AddOp { delta: -2 }, AddOp { delta: -1 }],
-            operation_meta: vec![OperationMeta {
-                operation_id: None,
+            inverse: vec![AddOp { delta: -2 }, AddOp { delta: -1 }],
+            mutation_meta: vec![MutationMeta {
+                mutation_id: None,
                 dependencies: Vec::new(),
                 base_version: 0,
                 author_id: None,
@@ -452,16 +452,16 @@ mod tests {
     fn apply_add_remove_move_patch() {
         let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
-        apply_collection_operation(&mut items, &CollectionOperation::Add { index: 1, item: Item { id: "c".into(), value: 3 } });
+        apply_collection_mutation(&mut items, &CollectionMutation::Add { index: 1, item: Item { id: "c".into(), value: 3 } });
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["a", "c", "b"]);
 
-        apply_collection_operation(&mut items, &CollectionOperation::Move { id: "c".into(), to_index: 2 });
+        apply_collection_mutation(&mut items, &CollectionMutation::Move { id: "c".into(), to_index: 2 });
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["a", "b", "c"]);
 
-        apply_collection_operation::<String, Item, i64>(&mut items, &CollectionOperation::Patch { id: "b".into(), patch: 10 });
+        apply_collection_mutation::<String, Item, i64>(&mut items, &CollectionMutation::Patch { id: "b".into(), patch: 10 });
         assert_eq!(items.iter().find(|i| i.id == "b").unwrap().value, 12);
 
-        apply_collection_operation(&mut items, &CollectionOperation::Remove { id: "a".into() });
+        apply_collection_mutation(&mut items, &CollectionMutation::Remove { id: "a".into() });
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c"]);
     }
 
@@ -469,32 +469,32 @@ mod tests {
     fn invert_collection_operation_round_trips_every_kind() {
         let original = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
-        let add = CollectionOperation::Add { index: 2, item: Item { id: "c".into(), value: 3 } };
+        let add = CollectionMutation::Add { index: 2, item: Item { id: "c".into(), value: 3 } };
         let mut items = original.clone();
-        apply_collection_operation(&mut items, &add);
-        let inverse = invert_collection_operation(&original, &add);
-        apply_collection_operation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &add);
+        let inverse = inverse_collection_mutation(&original, &add);
+        apply_collection_mutation(&mut items, &inverse);
         assert_eq!(items, original);
 
-        let mov = CollectionOperation::<String, Item, i64>::Move { id: "b".into(), to: 0 };
+        let mov = CollectionMutation::<String, Item, i64>::Move { id: "b".into(), to: 0 };
         let mut items = original.clone();
-        apply_collection_operation(&mut items, &mov);
-        let inverse = invert_collection_operation(&original, &mov);
-        apply_collection_operation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &mov);
+        let inverse = inverse_collection_mutation(&original, &mov);
+        apply_collection_mutation(&mut items, &inverse);
         assert_eq!(items, original);
 
-        let patch = CollectionOperation::Patch { id: "a".into(), patch: 9i64 };
+        let patch = CollectionMutation::Patch { id: "a".into(), patch: 9i64 };
         let mut items = original.clone();
-        apply_collection_operation(&mut items, &patch);
-        let inverse = invert_collection_operation(&original, &patch);
-        apply_collection_operation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &patch);
+        let inverse = inverse_collection_mutation(&original, &patch);
+        apply_collection_mutation(&mut items, &inverse);
         assert_eq!(items, original);
 
-        let remove = CollectionOperation::<String, Item, i64>::Remove { id: "a".into() };
+        let remove = CollectionMutation::<String, Item, i64>::Remove { id: "a".into() };
         let mut items = original.clone();
-        apply_collection_operation(&mut items, &remove);
-        let inverse = invert_collection_operation(&original, &remove);
-        apply_collection_operation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &remove);
+        let inverse = inverse_collection_mutation(&original, &remove);
+        apply_collection_mutation(&mut items, &inverse);
         assert_eq!(items, original);
     }
 
@@ -502,21 +502,21 @@ mod tests {
     fn collection_diff_from_operation_projects_each_kind() {
         let items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
-        let add = CollectionOperation::<String, Item, i64>::Add { id: "c".into(), item: Item { id: "c".into(), value: 3 }, at: 0 };
-        let diff = collection_diff_from_operation(&items, &add);
+        let add = CollectionMutation::<String, Item, i64>::Add { id: "c".into(), item: Item { id: "c".into(), value: 3 }, at: 0 };
+        let diff = collection_diff_from_mutation(&items, &add);
         assert_eq!(diff.added, vec![Item { id: "c".into(), value: 3 }]);
         assert!(diff.removed.is_empty() && diff.modified.is_empty());
 
-        let remove = CollectionOperation::<String, Item, i64>::Remove { id: "a".into() };
-        let diff = collection_diff_from_operation(&items, &remove);
+        let remove = CollectionMutation::<String, Item, i64>::Remove { id: "a".into() };
+        let diff = collection_diff_from_mutation(&items, &remove);
         assert_eq!(diff.removed, vec!["a".to_string()]);
 
-        let patch = CollectionOperation::Patch { id: "b".into(), patch: 5i64 };
-        let diff = collection_diff_from_operation(&items, &patch);
+        let patch = CollectionMutation::Patch { id: "b".into(), patch: 5i64 };
+        let diff = collection_diff_from_mutation(&items, &patch);
         assert_eq!(diff.modified, vec![ItemPatch { id: "b".into(), patch: 5i64 }]);
 
-        let mov = CollectionOperation::<String, Item, i64>::Move { id: "a".into(), to: 1 };
-        let diff = collection_diff_from_operation(&items, &mov);
+        let mov = CollectionMutation::<String, Item, i64>::Move { id: "a".into(), to: 1 };
+        let diff = collection_diff_from_mutation(&items, &mov);
         assert_eq!(diff.removed, vec!["a".to_string()]);
         assert_eq!(diff.added, vec![Item { id: "a".into(), value: 1 }]);
     }
@@ -526,11 +526,11 @@ mod tests {
     #[test]
     fn operation_descriptor_fingerprint_is_golden_pinned() {
         let descriptor =
-            OperationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Persistent, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::TextSequence));
+            MutationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Persistent, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::TextSequence));
         let hex: String = descriptor.fingerprint.iter().map(|b| format!("{b:02x}")).collect();
         // Golden pin computed once from `descriptor_fingerprint`'s canonical-JSON+blake3 encoding;
         // any change to that encoding (or to serde's field order/derives on the id/enum types it
-        // hashes) is a breaking change to every persisted `OperationDescriptor` and must update this.
+        // hashes) is a breaking change to every persisted `MutationDescriptor` and must update this.
         assert_eq!(hex, "8c6c0b22512540811343d8caa8d147f48e936728105861c4360bb202f626d517");
     }
     //#endregion 🧪️DescriptorLaws
@@ -539,7 +539,7 @@ mod tests {
     // Clamp-to-floor is the simplest genuinely idempotent upcaster: `upcast(upcast(x)) ==
     // upcast(x)` holds because `max(max(x, 10), 10) == max(x, 10)` for every `x`.
     struct ClampToFloor;
-    impl OperationUpcaster<i64> for ClampToFloor {
+    impl MutationUpcaster<i64> for ClampToFloor {
         fn upcast(&self, _from_version: crate::os_spr::ids::SchemaVersion, op: i64) -> i64 {
             op.max(10)
         }
@@ -570,9 +570,9 @@ mod tests {
 
     #[test]
     fn operation_event_serde_round_trip() {
-        let event = OperationEvent { operation_id: crate::os_spr::ids::OperationId("op-1".into()), state_class: crate::os_spr::StateClass::Effect, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
+        let event = MutationEvent { mutation_id: crate::os_spr::ids::MutationId("op-1".into()), state_class: crate::os_spr::StateClass::Effect, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
         let json = serde_json::to_string(&event).expect("serialize");
-        let round_tripped: OperationEvent = serde_json::from_str(&json).expect("deserialize");
+        let round_tripped: MutationEvent = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(round_tripped, event);
     }
     //#endregion 🧪️OutcomeLaws

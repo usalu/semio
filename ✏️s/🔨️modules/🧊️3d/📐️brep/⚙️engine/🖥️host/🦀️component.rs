@@ -10,7 +10,7 @@ use crate::brep::kernel::Brep;
 pub const BREP_ENGINE_ID: &str = "s.3d.brep";
 
 //#region 🔖️DocumentOpEngine
-/// 📜️ Placeholder for content-addressed brep document operations (input pack → output pack).
+/// 📜️ Content-addressed brep document operations (JSON `{ "op": ... }` → handle / report pack).
 pub struct BrepDocumentOpEngine;
 
 impl Engine for BrepDocumentOpEngine {
@@ -20,10 +20,61 @@ impl Engine for BrepDocumentOpEngine {
         if input.is_empty() {
             return Err(EngineFault::InvalidInput("empty brep op".into()));
         }
-        Err(EngineFault::Compute(format!(
-            "brep document op dispatch not implemented ({} bytes)",
-            input.len()
-        )))
+        // Content-addressed document ops: JSON `{ "op": "...", ... }` or raw ASCII op name.
+        let text = std::str::from_utf8(input).map_err(|e| EngineFault::InvalidInput(e.to_string()))?;
+        let value: serde_json::Value = serde_json::from_str(text).unwrap_or_else(|_| {
+            serde_json::json!({ "op": text.trim() })
+        });
+        let op = value.get("op").and_then(|v| v.as_str()).unwrap_or("").trim();
+        if op.is_empty() {
+            return Err(EngineFault::InvalidInput("missing brep op".into()));
+        }
+        let mut kernel = Brep::new();
+        let handle = match op {
+            "box" | "box_prim" => {
+                let dx = value.get("dx").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                let dy = value.get("dy").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                let dz = value.get("dz").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                crate::brep::engine::block_on(crate::brep::engine::BrepKernel::box_prim(&mut kernel, dx, dy, dz))
+                    .map_err(|e| EngineFault::Compute(e.to_string()))?
+            }
+            "sphere" | "sphere_prim" => {
+                let radius = value.get("radius").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                crate::brep::engine::block_on(crate::brep::engine::BrepKernel::sphere_prim(&mut kernel, radius))
+                    .map_err(|e| EngineFault::Compute(e.to_string()))?
+            }
+            "cylinder" | "cylinder_prim" => {
+                let radius = value.get("radius").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                let height = value.get("height").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                crate::brep::engine::block_on(crate::brep::engine::BrepKernel::cylinder_prim(
+                    &mut kernel, radius, height,
+                ))
+                .map_err(|e| EngineFault::Compute(e.to_string()))?
+            }
+            "validate" => {
+                let dx = value.get("dx").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                let dy = value.get("dy").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                let dz = value.get("dz").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                let handle = crate::brep::engine::block_on(crate::brep::engine::BrepKernel::box_prim(
+                    &mut kernel, dx, dy, dz,
+                ))
+                .map_err(|e| EngineFault::Compute(e.to_string()))?;
+                let report = crate::brep::engine::block_on(crate::brep::engine::BrepKernel::validate(
+                    &kernel, &handle,
+                ))
+                .map_err(|e| EngineFault::Compute(e.to_string()))?;
+                let out = serde_json::json!({ "op": op, "handle": handle.as_str(), "report": report });
+                return Ok(out.to_string().into_bytes());
+            }
+            other => {
+                return Err(EngineFault::Compute(format!("unknown brep document op '{other}'")));
+            }
+        };
+        let out = serde_json::json!({
+            "op": op,
+            "handle": handle.as_str(),
+        });
+        Ok(out.to_string().into_bytes())
     }
 }
 //#endregion 🔖️DocumentOpEngine
@@ -78,8 +129,10 @@ mod tests {
     #[test]
     fn host_derive_registers_brep_engine() {
         let host = BrepEngineHost::new(4096);
-        let err = host.derive(BREP_ENGINE_ID, b"\x01");
-        assert!(matches!(err, Err(EngineFault::Compute(_))));
+        let handle = host.derive(BREP_ENGINE_ID, br#"{"op":"box","dx":1.0,"dy":1.0,"dz":1.0}"#).expect("derive");
+        let bytes = host.read(&handle).expect("read");
+        let text = std::str::from_utf8(&bytes).expect("utf8");
+        assert!(text.contains("handle"), "{text}");
     }
 
     #[test]

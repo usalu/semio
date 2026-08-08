@@ -13,7 +13,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
 // framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
 // lint does not fire on the trait impl itself (only on the free functions the taxonomy split
@@ -33,6 +33,123 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod assets {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📦assets/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📦assets/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📦assets/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod shots {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📸shots/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📸shots/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📸shots/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod saved_cameras {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎥saved-cameras/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎥saved-cameras/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎥saved-cameras/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_active_shot {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎯set-active-shot/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎯set-active-shot/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🎯set-active-shot/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_active_asset {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📌set-active-asset/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📌set-active-asset/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📌set-active-asset/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_shot_camera {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📷set-shot-camera/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📷set-shot-camera/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📷set-shot-camera/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod patch_scene {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/☀️patch-scene/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/☀️patch-scene/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/☀️patch-scene/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod translate_assets {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↔️translate-assets/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↔️translate-assets/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↔️translate-assets/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod rotate_assets {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🔄rotate-assets/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🔄rotate-assets/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/🔄rotate-assets/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod scale_assets {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↕️scale-assets/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↕️scale-assets/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/↕️scale-assets/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_fixture {
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-fixture/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-fixture/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🎥️shooting/🧬️mutations/📄set-fixture/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🎥️shooting/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🎥️shooting/🎒️pack/🦀️component.rs"]

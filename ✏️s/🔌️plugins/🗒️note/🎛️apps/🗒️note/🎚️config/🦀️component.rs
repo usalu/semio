@@ -1,4 +1,4 @@
-//! 🧮️ Note play app — view state (`NoteConfig`) and its operation enum (`NoteConfigOperation`).
+//! 🧮️ Note play app — view state (`NoteConfig`) and its operation enum (`NoteConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.note` document. It still round-trips through a real
@@ -6,7 +6,7 @@
 //! document content.
 
 use crate::artifacts::note::NoteCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -109,14 +109,14 @@ impl Default for NoteConfig {
 store::impl_whole_record_config!(NoteConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
-/// @emoji 🧮️ `NoteConfig`'s operation enum — mirrors `shooting_op::ShootingConfigOperation`'s pilot shape
+//#region 🔖️ConfigMutations
+/// @emoji 🧮️ `NoteConfig`'s operation enum — mirrors `shooting_op::ShootingConfigMutation`'s pilot shape
 /// exactly: one variant per settled interaction (the pre-migration `NotePlayRuntime` field writes), plus
 /// a generic `Snapshot` every variant's `backwards()` returns — since a config-only "View" dispatch is a
 /// plain `Apply` (not an `AmendLast`), each tick is its own distinct, real config edit, and "undo this
 /// tick" is exactly "restore the whole-config snapshot from just before it".
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum NoteConfigOperation {
+pub enum NoteConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -140,7 +140,7 @@ pub enum NoteConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for NoteConfigOperation {
+impl protocol::OpText for NoteConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -165,7 +165,7 @@ impl protocol::OpText for NoteConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for NoteConfigOperation {
+impl protocol::OpBinary for NoteConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -211,28 +211,28 @@ impl protocol::OpBinary for NoteConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<NoteConfig> for NoteConfigOperation {
+impl Mutation<NoteConfig> for NoteConfigMutation {
     type Diff = NoteConfig;
 
     fn diff(&self, base: &NoteConfig) -> NoteConfig {
         let mut next = base.clone();
         match self {
-            NoteConfigOperation::Snapshot { config } => return config.clone(),
-            NoteConfigOperation::SetSelection { block_ids } => next.selected_block_ids = block_ids.clone(),
-            NoteConfigOperation::SetHoveredBlock { block_id } => next.hovered_block_id = block_id.clone(),
-            NoteConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            NoteConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            NoteConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            NoteConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            NoteConfigMutation::Snapshot { config } => return config.clone(),
+            NoteConfigMutation::SetSelection { block_ids } => next.selected_block_ids = block_ids.clone(),
+            NoteConfigMutation::SetHoveredBlock { block_id } => next.hovered_block_id = block_id.clone(),
+            NoteConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            NoteConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            NoteConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            NoteConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &NoteConfig) -> Vec<Self> {
-        vec![NoteConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &NoteConfig) -> Vec<Self> {
+        vec![NoteConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -273,26 +273,26 @@ mod tests {
             active_utility_id: "pencil".into(),
             locale: "de-DE".into(),
         };
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::Snapshot { config });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetSelection { block_ids: vec!["text-1".into(), "table-2".into()] });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetHoveredBlock { block_id: Some("image-2".into()) });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetHoveredBlock { block_id: None });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetEngagementInput { value: "Renaming…".into() });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetActiveUtility { utility_id: "eraserStroke".into() });
-        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::Snapshot { config });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetSelection { block_ids: vec!["text-1".into(), "table-2".into()] });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: Some("image-2".into()) });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: None });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetEngagementInput { value: "Renaming…".into() });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetActiveUtility { utility_id: "eraserStroke".into() });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
-    /// 🧮️ Every `NoteConfigOperation`'s `backwards()` is the whole-config snapshot from just before it —
+    /// 🧮️ Every `NoteConfigMutation`'s `backwards()` is the whole-config snapshot from just before it —
     /// mirrors `shooting_op`'s analogous coverage.
     #[test]
     fn note_config_operation_backwards_is_always_a_snapshot_of_the_prior_config() {
         let base = NoteConfig::default();
-        let operation = NoteConfigOperation::SetActiveUtility { utility_id: "pencil".into() };
-        assert_eq!(operation.backwards(&base), vec![NoteConfigOperation::Snapshot { config: base.clone() }]);
+        let operation = NoteConfigMutation::SetActiveUtility { utility_id: "pencil".into() };
+        assert_eq!(operation.inverse(&base), vec![NoteConfigMutation::Snapshot { config: base.clone() }]);
         let next = operation.diff(&base);
         assert_eq!(next.active_utility_id, "pencil");
-        let restored = NoteConfigOperation::Snapshot { config: base.clone() }.diff(&next);
+        let restored = NoteConfigMutation::Snapshot { config: base.clone() }.diff(&next);
         assert_eq!(restored, base);
     }
 }

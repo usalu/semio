@@ -8,17 +8,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::remodel::op::RemodelOperation;
+use crate::artifacts::remodel::op::RemodelMutation;
 use protocol::OpBinary;
 
-/// 📦️ Encodes a `RemodelOperation` to its binary command form.
-pub fn encode_op(operation: &RemodelOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `RemodelMutation` to its binary command form.
+pub fn encode_op(operation: &RemodelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `RemodelOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<RemodelOperation, protocol::ProtocolError> {
-    RemodelOperation::decode_op(bytes)
+/// 📖️ Decodes a `RemodelMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<RemodelMutation, protocol::ProtocolError> {
+    RemodelMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let scene = default_remodel_scene();
-        let operation = RemodelOperation::SetFeatureParams { params: scene.params.feature };
+        let operation = RemodelMutation::SetFeatureParams { params: scene.params.feature };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -45,7 +45,7 @@ mod tests {
         let mut store = store::DocumentStore::new(envelope);
         let mut feature_params = store.projection().expect("initial projection").params.feature;
         feature_params.target_count = 12345;
-        store.dispatch(store::DocumentCommand::Apply { operations: vec![RemodelOperation::SetFeatureParams { params: feature_params }], description: None }).expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { mutations: vec![RemodelMutation::SetFeatureParams { params: feature_params }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

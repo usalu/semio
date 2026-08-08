@@ -1,0 +1,5 @@
+- 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs:272 \bActionKind::Operation\b :: ActionKind::Operation => "sparkles".into(),
+- 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs:3077 \bActionKind::Operation\b :: ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Operation),
+- 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs:3078 \bActionKind::Operation\b :: ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Operation),
+- 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs:3094 \bActionKind::Operation\b :: ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Operation),
+- 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs:3288 \bActionKind::Operation\b :: let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Operation);

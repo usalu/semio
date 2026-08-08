@@ -1,8 +1,8 @@
 //! 🧱️ FEM 3D app commands — model-building: nodes, bar/frame members, materials, sections, supports,
 //! and meshed solid blocks.
 
-use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigOperation};
-use crate::artifacts::fem3d::op::Fem3dOperation;
+use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -19,11 +19,11 @@ pub mod add_node {
         pub z: f64,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
         let index = projection.nodes.len();
-        Ok(Emit::operations(vec![Fem3dOperation::SetNode { index, node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetNode { index, node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } }]))
     }
 }
 //#endregion 🔖️AddNode
@@ -42,12 +42,12 @@ pub mod add_bar {
         pub section_id: String,
     }
 
-    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
         let index = projection.elements.len();
         let element = crate::artifacts::fem3d::FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-        Ok(Emit::operations(vec![Fem3dOperation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetElement { index, element: Box::new(element) }]))
     }
 }
 //#endregion 🔖️AddBar
@@ -67,12 +67,12 @@ pub mod add_frame {
         pub roll: f64,
     }
 
-    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
         let index = projection.elements.len();
         let element = crate::artifacts::fem3d::FemElement::Frame { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone(), roll: payload.roll };
-        Ok(Emit::operations(vec![Fem3dOperation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetElement { index, element: Box::new(element) }]))
     }
 }
 //#endregion 🔖️AddFrame
@@ -91,11 +91,11 @@ pub mod add_material {
 
     /// 🧱️ New materials default to `nu = 0.3`/`rho = 7850.0` (mild steel) — the manifest's `addMaterial`
     /// arg form only stages `name`/`e`/`g`, matching the pre-migration `handle_action` behavior verbatim.
-    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
         let index = projection.materials.len();
-        Ok(Emit::operations(vec![Fem3dOperation::SetMaterial { index, material: crate::artifacts::fem3d::FemMaterial { id, name: payload.name.clone(), e: payload.e, g: payload.g, nu: 0.3, rho: 7850.0 } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetMaterial { index, material: crate::artifacts::fem3d::FemMaterial { id, name: payload.name.clone(), e: payload.e, g: payload.g, nu: 0.3, rho: 7850.0 } }]))
     }
 }
 //#endregion 🔖️AddMaterial
@@ -114,11 +114,11 @@ pub mod add_section {
         pub j: f64,
     }
 
-    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
         let index = projection.sections.len();
-        Ok(Emit::operations(vec![Fem3dOperation::SetSection { index, section: crate::artifacts::fem3d::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetSection { index, section: crate::artifacts::fem3d::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j } }]))
     }
 }
 //#endregion 🔖️AddSection
@@ -135,11 +135,11 @@ pub mod add_support {
         pub fixed: Vec<crate::artifacts::fem3d::FemDof>,
     }
 
-    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
         let index = projection.supports.len();
-        Ok(Emit::operations(vec![Fem3dOperation::SetSupport { index, support: crate::artifacts::fem3d::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetSupport { index, support: crate::artifacts::fem3d::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
     }
 }
 //#endregion 🔖️AddSupport
@@ -165,7 +165,7 @@ pub mod add_solid {
 
     /// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`
     /// defaulted to `0.0`/`1`/`0.5` when unspecified — mirrors the pre-migration `handle_action` defaults.
-    pub fn handle(payload: &AddSolid, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    pub fn handle(payload: &AddSolid, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let projection = doc.projection;
         let id = crate::app_surface::next_id(projection.solids.iter().map(|s| s.id.clone()), "sol");
         let index = projection.solids.len();
@@ -181,7 +181,7 @@ pub mod add_solid {
             mesh_size: payload.mesh_size.unwrap_or(0.5),
             material_id: payload.material_id.clone(),
         };
-        Ok(Emit::operations(vec![Fem3dOperation::SetSolid { index, solid }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::SetSolid { index, solid }]))
     }
 }
 //#endregion 🔖️AddSolid

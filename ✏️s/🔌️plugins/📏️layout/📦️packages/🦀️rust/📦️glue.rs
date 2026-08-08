@@ -14,7 +14,7 @@ extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
+// `Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
@@ -33,6 +33,77 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/📏️layout/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod pages {
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/📄pages/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/📄pages/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/📄pages/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod stories {
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/📖stories/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/📖stories/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/📖stories/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod links {
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🔗links/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🔗links/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🔗links/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod add_frame {
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/➕add-frame/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/➕add-frame/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/➕add-frame/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod remove_frame {
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/➖remove-frame/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/➖remove-frame/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/➖remove-frame/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod patch_frame {
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🩹patch-frame/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🩹patch-frame/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🩹patch-frame/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod set_data_fields {
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🧾set-data-fields/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🧾set-data-fields/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📏️layout/🧬️mutations/🧾set-data-fields/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📏️layout/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/📏️layout/🎒️pack/🦀️component.rs"]

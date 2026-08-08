@@ -6,6 +6,7 @@
 //! those entity enums, re-importing the types from `crate::artifacts::en1996::part_2`.
 
 use crate::artifacts::en1996::{Document, MasonryClass};
+use crate::artifacts::en1996::mutations::En1996Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, Quantity};
 use serde::{Deserialize, Serialize};
 
@@ -284,7 +285,7 @@ pub struct En1996Family;
 
 impl crate::document::NormFamily for En1996Family {
     type Document = Document;
-    type Operation = crate::artifacts::en1996::op::Operation;
+    type Mutation = crate::artifacts::en1996::mutations::En1996Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::En1996
@@ -294,6 +295,44 @@ impl crate::document::NormFamily for En1996Family {
         evaluate(document)
     }
 }
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1996 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1996Engine {
+    projection: Document,
+}
+
+impl En1996Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1996Engine {
+    type Projection = Document;
+    type Mutation = En1996Mutation;
+    type Diff = crate::artifacts::en1996::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = crate::document::NormHost<En1996Family>;
 // #endregion 🔖️Session

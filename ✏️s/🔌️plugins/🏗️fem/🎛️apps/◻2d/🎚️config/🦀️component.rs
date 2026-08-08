@@ -1,4 +1,4 @@
-//! 🧮️ Fem2d play app — view state (`Fem2dConfig`) and its operation enum (`Fem2dConfigOperation`).
+//! 🧮️ Fem2d play app — view state (`Fem2dConfig`) and its operation enum (`Fem2dConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.fem2d` document. It still round-trips through a real
@@ -6,7 +6,7 @@
 //! like document content.
 
 use crate::artifacts::fem2d::FemCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Config
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// former `Fem2dPlayApp` `RefCell` fields (`result_display`, `camera`) plus the locale the deleted
 /// `ViewModel` used to carry into label resolution — session-only view state now round-trips through
 /// the config `DocumentStore` exactly like document content, with a real `backwards` per
-/// [`Fem2dConfigOperation`] instead of never being VCS'd at all.
+/// [`Fem2dConfigMutation`] instead of never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "fem2dcfg")]
@@ -112,14 +112,14 @@ store::impl_whole_record_config!(Fem2dConfig);
 // #region 🔖️ConfigOperations
 /// @emoji 🧮️ B1: `Fem2dConfig`'s operation enum — one variant per settled interaction (mirrors the
 /// pre-B1 `Fem2dPlayApp` `RefCell` field writes), plus a generic `Snapshot` every variant's
-/// `backwards()` returns — mirrors `ShootingConfigOperation`'s identical B1 pilot recipe: since a
+/// `backwards()` returns — mirrors `ShootingConfigMutation`'s identical B1 pilot recipe: since a
 /// config-only dispatch is a plain `Apply` (not an `AmendLast`), each tick is its own distinct, real
 /// config edit, and "undo this tick" is exactly "restore the whole-config snapshot from just before
-/// it". `Operation::Diff` is the WHOLE `Fem2dConfig` (not a granular patch type): `diff()` returns "the
+/// it". `Mutation::Diff` is the WHOLE `Fem2dConfig` (not a granular patch type): `diff()` returns "the
 /// full config after this op", and `store::impl_whole_record_config!` supplies the
-/// `OperationDiff<Fem2dConfig>` that returns that snapshot verbatim, ignoring `base`.
+/// `MutationDiff<Fem2dConfig>` that returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Fem2dConfigOperation {
+pub enum Fem2dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -140,7 +140,7 @@ pub enum Fem2dConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for Fem2dConfigOperation {
+impl protocol::OpText for Fem2dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -154,7 +154,7 @@ impl protocol::OpText for Fem2dConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -165,7 +165,7 @@ impl protocol::OpText for Fem2dConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Fem2dConfigOperation {
+impl protocol::OpBinary for Fem2dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -211,26 +211,26 @@ impl protocol::OpBinary for Fem2dConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<Fem2dConfig> for Fem2dConfigOperation {
+impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
     type Diff = Fem2dConfig;
 
     fn diff(&self, base: &Fem2dConfig) -> Fem2dConfig {
         let mut next = base.clone();
         match self {
-            Fem2dConfigOperation::Snapshot { config } => return config.clone(),
-            Fem2dConfigOperation::SetResultDisplay { source_id, mode, mode_index } => {
+            Fem2dConfigMutation::Snapshot { config } => return config.clone(),
+            Fem2dConfigMutation::SetResultDisplay { source_id, mode, mode_index } => {
                 next.result_source_id = source_id.clone();
                 next.result_mode = mode.clone();
                 next.result_mode_index = *mode_index;
             }
-            Fem2dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            Fem2dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            Fem2dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            Fem2dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &Fem2dConfig) -> Vec<Self> {
-        vec![Fem2dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Fem2dConfig) -> Vec<Self> {
+        vec![Fem2dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 // #endregion 🔖️ConfigOperations
@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(config.locale, "en-US");
     }
 
-    /// 🧮️ `Fem2dConfig`'s `OperationDiff` is a whole-record replace, mirroring `ShootingConfig`'s
+    /// 🧮️ `Fem2dConfig`'s `MutationDiff` is a whole-record replace, mirroring `ShootingConfig`'s
     /// identical B1 pilot pattern: `apply` ignores `base` entirely.
     #[test]
     fn fem2d_config_operation_diff_is_a_whole_record_replace() {
@@ -258,10 +258,10 @@ mod tests {
         let mut replacement = Fem2dConfig::default();
         replacement.locale = "de-DE".into();
         replacement.camera = FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
-        let applied = protocol::OperationDiff::apply(&replacement, &base);
+        let applied = protocol::MutationDiff::apply(&replacement, &base);
         assert_eq!(applied, replacement);
         let mut absorbed = base.clone();
-        protocol::OperationDiff::absorb(&mut absorbed, replacement.clone());
+        protocol::MutationDiff::absorb(&mut absorbed, replacement.clone());
         assert_eq!(absorbed, replacement);
     }
 
@@ -269,18 +269,18 @@ mod tests {
     fn config_operation_backwards_always_restores_the_pre_operation_snapshot() {
         let base = Fem2dConfig::default();
         let camera = FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
-        let op = Fem2dConfigOperation::SetCamera { camera: camera.clone() };
+        let op = Fem2dConfigMutation::SetCamera { camera: camera.clone() };
         let next = op.diff(&base);
         assert_eq!(next.camera, camera);
-        let backwards = op.backwards(&base);
-        assert_eq!(backwards, vec![Fem2dConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = op.inverse(&base);
+        assert_eq!(backwards, vec![Fem2dConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(backwards[0].diff(&next), base);
     }
 
     #[test]
     fn set_result_display_config_operation_round_trips() {
         let base = Fem2dConfig::default();
-        let op = Fem2dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
+        let op = Fem2dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
         let next = op.diff(&base);
         assert_eq!(next.result_source_id.as_deref(), Some("dead"));
         assert_eq!(next.result_mode, "modal");
@@ -290,17 +290,17 @@ mod tests {
     #[test]
     fn set_locale_config_operation_round_trips() {
         let base = Fem2dConfig::default();
-        let op = Fem2dConfigOperation::SetLocale { value: "de-DE".into() };
+        let op = Fem2dConfigMutation::SetLocale { value: "de-DE".into() };
         let next = op.diff(&base);
         assert_eq!(next.locale, "de-DE");
     }
 
     #[test]
     fn fem2d_config_operation_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() });
-        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
-        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::SetCamera { camera: FemCamera { x: 1.0, y: 2.0, zoom: 1.5 } });
-        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() });
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetCamera { camera: FemCamera { x: 1.0, y: 2.0, zoom: 1.5 } });
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }
 // #endregion 🧪️Tests

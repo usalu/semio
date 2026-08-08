@@ -32,7 +32,7 @@ semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️pro
 # overlay below), and the overlay's own minimal `[workspace.dependencies]` can't carry the framework
 # crates' full dependency graphs. `workspace = true` for these three is safe to adopt in the SAME
 # registrar pass that adds this crate as a real root-workspace member (see registrar handoff).
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["os-host-full"] }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 serde = { workspace = true }

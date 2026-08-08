@@ -1,8 +1,8 @@
 //! 💬️ Note play app commands — the window engagement input (single-block rename).
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::engine::patch_block_field;
-use crate::artifacts::note::op::NoteOperation;
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,8 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        Ok(Emit::config(vec![NoteConfigOperation::SetEngagementInput { value: payload.value.clone() }]))
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(Emit::config(vec![NoteConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -34,16 +34,16 @@ pub mod engagement_submit {
         pub value: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let config = cfg.projection;
-        let mut document_operations = Vec::new();
+        let mut document_mutations = Vec::new();
         if config.selected_block_ids.len() == 1 {
             let name = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());
             let target_id = config.selected_block_ids[0].clone();
             let next = patch_block_field(doc.projection, &target_id, "name", &Value::String(name));
-            document_operations.push(NoteOperation::SetBlocks { blocks: next.blocks });
+            document_mutations.push(NoteMutation::SetBlocks { blocks: next.blocks });
         }
-        Ok(Emit { document_operations, config_operations: vec![NoteConfigOperation::SetEngagementInput { value: String::new() }], ..Default::default() })
+        Ok(Emit { document_mutations, config_mutations: vec![NoteConfigMutation::SetEngagementInput { value: String::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️EngagementSubmit
@@ -56,7 +56,7 @@ pub mod navigator_engagement_input {
     #[dsl(keyword = "navigator-engagement-input")]
     pub struct NavigatorEngagementInput {}
 
-    pub fn handle(_payload: &NavigatorEngagementInput, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(_payload: &NavigatorEngagementInput, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }

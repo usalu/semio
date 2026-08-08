@@ -18,7 +18,7 @@ use crate::apps::cad::commands::selection::{set_hover, set_node_selection, set_p
 use crate::apps::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::apps::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::apps::cad::commands::utility::{set_active_utility, set_dislocate_option};
-use crate::apps::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, CadComponentSelection, CadConfig, CadConfigOperation, CadDislocateOptions, CadHoverTarget, CadSelectionTargets};
+use crate::apps::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, CadComponentSelection, CadConfig, CadConfigMutation, CadDislocateOptions, CadHoverTarget, CadSelectionTargets};
 use crate::apps::cad::modes::edit;
 use crate::apps::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::apps::cad::panels::{catalogue, document, inspection};
@@ -29,12 +29,12 @@ use crate::artifacts::cad::engine::{
     cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, export_solids_as, forest_play_scene, interaction, next_cad_id, CadSolidExport, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY,
     CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
-use crate::artifacts::cad::op::{CadObjectPatch, CadOperation};
+use crate::artifacts::cad::op::{CadObjectPatch, CadMutation};
 use crate::artifacts::cad::{artifact_kind, cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects, CadCamera, CadObject, CadPaneId, CadProjection, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView,
     Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaFormat, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
@@ -226,12 +226,13 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
 
 /// @emoji 🔀️ The `cad_runtime_from_config` boundary's outbound twin: repacks the (possibly mutated)
 /// `CadPlayRuntime` scratch struct back into a real `CadConfig` snapshot for
-/// `CadConfigOperation::Snapshot`. `active_utility_id`/`locale` aren't part of `CadPlayRuntime` (they
+/// `CadConfigMutation::Snapshot`. `active_utility_id`/`locale` aren't part of `CadPlayRuntime` (they
 /// never had a runtime-side representation pre-B1 either — they were read straight off `ViewModel`),
 /// so callers that need to change them patch the returned `CadConfig` directly instead of threading
 /// them through `CadPlayRuntime`.
 pub fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
     CadConfig {
+        contributions_json: base.contributions_json.clone(),
         selected_object_ids: runtime.selected_object_ids.to_vec(),
         selected_node_ids: runtime.selected_node_ids.clone(),
         selection_method: runtime.selection_method.clone(),
@@ -352,8 +353,8 @@ pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>) -> CadPlayRuntime {
 }
 
 /// 🔀️ The outbound twin of [`runtime_of`]: the whole-record config snapshot a handler emits.
-pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfigOperation {
-    CadConfigOperation::Snapshot { config: cad_config_from_runtime(runtime, base) }
+pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfigMutation {
+    CadConfigMutation::Snapshot { config: cad_config_from_runtime(runtime, base) }
 }
 //#endregion 🔖️Runtime
 
@@ -361,7 +362,7 @@ pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfigOpera
 /// @emoji 🔁️ Derives the target-pane objects for transformation `qid` and returns the operations
 /// that both replace the target pane and refocus onto the target model definition — dispatched by
 /// the caller through the store (no direct mutation).
-pub fn apply_transformation_operations(document: &CadProjection, qid: &str) -> Vec<CadOperation> {
+pub fn apply_transformation_mutations(document: &CadProjection, qid: &str) -> Vec<CadMutation> {
     let Some((model_definition_id, transformation_id)) = qid.rsplit_once('.') else {
         return Vec::new();
     };
@@ -381,15 +382,15 @@ pub fn apply_transformation_operations(document: &CadProjection, qid: &str) -> V
         };
         let mut prepared = source_objects;
         for object in &mut prepared {
-            ensure_object_solid_handle(&mut **kernel, object);
+            ensure_object_solid_handle(&mut *kernel, object);
         }
         match spec.mode {
-            TransformationMode::DeriveFromGeometry => run_derive_from_geometry(&mut **kernel, &prepared, "derived-energy"),
+            TransformationMode::DeriveFromGeometry => run_derive_from_geometry(&mut *kernel, &prepared, "derived-energy"),
             TransformationMode::FromBuilding => apply_from_building(&prepared, "derived-structure"),
             TransformationMode::TypologyFallback => apply_typology_fallback(&prepared, &["building.building.slab", "building.building.column", "building.building.beam", "building.building.wall"], "derived-fallback"),
         }
     };
-    vec![CadOperation::SetPaneObjects { pane: target_pane, objects }, CadOperation::SetActiveModelDefinition { model_definition_id: spec.target_model_definition_id.into() }]
+    vec![CadMutation::SetPaneObjects { pane: target_pane, objects }, CadMutation::SetActiveModelDefinition { model_definition_id: spec.target_model_definition_id.into() }]
 }
 
 pub fn collect_pane_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView, pane: CadPaneId) -> Vec<GeometryHandle> {
@@ -410,23 +411,23 @@ pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: Os
     let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
-    let solids = collect_pane_solids(&mut **kernel, envelope, pane);
+    let solids = collect_pane_solids(&mut *kernel, envelope, pane);
     if solids.is_empty() {
         return None;
     }
     let stem = format!("cad-{}", pane.model_definition_id().replace('.', "-"));
-    export_solids_as(&mut **kernel, &solids, format, &stem)
+    export_solids_as(&mut *kernel, &solids, format, &stem)
 }
 
 pub fn export_solid_modelspace(envelope: &CadPlayView, format: OsMediaFormat) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
-    let solids = collect_modelspace_solids(&mut **kernel, envelope);
+    let solids = collect_modelspace_solids(&mut *kernel, envelope);
     if solids.is_empty() {
         return None;
     }
-    export_solids_as(&mut **kernel, &solids, format, "cad.modelspace")
+    export_solids_as(&mut *kernel, &solids, format, "cad.modelspace")
 }
 
 /// @emoji ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
@@ -624,9 +625,9 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
 /// fields (label/typology/hidden/locked) use the same patch for every object; `origin.<axis>`/`scale.<axis>`/
 /// `orientation.<axis>` read each object's own current component so `value` (absolute) or `delta` (relative)
 /// applies per-object, preserving each object's other axes and any offset across a multi-select.
-pub fn patch_objects_operations(document: &CadProjection, object_ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) -> Vec<CadOperation> {
+pub fn patch_objects_mutations(document: &CadProjection, object_ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) -> Vec<CadMutation> {
     if let Some(patch) = object_patch_from_field(field, value) {
-        return object_ids.iter().filter_map(|object_id| cad_find_object_pane(document, object_id).map(|pane| CadOperation::PatchObject { pane, object_id: object_id.clone(), patch: patch.clone() })).collect();
+        return object_ids.iter().filter_map(|object_id| cad_find_object_pane(document, object_id).map(|pane| CadMutation::PatchObject { pane, object_id: object_id.clone(), patch: patch.clone() })).collect();
     }
     let mut operations = Vec::new();
     for object_id in object_ids {
@@ -651,7 +652,7 @@ pub fn patch_objects_operations(document: &CadProjection, object_ids: &[String],
         } else {
             continue;
         };
-        operations.push(CadOperation::PatchObject { pane, object_id: object_id.clone(), patch });
+        operations.push(CadMutation::PatchObject { pane, object_id: object_id.clone(), patch });
     }
     operations
 }
@@ -679,7 +680,7 @@ pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPan
         primitives: Vec::new(),
     };
     if let Ok(mut kernel) = cad_brep_kernel() {
-        ensure_object_solid_handle(&mut **kernel, &mut object);
+        ensure_object_solid_handle(&mut *kernel, &mut object);
     }
     let _ = pane;
     object
@@ -687,10 +688,10 @@ pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPan
 
 /// Commits `session` if it satisfies `can_commit`, returning the `AddObject` operation and clearing
 /// the session runtime state. Returns the operations (empty when no commit happened) — used by both the
-/// direct-event and keyed-transition REPL paths in `engagement_submit_operations` (a state reached via
+/// direct-event and keyed-transition REPL paths in `engagement_submit_mutations` (a state reached via
 /// either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed
 /// transition).
-pub fn try_commit_session_operations(document: &CadProjection, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadOperation> {
+pub fn try_commit_session_mutations(document: &CadProjection, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
     if !can_commit(session) {
         return Vec::new();
     }
@@ -698,7 +699,7 @@ pub fn try_commit_session_operations(document: &CadProjection, runtime: &mut Cad
     let Ok(mut kernel) = cad_brep_kernel() else {
         return Vec::new();
     };
-    let Some(object) = commit_object(&mut **kernel, session, label_count, next_cad_id) else {
+    let Some(object) = commit_object(&mut *kernel, session, label_count, next_cad_id) else {
         return Vec::new();
     };
     drop(kernel);
@@ -709,12 +710,12 @@ pub fn try_commit_session_operations(document: &CadProjection, runtime: &mut Cad
     runtime.last_finalized_interaction_id = Some(interaction_id);
     runtime.engagement_session = None;
     runtime.engagement_step = "Idle".into();
-    vec![CadOperation::AddObject { pane, object }]
+    vec![CadMutation::AddObject { pane, object }]
 }
 
 /// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
 /// session state and returning any commit operations produced.
-pub fn engagement_submit_operations(document: &CadProjection, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadOperation> {
+pub fn engagement_submit_mutations(document: &CadProjection, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadMutation> {
     let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
         runtime.engagement_step = "Idle".into();
@@ -731,7 +732,7 @@ pub fn engagement_submit_operations(document: &CadProjection, runtime: &mut CadP
             if apply_event(session, &event_kind, payload.as_ref()) {
                 runtime.engagement_step = session.state.clone();
                 let session_snapshot = session.clone();
-                return try_commit_session_operations(document, runtime, pane, &session_snapshot);
+                return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
             }
             for transition in keyed_transitions(session) {
                 if (transition.key.eq_ignore_ascii_case(&input) || transition.event_kind.eq_ignore_ascii_case(&input))
@@ -739,7 +740,7 @@ pub fn engagement_submit_operations(document: &CadProjection, runtime: &mut CadP
                         runtime.engagement_step = session.state.clone();
                         runtime.engagement_input.clear();
                         let session_snapshot = session.clone();
-                        return try_commit_session_operations(document, runtime, pane, &session_snapshot);
+                        return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
                     }
             }
         } else if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
@@ -845,7 +846,7 @@ semio_framework_plugin::app_commands! {
     /// one `🎮️commands/<group>/<command>` payload module per row. Row order IS the binary variant
     /// ordinal and the two literals are two different vocabularies (camelCase manifest action id,
     /// kebab wire keyword) — both are copied verbatim from the pre-consolidation `CadCommand` enum.
-    pub enum CadCommand for CadProjection, CadOperation, CadConfig, CadConfigOperation, ctx = CadDispatchCtx<'_> {
+    pub enum CadCommand for CadProjection, CadMutation, CadConfig, CadConfigMutation, ctx = CadDispatchCtx<'_> {
         // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
         "addObject" as "add-object" => add_object::AddObject,
         "patchObject" as "patch-object" => patch_object::PatchObject,
@@ -865,7 +866,7 @@ semio_framework_plugin::app_commands! {
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
 
-        // 👁️ Config-only — emit `config_operations`, never document operations.
+        // 👁️ Config-only — emit `config_mutations`, never document operations.
         "setCamera" as "camera" => set_camera::SetCamera,
         "setProjection" as "projection" => set_projection::SetProjection,
         "setProjectionParam" as "projection-param" => set_projection_param::SetProjectionParam,
@@ -906,31 +907,62 @@ semio_framework_plugin::app_commands! {
 //#region 🔖️PlayApp
 /// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `DocumentApp` — every former
 /// `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
-/// `CadConfigOperation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
+/// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
 /// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
 /// rubber-band tick counter, not app state.
-#[derive(Default)]
-pub #[derive(Default, Clone, Copy)]
-struct CadPlayApp;
-
-impl CadPlayApp
+thread_local! {
+    static CAD_PREVIEW_SEQ: std::cell::RefCell<u64> = std::cell::RefCell::new(0);
 }
 
-impl DocumentApp for CadPlayApp
+#[derive(Default, Clone, Copy)]
+pub struct CadPlayApp;
+
+impl CadPlayApp {
+    /// 🔬️ CW7 preview-law seam: reads engagement scratch from config only; bumps a TLS seq for staleness.
+    pub fn gesture_preview(&self, config: &CadConfig) -> Option<(String, u64, Vec<u8>)> {
+        let session_json = config.engagement_session_json.as_ref()?;
+        if session_json.is_empty() || session_json == "null" {
+            return None;
+        }
+        let payload = session_json.as_bytes().to_vec();
+        let seq = CAD_PREVIEW_SEQ.with(|cell| {
+            let mut seq = cell.borrow_mut();
+            *seq = seq.wrapping_add(1);
+            *seq
+        });
+        Some(("gesture:engagement".into(), seq, payload))
+    }
+}
+
+impl DocumentApp for CadPlayApp {
+    type Projection = CadProjection;
+    type Mutation = CadMutation;
+    type Config = CadConfig;
+    type ConfigMutation = CadConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Command = CadCommand;
+
+    const APP_ID: &'static str = CAD_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
+
+    fn initial_projection() -> CadProjection {
+        forest_play_scene()
+    }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(cad_io())
     }
 
-    fn whole_document_operation(projection: CadProjection) -> Option<CadOperation> {
-        Some(CadOperation::SetScene { scene: Box::new(projection) })
+    fn whole_document_operation(projection: CadProjection) -> Option<CadMutation> {
+        Some(CadMutation::SetScene { scene: Box::new(projection) })
     }
 
     /// 🎞️ `geometry:in` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): accepts incoming mesh/brep
     /// geometry from any upstream 3D producer and inserts it as a new `CadObject` in the Shape pane,
     /// through the same brep kernel every other import path shares. Falls through to the default
     /// `document:in` importer for any other port.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, CadProjection>) -> Result<Emit<CadOperation, CadConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, CadProjection>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "geometry:in" {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
@@ -940,8 +972,8 @@ impl DocumentApp for CadPlayApp
             };
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             let projection = <CadProjection as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            return match self.whole_document_operation(projection) {
-                Some(operation) => Ok(Emit::operations(vec![operation])),
+            return match Self::whole_document_operation(projection) {
+                Some(operation) => Ok(Emit::mutations(vec![operation])),
                 None => Err(MediaError::NotImplemented),
             };
         }
@@ -954,7 +986,7 @@ impl DocumentApp for CadPlayApp
             MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured payload today".into())),
         };
         match crate::artifacts::cad::engine::import_cad_object_by_extension(name, &payload) {
-            Some(object) => Ok(Emit::operations(vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }])),
+            Some(object) => Ok(Emit::mutations(vec![CadMutation::AddObject { pane: CadPaneId::Shape, object }])),
             None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
         }
     }
@@ -975,11 +1007,11 @@ impl DocumentApp for CadPlayApp
         let Ok(mut kernel) = cad_brep_kernel() else {
             return Err(MediaError::Payload(port.to_string(), "brep kernel unavailable".into()));
         };
-        let solids = collect_modelspace_solids(&mut **kernel, &view);
+        let solids = collect_modelspace_solids(&mut *kernel, &view);
         if solids.is_empty() {
             return Err(MediaError::Payload(port.to_string(), "no solids to export".into()));
         }
-        let Some(export) = export_solids_as(&mut **kernel, &solids, OsMediaFormat::Step, "cad.modelspace") else {
+        let Some(export) = export_solids_as(&mut *kernel, &solids, OsMediaFormat::Step, "cad.modelspace") else {
             return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
         };
         let text = match export.data {
@@ -989,13 +1021,15 @@ impl DocumentApp for CadPlayApp
         Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64::engine::general_purpose::STANDARD.encode(text.as_bytes()) } })
     }
 
-    fn command_id(command: &CadCommand) -> &str {
+    fn command_id(command: &CadCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &CadCommand, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<CadOperation, CadConfigOperation, Self::DraftOperation>, Fault> {
-        let mut ctx = CadDispatchCtx { preview_seq: &self.preview_seq };
-        command.dispatch(doc, cfg, &mut ctx)
+    fn handle(command: &CadCommand, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
+        CAD_PREVIEW_SEQ.with(|preview_seq| {
+            let mut ctx = CadDispatchCtx { preview_seq };
+            command.dispatch(doc, cfg, &mut ctx)
+        })
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
@@ -1084,25 +1118,25 @@ pub fn create_cad_app() -> App {
             .window_kind_def(energy::definition())
             .window_kind_def(structure_classic::definition())
             .default_layout(edit::layout())
-            .operation("addObject", LocalizedLabel::native("Add Object", "Objekt hinzufügen"))
-            .operation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
-            .operation("patchSelection", LocalizedLabel::native("Patch Selection", "Auswahl aktualisieren"))
-            .action_with(ActionDefinition::new_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Operation).category("actions"))
-            .action_with(ActionDefinition::new_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Operation).category("create"))
-            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-            .operation("renameNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"))
-            .action_with(ActionDefinition::new_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Operation).category("transform"))
-            .action_with(ActionDefinition::new_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Operation).category("transform"))
-            .action_with(ActionDefinition::new_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Operation).category("transform"))
-            .operation("applyTransformation", LocalizedLabel::native("Apply Transformation", "Transformation anwenden"))
-            .operation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
-            .action_with(ActionDefinition::new_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Operation).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Operation).in_palette(false))
+            .mutation("addObject", LocalizedLabel::native("Add Object", "Objekt hinzufügen"))
+            .mutation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
+            .mutation("patchSelection", LocalizedLabel::native("Patch Selection", "Auswahl aktualisieren"))
+            .action_with(ActionDefinition::new_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Mutation).category("actions"))
+            .action_with(ActionDefinition::new_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Mutation).category("create"))
+            .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .mutation("renameNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"))
+            .action_with(ActionDefinition::new_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).category("transform"))
+            .action_with(ActionDefinition::new_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).category("transform"))
+            .action_with(ActionDefinition::new_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).category("transform"))
+            .mutation("applyTransformation", LocalizedLabel::native("Apply Transformation", "Transformation anwenden"))
+            .mutation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
+            .action_with(ActionDefinition::new_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation).in_palette(false))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
-            .operation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .action_with(ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"), ActionKind::View).in_palette(false))
@@ -1169,7 +1203,7 @@ pub(crate) mod testkit {
     //! 🧪️ The one cad-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
     //! instead of re-deriving a store/dispatch/render scaffold of its own.
     use super::*;
-    use protocol::{Operation, OperationDiff};
+    use protocol::{Mutation, MutationDiff};
     use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsDocumentApp, SET_ACTIVE_UTILITY_ACTION_ID};
 
 
@@ -1299,14 +1333,14 @@ pub(crate) mod testkit {
 
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
     /// inspect the emitted document/config operations directly.
-    pub fn drive(app: &CadPlayApp, scene: &CadProjection, action: &str, args: Option<Value>) -> Emit<CadOperation, CadConfigOperation> {
+    pub fn drive(app: &CadPlayApp, scene: &CadProjection, action: &str, args: Option<Value>) -> Emit<CadMutation, CadConfigMutation> {
         drive_with_config(app, scene, action, args, &CadConfig::default())
     }
 
     /// 🧪️ `args` stays owned so every ported test keeps the pre-migration `(action id, json!(..))`
     /// call shape verbatim; `command_from_action` only ever reads it.
     #[allow(clippy::needless_pass_by_value)]
-    pub fn drive_with_config(app: &CadPlayApp, scene: &CadProjection, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadOperation, CadConfigOperation> {
+    pub fn drive_with_config(app: &CadPlayApp, scene: &CadProjection, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
         let history = empty_history();
         let doc = DocumentView { projection: scene, history: &history };
         let cfg = ConfigView { projection: config };
@@ -1330,9 +1364,9 @@ pub(crate) mod testkit {
         app.context_menu(&request, doc, &cfg, registry)
     }
 
-    /// 🧮️ Folds a list of `CadOperation`s onto a scene via the core `Operation`/`OperationDiff` impls —
+    /// 🧮️ Folds a list of `CadMutation`s onto a scene via the core `Mutation`/`MutationDiff` impls —
     /// mirrors what the wrapping `VcsDocumentApp` store does when it dispatches the emitted operations.
-    pub fn apply_operations(scene: &CadProjection, operations: &[CadOperation]) -> CadProjection {
+    pub fn apply_mutations(scene: &CadProjection, operations: &[CadMutation]) -> CadProjection {
         let mut next = scene.clone();
         for operation in operations {
             next = operation.diff(&next).apply(&next);
@@ -1340,11 +1374,11 @@ pub(crate) mod testkit {
         next
     }
 
-    /// 🧮️ `apply_operations`'s config-targeted twin — folds an `Emit`'s `config_operations` onto a base
+    /// 🧮️ `apply_mutations`'s config-targeted twin — folds an `Emit`'s `config_mutations` onto a base
     /// `CadConfig` (mirrors what `VcsDocumentApp`'s config store does when it dispatches them).
-    pub fn config_after(emit: &Emit<CadOperation, CadConfigOperation>, base: &CadConfig) -> CadConfig {
+    pub fn config_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadConfig {
         let mut next = base.clone();
-        for operation in &emit.config_operations {
+        for operation in &emit.config_mutations {
             next = operation.diff(&next);
         }
         next
@@ -1352,7 +1386,7 @@ pub(crate) mod testkit {
 
     /// 🧮️ `config_after` plus the `CadConfig -> CadPlayRuntime` boundary conversion — the direct
     /// replacement for the pre-B1 `app.runtime.borrow()` most tests below inspected after `drive(..)`.
-    pub fn runtime_after(emit: &Emit<CadOperation, CadConfigOperation>, base: &CadConfig) -> CadPlayRuntime {
+    pub fn runtime_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadPlayRuntime {
         cad_runtime_from_config(&config_after(emit, base))
     }
 
@@ -1648,7 +1682,7 @@ mod tests {
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, vec![CAD_DISLOCATE_UTILITY_ID]);
         // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
-        // cad must NOT also declare it as an Operation.
+        // cad must NOT also declare it as an Mutation.
         let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
         assert_eq!(set_active_utility.kind, ActionKind::View);
         // 🚦️ Transform utilities gate the action panel while active (the default) — cad declares no
@@ -1790,15 +1824,15 @@ mod tests {
     }
 
     /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
-    /// registrations below) — they must never emit a `CadOperation` (no VCS edit, no undo entry) and
-    /// instead write a coalesced `CadConfigOperation`, isolated per pane.
+    /// registrations below) — they must never emit a `CadMutation` (no VCS edit, no undo entry) and
+    /// instead write a coalesced `CadConfigMutation`, isolated per pane.
     #[test]
-    fn set_camera_writes_config_not_operations() {
+    fn set_camera_writes_config_not_mutations() {
         let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&app, &scene, "setCamera", Some(json!({ "surfaceId": "cad.play.scene3d/building", "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 60.0 } })));
-        assert!(emit.document_operations.is_empty(), "setCamera must not emit a VCS operation");
-        assert!(!emit.config_operations.is_empty(), "setCamera must write a config operation");
+        assert!(emit.document_mutations.is_empty(), "setCamera must not emit a VCS operation");
+        assert!(!emit.config_mutations.is_empty(), "setCamera must write a config operation");
         let runtime = runtime_after(&emit, &CadConfig::default());
         assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Building).zoom, 2.0);
         assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Shape).zoom, 1.0, "panes stay isolated");
@@ -1934,7 +1968,7 @@ mod tests {
         app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).expect("add object");
         let projection_after_add = serde_json::to_string(&app.projection().expect("projection")).unwrap();
         let result = app.dispatch_typed(CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: CAD_DISLOCATE_UTILITY_ID.into() }), &meta("local")).expect("set active utility");
-        assert!(result.operations.is_empty(), "utility switch must emit zero operations");
+        assert!(result.mutations.is_empty(), "utility switch must emit zero operations");
         let projection_after_switch = serde_json::to_string(&app.projection().expect("projection")).unwrap();
         assert_eq!(projection_after_add, projection_after_switch, "utility switch must not mutate the projection");
         app.handle_action("undo", None, &meta("local")).expect("undo");
@@ -2077,8 +2111,8 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
-        assert_eq!(emit.document_operations.len(), 1);
-        let next = apply_operations(&scene, &emit.document_operations);
+        assert_eq!(emit.document_mutations.len(), 1);
+        let next = apply_mutations(&scene, &emit.document_mutations);
         assert!(next.objects.iter().any(|object| object.typology == "building.building.column") || next.building_objects.iter().any(|object| object.typology == "building.building.column"));
         let runtime = runtime_after(&emit, &CadConfig::default());
         assert_eq!(runtime.selected_object_ids.len(), 1);
@@ -2105,8 +2139,8 @@ mod tests {
         let mut scene = default_document();
         scene.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)];
         let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        assert!(!emit.document_operations.is_empty());
-        let next = apply_operations(&scene, &emit.document_operations);
+        assert!(!emit.document_mutations.is_empty());
+        let next = apply_mutations(&scene, &emit.document_mutations);
         assert!(!next.energy_objects.is_empty());
         assert!(next.energy_objects.iter().any(|object| object.typology.starts_with("energy.energy.")));
         assert_eq!(next.active_model_definition_id, "aec.building.energy");
@@ -2123,7 +2157,7 @@ mod tests {
         scene.objects[0].typology = "spatial.shape.primitive.box".into();
         scene.objects[0].label = "live-shape-only".into();
         let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        let next = apply_operations(&scene, &emit.document_operations);
+        let next = apply_mutations(&scene, &emit.document_mutations);
         assert!(!next.energy_objects.is_empty());
         assert!(next.energy_objects.iter().all(|object| !fixture_energy_ids.contains(&object.id)), "live single-box derive should not repopulate the static forest energy fixture's original objects");
     }
@@ -2134,7 +2168,7 @@ mod tests {
         let scene = default_document();
         let config = CadConfig { selected_object_ids: vec!["object-box-1".into()], ..CadConfig::default() };
         let emit = drive_with_config(&app, &scene, "saveSelected", None, &config);
-        assert!(emit.document_operations.is_empty(), "export must not mutate the document");
+        assert!(emit.document_mutations.is_empty(), "export must not mutate the document");
         assert_eq!(emit.effects.len(), 1);
         match &emit.effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
@@ -2170,7 +2204,7 @@ mod tests {
     }
 
     #[test]
-    fn world_pointer_move_updates_live_preview_without_committing_or_emitting_operations() {
+    fn world_pointer_move_updates_live_preview_without_committing_or_emitting_mutations() {
         let app = CadPlayApp::default();
         let scene = default_document();
         let config = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
@@ -2178,7 +2212,7 @@ mod tests {
         let config = config_after(&emit, &config);
 
         let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &config);
-        assert!(emit.document_operations.is_empty(), "a pointer move must not emit any document operation");
+        assert!(emit.document_mutations.is_empty(), "a pointer move must not emit any document operation");
         let runtime = runtime_after(&emit, &config);
         let session = runtime.engagement_session.as_ref().expect("session still active");
         assert_eq!(session.state, "first_corner", "pointer.move must not change state");
@@ -2187,7 +2221,7 @@ mod tests {
 
     //#region 🔖️GesturePreview
     /// 🔬️ CW7 preview-law seam: `CadPlayApp::gesture_preview` reads `CadEngagementScratch` only, never
-    /// `CadProjection`/`CadOperation` — driven through the real `worldPointerMove` handler (the natural
+    /// `CadProjection`/`CadMutation` — driven through the real `worldPointerMove` handler (the natural
     /// per-tick gesture handler) via the existing `drive` helper, config threaded explicitly across
     /// calls (the pure `CadPlayApp` no longer holds any of this state itself).
     #[test]
@@ -2256,7 +2290,7 @@ mod tests {
 
         for position in [json!([0.0, 0.0, 0.0]), json!([2.0, 3.0, 0.0])] {
             let emit = drive_with_config(&app, &scene, "worldPointerDown", Some(json!({ "pane": "shape", "position": position })), &config);
-            scene = apply_operations(&scene, &emit.document_operations);
+            scene = apply_mutations(&scene, &emit.document_mutations);
             config = config_after(&emit, &config);
         }
 
@@ -2268,7 +2302,7 @@ mod tests {
         // explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
         config.engagement_input = "Confirm".into();
         let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
-        scene = apply_operations(&scene, &emit.document_operations);
+        scene = apply_mutations(&scene, &emit.document_mutations);
         config = config_after(&emit, &config);
         let runtime = cad_runtime_from_config(&config);
         assert!(runtime.engagement_session.is_none(), "box should have committed");
@@ -2329,8 +2363,8 @@ mod tests {
         })
         .to_string();
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": file_text, "name": "cad.spatial.json" })));
-        assert!(!emit.document_operations.is_empty(), "importCadFile must emit a SetScene operation for a spatial JSON string payload");
-        let next = apply_operations(&scene, &emit.document_operations);
+        assert!(!emit.document_mutations.is_empty(), "importCadFile must emit a SetScene operation for a spatial JSON string payload");
+        let next = apply_mutations(&scene, &emit.document_mutations);
         assert_eq!(next.objects.len(), 1);
         assert_eq!(next.objects[0].id, "object-loaded");
     }
@@ -2342,8 +2376,8 @@ mod tests {
         let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
         let obj_data_url = format!("data:model/obj;base64,{}", base64::engine::general_purpose::STANDARD.encode(obj_text));
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })));
-        assert!(!emit.document_operations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
-        let next = apply_operations(&scene, &emit.document_operations);
+        assert!(!emit.document_mutations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
+        let next = apply_mutations(&scene, &emit.document_mutations);
         assert_eq!(next.objects.len(), scene.objects.len() + 1);
         assert!(next.objects.last().unwrap().solid_handle.is_some());
     }
@@ -2398,7 +2432,7 @@ mod tests {
         base.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape), make_object_for_typology("spatial.shape.primitive.box", 1, CadPaneId::Shape)];
         let object_a = base.objects[0].id.clone();
         let object_b = base.objects[1].id.clone();
-        let base_envelope = store::create_document_envelope::<CadProjection, CadOperation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None);
+        let base_envelope = store::create_document_envelope::<CadProjection, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
 
         let mut instance_a = new_app();
@@ -2442,7 +2476,7 @@ mod tests {
 
         let mut envelopes = Vec::new();
         for message in far.receive().expect("receive") {
-            if let BackboneMessage::Operations { envelopes: operations } = message {
+            if let BackboneMessage::Mutations { envelopes: operations } = message {
                 envelopes.extend(operations);
             }
         }
@@ -2451,8 +2485,8 @@ mod tests {
 
         let mut receiver = new_app();
         let nodes_before = receiver.projection().expect("projection").nodes.len();
-        receiver.ingest_operations(&operations).expect("ingest once");
-        receiver.ingest_operations(&operations).expect("ingest twice");
+        receiver.ingest_mutations(&operations).expect("ingest once");
+        receiver.ingest_mutations(&operations).expect("ingest twice");
         assert_eq!(receiver.projection().expect("projection").nodes.len(), nodes_before + 1, "feeding the same operation twice must not double-apply");
     }
     //#endregion 🔖️Convergence

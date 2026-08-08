@@ -1,7 +1,7 @@
 //! 🧩️ Process 3d play app commands — host-pushed plugin contributions (machine catalogs).
 
-use crate::apps::process3d::config::{Process3dConfig, Process3dConfigOperation};
-use crate::artifacts::process3d::{op::Process3dOperation, Process3dDocument};
+use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::artifacts::process3d::{op::Process3dMutation, Process3dDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Process3dConfigOperation::SetContributions { json: payload.json.clone() }]))
+    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Process3dConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }
 //#endregion 🔖️SetContributions

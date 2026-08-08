@@ -1,7 +1,7 @@
 dialect protocol
 protocol playbook.spr
 version 1
-schema playbook.program.operation
+schema playbook.program.mutation
 start record
 framing record
 record playbook.playbook-add-layer tag 1

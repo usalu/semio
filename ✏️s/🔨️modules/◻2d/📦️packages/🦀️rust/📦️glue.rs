@@ -1,6 +1,8 @@
 //! 🖊️ 2D drawing kernel: engine contracts, scene-graph store (SVG/PDF/DWG export), planar
 //! booleans, and bitmap autotrace.
 
+pub use semio_framework_os_kernel::os_spr;
+
 #[path = "../../⚙️engine/🦀️component.rs"]
 pub mod engine;
 pub use engine::*;

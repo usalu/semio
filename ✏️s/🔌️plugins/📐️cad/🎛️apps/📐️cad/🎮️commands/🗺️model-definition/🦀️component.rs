@@ -1,8 +1,8 @@
 //! 🗺️ CAD play app commands — which model definition the document is focused on, and which bundled example is loaded.
 
-use crate::apps::cad::config::{CadConfig, CadConfigOperation};
+use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::op::CadOperation;
+use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,8 @@ pub mod focus_model_definition {
         pub model_definition_id: String,
     }
 
-    pub fn handle(payload: &FocusModelDefinition, _doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![CadOperation::SetActiveModelDefinition { model_definition_id: payload.model_definition_id.clone() }]))
+    pub fn handle(payload: &FocusModelDefinition, _doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![CadMutation::SetActiveModelDefinition { model_definition_id: payload.model_definition_id.clone() }]))
     }
 }
 //#endregion 🔖️FocusModelDefinition
@@ -36,7 +36,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let _ = runtime_of(cfg);
         let (scene, runtime) = if payload.example_id.is_empty() {
             (default_document(), CadPlayRuntime::default())
@@ -56,8 +56,8 @@ pub mod set_active_example {
         } else {
             return Ok(Emit::default());
         };
-        let mut emit = Emit::operations(vec![CadOperation::SetScene { scene: Box::new(scene) }]);
-        emit.config_operations = vec![snapshot_of(&runtime, cfg.projection)];
+        let mut emit = Emit::mutations(vec![CadMutation::SetScene { scene: Box::new(scene) }]);
+        emit.config_mutations = vec![snapshot_of(&runtime, cfg.projection)];
         Ok(emit)
     }
 }

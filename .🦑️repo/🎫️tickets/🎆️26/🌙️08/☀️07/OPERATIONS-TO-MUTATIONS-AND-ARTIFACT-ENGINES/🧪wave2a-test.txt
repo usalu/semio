@@ -1,0 +1,21 @@
+bun test v1.3.14 (0d9b296a)
+
+---STDERR---
+
+🧪️index.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+4820 |       const referenced = frag.productions.some((prod) => new RegExp(`\\b${prod.replace(/[.*+?^${}()|[\]\\]/g, "\\//#region 🔧️PolicyRuleMutationArtifactEngines
+                                                                                                                     ^
+error: Unterminated string literal
+    at /Users/ueli/Documents/semio/📜️script.ts:4820:111
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [129.00ms]
+
+---CODE 1---

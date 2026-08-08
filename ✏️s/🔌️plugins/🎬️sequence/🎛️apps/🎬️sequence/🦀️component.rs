@@ -14,14 +14,14 @@ use crate::apps::sequence::commands::node_graph::{node_graph_edit, set_viewport}
 use crate::apps::sequence::commands::playback::{run_command, stop_command};
 use crate::apps::sequence::commands::selection::set_selection;
 use crate::apps::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
-use crate::apps::sequence::config::{SequenceConfig, SequenceConfigOperation};
+use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::apps::sequence::modes::edit;
 use crate::apps::sequence::modes::edit::windows::{compiled, main, script};
 use crate::apps::sequence::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::sequence::terminology::sequence_play_labels;
-use crate::artifacts::sequence::op::SequenceOperation;
+use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceFixture, StepParams, SEQUENCE_FIXTURE_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit,
     Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
 };
@@ -54,7 +54,7 @@ semio_framework_plugin::app_commands! {
     /// independently from the pre-migration `sequence_protocol` enum's `command_id()` match arm and
     /// `#[dsl(key = ..)]` attribute respectively, never derived one from the other. **Row order is the
     /// binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum SequenceCommand for SequenceFixture, SequenceOperation, SequenceConfig, SequenceConfigOperation {
+    pub enum SequenceCommand for SequenceFixture, SequenceMutation, SequenceConfig, SequenceConfigMutation {
         "addStep" as "add-step" => add_step::AddStep,
         "addStepToSlot" as "add-step-to-slot" => add_step_to_slot::AddStepToSlot,
         "addStepDropped" as "add-step-dropped" => add_step_dropped::AddStepDropped,
@@ -80,17 +80,17 @@ semio_framework_plugin::app_commands! {
 //#region 🔖️SequencePlayApp
 /// 🧪️ B1: unit struct — every former `SequencePlayRuntime` field now lives in
 /// `crate::apps::sequence::config::SequenceConfig` (see `DocumentApp::Config`), written through
-/// `SequenceConfigOperation`s.
+/// `SequenceConfigMutation`s.
 #[derive(Default)]
 pub struct SequencePlayApp;
 
 impl DocumentApp for SequencePlayApp {
     type Projection = SequenceFixture;
-    type Operation = SequenceOperation;
+    type Mutation = SequenceMutation;
     type Config = SequenceConfig;
-    type ConfigOperation = SequenceConfigOperation;
+    type ConfigMutation = SequenceConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = SequenceCommand;
 
@@ -110,7 +110,7 @@ impl DocumentApp for SequencePlayApp {
     /// scalar/array is wrapped under a single `"value"` key. Never mutates anything directly (matches
     /// every other `import_media` override): the caller (a headless runner or the UI) applies the
     /// returned `StepsAdd` through the ordinary, undoable document store.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, SequenceFixture>) -> Result<Emit<SequenceOperation, SequenceConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, SequenceFixture>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "steps:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -124,7 +124,7 @@ impl DocumentApp for SequencePlayApp {
         let id = crate::artifacts::sequence::engine::next_available_step_id(fixture);
         let x = fixture.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if fixture.steps.is_empty() { 0.0 } else { 280.0 };
         let step = crate::artifacts::sequence::SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
-        Ok(Emit::operations(vec![SequenceOperation::StepsAdd { index: fixture.steps.len(), item: step }]))
+        Ok(Emit::mutations(vec![SequenceMutation::StepsAdd { index: fixture.steps.len(), item: step }]))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -133,7 +133,7 @@ impl DocumentApp for SequencePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceOperation, SequenceConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -216,18 +216,18 @@ pub fn create_sequence_app() -> App {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .action_with(ActionDefinition::new_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Operation).with_category("create"))
-            .operation("addStepToSlot", LocalizedLabel::native("Add Step To Slot", "Schritt zu Slot hinzufügen"))
-            .operation("addStepDropped", LocalizedLabel::native("Add Step Dropped", "Schritt per Ablegen hinzufügen"))
-            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
-            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
-            .operation("connectSteps", LocalizedLabel::native("Connect Steps", "Schritte verbinden"))
-            .operation("disconnectSteps", LocalizedLabel::native("Disconnect Steps", "Schritte trennen"))
-            .operation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
-            .action_with(ActionDefinition::new_catalog("setStepCollapsed", LocalizedLabel::native("Set Step Collapsed", "Schritt einklappen"), ActionKind::Operation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
-            .operation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
+            .action_with(ActionDefinition::new_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .mutation("addStepToSlot", LocalizedLabel::native("Add Step To Slot", "Schritt zu Slot hinzufügen"))
+            .mutation("addStepDropped", LocalizedLabel::native("Add Step Dropped", "Schritt per Ablegen hinzufügen"))
+            .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .mutation("connectSteps", LocalizedLabel::native("Connect Steps", "Schritte verbinden"))
+            .mutation("disconnectSteps", LocalizedLabel::native("Disconnect Steps", "Schritte trennen"))
+            .mutation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
+            .action_with(ActionDefinition::new_catalog("setStepCollapsed", LocalizedLabel::native("Set Step Collapsed", "Schritt einklappen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .view_action("setViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
             // 👁️ Ephemeral view state — selection, run output, layout orientation, locale.
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))

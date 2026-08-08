@@ -1,0 +1,546 @@
+$ bun ./📜️script.ts nx run @semio-tech/plugin-registry:check
+
+> nx run @semio-tech/plugin-registry:check
+
+> bun ./📜️script.ts check
+
+plugin taxonomy tree violations (area "✏️s/🔌️plugins" is "clean"):
+  - ✒️writer: artifact "✒️writer" is missing ⚙️engine/🟦️component.ts
+  - ✒️writer: artifact "✒️writer" mutation "📄set-document" is missing 🧬️mutations/📄set-document/🔺️diff/🟦️component.ts
+  - ✒️writer: artifact "✒️writer" mutation "📄set-document" is missing 🧬️mutations/📄set-document/↩️inverse/🟦️component.ts
+  - ✒️writer: artifact "✒️writer" mutation "✍️set-text" is missing 🧬️mutations/✍️set-text/🔺️diff/🟦️component.ts
+  - ✒️writer: artifact "✒️writer" mutation "✍️set-text" is missing 🧬️mutations/✍️set-text/↩️inverse/🟦️component.ts
+  - ✒️writer: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ✒️writer: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ✒️writer: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ✒️writer: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: artifact "➗️mathematical" is missing ⚙️engine/🟦️component.ts
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📊set-graph" is missing 🧬️mutations/📊set-graph/🦠️mutation/🟦️component.ts
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📊set-graph" is missing 🧬️mutations/📊set-graph/🔺️diff/🦀️component.rs
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📊set-graph" is missing 🧬️mutations/📊set-graph/🔺️diff/🟦️component.ts
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📊set-graph" is missing 🧬️mutations/📊set-graph/↩️inverse/🟦️component.ts
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📐set-geometry" is missing 🧬️mutations/📐set-geometry/🦠️mutation/🟦️component.ts
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📐set-geometry" is missing 🧬️mutations/📐set-geometry/🔺️diff/🦀️component.rs
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📐set-geometry" is missing 🧬️mutations/📐set-geometry/🔺️diff/🟦️component.ts
+  - ➗️mathematical: artifact "➗️mathematical" mutation "📐set-geometry" is missing 🧬️mutations/📐set-geometry/↩️inverse/🟦️component.ts
+  - ➗️mathematical: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - ➗️mathematical: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: artifact "🌀️procedural2d" is missing ⚙️engine/🟦️component.ts
+  - 🌀️procedural: artifact "🧊️procedural3d" is missing ⚙️engine/🟦️component.ts
+  - 🌀️procedural: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/📚️examples/🎬️hexagonal-mushroom-column/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: artifact "🌊️flow" is missing ⚙️engine/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "📐set-layout" is missing 🧬️mutations/📐set-layout/🔺️diff/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "📐set-layout" is missing 🧬️mutations/📐set-layout/↩️inverse/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "🧩widgets" is missing 🧬️mutations/🧩widgets/🔺️diff/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "🧩widgets" is missing 🧬️mutations/🧩widgets/↩️inverse/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "🔗synapses" is missing 🧬️mutations/🔗synapses/🔺️diff/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "🔗synapses" is missing 🧬️mutations/🔗synapses/↩️inverse/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "📄set-fixture" is missing 🧬️mutations/📄set-fixture/🔺️diff/🟦️component.ts
+  - 🌊️flow: artifact "🌊️flow" mutation "📄set-fixture" is missing 🧬️mutations/📄set-fixture/↩️inverse/🟦️component.ts
+  - 🌊️flow: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/🧬️mutations/📐set-layout/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/🧬️mutations/🧩widgets/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/🧬️mutations/🔗synapses/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🗿️artifacts/🌊️flow/🧬️mutations/📄set-fixture/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📐️brep/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📖️dictionary/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🏗️bim/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🧠️logic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🔤️primitive/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🧮️math/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📃️list/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🖍️draw/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: artifact "🗺️gismap" is missing ⚙️engine/🟦️component.ts
+  - 🌍️gis: artifact "🏔️gisterrain" is missing ⚙️engine/🟦️component.ts
+  - 🌍️gis: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌍️gis: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: artifact "🌿️vcs" is missing ⚙️engine/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🏷️add-tag" is missing 🧬️mutations/🏷️add-tag/🦠️mutation/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🏷️add-tag" is missing 🧬️mutations/🏷️add-tag/🔺️diff/🦀️component.rs
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🏷️add-tag" is missing 🧬️mutations/🏷️add-tag/🔺️diff/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🏷️add-tag" is missing 🧬️mutations/🏷️add-tag/↩️inverse/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📛set-title" is missing 🧬️mutations/📛set-title/🦠️mutation/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📛set-title" is missing 🧬️mutations/📛set-title/🔺️diff/🦀️component.rs
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📛set-title" is missing 🧬️mutations/📛set-title/🔺️diff/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📛set-title" is missing 🧬️mutations/📛set-title/↩️inverse/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🚦set-status" is missing 🧬️mutations/🚦set-status/🦠️mutation/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🚦set-status" is missing 🧬️mutations/🚦set-status/🔺️diff/🦀️component.rs
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🚦set-status" is missing 🧬️mutations/🚦set-status/🔺️diff/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🚦set-status" is missing 🧬️mutations/🚦set-status/↩️inverse/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🗑️remove-tag" is missing 🧬️mutations/🗑️remove-tag/🦠️mutation/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🗑️remove-tag" is missing 🧬️mutations/🗑️remove-tag/🔺️diff/🦀️component.rs
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🗑️remove-tag" is missing 🧬️mutations/🗑️remove-tag/🔺️diff/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🗑️remove-tag" is missing 🧬️mutations/🗑️remove-tag/↩️inverse/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🔢set-counter" is missing 🧬️mutations/🔢set-counter/🔺️diff/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "🔢set-counter" is missing 🧬️mutations/🔢set-counter/↩️inverse/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📝set-notes" is missing 🧬️mutations/📝set-notes/🦠️mutation/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📝set-notes" is missing 🧬️mutations/📝set-notes/🔺️diff/🦀️component.rs
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📝set-notes" is missing 🧬️mutations/📝set-notes/🔺️diff/🟦️component.ts
+  - 🌿️vcs: artifact "🌿️vcs" mutation "📝set-notes" is missing 🧬️mutations/📝set-notes/↩️inverse/🟦️component.ts
+  - 🌿️vcs: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌿️vcs: 🗿️artifacts/🌿️vcs/🧬️mutations/🔢set-counter/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: artifact "🎬️present" is missing ⚙️engine/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "🃏set-deck" is missing 🧬️mutations/🃏set-deck/🔺️diff/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "🃏set-deck" is missing 🧬️mutations/🃏set-deck/↩️inverse/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "🎞tiles" is missing 🧬️mutations/🎞tiles/🔺️diff/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "🎞tiles" is missing 🧬️mutations/🎞tiles/↩️inverse/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "📋set-tiles" is missing 🧬️mutations/📋set-tiles/🔺️diff/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "📋set-tiles" is missing 🧬️mutations/📋set-tiles/↩️inverse/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "📎set-source" is missing 🧬️mutations/📎set-source/🔺️diff/🟦️component.ts
+  - 🎞️animate: artifact "🎬️present" mutation "📎set-source" is missing 🧬️mutations/📎set-source/↩️inverse/🟦️component.ts
+  - 🎞️animate: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎞️animate: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: artifact "🎥️shooting" is missing ⚙️engine/🟦️component.ts
+  - 🎥️shooting: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎥️shooting: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔺️diff/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔺️diff/📖️component.grammar.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔺️diff/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🗣️dsl/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🗣️dsl/📖️component.grammar.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🗣️dsl/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🎒️pack/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🎒️pack/📡️component.protocol.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🎒️pack/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔧️op/📖️component.grammar.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🔧️op/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 📡️spr/🦀️component.rs
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 📡️spr/📡️component.protocol.semio
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 📡️spr/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" is missing ⚙️engine/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" mutation "🫙no-mutation" is missing 🧬️mutations/🫙no-mutation/🦠️mutation/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" mutation "🫙no-mutation" is missing 🧬️mutations/🫙no-mutation/🔺️diff/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" mutation "🫙no-mutation" is missing 🧬️mutations/🫙no-mutation/↩️inverse/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" mutation "📄set-document" is missing 🧬️mutations/📄set-document/🦠️mutation/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" mutation "📄set-document" is missing 🧬️mutations/📄set-document/🔺️diff/🟦️component.ts
+  - 🎪️demonstrator: artifact "🎪️playground" mutation "📄set-document" is missing 🧬️mutations/📄set-document/↩️inverse/🟦️component.ts
+  - 🎪️demonstrator: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🔧️op/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🧬️mutations/🫙no-mutation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🧬️mutations/🫙no-mutation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🧬️mutations/🫙no-mutation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🧬️mutations/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎪️demonstrator: 🗿️artifacts/🎪️playground/⚙️engine/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: artifact "🎬️sequence" is missing ⚙️engine/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➕edges-add" is missing 🧬️mutations/➕edges-add/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➕edges-add" is missing 🧬️mutations/➕edges-add/↩️inverse/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➖steps-remove" is missing 🧬️mutations/➖steps-remove/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➖steps-remove" is missing 🧬️mutations/➖steps-remove/↩️inverse/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➕steps-add" is missing 🧬️mutations/➕steps-add/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➕steps-add" is missing 🧬️mutations/➕steps-add/↩️inverse/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➖edges-remove" is missing 🧬️mutations/➖edges-remove/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "➖edges-remove" is missing 🧬️mutations/➖edges-remove/↩️inverse/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "🩹steps-patch" is missing 🧬️mutations/🩹steps-patch/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "🩹steps-patch" is missing 🧬️mutations/🩹steps-patch/↩️inverse/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "↔️edges-move" is missing 🧬️mutations/↔️edges-move/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "↔️edges-move" is missing 🧬️mutations/↔️edges-move/↩️inverse/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "🩹edges-patch" is missing 🧬️mutations/🩹edges-patch/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "🩹edges-patch" is missing 🧬️mutations/🩹edges-patch/↩️inverse/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "↔️steps-move" is missing 🧬️mutations/↔️steps-move/🔺️diff/🟦️component.ts
+  - 🎬️sequence: artifact "🎬️sequence" mutation "↔️steps-move" is missing 🧬️mutations/↔️steps-move/↩️inverse/🟦️component.ts
+  - 🎬️sequence: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🎬️sequence: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: artifact "🧊️3d" is missing ⚙️engine/🟦️component.ts
+  - 🏗️fem: artifact "◻2d" is missing ⚙️engine/🟦️component.ts
+  - 🏗️fem: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏗️fem: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: artifact "🏛️program" is missing ⚙️engine/🟦️component.ts
+  - 🏛️architect: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: artifact "🧊️process3d" is missing ⚙️engine/🟦️component.ts
+  - 🏭️process: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🔩️metal/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🪵️wood/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🤖️robotic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🧱️concrete/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: artifact "💠️lowpoly" is missing ⚙️engine/🟦️component.ts
+  - 💠️lowpoly: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💠️lowpoly: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: artifact "🔌️wires" is missing ⚙️engine/🟦️component.ts
+  - 💡️reasoning: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 💡️reasoning: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: artifact "📋️forms" is missing ⚙️engine/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➕add-step" is missing 🧬️mutations/➕add-step/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➕add-step" is missing 🧬️mutations/➕add-step/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➖remove-block" is missing 🧬️mutations/➖remove-block/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➖remove-block" is missing 🧬️mutations/➖remove-block/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "↔️move-step" is missing 🧬️mutations/↔️move-step/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "↔️move-step" is missing 🧬️mutations/↔️move-step/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "📖update-playbook" is missing 🧬️mutations/📖update-playbook/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "📖update-playbook" is missing 🧬️mutations/📖update-playbook/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "↔️move-block" is missing 🧬️mutations/↔️move-block/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "↔️move-block" is missing 🧬️mutations/↔️move-block/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➖remove-step" is missing 🧬️mutations/➖remove-step/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➖remove-step" is missing 🧬️mutations/➖remove-step/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "🩹update-block" is missing 🧬️mutations/🩹update-block/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "🩹update-block" is missing 🧬️mutations/🩹update-block/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➕add-block" is missing 🧬️mutations/➕add-block/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "➕add-block" is missing 🧬️mutations/➕add-block/↩️inverse/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "🩹update-step" is missing 🧬️mutations/🩹update-step/🔺️diff/🟦️component.ts
+  - 📋️forms: artifact "📋️forms" mutation "🩹update-step" is missing 🧬️mutations/🩹update-step/↩️inverse/🟦️component.ts
+  - 📋️forms: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/➕add-step/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/➖remove-block/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/↔️move-step/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/📖update-playbook/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/↔️move-block/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/➖remove-step/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/🩹update-block/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/➕add-block/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📋️forms: 🗿️artifacts/📋️forms/🧬️mutations/🩹update-step/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: artifact "📏️layout" is missing ⚙️engine/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "📖stories" is missing 🧬️mutations/📖stories/🔺️diff/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "📖stories" is missing 🧬️mutations/📖stories/↩️inverse/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "📄pages" is missing 🧬️mutations/📄pages/🔺️diff/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "📄pages" is missing 🧬️mutations/📄pages/↩️inverse/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "🔗links" is missing 🧬️mutations/🔗links/🔺️diff/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "🔗links" is missing 🧬️mutations/🔗links/↩️inverse/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "➕add-frame" is missing 🧬️mutations/➕add-frame/🔺️diff/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "➕add-frame" is missing 🧬️mutations/➕add-frame/↩️inverse/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "🩹patch-frame" is missing 🧬️mutations/🩹patch-frame/🔺️diff/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "🩹patch-frame" is missing 🧬️mutations/🩹patch-frame/↩️inverse/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "➖remove-frame" is missing 🧬️mutations/➖remove-frame/🔺️diff/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "➖remove-frame" is missing 🧬️mutations/➖remove-frame/↩️inverse/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "🧾set-data-fields" is missing 🧬️mutations/🧾set-data-fields/🔺️diff/🟦️component.ts
+  - 📏️layout: artifact "📏️layout" mutation "🧾set-data-fields" is missing 🧬️mutations/🧾set-data-fields/↩️inverse/🟦️component.ts
+  - 📏️layout: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📏️layout: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: artifact "📐️cad" is missing ⚙️engine/🟦️component.ts
+  - 📐️cad: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🏢️aec-building/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/📐️spatial-shape/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🏛️aec-building-structure/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🔥️aec-building-energy/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: artifact "📕️din4108" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📙️din18599" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📗️din16798" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1995" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1992" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1993" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1994" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📔️vdi3805" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📓️iso16757" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1991" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1996" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1998" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1999" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1997" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: artifact "📘️en1990" is missing ⚙️engine/🟦️component.ts
+  - 📕️norm: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📕️norm: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: artifact "📖️playbook" is missing ⚙️engine/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➕add-step" is missing 🧬️mutations/➕add-step/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➕add-step" is missing 🧬️mutations/➕add-step/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➖remove-block" is missing 🧬️mutations/➖remove-block/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➖remove-block" is missing 🧬️mutations/➖remove-block/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "↔️move-step" is missing 🧬️mutations/↔️move-step/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "↔️move-step" is missing 🧬️mutations/↔️move-step/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "📖update-playbook" is missing 🧬️mutations/📖update-playbook/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "📖update-playbook" is missing 🧬️mutations/📖update-playbook/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "↔️move-block" is missing 🧬️mutations/↔️move-block/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "↔️move-block" is missing 🧬️mutations/↔️move-block/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➖remove-step" is missing 🧬️mutations/➖remove-step/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➖remove-step" is missing 🧬️mutations/➖remove-step/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "🩹update-block" is missing 🧬️mutations/🩹update-block/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "🩹update-block" is missing 🧬️mutations/🩹update-block/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➕add-block" is missing 🧬️mutations/➕add-block/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "➕add-block" is missing 🧬️mutations/➕add-block/↩️inverse/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "🩹update-step" is missing 🧬️mutations/🩹update-step/🔺️diff/🟦️component.ts
+  - 📖️playbook: artifact "📖️playbook" mutation "🩹update-step" is missing 🧬️mutations/🩹update-step/↩️inverse/🟦️component.ts
+  - 📖️playbook: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: 🧩️extensions/🌀️procedural/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: artifact "📜️imperative" is missing ⚙️engine/🟦️component.ts
+  - 📜️imperative: artifact "📜️imperative" mutation "✂️step-collection" is missing 🧬️mutations/✂️step-collection/🔺️diff/🟦️component.ts
+  - 📜️imperative: artifact "📜️imperative" mutation "✂️step-collection" is missing 🧬️mutations/✂️step-collection/↩️inverse/🟦️component.ts
+  - 📜️imperative: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/🧠️logic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/📣️effect/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/🧮️math/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/🎮️control/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📜️imperative: 🧩️extensions/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: artifact "📸️remodel" is missing ⚙️engine/🟦️component.ts
+  - 📸️remodel: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📸️remodel: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🔺️diff/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🔺️diff/📖️component.grammar.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🔺️diff/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 🗣️dsl/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🗣️dsl/📖️component.grammar.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🗣️dsl/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 🎒️pack/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 🎒️pack/📡️component.protocol.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🎒️pack/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 🔧️op/📖️component.grammar.semio
+  - 🔋️energy: artifact "🔋️model" is missing 🔧️op/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing 📡️spr/🦀️component.rs
+  - 🔋️energy: artifact "🔋️model" is missing 📡️spr/📡️component.protocol.semio
+  - 🔋️energy: artifact "🔋️model" is missing 📡️spr/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" is missing ⚙️engine/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" mutation "🫙no-mutation" is missing 🧬️mutations/🫙no-mutation/🦠️mutation/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" mutation "🫙no-mutation" is missing 🧬️mutations/🫙no-mutation/🔺️diff/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" mutation "🫙no-mutation" is missing 🧬️mutations/🫙no-mutation/↩️inverse/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" mutation "📄set-document" is missing 🧬️mutations/📄set-document/🦠️mutation/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" mutation "📄set-document" is missing 🧬️mutations/📄set-document/🔺️diff/🟦️component.ts
+  - 🔋️energy: artifact "🔋️model" mutation "📄set-document" is missing 🧬️mutations/📄set-document/↩️inverse/🟦️component.ts
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️plant.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️dispatch.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️output.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️room_air.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️sizing.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️faults.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️precompute.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️evaporative.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️num.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️refrigeration.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️controls.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️material.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️iaq.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️electrical.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️fans.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️error.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️units.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️curves.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️sim.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️air_system.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️terminal.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️water.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️gains.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️solar_thermal.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️air_exchange.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️zone_air.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️props.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️schedule.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️heat_recovery.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️economics.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️envelope.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️site.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️zone_hvac.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️shw.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️daylight.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️model.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️airflow_network.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️metrics.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️calendar.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️humidity_eq.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️solar.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️fenestration.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️ideal_hvac.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️hvac_topo.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️coils.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️meters.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️comfort.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️kernel.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️results.rs
+  - 🔋️energy: taxonomy leaf file must be named 🦀️component.rs, found ⚙️engine/🦀️geometry.rs
+  - 🔋️energy: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🔧️op/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🧬️mutations/🫙no-mutation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🧬️mutations/🫙no-mutation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🧬️mutations/🫙no-mutation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🧬️mutations/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔋️energy: 🗿️artifacts/🔋️model/⚙️engine/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: artifact "🔌️jack" is missing ⚙️engine/🟦️component.ts
+  - 🔱️trinity: artifact "♻️rewrite" is missing ⚙️engine/🟦️component.ts
+  - 🔱️trinity: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: artifact "🕸️dag" is missing ⚙️engine/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "📋set-edges" is missing 🧬️mutations/📋set-edges/🔺️diff/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "📋set-edges" is missing 🧬️mutations/📋set-edges/↩️inverse/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "🔗nodes" is missing 🧬️mutations/🔗nodes/🔺️diff/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "🔗nodes" is missing 🧬️mutations/🔗nodes/↩️inverse/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "📄set-document" is missing 🧬️mutations/📄set-document/🔺️diff/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "📄set-document" is missing 🧬️mutations/📄set-document/↩️inverse/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "➡️edges" is missing 🧬️mutations/➡️edges/🔺️diff/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "➡️edges" is missing 🧬️mutations/➡️edges/↩️inverse/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "📋set-nodes" is missing 🧬️mutations/📋set-nodes/🔺️diff/🟦️component.ts
+  - 🕸️dag: artifact "🕸️dag" mutation "📋set-nodes" is missing 🧬️mutations/📋set-nodes/↩️inverse/🟦️component.ts
+  - 🕸️dag: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/🧬️mutations/📋set-edges/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/🧬️mutations/🔗nodes/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/🧬️mutations/➡️edges/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🕸️dag: 🗿️artifacts/🕸️dag/🧬️mutations/📋set-nodes/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: artifact "🖍️draw" is missing ⚙️engine/🟦️component.ts
+  - 🖍️draw: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🔄️fsm/✨️macros/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🔄️fsm/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: artifact "🖨️raster" is missing ⚙️engine/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "↔️move-layer" is missing 🧬️mutations/↔️move-layer/🔺️diff/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "↔️move-layer" is missing 🧬️mutations/↔️move-layer/↩️inverse/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "📄replace-document" is missing 🧬️mutations/📄replace-document/🔺️diff/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "📄replace-document" is missing 🧬️mutations/📄replace-document/↩️inverse/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "➖remove-layer" is missing 🧬️mutations/➖remove-layer/🔺️diff/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "➖remove-layer" is missing 🧬️mutations/➖remove-layer/↩️inverse/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "🩹patch-layer" is missing 🧬️mutations/🩹patch-layer/🔺️diff/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "🩹patch-layer" is missing 🧬️mutations/🩹patch-layer/↩️inverse/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "➕add-layer" is missing 🧬️mutations/➕add-layer/🔺️diff/🟦️component.ts
+  - 🖨️raster: artifact "🖨️raster" mutation "➕add-layer" is missing 🧬️mutations/➕add-layer/↩️inverse/🟦️component.ts
+  - 🖨️raster: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖨️raster: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: artifact "🗒️note" is missing ⚙️engine/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🗑️remove-asset" is missing 🧬️mutations/🗑️remove-asset/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🗑️remove-asset" is missing 🧬️mutations/🗑️remove-asset/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🧲set-snap-enabled" is missing 🧬️mutations/🧲set-snap-enabled/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🧲set-snap-enabled" is missing 🧬️mutations/🧲set-snap-enabled/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "✏️set-pencil-width" is missing 🧬️mutations/✏️set-pencil-width/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "✏️set-pencil-width" is missing 🧬️mutations/✏️set-pencil-width/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🧱set-blocks" is missing 🧬️mutations/🧱set-blocks/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🧱set-blocks" is missing 🧬️mutations/🧱set-blocks/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🌫️set-grid-opacity" is missing 🧬️mutations/🌫️set-grid-opacity/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🌫️set-grid-opacity" is missing 🧬️mutations/🌫️set-grid-opacity/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🧽set-eraser-radius" is missing 🧬️mutations/🧽set-eraser-radius/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🧽set-eraser-radius" is missing 🧬️mutations/🧽set-eraser-radius/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📥put-asset" is missing 🧬️mutations/📥put-asset/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📥put-asset" is missing 🧬️mutations/📥put-asset/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🔢set-grid-subdivisions" is missing 🧬️mutations/🔢set-grid-subdivisions/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "🔢set-grid-subdivisions" is missing 🧬️mutations/🔢set-grid-subdivisions/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📐set-snap-grid-spacing" is missing 🧬️mutations/📐set-snap-grid-spacing/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📐set-snap-grid-spacing" is missing 🧬️mutations/📐set-snap-grid-spacing/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📄set-document" is missing 🧬️mutations/📄set-document/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📄set-document" is missing 🧬️mutations/📄set-document/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📏set-grid-spacing" is missing 🧬️mutations/📏set-grid-spacing/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "📏set-grid-spacing" is missing 🧬️mutations/📏set-grid-spacing/↩️inverse/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "👁️set-grid-visible" is missing 🧬️mutations/👁️set-grid-visible/🔺️diff/🟦️component.ts
+  - 🗒️note: artifact "🗒️note" mutation "👁️set-grid-visible" is missing 🧬️mutations/👁️set-grid-visible/↩️inverse/🟦️component.ts
+  - 🗒️note: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/🗑️remove-asset/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/🧲set-snap-enabled/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/✏️set-pencil-width/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/🧱set-blocks/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/🌫️set-grid-opacity/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/🧽set-eraser-radius/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/📥put-asset/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/🔢set-grid-subdivisions/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/📐set-snap-grid-spacing/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/📏set-grid-spacing/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗒️note: 🗿️artifacts/🗒️note/🧬️mutations/👁️set-grid-visible/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: artifact "🧊️3d" is missing ⚙️engine/🟦️component.ts
+  - 🧩️puzzle: artifact "🖐️5d" is missing ⚙️engine/🟦️component.ts
+  - 🧩️puzzle: artifact "◻2d" is missing ⚙️engine/🟦️component.ts
+  - 🧩️puzzle: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧩️puzzle: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: artifact "🧊️3d" is missing ⚙️engine/🟦️component.ts
+  - 🧱️block: artifact "🖐️5d" is missing ⚙️engine/🟦️component.ts
+  - 🧱️block: artifact "◻2d" is missing ⚙️engine/🟦️component.ts
+  - 🧱️block: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🧱️block: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: artifact "🏠️home" is missing ⚙️engine/🟦️component.ts
+  - 🪐️space: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪐️space: 🗿️artifacts/🏠️home/⚙️engine/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: artifact "🗂️curate" is missing ⚙️engine/🟦️component.ts
+  - 🪵️sourcing: 🔌️plugin/🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🔌️plugin/🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🔌️plugin/🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🔌️plugin/🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🪵️beams/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🧱️slabs/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🪟️windows/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+Warning: command "bun ./📜️script.ts check" exited with non-zero status code
+
+
+ NX   Running target check for project @semio-tech/plugin-registry failed
+
+Failed tasks:
+
+- @semio-tech/plugin-registry:check
+
+Hint: run the command with --verbose for more details.
+
+1371 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1372 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1373 |  */
+1374 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1375 |   const status = runCmdInternal(cmd, args, opts);
+1376 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/plugin-registry:check exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1376:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:599:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:815:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:850:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:5435:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

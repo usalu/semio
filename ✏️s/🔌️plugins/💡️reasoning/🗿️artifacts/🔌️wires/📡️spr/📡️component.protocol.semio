@@ -1,7 +1,7 @@
 dialect protocol
 protocol wires.spr
 version 1
-schema wires.operation
+schema wires.mutation
 start record
 framing record
 record reasoning.wires-add-node tag 1

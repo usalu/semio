@@ -801,10 +801,10 @@ impl crate::os_store::DocumentPack for DerivedDocument {
         assert_eq!(parsed, doc);
     }
 
-    // --- end-to-end derive test: an Operation enum via #[derive(DslOps)] ---
+    // --- end-to-end derive test: a Mutation enum via #[derive(DslOps)] ---
 
     #[derive(Clone, Debug, PartialEq, DslOps, serde::Serialize, serde::Deserialize)]
-    enum DerivedOperation {
+    enum DerivedMutation {
         #[dsl(key = "setCategory")]
         SetCategory { category: String },
         #[dsl(key = "setAirtightness")]
@@ -815,7 +815,7 @@ impl crate::os_store::DocumentPack for DerivedDocument {
 
 //#region 🔖️OpCodec
 /// 🎞️ Handcrafted OpText (P6).
-impl crate::os_spr::OpText for DerivedOperation {
+impl crate::os_spr::OpText for DerivedMutation {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -840,7 +840,7 @@ impl crate::os_spr::OpText for DerivedOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl crate::os_spr::OpBinary for DerivedOperation {
+impl crate::os_spr::OpBinary for DerivedMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
@@ -887,11 +887,11 @@ impl crate::os_spr::OpBinary for DerivedOperation {
 
     #[test]
     fn derived_op_text_round_trips_every_variant_as_one_line() {
-        let ops = vec![DerivedOperation::SetCategory { category: "roof".to_string() }, DerivedOperation::SetAirtightness { n50: 0.9 }, DerivedOperation::Reset];
+        let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
         for op in ops {
-            let printed = <DerivedOperation as crate::os_spr::OpText>::print_op(&op);
+            let printed = <DerivedMutation as crate::os_spr::OpText>::print_op(&op);
             assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
-            let parsed = <DerivedOperation as crate::os_spr::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+            let parsed = <DerivedMutation as crate::os_spr::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
             assert_eq!(parsed, op, "OpText round trip diverged for {printed:?}");
         }
     }
@@ -905,12 +905,12 @@ impl crate::os_spr::OpBinary for DerivedOperation {
 
     #[test]
     fn derived_op_satisfies_vcs_test_support_helpers() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DerivedOperation::SetCategory { category: "wall".to_string() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() });
     }
 
     #[test]
     fn derived_op_binary_round_trips_every_variant_and_matches_text() {
-        let ops = vec![DerivedOperation::SetCategory { category: "roof".to_string() }, DerivedOperation::SetAirtightness { n50: 0.9 }, DerivedOperation::Reset];
+        let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
         for op in ops {
             crate::os_store::test_support::assert_op_text_binary_equivalence(&op);
         }

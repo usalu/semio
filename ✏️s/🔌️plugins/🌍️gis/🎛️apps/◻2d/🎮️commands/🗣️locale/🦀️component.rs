@@ -1,8 +1,8 @@
 //! 🗣️ GIS 2D play app command — the host-pushed locale switch (undeclared in the manifest, never in
 //! the command palette; host/test infra dispatches it directly).
 
-use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigOperation};
-use crate::artifacts::gismap::op::GisMapOperation;
+use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
+use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Gis2dConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Gis2dConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -49,7 +49,7 @@ mod tests {
     fn gis2d_labels_translate_inspector_and_layers_in_german() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
-        assert!(result.operations.is_empty(), "locale is config state, not a document edit");
+        assert!(result.mutations.is_empty(), "locale is config state, not a document edit");
 
         let inspector_json = render(&mut app, GIS2D_PLAY_BODY_INSPECTION);
         assert!(inspector_json.contains("Kartenansicht"));

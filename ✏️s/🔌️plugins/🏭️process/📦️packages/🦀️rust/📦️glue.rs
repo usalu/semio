@@ -15,7 +15,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
 // framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
 // lint does not fire on the trait impl itself (only on the free functions the taxonomy split creates),
@@ -35,6 +35,64 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod steps {
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📋steps/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📋steps/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📋steps/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod machines {
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/🛠️machines/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/🛠️machines/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/🛠️machines/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_stock {
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/🧱set-stock/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/🧱set-stock/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/🧱set-stock/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_cursor {
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/⏱️set-cursor/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/⏱️set-cursor/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/⏱️set-cursor/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_document {
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🧊️process3d/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+        }
+
         #[path = "../../🗿️artifacts/🧊️process3d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🧊️process3d/🎒️pack/🦀️component.rs"]

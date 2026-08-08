@@ -1,9 +1,9 @@
 //! 👁️ Imperative play app commands — ephemeral view state / runtime effect. Selection is scratch, `run`
 //! evaluates into config, `setLocale` is config-only (was ephemeral `ViewModel::locale`).
 
-use crate::apps::imperative::config::ImperativeConfigOperation;
+use crate::apps::imperative::config::ImperativeConfigMutation;
 use crate::artifacts::imperative::engine::ImperativeHost;
-use crate::artifacts::imperative::op::ImperativeOperation;
+use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::ImperativeDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -19,8 +19,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ImperativeConfigOperation::SetSelectedSteps { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ImperativeConfigMutation::SetSelectedSteps { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -34,11 +34,11 @@ pub mod run {
     #[dsl(keyword = "run")]
     pub struct Run {}
 
-    pub fn handle(_payload: &Run, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation>, Fault> {
+    pub fn handle(_payload: &Run, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
         let host = ImperativeHost::from_document(doc.projection.clone());
         let result = host.run();
         let json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
-        Ok(Emit::config(vec![ImperativeConfigOperation::SetRunOutput { json }]))
+        Ok(Emit::config(vec![ImperativeConfigMutation::SetRunOutput { json }]))
     }
 }
 //#endregion 🔖️Run
@@ -54,8 +54,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation>, Fault> {
-        Ok(Emit::config(vec![ImperativeConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+        Ok(Emit::config(vec![ImperativeConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

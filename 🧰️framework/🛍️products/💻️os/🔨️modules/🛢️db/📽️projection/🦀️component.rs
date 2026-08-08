@@ -6,7 +6,7 @@
 //! (`## db crate family`, `db_projection` row) and Part 2 of the approved plan.
 //!
 //! 🎯️ Design choice: per the contract's "no db crate below `db_document` interprets operation
-//! semantics" rule, this crate never looks inside a `protocol::OperationEnvelope`'s
+//! semantics" rule, this crate never looks inside a `protocol::MutationEnvelope`'s
 //! `diff.schema`/`diff.payload` itself — every `ProjectionClass::apply` is supplied by a higher
 //! layer (`db_document`, or an app-level program) that owns the actual domain interpretation. This
 //! crate only owns the mechanism around that: dependency ordering, incremental application,
@@ -51,7 +51,7 @@ use {DbError, DocumentId};
 use db_index::ProjectionIndex;
 use db_state::{PGraph, PMap, TouchedRegion, TouchedSet};
 use db_storage::IndexStorage;
-use protocol::OperationEnvelope;
+use protocol::MutationEnvelope;
 
 //#region 🔖️State
 /// @emoji 🧬️ What a projection's in-memory state must support to round-trip through
@@ -196,7 +196,7 @@ pub trait ProjectionClass: Send + Sync {
 
     /// @emoji ⏩️ Computes the next state from `state`, `envelope`, and this step's already-computed
     /// sibling states (`deps`).
-    fn apply(&self, state: &Self::State, envelope: &OperationEnvelope, deps: &DepView) -> Result<Self::State, DbError>;
+    fn apply(&self, state: &Self::State, envelope: &MutationEnvelope, deps: &DepView) -> Result<Self::State, DbError>;
 }
 
 /// @emoji 🎭️ The object-safe (dyn-compatible) view of a `ProjectionClass` — every method operates
@@ -210,7 +210,7 @@ pub trait ErasedProjection: Send + Sync {
     fn reads(&self) -> &'static [&'static str];
     fn affected_by(&self, touched: &TouchedSet) -> bool;
     fn initial_bytes(&self) -> Vec<u8>;
-    fn apply_bytes(&self, state_bytes: &[u8], envelope: &OperationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError>;
+    fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError>;
 }
 
 struct ErasedWrapper<P: ProjectionClass>(P);
@@ -240,7 +240,7 @@ impl<P: ProjectionClass> ErasedProjection for ErasedWrapper<P> {
         self.0.initial().encode()
     }
 
-    fn apply_bytes(&self, state_bytes: &[u8], envelope: &OperationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError> {
+    fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError> {
         let state = P::State::decode(state_bytes)?;
         Ok(self.0.apply(&state, envelope, deps)?.encode())
     }
@@ -405,7 +405,7 @@ impl<'a> ProjectionEngine<'a> {
         }
     }
 
-    fn require_matching_document(&self, envelope: &OperationEnvelope) -> Result<(), DbError> {
+    fn require_matching_document(&self, envelope: &MutationEnvelope) -> Result<(), DbError> {
         if envelope.document_id.0 != self.document.0 {
             return Err(DbError::InvalidArgument(format!("envelope document {:?} does not match this engine's document {:?}", envelope.document_id.0, self.document.0)));
         }
@@ -422,7 +422,7 @@ impl<'a> ProjectionEngine<'a> {
     /// says no to is left exactly as it was (no write, no frontier advance) and its prior state is
     /// carried forward unchanged for `DepView`/the returned map. Returns every projection's
     /// (possibly carried-forward) state, keyed by id.
-    pub fn apply_envelope(&self, command_seq: u64, envelope: &OperationEnvelope, touched: &TouchedSet) -> Result<PMap<String, Vec<u8>>, DbError> {
+    pub fn apply_envelope(&self, command_seq: u64, envelope: &MutationEnvelope, touched: &TouchedSet) -> Result<PMap<String, Vec<u8>>, DbError> {
         self.require_matching_document(envelope)?;
         let mut deps = DepView::default();
         let mut out: PMap<String, Vec<u8>> = PMap::new();
@@ -451,7 +451,7 @@ impl<'a> ProjectionEngine<'a> {
     /// the exact same `should_run` call `apply_envelope` uses. This is the ground truth
     /// `apply_envelope`'s persisted, checkpoint-resuming path is checked against by the
     /// rebuild==incremental law (see `🧪️Tests::rebuild_equals_incremental_after_checkpoint_resume`).
-    pub fn rebuild_in_memory(&self, events: &[(u64, OperationEnvelope, TouchedSet)]) -> Result<PMap<String, Vec<u8>>, DbError> {
+    pub fn rebuild_in_memory(&self, events: &[(u64, MutationEnvelope, TouchedSet)]) -> Result<PMap<String, Vec<u8>>, DbError> {
         let mut states: Vec<Vec<u8>> = self.projections.iter().map(|projection| projection.initial_bytes()).collect();
         for (_, envelope, touched) in events {
             self.require_matching_document(envelope)?;
@@ -482,7 +482,7 @@ impl<'a> ProjectionEngine<'a> {
     /// checkpoint. This is the recovery path from a `DbError::Conflict` schema-version mismatch
     /// surfaced by `apply_envelope`/`state_at` — a projection whose `schema_version()` was bumped
     /// gets a fresh, current-version checkpoint by replaying its full history once.
-    pub fn rebuild_and_persist(&self, events: &[(u64, OperationEnvelope, TouchedSet)], final_command_seq: u64) -> Result<PMap<String, Vec<u8>>, DbError> {
+    pub fn rebuild_and_persist(&self, events: &[(u64, MutationEnvelope, TouchedSet)], final_command_seq: u64) -> Result<PMap<String, Vec<u8>>, DbError> {
         let final_states = self.rebuild_in_memory(events)?;
         for projection in &self.projections {
             let id = projection.id().to_string();
@@ -512,7 +512,7 @@ impl<'a> ProjectionEngine<'a> {
     /// `ProjectionIndex::record`/any `IndexStorage` write). Dependency states for the preview step
     /// are the DEPENDENCIES' own canonical state at `base_frontier_seq` — a preview augments one
     /// projection, it does not cascade a preview through the whole DAG.
-    pub fn preview_augmented(&self, projection_id: &str, base_frontier_seq: u64, preview_envelope: &OperationEnvelope) -> Result<Vec<u8>, DbError> {
+    pub fn preview_augmented(&self, projection_id: &str, base_frontier_seq: u64, preview_envelope: &MutationEnvelope) -> Result<Vec<u8>, DbError> {
         self.require_matching_document(preview_envelope)?;
         let projection = self.projection_by_id(projection_id)?;
         let base = match self.state_at(projection_id, base_frontier_seq)? {
@@ -571,7 +571,7 @@ mod tests {
             0
         }
 
-        fn apply(&self, state: &u64, _envelope: &OperationEnvelope, _deps: &DepView) -> Result<u64, DbError> {
+        fn apply(&self, state: &u64, _envelope: &MutationEnvelope, _deps: &DepView) -> Result<u64, DbError> {
             Ok(state + 1)
         }
     }
@@ -608,20 +608,20 @@ mod tests {
             0
         }
 
-        fn apply(&self, state: &u64, _envelope: &OperationEnvelope, deps: &DepView) -> Result<u64, DbError> {
+        fn apply(&self, state: &u64, _envelope: &MutationEnvelope, deps: &DepView) -> Result<u64, DbError> {
             let dependency_value: u64 = deps.get(self.dependency_id)?.unwrap_or(0);
             Ok(state + 1 + dependency_value)
         }
     }
 
-    fn envelope(document: &str, operation: &str, seq: u64) -> OperationEnvelope {
-        OperationEnvelope {
-            operation_id: protocol::OperationId(operation.to_string()),
+    fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope {
+        MutationEnvelope {
+            mutation_id: protocol::MutationId(operation.to_string()),
             document_id: protocol::DocumentId(document.to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }
@@ -840,7 +840,7 @@ mod tests {
         // Alternating touched paths so "count"/"sum" run on some steps and are skipped on others —
         // "never" is never touched and has no dependents, so it should stay at its initial state.
         let touched_paths: [&[&str]; 5] = [&["doc"], &["unrelated"], &["doc"], &["doc", "unrelated"], &["unrelated"]];
-        let events: Vec<(u64, OperationEnvelope, TouchedSet)> = (1..=5u64).map(|seq| (seq, envelope("doc-1", &format!("op-{seq}"), seq), touch(touched_paths[(seq - 1) as usize]))).collect();
+        let events: Vec<(u64, MutationEnvelope, TouchedSet)> = (1..=5u64).map(|seq| (seq, envelope("doc-1", &format!("op-{seq}"), seq), touch(touched_paths[(seq - 1) as usize]))).collect();
 
         // Incremental path: apply seqs 1-3 against one engine instance, drop it, then resume with a
         // FRESH engine instance (forcing seqs 4-5 to load their checkpoint from `storage`, not from

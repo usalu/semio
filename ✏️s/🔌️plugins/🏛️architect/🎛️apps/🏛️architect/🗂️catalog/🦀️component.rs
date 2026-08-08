@@ -10,13 +10,13 @@ use crate::apps::architect::chrome::{element_label, entity_to_json};
 use crate::artifacts::program::engine::adjacency::normalize_pair;
 use crate::artifacts::program::engine::analyze::AnalysisResult;
 use crate::artifacts::program::engine::report::ProgramReport;
-use crate::artifacts::program::op::ProgramOperation;
+use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::registers::{
     Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ProgramElementPatch, ReportKind,
     ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, StakeholderPatch, UserCategory, UserProfile, ValidationStatus,
 };
 use crate::artifacts::program::{EntityHeader, EntityId, Program, TextField, TraceKind, TraceLink};
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
@@ -515,19 +515,19 @@ pub fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra
     serde_json::from_value(value).ok()
 }
 
-pub fn add_register_item_operation(program: &Program, register: &str, label: &str) -> Option<(ProgramOperation, EntityId)> {
+pub fn add_register_item_operation(program: &Program, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
     macro_rules! add {
         ($field:ident, $operation:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (ProgramOperation::$operation(CollectionOperation::Add { index: program.$field.len(), item: item }), id)
+            (ProgramMutation::$operation(CollectionMutation::Add { index: program.$field.len(), item: item }), id)
         }};
     }
     Some(match register {
         "elements" => {
             let item = default_element(label);
             let id = item.header.id.clone();
-            (ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: item }), id)
+            (ProgramMutation::Elements(CollectionMutation::Add { index: program.elements.len(), item: item }), id)
         }
         "stakeholders" => add!(stakeholders, Stakeholders, default_stakeholder(label)),
         "requirements" => add!(requirements, Requirements, default_requirement(label)),
@@ -575,16 +575,16 @@ pub fn add_register_item_operation(program: &Program, register: &str, label: &st
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to", "to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (ProgramOperation::Traces(CollectionOperation::Add { index: program.traces.len(), item: item }), id)
+            (ProgramMutation::Traces(CollectionMutation::Add { index: program.traces.len(), item: item }), id)
         }
         _ => return None,
     })
 }
 
-pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramOperation> {
+pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramMutation> {
     macro_rules! remove {
         ($operation:ident) => {
-            ProgramOperation::$operation(CollectionOperation::Remove { id: entity_id })
+            ProgramMutation::$operation(CollectionMutation::Remove { id: entity_id })
         };
     }
     Some(match register {
@@ -658,10 +658,10 @@ pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Op
     })
 }
 
-pub fn patch_register_item_operation(register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramOperation> {
+pub fn patch_register_item_operation(register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramMutation> {
     macro_rules! patch {
         ($operation:ident, $ty:ty) => {
-            ProgramOperation::$operation(CollectionOperation::Patch { id: entity_id, patch: serde_json::from_value::<$ty>(patch).ok()? })
+            ProgramMutation::$operation(CollectionMutation::Patch { id: entity_id, patch: serde_json::from_value::<$ty>(patch).ok()? })
         };
     }
     Some(match register {

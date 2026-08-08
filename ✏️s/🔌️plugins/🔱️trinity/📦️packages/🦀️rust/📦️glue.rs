@@ -1,5 +1,3 @@
-extern crate infinite_canvas as infinite_board_port_directed_normal;
-extern crate infinite_canvas as infinite_board_port_directed;
 //! 🔺️ Trinity plugin — Jack and Rewrite apps in one hot-swappable WASM plugin.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]`
@@ -8,6 +6,8 @@ extern crate infinite_canvas as infinite_board_port_directed;
 //! back out to the owner-root tree). The grouping modules carry `#[path = "."]` so their own names
 //! are not spliced into that base directory.
 
+extern crate infinite_canvas as infinite_board_port_directed_normal;
+extern crate infinite_canvas as infinite_board_port_directed;
 #[allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
@@ -17,7 +17,7 @@ extern crate semio_framework_os_kernel as vcs;
 // single `DocumentApp::handle` match, one function per command — the uniform `Result<Emit<_, _>,
 // Fault>` signature is dictated by the dispatch call site (some commands in the same group DO fail;
 // others never do), so per-function `Ok(...)`-only bodies are intentional, not a mistake to unwrap.
-#![allow(clippy::unnecessary_wraps)]
+#[allow(clippy::unnecessary_wraps)]
 
 //#region 🔤️Jack kernel
 #[path = "../../🌳️ast/🦀️component.rs"]
@@ -28,6 +28,7 @@ pub mod lexer;
 pub mod executor;
 #[path = "../../🗣️language-service/🦀️component.rs"]
 pub mod language_service;
+pub use language_service as core;
 //#endregion 🔤️Jack kernel
 
 //#region 🔖️Artifacts
@@ -51,6 +52,104 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/🔌️jack/🔧️op/🦀️component.rs"]
             mod component;
             pub use component::*;
+        }
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_data_property {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/🎛set-data-property/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/🎛set-data-property/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/🎛set-data-property/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_fixture {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/🎛set-fixture/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/🎛set-fixture/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/🎛set-fixture/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod clear_data_property {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌clear-data-property/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌clear-data-property/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌clear-data-property/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod create_edge {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌create-edge/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌create-edge/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌create-edge/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod create_node {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌create-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌create-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌create-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod delete_edge {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌delete-edge/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌delete-edge/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌delete-edge/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod delete_node {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌delete-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌delete-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌delete-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod rename {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌rename/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌rename/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌rename/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod reposition {
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌reposition/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌reposition/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️jack/🧬️mutations/📌reposition/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
         }
 
         #[path = "."]
@@ -100,6 +199,24 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs"]
             mod component;
             pub use component::*;
+        }
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/♻️rewrite/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_state {
+                #[path = "../../🗿️artifacts/♻️rewrite/🧬️mutations/🎛set-state/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/♻️rewrite/🧬️mutations/🎛set-state/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/♻️rewrite/🧬️mutations/🎛set-state/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
         }
 
         #[path = "."]
@@ -352,7 +469,7 @@ pub mod apps {
 //#region 🔖️Bundle
 /// 🗂️ Registers this crate's two document kinds' pack↔dsl codecs so `framework/sync`'s
 /// `FolderEndpoint::Pack` (and any other schema-string-keyed caller) can print/parse them without
-/// depending on the artifacts' concrete `Projection`/`Operation` types.
+/// depending on the artifacts' concrete `Projection`/`Mutation` types.
 fn register_trinity_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::jack::TrinityJackPlayApp>(artifacts::jack::TRINITY_GRAPH_SCHEMA);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::rewrite::TrinityRewritePlayApp>(artifacts::rewrite::REWRITE_RULE_SCHEMA);

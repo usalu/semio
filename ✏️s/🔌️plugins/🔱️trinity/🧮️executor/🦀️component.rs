@@ -1,7 +1,7 @@
 //! 🧮️ Trinity jack query executor.
 #![allow(dead_code)]
 
-use crate::artifacts::jack::op::{apply_trinity_graph_operations, TrinityGraphOperation};
+use crate::artifacts::jack::mutations::{apply_trinity_graph_mutations, TrinityGraphMutation};
 use crate::artifacts::jack::{port_key, Camera, Edge, EntityRef, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -18,7 +18,7 @@ pub struct Binding {
 }
 
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
-pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphOperation>), String> {
+pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
     let mut fixture = graph.to_fixture();
     let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
@@ -38,15 +38,15 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
             Clause::Create(pattern) => {
                 let batch = emit_create_operations(&fixture, pattern)?;
                 operations.extend(batch.iter().cloned());
-                fixture = apply_trinity_graph_operations(fixture, &batch).map_err(|e| e.to_string())?;
+                fixture = apply_trinity_graph_mutations(fixture, &batch).map_err(|e| e.to_string())?;
                 view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
             }
             Clause::Delete(vars) => {
                 for var in vars {
                     if let Some(id) = bindings.first().and_then(|b| b.nodes.get(var).cloned()) {
-                        let operation = TrinityGraphOperation::DeleteNode { id };
+                        let operation = TrinityGraphMutation::DeleteNode { id };
                         operations.push(operation.clone());
-                        fixture = apply_trinity_graph_operations(fixture, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
+                        fixture = apply_trinity_graph_mutations(fixture, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
                         view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
                     }
                 }
@@ -57,7 +57,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                     if let Some(node_id) = b.nodes.get(&item.var) {
                         let operation = emit_set_operation(&fixture, node_id, &item.prop, item.value.clone())?;
                         operations.push(operation.clone());
-                        fixture = apply_trinity_graph_operations(fixture, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
+                        fixture = apply_trinity_graph_mutations(fixture, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
                         view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
                     }
                 }
@@ -67,7 +67,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                 if existing.is_empty() {
                     let batch = emit_create_operations(&fixture, pattern)?;
                     operations.extend(batch.iter().cloned());
-                    fixture = apply_trinity_graph_operations(fixture, &batch).map_err(|e| e.to_string())?;
+                    fixture = apply_trinity_graph_mutations(fixture, &batch).map_err(|e| e.to_string())?;
                     view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
                 }
             }
@@ -84,7 +84,7 @@ pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
     let query = parse(source)?;
     let (result, operations) = execute(graph, &query)?;
     if !operations.is_empty() {
-        let fixture = apply_trinity_graph_operations(graph.to_fixture(), &operations).map_err(|e| e.to_string())?;
+        let fixture = apply_trinity_graph_mutations(graph.to_fixture(), &operations).map_err(|e| e.to_string())?;
         *graph = Graph::from_fixture(fixture).map_err(|e| e.to_string())?;
     }
     Ok(result)
@@ -243,28 +243,28 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     QueryResult::table(columns, rows)
 }
 
-fn emit_set_operation(fixture: &GraphFixture, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphOperation, String> {
+fn emit_set_operation(fixture: &GraphFixture, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
     let node = fixture.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
         "name" => {
             let PropertyValue::String(name) = value else {
                 return Err(format!("node {node_id}.name expects string value"));
             };
-            Ok(TrinityGraphOperation::Rename { id: node_id.to_string(), name })
+            Ok(TrinityGraphMutation::Rename { id: node_id.to_string(), name })
         }
         "x" => {
             let x = value.as_f64().ok_or_else(|| format!("node {node_id}.x expects number value"))?;
-            Ok(TrinityGraphOperation::Reposition { id: node_id.to_string(), x, y: node.y })
+            Ok(TrinityGraphMutation::Reposition { id: node_id.to_string(), x, y: node.y })
         }
         "y" => {
             let y = value.as_f64().ok_or_else(|| format!("node {node_id}.y expects number value"))?;
-            Ok(TrinityGraphOperation::Reposition { id: node_id.to_string(), x: node.x, y })
+            Ok(TrinityGraphMutation::Reposition { id: node_id.to_string(), x: node.x, y })
         }
-        _ => Ok(TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node(node_id.to_string()), key: prop.to_string(), value }),
+        _ => Ok(TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node(node_id.to_string()), key: prop.to_string(), value }),
     }
 }
 
-fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<Vec<TrinityGraphOperation>, String> {
+fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
     let left_id = format!("{}-{}", left.var, fixture.nodes.len());
     let mut operations = Vec::new();
@@ -272,10 +272,10 @@ fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<V
     if pattern.edge.is_some() {
         left_ports.push(Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
     }
-    operations.push(TrinityGraphOperation::CreateNode { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: fixture.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, ports: left_ports });
+    operations.push(TrinityGraphMutation::CreateNode { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: fixture.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, ports: left_ports });
     if let Some(edge_pat) = &pattern.edge {
         let right_id = format!("{}-{}", edge_pat.right.var, fixture.nodes.len() + 1);
-        operations.push(TrinityGraphOperation::CreateNode {
+        operations.push(TrinityGraphMutation::CreateNode {
             id: right_id.clone(),
             kind: edge_pat.right.kind.clone(),
             name: edge_pat.right.var.clone(),
@@ -285,7 +285,7 @@ fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<V
             height: 40.0,
             ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
         });
-        operations.push(TrinityGraphOperation::CreateEdge {
+        operations.push(TrinityGraphMutation::CreateEdge {
             id: format!("e-{}", fixture.edges.len()),
             kind: edge_pat.kind.clone().unwrap_or_else(|| "Connection".into()),
             source: port_key(&left_id, "out"),

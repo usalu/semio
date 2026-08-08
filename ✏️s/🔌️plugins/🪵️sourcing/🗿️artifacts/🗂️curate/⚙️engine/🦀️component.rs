@@ -831,3 +831,36 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+pub struct SourcingEngine {
+    projection: crate::artifacts::curate::SourcingDocument,
+}
+
+impl SourcingEngine {
+    pub fn new(projection: crate::artifacts::curate::SourcingDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for SourcingEngine {
+    type Projection = crate::artifacts::curate::SourcingDocument;
+    type Mutation = crate::artifacts::curate::mutations::SourcingMutation;
+    type Diff = crate::artifacts::curate::diff::SourcingDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::curate::mutations::apply_sourcing_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

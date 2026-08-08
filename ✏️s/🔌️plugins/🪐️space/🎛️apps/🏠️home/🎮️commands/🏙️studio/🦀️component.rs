@@ -3,8 +3,8 @@
 //! One nested `pub mod` per payload (the `app_commands!` shape — see `apps::home::🦀️component.rs`'s
 //! `🔖️HomeCommand` region, which `use`s each of these modules flat).
 
-use crate::apps::home::config::{HomeConfig, HomeConfigOperation};
-use crate::artifacts::home::op::SHomeOperation;
+use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
+use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 
@@ -35,11 +35,11 @@ pub mod create_studio {
 
     /// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation)
     /// and navigate the shell to the new studio route (host effect).
-    fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeOperation, HomeConfigOperation> {
-        Emit { document_operations: vec![SHomeOperation::SetCatalogGeneration { value: catalog_generation + 1 }], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
+    fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
+        Emit { document_mutations: vec![SHomeMutation::SetCatalogGeneration { value: catalog_generation + 1 }], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
     }
 
-    pub fn handle(payload: &CreateStudio, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeOperation, HomeConfigOperation>, Fault> {
+    pub fn handle(payload: &CreateStudio, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         let generation = doc.projection.catalog_generation;
         match payload.kind.as_str() {
             "folder" => {
@@ -100,7 +100,7 @@ pub mod bind_space_file {
         Ok(())
     }
 
-    pub fn handle(payload: &BindSpaceFile, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeOperation, HomeConfigOperation>, Fault> {
+    pub fn handle(payload: &BindSpaceFile, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = bind_studio_file(&payload.space_id, &payload.file_path);
@@ -126,12 +126,12 @@ pub mod import_space {
         pub dsl: Option<String>,
     }
 
-    pub fn handle(payload: &ImportSpace, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeOperation, HomeConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportSpace, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         let generation = doc.projection.catalog_generation;
         match &payload.dsl {
             Some(dsl) => {
                 if import_os_space_from_dsl(dsl, crate::apps::home::catalog_port()).is_ok() {
-                    Ok(Emit::operations(vec![SHomeOperation::SetCatalogGeneration { value: generation + 1 }]))
+                    Ok(Emit::mutations(vec![SHomeMutation::SetCatalogGeneration { value: generation + 1 }]))
                 } else {
                     Ok(Emit::default())
                 }
@@ -153,7 +153,7 @@ pub mod open_space {
         pub space_id: String,
     }
 
-    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeOperation, HomeConfigOperation>, Fault> {
+    pub fn handle(payload: &OpenSpace, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
         eprintln!("[DEBUG] home openSpace id={}", payload.space_id);
         Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
     }

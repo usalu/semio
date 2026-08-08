@@ -1,7 +1,7 @@
 dialect protocol
 protocol vcs.spr
 version 1
-schema vcs.demo.operation
+schema vcs.demo.mutation
 start record
 framing record
 record vcs.vcs-add-node tag 1

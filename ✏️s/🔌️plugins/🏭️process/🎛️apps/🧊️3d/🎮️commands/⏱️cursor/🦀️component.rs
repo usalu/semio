@@ -1,8 +1,8 @@
 //! ⏱️ Process 3d play app commands — the process timeline cursor (`resolved_up_to`), NOT framework
 //! History — these move the replay cursor.
 
-use crate::apps::process3d::config::{Process3dConfig, Process3dConfigOperation};
-use crate::artifacts::process3d::{op::Process3dOperation, Process3dDocument};
+use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::artifacts::process3d::{op::Process3dMutation, Process3dDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,10 +16,10 @@ pub mod set_cursor {
         pub value: Option<u64>,
     }
 
-    pub fn handle(payload: &SetCursor, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetCursor, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.projection;
         let resolved = payload.value.map(|n| (n as usize).min(fixture.steps.len()));
-        Ok(Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: resolved }]))
+        Ok(Emit::mutations(vec![Process3dMutation::SetCursor { resolved_up_to: resolved }]))
     }
 }
 //#endregion 🔖️SetCursor
@@ -34,11 +34,11 @@ pub mod step_cursor {
         pub delta: i64,
     }
 
-    pub fn handle(payload: &StepCursor, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
+    pub fn handle(payload: &StepCursor, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.projection;
         let len = fixture.steps.len();
         let current = fixture.resolved_up_to.unwrap_or(len) as i64;
-        Ok(Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + payload.delta).clamp(0, len as i64) as usize) }]))
+        Ok(Emit::mutations(vec![Process3dMutation::SetCursor { resolved_up_to: Some((current + payload.delta).clamp(0, len as i64) as usize) }]))
     }
 }
 //#endregion 🔖️StepCursor
@@ -51,11 +51,11 @@ pub mod step_cursor_back {
     #[dsl(keyword = "step-cursor-back")]
     pub struct StepCursorBack {}
 
-    pub fn handle(_payload: &StepCursorBack, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
+    pub fn handle(_payload: &StepCursorBack, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.projection;
         let len = fixture.steps.len();
         let current = fixture.resolved_up_to.unwrap_or(len) as i64;
-        Ok(Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current - 1).clamp(0, len as i64) as usize) }]))
+        Ok(Emit::mutations(vec![Process3dMutation::SetCursor { resolved_up_to: Some((current - 1).clamp(0, len as i64) as usize) }]))
     }
 }
 //#endregion 🔖️StepCursorBack
@@ -68,11 +68,11 @@ pub mod step_cursor_forward {
     #[dsl(keyword = "step-cursor-forward")]
     pub struct StepCursorForward {}
 
-    pub fn handle(_payload: &StepCursorForward, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
+    pub fn handle(_payload: &StepCursorForward, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.projection;
         let len = fixture.steps.len();
         let current = fixture.resolved_up_to.unwrap_or(len) as i64;
-        Ok(Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).clamp(0, len as i64) as usize) }]))
+        Ok(Emit::mutations(vec![Process3dMutation::SetCursor { resolved_up_to: Some((current + 1).clamp(0, len as i64) as usize) }]))
     }
 }
 //#endregion 🔖️StepCursorForward

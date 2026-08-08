@@ -20,15 +20,15 @@ use crate::apps::note::commands::nudge::{nudge_selection, nudge_selection_down, 
 use crate::apps::note::commands::selection::{clear_selection, select_all, set_hover, set_selection};
 use crate::apps::note::commands::snap::{set_snap_enabled, set_snap_grid_spacing};
 use crate::apps::note::commands::utility::set_active_utility;
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::apps::note::modes::edit;
 use crate::apps::note::modes::edit::windows::{composite, navigator};
 use crate::apps::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::note::terminology::note_play_labels;
 use crate::artifacts::note::engine::empty_note_document;
-use crate::artifacts::note::op::NoteOperation;
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteDocument, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::EngineHandles;
 use std::collections::HashMap;
 
@@ -71,7 +71,7 @@ semio_framework_plugin::app_commands! {
     /// or its hosts) collapse onto the one surviving action id's command instead of keeping a dead
     /// synonym. Row order is the binary variant ordinal: appending is safe, reordering is a wire-format
     /// break.
-    pub enum NoteCommand for NoteDocument, NoteOperation, NoteConfig, NoteConfigOperation {
+    pub enum NoteCommand for NoteDocument, NoteMutation, NoteConfig, NoteConfigMutation {
         "setGridVisible" as "set-grid-visible" => set_grid_visible::SetGridVisible,
         "setGridSpacing" as "set-grid-spacing" => set_grid_spacing::SetGridSpacing,
         "setGridSubdivisions" as "set-grid-subdivisions" => set_grid_subdivisions::SetGridSubdivisions,
@@ -118,17 +118,17 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️NotePlayApp
 /// 🧪️ B1: unit struct — every former `NotePlayRuntime`/`ViewModel`-read field now lives in
-/// `NoteConfig` (see `DocumentApp::Config`), written through `NoteConfigOperation`s.
+/// `NoteConfig` (see `DocumentApp::Config`), written through `NoteConfigMutation`s.
 #[derive(Default)]
 pub struct NotePlayApp;
 
 impl DocumentApp for NotePlayApp {
     type Projection = NoteDocument;
-    type Operation = NoteOperation;
+    type Mutation = NoteMutation;
     type Config = NoteConfig;
-    type ConfigOperation = NoteConfigOperation;
+    type ConfigMutation = NoteConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = NoteCommand;
 
@@ -146,7 +146,7 @@ impl DocumentApp for NotePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteOperation, NoteConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -202,11 +202,11 @@ pub fn create_note_app() -> App {
             // 📇️ Palette-visible selection commands (P0) — ephemeral selection is View, block edits are Operations.
             .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
             .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
-            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-            .operation("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"))
+            .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .mutation("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"))
             // ➕️ Palette-visible block insertion (P1) with a staged argument form.
-            .operation("addBlock", LocalizedLabel::native("Add Block", "Block hinzufügen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("addBlock", LocalizedLabel::native("Add Block", "Block hinzufügen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🐚️ Import/export footer actions → panel Shell actions emitting host effects (S).
             .shell_action("loadRequest", LocalizedLabel::native("Import", "Importieren"))
             .shell_action("saveDownload", LocalizedLabel::native("Export", "Exportieren"))
@@ -216,30 +216,30 @@ pub fn create_note_app() -> App {
             // each (see `NoteCommand`'s doc comment) — `toggleGrid`/`toggleSnap`/`dropBlockKind` were
             // never independently wired to any UI element or host caller, so their dead alias
             // declarations are dropped here rather than kept as unreachable synonyms.
-            .action_with(note_internal_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Rastersichtbarkeit festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("setGridSpacing", LocalizedLabel::native("Set Grid Spacing", "Rasterabstand festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("setGridSubdivisions", LocalizedLabel::native("Set Grid Subdivisions", "Rasterunterteilungen festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("setGridOpacity", LocalizedLabel::native("Set Grid Opacity", "Rasterdeckkraft festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("setSnapEnabled", LocalizedLabel::native("Set Snap Enabled", "Einrasten aktivieren"), ActionKind::Operation))
-            .action_with(note_internal_action("setSnapGridSpacing", LocalizedLabel::native("Set Snap Grid Spacing", "Rasterabstand für Einrasten festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("setPencilWidth", LocalizedLabel::native("Set Pencil Width", "Stiftbreite festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("setEraserRadius", LocalizedLabel::native("Set Eraser Radius", "Radiergummi-Radius festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("moveBlock", LocalizedLabel::native("Move Block", "Block verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("deleteBlock", LocalizedLabel::native("Delete Block", "Block löschen"), ActionKind::Operation))
-            .action_with(note_internal_action("duplicateBlock", LocalizedLabel::native("Duplicate Block", "Block duplizieren"), ActionKind::Operation))
-            .action_with(note_internal_action("patchBlocks", LocalizedLabel::native("Patch Blocks", "Blöcke aktualisieren"), ActionKind::Operation))
-            .action_with(note_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Operation))
-            .action_with(note_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation))
-            .action_with(note_internal_action("inkApplyEvents", LocalizedLabel::native("Apply Note Events", "Notiz-Ereignisse anwenden"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelection", LocalizedLabel::native("Nudge Selection", "Auswahl verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionUp", LocalizedLabel::native("Nudge Selection Up", "Auswahl nach oben verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionDown", LocalizedLabel::native("Nudge Selection Down", "Auswahl nach unten verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionLeft", LocalizedLabel::native("Nudge Selection Left", "Auswahl nach links verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionRight", LocalizedLabel::native("Nudge Selection Right", "Auswahl nach rechts verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionUpFast", LocalizedLabel::native("Nudge Selection Up Fast", "Auswahl schnell nach oben verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionDownFast", LocalizedLabel::native("Nudge Selection Down Fast", "Auswahl schnell nach unten verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionLeftFast", LocalizedLabel::native("Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"), ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionRightFast", LocalizedLabel::native("Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Rastersichtbarkeit festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("setGridSpacing", LocalizedLabel::native("Set Grid Spacing", "Rasterabstand festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("setGridSubdivisions", LocalizedLabel::native("Set Grid Subdivisions", "Rasterunterteilungen festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("setGridOpacity", LocalizedLabel::native("Set Grid Opacity", "Rasterdeckkraft festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("setSnapEnabled", LocalizedLabel::native("Set Snap Enabled", "Einrasten aktivieren"), ActionKind::Mutation))
+            .action_with(note_internal_action("setSnapGridSpacing", LocalizedLabel::native("Set Snap Grid Spacing", "Rasterabstand für Einrasten festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("setPencilWidth", LocalizedLabel::native("Set Pencil Width", "Stiftbreite festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("setEraserRadius", LocalizedLabel::native("Set Eraser Radius", "Radiergummi-Radius festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("moveBlock", LocalizedLabel::native("Move Block", "Block verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("deleteBlock", LocalizedLabel::native("Delete Block", "Block löschen"), ActionKind::Mutation))
+            .action_with(note_internal_action("duplicateBlock", LocalizedLabel::native("Duplicate Block", "Block duplizieren"), ActionKind::Mutation))
+            .action_with(note_internal_action("patchBlocks", LocalizedLabel::native("Patch Blocks", "Blöcke aktualisieren"), ActionKind::Mutation))
+            .action_with(note_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
+            .action_with(note_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("inkApplyEvents", LocalizedLabel::native("Apply Note Events", "Notiz-Ereignisse anwenden"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelection", LocalizedLabel::native("Nudge Selection", "Auswahl verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionUp", LocalizedLabel::native("Nudge Selection Up", "Auswahl nach oben verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionDown", LocalizedLabel::native("Nudge Selection Down", "Auswahl nach unten verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionLeft", LocalizedLabel::native("Nudge Selection Left", "Auswahl nach links verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionRight", LocalizedLabel::native("Nudge Selection Right", "Auswahl nach rechts verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionUpFast", LocalizedLabel::native("Nudge Selection Up Fast", "Auswahl schnell nach oben verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionDownFast", LocalizedLabel::native("Nudge Selection Down Fast", "Auswahl schnell nach unten verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionLeftFast", LocalizedLabel::native("Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"), ActionKind::Mutation))
+            .action_with(note_internal_action("nudgeSelectionRightFast", LocalizedLabel::native("Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"), ActionKind::Mutation))
             // 👁️ Ephemeral view state — selection/hover/engagement/camera scratch, never a document operation.
             .action_with(note_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
             .action_with(note_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))

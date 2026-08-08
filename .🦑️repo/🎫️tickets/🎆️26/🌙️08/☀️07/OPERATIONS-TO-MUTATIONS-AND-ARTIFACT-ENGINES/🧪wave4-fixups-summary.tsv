@@ -1,0 +1,32 @@
+semio-s-plugin-writer	FAIL	error[E0425]: cannot find function `lex` in this scope
+semio-s-plugin-mathematical	PASS
+semio-s-plugin-procedural	PASS
+semio-s-plugin-flow	FAIL	error[E0425]: cannot find function `default_contributions_json` in this scope
+semio-s-plugin-gis	PASS
+semio-s-plugin-vcs	PASS
+semio-s-plugin-animate	FAIL	error[E0432]: unresolved imports `crate::artifacts::present::engine::animate::AnimateConfig`, `crate::artifacts::present::engine::animate::QualityPreset`
+semio-s-plugin-shooting	PASS
+semio-s-plugin-demonstrator	FAIL	error[E0433]: cannot find module or crate `semio_framework_core` in this scope
+semio-s-plugin-sequence	FAIL	error[E0425]: cannot find function `computation_node_width` in crate `dag`
+semio-s-plugin-fem	PASS
+semio-s-plugin-architect	PASS
+semio-s-plugin-process	PASS
+semio-s-plugin-lowpoly	PASS
+semio-s-plugin-reasoning-mindmap	FAIL	error[E0277]: the trait bound `DefaultWiresExtension: semio_s_mindmap::GraphExtension` is not satisfied
+semio-s-plugin-forms	PASS
+semio-s-plugin-layout	PASS
+semio-s-plugin-cad	PASS
+semio-s-plugin-norm	PASS
+semio-s-plugin-playbook	PASS
+semio-s-plugin-imperative	PASS
+semio-s-plugin-remodel	PASS
+semio-s-plugin-energy	PASS
+semio-s-plugin-trinity	FAIL	error[E0425]: cannot find function `lex` in this scope
+semio-s-plugin-dag	FAIL	error[E0599]: no method named `apply` found for struct `DagDiff` in the current scope
+semio-s-plugin-draw	PASS
+semio-s-plugin-raster	PASS
+semio-s-plugin-note	PASS
+semio-s-plugin-puzzle	FAIL	error[E0433]: cannot find module or crate `semio_framework_core` in this scope
+semio-s-plugin-block	PASS
+semio-s-plugin-space	FAIL	error[E0432]: unresolved import `crate::store_sync`
+semio-s-plugin-sourcing	PASS

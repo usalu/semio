@@ -3,4 +3,6 @@ export * as program_diff from "../../🗿️artifacts/🏛️program/🔺️diff
 export * as program_dsl from "../../🗿️artifacts/🏛️program/🗣️dsl/🟦️component.ts";
 export * as program_pack from "../../🗿️artifacts/🏛️program/🎒️pack/🟦️component.ts";
 export * as program_op from "../../🗿️artifacts/🏛️program/🔧️op/🟦️component.ts";
+export * as program_mutations from "../../🗿️artifacts/🏛️program/🧬️mutations/🟦️component.ts";
+
 export * as program_spr from "../../🗿️artifacts/🏛️program/📡️spr/🟦️component.ts";

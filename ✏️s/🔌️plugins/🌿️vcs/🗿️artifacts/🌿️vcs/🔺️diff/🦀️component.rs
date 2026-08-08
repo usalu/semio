@@ -1,4 +1,4 @@
-//! 🔺️ VCS artifact — per-field diff type + `OperationDiff` law (was: part of constitutional `op`).
+//! 🔺️ VCS artifact — per-field diff type + `MutationDiff` law (was: part of constitutional `op`).
 
 
 //#region 📖️SemioGrammar
@@ -8,9 +8,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::vcs::op::VcsDemoOperation;
+use crate::artifacts::vcs::mutations::VcsDemoMutation;
 use crate::artifacts::vcs::VcsDemoProjection;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
@@ -39,18 +39,20 @@ pub enum VcsDemoDiff {
     },
 }
 
-impl OperationDiff<VcsDemoProjection> for VcsDemoDiff {
+impl MutationDiff<VcsDemoProjection> for VcsDemoDiff {
     fn apply(&self, projection: &VcsDemoProjection) -> VcsDemoProjection {
         let operation = match self {
             VcsDemoDiff::Empty => return projection.clone(),
-            VcsDemoDiff::SetCounter { counter } => VcsDemoOperation::SetCounter { counter: *counter },
-            VcsDemoDiff::SetTitle { title } => VcsDemoOperation::SetTitle { title: title.clone() },
-            VcsDemoDiff::SetNotes { notes } => VcsDemoOperation::SetNotes { notes: notes.clone() },
-            VcsDemoDiff::SetStatus { status } => VcsDemoOperation::SetStatus { status: status.clone() },
-            VcsDemoDiff::AddTag { tag } => VcsDemoOperation::AddTag { tag: tag.clone() },
-            VcsDemoDiff::RemoveTag { tag } => VcsDemoOperation::RemoveTag { tag: tag.clone() },
+            VcsDemoDiff::SetCounter { counter } => VcsDemoMutation::SetCounter { counter: *counter },
+            VcsDemoDiff::SetTitle { title } => VcsDemoMutation::SetTitle { title: title.clone() },
+            VcsDemoDiff::SetNotes { notes } => VcsDemoMutation::SetNotes { notes: notes.clone() },
+            VcsDemoDiff::SetStatus { status } => VcsDemoMutation::SetStatus { status: status.clone() },
+            VcsDemoDiff::AddTag { tag } => VcsDemoMutation::AddTag { tag: tag.clone() },
+            VcsDemoDiff::RemoveTag { tag } => VcsDemoMutation::RemoveTag { tag: tag.clone() },
         };
-        crate::artifacts::vcs::op::apply_vcs_demo_operation(projection, &operation)
+        let mut next = projection.clone();
+        crate::artifacts::vcs::mutations::apply_vcs_demo_mutation(&mut next, &operation);
+        next
     }
 
     fn absorb(&mut self, other: Self) {

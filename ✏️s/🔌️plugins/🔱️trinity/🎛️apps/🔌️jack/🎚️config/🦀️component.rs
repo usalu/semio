@@ -126,12 +126,12 @@ store::impl_whole_record_config!(JackConfig);
 
 /// @emoji 🧮️ Jack's `JackConfig` operation enum — one variant per settled interaction, plus a generic
 /// `Snapshot` every variant's `backwards()` returns. `Snapshot`'s whole-`JackConfig` payload is
-/// inherent to the "backwards restores a full prior snapshot" design (mirrors `RewriteConfigOperation`
-/// and `shooting_op::ShootingConfigOperation`) — boxing it would perturb the `#[dsl(block)]` wire
+/// inherent to the "backwards restores a full prior snapshot" design (mirrors `RewriteConfigMutation`
+/// and `shooting_op::ShootingConfigMutation`) — boxing it would perturb the `#[dsl(block)]` wire
 /// shape for no behavioral gain, so the size lint is silenced instead of restructuring the type.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[allow(clippy::large_enum_variant)]
-pub enum JackConfigOperation {
+pub enum JackConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -172,7 +172,7 @@ pub enum JackConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for JackConfigOperation {
+impl protocol::OpText for JackConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -186,7 +186,7 @@ impl protocol::OpText for JackConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -197,7 +197,7 @@ impl protocol::OpText for JackConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for JackConfigOperation {
+impl protocol::OpBinary for JackConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -243,34 +243,34 @@ impl protocol::OpBinary for JackConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl protocol::Operation<JackConfig> for JackConfigOperation {
+impl protocol::Mutation<JackConfig> for JackConfigMutation {
     type Diff = JackConfig;
 
     fn diff(&self, base: &JackConfig) -> JackConfig {
         let mut next = base.clone();
         match self {
-            JackConfigOperation::Snapshot { config } => return config.clone(),
-            JackConfigOperation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
-            JackConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            JackConfigOperation::SetActiveFixture { value } => next.active_fixture_id = value.clone(),
-            JackConfigOperation::SetQuery { value } => next.jack_query = value.clone(),
-            JackConfigOperation::SetResult { value } => next.jack_result_json = value.clone(),
-            JackConfigOperation::SetEditorEngagementInput { value } => next.editor_engagement_input = value.clone(),
-            JackConfigOperation::SetGraphEngagementInput { value } => next.graph_engagement_input = value.clone(),
-            JackConfigOperation::SetResultsEngagementInput { value } => next.results_engagement_input = value.clone(),
-            JackConfigOperation::SetReorganizeEpoch { value } => next.reorganize_epoch = *value,
-            JackConfigOperation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
-            JackConfigOperation::SetLodMode { window_id, value } => {
+            JackConfigMutation::Snapshot { config } => return config.clone(),
+            JackConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
+            JackConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            JackConfigMutation::SetActiveFixture { value } => next.active_fixture_id = value.clone(),
+            JackConfigMutation::SetQuery { value } => next.jack_query = value.clone(),
+            JackConfigMutation::SetResult { value } => next.jack_result_json = value.clone(),
+            JackConfigMutation::SetEditorEngagementInput { value } => next.editor_engagement_input = value.clone(),
+            JackConfigMutation::SetGraphEngagementInput { value } => next.graph_engagement_input = value.clone(),
+            JackConfigMutation::SetResultsEngagementInput { value } => next.results_engagement_input = value.clone(),
+            JackConfigMutation::SetReorganizeEpoch { value } => next.reorganize_epoch = *value,
+            JackConfigMutation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
+            JackConfigMutation::SetLodMode { window_id, value } => {
                 next.lod_mode_by_window.insert(window_id.clone(), value.clone());
             }
-            JackConfigOperation::SetRevision { value } => next.revision = *value,
-            JackConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            JackConfigMutation::SetRevision { value } => next.revision = *value,
+            JackConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &JackConfig) -> Vec<Self> {
-        vec![JackConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &JackConfig) -> Vec<Self> {
+        vec![JackConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
@@ -303,18 +303,18 @@ mod tests {
     #[test]
     fn jack_config_operation_backwards_restores_prior_snapshot() {
         let base = JackConfig::default();
-        let operation = JackConfigOperation::SetSelection { node_ids: vec!["n1".into()] };
-        let next = protocol::Operation::diff(&operation, &base);
+        let operation = JackConfigMutation::SetSelection { node_ids: vec!["n1".into()] };
+        let next = protocol::Mutation::diff(&operation, &base);
         assert_eq!(next.selected_node_ids, vec!["n1".to_string()]);
-        let backwards = protocol::Operation::backwards(&operation, &base);
-        let restored = protocol::Operation::diff(&backwards[0], &next);
+        let backwards = protocol::Mutation::backwards(&operation, &base);
+        let restored = protocol::Mutation::diff(&backwards[0], &next);
         assert_eq!(restored, base);
     }
 
     #[test]
     fn jack_config_operation_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&JackConfigOperation::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() });
-        store::test_support::assert_op_line_round_trip(&JackConfigOperation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() });
+        store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
     }
 }
 //#endregion 🧪️Tests

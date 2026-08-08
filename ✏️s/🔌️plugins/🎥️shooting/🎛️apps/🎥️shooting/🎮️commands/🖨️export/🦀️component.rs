@@ -6,9 +6,9 @@
 //! `crate::apps::shooting::ShootingPlayApp::command_id`'s override, since `app_commands!`'s generated
 //! `command_id()` is a static 1:1 row→literal mapping with no payload-conditional escape hatch.
 
-use crate::apps::shooting::config::{ShootingConfig, ShootingConfigOperation};
+use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::engine::shooting_icon_render_request_json;
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingFixture, ShootingShot};
 use semio_framework_plugin::{ConfigView, DocumentView, DslValue, Emit, Fault, HostEffect, IconRenderExportItem};
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ pub mod export_shots {
         pub all: bool,
     }
 
-    pub fn handle(payload: &ExportShots, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    pub fn handle(payload: &ExportShots, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         if let Some(asset) = crate::artifacts::shooting::engine::active_asset(fixture) {

@@ -3,4 +3,5 @@ export * as process3d_diff from "../../🗿️artifacts/🧊️process3d/🔺️
 export * as process3d_dsl from "../../🗿️artifacts/🧊️process3d/🗣️dsl/🟦️component.ts";
 export * as process3d_pack from "../../🗿️artifacts/🧊️process3d/🎒️pack/🟦️component.ts";
 export * as process3d_op from "../../🗿️artifacts/🧊️process3d/🔧️op/🟦️component.ts";
+export * as process3d_mutations from "../../🗿️artifacts/🧊️process3d/🧬️mutations/🟦️component.ts";
 export * as process3d_spr from "../../🗿️artifacts/🧊️process3d/📡️spr/🟦️component.ts";

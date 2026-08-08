@@ -1,9 +1,9 @@
 //! 📃️ Forms play app commands — step lifecycle (add / patch / remove / move) and the form title.
 
-use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
-use crate::apps::forms::reset_try_config_operations;
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::apps::forms::reset_try_config_mutations;
 use crate::artifacts::forms::engine::create_form_id;
-use crate::artifacts::forms::{op::FormOperation, FormSpec, FormStep};
+use crate::artifacts::forms::{op::FormMutation, FormSpec, FormStep};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -15,10 +15,10 @@ pub mod add_step {
     #[dsl(keyword = "add-step")]
     pub struct AddStep {}
 
-    pub fn handle(_payload: &AddStep, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(_payload: &AddStep, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.projection;
         let step = FormStep { id: create_form_id("step"), title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() };
-        Ok(Emit { document_operations: vec![FormOperation::AddStep { step, index: None }], config_operations: reset_try_config_operations(), ..Default::default() })
+        Ok(Emit { document_mutations: vec![FormMutation::AddStep { step, index: None }], config_mutations: reset_try_config_mutations(), ..Default::default() })
     }
 }
 //#endregion 🔖️AddStep
@@ -35,7 +35,7 @@ pub mod patch_step {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchStep, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchStep, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.projection;
         let Some(step) = spec.steps.iter().find(|step| step.id == payload.step_id).cloned() else {
             return Ok(Emit::default());
@@ -45,7 +45,7 @@ pub mod patch_step {
             "description" => FormStep { description: Some(payload.value.clone()).filter(|description| !description.is_empty()), ..step },
             _ => return Ok(Emit::default()),
         };
-        Ok(Emit { document_operations: vec![FormOperation::UpdateStep { step }], config_operations: reset_try_config_operations(), coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })
+        Ok(Emit { document_mutations: vec![FormMutation::UpdateStep { step }], config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })
     }
 }
 //#endregion 🔖️PatchStep
@@ -60,16 +60,16 @@ pub mod remove_step {
         pub step_id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveStep, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         if payload.step_id.is_empty() {
             return Ok(Emit::default());
         }
         let spec = doc.projection;
         let config = cfg.projection;
         let removed_ids: Vec<String> = spec.steps.iter().filter(|step| step.id == payload.step_id).flat_map(|step| step.blocks.iter().map(|question| question.id.clone())).collect();
-        let mut config_operations = reset_try_config_operations();
-        config_operations.push(FormsConfigOperation::SetSelection { ids: config.selected_ids.iter().filter(|id| !removed_ids.contains(id)).cloned().collect() });
-        Ok(Emit { document_operations: vec![FormOperation::RemoveStep { step_id: payload.step_id.clone() }], config_operations, ..Default::default() })
+        let mut config_mutations = reset_try_config_mutations();
+        config_mutations.push(FormsConfigMutation::SetSelection { ids: config.selected_ids.iter().filter(|id| !removed_ids.contains(id)).cloned().collect() });
+        Ok(Emit { document_mutations: vec![FormMutation::RemoveStep { step_id: payload.step_id.clone() }], config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️RemoveStep
@@ -85,11 +85,11 @@ pub mod move_step {
         pub index: u64,
     }
 
-    pub fn handle(payload: &MoveStep, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &MoveStep, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         if payload.step_id.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit { document_operations: vec![FormOperation::MoveStep { step_id: payload.step_id.clone(), index: payload.index as usize }], config_operations: reset_try_config_operations(), ..Default::default() })
+        Ok(Emit { document_mutations: vec![FormMutation::MoveStep { step_id: payload.step_id.clone(), index: payload.index as usize }], config_mutations: reset_try_config_mutations(), ..Default::default() })
     }
 }
 //#endregion 🔖️MoveStep
@@ -104,8 +104,8 @@ pub mod update_form {
         pub title: String,
     }
 
-    pub fn handle(payload: &UpdateForm, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
-        Ok(Emit { document_operations: vec![FormOperation::UpdatePlaybook { title: Some(payload.title.clone()).filter(|title| !title.is_empty()) }], coalesce_key: Some("update-playbook".into()), ..Default::default() })
+    pub fn handle(payload: &UpdateForm, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        Ok(Emit { document_mutations: vec![FormMutation::UpdatePlaybook { title: Some(payload.title.clone()).filter(|title| !title.is_empty()) }], coalesce_key: Some("update-playbook".into()), ..Default::default() })
     }
 }
 //#endregion 🔖️UpdateForm

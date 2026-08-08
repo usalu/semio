@@ -9,7 +9,7 @@
 use base64::Engine;
 use semio_s_3d::brep::kernel::Brep;
 use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
-use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
@@ -354,16 +354,16 @@ pub fn operator_info_with_outputs(id: &str, name: &str, abbreviation: &str, icon
     }
 }
 
-pub fn register_untyped(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operation }], produces);
+pub fn register_untyped(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], produces);
 }
 
-pub fn register_typed(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operation }], produces);
+pub fn register_typed(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], produces);
 }
 
 #[allow(clippy::too_many_arguments, reason = "positional geometry-operator registration helper; ~68 call sites forming this file's operator table, restructuring into a params struct would only churn call sites with no behavior change")]
-pub fn reg_geo(registry: &mut Registry, id: &str, name: &str, abbr: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str], operation: Box<dyn Operation>) {
+pub fn reg_geo(registry: &mut Registry, id: &str, name: &str, abbr: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str], operation: Box<dyn Operator>) {
     register_untyped(registry, operator_info_with_outputs(id, name, abbr, icon, summary, inputs, vec![output], group), operation, &["geometry"]);
 }
 
@@ -410,7 +410,7 @@ pub fn topology_list(schema: &str, handles: Vec<GeometryHandle>) -> Dictionary {
 
 pub struct BrepDeconstruct;
 
-impl Operation for BrepDeconstruct {
+impl Operator for BrepDeconstruct {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let shape = read_geometry(input, "brep")?;

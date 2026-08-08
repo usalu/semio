@@ -8,17 +8,17 @@
 //! passthrough per node.
 
 use crate::apps::procedural2d::commands::{eval, generation, graph, locale, selection, view, widget};
-use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigOperation};
+use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::apps::procedural2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
 use crate::apps::procedural2d::modes::generate::windows::{form, generations, preview as generate_preview};
 use crate::apps::procedural2d::modes::{edit, generate};
 use crate::apps::procedural2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::procedural2d::terminology::{procedural2d_labels, Procedural2dLabels};
 use crate::artifacts::procedural2d::engine::procedural2d_io;
-use crate::artifacts::procedural2d::op::Procedural2dOperation;
+use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -38,7 +38,7 @@ semio_framework_plugin::app_commands! {
     /// Each row states BOTH the manifest action id (`command_id()`) and the `dsl` wire keyword
     /// (`#[dsl(key = ..)]`) — genuinely different vocabularies; `setLocale`/`locale` proves it. **Row
     /// order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Procedural2dCommand for Procedural2dDocument, Procedural2dOperation, Procedural2dConfig, Procedural2dConfigOperation, ctx = FlowEvalSession {
+    pub enum Procedural2dCommand for Procedural2dDocument, Procedural2dMutation, Procedural2dConfig, Procedural2dConfigMutation, ctx = FlowEvalSession {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "moveMediaNode" as "move-media-node" => move_media_node::MoveMediaNode,
         "addWidget" as "add-widget" => add_widget::AddWidget,
@@ -80,7 +80,7 @@ use widget::{add_widget, remove_widget};
 
 //#region 🔖️Procedural2dPlayApp
 /// 🧪️ Unit struct apart from `eval_session`: every former runtime field lives in [`Procedural2dConfig`],
-/// written through [`Procedural2dConfigOperation`]s. The eval session is the one piece of state that is
+/// written through [`Procedural2dConfigMutation`]s. The eval session is the one piece of state that is
 /// neither document nor view — it is threaded into every command handler as the `app_commands!`
 /// dispatch context.
 #[derive(Default)]
@@ -88,11 +88,11 @@ pub struct Procedural2dPlayApp;
 
 impl DocumentApp for Procedural2dPlayApp {
     type Projection = Procedural2dDocument;
-    type Operation = Procedural2dOperation;
+    type Mutation = Procedural2dMutation;
     type Config = Procedural2dConfig;
-    type ConfigOperation = Procedural2dConfigOperation;
+    type ConfigMutation = Procedural2dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Procedural2dCommand;
 
@@ -182,7 +182,7 @@ impl DocumentApp for Procedural2dPlayApp {
         }
     }
 
-    fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
@@ -257,7 +257,7 @@ impl DocumentApp for Procedural2dPlayApp {
 
     /// 🎞️ `"params:in"`: a generic Data×Value JSON object `{widgetId: number}` — patches matching
     /// `InputSlider` widgets' `value` field, leaving unmatched keys/widget kinds untouched.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural2dDocument>) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation, Self::DraftOperation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural2dDocument>) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
         if port != "params:in" {
             return Err(semio_framework_plugin::MediaError::NotImplemented);
         }
@@ -273,10 +273,10 @@ impl DocumentApp for Procedural2dPlayApp {
             let Some(number) = value.as_f64() else { continue };
             let Some((index, widget)) = doc.projection.fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
             if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
-                operations.push(Procedural2dOperation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
+                operations.push(Procedural2dMutation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
             }
         }
-        Ok(Emit::operations(operations))
+        Ok(Emit::mutations(operations))
     }
 }
 //#endregion 🔖️Procedural2dPlayApp
@@ -289,6 +289,7 @@ pub fn create_procedural2d_app() -> App {
             .icon_id("procedural2d")
             .mode_def(edit::definition())
             .mode_def(generate::definition())
+            .mode_layout(generate::PROCEDURAL2D_PLAY_MODE_GENERATE, generate::PROCEDURAL2D_PLAY_LAYOUT_GENERATE)
             .default_mode_id(edit::PROCEDURAL2D_PLAY_MODE_EDIT)
             .window_kind_def(flow_window::definition())
             .window_kind_def(edit_preview::definition())
@@ -302,16 +303,16 @@ pub fn create_procedural2d_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
             // 🗂️ Referenced by `Procedural2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Operation).with_category("selection"))
-            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-            .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Operation).with_category("create"))
-            .operation("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"))
-            .operation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Operation).with_category("create"))
-            .operation("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"))
-            .operation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
-            .operation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
+            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("selection"))
+            .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"))
+            .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .mutation("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"))
+            .mutation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
+            .mutation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
             // 👁️ Ephemeral view actions — selection, hover, camera, the show-mode display toggle, and evaluation scratch (emit no operations).
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))

@@ -31,7 +31,7 @@ pub struct PluginInstanceId(pub String);
 #[serde(transparent)]
 pub struct ArtifactId(pub String);
 
-// 🎞️ CW3 kernel cut-over: OperationId/ActorId/DocumentId/DocumentVersion/SchemaId moved to
+// 🎞️ CW3 kernel cut-over: MutationId/ActorId/DocumentId/DocumentVersion/SchemaId moved to
 // `protocol_core` (frozen contract `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
 // re-exported here under their original names — shapes are unchanged (plain serde-transparent
 // String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
@@ -41,10 +41,10 @@ pub struct ArtifactId(pub String);
 // protocol-format concept), incompatible with this kernel's `String`-shaped version below, which
 // several external crates (`framework/sync`, semio_hub storage crates) still construct from plain
 // strings; moving it would be a breaking shape change out of this wave's scope.
-pub use protocol_core::{ActorId, DocumentId, DocumentVersion, OperationId, SchemaId};
+pub use protocol_core::{ActorId, DocumentId, DocumentVersion, MutationId, SchemaId};
 
 /// 🪪️ Identifies one dispatched invocation — of an action *or* a command; both route through the same
-/// `KernelOperation`/`UndoGroup` history bookkeeping.
+/// `KernelMutation`/`UndoGroup` history bookkeeping.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct InvocationId(pub String);
@@ -164,7 +164,7 @@ pub struct ActionInvocation {
     pub input: DslValue,
     pub actor: ActorId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub causal_context: Vec<OperationId>,
+    pub causal_context: Vec<MutationId>,
 }
 
 /// @emoji 🎛️ A dispatched invocation of a `CommandDefinition` — the command mirror of `ActionInvocation`.
@@ -421,26 +421,26 @@ pub use protocol_core::UndoPolicy;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct InverseOperation {
-    pub target_operation: OperationId,
+pub struct InverseMutation {
+    pub target_mutation: MutationId,
     pub inverse_diff: DocumentDiff,
     pub base_version: DocumentVersion,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub dependencies: Vec<OperationId>,
+    pub dependencies: Vec<MutationId>,
     pub undo_policy: UndoPolicy,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct KernelOperation {
-    pub id: OperationId,
+pub struct KernelMutation {
+    pub id: MutationId,
     pub document: DocumentHandle,
     pub base_version: DocumentVersion,
     pub invocation_id: InvocationId,
     pub diff: DocumentDiff,
-    pub inverse: InverseOperation,
+    pub inverse: InverseMutation,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub dependencies: Vec<OperationId>,
+    pub dependencies: Vec<MutationId>,
     pub author: ActorId,
     pub timestamp: HybridLogicalTimestamp,
 }
@@ -449,8 +449,8 @@ pub struct KernelOperation {
 #[serde(rename_all = "camelCase")]
 pub struct UndoGroup {
     pub invocation_id: InvocationId,
-    pub operations: Vec<OperationId>,
-    pub inverse_operations: Vec<InverseOperation>,
+    pub mutations: Vec<MutationId>,
+    pub inverse_mutations: Vec<InverseMutation>,
 }
 
 /// @emoji 🐢️ What part of the shell's rendered UI an action actually invalidates — lets `refresh-ui`
@@ -490,7 +490,7 @@ pub enum UiDirtyScope {
 #[serde(rename_all = "camelCase")]
 pub struct InvocationResult {
     pub output: DslValue,
-    pub operations: Vec<KernelOperation>,
+    pub mutations: Vec<KernelMutation>,
     pub inverse_group: UndoGroup,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<Diagnostic>,

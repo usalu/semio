@@ -5,7 +5,7 @@ use crate::apps::flow::terminology::flow_play_labels;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
 use crate::artifacts::flow::FlowFixture;
 use flow::forms_bridge::flow_fixture_to_form_spec;
-use playbook::{render_generation_form_body, selected_generation};
+use crate::playbook::{render_generation_form_body, selected_generation};
 use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

@@ -1,18 +1,18 @@
 //! 🖥️ Raster app — DocumentApp impl, render, manifest (constitutional: ui/general). B1: `RasterPlayApp`
 //! is a unit struct — every former `RasterConfig` (`ui`-crate `RefCell`) field (selection, hover, brush
 //! size/opacity, navigator composite-viewport size, the session-only free camera) now lives in
-//! `crate::apps::raster::config::RasterConfig`, written via `RasterConfigOperation`s. Every action
+//! `crate::apps::raster::config::RasterConfig`, written via `RasterConfigMutation`s. Every action
 //! dispatches through the single typed `RasterCommand` channel via `app_commands!` — mirrors
 //! `shooting_ui`'s B1 pilot.
 
-use crate::apps::raster::config::{RasterConfig, RasterConfigOperation};
+use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::apps::raster::modes::edit;
 use crate::apps::raster::modes::edit::windows::{composite, navigator};
 use crate::apps::raster::terminology::raster_play_labels;
 use crate::artifacts::raster::engine::{raster_composite_media, raster_io, semio_example_json};
-use crate::artifacts::raster::op::RasterOperation;
+use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::{RasterLayerNode, RasterProjection as RasterDocument, RASTER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     App, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
@@ -98,7 +98,7 @@ semio_framework_plugin::app_commands! {
     /// old `raster_protocol::RasterCommand` enum's `#[dsl(key)]` attributes and
     /// `RasterPlayApp::command_id` match arms respectively. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
-    pub enum RasterCommand for RasterDocument, RasterOperation, RasterConfig, RasterConfigOperation {
+    pub enum RasterCommand for RasterDocument, RasterMutation, RasterConfig, RasterConfigMutation {
         "setDocument" as "set-document" => set_document::SetDocument,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addLayer" as "add-layer" => add_layer::AddLayer,
@@ -136,17 +136,17 @@ use crate::apps::raster::commands::utility::set_active_utility;
 
 //#region 🔖️RasterPlayApp
 /// 🧪️ B1: unit struct — every former `RasterConfig` field now lives in
-/// `crate::apps::raster::config::RasterConfig`, written through `RasterConfigOperation`s.
+/// `crate::apps::raster::config::RasterConfig`, written through `RasterConfigMutation`s.
 #[derive(Default)]
 pub struct RasterPlayApp;
 
 impl DocumentApp for RasterPlayApp {
     type Projection = RasterDocument;
-    type Operation = RasterOperation;
+    type Mutation = RasterMutation;
     type Config = RasterConfig;
-    type ConfigOperation = RasterConfigOperation;
+    type ConfigMutation = RasterConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = RasterCommand;
 
@@ -178,10 +178,10 @@ impl DocumentApp for RasterPlayApp {
     }
 
     /// 🎞️ `image:in` inserts the incoming raster media as a new composited layer + embedded asset
-    /// (`raster_append_image_layer`) via a whole-document `ReplaceDocument` — `RasterOperation` has
+    /// (`raster_append_image_layer`) via a whole-document `ReplaceDocument` — `RasterMutation` has
     /// no granular "add asset" step (see that function's doc). Falls through to the inherited
     /// `document:in` default (base64 pack replace) for any other port.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RasterDocument>) -> Result<Emit<RasterOperation, RasterConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RasterDocument>) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "image:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -189,18 +189,18 @@ impl DocumentApp for RasterPlayApp {
             return Err(MediaError::Payload(port.to_string(), "image:in only accepts a Structured (base64 PNG) payload".into()));
         };
         let next = crate::artifacts::raster::engine::raster_append_image_layer(doc.projection, png_base64);
-        Ok(Emit::operations(vec![RasterOperation::ReplaceDocument { document: next }]))
+        Ok(Emit::mutations(vec![RasterMutation::ReplaceDocument { document: next }]))
     }
 
-    fn whole_document_operation(projection: RasterDocument) -> Option<RasterOperation> {
-        Some(RasterOperation::ReplaceDocument { document: projection })
+    fn whole_document_operation(projection: RasterDocument) -> Option<RasterMutation> {
+        Some(RasterMutation::ReplaceDocument { document: projection })
     }
 
     fn command_id(command: &RasterCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &RasterCommand, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterOperation, RasterConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &RasterCommand, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -271,18 +271,18 @@ pub fn create_raster_app() -> App {
             .panel_tab_def(crate::apps::raster::panels::masks::definition())
             .panel_tab_def(crate::apps::raster::panels::inspection::definition())
             // ✏️ Palette-visible content operations.
-            .operation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
-            .operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
+            .mutation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🔧️ Internal content operations — layer-tree / catalogue-drop / inspector bound.
-            .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Operation))
-            .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Operation))
-            .action_with(raster_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Operation))
-            .action_with(raster_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Operation))
-            .action_with(raster_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Operation))
-            .action_with(raster_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Operation))
-            .action_with(raster_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Operation))
-            .action_with(raster_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Operation))
+            .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))
+            .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
+            .action_with(raster_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Mutation))
+            .action_with(raster_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Mutation))
+            .action_with(raster_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Mutation))
+            .action_with(raster_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation))
+            .action_with(raster_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
+            .action_with(raster_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Mutation))
             // 👁️ Ephemeral view state — selection, hover, live brush controls, navigator viewport, camera.
             .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
             .action_with(raster_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
@@ -353,7 +353,7 @@ pub(crate) mod testkit {
     pub fn semio_app() -> RasterApp {
         let mut app = framework_testkit::new_app::<RasterPlayApp>();
         let document = crate::artifacts::raster::engine::semio_example_document();
-        let envelope = store::create_document_envelope::<RasterDocument, RasterOperation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
+        let envelope = store::create_document_envelope::<RasterDocument, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
         let files = store::print_document_pack(&envelope).expect("print document pack");
         app.load_document_pack(&files).expect("load semio");
         app
@@ -478,7 +478,7 @@ mod tests {
         let layer_id = crate::artifacts::raster::engine::layer_node_id(&app.projection().expect("projection").layers[0]).to_string();
         let row_id = layer_row_id(crate::artifacts::raster::engine::find_layer(&app.projection().expect("projection").layers, &layer_id).expect("layer"));
         let result = app.dispatch_typed(RasterCommand::SetHover(set_hover::SetHover { id: Some(layer_id) }), &testkit::meta("local")).expect("hover");
-        assert!(result.operations.is_empty(), "hover is a view action and emits no operations");
+        assert!(result.document_mutations.is_empty(), "hover is a view action and emits no operations");
         let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
         assert!(json.contains(&format!("\"id\":\"{row_id}\"")), "hovered layer row must be present");
         assert!(json.contains("\"state\":\"previewed\""), "hover stamps UiState::Previewed onto the layer row");
@@ -499,7 +499,7 @@ mod tests {
         let mut app = app();
         let before = app.projection().expect("projection");
         let result = dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::raster::RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }));
-        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        assert!(result.document_mutations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
         let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
         assert!(json.contains(r#"\"zoom\":2.0"#), "composite scene camera reflects runtime state: {json}");
@@ -511,7 +511,7 @@ mod tests {
         let mut app = app();
         dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::raster::RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } }));
         let result = dispatch(&mut app, RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 3.0 }));
-        assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
+        assert!(result.document_mutations.is_empty(), "camera zoom is a view action and emits no operations");
         let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
         assert!(json.contains(r#"\"zoom\":3.0"#), "zoom updated: {json}");
         assert!(json.contains(r#"\"x\":4.0"#), "pan preserved across zoom-only update: {json}");
@@ -582,7 +582,7 @@ mod tests {
             height: Some(512),
             image_key: None,
         }];
-        let base_envelope = store::create_document_envelope::<RasterDocument, RasterOperation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None);
+        let base_envelope = store::create_document_envelope::<RasterDocument, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
         instance_a.load_document_pack(&base_files).expect("load a");
         instance_b.load_document_pack(&base_files).expect("load b");
@@ -616,7 +616,7 @@ mod tests {
         let before = app.projection().expect("projection");
         // Switching utilities is the framework View action: no document operations, nothing to sync/undo.
         let result = dispatch(&mut app, RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() }));
-        assert!(result.operations.is_empty(), "utility switching never emits document operations");
+        assert!(result.document_mutations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
         // The composite scene reads the host-owned active utility from config, not view state.
         let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
@@ -657,7 +657,7 @@ mod tests {
         let before = app.projection().expect("projection").layers.len();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "aGVsbG8=".into() } };
         let result = app.import_media("image:in", &media, &testkit::meta("local")).expect("import image:in");
-        assert!(!result.operations.is_empty(), "image:in import must emit a real document operation");
+        assert!(!result.document_mutations.is_empty(), "image:in import must emit a real document operation");
         assert_eq!(app.projection().expect("projection").layers.len(), before + 1);
     }
 

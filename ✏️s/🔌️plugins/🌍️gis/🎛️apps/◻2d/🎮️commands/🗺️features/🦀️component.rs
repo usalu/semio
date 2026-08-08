@@ -1,11 +1,11 @@
 //! 🗺️ GIS 2D play app commands — the document-mutating feature patches (positions and routes).
 
-use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigOperation};
+use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::artifacts::gismap::engine::{gis_map_document_from_descriptor_json, positions_operations};
-use crate::artifacts::gismap::op::GisMapOperation;
+use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::{GisMapDocument, MapFeaturePatch};
 use dsl::DslValue;
-use protocol::CollectionOperation;
+use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -13,12 +13,12 @@ use serde_json::{json, Value};
 //#region 🔖️RouteHelpers
 /// 🌉️ Shared `patchRoutes`/`patchRoute` implementation — a single route id (`patchRoute`) is just a
 /// one-element slice of the many-route form (`patchRoutes`).
-pub fn patch_routes_operations(document: &GisMapDocument, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapOperation, Gis2dConfigOperation> {
+pub fn patch_routes_operations(document: &GisMapDocument, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapMutation, Gis2dConfigMutation> {
     if route_ids.is_empty() {
         return Emit::default();
     }
     let dsl_value = dsl::to_dsl_value(&json!(value)).unwrap_or(DslValue::Null);
-    let operations: Vec<GisMapOperation> = document
+    let operations: Vec<GisMapMutation> = document
         .routes
         .iter()
         .filter(|route| route_ids.iter().any(|id| id == &route.id))
@@ -32,10 +32,10 @@ pub fn patch_routes_operations(document: &GisMapDocument, route_ids: &[String], 
             } else {
                 entries.push((field.to_string(), dsl_value.clone()));
             }
-            Some(GisMapOperation::Routes(CollectionOperation::Patch { id: route.id.clone(), patch: MapFeaturePatch { data: Some(data) } }))
+            Some(GisMapMutation::Routes(CollectionMutation::Patch { id: route.id.clone(), patch: MapFeaturePatch { data: Some(data) } }))
         })
         .collect();
-    Emit::operations(operations)
+    Emit::mutations(operations)
 }
 //#endregion 🔖️RouteHelpers
 
@@ -49,12 +49,12 @@ pub mod patch_positions {
         pub positions_json: String,
     }
 
-    pub fn handle(payload: &PatchPositions, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchPositions, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let Ok(positions) = serde_json::from_str::<Value>(&payload.positions_json) else {
             return Ok(Emit::default());
         };
         let next = gis_map_document_from_descriptor_json(&json!({ "positions": positions }).to_string()).positions;
-        Ok(Emit::operations(positions_operations(&doc.projection.positions, &next)))
+        Ok(Emit::mutations(positions_operations(&doc.projection.positions, &next)))
     }
 }
 //#endregion 🔖️PatchPositions
@@ -71,7 +71,7 @@ pub mod patch_routes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoutes, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchRoutes, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(patch_routes_operations(doc.projection, &payload.route_ids, &payload.field, &payload.value))
     }
 }
@@ -89,7 +89,7 @@ pub mod patch_route {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoute, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchRoute, doc: &DocumentView<'_, GisMapDocument>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(patch_routes_operations(doc.projection, std::slice::from_ref(&payload.route_id), &payload.field, &payload.value))
     }
 }
@@ -109,7 +109,7 @@ mod tests {
     fn patch_routes_emits_route_patch_ops_and_updates_document() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_A.into(), field: "label".into(), value: "Renamed Route".into() }));
-        assert_eq!(result.operations.len(), 1, "one matching route → one patch operation");
+        assert_eq!(result.mutations.len(), 1, "one matching route → one patch operation");
         let document = app.projection().expect("projection");
         let route = document.routes.iter().find(|route| route.id == ROUTE_A).expect("route");
         assert_eq!(route.data.get("label").and_then(|value| value.as_str()), Some("Renamed Route"));
@@ -119,14 +119,14 @@ mod tests {
     fn patch_routes_with_no_ids_emits_nothing() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: "x".into() }));
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 
     #[test]
     fn patch_positions_with_malformed_json_emits_nothing() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: "not json".into() }));
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 
     #[test]

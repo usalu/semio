@@ -1,4 +1,4 @@
-//! 🔺️ `trinity.rewrite.rule` artifact — diff structs + `OperationDiff` impl (constitutional: diff).
+//! 🔺️ `trinity.rewrite.rule` artifact — diff structs + `MutationDiff` impl (constitutional: diff).
 
 
 //#region 📖️SemioGrammar
@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::rewrite::RewriteRuleModel;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 /// 🔁️ Whole-state snapshot diff: the rule document is one small unit, so history stores full pre/post states rather than field-level patches.
@@ -19,7 +19,7 @@ pub struct RewriteRuleDiff {
     pub next: Option<RewriteRuleModel>,
 }
 
-impl OperationDiff<RewriteRuleModel> for RewriteRuleDiff {
+impl MutationDiff<RewriteRuleModel> for RewriteRuleDiff {
     fn apply(&self, projection: &RewriteRuleModel) -> RewriteRuleModel {
         self.next.clone().unwrap_or_else(|| projection.clone())
     }

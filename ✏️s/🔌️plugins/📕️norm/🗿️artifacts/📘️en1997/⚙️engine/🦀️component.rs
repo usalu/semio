@@ -2,6 +2,7 @@
 //! 📚️ Models the classic (pre-2024) Eurocode 7 generation only: EN 1997-1 (general design rules, including piles) + EN 1997-2 (ground investigation and testing); the second-generation EN 1997-3 does not apply here.
 
 use crate::artifacts::en1997::Document;
+use crate::artifacts::en1997::mutations::En1997Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 pub mod na_de {
@@ -334,7 +335,7 @@ pub struct En1997Family;
 
 impl crate::document::NormFamily for En1997Family {
     type Document = Document;
-    type Operation = crate::artifacts::en1997::op::Operation;
+    type Mutation = crate::artifacts::en1997::mutations::En1997Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::En1997
@@ -344,6 +345,44 @@ impl crate::document::NormFamily for En1997Family {
         evaluate(document)
     }
 }
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1997 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1997Engine {
+    projection: Document,
+}
+
+impl En1997Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1997Engine {
+    type Projection = Document;
+    type Mutation = En1997Mutation;
+    type Diff = crate::artifacts::en1997::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
 
 pub type Host = crate::document::NormHost<En1997Family>;
 // #endregion 🔖️Session

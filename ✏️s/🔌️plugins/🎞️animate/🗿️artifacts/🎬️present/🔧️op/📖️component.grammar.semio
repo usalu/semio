@@ -2,10 +2,10 @@ dialect grammar
 grammar present.op
 extension present
 use family-scene
-start operation
+start mutation
 
 artifact-mark = "animate.present-op"
-operation = artifact-mark canvas-op+
+mutation = artifact-mark canvas-op+
 canvas-op = "add-layer" layer-field+ | "set-stroke" stroke-field+ | "move-layer" move-field+ | "set-fill" fill-field+
 layer-field = "id" "=" IDENT | "kind" "=" IDENT
 stroke-field = "color" "=" TEXT | "width" "=" FLOAT

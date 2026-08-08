@@ -1,6 +1,6 @@
 //! 🧠️ Imperative logic module: boolean scope operators.
 
-use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
 fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
@@ -21,7 +21,7 @@ fn write_bool(input: &Dictionary, value: bool) -> Result<Dictionary, EvalError> 
 
 pub struct LogicCompare;
 
-impl Operation for LogicCompare {
+impl Operator for LogicCompare {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left_key = read_string(input, "left")?;
         let right_key = read_string(input, "right")?;
@@ -43,7 +43,7 @@ impl Operation for LogicCompare {
 
 pub struct LogicAnd;
 
-impl Operation for LogicAnd {
+impl Operator for LogicAnd {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left = read_string(input, "left")?;
         let right = read_string(input, "right")?;
@@ -53,7 +53,7 @@ impl Operation for LogicAnd {
 
 pub struct LogicOr;
 
-impl Operation for LogicOr {
+impl Operator for LogicOr {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left = read_string(input, "left")?;
         let right = read_string(input, "right")?;
@@ -63,7 +63,7 @@ impl Operation for LogicOr {
 
 pub struct LogicNot;
 
-impl Operation for LogicNot {
+impl Operator for LogicNot {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let source = read_string(input, "source")?;
         write_bool(input, !read_scope_bool(input, &source))
@@ -78,8 +78,8 @@ fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🧠️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operation }], &[]);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
 }
 
 pub fn register(registry: &mut Registry) {

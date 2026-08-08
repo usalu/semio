@@ -1,14 +1,14 @@
 //! ⚙️ S Studio app — headless compute over the kernel-owned `WorkflowDocument` (constitutional:
 //! engine, kept app-level since this app owns no document-side `🗿️artifacts` node — see
 //! `🦀️component.rs`'s module doc for the full rationale). Every function here computes over
-//! `semio_framework_os::{WorkflowDocument, WorkflowOperation}` (a foreign type owned by the kernel
-//! `workflow` crate via os-core's re-export) — building `WorkflowOperation` values from arguments is
-//! still pure compute, not an `apply_X_operation` match on a locally-owned enum.
+//! `semio_framework_os::{WorkflowDocument, WorkflowMutation}` (a foreign type owned by the kernel
+//! `workflow` crate via os-core's re-export) — building `WorkflowMutation` values from arguments is
+//! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
 use infinite_board_port_directed_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os::{
     create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, patch_workflow_parameter, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id_from_port_id, MediaContract,
-    WorkflowDocument, WorkflowOperation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition,
+    WorkflowDocument, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -37,16 +37,16 @@ impl OsParameterId for WorkflowParameter {
 }
 
 /// @emoji ➕️ Builds an `AddParameter` operation with a fresh default parameter of the requested type.
-pub fn add_parameter_operation(parameter_type: &WorkflowParameterType, name: &str) -> WorkflowOperation {
-    WorkflowOperation::AddParameter { parameter: create_default_workflow_parameter(parameter_type, name, None) }
+pub fn add_parameter_operation(parameter_type: &WorkflowParameterType, name: &str) -> WorkflowMutation {
+    WorkflowMutation::AddParameter { parameter: create_default_workflow_parameter(parameter_type, name, None) }
 }
 
 /// @emoji 🩹️ Builds a `PatchParameter` operation by folding `patch` (a `{field: value}` object) into the
 /// current parameter — the store-free operation-builder used in place of os-core's
 /// `OsWorkflowStore::patch_parameter`.
-pub fn patch_parameter_operation(projection: &WorkflowDocument, parameter_id: &str, patch: &Value) -> Option<WorkflowOperation> {
+pub fn patch_parameter_operation(projection: &WorkflowDocument, parameter_id: &str, patch: &Value) -> Option<WorkflowMutation> {
     let current = projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == parameter_id)?;
-    Some(WorkflowOperation::PatchParameter { parameter_id: parameter_id.into(), parameter: patch_workflow_parameter(current, patch) })
+    Some(WorkflowMutation::PatchParameter { parameter_id: parameter_id.into(), parameter: patch_workflow_parameter(current, patch) })
 }
 //#endregion 🔖️Parameters
 
@@ -56,7 +56,7 @@ pub fn patch_parameter_operation(projection: &WorkflowDocument, parameter_id: &s
 /// the caller to focus. The store-free operation-builder the plugin uses in place of os-core's
 /// `OsWorkflowStore::add_workflow_node`. A node IS the app instance now, there is no separate
 /// `OsAppInstance` to mint alongside it.
-pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64) -> Option<(WorkflowOperation, String)> {
+pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64) -> Option<(WorkflowMutation, String)> {
     let app = resolve_os_app_definition(plugin_id, app_id)?;
     let node_id = create_os_id("node");
     let position = WorkflowPosition { x, y, width: 0.0, height: 0.0 };
@@ -64,7 +64,7 @@ pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<
     if let Some(label) = label {
         node.label = label.into();
     }
-    Some((WorkflowOperation::AddNode { node }, node_id))
+    Some((WorkflowMutation::AddNode { node }, node_id))
 }
 //#endregion 🔖️WorkflowNodes
 
@@ -72,7 +72,7 @@ pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<
 /// @emoji 🤝️ Resolves the source/target `WorkflowMediaPort`s for a proposed connect from the live
 /// projection and negotiates their wire contract — shared by both connect entry points
 /// (`connections::ConnectMediaPorts` and the `graph_edit::NodeGraphEdit`/`"connect"` fixture edit) so
-/// neither can push a `WorkflowOperation::ConnectPorts` for an incompatible or unresolved pair of ports.
+/// neither can push a `WorkflowMutation::ConnectPorts` for an incompatible or unresolved pair of ports.
 /// Operates directly on `WorkflowNode`/`WorkflowMediaPort` — a node's ports are typed `MediaPortSpec`s
 /// now, no more string `artifact_kind` join through a separate `OsMediaPort`.
 pub fn negotiate_media_connect(projection: &WorkflowDocument, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, String> {
@@ -225,7 +225,7 @@ mod tests {
         let projection = demo_space_projection();
         let operation = patch_parameter_operation(&projection, "param-brush-size", &json!({ "value": 48.0 })).expect("operation");
         match operation {
-            WorkflowOperation::PatchParameter { parameter, .. } => match parameter {
+            WorkflowMutation::PatchParameter { parameter, .. } => match parameter {
                 WorkflowParameter::Numeric { value, .. } => assert_eq!(value, 48.0),
                 _ => panic!("expected numeric"),
             },

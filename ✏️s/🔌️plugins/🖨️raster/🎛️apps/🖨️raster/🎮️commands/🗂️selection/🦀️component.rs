@@ -1,8 +1,8 @@
 //! 🗂️ Raster play app commands — selection/hover (view actions, never a document operation).
 
-use crate::apps::raster::config::{RasterConfig, RasterConfigOperation};
+use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::artifacts::raster::engine::{flatten_raster_layers, layer_node_id};
-use crate::artifacts::raster::op::RasterOperation;
+use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::RasterProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
-        Ok(Emit::config(vec![RasterConfigOperation::SetSelection { ids: payload.ids.clone() }]))
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+        Ok(Emit::config(vec![RasterConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
 //#endregion 🔖️SetSelection
@@ -33,8 +33,8 @@ pub mod set_hover {
         pub id: Option<String>,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
-        Ok(Emit::config(vec![RasterConfigOperation::SetHovered { id: payload.id.clone() }]))
+    pub fn handle(payload: &SetHover, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+        Ok(Emit::config(vec![RasterConfigMutation::SetHovered { id: payload.id.clone() }]))
     }
 }
 //#endregion 🔖️SetHover
@@ -47,9 +47,9 @@ pub mod select_all {
     #[dsl(keyword = "select-all")]
     pub struct SelectAll {}
 
-    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
         let ids = flatten_raster_layers(&doc.projection.layers).into_iter().map(|layer| layer_node_id(layer).to_string()).collect();
-        Ok(Emit::config(vec![RasterConfigOperation::SetSelection { ids }]))
+        Ok(Emit::config(vec![RasterConfigMutation::SetSelection { ids }]))
     }
 }
 //#endregion 🔖️SelectAll

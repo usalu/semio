@@ -1,7 +1,7 @@
 //! 🔍️ S Studio app — open/close a node's own plugin instance window.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
-use semio_framework_os::{WorkflowDocument, WorkflowOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{WorkflowDocument, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 
 //#region 🔖️OpenInstance
@@ -15,14 +15,14 @@ pub mod open_instance {
         pub node_id: Option<String>,
     }
 
-    pub fn handle(payload: &OpenInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &OpenInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         match payload.node_id.clone().or_else(|| crate::apps::space::primary_selected_node_id(cfg.projection)) {
             Some(node_id) => match doc.projection.graph.nodes.iter().find(|row| row.id == node_id) {
                 Some(node) => Ok(Emit {
-                    config_operations: vec![
-                        SpaceConfigOperation::SetFocusedNode { node_id: Some(node_id.clone()) },
-                        SpaceConfigOperation::SetActiveNode { node_id: Some(node_id.clone()) },
-                        SpaceConfigOperation::SetSelection { node_ids: vec![node_id.clone()] },
+                    config_mutations: vec![
+                        SpaceConfigMutation::SetFocusedNode { node_id: Some(node_id.clone()) },
+                        SpaceConfigMutation::SetActiveNode { node_id: Some(node_id.clone()) },
+                        SpaceConfigMutation::SetSelection { node_ids: vec![node_id.clone()] },
                     ],
                     effects: vec![HostEffect::OpenPluginInstance { plugin_id: node.plugin_id.clone(), app_id: node.app_id.clone(), os_instance_id: Some(node.id.clone()) }],
                     ..Default::default()
@@ -44,8 +44,8 @@ pub mod close_focused_instance {
     #[dsl(keyword = "close-focused-instance")]
     pub struct CloseFocusedInstance {}
 
-    pub fn handle(_payload: &CloseFocusedInstance, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SpaceConfigOperation::SetFocusedNode { node_id: None }]))
+    pub fn handle(_payload: &CloseFocusedInstance, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SpaceConfigMutation::SetFocusedNode { node_id: None }]))
     }
 }
 //#endregion 🔖️CloseFocusedInstance
@@ -71,7 +71,7 @@ mod tests {
         let node = projection.graph.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
         let config = SpaceConfig::default();
         let emit = studio_emit(&projection, &config, &SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some(node.id.clone()) })).expect("handle");
-        assert!(emit.document_operations.is_empty(), "opening an instance is a host effect, not a document operation");
+        assert!(emit.document_mutations.is_empty(), "opening an instance is a host effect, not a document operation");
         let opened = emit
             .effects
             .iter()
@@ -91,11 +91,11 @@ mod tests {
         let config = SpaceConfig::default();
         let node_id = projection.graph.nodes.first().expect("node").id.clone();
         let open_emit = studio_emit(&projection, &config, &SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some(node_id.clone()) })).expect("handle");
-        assert!(open_emit.config_operations.contains(&SpaceConfigOperation::SetFocusedNode { node_id: Some(node_id.clone()) }));
-        let config_after_open = apply_config(&config, &open_emit.config_operations);
+        assert!(open_emit.config_mutations.contains(&SpaceConfigMutation::SetFocusedNode { node_id: Some(node_id.clone()) }));
+        let config_after_open = apply_config(&config, &open_emit.config_mutations);
         assert_eq!(config_after_open.focused_node_id.as_deref(), Some(node_id.as_str()));
         let close_emit = studio_emit(&projection, &config_after_open, &SpaceCommand::CloseFocusedInstance(close_focused_instance::CloseFocusedInstance {})).expect("handle");
-        assert_eq!(close_emit.config_operations, vec![SpaceConfigOperation::SetFocusedNode { node_id: None }]);
+        assert_eq!(close_emit.config_mutations, vec![SpaceConfigMutation::SetFocusedNode { node_id: None }]);
     }
 }
 //#endregion 🧪️Tests

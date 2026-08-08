@@ -10,13 +10,13 @@ use crate::artifacts::playbook::PLAYBOOK_DOCUMENT_SCHEMA;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
-pub use playbook::{empty_playbook_projection, flatten_playbook_blocks, PlaybookBlock};
+pub use crate::playbook::{empty_playbook_projection, flatten_playbook_blocks, PlaybookBlock};
 //#endregion 🔖️Types
 
 //#region 🔖️Register
 /// 🗂️ Registers `PlaybookSpec`'s pack↔dsl codec under `PLAYBOOK_DOCUMENT_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse playbook documents without
-/// depending on this crate's concrete `Projection`/`Operation` types. Called from the plugin root's
+/// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
 /// `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
@@ -170,3 +170,41 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent document engine — every transition is a `PlaybookMutation`.
+pub struct PlaybookEngine {
+    projection: crate::playbook::PlaybookSpec,
+}
+
+impl PlaybookEngine {
+    pub fn new(projection: crate::playbook::PlaybookSpec) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::playbook::PlaybookSpec {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for PlaybookEngine {
+    type Projection = crate::playbook::PlaybookSpec;
+    type Mutation = crate::artifacts::playbook::mutations::PlaybookMutation;
+    type Diff = crate::artifacts::playbook::diff::PlaybookDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = crate::artifacts::playbook::mutations::apply_playbook_edit_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

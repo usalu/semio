@@ -13,7 +13,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<PresentOperation, PresentConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<PresentMutation, PresentConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
 // framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
 // lint does not fire on the trait impl itself (only on the free functions the taxonomy split creates),
@@ -33,6 +33,50 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🎬️present/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod tiles {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🎞tiles/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🎞tiles/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🎞tiles/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod set_source {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📎set-source/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📎set-source/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📎set-source/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod set_tiles {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📋set-tiles/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📋set-tiles/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/📋set-tiles/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod set_deck {
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🃏set-deck/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🃏set-deck/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/🎬️present/🧬️mutations/🃏set-deck/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🎬️present/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🎬️present/🎒️pack/🦀️component.rs"]

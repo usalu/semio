@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Collections
@@ -119,7 +119,7 @@ pub(crate) fn puzzle3d_diff_absorb(diff: &mut Puzzle3dDiff, other: Puzzle3dDiff)
     }
 }
 
-impl OperationDiff<Puzzle3dProjection> for Puzzle3dDiff {
+impl MutationDiff<Puzzle3dProjection> for Puzzle3dDiff {
     fn apply(&self, projection: &Puzzle3dProjection) -> Puzzle3dProjection {
         if let Some(document) = &self.document {
             return document.clone();

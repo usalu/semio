@@ -3,7 +3,7 @@
 
 use crate::artifacts::fem3d::engine::{meshing, Fem3dError};
 use crate::artifacts::fem3d::Fem3dDocument;
-use crate::model::analyses;
+use crate::analyses;
 use std::collections::HashMap;
 
 /// 🗺️ One meshed solid's cheap preview geometry — the full volume mesh (points/tets) plus its outer

@@ -5,9 +5,9 @@
 //! only clears `selected_node_ids` on success (leaving `selected_edge_ids`/`selected_handle_ids`
 //! untouched) — distinct from the top-level `FlowCommand::DeleteSelection`, which clears all three.
 
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::artifacts::flow::engine::{host_operations, sync_host_selection};
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -28,10 +28,10 @@ pub enum FlowNodeGraphEditOp {
 //#endregion 🔖️FlowNodeGraphEditOp
 
 //#region 🔖️SharedDispatch
-fn node_graph_edit_result(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp]) -> Emit<FlowOperation, FlowConfigOperation> {
+fn node_graph_edit_result(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp]) -> Emit<FlowMutation, FlowConfigMutation> {
     let selected = config.selected_node_ids.clone();
     let mut clear_selection = false;
-    let document_operations = host_operations(fixture, config, session, |host| {
+    let document_mutations = host_operations(fixture, config, session, |host| {
         let mut changed = false;
         for sub_operation in operations {
             match sub_operation {
@@ -58,8 +58,8 @@ fn node_graph_edit_result(fixture: &FlowFixture, config: &FlowConfig, session: &
         }
         changed
     });
-    let config_operations = if clear_selection { vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }] } else { Vec::new() };
-    Emit { document_operations, config_operations, ..Default::default() }
+    let config_mutations = if clear_selection { vec![FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }] } else { Vec::new() };
+    Emit { document_mutations, config_mutations, ..Default::default() }
 }
 //#endregion 🔖️SharedDispatch
 
@@ -74,7 +74,7 @@ pub mod node_graph_edit {
         pub operations: Vec<FlowNodeGraphEditOp>,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(node_graph_edit_result(doc.projection, cfg.projection, session, &payload.operations))
     }
 }
@@ -91,7 +91,7 @@ pub mod spotlight_commit {
         pub operations: Vec<FlowNodeGraphEditOp>,
     }
 
-    pub fn handle(payload: &SpotlightCommit, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
+    pub fn handle(payload: &SpotlightCommit, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         Ok(node_graph_edit_result(doc.projection, cfg.projection, session, &payload.operations))
     }
 }
@@ -113,15 +113,15 @@ mod tests {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::SetSelection(SetSelection { ids: vec!["slider".into()], edge_ids: Vec::new(), handle_ids: Vec::new() }));
         assert!(render(&mut app, crate::apps::flow::FLOW_PLAY_BODY_MAIN).contains(r#""selection":["slider"]"#), "selection lands on the scene first");
-        dispatch(&mut app, FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![FlowNodeGraphEditOp::DeleteSelection] }));
+        dispatch(&mut app, FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { mutations: vec![FlowNodeGraphEditOp::DeleteSelection] }));
         assert!(!render(&mut app, crate::apps::flow::FLOW_PLAY_BODY_MAIN).contains(r#""selection":["slider"]"#), "batched delete clears the node selection");
     }
 
     #[test]
     fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
         let mut app = flow_app();
-        let result = dispatch(&mut app, FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![FlowNodeGraphEditOp::Connect { source_node_id: "nope".into(), source_port_id: "out".into(), target_node_id: "gone".into(), target_port_id: "in".into() }] }));
-        assert!(result.operations.is_empty(), "connecting missing nodes is a no-operation");
+        let result = dispatch(&mut app, FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { mutations: vec![FlowNodeGraphEditOp::Connect { source_node_id: "nope".into(), source_port_id: "out".into(), target_node_id: "gone".into(), target_port_id: "in".into() }] }));
+        assert!(result.document_mutations.is_empty(), "connecting missing nodes is a no-operation");
     }
 }
 //#endregion 🧪️Tests

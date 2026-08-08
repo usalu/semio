@@ -1,0 +1,1 @@
+error: could not compile `semio-s-plugin-forms` (lib) due to 22 previous errors; 3 warnings emitted

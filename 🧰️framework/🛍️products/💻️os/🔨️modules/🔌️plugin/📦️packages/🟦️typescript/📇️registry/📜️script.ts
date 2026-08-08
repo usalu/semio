@@ -848,10 +848,10 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[]): string[] {
 }
 
 //#region 🏛️ConstitutionalCrateGate
-/** @emoji 🏛️ The seven mandatory constitutional-crate slots every `s/plugin/<p>/app/<a>/` must carry
+/** @emoji 🏛️ The eight mandatory constitutional-crate slots every `s/plugin/<p>/app/<a>/` must carry
  * (see `.🦑️repo/🎫️tickets/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`).
  * `rs` sits directly at `<appDir>/rs`; every other slot sits at `<appDir>/<slot>/rs`. */
-const CONSTITUTIONAL_SLOTS = ["engine", "dsl", "op", "pack", "protocol", "ui"] as const;
+const CONSTITUTIONAL_SLOTS = ["engine", "dsl", "op", "pack", "protocol", "ui", "mutations"] as const;
 /** @emoji 🔤️ Slot word -> its emoji+name directory segment (matches the repo's emoji+name naming scheme). */
 const CONSTITUTIONAL_SLOT_DIRNAME: Record<(typeof CONSTITUTIONAL_SLOTS)[number], string> = {
   engine: "⚙️engine",
@@ -860,12 +860,13 @@ const CONSTITUTIONAL_SLOT_DIRNAME: Record<(typeof CONSTITUTIONAL_SLOTS)[number],
   pack: "🎒️pack",
   protocol: "📡️protocol",
   ui: "🖱️ui",
+  mutations: "🧬️mutations",
 };
 
 /** @emoji 🚦️ Gate 1 (build-time): every `s/plugin/<p>/app/…` directory — whether a single flattened
  * app (`app/rs/Cargo.toml` sits directly under `app/`) or a multi-app plugin (`app/<a>/rs/Cargo.toml`
  * per subdirectory) — must carry all seven constitutional-crate slot manifests. Hard-fails `check` so
- * a future split can never silently regress to a partial 4-of-7 or 5-of-7 crate set. Plugins that
+ * a future split can never silently regress to a partial 4-of-8 or 5-of-8 crate set. Plugins that
  * haven't reached `s/plugin/` yet (nothing under `app/`) are out of scope, not a violation — this gate
  * only enforces completeness for plugins that have already started the split. Goes silent entirely
  * once the plugin area is declared `clean`: the legacy constitution has no meaning without legacy
@@ -894,7 +895,7 @@ function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: Reado
         if (legacyRustManifestIn(join(dir, "🔨️modules", CONSTITUTIONAL_SLOT_DIRNAME[slot])) === undefined) missing.push(slot);
       }
       if (missing.length > 0) {
-        errors.push(`${PLUGINS_AREA}/${label} is missing constitutional crate slot(s): ${missing.join(", ")} (expected 7: rs, ${CONSTITUTIONAL_SLOTS.join(", ")})`);
+        errors.push(`${PLUGINS_AREA}/${label} is missing constitutional crate slot(s): ${missing.join(", ")} (expected 8: rs, ${CONSTITUTIONAL_SLOTS.join(", ")})`);
       }
     }
   }
@@ -903,11 +904,14 @@ function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: Reado
 //#endregion 🏛️ConstitutionalCrateGate
 
 //#region 🗿️TaxonomyValidator
-/** @emoji 🗿️ Every artifact node must carry all five taxonomy component slots — sourced from
+/** @emoji 🗿️ Every artifact node must carry the completeness taxonomy component slots (incl. `🧬️mutations` + `⚙️engine`) — sourced from
  * `🔣️taxonomy.json` (single vocabulary source of truth, see master ticket
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`; this used to be an independently
  * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
 const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
+const TAXONOMY_MUTATION_CHILD_DIRS = TAXONOMY.mutationChildDirs ?? [];
+const MUTATIONS_FACET_DIR = "🧬️mutations";
+const ENGINE_FACET_DIR = "⚙️engine";
 const TAXONOMY_ARTIFACT_SPEC_FILENAMES = TAXONOMY.artifactSpecFilenames ?? {};
 const TAXONOMY_TS_LEAF_FILENAME = TAXONOMY.ecosystems["🟦️typescript"]?.leafFilename ?? "🟦️component.ts";
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
@@ -955,6 +959,28 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
         findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_TS_LEAF_FILENAME}`);
       }
     }
+    //#region MutationTriad
+    // 🧬️ Walk 🧬️mutations/<mutation>/<kind> — each concrete mutation must carry rust+ts leaves for every mutationChildDirs kind.
+    const mutationsRoot = join(artifactsDir, artifact, MUTATIONS_FACET_DIR);
+    if (existsSync(mutationsRoot)) {
+      for (const mutation of listDirs(mutationsRoot)) {
+        if (mutation === TAXONOMY.packagesDirName) continue;
+        for (const kind of TAXONOMY_MUTATION_CHILD_DIRS) {
+          const kindDir = join(mutationsRoot, mutation, kind);
+          if (!existsSync(join(kindDir, TAXONOMY_LEAF_FILENAME))) {
+            findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${kind}/${TAXONOMY_LEAF_FILENAME}`);
+          }
+          if (!existsSync(join(kindDir, TAXONOMY_TS_LEAF_FILENAME))) {
+            findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${kind}/${TAXONOMY_TS_LEAF_FILENAME}`);
+          }
+        }
+      }
+    }
+    // ⚙️engine presence is enforced via TAXONOMY_ARTIFACT_COMPONENTS (completeness); keep an explicit finding if the facet dir itself is absent.
+    if (!existsSync(join(artifactsDir, artifact, ENGINE_FACET_DIR))) {
+      findings.push(`${pluginId}: artifact "${artifact}" is missing ${ENGINE_FACET_DIR}/`);
+    }
+    //#endregion MutationTriad
     const examplesRoot = join(artifactsDir, artifact, EXAMPLES_DIRNAME);
     if (!existsSync(examplesRoot)) {
       findings.push(`${pluginId}: artifact "${artifact}" is missing ${EXAMPLES_DIRNAME}/`);
@@ -1050,7 +1076,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
-  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN]);
+  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...TAXONOMY_MUTATION_CHILD_DIRS]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;

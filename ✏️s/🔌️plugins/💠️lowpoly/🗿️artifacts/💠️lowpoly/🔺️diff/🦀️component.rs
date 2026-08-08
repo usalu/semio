@@ -1,9 +1,9 @@
-//! 🔺️ Lowpoly artifact — the diff type: an ordered list of operations, replayed to materialize a
-//! result. Extracted out of the old `op` crate's `OperationDiff` impl per the taxonomy split.
+//! 🔺️ Lowpoly artifact — the aggregate diff type: an ordered list of mutations, replayed to
+//! materialize a result.
 
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::mutations::{apply_lowpoly_mutation, LowpolyMutation};
 use crate::artifacts::lowpoly::LowpolyProjection;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
@@ -13,25 +13,25 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Diff
-/// @emoji 📦️ A lowpoly diff is just the ordered list of operations it applies — replaying them over a
+/// @emoji 📦️ A lowpoly diff is just the ordered list of mutations it applies — replaying them over a
 /// cloned projection materializes the result and `absorb` concatenates, so a coalesced gesture stays
 /// one edit.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LowpolyDiff {
-    pub operations: Vec<LowpolyOperation>,
+    pub mutations: Vec<LowpolyMutation>,
 }
 
-impl OperationDiff<LowpolyProjection> for LowpolyDiff {
+impl MutationDiff<LowpolyProjection> for LowpolyDiff {
     fn apply(&self, projection: &LowpolyProjection) -> LowpolyProjection {
         let mut next = projection.clone();
-        for operation in &self.operations {
-            super::op::apply_lowpoly_operation(&mut next, operation);
+        for mutation in &self.mutations {
+            apply_lowpoly_mutation(&mut next, mutation);
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.operations.extend(other.operations);
+        self.mutations.extend(other.mutations);
     }
 }
 //#endregion 🔖️Diff

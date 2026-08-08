@@ -4,7 +4,7 @@
 //! consumer across the taxonomy tree lives here; a helper with exactly one consumer lives in that
 //! consumer's component file.
 
-use crate::artifacts::sequence::op::{sequence_fixture_operations, SequenceOperation};
+use crate::artifacts::sequence::op::{sequence_fixture_mutations, SequenceMutation};
 use crate::artifacts::sequence::{default_fixture, SequenceCamera, SequenceEdge, SequenceFixture, SequenceStep, SlotRef, StepParams, SEQUENCE_FIXTURE_SCHEMA};
 use infinite_board_port_directed_dag as dag;
 
@@ -142,7 +142,6 @@ fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
 pub fn register() {
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::sequence::SequencePlayApp>(SEQUENCE_FIXTURE_SCHEMA);
-    imperative_engine::bootstrap_linked_modules();
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -670,10 +669,10 @@ pub fn host_from_fixture(fixture: &SequenceFixture) -> SequenceHost {
 
 /// 🔀️ Runs a host mutation seeded from `fixture` and diffs the result into typed operations — a free
 /// function (not a method) since `SequencePlayApp` is a unit struct with nothing to borrow.
-pub fn ops_from_host_mutation(fixture: &SequenceFixture, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceOperation> {
+pub fn ops_from_host_mutation(fixture: &SequenceFixture, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
     let mut host = host_from_fixture(fixture);
     mutate(&mut host);
-    sequence_fixture_operations(fixture, &host.fixture)
+    sequence_fixture_mutations(fixture, &host.fixture)
 }
 //#endregion 🔖️HostHelpers
 
@@ -1139,3 +1138,41 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent document engine — every transition is a `SequenceMutation`.
+pub struct SequenceEngine {
+    projection: crate::artifacts::sequence::SequenceFixture,
+}
+
+impl SequenceEngine {
+    pub fn new(projection: crate::artifacts::sequence::SequenceFixture) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::sequence::SequenceFixture {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for SequenceEngine {
+    type Projection = crate::artifacts::sequence::SequenceFixture;
+    type Mutation = crate::artifacts::sequence::mutations::SequenceMutation;
+    type Diff = crate::artifacts::sequence::diff::SequenceDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = crate::artifacts::sequence::mutations::apply_sequence_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

@@ -1,7 +1,7 @@
 //! 💬️ Writer play app commands — the engagement bar: draft input and natural-language submit.
 
-use crate::apps::writer::config::{WriterConfig, WriterConfigOperation};
-use crate::artifacts::writer::op::WriterOperation;
+use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
+use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterProjection;
 use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,10 +16,10 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.projection;
         if payload.value != config.engagement_input {
-            Ok(Emit::config(vec![WriterConfigOperation::SetEngagementInput { value: payload.value.clone() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
+            Ok(Emit::config(vec![WriterConfigMutation::SetEngagementInput { value: payload.value.clone() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
         } else {
             Ok(Emit::default())
         }
@@ -33,7 +33,7 @@ pub mod engagement_input {
 /// wires this straight into one `Emit`).
 struct WriterEngagementOutcome {
     text: Option<String>,
-    config_operations: Vec<WriterConfigOperation>,
+    config_mutations: Vec<WriterConfigMutation>,
 }
 
 /// 💬️ Natural-language engagement parsing (premigration `applyEngagement`). Accepts both the spaced
@@ -43,42 +43,42 @@ fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str
     use crate::artifacts::writer::engine::format_writer_text;
 
     let trimmed = value.trim();
-    let mut config_operations = vec![WriterConfigOperation::SetEngagementInput { value: String::new() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }];
+    let mut config_mutations = vec![WriterConfigMutation::SetEngagementInput { value: String::new() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }];
     if trimmed.is_empty() {
-        return WriterEngagementOutcome { text: None, config_operations };
+        return WriterEngagementOutcome { text: None, config_mutations };
     }
     if engagement_token_matches(trimmed, "format") {
-        config_operations.push(WriterConfigOperation::SetFormatSignal { value: config.format_signal + 1 });
+        config_mutations.push(WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 });
         let formatted = format_writer_text(current_text, language_id);
         let text = (formatted != current_text).then_some(formatted);
-        return WriterEngagementOutcome { text, config_operations };
+        return WriterEngagementOutcome { text, config_mutations };
     }
     if engagement_token_matches(trimmed, "lint") {
-        config_operations.push(WriterConfigOperation::SetLintSignal { value: config.lint_signal + 1 });
-        return WriterEngagementOutcome { text: None, config_operations };
+        config_mutations.push(WriterConfigMutation::SetLintSignal { value: config.lint_signal + 1 });
+        return WriterEngagementOutcome { text: None, config_mutations };
     }
     if engagement_token_matches(trimmed, "line numbers") || engagement_token_matches(trimmed, "numbers") || engagement_token_matches(trimmed, "gutter") {
         let mut settings = config.editor_settings.clone();
         settings.show_line_numbers = !settings.show_line_numbers;
-        config_operations.push(WriterConfigOperation::SetEditorSettings { settings });
-        return WriterEngagementOutcome { text: None, config_operations };
+        config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
+        return WriterEngagementOutcome { text: None, config_mutations };
     }
     if let Some(rest) = strip_engagement_prefix(trimmed, "font size").or_else(|| strip_engagement_prefix(trimmed, "font")) {
         if let Ok(px) = rest.parse::<u32>() {
             let mut settings = config.editor_settings.clone();
             settings.font_px = px;
-            config_operations.push(WriterConfigOperation::SetEditorSettings { settings });
+            config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
         }
-        return WriterEngagementOutcome { text: None, config_operations };
+        return WriterEngagementOutcome { text: None, config_mutations };
     }
     if let Some(rest) = strip_engagement_prefix(trimmed, "tab size").or_else(|| strip_engagement_prefix(trimmed, "tab")) {
         if let Ok(size) = rest.parse::<u32>() {
             let mut settings = config.editor_settings.clone();
             settings.tab_size = size.max(1);
-            config_operations.push(WriterConfigOperation::SetEditorSettings { settings });
+            config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
         }
     }
-    WriterEngagementOutcome { text: None, config_operations }
+    WriterEngagementOutcome { text: None, config_mutations }
 }
 
 pub mod engagement_submit {
@@ -90,12 +90,12 @@ pub mod engagement_submit {
         pub value: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         let value = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());
         let outcome = apply_engagement(config, &document.text, &document.language_id, &value);
-        Ok(Emit { document_operations: outcome.text.map(|text| vec![WriterOperation::SetText { text }]).unwrap_or_default(), config_operations: outcome.config_operations, ..Default::default() })
+        Ok(Emit { document_mutations: outcome.text.map(|text| vec![WriterMutation::SetText { text }]).unwrap_or_default(), config_mutations: outcome.config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️EngagementSubmit
@@ -113,7 +113,7 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("font 16".into()) }), &semio_framework_plugin::testkit::meta("local")).expect("submit");
         // Font size is ephemeral config state — no history entry.
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
         let measures = app.window_measures();
         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));

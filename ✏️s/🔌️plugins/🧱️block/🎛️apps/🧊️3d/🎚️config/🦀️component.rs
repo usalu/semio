@@ -5,7 +5,7 @@
 //! state — the object kind's identity/representations/vortices live in `crate::artifacts::block3d`.
 
 use crate::BlockCamera3d;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️WindowView
@@ -204,10 +204,10 @@ pub fn upsert_window_view_index(windows: &mut Vec<Block3dWindowView>, window_id:
 // row carries one or two scalars — that whole-config snapshot IS the inverse mechanism every variant's
 // `backwards()` returns. Boxing it would change the derived `dsl::DslOps` wire encoding, which this
 // migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as gis's
-// `Gis2dConfigOperation`).
+// `Gis2dConfigMutation`).
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Block3dConfigOperation {
+pub enum Block3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -246,7 +246,7 @@ pub enum Block3dConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for Block3dConfigOperation {
+impl protocol::OpText for Block3dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -260,7 +260,7 @@ impl protocol::OpText for Block3dConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -271,7 +271,7 @@ impl protocol::OpText for Block3dConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Block3dConfigOperation {
+impl protocol::OpBinary for Block3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -317,22 +317,22 @@ impl protocol::OpBinary for Block3dConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<Block3dConfig> for Block3dConfigOperation {
+impl Mutation<Block3dConfig> for Block3dConfigMutation {
     type Diff = Block3dConfig;
 
     fn diff(&self, base: &Block3dConfig) -> Block3dConfig {
         let mut next = base.clone();
         match self {
-            Block3dConfigOperation::Snapshot { config } => return config.clone(),
-            Block3dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            Block3dConfigOperation::SetActiveRepresentation { representation_id } => next.active_representation_id = representation_id.clone(),
-            Block3dConfigOperation::SetWantedTags { tags } => next.wanted_tags = tags.clone(),
-            Block3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
-            Block3dConfigOperation::SetWindowRepresentations { window_id, representation_ids } => {
+            Block3dConfigMutation::Snapshot { config } => return config.clone(),
+            Block3dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Block3dConfigMutation::SetActiveRepresentation { representation_id } => next.active_representation_id = representation_id.clone(),
+            Block3dConfigMutation::SetWantedTags { tags } => next.wanted_tags = tags.clone(),
+            Block3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            Block3dConfigMutation::SetWindowRepresentations { window_id, representation_ids } => {
                 let index = upsert_window_view_index(&mut next.windows, window_id);
                 next.windows[index].representation_ids = representation_ids.clone();
             }
-            Block3dConfigOperation::ToggleWindowRepresentation { window_id, representation_id, visible } => {
+            Block3dConfigMutation::ToggleWindowRepresentation { window_id, representation_id, visible } => {
                 let index = upsert_window_view_index(&mut next.windows, window_id);
                 let row = &mut next.windows[index];
                 if *visible {
@@ -343,30 +343,30 @@ impl Operation<Block3dConfig> for Block3dConfigOperation {
                     row.representation_ids.retain(|id| id != representation_id);
                 }
             }
-            Block3dConfigOperation::SetWindowArrangement { window_id, arrangement } => {
+            Block3dConfigMutation::SetWindowArrangement { window_id, arrangement } => {
                 let index = upsert_window_view_index(&mut next.windows, window_id);
                 next.windows[index].arrangement = arrangement.clone();
             }
-            Block3dConfigOperation::SetWindowSpacing { window_id, spacing } => {
+            Block3dConfigMutation::SetWindowSpacing { window_id, spacing } => {
                 let index = upsert_window_view_index(&mut next.windows, window_id);
                 next.windows[index].spacing = *spacing;
             }
-            Block3dConfigOperation::SetActiveUtility { window_id, utility_id } => {
+            Block3dConfigMutation::SetActiveUtility { window_id, utility_id } => {
                 let index = upsert_window_view_index(&mut next.windows, window_id);
                 next.windows[index].active_utility = utility_id.clone();
             }
-            Block3dConfigOperation::SetBrushVortexKind { vortex_kind_id } => next.brush_vortex_kind_id = vortex_kind_id.clone(),
-            Block3dConfigOperation::SetBrushRadius { radius } => next.brush_radius = *radius,
-            Block3dConfigOperation::SetBrushFlip { flip } => next.brush_flip = *flip,
-            Block3dConfigOperation::SetBrushPreview { preview } => next.brush_preview = preview.clone(),
-            Block3dConfigOperation::SetCamera { camera } => next.camera = Some(camera.clone()),
-            Block3dConfigOperation::SetHoveredVortexFullId { full_id } => next.hovered_vortex_full_id = full_id.clone(),
+            Block3dConfigMutation::SetBrushVortexKind { vortex_kind_id } => next.brush_vortex_kind_id = vortex_kind_id.clone(),
+            Block3dConfigMutation::SetBrushRadius { radius } => next.brush_radius = *radius,
+            Block3dConfigMutation::SetBrushFlip { flip } => next.brush_flip = *flip,
+            Block3dConfigMutation::SetBrushPreview { preview } => next.brush_preview = preview.clone(),
+            Block3dConfigMutation::SetCamera { camera } => next.camera = Some(camera.clone()),
+            Block3dConfigMutation::SetHoveredVortexFullId { full_id } => next.hovered_vortex_full_id = full_id.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &Block3dConfig) -> Vec<Self> {
-        vec![Block3dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Block3dConfig) -> Vec<Self> {
+        vec![Block3dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -390,11 +390,11 @@ mod tests {
     #[test]
     fn config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Block3dConfig::default();
-        let operation = Block3dConfigOperation::SetSelection { ids: vec!["r0".into()] };
+        let operation = Block3dConfigMutation::SetSelection { ids: vec!["r0".into()] };
         let next = operation.diff(&base);
         assert_eq!(next.selected_ids, vec!["r0".to_string()]);
-        let inverse = operation.backwards(&base);
-        assert_eq!(inverse, vec![Block3dConfigOperation::Snapshot { config: base.clone() }]);
+        let inverse = operation.inverse(&base);
+        assert_eq!(inverse, vec![Block3dConfigMutation::Snapshot { config: base.clone() }]);
         let restored = inverse[0].diff(&next);
         assert_eq!(restored, base);
     }

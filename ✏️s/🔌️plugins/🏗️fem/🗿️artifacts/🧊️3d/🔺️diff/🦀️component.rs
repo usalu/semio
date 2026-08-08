@@ -7,7 +7,7 @@
 //! every old per-type struct's.
 
 use crate::artifacts::fem3d::{element_id, Fem3dDocument, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
@@ -151,7 +151,7 @@ pub struct Fem3dDiff {
     pub analysis: Option<FemAnalysisSettings>,
 }
 
-impl OperationDiff<Fem3dDocument> for Fem3dDiff {
+impl MutationDiff<Fem3dDocument> for Fem3dDiff {
     fn apply(&self, projection: &Fem3dDocument) -> Fem3dDocument {
         if let Some(document) = &self.document {
             return document.clone();

@@ -208,18 +208,18 @@ mod tests {
         dir
     }
 
-    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::DocumentId, entries: &[(&str, serde_json::Value)]) -> protocol::OperationEnvelope {
+    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::DocumentId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
         let mut payload = serde_json::Map::new();
         for (path, value) in entries {
             payload.insert((*path).to_string(), value.clone());
         }
-        protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(id.to_string()),
+        protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
-            dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
+            dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -241,7 +241,7 @@ mod tests {
 
         let batch = document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))])]).unwrap();
         let receipt = actor::block_on(handle.submit(batch, document::SubmitOptions { durability: DurabilityClass::Fsync })).unwrap().unwrap();
-        assert_eq!(receipt.command_id, protocol::OperationId("op-1".to_string()));
+        assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.head_seq, 1);
         assert!(receipt.conflicts.is_empty());
 

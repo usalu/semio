@@ -611,23 +611,23 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dDoc
 /// ✂️➕️ Read-only operation builders for the two structural collection edits every mutating command
 /// needs: inserting a step at the resolved-up-to cursor (and advancing it), and removing a step by id
 /// (and pulling the cursor back if it sat past the removed step). Shared by the `🎮️commands/🪜️step` and
-/// `🎮️commands/🌍️world` command modules — building `Process3dOperation`s from an immutable
+/// `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an immutable
 /// `&Process3dDocument` keeps every handler free of manual mutation, since the VCS store applies them.
-pub fn insert_step_operations(fixture: &Process3dDocument, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dOperation> {
-    use crate::artifacts::process3d::op::Process3dOperation;
-    use protocol::CollectionOperation;
+pub fn insert_step_mutations(fixture: &Process3dDocument, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
+    use crate::artifacts::process3d::op::Process3dMutation;
+    use protocol::CollectionMutation;
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-    vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: cursor, item: step } }, Process3dOperation::SetCursor { resolved_up_to: Some(cursor + 1) }]
+    vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: cursor, item: step } }, Process3dMutation::SetCursor { resolved_up_to: Some(cursor + 1) }]
 }
 
-pub fn remove_step_operations(fixture: &Process3dDocument, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dOperation>> {
-    use crate::artifacts::process3d::op::Process3dOperation;
-    use protocol::CollectionOperation;
+pub fn remove_step_mutations(fixture: &Process3dDocument, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
+    use crate::artifacts::process3d::op::Process3dMutation;
+    use protocol::CollectionMutation;
     let index = fixture.steps.iter().position(|step| step.id == id)?;
-    let mut operations = vec![Process3dOperation::Steps { collection: CollectionOperation::Remove { id: id.to_string() } }];
+    let mut operations = vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: id.to_string() } }];
     if let Some(cursor) = fixture.resolved_up_to {
         if cursor > index {
-            operations.push(Process3dOperation::SetCursor { resolved_up_to: Some(cursor - 1) });
+            operations.push(Process3dMutation::SetCursor { resolved_up_to: Some(cursor - 1) });
         }
     }
     Some(operations)
@@ -860,3 +860,41 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("process3d.spr"),
     });
 }
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent artifact engine — owns the projection; every transition is a mutation.
+pub struct Process3dEngine {
+    projection: crate::artifacts::process3d::Process3dDocument,
+}
+
+impl Process3dEngine {
+    pub fn new(projection: crate::artifacts::process3d::Process3dDocument) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::process3d::Process3dDocument {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for Process3dEngine {
+    type Projection = crate::artifacts::process3d::Process3dDocument;
+    type Mutation = crate::artifacts::process3d::mutations::Process3dMutation;
+    type Diff = crate::artifacts::process3d::diff::Process3dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = <Self::Diff as protocol::MutationDiff<Self::Projection>>::apply(&diff, &self.projection);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

@@ -1,12 +1,12 @@
 //! 🧮️ Animate present app — view state (`PresentConfig`) and its operation enum
-//! (`PresentConfigOperation`).
+//! (`PresentConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.present` document. It still round-trips through a real
 //! `DocumentStore` (with a real `backwards`), so selection/engagement/locale edits are VCS'd exactly
 //! like document content.
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -99,13 +99,13 @@ impl Default for PresentConfig {
 store::impl_whole_record_config!(PresentConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
+//#region 🔖️ConfigMutations
 /// 🧮️ B1: `PresentConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `AnimatePresentPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns — same "whole-config snapshot is the simplest correct inverse" shape as
-/// `shooting_op::ShootingConfigOperation`.
+/// `shooting_op::ShootingConfigMutation`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum PresentConfigOperation {
+pub enum PresentConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -120,7 +120,7 @@ pub enum PresentConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for PresentConfigOperation {
+impl protocol::OpText for PresentConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -134,7 +134,7 @@ impl protocol::OpText for PresentConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -145,7 +145,7 @@ impl protocol::OpText for PresentConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for PresentConfigOperation {
+impl protocol::OpBinary for PresentConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -191,25 +191,25 @@ impl protocol::OpBinary for PresentConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<PresentConfig> for PresentConfigOperation {
+impl Mutation<PresentConfig> for PresentConfigMutation {
     type Diff = PresentConfig;
 
     fn diff(&self, base: &PresentConfig) -> PresentConfig {
         let mut next = base.clone();
         match self {
-            PresentConfigOperation::Snapshot { config } => return config.clone(),
-            PresentConfigOperation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
-            PresentConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            PresentConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            PresentConfigMutation::Snapshot { config } => return config.clone(),
+            PresentConfigMutation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
+            PresentConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            PresentConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &PresentConfig) -> Vec<Self> {
-        vec![PresentConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &PresentConfig) -> Vec<Self> {
+        vec![PresentConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -240,10 +240,10 @@ mod tests {
         assert_eq!(decoded, config);
     }
 
-    //#region 🔖️ConfigOperationTests
-    fn round_trip_config(config: &PresentConfig, operation: &PresentConfigOperation) -> PresentConfig {
+    //#region 🔖️ConfigMutationTests
+    fn round_trip_config(config: &PresentConfig, operation: &PresentConfigMutation) -> PresentConfig {
         let forward = operation.diff(config);
-        let backwards = operation.backwards(config);
+        let backwards = operation.inverse(config);
         assert_eq!(backwards.len(), 1);
         let restored = backwards[0].diff(&forward);
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
@@ -253,31 +253,31 @@ mod tests {
     #[test]
     fn config_set_selected_ids_round_trips() {
         let config = PresentConfig::default();
-        let next = round_trip_config(&config, &PresentConfigOperation::SetSelectedIds { ids: vec!["t1".into()] });
+        let next = round_trip_config(&config, &PresentConfigMutation::SetSelectedIds { ids: vec!["t1".into()] });
         assert_eq!(next.selected_ids, vec!["t1".to_string()]);
     }
 
     #[test]
     fn config_set_engagement_input_round_trips() {
         let config = PresentConfig::default();
-        let next = round_trip_config(&config, &PresentConfigOperation::SetEngagementInput { value: "2x2".into() });
+        let next = round_trip_config(&config, &PresentConfigMutation::SetEngagementInput { value: "2x2".into() });
         assert_eq!(next.engagement_input, "2x2");
     }
 
     #[test]
     fn config_set_locale_round_trips() {
         let config = PresentConfig::default();
-        let next = round_trip_config(&config, &PresentConfigOperation::SetLocale { value: "de-DE".into() });
+        let next = round_trip_config(&config, &PresentConfigMutation::SetLocale { value: "de-DE".into() });
         assert_eq!(next.locale, "de-DE");
     }
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&PresentConfigOperation::Snapshot { config: PresentConfig::default() });
-        store::test_support::assert_op_line_round_trip(&PresentConfigOperation::SetSelectedIds { ids: vec!["t1".into(), "t2".into()] });
-        store::test_support::assert_op_line_round_trip(&PresentConfigOperation::SetEngagementInput { value: "add".into() });
-        store::test_support::assert_op_line_round_trip(&PresentConfigOperation::SetLocale { value: "en-US".into() });
+        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::Snapshot { config: PresentConfig::default() });
+        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetSelectedIds { ids: vec!["t1".into(), "t2".into()] });
+        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetEngagementInput { value: "add".into() });
+        store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetLocale { value: "en-US".into() });
     }
-    //#endregion 🔖️ConfigOperationTests
+    //#endregion 🔖️ConfigMutationTests
 }
 //#endregion 🧪️Tests

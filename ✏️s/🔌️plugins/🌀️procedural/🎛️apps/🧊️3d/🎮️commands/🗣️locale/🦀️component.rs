@@ -1,8 +1,8 @@
 //! 🗣️ Procedural3d play app commands — host-pushed locale switch and the plugin-contribution catalogue
 //! hot-swap (both undeclared in the manifest, never in the command palette).
 
-use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation};
-use crate::artifacts::procedural3d::op::Procedural3dOperation;
+use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
+use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -18,8 +18,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural3dConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural3dConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -34,8 +34,8 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Procedural3dConfigOperation::SetContributions { json: payload.json.clone() }]))
+    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Procedural3dConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }
 //#endregion 🔖️SetContributions

@@ -1,15 +1,15 @@
 //! 🖱️ S Studio app — graph hover + viewport/camera commands.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
-use semio_framework_os::{OsWorkflowCamera, WorkflowDocument, WorkflowOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{OsWorkflowCamera, WorkflowDocument, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️Hover
 /// 🔁️ Shared body for `node_graph_hover` and `text_hover` — both decode an optional `{nodeId}` JSON
 /// blob (or accept the raw string as-is) into a `SetHover` config operation.
-fn hover_operation(hover_json: &Option<String>) -> Vec<SpaceConfigOperation> {
+fn hover_operation(hover_json: &Option<String>) -> Vec<SpaceConfigMutation> {
     let node_id = hover_json.as_deref().and_then(|text| serde_json::from_str::<serde_json::Value>(text).ok().and_then(|parsed| parsed.get("nodeId").and_then(|id| id.as_str().map(str::to_string))).or_else(|| Some(text.to_string())));
-    vec![SpaceConfigOperation::SetHover { node_id }]
+    vec![SpaceConfigMutation::SetHover { node_id }]
 }
 
 pub mod node_graph_hover {
@@ -22,7 +22,7 @@ pub mod node_graph_hover {
         pub hover_json: Option<String>,
     }
 
-    pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
@@ -37,7 +37,7 @@ pub mod text_hover {
         pub hover_json: Option<String>,
     }
 
-    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
@@ -54,9 +54,9 @@ pub mod node_graph_viewport {
         pub viewport_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         match serde_json::from_str::<OsWorkflowCamera>(&payload.viewport_json) {
-            Ok(camera) => Ok(Emit::config(vec![SpaceConfigOperation::SetCamera { window_id: crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }])),
+            Ok(camera) => Ok(Emit::config(vec![SpaceConfigMutation::SetCamera { window_id: crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }])),
             Err(_) => Ok(Emit::default()),
         }
     }
@@ -85,8 +85,8 @@ mod tests {
         let config = SpaceConfig::default();
         let emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: r#"{"x":7.0,"y":9.0,"zoom":0.5}"#.into() })).expect("handle");
         assert_eq!(
-            emit.config_operations,
-            vec![SpaceConfigOperation::SetCamera { window_id: crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: OsWorkflowCamera { x: 7.0, y: 9.0, zoom: 0.5 }.into() }]
+            emit.config_mutations,
+            vec![SpaceConfigMutation::SetCamera { window_id: crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: OsWorkflowCamera { x: 7.0, y: 9.0, zoom: 0.5 }.into() }]
         );
     }
 }

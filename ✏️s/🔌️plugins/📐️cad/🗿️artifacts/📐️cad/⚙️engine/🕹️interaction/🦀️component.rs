@@ -18,6 +18,19 @@ use std::sync::OnceLock;
 #[serde(transparent)]
 pub struct CadEngagementContext(pub HashMap<String, Value>);
 
+impl std::ops::Deref for CadEngagementContext {
+    type Target = HashMap<String, Value>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for CadEngagementContext {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CadEngagementScratch {
@@ -115,8 +128,9 @@ fn spec_by_id(id: &str) -> Option<InteractionSpec> {
     parsed_specs().into_iter().find(|(_, spec)| spec.id == id).map(|(_, spec)| spec)
 }
 
-fn catalog() -> Vec<InteractionCatalogEntry> {
-    {
+fn catalog() -> &'static [InteractionCatalogEntry] {
+    static CATALOG: OnceLock<Vec<InteractionCatalogEntry>> = OnceLock::new();
+    CATALOG.get_or_init(|| {
         let mut entries = vec![
             InteractionCatalogEntry { id: "building.building.constructWall".to_string(), label: "Wall".to_string(), key: "w".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.wall".to_string() },
             InteractionCatalogEntry { id: "building.building.constructBeam".to_string(), label: "Beam".to_string(), key: "m".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.beam".to_string() },
@@ -139,7 +153,7 @@ fn catalog() -> Vec<InteractionCatalogEntry> {
             });
         }
         entries
-    }
+    })
 }
 //#endregion 🔖️Registry
 
@@ -172,15 +186,15 @@ fn parse_vec3(value: &Value) -> Option<[f64; 3]> {
 }
 
 fn context_point(session: &CadEngagementScratch, field: &str) -> Option<[f64; 3]> {
-    session.context.get(field).and_then(parse_vec3)
+    session.context.0.get(field).and_then(parse_vec3)
 }
 
 pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementScratch> {
     if is_legacy_building_id(interaction_id) {
-        return Some(CadEngagementScratch { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: HashMap::new(), pane, last_response: None });
+        return Some(CadEngagementScratch { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: CadEngagementContext(HashMap::new()), pane, last_response: None });
     }
     let spec = spec_by_id(interaction_id)?;
-    Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: HashMap::new(), pane, last_response: None })
+    Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: CadEngagementContext(HashMap::new()), pane, last_response: None })
 }
 
 pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
@@ -217,7 +231,7 @@ pub fn can_commit(session: &CadEngagementScratch) -> bool {
     match &spec.commit.when {
         None => true,
         Some(guard_name) => {
-            let env = ExprEnv { context: &session.context, event: None };
+            let env = ExprEnv { context: &session.context.0, event: None };
             spec.guard(guard_name, &env)
         }
     }
@@ -294,7 +308,7 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, eff
     match effect {
         Effect::Assign { target, value } => {
             if let Some(field) = context_target_field(target) {
-                let env = ExprEnv { context: &session.context, event: payload };
+                let env = ExprEnv { context: &session.context.0, event: payload };
                 let evaluated = evaluate_expr(value, &env, &empty_vars);
                 session.context.insert(field.to_string(), evaluated);
             }
@@ -306,7 +320,7 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, eff
         }
         Effect::Append { target, value } => {
             if let Some(field) = context_target_field(target) {
-                let env = ExprEnv { context: &session.context, event: payload };
+                let env = ExprEnv { context: &session.context.0, event: payload };
                 let evaluated = evaluate_expr(value, &env, &empty_vars);
                 let entry = session.context.entry(field.to_string()).or_insert_with(|| json!([]));
                 if let Some(array) = entry.as_array_mut() {
@@ -318,7 +332,7 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, eff
         }
         Effect::Raise { event } => raised.push(event.clone()),
         Effect::Action { action, params, .. } => {
-            let env = ExprEnv { context: &session.context, event: payload };
+            let env = ExprEnv { context: &session.context.0, event: payload };
             let evaluated: HashMap<String, Value> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
             run_named_action_effect(&mut session.context, payload, action, &evaluated);
         }
@@ -349,7 +363,7 @@ fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw
     let chosen = handler.transitions.iter().find(|transition| match &transition.guard {
         None => true,
         Some(name) => {
-            let env = ExprEnv { context: &session.context, event: payload };
+            let env = ExprEnv { context: &session.context.0, event: payload };
             spec.guard(name, &env)
         }
     });
@@ -619,7 +633,7 @@ fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScra
     let entry = interaction_by_id(&session.interaction_id)?;
     if session.interaction_id == "building.building.constructColumn" {
         let base = context_point(session, "base")?;
-        let height = session.context.get("height").and_then(|value| value.as_f64()).unwrap_or(3.0);
+        let height = session.context.0.get("height").and_then(|value| value.as_f64()).unwrap_or(3.0);
         let radius = 0.25;
         let solid = semio_s_3d::brep::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
         return Some(CadObject {
@@ -647,7 +661,7 @@ fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScra
     } else {
         3.0
     };
-    let height = session.context.get("height").and_then(|value| value.as_f64()).unwrap_or(default_height);
+    let height = session.context.0.get("height").and_then(|value| value.as_f64()).unwrap_or(default_height);
     let span = ((corner_b[0] - corner_a[0]).powi(2) + (corner_b[1] - corner_a[1]).powi(2)).sqrt().max(0.5);
     let width = (corner_b[0] - corner_a[0]).abs().max(0.5);
     let depth = (corner_b[1] - corner_a[1]).abs().max(0.5);
@@ -680,7 +694,7 @@ pub fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch
         return legacy_commit_object(kernel, session, label_count, next_id);
     }
     let spec = spec_by_id(&session.interaction_id)?;
-    let env = ExprEnv { context: &session.context, event: None };
+    let env = ExprEnv { context: &session.context.0, event: None };
     let empty_vars = HashMap::new();
     let params: HashMap<String, Value> = spec.commit.operation.params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
     let action = spec.commit.operation.action.as_str();
@@ -795,7 +809,7 @@ pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     let Some(display_state) = spec.display.states.iter().find(|state| state.state == session.state) else {
         return Vec::new();
     };
-    let env = ExprEnv { context: &session.context, event: None };
+    let env = ExprEnv { context: &session.context.0, event: None };
     let empty_vars = HashMap::new();
     display_state.items.iter().filter_map(|item| display_item_to_json(item, &env, &empty_vars)).collect()
 }

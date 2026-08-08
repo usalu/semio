@@ -1,8 +1,8 @@
 //! 🧰️ CAD play app commands — the window-scoped Dislocate utility: activation and its per-pane handle options.
 
-use crate::apps::cad::config::{CadConfig, CadConfigOperation};
+use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::op::CadOperation;
+use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🧰️ Switching the active utility is config-only: it never mutates the document. Clear
         // any in-progress engagement session / rubber-band scratch so a stale preview cannot
         // leak across a utility switch.
@@ -32,7 +32,7 @@ pub mod set_active_utility {
         runtime.hovered_target = None;
         let mut config = cad_config_from_runtime(&runtime, cfg.projection);
         config.active_utility_id = payload.utility_id.clone();
-        Ok(Emit::config(vec![CadConfigOperation::Snapshot { config }]))
+        Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))
     }
 }
 //#endregion 🔖️SetActiveUtility
@@ -49,7 +49,7 @@ pub mod set_dislocate_option {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetDislocateOption, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetDislocateOption, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         let window_id = cad_window_id_for_pane(pane);

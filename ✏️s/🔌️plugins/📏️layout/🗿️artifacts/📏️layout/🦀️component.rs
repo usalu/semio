@@ -330,7 +330,7 @@ pub struct LayoutDocument {
     /// `fields:in` workflow port (JSON object text, `{ "key": value, ... }`). Layout has no existing
     /// text-interpolation/field-binding concept for frames/stories, so this is a new named data source
     /// the layout can reference later (e.g. a future `{{key}}` story-content binding) rather than
-    /// wiring it into rendering today — see `crate::artifacts::layout::op::LayoutOperation::SetDataFields`/
+    /// wiring it into rendering today — see `crate::artifacts::layout::mutations::LayoutMutation::SetDataFields`/
     /// `crate::apps::layout::commands::author::import_media`.
     #[serde(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none")]
     pub data_fields_json: Option<String>,
@@ -560,7 +560,7 @@ impl Patchable<ImageLinkPatch> for ImageLink {
 /// for text. The doubly-optional `fill`/`stroke` distinguishes "unchanged" (outer `None`) from
 /// "cleared" (inner `None`). Needed both by `op`'s `PatchFrame` operation and by the DSL/spr mirror in
 /// `spr` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
-/// itself. Frame patching is per-page nested rather than a flat `CollectionOperation`, so unlike the
+/// itself. Frame patching is per-page nested rather than a flat `CollectionMutation`, so unlike the
 /// patches above it has no `Patchable` impl.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct FramePatch {

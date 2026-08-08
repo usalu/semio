@@ -8,7 +8,7 @@
 //! sub-operation enum for `nodeGraphEdit`) moved with it, into `🎮️commands/🕸️graph/🦀️component.rs`
 //! alongside the command it's a field of.
 
-use crate::artifacts::dag::op::DagOperation;
+use crate::artifacts::dag::op::DagMutation;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
@@ -18,14 +18,14 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-/// 📦️ Encodes a `DagOperation` to its binary command form.
-pub fn encode_op(operation: &DagOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `DagMutation` to its binary command form.
+pub fn encode_op(operation: &DagMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `DagOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<DagOperation, protocol::ProtocolError> {
-    DagOperation::decode_op(bytes)
+/// 📖️ Decodes a `DagMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<DagMutation, protocol::ProtocolError> {
+    DagMutation::decode_op(bytes)
 }
 
 //#region 🧪️Tests
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = DagOperation::SetNodes { nodes: Vec::new() };
+        let operation = DagMutation::SetNodes { nodes: Vec::new() };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -57,7 +57,7 @@ mod semio_protocol_conformance {
 
     #[test]
     fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = DagOperation::SetNodes { nodes: Vec::new() };
+        let operation = DagMutation::SetNodes { nodes: Vec::new() };
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

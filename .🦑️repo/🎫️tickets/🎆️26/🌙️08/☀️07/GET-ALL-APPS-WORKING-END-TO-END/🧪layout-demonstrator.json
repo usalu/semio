@@ -1,0 +1,92 @@
+{
+  "label": "demonstrator",
+  "url": "http://127.0.0.1:6029/",
+  "dump": {
+    "title": "Entwerfen mit Bestand · Demonstrator",
+    "body": {
+      "scrollH": 900,
+      "clientH": 900,
+      "scrollW": 1440,
+      "clientW": 1440
+    },
+    "hasRenderError": false,
+    "bodySample": [
+      "Dokument",
+      "Katalog",
+      "Inspektion",
+      "Vollbild",
+      "semio · procedural · 3d",
+      "Beispiel",
+      "Sechseckige Pilzsäule",
+      "Bearbeiten",
+      "Generieren",
+      "Workflow",
+      "Fokussieren",
+      "Schließen",
+      "Fensteroptionen",
+      "Aktionen",
+      "Hilfsmittel",
+      "Vorschau",
+      "Fokussieren",
+      "Schließen",
+      "Lädt…",
+      "Projektion",
+      "Fensteroptionen",
+      "Aktionen",
+      "Hilfsmittel",
+      "Anzeige",
+      "Synchronisierung",
+      "Ein Projekt von",
+      "und",
+      "Gefördert durch",
+      "Einstellungen",
+      "Tastenkürzel"
+    ],
+    "layout": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "hidden",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "relative flex flex-col overflow-hidden ui-surface h-screen w-screen"
+    },
+    "scope": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "visible",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "semio-scope"
+    },
+    "host": {
+      "w": 966,
+      "h": 807,
+      "overflow": "hidden",
+      "flex": "0 1 auto",
+      "height": "807.266px",
+      "className": "semio-node-graph-host relative h-full min-h-0 w-full overflow-hidden"
+    }
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "[DEBUG] action failed setActiveExample {exampleId: hexagonal-cut-concrete-forest-left} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "[DEBUG] action failed setActiveExample {exampleId: concrete-forest} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)",
+    "%o\n\n%s\n\n%s\n Error: Invalid 3 panel layout: 68%, 32%\n    at K (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=f178fec1:864:11)\n    at Bt (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=f178fec1:1507:58)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=f178fec1:1749:15\n    at Object.react_stack_bottom_frame (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:18299:20)\n    at runWithFiberInDEV (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:729:72)\n    at commitHookEffectListMount (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9143:163)\n    at commitHookLayoutEffects (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9123:60)\n    at commitLayoutEffectOnFiber (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9636:26)\n    at recursivelyTraverseLayoutEffects (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:10524:13)\n    at commitLayoutEffectOnFiber (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9635:13) The above error occurred in the <Group> component. React will try to recreate this component tree from scratch using the error boundary you provided, ShellFaultBoundary.",
+    "[DEBUG] shell fault session-canvas Error: Invalid 3 panel layout: 68%, 32%\n    at K (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=f178fec1:864:11)\n    at Bt (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=f178fec1:1507:58)\n    at http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=f178fec1:1749:15\n    at Object.react_stack_bottom_frame (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:18299:20)\n    at runWithFiberInDEV (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:729:72)\n    at commitHookEffectListMount (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9143:163)\n    at commitHookLayoutEffects (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9123:60)\n    at commitLayoutEffectOnFiber (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9636:26)\n    at recursivelyTraverseLayoutEffects (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:10524:13)\n    at commitLayoutEffectOnFiber (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=f178fec1:9635:13) \n    at Xt (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-resizable-panels.js?v=f178fec1:1606:13)\n    at ResizablePanelGroup (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%E2%86%95%EF%B8%8FResizable/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:115:32)\n    at div (<anonymous>)\n    at LevelProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8C%88%EF%B8%8FSurface/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:9:33)\n    at div (<anonymous>)\n    at Mode (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8E%A8%EF%B8%8FCanvas/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:1118:17)\n    at div (<anonymous>)\n    at div (<anonymous>)\n    at App (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8E%A8%EF%B8%8FCanvas/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:1716:16)\n    at ShellFaultBoundary (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/Shell/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:458:5)\n    at div (<anonymous>)\n    at div (<anonymous>)\n    at ShellFaultBoundary (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/Shell/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:458:5)\n    at div (<anonymous>)\n    at div (<anonymous>)\n    at div (<anonymous>)\n    at div (<anonymous>)\n    at LevelProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8C%88%EF%B8%8FSurface/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:9:33)\n    at SurfaceScope (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8C%88%EF%B8%8FSurface/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:47:32)\n    at div (<anonymous>)\n    at GhostProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%8E%AF%EF%B8%8Ftargets/%E2%9A%9B%EF%B8%8Freact/%F0%9F%93%A6%EF%B8%8Findex.tsx:3225:33)\n    at UiMobileProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%8E%AF%EF%B8%8Ftargets/%E2%9A%9B%EF%B8%8Freact/%F0%9F%93%A6%EF%B8%8Findex.tsx:3060:36)\n    at Layout (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%93%90%EF%B8%8FLayout/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:10:19)\n    at PanelDockProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%8E%AF%EF%B8%8Ftargets/%E2%9A%9B%EF%B8%8Freact/%F0%9F%93%A6%EF%B8%8Findex.tsx:5374:37)\n    at div (<anonymous>)\n    at LevelProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8C%88%EF%B8%8FSurface/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:9:33)\n    at UIFindProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellSearch/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:121:34)\n    at ShellFaultBoundary (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/Shell/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:458:5)\n    at UiKeybindingsProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%8E%AF%EF%B8%8Ftargets/%E2%9A%9B%EF%B8%8Freact/%F0%9F%93%A6%EF%B8%8Findex.tsx:896:41)\n    at FrameworkOsShellInner (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:513:3)\n    at I18nextProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-i18next.js?v=f178fec1:1435:3)\n    at ShellScopeProvider (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%90%9A%EF%B8%8FShellScope/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:40:38)\n    at div (<anonymous>)\n    at FrameworkOsShell (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:472:11)\n    at PaneErrorBoundary (http://127.0.0.1:6029/%F0%9F%93%A6%EF%B8%8Findex.tsx:239:5)\n    at div (<anonymous>)\n    at DemonstratorPane (http://127.0.0.1:6029/%F0%9F%93%A6%EF%B8%8Findex.tsx:263:3)\n    at div (<anonymous>)\n    at div (<anonymous>)\n    at DemonstratorLanding (http://127.0.0.1:6029/%F0%9F%93%A6%EF%B8%8Findex.tsx:424:26)",
+    "[DEBUG] action failed setActiveExample {exampleId: demo-stock} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)",
+    "[DEBUG] action failed setActiveExample {exampleId: timber-beam-joinery} Error: [DEBUG] action 'setActiveExample' failed: unknown fault\n    at performCommand (http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:83:13)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Error: Could not load /mesh/🧊️hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', \"<!doctype \"... is not valid JSON",
+    "Error: Could not load /mesh/🧊️hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+  ]
+}

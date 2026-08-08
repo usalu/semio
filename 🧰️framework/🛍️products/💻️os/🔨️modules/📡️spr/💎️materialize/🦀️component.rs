@@ -3,7 +3,7 @@
 //! it into a caller-owned projection type `P` (`materialize_with`). This crate never knows what
 //! `P` is or how an op applies to it — `crate::os_spr::history::HistoryEdit`'s `ops: Vec<OpPayload>` stay
 //! opaque text/binary blobs all the way through; the `apply_edit` closure is where a downstream
-//! technology (its own `dsl`-generated `Operation` impls) turns them into real mutations. Frozen
+//! technology (its own `dsl`-generated `Mutation` impls) turns them into real mutations. Frozen
 //! contract: `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_materialize`).
 //!
 //! @emoji 🧭️ `REC_PROJECTION` bodies (a complete `.spk` or dsl-text snapshot) are just as opaque to
@@ -579,7 +579,7 @@ mod tests {
             coalesce_key: None,
             description: None,
             ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }],
-            backwards: Vec::new(),
+            inverse: Vec::new(),
             meta: None,
         }
     }

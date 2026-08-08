@@ -1,0 +1,9 @@
+{
+  "extensionId": "flow-extension-draw",
+  "version": "0.0.0-dev",
+  "label": "flow-extension-draw",
+  "extends": "flow",
+  "moduleUrl": "/extensions/flow-extension-draw/semio_s_plugin_flow_extension_draw.js",
+  "packageHash": "dev:1786197681664",
+  "installedAt": 1786197681664
+}

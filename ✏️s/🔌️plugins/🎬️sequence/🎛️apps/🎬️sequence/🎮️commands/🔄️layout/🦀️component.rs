@@ -1,8 +1,8 @@
 //! 🔄️ Sequence play app commands — auto-layout (`reorganize`) and its flow-direction setting.
 
-use crate::apps::sequence::config::{SequenceConfig, SequenceConfigOperation};
+use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::ops_from_host_mutation;
-use crate::artifacts::sequence::op::SequenceOperation;
+use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceFixture;
 use infinite_board_port_directed_dag::{DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -29,9 +29,9 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let orientation = orientation_from_config(&cfg.projection.orientation);
-        Ok(Emit::operations(ops_from_host_mutation(doc.projection, |host| {
+        Ok(Emit::mutations(ops_from_host_mutation(doc.projection, |host| {
             let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
             let _ = host.reorganize(&opts);
         })))
@@ -49,8 +49,8 @@ pub mod set_orientation {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetOrientation, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigOperation::SetOrientation { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetOrientation, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SequenceConfigMutation::SetOrientation { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetOrientation

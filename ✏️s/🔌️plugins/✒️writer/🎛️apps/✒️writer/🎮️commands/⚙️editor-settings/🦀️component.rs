@@ -1,8 +1,8 @@
 //! ⚙️ Writer play app commands — editor chrome settings: line-number toggle, font size, line height,
 //! tab size. All config-only View commands, all patching `WriterConfig::editor_settings`.
 
-use crate::apps::writer::config::{WriterConfig, WriterConfigOperation};
-use crate::artifacts::writer::op::WriterOperation;
+use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
+use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -15,11 +15,11 @@ pub mod toggle_line_numbers {
     #[dsl(keyword = "toggle-line-numbers")]
     pub struct ToggleLineNumbers {}
 
-    pub fn handle(_payload: &ToggleLineNumbers, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+    pub fn handle(_payload: &ToggleLineNumbers, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.projection;
         let mut settings = config.editor_settings.clone();
         settings.show_line_numbers = !settings.show_line_numbers;
-        Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
+        Ok(Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
     }
 }
 //#endregion 🔖️ToggleLineNumbers
@@ -34,11 +34,11 @@ pub mod set_font_px {
         pub value: u32,
     }
 
-    pub fn handle(payload: &SetFontPx, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFontPx, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.projection;
         let mut settings = config.editor_settings.clone();
         settings.font_px = payload.value;
-        Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
+        Ok(Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
     }
 }
 //#endregion 🔖️SetFontPx
@@ -53,11 +53,11 @@ pub mod set_line_height {
         pub value: u32,
     }
 
-    pub fn handle(payload: &SetLineHeight, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+    pub fn handle(payload: &SetLineHeight, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.projection;
         let mut settings = config.editor_settings.clone();
         settings.line_height = payload.value;
-        Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
+        Ok(Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
     }
 }
 //#endregion 🔖️SetLineHeight
@@ -72,11 +72,11 @@ pub mod set_tab_size {
         pub value: u32,
     }
 
-    pub fn handle(payload: &SetTabSize, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+    pub fn handle(payload: &SetTabSize, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         let config = cfg.projection;
         let mut settings = config.editor_settings.clone();
         settings.tab_size = payload.value.max(1);
-        Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
+        Ok(Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
     }
 }
 //#endregion 🔖️SetTabSize
@@ -92,7 +92,7 @@ mod tests {
     fn view_action_emits_no_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {}), &semio_framework_plugin::testkit::meta("local")).expect("toggle");
-        assert!(result.operations.is_empty());
+        assert!(result.document_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

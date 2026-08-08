@@ -5,7 +5,7 @@
 //! The terrain's one editable property (exaggeration) is document state and lives in
 //! `crate::artifacts::gisterrain`.
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -105,10 +105,10 @@ store::impl_whole_record_config!(Gis3dConfig);
 
 //#region 🔖️ConfigOperations
 /// 🧮️ `Gis3dConfig`'s operation enum — one variant per settled interaction, plus a generic `Snapshot`
-/// every variant's `backwards()` returns — mirrors `crate::apps::gis2d::config::Gis2dConfigOperation`'s
+/// every variant's `backwards()` returns — mirrors `crate::apps::gis2d::config::Gis2dConfigMutation`'s
 /// identical shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Gis3dConfigOperation {
+pub enum Gis3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -123,7 +123,7 @@ pub enum Gis3dConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for Gis3dConfigOperation {
+impl protocol::OpText for Gis3dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -137,7 +137,7 @@ impl protocol::OpText for Gis3dConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -148,7 +148,7 @@ impl protocol::OpText for Gis3dConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Gis3dConfigOperation {
+impl protocol::OpBinary for Gis3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -194,22 +194,22 @@ impl protocol::OpBinary for Gis3dConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<Gis3dConfig> for Gis3dConfigOperation {
+impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
     type Diff = Gis3dConfig;
 
     fn diff(&self, base: &Gis3dConfig) -> Gis3dConfig {
         let mut next = base.clone();
         match self {
-            Gis3dConfigOperation::Snapshot { config } => return config.clone(),
-            Gis3dConfigOperation::SetCamera { camera_json } => next.camera_json = camera_json.clone(),
-            Gis3dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            Gis3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            Gis3dConfigMutation::Snapshot { config } => return config.clone(),
+            Gis3dConfigMutation::SetCamera { camera_json } => next.camera_json = camera_json.clone(),
+            Gis3dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Gis3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &Gis3dConfig) -> Vec<Self> {
-        vec![Gis3dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Gis3dConfig) -> Vec<Self> {
+        vec![Gis3dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -238,20 +238,20 @@ mod tests {
     #[test]
     fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis3dConfig::default();
-        let operation = Gis3dConfigOperation::SetSelection { ids: vec!["p1".into()] };
+        let operation = Gis3dConfigMutation::SetSelection { ids: vec!["p1".into()] };
         let next = operation.diff(&base);
         assert_eq!(next.selected_ids, vec!["p1".to_string()]);
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![Gis3dConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![Gis3dConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(backwards[0].diff(&next), base);
     }
 
     #[test]
     fn gis3d_config_operation_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigOperation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigOperation::SetSelection { ids: vec!["p1".into()] });
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigOperation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&Gis3dConfigOperation::Snapshot { config: Gis3dConfig::default() });
+        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
+        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetSelection { ids: vec!["p1".into()] });
+        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::Snapshot { config: Gis3dConfig::default() });
     }
 }
 //#endregion 🧪️Tests

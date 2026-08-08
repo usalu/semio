@@ -1,7 +1,7 @@
 //! ⏱️ Criterion benchmarks for the `protocol_*` crate family's hot paths: `HistoryLogGen`
 //! generation cost, whole-file `encode_history`/`decode_history`, `HistoryAppender` streaming
 //! append, `protocol_format::recover`, `protocol_wire` frame codec, `protocol_crdt::
-//! merge_concurrent_diffs`, and `OpDag` insertion — each group parameterized over a scaling value
+//! merge_concurrent_diffs`, and `MutationDag` insertion — each group parameterized over a scaling value
 //! to reveal where a cost curve goes superlinear, not just a single-point timing. Run via
 //! `nx run @protocol/testkit-rs:bench` (`bun ./📜️script.ts bench`).
 
@@ -92,7 +92,7 @@ fn bench_recover(c: &mut Criterion) {
 fn bench_wire_frame_codec(c: &mut Criterion) {
     let mut group = c.benchmark_group("wire_frame_codec");
     for &envelope_count in &[1usize, 16, 64] {
-        let envelopes: Vec<protocol::OperationEnvelope> = OpDagGen::new(5).generate(envelope_count);
+        let envelopes: Vec<protocol::MutationEnvelope> = OpDagGen::new(5).generate(envelope_count);
         let frame = protocol::ClientFrame::Commands { batch_id: 1, envelopes };
         group.bench_with_input(BenchmarkId::new("encode_client_frame", envelope_count), &frame, |b, frame| {
             b.iter(|| black_box(protocol::encode_client_frame(frame, protocol::Lane::Command)));
@@ -114,7 +114,7 @@ fn bench_crdt_merge(c: &mut Criterion) {
         field_a: Option<i64>,
         field_b: Option<i64>,
     }
-    impl protocol::OperationDiff<(i64, i64)> for BenchDiff {
+    impl protocol::MutationDiff<(i64, i64)> for BenchDiff {
         fn apply(&self, base: &(i64, i64)) -> (i64, i64) {
             (self.field_a.unwrap_or(base.0), self.field_b.unwrap_or(base.1))
         }
@@ -127,9 +127,9 @@ fn bench_crdt_merge(c: &mut Criterion) {
             }
         }
     }
-    fn meta_at(actor: u64, physical_ms: u64) -> protocol::OperationMeta {
-        protocol::OperationMeta {
-            operation_id: None,
+    fn meta_at(actor: u64, physical_ms: u64) -> protocol::MutationMeta {
+        protocol::MutationMeta {
+            mutation_id: None,
             dependencies: Vec::new(),
             base_version: 0,
             author_id: None,
@@ -155,14 +155,14 @@ fn bench_crdt_merge(c: &mut Criterion) {
 }
 //#endregion 🔖️Crdt
 
-//#region 🔖️OpDag
+//#region 🔖️MutationDag
 fn bench_op_dag_insert(c: &mut Criterion) {
     let mut group = c.benchmark_group("op_dag_insert");
     for &node_count in &[8usize, 64, 256] {
         let envelopes = OpDagGen::new(6).generate(node_count);
         group.bench_with_input(BenchmarkId::new("insert_in_topological_order", node_count), &envelopes, |b, envelopes| {
             b.iter(|| {
-                let mut dag = protocol::OpDag::new();
+                let mut dag = protocol::MutationDag::new();
                 for envelope in envelopes {
                     dag.insert(envelope.clone()).expect("insert");
                 }
@@ -172,7 +172,7 @@ fn bench_op_dag_insert(c: &mut Criterion) {
     }
     group.finish();
 }
-//#endregion 🔖️OpDag
+//#endregion 🔖️MutationDag
 
 criterion_group!(protocol_benches, bench_history_log_gen, bench_encode_decode_history, bench_history_appender, bench_recover, bench_wire_frame_codec, bench_crdt_merge, bench_op_dag_insert);
 criterion_main!(protocol_benches);

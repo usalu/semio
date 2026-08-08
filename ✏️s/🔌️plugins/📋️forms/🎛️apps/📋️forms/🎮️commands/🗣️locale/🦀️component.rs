@@ -5,8 +5,8 @@
 //! `"set-locale"` its command id would suggest — see the `as` literal in `crate::apps::forms`'s
 //! `app_commands!` invocation.
 
-use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
-use crate::artifacts::forms::{op::FormOperation, FormSpec};
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::artifacts::forms::{op::FormMutation, FormSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +20,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
-        Ok(Emit::config(vec![FormsConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FormsConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

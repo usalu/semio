@@ -1,9 +1,9 @@
 //! 📥️ Remodel play app commands — media ingestion: still-image drop-zone payloads, the host-decoded
 //! video frame/done tick pair, the in-process video-bytes fallback, and manual stream bookkeeping.
 
-use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
+use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::engine::{decode_still_image, describe_video_probe, images as remodel_image, next_remodel_id, payload_from_data_url, video as remodel_video, video_codec_from_label, video_codec_to_document};
-use crate::artifacts::remodel::op::RemodelOperation;
+use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelProjection, VideoSource};
 use base64::Engine as _;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
@@ -102,7 +102,7 @@ pub mod import_frame_payload {
 
     /// 📥️ A still-image drop-zone/file-picker payload; a `video/*` mime is re-routed to the in-process
     /// video-bytes decoder.
-    pub fn handle(payload: &ImportFramePayload, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportFramePayload, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let Some((mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
         if mime.starts_with("video/") {
             return import_video_bytes_payload::handle(&import_video_bytes_payload::ImportVideoBytesPayload { payload: payload.payload.clone(), name: payload.name.clone() }, doc, cfg);
@@ -133,7 +133,7 @@ pub mod import_frame_payload {
                 });
             }
         }
-        Ok(Emit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
+        Ok(Emit::amend(vec![RemodelMutation::SetAsset { key: asset_key, value: Some(asset) }, RemodelMutation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
     }
 }
 //#endregion 🔖️ImportFramePayload
@@ -155,7 +155,7 @@ pub mod import_video_frame_payload {
     /// 🎞️ Host-decoded video frame tick (Tier 1/2 `RequestMediaFrames` frame dispatch): decodes the
     /// sampled JPEG, runs it through the relative blur gate (rebuilt from persisted frames each tick —
     /// see `rebuild_video_import_scratch`), and amends it into the active stream.
-    pub fn handle(payload: &ImportVideoFramePayload, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportVideoFramePayload, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
         let Ok(image) = remodel_image::decode_jpeg(&bytes) else { return Ok(Emit::default()) };
         let scene = doc.projection;
@@ -187,7 +187,7 @@ pub mod import_video_frame_payload {
                 source: None,
             }),
         }
-        Ok(Emit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
+        Ok(Emit::amend(vec![RemodelMutation::SetAsset { key: asset_key, value: Some(asset) }, RemodelMutation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
     }
 }
 //#endregion 🔖️ImportVideoFramePayload
@@ -211,14 +211,14 @@ pub mod import_video_done {
     /// stream (`scene.streams.last()` — the stream this batch's ticks just built). Uses the SAME
     /// coalesce key as every preceding `ImportVideoFramePayload` tick, so the whole import (every
     /// accepted frame plus this final metadata write) collapses into one undo step.
-    pub fn handle(payload: &ImportVideoDone, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportVideoDone, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let scene = doc.projection;
         let Some(stream_id) = scene.streams.last().map(|stream| stream.id.clone()) else { return Ok(Emit::default()) };
         let codec_value = video_codec_from_label(&payload.codec);
         let mut streams = scene.streams.clone();
         let Some(stream) = streams.iter_mut().find(|stream| stream.id == stream_id) else { return Ok(Emit::default()) };
         stream.source = Some(VideoSource { name: payload.name.clone(), container: "unknown".into(), codec: codec_value, duration_ms: payload.duration_ms, frame_count: payload.frame_count, width: payload.width, height: payload.height });
-        Ok(Emit::amend(vec![RemodelOperation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
+        Ok(Emit::amend(vec![RemodelMutation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
     }
 }
 //#endregion 🔖️ImportVideoDone
@@ -239,7 +239,7 @@ pub mod import_video_bytes_payload {
     /// demux/MJPEG/baseline-AVC decoder extracts frames fully in-process. The whole batch materializes
     /// inside this ONE pure call, so it needs no coalesce key (already exactly one `Emit`, hence one
     /// undo step). An undecodable codec surfaces as a `Notify` naming it, with provenance from the probe.
-    pub fn handle(payload: &ImportVideoBytesPayload, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportVideoBytesPayload, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
         let probe = match remodel_video::probe(&bytes) {
             Ok(probe) => probe,
@@ -267,7 +267,7 @@ pub mod import_video_bytes_payload {
             }
             let jpeg = remodel_image::encode_jpeg(&extracted.image, 90);
             let asset_key = format!("{stream_id}-frame-{}", extracted.index);
-            operations.push(RemodelOperation::SetAsset {
+            operations.push(RemodelMutation::SetAsset {
                 key: asset_key.clone(),
                 value: Some(ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }),
             });
@@ -284,8 +284,8 @@ pub mod import_video_bytes_payload {
             frames,
             source: Some(VideoSource { name: String::new(), container: container.into(), codec: video_codec_to_document(codec), duration_ms, frame_count: 0, width, height }),
         });
-        operations.push(RemodelOperation::SetStreams { streams });
-        Ok(Emit::operations(operations))
+        operations.push(RemodelMutation::SetStreams { streams });
+        Ok(Emit::mutations(operations))
     }
 }
 //#endregion 🔖️ImportVideoBytesPayload
@@ -302,14 +302,14 @@ pub mod add_stream {
         pub camera_id: String,
     }
 
-    pub fn handle(payload: &AddStream, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &AddStream, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let scene = doc.projection;
         let kind = if payload.kind == "video" { MediaKind::Video } else { MediaKind::ImageSequence };
         let camera_id = if payload.camera_id.is_empty() { None } else { Some(payload.camera_id.clone()) };
         let id = next_remodel_id("stream");
         let mut streams = scene.streams.clone();
         streams.push(MediaStream { id, name: payload.name.clone(), kind, camera_id, sync_offset_ms: 0.0, fps_hint: 30.0, frames: Vec::new(), source: None });
-        Ok(Emit::operations(vec![RemodelOperation::SetStreams { streams }]))
+        Ok(Emit::mutations(vec![RemodelMutation::SetStreams { streams }]))
     }
 }
 //#endregion 🔖️AddStream
@@ -324,9 +324,9 @@ pub mod remove_stream {
         pub stream_id: String,
     }
 
-    pub fn handle(payload: &RemoveStream, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveStream, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let streams: Vec<MediaStream> = doc.projection.streams.iter().filter(|stream| stream.id != payload.stream_id).cloned().collect();
-        Ok(Emit::operations(vec![RemodelOperation::SetStreams { streams }]))
+        Ok(Emit::mutations(vec![RemodelMutation::SetStreams { streams }]))
     }
 }
 //#endregion 🔖️RemoveStream
@@ -342,11 +342,11 @@ pub mod set_stream_sync {
         pub sync_offset_ms: f64,
     }
 
-    pub fn handle(payload: &SetStreamSync, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetStreamSync, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let mut streams = doc.projection.streams.clone();
         let Some(stream) = streams.iter_mut().find(|stream| stream.id == payload.stream_id) else { return Ok(Emit::default()) };
         stream.sync_offset_ms = payload.sync_offset_ms;
-        Ok(Emit::operations(vec![RemodelOperation::SetStreams { streams }]))
+        Ok(Emit::mutations(vec![RemodelMutation::SetStreams { streams }]))
     }
 }
 //#endregion 🔖️SetStreamSync

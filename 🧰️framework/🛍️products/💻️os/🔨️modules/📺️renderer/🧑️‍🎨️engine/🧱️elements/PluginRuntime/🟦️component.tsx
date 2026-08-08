@@ -27,7 +27,7 @@ import {
   type AppFrameValue,
   decodeActionWire,
   decodeFaultFromWire,
-  decodeOperationEnvelopesPack,
+  decodeMutationEnvelopesPack,
   decodePackValue,
   encodePackValue,
   faultDisplayMessage,
@@ -54,13 +54,13 @@ export type PluginWasmHandle = {
    * `store::print_document_pack`/`parse_document_pack`'s deflate+BLAKE3 `.spk` container) — there is
    * no JSON-text document command on the new channel, and no TS-side encoder for that container
    * format (deliberately out of scope for `🔖️PackValueCodec`, see its header doc). The OLD
-   * `applyOperations`/`readAppDocument`/`loadAppDocument` all carried plain JSON text
-   * (`OperationEnvelope[]` / a VCS envelope string), so they cannot be rebuilt on top of the binary
+   * `applyMutations`/`readAppDocument`/`loadAppDocument` all carried plain JSON text
+   * (`MutationEnvelope[]` / a VCS envelope string), so they cannot be rebuilt on top of the binary
    * channel without a real pack encoder in TS (a separate, much larger work package). Every call
    * site already feature-detects these (`if (plugin.loadAppDocument) ...`), so leaving them
    * `undefined` here fails loud-but-inert (a `console.error`/no-op at the call site) rather than
    * silently miscoding a `.spk` container. */
-  readonly applyOperations?: (instanceId: number, operationsPack: string) => Promise<void>;
+  readonly applyMutations?: (instanceId: number, mutationsPack: string) => Promise<void>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
   readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
@@ -182,8 +182,8 @@ async function performCommand(client: AppChannelClient, envelope: WireCommandEnv
   }
   return {
     output,
-    operations: [],
-    inverseGroup: { invocationId: "", operations: [], inverseOperations: [] },
+    mutations: [],
+    inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] },
     diagnostics,
     requestedEffects,
     events,
@@ -322,11 +322,11 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
     },
     refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
     contextMenu: (instanceId, request) => performContextMenu(requireChannel(instanceId), request),
-    applyOperations: async (instanceId, operationsPack) => {
-      const envelopes = decodeOperationEnvelopesPack(operationsPack);
+    applyMutations: async (instanceId, mutationsPack) => {
+      const envelopes = decodeMutationEnvelopesPack(mutationsPack);
       const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] applyOperations failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`[DEBUG] applyMutations failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     readAppDocument: undefined,
     loadAppDocument: undefined,

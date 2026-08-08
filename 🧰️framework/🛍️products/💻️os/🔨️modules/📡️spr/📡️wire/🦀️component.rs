@@ -7,7 +7,7 @@
 //! `frame tag: u8` (the frame enum's variant declaration order) and its fields in declaration
 //! order, with no body-length prefix (one frame per WS message) and no per-field tags. This
 //! matches `crate::os_spr::wire::🔖️WireCodec`'s convention (also used by `crate::os_spr::causal::🔖️EnvelopeCodec`
-//! and `crate::os_dsl::op_rt`). `DocumentDiff`/`InverseOperation` payloads are opaque `Vec<u8>` (never
+//! and `crate::os_dsl::op_rt`). `DocumentDiff`/`InverseMutation` payloads are opaque `Vec<u8>` (never
 //! `serde_json::Value`). `ClientFrame::Presence`/`ServerFrame::Presence` carry opaque presence
 //! payload bytes (`peer: Vec<u8>` / `peers: Vec<Vec<u8>>`) — this crate has no dependency on
 //! `framework_core` (where the concrete `PresencePeer` type and its binary codec live), so the
@@ -46,7 +46,7 @@ impl Lane {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
     Hello { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], actor: crate::os_spr::ids::ActorId, token: Option<String>, resume_token: Option<String>, frontier: Option<crate::os_spr::causal::FrontierSummary> },
-    Commands { batch_id: u64, envelopes: Vec<crate::os_spr::causal::OperationEnvelope> },
+    Commands { batch_id: u64, envelopes: Vec<crate::os_spr::causal::MutationEnvelope> },
     FrontierAdvertise { frontier: crate::os_spr::causal::FrontierSummary },
     PreviewPublish { key: String, seq: u64, payload: Vec<u8> },
     Presence { peer: Vec<u8> },
@@ -68,9 +68,9 @@ pub enum Bootstrap {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ApplyOutcome {
     Accepted,
-    // 🔒️ Boxed: OperationEnvelope is far larger than the other variants, and clippy's
+    // 🔒️ Boxed: MutationEnvelope is far larger than the other variants, and clippy's
     // large_enum_variant lint (a real per-instance cost, not just style) applies at -D warnings.
-    Transformed { envelope: Box<crate::os_spr::causal::OperationEnvelope> },
+    Transformed { envelope: Box<crate::os_spr::causal::MutationEnvelope> },
     Rejected { reason: String },
 }
 
@@ -89,7 +89,7 @@ pub enum ServerFrame {
     Welcome { session_id: String, resume_token: String, server_frontier: crate::os_spr::causal::FrontierSummary, bootstrap: Bootstrap },
     SnapshotChunk { seq: u32, bytes: Vec<u8> },
     SnapshotDone { seq_count: u32 },
-    Commands { envelopes: Vec<crate::os_spr::causal::OperationEnvelope>, origin: crate::os_spr::ids::ActorId, frontier: crate::os_spr::causal::FrontierSummary },
+    Commands { envelopes: Vec<crate::os_spr::causal::MutationEnvelope>, origin: crate::os_spr::ids::ActorId, frontier: crate::os_spr::causal::FrontierSummary },
     Ack { batch_id: u64, stages: Vec<AckStage>, frontier: crate::os_spr::causal::FrontierSummary },
     Preview { actor: crate::os_spr::ids::ActorId, key: String, seq: u64, payload: Vec<u8> },
     Presence { peers: Vec<Vec<u8>> },
@@ -165,14 +165,14 @@ fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::
     (0..count).map(|_| crate::os_spr::read_bytes(bytes, pos)).collect()
 }
 
-fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::OperationEnvelope]) {
+fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::MutationEnvelope]) {
     crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
         crate::os_spr::causal::encode_envelope(value, out);
     }
 }
 
-fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::OperationEnvelope>, crate::os_spr::ProtocolError> {
+fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::MutationEnvelope>, crate::os_spr::ProtocolError> {
     let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     (0..count).map(|_| crate::os_spr::causal::decode_envelope(bytes, pos)).collect()
 }
@@ -435,14 +435,14 @@ mod tests {
     use super::*;
 
     //#region 🧸️Fixtures
-    fn sample_envelope(id: &str) -> crate::os_spr::causal::OperationEnvelope {
-        crate::os_spr::causal::OperationEnvelope {
-            operation_id: crate::os_spr::ids::OperationId(id.to_string()),
+    fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
+        crate::os_spr::causal::MutationEnvelope {
+            mutation_id: crate::os_spr::ids::MutationId(id.to_string()),
             document_id: crate::os_spr::ids::DocumentId("document-1".to_string()),
             actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
             diff: crate::os_spr::causal::DocumentDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-            inverse: crate::os_spr::causal::InverseOperation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+            inverse: crate::os_spr::causal::InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
@@ -644,10 +644,10 @@ mod tests {
 
 
 //#region 🔖️Presence
-// 🎯️ W6 kernel unification: `PayloadHash`/`OperationEnvelope`/`OpDagError`/`OpDag`/`InsertResult`
+// 🎯️ W6 kernel unification: `PayloadHash`/`MutationEnvelope`/`MutationDagError`/`MutationDag`/`InsertResult`
 // (the local causal-sync types) and `HubClientFrame`/`HubServerFrame` (the local semio_hub wire frames)
 // are DELETED — `store`/`store_sync` (their only consumers outside this crate) now speak
-// `protocol::{OperationEnvelope, OpDag, OpDagError, InsertResult}`/`protocol::{ClientFrame,
+// `protocol::{MutationEnvelope, MutationDag, MutationDagError, InsertResult}`/`protocol::{ClientFrame,
 // ServerFrame}` directly (W5 already made these real binary types; this wave just stops
 // duplicating them here). `PresencePoint`/`PresenceViewport`/`PresencePeer` below are NOT
 // duplicates of anything in `protocol` — no equivalent exists there — so they stay, kept in their

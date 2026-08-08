@@ -4,28 +4,28 @@ overview: Rename the document-changing "operation" concept to "mutation" repo-wi
 todos:
   - id: wave0-spec
     content: "Wave 0: open ticket and write the normative mutation spec (emoji registry, folder layout, trait signatures, full old-to-new identifier table) into the ticket folder"
-    status: in_progress
+    status: completed
   - id: wave1-kernel
     content: "Wave 1: rename kernel contracts and add Mutation/MutationDiff/ArtifactEngine traits across spr/command, spr/causal, store, vcs, plugin, engine, dsl+derive; cargo check the os kernel"
-    status: pending
+    status: completed
   - id: wave2a-taxonomy
     content: "Wave 2a: taxonomy.json new facets + mutationChildDirs, discovery Taxonomy interface, registry validateTaxonomyTree, Rust assert_taxonomy_components"
-    status: pending
+    status: completed
   - id: wave2b-policy
     content: "Wave 2b: root script.ts policy rename plus new scanners (mutation triad completeness, impl Mutation presence, ArtifactEngine presence, emoji uniqueness, start mutation grammar, dispatch coverage); replace TS facade allowlist with a structural rule"
-    status: pending
+    status: completed
   - id: wave3-pilot
     content: "Wave 3: lowpoly pilot end to end (9 mutation dirs, LowpolyEngine state machine, grammar, examples, tests green) as the reference implementation"
-    status: pending
+    status: completed
   - id: wave4-fanout
     content: "Wave 4: parallel fan-out over the remaining 51 artifacts, one plugin crate per agent, Grok for heavy artifacts and Composer for mechanical ones"
-    status: pending
+    status: completed
   - id: wave5-ts
     content: "Wave 5: TypeScript rename across framework-core, framework-os, backbone-worker, renderer elements, react target, WIT, and vitest suites"
-    status: pending
+    status: completed
   - id: wave6-gate
     content: "Wave 6: full repo gate, regenerate launch.json, prove zero legacy with an operation sweep, close ticket"
-    status: pending
+    status: completed
 isProject: false
 ---
 

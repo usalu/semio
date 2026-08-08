@@ -1,8 +1,8 @@
-//! 🔺️ EN 1994 artifact — the operation diff and its `OperationDiff` law.
+//! 🔺️ EN 1994 artifact — the operation diff and its `MutationDiff` law.
 //!
 //! 📌️ Every norm artifact's sole mutation is a whole-document replace, so its diff is
-//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentOperation<D>`
-//! names as its `Operation::Diff`, with the `OperationDiff` impl (apply = "take the replacement,
+//! `crate::document::DocumentDiff<Document>` — the one generic diff `crate::document::SetDocumentMutation<D>`
+//! names as its `En1994Mutation::Diff`, with the `MutationDiff` impl (apply = "take the replacement,
 //! otherwise keep the projection"; absorb = "the later replacement wins") living beside it in
 //! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
 //! binding for this artifact and proves the law against this artifact's own `Document`.
@@ -26,14 +26,14 @@ pub type Diff = crate::document::DocumentDiff<Document>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1994::op::Operation;
-    use protocol::{Operation as _, OperationDiff};
+    use crate::artifacts::en1994::op::En1994Mutation;
+    use protocol::{Mutation as _, MutationDiff};
 
     #[test]
     fn set_document_diff_replaces_the_whole_projection() {
         let base = Document::default();
-        let operation = Operation::SetDocument { document: Document::default() };
-        let diff: Diff = operation.diff(&base);
+        let mutation = En1994Mutation::SetDocument { document: Document::default() };
+        let diff: Diff = mutation.diff(&base);
         assert_eq!(diff.apply(&base), Document::default());
     }
 

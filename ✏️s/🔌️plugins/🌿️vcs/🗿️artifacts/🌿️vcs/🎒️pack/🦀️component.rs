@@ -25,7 +25,7 @@ pub fn decode(bytes: &[u8]) -> Result<VcsDemoProjection, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::vcs::op::VcsDemoOperation;
+    use crate::artifacts::vcs::op::VcsDemoMutation;
     use crate::artifacts::vcs::VCS_DEMO_SCHEMA;
 
     #[test]
@@ -38,7 +38,7 @@ mod tests {
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `VcsDemoOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this file's
+    /// `VcsDemoMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
@@ -46,11 +46,11 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<VcsDemoProjection, VcsDemoOperation> =
+        let mut store: DocumentStore<VcsDemoProjection, VcsDemoMutation> =
             DocumentStore::new(create_document_envelope(VCS_DEMO_SCHEMA, "vcs-demo", crate::artifacts::vcs::engine::empty_vcs_demo_projection(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetTitle { title: "Renamed".into() }], description: None }).expect("apply");
-        let edit: &Edit<VcsDemoOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<VcsDemoProjection, VcsDemoOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Renamed".into() }], description: None }).expect("apply");
+        let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<VcsDemoProjection, VcsDemoMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

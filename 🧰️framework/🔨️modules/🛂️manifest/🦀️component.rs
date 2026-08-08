@@ -23,8 +23,8 @@ pub struct Keybinding {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ActionKind {
-    /// Mutates the document — dispatched as VCS operations with a true inverse, recorded in history.
-    Operation,
+    /// Mutates the document — dispatched as VCS mutations with a true inverse, recorded in history.
+    Mutation,
     /// Ephemeral view state (camera, selection, hover, active utility) — recorded in the session
     /// command log, never as a VCS edit.
     View,
@@ -269,7 +269,7 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
         _ => match kind {
             ActionKind::View => "eye".into(),
             ActionKind::Shell => "code".into(),
-            ActionKind::Operation => "sparkles".into(),
+            ActionKind::Mutation => "sparkles".into(),
             ActionKind::History => "clock".into(),
             ActionKind::Clipboard => "clipboard".into(),
         },
@@ -1722,8 +1722,8 @@ pub enum TutorialUiChange {
     }
 }
 
-/// @emoji 🖋️ One document-track entry — mirrors `store::DocumentCommand` with `Operation =
-/// serde_json::Value` (opaque per-app operation JSON, already the wire shape of every `KernelOperation`
+/// @emoji 🖋️ One document-track entry — mirrors `store::DocumentCommand` with `Mutation =
+/// serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
 /// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
 /// (fresh ids/timestamps) and would double-apply against this track.
@@ -3074,8 +3074,8 @@ mod app_document_tests {
     fn resolve_window_actions_explicit_scoping() {
         let app = app_with(
             vec![
-                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Operation),
-                ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Operation),
+                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation),
+                ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation),
             ],
             vec![ActionRef::new("add")],
         );
@@ -3091,7 +3091,7 @@ mod app_document_tests {
             vec![
                 ActionDefinition::new_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History),
                 crate::ui::set_active_utility_action_definition(),
-                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Operation),
+                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation),
             ],
             vec![],
         );
@@ -3285,7 +3285,7 @@ mod app_document_tests {
 
     #[test]
     fn action_definition_requires_and_serializes_args_field() {
-        let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Operation);
+        let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation);
         let json = serde_json::to_value(&action).unwrap();
         assert_eq!(json["args"], json!([]));
         assert!(serde_json::from_value::<ActionDefinition>(json!({

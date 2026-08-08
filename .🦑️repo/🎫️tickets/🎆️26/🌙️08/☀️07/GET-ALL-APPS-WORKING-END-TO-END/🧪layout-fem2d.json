@@ -1,0 +1,72 @@
+{
+  "label": "fem2d",
+  "url": "http://127.0.0.1:6086/",
+  "dump": {
+    "title": "semio · fem · fem2d",
+    "body": {
+      "scrollH": 900,
+      "clientH": 900,
+      "scrollW": 1440,
+      "clientW": 1440
+    },
+    "hasRenderError": false,
+    "bodySample": [
+      "Document",
+      "Fullscreen",
+      "semio · fem · fem2d",
+      "Example",
+      "Family House",
+      "Model",
+      "Focus",
+      "Close",
+      "Actions",
+      "Utilities",
+      "Results",
+      "Focus",
+      "Close",
+      "Analysis error: model has no nodes",
+      "Actions",
+      "Utilities",
+      "Display",
+      "Sync",
+      "Settings",
+      "Keybindings",
+      "Theme",
+      "Plugins",
+      "Extensions",
+      "History",
+      "Command",
+      "Search",
+      "Search for items",
+      "Find",
+      "Find items in this view"
+    ],
+    "layout": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "hidden",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "relative flex flex-col overflow-hidden ui-surface h-screen w-screen"
+    },
+    "scope": {
+      "w": 1440,
+      "h": 900,
+      "overflow": "visible",
+      "flex": "0 1 auto",
+      "height": "900px",
+      "className": "semio-scope"
+    },
+    "host": {
+      "w": 709,
+      "h": 807,
+      "overflow": "visible",
+      "flex": "0 1 auto",
+      "height": "807.266px",
+      "className": "h-full w-full"
+    }
+  },
+  "consoleErrors": [
+    "[DEBUG] action failed setActiveExample {exampleId: default} SemioFaultError: action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)\n    at performCommand (http://127.0.0.1:6086/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/PluginRuntime/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:82:24)"
+  ]
+}

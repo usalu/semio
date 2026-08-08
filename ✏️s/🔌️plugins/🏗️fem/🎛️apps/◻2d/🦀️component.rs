@@ -8,15 +8,15 @@
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
 
 use crate::apps::fem2d::commands::{analysis, camera, example, loads, locale, model, results, selection};
-use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigOperation};
+use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::apps::fem2d::modes::edit;
 use crate::apps::fem2d::modes::edit::windows::model as model_window;
 use crate::apps::fem2d::modes::edit::windows::results as results_window;
-use crate::artifacts::fem2d::op::Fem2dOperation;
+use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::Fem2dDocument;
 use crate::app_surface::{DisplayMode, ResultDisplay};
 use crate::model::{Dof, ElementResult};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
     UiNode,
 };
@@ -40,7 +40,7 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies; `"setActiveExample" as
     /// "active-example"` and `"setCamera" as "camera"` are two of the rows that prove it. **Row order is
     /// the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Fem2dCommand for Fem2dDocument, Fem2dOperation, Fem2dConfig, Fem2dConfigOperation {
+    pub enum Fem2dCommand for Fem2dDocument, Fem2dMutation, Fem2dConfig, Fem2dConfigMutation {
         "addNode" as "add-node" => add_node::AddNode,
         "addBar" as "add-bar" => add_bar::AddBar,
         "addBeam" as "add-beam" => add_beam::AddBeam,
@@ -137,7 +137,7 @@ fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Va
 //#region 🔖️Fem2dPlayApp
 /// 🧪️ B1: unit struct — every former `Fem2dPlayApp` `RefCell` field (`result_display`, `camera`) plus
 /// the deleted `ViewModel::locale` now live in `crate::apps::fem2d::config::Fem2dConfig`, written
-/// through `Fem2dConfigOperation`s. v0 design unchanged: results are never persisted or cached —
+/// through `Fem2dConfigMutation`s. v0 design unchanged: results are never persisted or cached —
 /// `fem2d_solve`/`fem2d_solve_all` run fresh inside `render()`/`export_media` whenever the results
 /// window is drawn or the `"results:out"` port is read.
 #[derive(Default)]
@@ -145,11 +145,11 @@ pub struct Fem2dPlayApp;
 
 impl DocumentApp for Fem2dPlayApp {
     type Projection = Fem2dDocument;
-    type Operation = Fem2dOperation;
+    type Mutation = Fem2dMutation;
     type Config = Fem2dConfig;
-    type ConfigOperation = Fem2dConfigOperation;
+    type ConfigMutation = Fem2dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Fem2dCommand;
 
@@ -190,15 +190,15 @@ impl DocumentApp for Fem2dPlayApp {
         }
     }
 
-    fn whole_document_operation(projection: Fem2dDocument) -> Option<Fem2dOperation> {
-        Some(Fem2dOperation::SetDocument { document: projection })
+    fn whole_document_operation(projection: Fem2dDocument) -> Option<Fem2dMutation> {
+        Some(Fem2dMutation::SetDocument { document: projection })
     }
 
     /// 🎞️ `"document:in"` reproduces the trait's default whole-document-pack importer. `"geometry:in"`
     /// decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}`
     /// polygon-with-holes contract into a new `FemRegion`, defaulted to the document's first existing
     /// material if any, else an `"unassigned"` placeholder id.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -207,7 +207,7 @@ impl DocumentApp for Fem2dPlayApp {
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let projection = <Fem2dDocument as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
-                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
             }
@@ -225,7 +225,7 @@ impl DocumentApp for Fem2dPlayApp {
                 let id = crate::app_surface::next_id(doc.projection.regions.iter().map(|r| r.id.clone()), "r");
                 let index = doc.projection.regions.len();
                 let region = crate::artifacts::fem2d::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
-                Ok(Emit::operations(vec![Fem2dOperation::SetRegion { index, region }]))
+                Ok(Emit::mutations(vec![Fem2dMutation::SetRegion { index, region }]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -237,7 +237,7 @@ impl DocumentApp for Fem2dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dDocument>, cfg: &ConfigView<'_, Fem2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dDocument>, cfg: &ConfigView<'_, Fem2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -280,27 +280,27 @@ pub fn create_fem2d_app() -> App {
                 Some(&[50.0, 50.0]),
                 Some(&["Model".into(), "Results".into()]),
             ))
-            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .action_args("addNode", vec![
                 ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required(),
                 ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required(),
             ])
-            .operation("addBar", LocalizedLabel::native("Add Bar", "Stab hinzufügen"))
-            .operation("addBeam", LocalizedLabel::native("Add Beam", "Balken hinzufügen"))
-            .operation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
-            .operation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
-            .operation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
-            .operation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
+            .mutation("addBar", LocalizedLabel::native("Add Bar", "Stab hinzufügen"))
+            .mutation("addBeam", LocalizedLabel::native("Add Beam", "Balken hinzufügen"))
+            .mutation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
+            .mutation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
+            .mutation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
+            .mutation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
             .action_args("addNodalLoad", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
-            .operation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
+            .mutation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
             .action_args("addMemberUdl", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
-            .operation("addAreaLoad", LocalizedLabel::native("Add Area Load", "Flächenlast hinzufügen"))
+            .mutation("addAreaLoad", LocalizedLabel::native("Add Area Load", "Flächenlast hinzufügen"))
             .action_args("addAreaLoad", vec![
                 ActionArgDef::text("regionId", LocalizedLabel::native("Region", "Bereich")).required(),
                 ActionArgDef::number("pressure", LocalizedLabel::native("Pressure", "Druck")).required(),
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
             ])
-            .operation("addRegion", LocalizedLabel::native("Add Region", "Bereich hinzufügen"))
+            .mutation("addRegion", LocalizedLabel::native("Add Region", "Bereich hinzufügen"))
             .action_args("addRegion", vec![
                 ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required(),
                 ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required(),
@@ -310,7 +310,7 @@ pub fn create_fem2d_app() -> App {
                 ActionArgDef::number("thickness", LocalizedLabel::native("Thickness", "Dicke")).default_value(0.02),
                 ActionArgDef::number("meshSize", LocalizedLabel::native("Mesh Size", "Netzgröße")).default_value(0.25),
             ])
-            .operation("addLoadCase", LocalizedLabel::native("Add Load Case", "Lastfall hinzufügen"))
+            .mutation("addLoadCase", LocalizedLabel::native("Add Load Case", "Lastfall hinzufügen"))
             .action_args("addLoadCase", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
                 ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(false),
@@ -319,21 +319,21 @@ pub fn create_fem2d_app() -> App {
             // `ActionArgDef` control maps to that shape, so (mirroring the sibling apps' precedent for
             // commands with no matching staged form) this action simply has no `.action_args(...)`
             // declaration.
-            .operation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
-            .operation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
+            .mutation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
+            .mutation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
             .action_args("setSelfWeight", vec![
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")).required(),
                 ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).required(),
             ])
-            .operation("setAnalysisSettings", LocalizedLabel::native("Set Analysis Settings", "Analyseeinstellungen festlegen"))
+            .mutation("setAnalysisSettings", LocalizedLabel::native("Set Analysis Settings", "Analyseeinstellungen festlegen"))
             .action_args("setAnalysisSettings", vec![
                 ActionArgDef::number("modalCount", LocalizedLabel::native("Modal Count", "Anzahl Eigenformen")),
                 ActionArgDef::number("bucklingCount", LocalizedLabel::native("Buckling Count", "Anzahl Knickformen")),
                 ActionArgDef::number("deformationScale", LocalizedLabel::native("Deformation Scale", "Verformungsmaßstab")),
             ])
-            .operation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
+            .mutation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard"))])
                     .default_value("default"),
@@ -599,9 +599,9 @@ mod tests {
         let empty_history = semio_framework_plugin::HistoryView::empty();
         let empty_doc = DocumentView { projection: &empty_projection, history: &empty_history };
         let emit = app.import_media("document:in", &media, &empty_doc).expect("document:in imports");
-        assert_eq!(emit.document_operations.len(), 1);
-        match &emit.document_operations[0] {
-            Fem2dOperation::SetDocument { document } => assert_eq!(document, &projection),
+        assert_eq!(emit.document_mutations.len(), 1);
+        match &emit.document_mutations[0] {
+            Fem2dMutation::SetDocument { document } => assert_eq!(document, &projection),
             _ => panic!("expected SetDocument"),
         }
     }
@@ -662,9 +662,9 @@ mod tests {
         let payload = json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = app.import_media("geometry:in", &media, &doc).expect("geometry:in imports");
-        assert_eq!(emit.document_operations.len(), 1);
-        match &emit.document_operations[0] {
-            Fem2dOperation::SetRegion { region, .. } => {
+        assert_eq!(emit.document_mutations.len(), 1);
+        match &emit.document_mutations[0] {
+            Fem2dMutation::SetRegion { region, .. } => {
                 assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
                 assert!(region.holes.is_empty());
                 assert_eq!(region.material_id, "steel");
@@ -682,8 +682,8 @@ mod tests {
         let payload = json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = app.import_media("geometry:in", &media, &doc).expect("geometry:in imports");
-        match &emit.document_operations[0] {
-            Fem2dOperation::SetRegion { region, .. } => assert_eq!(region.material_id, "unassigned"),
+        match &emit.document_mutations[0] {
+            Fem2dMutation::SetRegion { region, .. } => assert_eq!(region.material_id, "unassigned"),
             _ => panic!("expected SetRegion"),
         }
     }

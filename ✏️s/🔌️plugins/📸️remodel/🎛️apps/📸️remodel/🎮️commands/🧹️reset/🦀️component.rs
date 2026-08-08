@@ -1,7 +1,7 @@
 //! 🧹️ Remodel play app commands — clearing and resetting reconstruction results.
 
-use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
-use crate::artifacts::remodel::op::RemodelOperation;
+use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelProjection};
 use semio_framework_plugin::{mesh_from_kind, ConfigView, DocumentView, Emit, Fault, MeshData};
 use serde::{Deserialize, Serialize};
@@ -26,8 +26,8 @@ pub mod reset_placeholder_mesh {
     #[dsl(keyword = "reset-placeholder-mesh")]
     pub struct ResetPlaceholderMesh {}
 
-    pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(placeholder_result()) }]))
+    pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(placeholder_result()) }]))
     }
 }
 //#endregion 🔖️ResetPlaceholderMesh
@@ -40,8 +40,8 @@ pub mod clear_sparse {
     #[dsl(keyword = "clear-sparse")]
     pub struct ClearSparse {}
 
-    pub fn handle(_payload: &ClearSparse, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![RemodelOperation::SetSparse { sparse: None }]))
+    pub fn handle(_payload: &ClearSparse, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![RemodelMutation::SetSparse { sparse: None }]))
     }
 }
 //#endregion 🔖️ClearSparse
@@ -54,8 +54,8 @@ pub mod clear_dense {
     #[dsl(keyword = "clear-dense")]
     pub struct ClearDense {}
 
-    pub fn handle(_payload: &ClearDense, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![RemodelOperation::SetDense { dense: None }]))
+    pub fn handle(_payload: &ClearDense, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![RemodelMutation::SetDense { dense: None }]))
     }
 }
 //#endregion 🔖️ClearDense
@@ -68,8 +68,8 @@ pub mod clear_mesh_result {
     #[dsl(keyword = "clear-mesh-result")]
     pub struct ClearMeshResult {}
 
-    pub fn handle(_payload: &ClearMeshResult, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(empty_result()) }]))
+    pub fn handle(_payload: &ClearMeshResult, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) }]))
     }
 }
 //#endregion 🔖️ClearMeshResult
@@ -82,8 +82,8 @@ pub mod clear_tracks {
     #[dsl(keyword = "clear-tracks")]
     pub struct ClearTracks {}
 
-    pub fn handle(_payload: &ClearTracks, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![RemodelOperation::SetTracks { tracks: Vec::new() }]))
+    pub fn handle(_payload: &ClearTracks, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![RemodelMutation::SetTracks { tracks: Vec::new() }]))
     }
 }
 //#endregion 🔖️ClearTracks
@@ -96,8 +96,8 @@ pub mod clear_geo_products {
     #[dsl(keyword = "clear-geo-products")]
     pub struct ClearGeoProducts {}
 
-    pub fn handle(_payload: &ClearGeoProducts, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![RemodelOperation::SetGeoProducts { geo: None }]))
+    pub fn handle(_payload: &ClearGeoProducts, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![RemodelMutation::SetGeoProducts { geo: None }]))
     }
 }
 //#endregion 🔖️ClearGeoProducts
@@ -111,15 +111,15 @@ pub mod clear_result {
     pub struct ClearResult {}
 
     /// 🧹️ Resets all seven `ReconstructionResults` fields in one undoable step.
-    pub fn handle(_payload: &ClearResult, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![
-            RemodelOperation::SetMeshResult { mesh: Box::new(empty_result()) },
-            RemodelOperation::SetSparse { sparse: None },
-            RemodelOperation::SetDense { dense: None },
-            RemodelOperation::SetTrajectory { trajectory: None },
-            RemodelOperation::SetTracks { tracks: Vec::new() },
-            RemodelOperation::SetGeoProducts { geo: None },
-            RemodelOperation::SetQc { qc: None },
+    pub fn handle(_payload: &ClearResult, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![
+            RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) },
+            RemodelMutation::SetSparse { sparse: None },
+            RemodelMutation::SetDense { dense: None },
+            RemodelMutation::SetTrajectory { trajectory: None },
+            RemodelMutation::SetTracks { tracks: Vec::new() },
+            RemodelMutation::SetGeoProducts { geo: None },
+            RemodelMutation::SetQc { qc: None },
         ]))
     }
 }
@@ -137,7 +137,7 @@ mod tests {
     fn clear_result_resets_all_seven_result_fields_and_reset_placeholder_restores_the_box() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}));
-        assert_eq!(result.operations.len(), 7, "clearResult resets all 7 ReconstructionResults fields");
+        assert_eq!(result.mutations.len(), 7, "clearResult resets all 7 ReconstructionResults fields");
         assert_eq!(app.projection().expect("materialize projection").results.mesh.mesh.vertex_count(), 0);
         dispatch(&mut app, RemodelCommand::ResetPlaceholderMesh(reset_placeholder_mesh::ResetPlaceholderMesh {}));
         assert_eq!(app.projection().expect("materialize projection").results.mesh.source, MeshSource::Placeholder);

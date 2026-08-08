@@ -1,5 +1,3 @@
-extern crate infinite_canvas as infinite_board_normal_undirected;
-extern crate infinite_canvas as infinite_board_port_directed;
 //! 🧠️ Reasoning plugin — declarative WIRES mindmap play app bundled as a hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that is
@@ -11,12 +9,14 @@ extern crate infinite_canvas as infinite_board_port_directed;
 //! master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard
 //! ruling, and its Shape V2 addendum for the `📦️packages`-relocated entry file).
 
+extern crate infinite_canvas as infinite_board_normal_undirected;
+extern crate infinite_canvas as infinite_board_port_directed;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<MindmapWiresMutation, WiresConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
 // framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
 // lint does not fire on the trait impl itself (only on the free functions the taxonomy split creates),
@@ -36,6 +36,73 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs"]
         pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod add_node {
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➕add-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➕add-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➕add-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_node {
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➖remove-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➖remove-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➖remove-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod patch_node {
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/🩹patch-node/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/🩹patch-node/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/🩹patch-node/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod add_relationship {
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➕add-relationship/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➕add-relationship/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/➕add-relationship/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_edge {
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/✂️remove-edge/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/✂️remove-edge/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/✂️remove-edge/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod replace_document {
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/📌replace-document/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/📌replace-document/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🔌️wires/🧬️mutations/📌replace-document/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
         #[path = "../../🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/🔌️wires/🎒️pack/🦀️component.rs"]

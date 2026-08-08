@@ -11,10 +11,10 @@ use crate::apps::din16798::modes::edit as edit_mode;
 use crate::apps::din16798::modes::edit::windows::{inputs, results};
 use crate::apps::din16798::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::din16798::engine::DinEn16798Family;
-use crate::artifacts::din16798::op::Operation;
+use crate::artifacts::din16798::op::Din16798Mutation;
 use crate::artifacts::din16798::Document;
-use crate::config::{NormConfig, NormConfigOperation, NormHost};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
+use crate::config::{NormConfig, NormConfigMutation, NormHost};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -34,7 +34,7 @@ semio_framework_plugin::app_commands! {
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
     /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
     /// pre-migration enum, never derived from one another.
-    pub enum Din16798Command for Document, Operation, NormConfig, NormConfigOperation {
+    pub enum Din16798Command for Document, Din16798Mutation, NormConfig, NormConfigMutation {
         "setDocument" as "set-document" => set_document::SetDocument,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
@@ -48,11 +48,11 @@ pub struct Din16798PlayApp;
 
 impl DocumentApp for Din16798PlayApp {
     type Projection = Document;
-    type Operation = Operation;
+    type Mutation = Din16798Mutation;
     type Config = NormConfig;
-    type ConfigOperation = NormConfigOperation;
+    type ConfigMutation = NormConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Din16798Command;
 
@@ -75,7 +75,7 @@ impl DocumentApp for Din16798PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Din16798Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Operation, NormConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Din16798Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Din16798Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -100,7 +100,7 @@ impl DocumentApp for Din16798PlayApp {
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Operation, NormConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Din16798Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
         crate::app_surface::import_media::<Document>(port, media)
     }
     //#endregion 🔖️MediaPorts
@@ -122,7 +122,7 @@ pub fn create_din16798_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .operation("setDocument", LocalizedLabel::native("Set Document", "Dokument setzen"))
+            .mutation("setDocument", LocalizedLabel::native("Set Document", "Dokument setzen"))
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
             .keybinding("mod+z", "undo")
@@ -276,17 +276,17 @@ mod tests {
         let mut app = testkit::new_app();
         let before = app.projection().expect("projection");
         let result = testkit::dispatch(&mut app, Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }));
-        assert!(result.operations.is_empty(), "a config-only command must emit no document operations");
+        assert!(result.mutations.is_empty(), "a config-only command must emit no document operations");
         assert_eq!(before, app.projection().expect("projection"), "a config-only command must never mutate the document");
     }
 
     /// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
     /// operations.
     #[test]
-    fn view_actions_never_emit_document_operations_under_the_real_registry() {
+    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) }));
-        assert!(result.operations.is_empty());
+        assert!(result.mutations.is_empty());
     }
 
     #[test]

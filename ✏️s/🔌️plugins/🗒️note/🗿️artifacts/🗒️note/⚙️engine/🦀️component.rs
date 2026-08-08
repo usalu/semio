@@ -755,3 +755,35 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+pub struct NoteEngine {
+    projection: NoteDocument,
+}
+
+impl NoteEngine {
+    pub fn new(projection: NoteDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for NoteEngine {
+    type Projection = NoteDocument;
+    type Mutation = crate::artifacts::note::mutations::NoteMutation;
+    type Diff = crate::artifacts::note::diff::NoteDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = crate::artifacts::note::mutations::apply_note_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

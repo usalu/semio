@@ -86,7 +86,7 @@ mod tests {
     fn add_workshop_machine_action_installs_and_selects() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
-        assert!(!result.operations.is_empty(), "adding an uninstalled catalog machine must emit an operation");
+        assert!(!result.mutations.is_empty(), "adding an uninstalled catalog machine must emit an operation");
         let document = app.projection().expect("projection");
         assert!(document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"), "chopSaw should now be in the workshop");
         let rendered = testkit::render(&mut app, inspection::PROCESS_3D_PLAY_BODY_INSPECTION);
@@ -99,7 +99,7 @@ mod tests {
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         let count_after_first = app.projection().expect("projection").workshop.machines.len();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
-        assert!(result.operations.is_empty(), "adding an already-installed machine must be a no-op");
+        assert!(result.mutations.is_empty(), "adding an already-installed machine must be a no-op");
         assert_eq!(app.projection().expect("projection").workshop.machines.len(), count_after_first);
     }
 
@@ -108,7 +108,7 @@ mod tests {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         let result = testkit::dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "chopSaw".into() }));
-        assert!(!result.operations.is_empty());
+        assert!(!result.mutations.is_empty());
         let document = app.projection().expect("projection");
         assert!(!document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"));
         let rendered = testkit::render(&mut app, inspection::PROCESS_3D_PLAY_BODY_INSPECTION);
@@ -134,7 +134,7 @@ mod tests {
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
         testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "machine:circularSaw".into(), field: "crosscut.bladeDiameter".into(), number: Some(0.4), text: None }));
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(!result.operations.is_empty());
+        assert!(!result.mutations.is_empty());
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
         let ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius, .. }, .. } = &last.measure else {

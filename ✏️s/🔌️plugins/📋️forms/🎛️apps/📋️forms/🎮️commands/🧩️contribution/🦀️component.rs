@@ -3,8 +3,8 @@
 //! Not declared as a manifest action (host-pushed, like `setLocale`) — see `crate::apps::forms`'s
 //! `app_commands!` invocation for the shared `as` wire-keyword rationale.
 
-use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
-use crate::artifacts::forms::{op::FormOperation, FormSpec};
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::artifacts::forms::{op::FormMutation, FormSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,8 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
-        Ok(Emit::config(vec![FormsConfigOperation::SetContributions { json: payload.json.clone() }]))
+    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+        Ok(Emit::config(vec![FormsConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }
 //#endregion 🔖️SetContributions

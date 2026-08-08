@@ -221,3 +221,36 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+pub struct Puzzle2dEngine {
+    projection: crate::artifacts::puzzle2d::Puzzle2dProjection,
+}
+
+impl Puzzle2dEngine {
+    pub fn new(projection: crate::artifacts::puzzle2d::Puzzle2dProjection) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Puzzle2dEngine {
+    type Projection = crate::artifacts::puzzle2d::Puzzle2dProjection;
+    type Mutation = crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
+    type Diff = crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::puzzle2d::mutations::apply_puzzle2d_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

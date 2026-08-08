@@ -3,8 +3,8 @@
 //! One nested `pub mod` per payload (the `app_commands!` shape — see `apps::home::🦀️component.rs`'s
 //! `🔖️HomeCommand` region, which `use`s each of these modules flat).
 
-use crate::apps::home::config::{HomeConfig, HomeConfigOperation};
-use crate::artifacts::home::op::SHomeOperation;
+use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
+use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
@@ -19,8 +19,8 @@ pub mod set_active_panel_tab {
         pub tab_id: String,
     }
 
-    pub fn handle(payload: &SetActivePanelTab, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeOperation, HomeConfigOperation>, Fault> {
-        Ok(Emit::config(vec![HomeConfigOperation::SetActivePanelTab { tab_id: payload.tab_id.clone() }]))
+    pub fn handle(payload: &SetActivePanelTab, _doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+        Ok(Emit::config(vec![HomeConfigMutation::SetActivePanelTab { tab_id: payload.tab_id.clone() }]))
     }
 }
 //#endregion 🔖️SetActivePanelTab
@@ -45,8 +45,8 @@ mod tests {
         let config = HomeConfig::default();
         let cfg = ConfigView { projection: &config };
         let emit = set_active_panel_tab::handle(&set_active_panel_tab::SetActivePanelTab { tab_id: "tab-1".into() }, &doc, &cfg).expect("handle");
-        assert_eq!(emit.config_operations, vec![HomeConfigOperation::SetActivePanelTab { tab_id: "tab-1".into() }]);
-        assert!(emit.document_operations.is_empty());
+        assert_eq!(emit.config_mutations, vec![HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() }]);
+        assert!(emit.document_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

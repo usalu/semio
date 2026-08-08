@@ -1,8 +1,8 @@
 //! ⚖️ FEM 3D artifact — binary operation protocol surface + laws (constitutional: spr, renamed from the
 //! old `📡️protocol` crate — the old crate's hand-rolled `Fem3dCommand` enum moved to `app_commands!` in
-//! `crate::apps::fem3d`; only the `Fem3dOperation` codec pair survives here).
+//! `crate::apps::fem3d`; only the `Fem3dMutation` codec pair survives here).
 
-use crate::artifacts::fem3d::op::Fem3dOperation;
+use crate::artifacts::fem3d::op::Fem3dMutation;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
@@ -12,14 +12,14 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-/// 📦️ Encodes a `Fem3dOperation` to its binary command form.
-pub fn encode_op(operation: &Fem3dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+/// 📦️ Encodes a `Fem3dMutation` to its binary command form.
+pub fn encode_op(operation: &Fem3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
-/// 📖️ Decodes a `Fem3dOperation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Fem3dOperation, protocol::ProtocolError> {
-    Fem3dOperation::decode_op(bytes)
+/// 📖️ Decodes a `Fem3dMutation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Fem3dMutation, protocol::ProtocolError> {
+    Fem3dMutation::decode_op(bytes)
 }
 
 // #region 🧪️Tests
@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
+        let operation = Fem3dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -59,7 +59,7 @@ mod tests {
     /// pass on a silently rewritten format, so this pin is the only real proof.
     #[test]
     fn operation_bytes_match_the_pre_migration_baseline() {
-        let operation = Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
+        let operation = Fem3dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "01100001000e0d0300040501040202050000000000002440");
     }
@@ -67,7 +67,7 @@ mod tests {
     #[test]
     fn fem3d_document_text_round_trips_through_the_store() {
         let mut store = crate::artifacts::fem3d::op::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", engine::empty_fem3d_projection(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![Fem3dOperation::SetDocument { document: cantilever_fixture() }], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem3dMutation::SetDocument { document: cantilever_fixture() }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -87,7 +87,7 @@ mod semio_protocol_conformance {
     }
     #[test]
     fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = Fem3dOperation::SetAnalysisSettings {
+        let operation = Fem3dMutation::SetAnalysisSettings {
             settings: crate::artifacts::fem3d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
         };
         let bytes = encode_op(&operation).expect("encode op");

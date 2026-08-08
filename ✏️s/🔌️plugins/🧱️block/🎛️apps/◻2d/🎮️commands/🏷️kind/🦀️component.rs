@@ -1,8 +1,8 @@
 //! 🏷️ Block 2D play app command — patch a field on the node kind's identity.
 
 pub mod patch_node_kind {
-    use crate::apps::block2d::config::{Block2dConfig, Block2dConfigOperation};
-    use crate::artifacts::block2d::op::Block2dOperation;
+    use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
+    use crate::artifacts::block2d::op::Block2dMutation;
     use crate::artifacts::block2d::Block2dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ pub mod patch_node_kind {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchNodeKind, doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dOperation, Block2dConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchNodeKind, doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
         let mut node_kind = doc.projection.node_kind.clone();
         match payload.field.as_str() {
             "name" => node_kind.name = payload.value.clone(),
@@ -23,6 +23,6 @@ pub mod patch_node_kind {
             "description" => node_kind.description = payload.value.clone(),
             _ => return Ok(Emit::default()),
         }
-        Ok(Emit::operations(vec![Block2dOperation::SetNodeKind { node_kind }]))
+        Ok(Emit::mutations(vec![Block2dMutation::SetNodeKind { node_kind }]))
     }
 }

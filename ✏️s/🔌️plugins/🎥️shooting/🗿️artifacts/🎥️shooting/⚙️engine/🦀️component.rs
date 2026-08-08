@@ -124,10 +124,8 @@ pub fn shooting_photo_media(fixture: &ShootingFixture) -> Result<semio_framework
 
 //#region 🔖️DocumentHelpers
 pub fn next_shooting_id(prefix: &str) -> String {
-    let next = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
+    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{prefix}-{next}")
 }
 
@@ -361,3 +359,38 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent shooting artifact engine — owns the projection; every transition is a mutation.
+pub struct ShootingEngine {
+    projection: crate::artifacts::shooting::ShootingFixture,
+}
+
+impl ShootingEngine {
+    pub fn new(projection: crate::artifacts::shooting::ShootingFixture) -> Self {
+        Self { projection }
+    }
+    pub fn into_projection(self) -> crate::artifacts::shooting::ShootingFixture {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for ShootingEngine {
+    type Projection = crate::artifacts::shooting::ShootingFixture;
+    type Mutation = crate::artifacts::shooting::mutations::ShootingMutation;
+    type Diff = crate::artifacts::shooting::diff::ShootingDiff;
+
+    fn projection(&self) -> &Self::Projection { &self.projection }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::shooting::mutations::apply_shooting_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

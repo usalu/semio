@@ -1,12 +1,12 @@
 //! ⚡️ Imperative core module: side-effecting action operators.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
 // #region 🔖️LogPrint
 /// 📝️ Writes a message to the effect log.
 pub struct LogPrint;
 
-impl Operation for LogPrint {
+impl Operator for LogPrint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let message = read_string(input, "message")?;
         Ok(channel_output("message", Dictionary::new().insert("text", Value::Atom(Atom::String(message)))))
@@ -18,7 +18,7 @@ impl Operation for LogPrint {
 /// 🔧️ Sets a scope key to a value.
 pub struct StateSet;
 
-impl Operation for StateSet {
+impl Operator for StateSet {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let key = read_string(input, "key")?;
         let value = input.get("value").cloned().unwrap_or(Value::null());
@@ -31,7 +31,7 @@ impl Operation for StateSet {
 /// ➕️ Increments a numeric scope key.
 pub struct StateIncrement;
 
-impl Operation for StateIncrement {
+impl Operator for StateIncrement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let key = read_string(input, "key")?;
         let by = read_number(input, "by").unwrap_or(1.0);
@@ -45,7 +45,7 @@ impl Operation for StateIncrement {
 /// ⏱️ Records a delay side effect.
 pub struct WaitDelay;
 
-impl Operation for WaitDelay {
+impl Operator for WaitDelay {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let ms = read_number(input, "ms").unwrap_or(0.0);
         Ok(channel_output("delay", Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(ms)))))
@@ -74,8 +74,8 @@ fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:⚡️".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operation }], &[]);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
 }
 
 /// 📦️ Registers all imperative action operators.

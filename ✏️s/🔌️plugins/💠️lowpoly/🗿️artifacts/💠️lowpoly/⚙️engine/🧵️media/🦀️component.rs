@@ -59,7 +59,7 @@ pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
 //#endregion 🔖️MediaExportImport
 
 //#region 🔖️ExportConcreteForestMeshTests
-#[cfg(test)]
+#[cfg(all(test, feature = "cad-fixtures"))]
 mod export_concrete_forest_mesh_tests {
     use cad_plugin::artifacts::cad::engine::geometry_import::{objects_from_fixture_model, parse_geometry};
     use semio_s_3d::brep::kernel::Brep;

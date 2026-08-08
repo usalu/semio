@@ -1,4 +1,4 @@
-//! 🧮️ VCS play app — view state (`VcsDemoConfig`) and its operation enum (`VcsDemoConfigOperation`).
+//! 🧮️ VCS play app — view state (`VcsDemoConfig`) and its operation enum (`VcsDemoConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.vcsdemo` document. It still round-trips through a real
@@ -7,7 +7,7 @@
 //! checkpoint ids in the document tree) plus the `locale` field the UI used to read off the deleted
 //! `ViewModel` (mirrors `shooting_engine::ShootingConfig`'s identical `locale` field/doc).
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -94,13 +94,13 @@ impl Default for VcsDemoConfig {
 store::impl_whole_record_config!(VcsDemoConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
+//#region 🔖️ConfigMutations
 /// 🧮️ [`VcsDemoConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `VcsPlayApp` field writes/deleted `ViewModel.locale`), plus a generic `Snapshot` every variant's
-/// `backwards()` returns (see `shooting_op::ShootingConfigOperation`'s identical doc for why this
+/// `backwards()` returns (see `shooting_op::ShootingConfigMutation`'s identical doc for why this
 /// whole-config-snapshot-undo shape is correct and sufficient here).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum VcsDemoConfigOperation {
+pub enum VcsDemoConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -113,7 +113,7 @@ pub enum VcsDemoConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for VcsDemoConfigOperation {
+impl protocol::OpText for VcsDemoConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -138,7 +138,7 @@ impl protocol::OpText for VcsDemoConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for VcsDemoConfigOperation {
+impl protocol::OpBinary for VcsDemoConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -184,24 +184,24 @@ impl protocol::OpBinary for VcsDemoConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<VcsDemoConfig> for VcsDemoConfigOperation {
+impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
     type Diff = VcsDemoConfig;
 
     fn diff(&self, base: &VcsDemoConfig) -> VcsDemoConfig {
         let mut next = base.clone();
         match self {
-            VcsDemoConfigOperation::Snapshot { config } => return config.clone(),
-            VcsDemoConfigOperation::SetSelection { checkpoint_ids } => next.selected_checkpoint_ids = checkpoint_ids.clone(),
-            VcsDemoConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            VcsDemoConfigMutation::Snapshot { config } => return config.clone(),
+            VcsDemoConfigMutation::SetSelection { checkpoint_ids } => next.selected_checkpoint_ids = checkpoint_ids.clone(),
+            VcsDemoConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &VcsDemoConfig) -> Vec<Self> {
-        vec![VcsDemoConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &VcsDemoConfig) -> Vec<Self> {
+        vec![VcsDemoConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -223,13 +223,13 @@ mod tests {
         store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    /// 🧮️ Round-trip law per `VcsDemoConfigOperation` variant (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-
+    /// 🧮️ Round-trip law per `VcsDemoConfigMutation` variant (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-
     /// SCHEMA-FLOW-CONFIG-ON-NODE).
     #[test]
     fn vcs_demo_config_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&VcsDemoConfigOperation::Snapshot { config: VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "de-DE".into() } });
-        store::test_support::assert_op_line_round_trip(&VcsDemoConfigOperation::SetSelection { checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] });
-        store::test_support::assert_op_line_round_trip(&VcsDemoConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "de-DE".into() } });
+        store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetSelection { checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] });
+        store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     /// ⏪️ `backwards()` always returns a `Snapshot` of the pre-operation config, so applying it after
@@ -237,11 +237,11 @@ mod tests {
     #[test]
     fn vcs_demo_config_operation_backwards_restores_the_base_config() {
         let base = VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "en-US".into() };
-        let operation = VcsDemoConfigOperation::SetLocale { value: "de-DE".into() };
+        let operation = VcsDemoConfigMutation::SetLocale { value: "de-DE".into() };
         let forward = operation.diff(&base);
         assert_eq!(forward.locale, "de-DE");
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![VcsDemoConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![VcsDemoConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
         assert_eq!(restored, base);
     }

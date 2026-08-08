@@ -17,8 +17,15 @@
         ],
         "blocked": [],
         "errors": [],
+        "errorDetails": [],
         "trigger": "Hexagonal Mushroom Column",
-        "graphH": 185124
+        "graphH": 807,
+        "meshEdges": [
+          108
+        ],
+        "meshPositions": [
+          108
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/hexagonal-mushroom-column.png"
     },
@@ -39,8 +46,15 @@
         ],
         "blocked": [],
         "errors": [],
+        "errorDetails": [],
         "trigger": "Rectangle Extrude Volume",
-        "graphH": 236517
+        "graphH": 807,
+        "meshEdges": [
+          72
+        ],
+        "meshPositions": [
+          72
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/rectangle-extrude-volume.png"
     },
@@ -48,8 +62,8 @@
       "exampleId": "sphere-cut-with-torus",
       "how": "clicked:Sphere Cut With Torus -> Sphere Cut With Torus",
       "snap": {
-        "allOk": false,
-        "meshCount": 0,
+        "allOk": true,
+        "meshCount": 1,
         "keys": [
           "brep_bool_cut_5",
           "brep_measure_volume_2",
@@ -59,12 +73,16 @@
           "slider_2"
         ],
         "blocked": [],
-        "errors": [
-          "brep_bool_cut_5",
-          "brep_measure_volume_2"
-        ],
+        "errors": [],
+        "errorDetails": [],
         "trigger": "Sphere Cut With Torus",
-        "graphH": 1597037
+        "graphH": 807,
+        "meshEdges": [
+          126
+        ],
+        "meshPositions": [
+          180
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/sphere-cut-with-torus.png"
     },
@@ -83,8 +101,15 @@
         ],
         "blocked": [],
         "errors": [],
+        "errorDetails": [],
         "trigger": "Box Fillet Preview",
-        "graphH": 1649977
+        "graphH": 807,
+        "meshEdges": [
+          2070
+        ],
+        "meshPositions": [
+          2070
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/box-fillet-preview.png"
     },
@@ -104,8 +129,15 @@
         ],
         "blocked": [],
         "errors": [],
+        "errorDetails": [],
         "trigger": "Sphere Box Fuse",
-        "graphH": 1686294
+        "graphH": 807,
+        "meshEdges": [
+          468
+        ],
+        "meshPositions": [
+          468
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/sphere-box-fuse.png"
     },
@@ -126,8 +158,15 @@
         ],
         "blocked": [],
         "errors": [],
+        "errorDetails": [],
         "trigger": "Face Sweep Extrude",
-        "graphH": 1735398
+        "graphH": 807,
+        "meshEdges": [
+          72
+        ],
+        "meshPositions": [
+          72
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/face-sweep-extrude.png"
     },
@@ -136,7 +175,7 @@
       "how": "clicked:Rectangle Wire Preview -> Rectangle Wire Preview",
       "snap": {
         "allOk": true,
-        "meshCount": 0,
+        "meshCount": 1,
         "keys": [
           "height",
           "rect",
@@ -144,8 +183,15 @@
         ],
         "blocked": [],
         "errors": [],
+        "errorDetails": [],
         "trigger": "Rectangle Wire Preview",
-        "graphH": 2860974
+        "graphH": 807,
+        "meshEdges": [
+          24
+        ],
+        "meshPositions": [
+          0
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/rectangle-wire-preview.png"
     },
@@ -153,8 +199,8 @@
       "exampleId": "box-shell-preview",
       "how": "clicked:Box Shell Preview -> Box Shell Preview",
       "snap": {
-        "allOk": false,
-        "meshCount": 0,
+        "allOk": true,
+        "meshCount": 1,
         "keys": [
           "box",
           "shell",
@@ -162,11 +208,16 @@
           "thickness"
         ],
         "blocked": [],
-        "errors": [
-          "shell"
-        ],
+        "errors": [],
+        "errorDetails": [],
         "trigger": "Box Shell Preview",
-        "graphH": 4086863
+        "graphH": 807,
+        "meshEdges": [
+          180
+        ],
+        "meshPositions": [
+          180
+        ]
       },
       "shot": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL/example-shots/box-shell-preview.png"
     }

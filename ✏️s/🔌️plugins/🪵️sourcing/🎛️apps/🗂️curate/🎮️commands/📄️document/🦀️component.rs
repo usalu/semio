@@ -1,16 +1,16 @@
 //! 📄️ Sourcing curate app commands — whole-document import, example switch, catalogue restock.
 
-use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigOperation};
+use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::apps::curate::EMPTY_EXAMPLE_ID;
 use crate::artifacts::curate::engine::{available_modules, default_document, empty_document};
-use crate::artifacts::curate::op::SourcingOperation;
+use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-fn set_document(document: CurateDocument) -> Emit<SourcingOperation, SourcingCurateConfigOperation> {
-    Emit::operations(vec![SourcingOperation::SetDocument { document }])
+fn set_document(document: CurateDocument) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
+    Emit::mutations(vec![SourcingMutation::SetDocument { document }])
 }
 
 //#region 🔖️SetDocumentJson
@@ -24,7 +24,7 @@ pub mod set_document_json {
     }
 
     /// 🛠️ Dev-only whole-document import — kept out of the command palette.
-    pub fn handle(payload: &SetDocumentJson, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &SetDocumentJson, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         match serde_json::from_str::<CurateDocument>(&payload.json) {
             Ok(document) => Ok(set_document(document)),
             Err(_) => Ok(Emit::default()),
@@ -43,7 +43,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() || payload.example_id == EMPTY_EXAMPLE_ID { empty_document() } else { default_document() };
         Ok(set_document(next))
     }
@@ -58,7 +58,7 @@ pub mod stock_from_catalogue {
     #[dsl(keyword = "stock-from-catalogue")]
     pub struct StockFromCatalogue {}
 
-    pub fn handle(_payload: &StockFromCatalogue, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(_payload: &StockFromCatalogue, doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         let mut document = doc.projection.clone();
         let existing: HashSet<String> = document.stock.iter().map(|kind| kind.id.clone()).collect();
         for module in available_modules() {
@@ -94,7 +94,7 @@ mod tests {
         let result = app
             .dispatch_typed(SourcingCurateCommand::CurateAdd(crate::apps::curate::commands::curation::curate_add::CurateAdd { object_id }), &semio_framework_plugin::testkit::meta("local"))
             .expect("curate");
-        assert_eq!(result.operations.len(), 1, "curateAdd is a document operation");
+        assert_eq!(result.mutations.len(), 1, "curateAdd is a document operation");
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
     }
 

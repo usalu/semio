@@ -504,14 +504,14 @@ mod tests {
     //#endregion 🔖️Ownership
 
     //#region 🔖️Replication
-    fn sample_envelope(id: &str, seq: u64) -> protocol::OperationEnvelope {
-        protocol::OperationEnvelope {
-            operation_id: protocol::OperationId(id.to_string()),
+    fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
+        protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(id.to_string()),
             document_id: protocol::DocumentId("doc-1".to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
             diff: protocol::DocumentDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }
@@ -543,8 +543,8 @@ mod tests {
 
         let follower_state = db_sync::replay_sync_state(&follower, document).unwrap();
         assert_eq!(follower_state.commands.len(), 4);
-        assert_eq!(follower_state.commands[0].operation_id.0, "op-0");
-        assert_eq!(follower_state.commands[3].operation_id.0, "op-3");
+        assert_eq!(follower_state.commands[0].mutation_id.0, "op-0");
+        assert_eq!(follower_state.commands[3].mutation_id.0, "op-3");
     }
 
     #[test]

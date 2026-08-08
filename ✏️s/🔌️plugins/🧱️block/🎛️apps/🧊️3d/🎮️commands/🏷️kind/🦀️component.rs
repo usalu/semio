@@ -1,8 +1,8 @@
 //! 🏷️ Block 3D play app command — patch a field on the object kind's identity.
 
 pub mod patch_object_kind {
-    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
-    use crate::artifacts::block3d::op::Block3dOperation;
+    use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
+    use crate::artifacts::block3d::op::Block3dMutation;
     use crate::artifacts::block3d::Block3dDefinition;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ pub mod patch_object_kind {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchObjectKind, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchObjectKind, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         let mut object_kind = doc.projection.object_kind.clone();
         match payload.field.as_str() {
             "name" => object_kind.name = payload.value.clone(),
@@ -23,6 +23,6 @@ pub mod patch_object_kind {
             "description" => object_kind.description = payload.value.clone(),
             _ => return Ok(Emit::default()),
         }
-        Ok(Emit::operations(vec![Block3dOperation::SetObjectKind { object_kind }]))
+        Ok(Emit::mutations(vec![Block3dMutation::SetObjectKind { object_kind }]))
     }
 }

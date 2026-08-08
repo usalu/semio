@@ -10,8 +10,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
 use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
-use flow::playbook::{apply_generation_operation, GenerationOperation};
-use protocol::OperationDiff;
+use flow::playbook::{apply_generation_mutation, GenerationMutation};
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Collections
@@ -73,10 +73,10 @@ pub struct Procedural3dDiff {
     pub camera: Option<CameraJson>,
     pub schema: Option<String>,
     #[serde(default)]
-    pub generation: Vec<GenerationOperation>,
+    pub generation: Vec<GenerationMutation>,
 }
 
-impl OperationDiff<Procedural3dDocument> for Procedural3dDiff {
+impl MutationDiff<Procedural3dDocument> for Procedural3dDiff {
     fn apply(&self, projection: &Procedural3dDocument) -> Procedural3dDocument {
         let mut next = projection.clone();
         apply_widgets_diff(&mut next.fixture.widgets, &self.widgets);
@@ -94,7 +94,7 @@ impl OperationDiff<Procedural3dDocument> for Procedural3dDiff {
             next.fixture.schema = schema.clone();
         }
         for operation in &self.generation {
-            apply_generation_operation(&mut next.generation, operation);
+            apply_generation_mutation(&mut next.generation, operation);
         }
         next
     }
@@ -131,7 +131,7 @@ mod tests {
         first.layout.removed.push("l-a".into());
         first.camera = Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 });
         first.schema = Some("schema-1".into());
-        first.generation.push(GenerationOperation::Rename { id: "generation-1".into(), name: "First".into() });
+        first.generation.push(GenerationMutation::Rename { id: "generation-1".into(), name: "First".into() });
 
         let mut second = Procedural3dDiff::default();
         second.widgets.removed.push("w-c".into());
@@ -139,7 +139,7 @@ mod tests {
         second.layout.set.push(("l-b".into(), WidgetLayout { x: 2.0, y: 2.0 }));
         second.camera = Some(CameraJson { x: 9.0, y: 9.0, zoom: 9.0 });
         second.schema = None;
-        second.generation.push(GenerationOperation::Rename { id: "generation-1".into(), name: "Second".into() });
+        second.generation.push(GenerationMutation::Rename { id: "generation-1".into(), name: "Second".into() });
 
         first.absorb(second);
 

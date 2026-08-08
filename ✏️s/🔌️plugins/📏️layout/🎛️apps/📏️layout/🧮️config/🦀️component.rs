@@ -1,4 +1,4 @@
-//! 🧮️ Layout play app — view state (`LayoutConfig`) and its operation enum (`LayoutConfigOperation`).
+//! 🧮️ Layout play app — view state (`LayoutConfig`) and its operation enum (`LayoutConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.layout` document. It still round-trips through a real
@@ -6,7 +6,7 @@
 //! document content.
 
 use crate::artifacts::layout::LayoutCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -27,7 +27,7 @@ pub struct LayoutDropPreviewState {
 /// engagement draft, and the two independent blueprint/preview camera poses) plus `locale`, the one
 /// `ViewModel` field the layout UI actually reads — session-only view state now round-trips through the
 /// config `DocumentStore` exactly like document content, with a real `backwards` per
-/// `LayoutConfigOperation` instead of never being VCS'd at all.
+/// `LayoutConfigMutation` instead of never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "layoutcfg")]
@@ -135,14 +135,14 @@ impl Default for LayoutConfig {
 store::impl_whole_record_config!(LayoutConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
+//#region 🔖️ConfigMutations
 /// 🧮️ [`LayoutConfig`]'s operation enum — one variant per settled interaction, plus a generic
-/// `Snapshot` every variant's `backwards()` returns. `Operation::Diff` is the WHOLE `LayoutConfig` (not a
+/// `Snapshot` every variant's `backwards()` returns. `Mutation::Diff` is the WHOLE `LayoutConfig` (not a
 /// granular patch type): `diff()` returns "the full config after this op", and
-/// `store::impl_whole_record_config!` supplies the `OperationDiff<LayoutConfig>` that returns that
+/// `store::impl_whole_record_config!` supplies the `MutationDiff<LayoutConfig>` that returns that
 /// snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum LayoutConfigOperation {
+pub enum LayoutConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -176,7 +176,7 @@ pub enum LayoutConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for LayoutConfigOperation {
+impl protocol::OpText for LayoutConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -190,7 +190,7 @@ impl protocol::OpText for LayoutConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -201,7 +201,7 @@ impl protocol::OpText for LayoutConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for LayoutConfigOperation {
+impl protocol::OpBinary for LayoutConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -247,30 +247,30 @@ impl protocol::OpBinary for LayoutConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<LayoutConfig> for LayoutConfigOperation {
+impl Mutation<LayoutConfig> for LayoutConfigMutation {
     type Diff = LayoutConfig;
 
     fn diff(&self, base: &LayoutConfig) -> LayoutConfig {
         let mut next = base.clone();
         match self {
-            LayoutConfigOperation::Snapshot { config } => return config.clone(),
-            LayoutConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            LayoutConfigOperation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
-            LayoutConfigOperation::SetHover { id } => next.hovered_id = id.clone(),
-            LayoutConfigOperation::SetDropPreview { preview } => next.drop_preview = preview.clone(),
-            LayoutConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            LayoutConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            LayoutConfigOperation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
-            LayoutConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            LayoutConfigMutation::Snapshot { config } => return config.clone(),
+            LayoutConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            LayoutConfigMutation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
+            LayoutConfigMutation::SetHover { id } => next.hovered_id = id.clone(),
+            LayoutConfigMutation::SetDropPreview { preview } => next.drop_preview = preview.clone(),
+            LayoutConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            LayoutConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            LayoutConfigMutation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
+            LayoutConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &LayoutConfig) -> Vec<Self> {
-        vec![LayoutConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &LayoutConfig) -> Vec<Self> {
+        vec![LayoutConfigMutation::Snapshot { config: base.clone() }]
     }
 }
-//#endregion 🔖️ConfigOperations
+//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -318,9 +318,9 @@ mod tests {
         }
     }
 
-    fn config_round_trip(base: &LayoutConfig, operation: &LayoutConfigOperation) -> LayoutConfig {
+    fn config_round_trip(base: &LayoutConfig, operation: &LayoutConfigMutation) -> LayoutConfig {
         let forward = operation.diff(base);
-        let backwards = operation.backwards(base);
+        let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
             restored = back.diff(&restored);
@@ -330,28 +330,28 @@ mod tests {
     }
 
     #[test]
-    fn config_operations_apply_and_restore_every_field() {
+    fn config_mutations_apply_and_restore_every_field() {
         let base = LayoutConfig::default();
-        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetSelection { ids: vec!["a".into()] }).selected_ids, vec!["a".to_string()]);
-        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
-        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetHover { id: Some("frame-9".into()) }).hovered_id, Some("frame-9".to_string()));
-        let previewed = config_round_trip(&base, &LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState { kind: "rect".into(), x: 5.0, y: 6.0 } });
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetSelection { ids: vec!["a".into()] }).selected_ids, vec!["a".to_string()]);
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetHover { id: Some("frame-9".into()) }).hovered_id, Some("frame-9".to_string()));
+        let previewed = config_round_trip(&base, &LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState { kind: "rect".into(), x: 5.0, y: 6.0 } });
         assert_eq!(previewed.drop_preview.kind, "rect");
-        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetEngagementInput { value: "undo".into() }).engagement_input, "undo");
-        let cam = config_round_trip(&base, &LayoutConfigOperation::SetCamera { camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetEngagementInput { value: "undo".into() }).engagement_input, "undo");
+        let cam = config_round_trip(&base, &LayoutConfigMutation::SetCamera { camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
         assert_eq!(cam.camera, LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 });
-        let preview_cam = config_round_trip(&base, &LayoutConfigOperation::SetPreviewCamera { camera: LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 } });
+        let preview_cam = config_round_trip(&base, &LayoutConfigMutation::SetPreviewCamera { camera: LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 } });
         assert_eq!(preview_cam.preview_camera, LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 });
-        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
     }
 
     #[test]
     fn config_snapshot_op_text_round_trips() {
         let config = sample_config();
-        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::Snapshot { config });
-        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::SetHover { id: None });
-        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::SetLocale { value: "en-US".into() });
+        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetHover { id: None });
+        store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale { value: "en-US".into() });
     }
 }
 //#endregion 🧪️Tests

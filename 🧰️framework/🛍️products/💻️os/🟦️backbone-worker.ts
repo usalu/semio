@@ -6,7 +6,7 @@
  */
 // #endregion Header
 
-import type { BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, OperationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireOperationEnvelope } from "./🟦️component";
+import type { BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
 import { decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./🟦️component";
 
 type RustWorkerHost = {
@@ -82,7 +82,7 @@ type DocumentState = {
   pollTimer: ReturnType<typeof setInterval> | null;
   reconnectTimer: ReturnType<typeof setTimeout> | null;
   reconnectDelayMs: number;
-  pendingOperations: OperationEnvelope[];
+  pendingMutations: MutationEnvelope[];
   status: DocumentSyncStatus;
   /** 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
    * `Ack.frontier`) — the wire-v2 replacement for the old `sinceVersion: number` counter. */
@@ -90,7 +90,7 @@ type DocumentState = {
   /** 🎟️ The hub's last `Welcome.resume_token`, echoed back on the next `hello` after a reconnect. */
   resumeToken: string | null;
   /** 🧺️ Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`. */
-  pendingBatches: Map<number, OperationEnvelope[]>;
+  pendingBatches: Map<number, MutationEnvelope[]>;
   nextBatchId: number;
   /** ⏰️ Logical tick counter for {@link nextWireTimestamp} on every outbound wire envelope. */
   hlcCounter: number;
@@ -128,11 +128,11 @@ function hubBinding(config: DocumentActorConfig): Extract<PersistenceBinding, { 
 //#endregion 🔖️DocumentState
 
 //#region 🔖️WireBridge
-/** 🧮️ A stable, deterministic 32-bit seed for an actor id string, for `WireOperationEnvelope.
+/** 🧮️ A stable, deterministic 32-bit seed for an actor id string, for `WireMutationEnvelope.
  * timestamp.actor` — the TS twin of the Rust actor's `actor_seed` (`framework/sync/rs/lib.rs`
  * `🔖️WireBridge`). Not cryptographic, just a cheap deterministic fold — matches the Rust side's own
  * `DefaultHasher`-based approach in spirit (both are wire-local ordering metadata, never round-
- * tripped back into an app-level {@link OperationEnvelope}). */
+ * tripped back into an app-level {@link MutationEnvelope}). */
 function actorSeed(actor: string): number {
   let hash = 0;
   for (let index = 0; index < actor.length; index++) {
@@ -143,7 +143,7 @@ function actorSeed(actor: string): number {
 
 /** ⏰️ Advances `state.hlcCounter` and stamps a fresh wire timestamp for an outbound envelope —
  * the TS twin of the Rust actor's `next_timestamp`. */
-function nextWireTimestamp(state: DocumentState): WireOperationEnvelope["timestamp"] {
+function nextWireTimestamp(state: DocumentState): WireMutationEnvelope["timestamp"] {
   state.hlcCounter += 1;
   return { actor: actorSeed(state.config.actor), physical_ms: Date.now(), logical: state.hlcCounter };
 }
@@ -176,12 +176,12 @@ function decodePackPayload(bytes: readonly number[]): unknown {
   return decodePackValue(new Uint8Array(bytes));
 }
 
-/** 🌉️ Converts this fallback's local, camelCase {@link OperationEnvelope} into the snake_case
- * {@link WireOperationEnvelope} `protocol_wire::ClientFrame::Commands`/`ServerFrame::Commands`
+/** 🌉️ Converts this fallback's local, camelCase {@link MutationEnvelope} into the snake_case
+ * {@link WireMutationEnvelope} `protocol_wire::ClientFrame::Commands`/`ServerFrame::Commands`
  * carry — the TS twin of the Rust actor's `to_wire_envelope`. */
-function toWireEnvelope(envelope: OperationEnvelope, timestamp: WireOperationEnvelope["timestamp"]): WireOperationEnvelope {
+function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvelope["timestamp"]): WireMutationEnvelope {
   return {
-    operation_id: envelope.id,
+    mutation_id: envelope.id,
     document_id: envelope.document,
     actor: envelope.actor,
     dependencies: [...(envelope.deps ?? [])],
@@ -194,11 +194,11 @@ function toWireEnvelope(envelope: OperationEnvelope, timestamp: WireOperationEnv
 /** 🌉️ The inverse of {@link toWireEnvelope} — the TS twin of the Rust actor's `from_wire_envelope`.
  * `baseVersion` is recovered from the payload's own `sequenceNumber` (this actor's payloads are
  * always edit-shaped JSON), mirroring the Rust side's identical recovery. */
-function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
+function fromWireEnvelope(envelope: WireMutationEnvelope): MutationEnvelope {
   const payload = decodePackPayload(envelope.diff.payload);
   const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
   return {
-    id: envelope.operation_id,
+    id: envelope.mutation_id,
     actor: envelope.actor,
     document: envelope.document_id,
     schemaVersion: envelope.diff.schema,
@@ -206,7 +206,7 @@ function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
     payloadHash: placeholderPayloadHash(payload),
     diff: { schemaId: envelope.diff.schema, payload },
     inverse: {
-      targetOperation: envelope.operation_id,
+      targetOperation: envelope.mutation_id,
       inverseDiff: { schemaId: envelope.inverse.schema, payload: decodePackPayload(envelope.inverse.payload) },
       baseVersion: Number.isFinite(sequenceNumber) ? Math.max(0, sequenceNumber) : 0,
       dependencies: [],
@@ -219,7 +219,7 @@ function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
  * the TS twin of the Rust actor's `rollback_envelope` (see that function's doc comment for why
  * replaying the envelope's own inverse, rather than calling into typed operation-inverse machinery,
  * is the right move for this schema-agnostic relay). */
-function rollbackEnvelope(envelope: OperationEnvelope): OperationEnvelope {
+function rollbackEnvelope(envelope: MutationEnvelope): MutationEnvelope {
   const undoId = `${envelope.id}~undo`;
   return {
     id: undoId,
@@ -348,7 +348,7 @@ function sendWireFrame(state: DocumentState, frame: ClientFrame, lane: WireLane)
 
 /** 🧺️ Builds + sends one `Commands` batch, tracking it in `pendingBatches` for
  * {@link handleAck}. Mirrors the Rust actor's `relay_operations_to_hub`. */
-function relayOperationsToHub(state: DocumentState, envelopes: readonly OperationEnvelope[]): void {
+function relayMutationsToHub(state: DocumentState, envelopes: readonly MutationEnvelope[]): void {
   if (state.socket?.readyState !== WebSocket.OPEN || envelopes.length === 0) return;
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
@@ -358,7 +358,7 @@ function relayOperationsToHub(state: DocumentState, envelopes: readonly Operatio
 }
 
 /** 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage — mirrors the Rust actor's
- * `handle_ack`. `pendingOperations` (the UI-facing "unconfirmed" count) is trimmed by id, the same
+ * `handle_ack`. `pendingMutations` (the UI-facing "unconfirmed" count) is trimmed by id, the same
  * way the old per-operation `ack` frame used to. */
 function handleAck(state: DocumentState, batchId: number, stages: readonly WireAckStage[]): void {
   for (const stage of stages) {
@@ -367,7 +367,7 @@ function handleAck(state: DocumentState, batchId: number, stages: readonly WireA
     state.pendingBatches.delete(batchId);
     if (!sent) continue;
     const sentIds = new Set(sent.map((envelope) => envelope.id));
-    state.pendingOperations = state.pendingOperations.filter((envelope) => !sentIds.has(envelope.id));
+    state.pendingMutations = state.pendingMutations.filter((envelope) => !sentIds.has(envelope.id));
 
     const outcome = stage.Applied.outcome;
     let ackOutcome: CommandAckOutcome;
@@ -375,16 +375,16 @@ function handleAck(state: DocumentState, batchId: number, stages: readonly WireA
       ackOutcome = { kind: "accepted" };
     } else if ("Transformed" in outcome) {
       const rollbacks = [...sent].reverse().map(rollbackEnvelope);
-      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: rollbacks });
+      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: rollbacks });
       const converted = fromWireEnvelope(outcome.Transformed.envelope);
-      emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: [converted] });
+      emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: [converted] });
       ackOutcome = { kind: "transformed" };
     } else {
       const rollbacks = [...sent].reverse().map(rollbackEnvelope);
-      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: rollbacks });
+      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: rollbacks });
       ackOutcome = { kind: "rejected", reason: outcome.Rejected.reason };
     }
-    setStatus(state, { pendingOperations: state.pendingOperations.length });
+    setStatus(state, { pendingMutations: state.pendingMutations.length });
     emitEvent(state.config.documentId, { kind: "commandOutcome", batchId, outcome: ackOutcome });
   }
 }
@@ -410,7 +410,7 @@ function handleHubFrame(state: DocumentState, frame: ServerFrame): void {
     state.frontier = frame.Commands.frontier;
     if (frame.Commands.origin !== state.config.actor) {
       const envelopes = frame.Commands.envelopes.map(fromWireEnvelope);
-      emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes });
+      emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes });
     }
     return;
   }
@@ -596,8 +596,8 @@ function openDocument(config: DocumentActorConfig): void {
     pollTimer: null,
     reconnectTimer: null,
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
-    pendingOperations: [],
-    status: { persisted: false, pendingOperations: 0, remote: { kind: "detached" } },
+    pendingMutations: [],
+    status: { persisted: false, pendingMutations: 0, remote: { kind: "detached" } },
     frontier: null,
     resumeToken: null,
     pendingBatches: new Map(),
@@ -607,8 +607,8 @@ function openDocument(config: DocumentActorConfig): void {
   };
   documents.set(config.documentId, state);
   channel.onmessage = (messageEvent) => {
-    const envelopes = messageEvent.data as OperationEnvelope[];
-    if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(config.documentId, { kind: "remoteOperations", envelopes });
+    const envelopes = messageEvent.data as MutationEnvelope[];
+    if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(config.documentId, { kind: "remoteMutations", envelopes });
   };
   const folder = folderBinding(config);
   if (folder) {
@@ -633,12 +633,12 @@ function closeDocument(documentId: string): void {
 
 async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): Promise<void> {
   switch (message.kind) {
-    case "localOperations": {
+    case "localMutations": {
       if (message.envelopes.length === 0) break; // pure wake
-      state.pendingOperations.push(...message.envelopes);
-      setStatus(state, { pendingOperations: state.pendingOperations.length });
+      state.pendingMutations.push(...message.envelopes);
+      setStatus(state, { pendingMutations: state.pendingMutations.length });
       state.channel.postMessage(message.envelopes);
-      relayOperationsToHub(state, message.envelopes);
+      relayMutationsToHub(state, message.envelopes);
       const folder = folderBinding(state.config);
       // 📁️ Folder persistence only understands whole-envelope snapshots today (`vcs::FolderSqliteStorage`
       // stores one json blob per document) — a local operation still marks the document dirty so the next
@@ -651,8 +651,8 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       if (folder) {
         try {
           await writeFolder(state, folder, message.pack, message.spr);
-          state.pendingOperations = [];
-          setStatus(state, { pendingOperations: 0 });
+          state.pendingMutations = [];
+          setStatus(state, { pendingMutations: 0 });
         } catch (error) {
           console.error("[backbone-worker] folder write failed", state.config.documentId, error);
         }
@@ -706,7 +706,7 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  function sampleEnvelope(): OperationEnvelope {
+  function sampleEnvelope(): MutationEnvelope {
     return {
       id: "edit-1",
       actor: "actor-1",
@@ -720,10 +720,10 @@ if (import.meta.vitest) {
   }
 
   describe("backbone-worker wire bridge", () => {
-    it("round-trips an OperationEnvelope through toWireEnvelope/fromWireEnvelope", () => {
+    it("round-trips an MutationEnvelope through toWireEnvelope/fromWireEnvelope", () => {
       const envelope = sampleEnvelope();
       const wire = toWireEnvelope(envelope, { actor: 1, physical_ms: 2, logical: 3 });
-      expect(wire.operation_id).toBe(envelope.id);
+      expect(wire.mutation_id).toBe(envelope.id);
       expect(wire.document_id).toBe(envelope.document);
       expect(wire.actor).toBe(envelope.actor);
       expect(decodePackPayload(wire.diff.payload)).toEqual(envelope.diff.payload);

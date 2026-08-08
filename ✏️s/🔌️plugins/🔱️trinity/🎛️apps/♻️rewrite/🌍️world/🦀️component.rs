@@ -2,7 +2,7 @@
 //! live document AND its own view-only camera/LOD state, so — like `block`/`cad`'s app-level
 //! `world.rs` precedent — this lives at app level rather than in the artifact's `⚙️engine`).
 
-use crate::artifacts::jack::op::TrinityGraphOperation;
+use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{port_key, Graph, GraphFixture, Node, PortDirection};
 use crate::artifacts::rewrite::engine::{ApplyRuleResult, Rule};
 use crate::ast::QueryResult;
@@ -251,7 +251,7 @@ fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &se
     Ok(())
 }
 
-fn force_layout_reposition_operations(fixture: &GraphFixture) -> Result<Vec<TrinityGraphOperation>, TrinityRewriteError> {
+fn force_layout_reposition_operations(fixture: &GraphFixture) -> Result<Vec<TrinityGraphMutation>, TrinityRewriteError> {
     let mut graph = Graph::from_fixture(fixture.clone())?;
     apply_force_layout_to_trinity_graph(&mut graph)?;
     let next = graph.to_fixture();
@@ -261,7 +261,7 @@ fn force_layout_reposition_operations(fixture: &GraphFixture) -> Result<Vec<Trin
             continue;
         };
         if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-            operations.push(TrinityGraphOperation::Reposition { id: node.id.clone(), x: node.x, y: node.y });
+            operations.push(TrinityGraphMutation::Reposition { id: node.id.clone(), x: node.x, y: node.y });
         }
     }
     Ok(operations)
@@ -328,8 +328,8 @@ impl TrinityBridge {
         Ok(())
     }
 
-    fn dispatch(&mut self, operations: Vec<TrinityGraphOperation>) -> Result<(), TrinityRewriteError> {
-        crate::artifacts::jack::op::dispatch_trinity_graph_operations(&mut self.store, operations)?;
+    fn dispatch(&mut self, operations: Vec<TrinityGraphMutation>) -> Result<(), TrinityRewriteError> {
+        crate::artifacts::jack::op::dispatch_trinity_graph_mutations(&mut self.store, operations)?;
         self.refresh_graph_from_store()
     }
 
@@ -553,7 +553,7 @@ impl TrinityBridge {
                 continue;
             };
             if (fixture_node.x - engine_node.center.x).abs() > 1e-6 || (fixture_node.y - engine_node.center.y).abs() > 1e-6 {
-                operations.push(TrinityGraphOperation::Reposition { id: widget_id.clone(), x: engine_node.center.x, y: engine_node.center.y });
+                operations.push(TrinityGraphMutation::Reposition { id: widget_id.clone(), x: engine_node.center.x, y: engine_node.center.y });
             }
         }
         if operations.is_empty() {
@@ -1112,7 +1112,7 @@ mod tests {
         let fixture = nakagin_graph().to_fixture();
         let operations = force_layout_reposition_operations(&fixture).unwrap();
         assert!(!operations.is_empty());
-        assert!(operations.iter().all(|op| matches!(op, TrinityGraphOperation::Reposition { .. })));
+        assert!(operations.iter().all(|op| matches!(op, TrinityGraphMutation::Reposition { .. })));
     }
 
     #[test]

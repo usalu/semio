@@ -1,7 +1,7 @@
 dialect protocol
 protocol program.spr
 version 1
-schema architect.program.operation
+schema architect.program.mutation
 start record
 framing record
 record program-set-field tag 1

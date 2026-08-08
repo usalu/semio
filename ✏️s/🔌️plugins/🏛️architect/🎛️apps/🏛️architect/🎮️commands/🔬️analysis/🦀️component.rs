@@ -2,9 +2,9 @@
 //! report kinds. Each records its outcome in the document register AND caches it in the config.
 
 pub mod run_validation {
-    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigOperation};
+    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::validate::validate_plugin;
-    use crate::artifacts::program::op::ProgramOperation;
+    use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::Program;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -13,7 +13,7 @@ pub mod run_validation {
     #[dsl(keyword = "run-validation")]
     pub struct RunValidation {}
 
-    pub fn handle(_payload: &RunValidation, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    pub fn handle(_payload: &RunValidation, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let diagnostics = validate_plugin(doc.projection);
         let mut next = cfg.projection.clone();
         next.last_result_json = serde_json::to_string_pretty(&diagnostics).unwrap_or_else(|_| "{}".into());
@@ -23,11 +23,11 @@ pub mod run_validation {
 
 pub mod run_analysis {
     use crate::apps::architect::catalog::{analysis_kind_from_str, analysis_record_from};
-    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigOperation};
+    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::analyze::run_analysis;
-    use crate::artifacts::program::op::ProgramOperation;
+    use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::Program;
-    use protocol::CollectionOperation;
+    use protocol::CollectionMutation;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -37,7 +37,7 @@ pub mod run_analysis {
         pub analysis_kind: String,
     }
 
-    pub fn handle(payload: &RunAnalysis, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    pub fn handle(payload: &RunAnalysis, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.projection;
         let kind = analysis_kind_from_str(&payload.analysis_kind);
         let result = run_analysis(program, kind);
@@ -47,8 +47,8 @@ pub mod run_analysis {
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
         Ok(Emit {
-            document_operations: vec![ProgramOperation::Analyses(CollectionOperation::Add { index: program.analyses.len(), item: record })],
-            config_operations: snapshot(next),
+            document_mutations: vec![ProgramMutation::Analyses(CollectionMutation::Add { index: program.analyses.len(), item: record })],
+            config_mutations: snapshot(next),
             ..Default::default()
         })
     }
@@ -56,11 +56,11 @@ pub mod run_analysis {
 
 pub mod run_report {
     use crate::apps::architect::catalog::{report_kind_from_str, report_record_from};
-    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigOperation};
+    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::report::build_report;
-    use crate::artifacts::program::op::ProgramOperation;
+    use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::Program;
-    use protocol::CollectionOperation;
+    use protocol::CollectionMutation;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -70,7 +70,7 @@ pub mod run_report {
         pub report_kind: String,
     }
 
-    pub fn handle(payload: &RunReport, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    pub fn handle(payload: &RunReport, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.projection;
         let kind = report_kind_from_str(&payload.report_kind);
         let report = build_report(program, kind);
@@ -79,8 +79,8 @@ pub mod run_report {
         next.active_report_json = serde_json::to_string(&report).unwrap_or_else(|_| "{}".into());
         next.last_result_json = serde_json::to_string_pretty(&report).unwrap_or_else(|_| "{}".into());
         Ok(Emit {
-            document_operations: vec![ProgramOperation::Reports(CollectionOperation::Add { index: program.reports.len(), item: record })],
-            config_operations: snapshot(next),
+            document_mutations: vec![ProgramMutation::Reports(CollectionMutation::Add { index: program.reports.len(), item: record })],
+            config_mutations: snapshot(next),
             ..Default::default()
         })
     }

@@ -182,3 +182,36 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️ArtifactEngine
+pub struct Block5dEngine {
+    projection: crate::artifacts::block5d::Block5dDefinition,
+}
+
+impl Block5dEngine {
+    pub fn new(projection: crate::artifacts::block5d::Block5dDefinition) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Block5dEngine {
+    type Projection = crate::artifacts::block5d::Block5dDefinition;
+    type Mutation = crate::artifacts::block5d::mutations::Block5dMutation;
+    type Diff = crate::artifacts::block5d::diff::Block5dDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::block5d::mutations::apply_block5d_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

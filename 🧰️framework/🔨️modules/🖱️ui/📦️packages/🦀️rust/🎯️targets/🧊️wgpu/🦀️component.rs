@@ -4690,8 +4690,8 @@ pub mod ui {
         #[test]
         fn build_shell_context_menu_specs_shapes_arg_carrying_actions_and_appends_the_palette() {
             let actions = vec![
-                ShellMenuAction { id: "shell.rename".into(), label: "Rename".into(), icon: None, keys: None, kind: "Operation".into(), category: None, in_palette: true, arg_carrying: true },
-                ShellMenuAction { id: "shell.hidden".into(), label: "Hidden".into(), icon: None, keys: None, kind: "Operation".into(), category: None, in_palette: false, arg_carrying: false },
+                ShellMenuAction { id: "shell.rename".into(), label: "Rename".into(), icon: None, keys: None, kind: "Mutation".into(), category: None, in_palette: true, arg_carrying: true },
+                ShellMenuAction { id: "shell.hidden".into(), label: "Hidden".into(), icon: None, keys: None, kind: "Mutation".into(), category: None, in_palette: false, arg_carrying: false },
             ];
             let specs = build_shell_context_menu_specs(&actions, true);
             assert_eq!(specs.len(), 2, "the non-palette action is filtered out, the palette leaf is appended: {specs:?}");

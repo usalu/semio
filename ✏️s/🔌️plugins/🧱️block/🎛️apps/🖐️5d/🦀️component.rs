@@ -10,14 +10,14 @@ use crate::apps::block5d::commands::grip::{add_grip, remove_grip};
 use crate::apps::block5d::commands::grip_kind::{add_grip_kind, remove_grip_kind};
 use crate::apps::block5d::commands::kind::patch_part_kind;
 use crate::apps::block5d::commands::selection::set_selection;
-use crate::apps::block5d::config::{Block5dConfig, Block5dConfigOperation};
+use crate::apps::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use crate::apps::block5d::modes::edit as edit_mode;
 use crate::apps::block5d::modes::edit::windows::{board, world};
 use crate::apps::block5d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::block5d::terminology::block5d_labels;
-use crate::artifacts::block5d::op::Block5dOperation;
+use crate::artifacts::block5d::op::Block5dMutation;
 use crate::artifacts::block5d::{artifact_kind, Block5dDefinition, BLOCK_5D_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use store::EngineHandles;
@@ -42,7 +42,7 @@ semio_framework_plugin::app_commands! {
     /// every action `create_block5d_app` declares. Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break. Every id/key pair here is IDENTICAL (the pre-migration
     /// `#[dsl(key)]` already used the camelCase action id, not kebab-case) — preserved verbatim.
-    pub enum Block5dCommand for Block5dDefinition, Block5dOperation, Block5dConfig, Block5dConfigOperation {
+    pub enum Block5dCommand for Block5dDefinition, Block5dMutation, Block5dConfig, Block5dConfigMutation {
         "patchPartKind" as "patchPartKind" => patch_part_kind::PatchPartKind,
         "addGripKind" as "addGripKind" => add_grip_kind::AddGripKind,
         "removeGripKind" as "removeGripKind" => remove_grip_kind::RemoveGripKind,
@@ -57,17 +57,17 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️Block5dPlayApp
 /// 🧪️ B1: unit struct — the former `selected_ids` `RefCell` field now lives in
-/// `crate::apps::block5d::config::Block5dConfig`, written through `Block5dConfigOperation`s.
+/// `crate::apps::block5d::config::Block5dConfig`, written through `Block5dConfigMutation`s.
 #[derive(Default)]
 pub struct Block5dPlayApp;
 
 impl DocumentApp for Block5dPlayApp {
     type Projection = Block5dDefinition;
-    type Operation = Block5dOperation;
+    type Mutation = Block5dMutation;
     type Config = Block5dConfig;
-    type ConfigOperation = Block5dConfigOperation;
+    type ConfigMutation = Block5dConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = Block5dCommand;
 
@@ -113,7 +113,7 @@ impl DocumentApp for Block5dPlayApp {
         }
     }
 
-    fn handle(command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dOperation, Block5dConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -179,13 +179,13 @@ pub fn create_block5d_app() -> App {
             .window_kind_def(world::definition())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .operation("patchPartKind", LocalizedLabel::native("Patch Part Kind", "Teilart bearbeiten"))
-            .operation("addGripKind", LocalizedLabel::native("Add Grip Kind", "Griffart hinzufügen"))
-            .operation("removeGripKind", LocalizedLabel::native("Remove Grip Kind", "Griffart entfernen"))
-            .operation("addGrip", LocalizedLabel::native("Add Grip", "Griff hinzufügen"))
-            .operation("removeGrip", LocalizedLabel::native("Remove Grip", "Griff entfernen"))
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .mutation("patchPartKind", LocalizedLabel::native("Patch Part Kind", "Teilart bearbeiten"))
+            .mutation("addGripKind", LocalizedLabel::native("Add Grip Kind", "Griffart hinzufügen"))
+            .mutation("removeGripKind", LocalizedLabel::native("Remove Grip Kind", "Griffart entfernen"))
+            .mutation("addGrip", LocalizedLabel::native("Add Grip", "Griff hinzufügen"))
+            .mutation("removeGrip", LocalizedLabel::native("Remove Grip", "Griff entfernen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .default_layout(edit_mode::layout())
             .io(crate::artifacts::block5d::engine::block5d_io()),
@@ -357,7 +357,7 @@ mod tests {
     fn set_selection_writes_config_not_document() {
         let mut app: Block5dApp = new_app();
         let result = app.dispatch_typed(Block5dCommand::SetSelection(set_selection::SetSelection { ids: vec!["grip-kind:b-l".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        assert!(result.operations.is_empty(), "setSelection is config-only and must emit no document operations");
+        assert!(result.mutations.is_empty(), "setSelection is config-only and must emit no document operations");
     }
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s new caller round-trips through the `"catalog:out"` media port.
@@ -387,10 +387,10 @@ mod tests {
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
     #[test]
-    fn view_actions_never_emit_document_operations_under_the_real_registry() {
+    fn view_actions_never_emit_document_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block5dCommand::SetSelection(set_selection::SetSelection { ids: vec!["g0".into()] }));
-        assert!(result.operations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
     }
     //#endregion 🔖️Behavior
 }

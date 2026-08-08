@@ -1,0 +1,60 @@
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔺️diff/🦀️component.rs:1://! 🔺️ Imperative artifact — diff structs + `OperationDiff` impl (constitutional: diff).
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🦀️component.rs:122://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🦀️component.rs:257://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🦀️component.rs:136:/// generic inverse every `🎮️commands/*` config edit uses (mirrors `norm::NormConfigOperation`
+✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔺️diff/🦀️component.rs:25:    use protocol::{Mutation, OperationDiff};
+✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔺️diff/🦀️component.rs:28:    /// the touched slot — the `OperationDiff` contract undo/redo rides on.
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🧮️config/🦀️component.rs:214:/// returns — mirrors `shooting_op::ShootingConfigOperation`'s identical pattern: a config-only dispatch
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🦀️component.rs:142://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🦀️component.rs:288://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🦀️component.rs:114://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🦀️component.rs:235://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:182://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:185:/// mirrors `shooting_op::ShootingConfigOperation`/`lowpoly_op::LowpolyConfigOperation`'s identical
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:330://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🦀️component.rs:169://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🦀️component.rs:317://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🦀️component.rs:112:// #region 🔖️ConfigOperations
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🦀️component.rs:236:// #endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🦀️component.rs:104://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🦀️component.rs:216://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:200://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:351://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:106://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:215://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔺️diff/🦀️component.rs:1://! 🔺️ VCS artifact — per-field diff type + `OperationDiff` law (was: part of constitutional `op`).
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🔺️diff/🦀️component.rs:11:pub struct SetBooleanOperationDiff {
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🔺️diff/🦀️component.rs:15:impl SetBooleanOperationDiff {
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧬️mutations/🔀set-boolean-operation/🔺️diff/🦀️component.rs:21:impl MutationDiff<DrawDocument> for SetBooleanOperationDiff {
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🧮️config/🦀️component.rs:304://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🧮️config/🦀️component.rs:314:/// bookkeeping — the same justification `shooting_op::ShootingConfigOperation` documents for its own
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🧮️config/🦀️component.rs:418://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:2://! op's `ConfigOperations` region, both moved here since config is app-level view state, not document
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:107:// #region 🔖️ConfigOperations
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:227:// #endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🦀️component.rs:2://! `ConfigOperation`, split out per the taxonomy recipe: view state lives at app level, not artifact).
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🦀️component.rs:111://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🦀️component.rs:117:/// `shooting_op::ShootingConfigOperation`'s identical shape.
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🦀️component.rs:235://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🦀️component.rs:179://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🦀️component.rs:345://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🦀️component.rs:99://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🦀️component.rs:204://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🦀️component.rs:163://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🦀️component.rs:166:/// returns — mirrors `shooting_op::ShootingConfigOperation` exactly (see that type's doc comment for the
+✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🦀️component.rs:306://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🔺️diff/🦀️component.rs:3://! `OperationDiff<DagDocument> for DagDiff` and its `apply`/`absorb` logic are implemented directly in
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🦀️component.rs:173://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🦀️component.rs:176:/// `backwards()` returns. Mirrors `shooting_op::ShootingConfigOperation` exactly: a config-only "View"
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🦀️component.rs:319://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🧮️config/🦀️component.rs:142:/// `store::impl_whole_record_config!` supplies the `OperationDiff<LayoutConfig>` that returns that
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🦀️component.rs:105://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🦀️component.rs:225://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🦀️component.rs:249:    //#region 🔖️ConfigOperationTests
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🦀️component.rs:278:    //#endregion 🔖️ConfigOperationTests
+✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:199://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:372://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🦀️component.rs:96://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🦀️component.rs:202://#endregion 🔖️ConfigOperations
+✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🦀️component.rs:96://#region 🔖️ConfigOperations
+✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🦀️component.rs:202://#endregion 🔖️ConfigOperations

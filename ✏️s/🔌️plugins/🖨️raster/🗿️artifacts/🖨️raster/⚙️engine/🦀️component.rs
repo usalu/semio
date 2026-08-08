@@ -293,7 +293,7 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
 }
 
 /// 📥️ Builds the whole-document replacement that appends the incoming `image:in` media as one new
-/// pixel layer + embedded asset — `RasterOperation` has no granular "add asset" step (assets are
+/// pixel layer + embedded asset — `RasterMutation` has no granular "add asset" step (assets are
 /// seeded with the document today), so this mirrors `raster_document_json_from_dwg`'s "compute the
 /// whole next document, then `ReplaceDocument`" shape rather than inventing a narrower op. `png_base64`
 /// is raw (unprefixed) base64 PNG bytes — the same convention `shooting_engine::shooting_photo_media`
@@ -452,3 +452,41 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ArtifactEngine
+/// 🧬️ UI-independent document engine — every transition is a `RasterMutation`.
+pub struct RasterEngine {
+    projection: crate::artifacts::raster::RasterProjection,
+}
+
+impl RasterEngine {
+    pub fn new(projection: crate::artifacts::raster::RasterProjection) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> crate::artifacts::raster::RasterProjection {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for RasterEngine {
+    type Projection = crate::artifacts::raster::RasterProjection;
+    type Mutation = crate::artifacts::raster::mutations::RasterMutation;
+    type Diff = crate::artifacts::raster::diff::RasterDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        self.projection = crate::artifacts::raster::mutations::apply_raster_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+

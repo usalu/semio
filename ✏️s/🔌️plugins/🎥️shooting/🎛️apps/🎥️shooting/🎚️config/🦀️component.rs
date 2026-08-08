@@ -1,5 +1,5 @@
 //! 🧮️ Shooting play app — view state (`ShootingConfig`) and its operation enum
-//! (`ShootingConfigOperation`).
+//! (`ShootingConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.shooting` document. It still round-trips through a real
@@ -7,7 +7,7 @@
 //! document content.
 
 use crate::artifacts::shooting::ShootingCamera;
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// AND everything that used to live in an app-struct `RefCell` runtime (selection, hover, selection
 /// method, center-model toggle, fit-revision counter, camera draft label, and the free/live viewport
 /// camera) — session-only view state now round-trips through the config `DocumentStore` exactly like
-/// document content, with a real `backwards` per [`ShootingConfigOperation`] instead of never being
+/// document content, with a real `backwards` per [`ShootingConfigMutation`] instead of never being
 /// VCS'd at all. `locale`/`active_utility_id` are the two view-state fields the shooting UI actually
 /// reads (`resolve_labels`/the transform-gumball utility) — see `crate::apps::shooting::render`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -145,12 +145,12 @@ store::impl_whole_record_config!(ShootingConfig);
 /// since a config-only "View" dispatch is a plain `Apply` (not an `AmendLast`), each tick is its own
 /// distinct, real config edit, and "undo this tick" is exactly "restore the whole-config snapshot from
 /// just before it" — the simplest correct inverse, needing no per-field reverse-patch bookkeeping.
-/// `Operation::Diff` is the WHOLE `ShootingConfig` (not a granular patch type, unlike `ShootingDiff`):
+/// `Mutation::Diff` is the WHOLE `ShootingConfig` (not a granular patch type, unlike `ShootingDiff`):
 /// `diff()` returns "the full config after this op", and `store::impl_whole_record_config!` supplies the
-/// `OperationDiff<ShootingConfig>` that returns that snapshot verbatim, ignoring `base`.
+/// `MutationDiff<ShootingConfig>` that returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[allow(clippy::large_enum_variant, reason = "Snapshot{config: ShootingConfig} mirrors the pre-migration shape verbatim (a whole-record config snapshot, not a size regression this migration introduced); boxing it would change the wire shape")]
-pub enum ShootingConfigOperation {
+pub enum ShootingConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -182,7 +182,7 @@ pub enum ShootingConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for ShootingConfigOperation {
+impl protocol::OpText for ShootingConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -196,7 +196,7 @@ impl protocol::OpText for ShootingConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -207,7 +207,7 @@ impl protocol::OpText for ShootingConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for ShootingConfigOperation {
+impl protocol::OpBinary for ShootingConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -253,26 +253,26 @@ impl protocol::OpBinary for ShootingConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<ShootingConfig> for ShootingConfigOperation {
+impl Mutation<ShootingConfig> for ShootingConfigMutation {
     type Diff = ShootingConfig;
 
     fn diff(&self, base: &ShootingConfig) -> ShootingConfig {
         let mut next = base.clone();
         match self {
-            ShootingConfigOperation::Snapshot { config } => return config.clone(),
-            ShootingConfigOperation::SetSelection { shot_ids, asset_ids } => {
+            ShootingConfigMutation::Snapshot { config } => return config.clone(),
+            ShootingConfigMutation::SetSelection { shot_ids, asset_ids } => {
                 next.selected_shot_ids = shot_ids.clone();
                 next.selected_asset_ids = asset_ids.clone();
             }
-            ShootingConfigOperation::SetHoveredAsset { asset_id } => next.hovered_asset_id = asset_id.clone(),
-            ShootingConfigOperation::SetSelectionMethod { method } => next.selection_method = method.clone(),
-            ShootingConfigOperation::SetCenterModel { value } => next.center_model = *value,
-            ShootingConfigOperation::SetFitRevision { value } => next.fit_revision = *value,
-            ShootingConfigOperation::SetCameraDraftLabel { value } => next.camera_draft_label = value.clone(),
-            ShootingConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
-            ShootingConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            ShootingConfigOperation::SetLocale { value } => next.locale = value.clone(),
-            ShootingConfigOperation::SetDefaults { shot_format, shot_shape, asset_format } => {
+            ShootingConfigMutation::SetHoveredAsset { asset_id } => next.hovered_asset_id = asset_id.clone(),
+            ShootingConfigMutation::SetSelectionMethod { method } => next.selection_method = method.clone(),
+            ShootingConfigMutation::SetCenterModel { value } => next.center_model = *value,
+            ShootingConfigMutation::SetFitRevision { value } => next.fit_revision = *value,
+            ShootingConfigMutation::SetCameraDraftLabel { value } => next.camera_draft_label = value.clone(),
+            ShootingConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+            ShootingConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            ShootingConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            ShootingConfigMutation::SetDefaults { shot_format, shot_shape, asset_format } => {
                 next.default_shot_format = shot_format.clone();
                 next.default_shot_shape = shot_shape.clone();
                 next.default_asset_format = asset_format.clone();
@@ -281,8 +281,8 @@ impl Operation<ShootingConfig> for ShootingConfigOperation {
         next
     }
 
-    fn backwards(&self, base: &ShootingConfig) -> Vec<Self> {
-        vec![ShootingConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &ShootingConfig) -> Vec<Self> {
+        vec![ShootingConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -321,28 +321,28 @@ mod tests {
 
     #[test]
     fn shooting_config_operation_text_binary_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::Snapshot { config: ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "de-DE".into(), ..ShootingConfig::default() } });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetSelection { shot_ids: vec!["s1".into()], asset_ids: vec!["a1".into(), "a2".into()] });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetHoveredAsset { asset_id: Some("a1".into()) });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetHoveredAsset { asset_id: None });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetSelectionMethod { method: "rectangle".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetCenterModel { value: true });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetFitRevision { value: 4 });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetCameraDraftLabel { value: "Hero".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetActiveUtility { utility_id: "rotate".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&ShootingConfigOperation::SetDefaults { shot_format: "svg".into(), shot_shape: "ellipse".into(), asset_format: "glb".into() });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::Snapshot { config: ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "de-DE".into(), ..ShootingConfig::default() } });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelection { shot_ids: vec!["s1".into()], asset_ids: vec!["a1".into(), "a2".into()] });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: Some("a1".into()) });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: None });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelectionMethod { method: "rectangle".into() });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCenterModel { value: true });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetFitRevision { value: 4 });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCameraDraftLabel { value: "Hero".into() });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetActiveUtility { utility_id: "rotate".into() });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetDefaults { shot_format: "svg".into(), shot_shape: "ellipse".into(), asset_format: "glb".into() });
     }
 
     #[test]
     fn shooting_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "en-US".into(), ..ShootingConfig::default() };
-        let operation = ShootingConfigOperation::SetSelection { shot_ids: vec!["s2".into()], asset_ids: Vec::new() };
+        let operation = ShootingConfigMutation::SetSelection { shot_ids: vec!["s2".into()], asset_ids: Vec::new() };
         let forward = operation.diff(&base);
         assert_eq!(forward.selected_shot_ids, vec!["s2".to_string()]);
-        let backwards = operation.backwards(&base);
-        assert_eq!(backwards, vec![ShootingConfigOperation::Snapshot { config: base.clone() }]);
+        let backwards = operation.inverse(&base);
+        assert_eq!(backwards, vec![ShootingConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
         assert_eq!(restored, base);
     }

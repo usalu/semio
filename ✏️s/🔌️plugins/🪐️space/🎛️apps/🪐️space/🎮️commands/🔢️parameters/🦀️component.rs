@@ -3,8 +3,8 @@
 //! One nested `pub mod` per payload (the `app_commands!` shape — see `apps::space::🦀️component.rs`'s
 //! `🔖️SpaceCommand` region, which `use`s each of these modules flat).
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
-use semio_framework_os::{WorkflowDocument, WorkflowOperation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{WorkflowDocument, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️PatchParameter
@@ -22,7 +22,7 @@ pub mod patch_parameter {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchParameter, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchParameter, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let projection = doc.projection;
         let value_json: Value = serde_json::from_str(&payload.value).unwrap_or_else(|_| Value::String(payload.value.clone()));
         let patch = if payload.field == "addOption" {
@@ -53,7 +53,7 @@ pub mod patch_parameter {
             Some(json!({ payload.field.clone(): value_json }))
         };
         match patch.and_then(|patch| crate::apps::space::engine::patch_parameter_operation(projection, &payload.parameter_id, &patch)) {
-            Some(operation) => Ok(Emit::operations(vec![operation])),
+            Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }
     }
@@ -72,14 +72,14 @@ pub mod add_parameter {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddParameter, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &AddParameter, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let parameter_type = match payload.kind.as_str() {
             "categorical" => WorkflowParameterType::Categorical,
             "toggle" => WorkflowParameterType::Toggle,
             "text" => WorkflowParameterType::Text,
             _ => WorkflowParameterType::Numeric,
         };
-        Ok(Emit::operations(vec![crate::apps::space::engine::add_parameter_operation(&parameter_type, &payload.name)]))
+        Ok(Emit::mutations(vec![crate::apps::space::engine::add_parameter_operation(&parameter_type, &payload.name)]))
     }
 }
 //#endregion 🔖️AddParameter
@@ -95,8 +95,8 @@ pub mod remove_parameter {
         pub parameter_id: String,
     }
 
-    pub fn handle(payload: &RemoveParameter, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![WorkflowOperation::RemoveParameter { parameter_id: payload.parameter_id.clone() }]))
+    pub fn handle(payload: &RemoveParameter, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![WorkflowMutation::RemoveParameter { parameter_id: payload.parameter_id.clone() }]))
     }
 }
 //#endregion 🔖️RemoveParameter
@@ -114,11 +114,11 @@ pub mod bind_parameter_field {
         pub parameter_id: String,
     }
 
-    pub fn handle(payload: &BindParameterField, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &BindParameterField, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         if payload.parameter_id.is_empty() || payload.parameter_id == "__direct__" {
-            Ok(Emit::operations(vec![WorkflowOperation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
+            Ok(Emit::mutations(vec![WorkflowMutation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
         } else {
-            Ok(Emit::operations(vec![WorkflowOperation::BindParameterField {
+            Ok(Emit::mutations(vec![WorkflowMutation::BindParameterField {
                 binding: WorkflowParameterBinding { parameter_id: payload.parameter_id.clone(), node_id: payload.node_id.clone(), field_path: payload.field_path.clone() },
             }]))
         }
@@ -138,8 +138,8 @@ pub mod unbind_parameter_field {
         pub field_path: String,
     }
 
-    pub fn handle(payload: &UnbindParameterField, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![WorkflowOperation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
+    pub fn handle(payload: &UnbindParameterField, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![WorkflowMutation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
     }
 }
 //#endregion 🔖️UnbindParameterField
@@ -149,7 +149,7 @@ pub mod unbind_parameter_field {
 mod tests {
     use super::*;
     use crate::apps::space::engine::parameter_entity_id;
-    use crate::apps::space::testkit::apply_operations;
+    use crate::apps::space::testkit::apply_mutations;
     use crate::demo_space_projection;
     use semio_framework_plugin::HistoryView;
 
@@ -171,8 +171,8 @@ mod tests {
         let config = SpaceConfig::default();
         let cfg = ConfigView { projection: &config };
         let emit = patch_parameter::handle(&patch_parameter::PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() }, &doc, &cfg).expect("handle");
-        assert_eq!(emit.document_operations.len(), 1);
-        let next = apply_operations(&projection, &emit.document_operations);
+        assert_eq!(emit.document_mutations.len(), 1);
+        let next = apply_mutations(&projection, &emit.document_mutations);
         use crate::apps::space::engine::OsParameterId;
         match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
             WorkflowParameter::Numeric { value, .. } => assert_eq!(*value, 48.0),
@@ -190,11 +190,11 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let cfg = ConfigView { projection: &config };
         let emit = bind_parameter_field::handle(&bind_parameter_field::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id }, &doc, &cfg).expect("handle");
-        projection = apply_operations(&projection, &emit.document_operations);
+        projection = apply_mutations(&projection, &emit.document_mutations);
         assert!(projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = unbind_parameter_field::handle(&unbind_parameter_field::UnbindParameterField { node_id: node.id.clone(), field_path: "label".into() }, &doc, &cfg).expect("handle");
-        projection = apply_operations(&projection, &emit.document_operations);
+        projection = apply_mutations(&projection, &emit.document_mutations);
         assert!(!projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
     }
 }

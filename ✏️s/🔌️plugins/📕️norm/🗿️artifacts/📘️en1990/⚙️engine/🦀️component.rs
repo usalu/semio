@@ -2,7 +2,7 @@
 //! (constitutional: engine).
 
 use crate::artifacts::en1990::{Document, QkEntry};
-use crate::artifacts::en1990::op::Operation;
+use crate::artifacts::en1990::mutations::En1990Mutation;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, NormFamily, NormFamilyId, NormHost, Quantity};
 
 pub use crate::document::NationalAnnex;
@@ -445,13 +445,51 @@ pub fn evaluate(document: &Document) -> CheckReport {
     report
 }
 
+
+//#region 🔖️ArtifactEngine
+/// @emoji ⚙️ UI-independent En1990 artifact engine — owns the projection; every transition is a mutation.
+pub struct En1990Engine {
+    projection: Document,
+}
+
+impl En1990Engine {
+    pub fn new(projection: Document) -> Self {
+        Self { projection }
+    }
+
+    pub fn into_projection(self) -> Document {
+        self.projection
+    }
+}
+
+impl protocol::ArtifactEngine for En1990Engine {
+    type Projection = Document;
+    type Mutation = En1990Mutation;
+    type Diff = crate::artifacts::en1990::diff::Diff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = protocol::Mutation::diff(mutation, &self.projection);
+        self.projection = vcs::apply_mutation(&self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        protocol::Mutation::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
 pub type Host = NormHost<En1990Family>;
 
 pub struct En1990Family;
 
 impl NormFamily for En1990Family {
     type Document = Document;
-    type Operation = Operation;
+    type Mutation = En1990Mutation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1990

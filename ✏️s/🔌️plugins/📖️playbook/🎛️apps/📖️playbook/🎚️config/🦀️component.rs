@@ -1,4 +1,4 @@
-//! 🧮️ Playbook play app — view state (`PlaybookConfig`) and its operation enum (`PlaybookConfigOperation`).
+//! 🧮️ Playbook play app — view state (`PlaybookConfig`) and its operation enum (`PlaybookConfigMutation`).
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.playbook` document. It still round-trips through a real
@@ -6,7 +6,7 @@
 //! B1: absorbs the former app-struct `RefCell<Vec<String>>` selection state, plus `locale` (was read off
 //! `view_state.locale`) — mirrors `writer_engine::WriterConfig`/`forms::config::FormsConfig`'s B1 shape.
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -104,12 +104,12 @@ store::impl_whole_record_config!(PlaybookConfig);
 //#region 🔖️ConfigOperations
 /// 🧮️ B1: `PlaybookConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `PlaybookPlayApp::selected_ids` field write), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — mirrors `writer_op::WriterConfigOperation`/`forms::config::FormsConfigOperation` exactly
+/// returns — mirrors `writer_op::WriterConfigMutation`/`forms::config::FormsConfigMutation` exactly
 /// (see either's doc comment for the whole-config-snapshot inverse rationale). Lives here, not in the
 /// kernel `playbook` crate, since `PlaybookConfig` is this app's own config artifact, not shared domain
 /// state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum PlaybookConfigOperation {
+pub enum PlaybookConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -124,7 +124,7 @@ pub enum PlaybookConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for PlaybookConfigOperation {
+impl protocol::OpText for PlaybookConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -138,7 +138,7 @@ impl protocol::OpText for PlaybookConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -149,7 +149,7 @@ impl protocol::OpText for PlaybookConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for PlaybookConfigOperation {
+impl protocol::OpBinary for PlaybookConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -195,22 +195,22 @@ impl protocol::OpBinary for PlaybookConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<PlaybookConfig> for PlaybookConfigOperation {
+impl Mutation<PlaybookConfig> for PlaybookConfigMutation {
     type Diff = PlaybookConfig;
 
     fn diff(&self, base: &PlaybookConfig) -> PlaybookConfig {
         let mut next = base.clone();
         match self {
-            PlaybookConfigOperation::Snapshot { config } => return config.clone(),
-            PlaybookConfigOperation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
-            PlaybookConfigOperation::SetLocale { value } => next.locale = value.clone(),
-            PlaybookConfigOperation::SetContributions { json } => next.contributions_json = json.clone(),
+            PlaybookConfigMutation::Snapshot { config } => return config.clone(),
+            PlaybookConfigMutation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
+            PlaybookConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            PlaybookConfigMutation::SetContributions { json } => next.contributions_json = json.clone(),
         }
         next
     }
 
-    fn backwards(&self, base: &PlaybookConfig) -> Vec<Self> {
-        vec![PlaybookConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &PlaybookConfig) -> Vec<Self> {
+        vec![PlaybookConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -242,9 +242,9 @@ mod tests {
         assert_eq!(decoded, config);
     }
 
-    fn config_round_trip(base: &PlaybookConfig, operation: &PlaybookConfigOperation) -> PlaybookConfig {
+    fn config_round_trip(base: &PlaybookConfig, operation: &PlaybookConfigMutation) -> PlaybookConfig {
         let forward = operation.diff(base);
-        let backwards = operation.backwards(base);
+        let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
             restored = back.diff(&restored);
@@ -254,17 +254,17 @@ mod tests {
     }
 
     #[test]
-    fn config_operations_apply_and_restore_every_field() {
+    fn config_mutations_apply_and_restore_every_field() {
         let base = PlaybookConfig::default();
-        assert_eq!(config_round_trip(&base, &PlaybookConfigOperation::SetSelectedIds { ids: vec!["block-1".into()] }).selected_ids, vec!["block-1".to_string()]);
-        assert_eq!(config_round_trip(&base, &PlaybookConfigOperation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
-        assert_eq!(config_round_trip(&base, &PlaybookConfigOperation::SetContributions { json: "[]".into() }).contributions_json, "[]");
+        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetSelectedIds { ids: vec!["block-1".into()] }).selected_ids, vec!["block-1".to_string()]);
+        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetContributions { json: "[]".into() }).contributions_json, "[]");
     }
 
     #[test]
     fn playbook_config_operation_binary_matches_text() {
-        store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigOperation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigOperation::Snapshot { config: PlaybookConfig::default() });
+        store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::Snapshot { config: PlaybookConfig::default() });
     }
 }
 //#endregion 🧪️Tests

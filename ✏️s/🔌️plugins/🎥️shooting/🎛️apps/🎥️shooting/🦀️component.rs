@@ -8,15 +8,15 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::shooting::commands::{asset, camera, export, fixture, gumball, locale, scene, selection, shot};
-use crate::apps::shooting::config::{ShootingConfig, ShootingConfigOperation};
+use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::apps::shooting::modes::edit;
 use crate::apps::shooting::modes::edit::windows::icon as icon_window;
 use crate::apps::shooting::modes::edit::windows::scene as scene_window;
 use crate::apps::shooting::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::shooting::terminology::shooting_play_labels;
-use crate::artifacts::shooting::op::ShootingOperation;
+use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingFixture, SHOOTING_FIXTURE_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
@@ -59,7 +59,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
-    pub enum ShootingCommand for ShootingFixture, ShootingOperation, ShootingConfig, ShootingConfigOperation {
+    pub enum ShootingCommand for ShootingFixture, ShootingMutation, ShootingConfig, ShootingConfigMutation {
         "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setActiveShot" as "active-shot" => set_active_shot::SetActiveShot,
@@ -122,17 +122,17 @@ use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_a
 
 //#region 🔖️ShootingPlayApp
 /// 🧪️ B1: unit struct — every former runtime field now lives in `ShootingConfig`, written through
-/// `ShootingConfigOperation`s.
+/// `ShootingConfigMutation`s.
 #[derive(Default)]
 pub struct ShootingPlayApp;
 
 impl DocumentApp for ShootingPlayApp {
     type Projection = ShootingFixture;
-    type Operation = ShootingOperation;
+    type Mutation = ShootingMutation;
     type Config = ShootingConfig;
-    type ConfigOperation = ShootingConfigOperation;
+    type ConfigMutation = ShootingConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = ShootingCommand;
 
@@ -163,8 +163,8 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn whole_document_operation(projection: ShootingFixture) -> Option<ShootingOperation> {
-        Some(ShootingOperation::SetFixture { fixture: projection })
+    fn whole_document_operation(projection: ShootingFixture) -> Option<ShootingMutation> {
+        Some(ShootingMutation::SetFixture { fixture: projection })
     }
 
     /// 🏷️ Maps each `ShootingCommand` variant back to the action id it was declared under in
@@ -187,7 +187,7 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn handle(command: &ShootingCommand, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingOperation, ShootingConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &ShootingCommand, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -279,33 +279,33 @@ pub fn create_shooting_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation) })
-            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .operation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))
-            .operation("setActiveAsset", LocalizedLabel::native("Set Active Asset", "Aktives Objekt festlegen"))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .mutation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))
+            .mutation("setActiveAsset", LocalizedLabel::native("Set Active Asset", "Aktives Objekt festlegen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .operation("setShotCamera", LocalizedLabel::native("Set Shot Camera", "Aufnahmekamera festlegen"))
-            .operation("saveCamera", LocalizedLabel::native("Save Camera", "Kamera speichern"))
+            .mutation("setShotCamera", LocalizedLabel::native("Set Shot Camera", "Aufnahmekamera festlegen"))
+            .mutation("saveCamera", LocalizedLabel::native("Save Camera", "Kamera speichern"))
             .view_action("loadSavedCamera", LocalizedLabel::native("Load Saved Camera", "Gespeicherte Kamera laden"))
-            .operation("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
-            .operation("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
-            .operation("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
-            .operation("setAmbientIntensity", LocalizedLabel::native("Set Ambient Intensity", "Umgebungslichtintensität festlegen"))
-            .operation("setMaterialRoughness", LocalizedLabel::native("Set Material Roughness", "Materialrauheit festlegen"))
-            .operation("setShadowEnabled", LocalizedLabel::native("Set Shadow Enabled", "Schatten aktivieren"))
-            .operation("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
-            .operation("setActiveShotLabel", LocalizedLabel::native("Set Active Shot Label", "Bezeichnung der aktiven Aufnahme festlegen"))
-            .operation("setActiveShotFormat", LocalizedLabel::native("Set Active Shot Format", "Format der aktiven Aufnahme festlegen"))
-            .operation("setActiveShotShape", LocalizedLabel::native("Set Active Shot Shape", "Form der aktiven Aufnahme festlegen"))
-            .operation("patchShots", LocalizedLabel::native("Patch Shots", "Aufnahmen aktualisieren"))
-            .operation("patchAssets", LocalizedLabel::native("Patch Assets", "Objekte aktualisieren"))
-            .operation("addShot", LocalizedLabel::native("Add Shot", "Aufnahme hinzufügen"))
-            .operation("addAsset", LocalizedLabel::native("Add Asset", "Objekt hinzufügen"))
-            .operation("importAsset", LocalizedLabel::native("Import Asset", "Objekt importieren"))
-            .operation("resetFixture", LocalizedLabel::native("Reset Fixture", "Vorgabe zurücksetzen"))
-            .operation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
-            .operation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
-            .operation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
+            .mutation("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
+            .mutation("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
+            .mutation("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .mutation("setAmbientIntensity", LocalizedLabel::native("Set Ambient Intensity", "Umgebungslichtintensität festlegen"))
+            .mutation("setMaterialRoughness", LocalizedLabel::native("Set Material Roughness", "Materialrauheit festlegen"))
+            .mutation("setShadowEnabled", LocalizedLabel::native("Set Shadow Enabled", "Schatten aktivieren"))
+            .mutation("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
+            .mutation("setActiveShotLabel", LocalizedLabel::native("Set Active Shot Label", "Bezeichnung der aktiven Aufnahme festlegen"))
+            .mutation("setActiveShotFormat", LocalizedLabel::native("Set Active Shot Format", "Format der aktiven Aufnahme festlegen"))
+            .mutation("setActiveShotShape", LocalizedLabel::native("Set Active Shot Shape", "Form der aktiven Aufnahme festlegen"))
+            .mutation("patchShots", LocalizedLabel::native("Patch Shots", "Aufnahmen aktualisieren"))
+            .mutation("patchAssets", LocalizedLabel::native("Patch Assets", "Objekte aktualisieren"))
+            .mutation("addShot", LocalizedLabel::native("Add Shot", "Aufnahme hinzufügen"))
+            .mutation("addAsset", LocalizedLabel::native("Add Asset", "Objekt hinzufügen"))
+            .mutation("importAsset", LocalizedLabel::native("Import Asset", "Objekt importieren"))
+            .mutation("resetFixture", LocalizedLabel::native("Reset Fixture", "Vorgabe zurücksetzen"))
+            .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
             // 👁️ Ephemeral view state — selection, camera draft label, world picking.
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("setCameraDraftLabel", LocalizedLabel::native("Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"))
@@ -516,7 +516,7 @@ mod tests {
         assert!(matches!(world_pick_action.kind, ActionKind::View), "worldPick is a View action");
         let mut app = shooting_app_with_registry();
         let result = dispatch(&mut app, ShootingCommand::WorldPick(world_pick::WorldPick { asset_id: None, asset_index: Some(0), merge: "replace".into() }));
-        assert!(result.operations.is_empty(), "worldPick (View) emits no operations even under registry enforcement");
+        assert!(result.mutations.is_empty(), "worldPick (View) emits no operations even under registry enforcement");
     }
     //#endregion 🔖️ManifestSanity
 

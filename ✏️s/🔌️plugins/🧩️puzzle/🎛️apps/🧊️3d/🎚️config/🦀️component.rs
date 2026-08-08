@@ -1,7 +1,7 @@
 //! 🎛️ Puzzle 3d play app — its `DocumentApp::Config`: every piece of view state the app owns but the
 //! document must never carry (selection, hover, per-window camera/grid/LOD/vortex/sun chrome, brush
 //! and fill scratch, distribution weights, active utility/tool, locale/terminology, the live window
-//! registry), plus the whole-snapshot `ConfigOperation` that patches it.
+//! registry), plus the whole-snapshot `ConfigMutation` that patches it.
 //!
 //! 🪟️ The flat window-option fields are a scratch, currently-materialized-window working copy:
 //! `load_window`/`save_window` swap them in and out of [`Puzzle3dRuntime::window_options`] around
@@ -289,7 +289,7 @@ impl Default for Puzzle3dRuntime {
 /// 🧮️ B1: puzzle3d's real `DocumentApp::Config` — `Puzzle3dRuntime` itself doubles as the config
 /// record (an alias, not a new type) so every helper taking `&Puzzle3dRuntime`/`&mut Puzzle3dRuntime`
 /// keeps working unchanged; every read comes from `cfg.projection`, every write flows out as a
-/// `Puzzle3dConfigOperation` in the returned `Emit` instead of a silent `self` mutation.
+/// `Puzzle3dConfigMutation` in the returned `Emit` instead of a silent `self` mutation.
 pub type Puzzle3dConfig = Puzzle3dRuntime;
 
 impl store::DocumentDsl for Puzzle3dRuntime {
@@ -443,30 +443,30 @@ impl Puzzle3dRuntime {
 }
 //#endregion 🔖️WindowOptions
 
-//#region 🔖️ConfigOperation
+//#region 🔖️ConfigMutation
 /// 🧮️ B1: `Puzzle3dConfig`'s operation enum. Every real config edit is captured as "the whole config
 /// after this edit"; `backwards()` is the same one-liner regardless of what changed ("restore the
 /// whole-config snapshot from just before"), so no per-field inverse bookkeeping is needed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum Puzzle3dConfigOperation {
+pub enum Puzzle3dConfigMutation {
     Snapshot { config: Puzzle3dConfig },
 }
 
-impl protocol::Operation<Puzzle3dConfig> for Puzzle3dConfigOperation {
+impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
     type Diff = Puzzle3dConfig;
 
     fn diff(&self, _base: &Puzzle3dConfig) -> Puzzle3dConfig {
         match self {
-            Puzzle3dConfigOperation::Snapshot { config } => config.clone(),
+            Puzzle3dConfigMutation::Snapshot { config } => config.clone(),
         }
     }
 
-    fn backwards(&self, base: &Puzzle3dConfig) -> Vec<Self> {
-        vec![Puzzle3dConfigOperation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &Puzzle3dConfig) -> Vec<Self> {
+        vec![Puzzle3dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
-impl protocol::OpBinary for Puzzle3dConfigOperation {
+impl protocol::OpBinary for Puzzle3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
@@ -475,7 +475,7 @@ impl protocol::OpBinary for Puzzle3dConfigOperation {
     }
 }
 
-impl protocol::OpText for Puzzle3dConfigOperation {
+impl protocol::OpText for Puzzle3dConfigMutation {
     fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
@@ -483,4 +483,4 @@ impl protocol::OpText for Puzzle3dConfigOperation {
         serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }
-//#endregion 🔖️ConfigOperation
+//#endregion 🔖️ConfigMutation

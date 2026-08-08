@@ -1,7 +1,7 @@
 dialect protocol
 protocol forms.spr
 version 1
-schema forms.form.operation
+schema forms.form.mutation
 start record
 framing record
 record forms.forms-add-layer tag 1

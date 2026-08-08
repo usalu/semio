@@ -1,4 +1,4 @@
-//! 🔺️ GIS map artifact — the operation diff and its `OperationDiff` law (split out of the old
+//! 🔺️ GIS map artifact — the operation diff and its `MutationDiff` law (split out of the old
 //! constitutional `op` crate).
 
 
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch};
-use protocol::{CollectionDiff, OperationDiff, Patchable};
+use protocol::{CollectionDiff, MutationDiff, Patchable};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Helpers
@@ -52,7 +52,7 @@ pub struct GisMapDiff {
     pub regions: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
 }
 
-impl OperationDiff<GisMapDocument> for GisMapDiff {
+impl MutationDiff<GisMapDocument> for GisMapDiff {
     fn apply(&self, projection: &GisMapDocument) -> GisMapDocument {
         if let Some(document) = &self.document {
             return document.clone();

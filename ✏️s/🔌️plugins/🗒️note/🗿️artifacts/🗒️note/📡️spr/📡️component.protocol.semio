@@ -1,7 +1,7 @@
 dialect protocol
 protocol note.spr
 version 1
-schema note.document.operation
+schema note.document.mutation
 start record
 framing record
 record note.note-add-layer tag 1

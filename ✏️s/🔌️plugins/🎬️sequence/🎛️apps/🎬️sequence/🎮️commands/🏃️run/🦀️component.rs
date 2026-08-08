@@ -1,8 +1,8 @@
 //! 🏃️ Sequence play app commands — run the compiled path and clear the last run result.
 
-use crate::apps::sequence::config::{SequenceConfig, SequenceConfigOperation};
+use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::engine::host_from_fixture;
-use crate::artifacts::sequence::op::SequenceOperation;
+use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceFixture;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -19,10 +19,10 @@ pub mod run_command {
     #[dsl(keyword = "run")]
     pub struct Run {}
 
-    pub fn handle(_payload: &Run, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
+    pub fn handle(_payload: &Run, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let result = host_from_fixture(doc.projection).run();
         let json = serde_json::to_string(&result).unwrap_or_default();
-        Ok(Emit::config(vec![SequenceConfigOperation::SetLastRun { json }]))
+        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json }]))
     }
 }
 //#endregion 🔖️Run
@@ -35,8 +35,8 @@ pub mod stop_command {
     #[dsl(keyword = "stop")]
     pub struct Stop {}
 
-    pub fn handle(_payload: &Stop, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigOperation::SetLastRun { json: String::new() }]))
+    pub fn handle(_payload: &Stop, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json: String::new() }]))
     }
 }
 //#endregion 🔖️Stop

@@ -1,9 +1,9 @@
 //! 🎨️ GIS 2D play app command — loading a bundled example map.
 
-use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigOperation};
+use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::apps::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::engine::default_document;
-use crate::artifacts::gismap::op::GisMapOperation;
+use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,15 +21,15 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() { GisMapDocument::default() } else { default_document() };
-        let mut config_operations = vec![Gis2dConfigOperation::SetSelection { ids: Vec::new() }];
+        let mut config_mutations = vec![Gis2dConfigMutation::SetSelection { ids: Vec::new() }];
         if !payload.example_id.is_empty() {
             let mut host = map_host_from(&next, cfg.projection);
             host.fit_world_camera();
-            config_operations.push(Gis2dConfigOperation::SetCamera { camera_json: host.camera_json() });
+            config_mutations.push(Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() });
         }
-        Ok(Emit { document_operations: vec![GisMapOperation::SetDocument { document: next }], config_operations, ..Default::default() })
+        Ok(Emit { document_mutations: vec![GisMapMutation::SetDocument { document: next }], config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -61,12 +61,12 @@ mod tests {
     fn set_active_example_is_operation_under_registry_kind_discipline() {
         let definition = crate::apps::gis2d::create_gis2d_app().definition;
         let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-        assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Operation), "loading an example emits SetDocument operations, so it is an Operation");
+        assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits SetDocument operations, so it is a Mutation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
 
         let mut app = app_with_registry();
         let result = dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }));
-        assert_eq!(result.operations.len(), 1, "loading an example is one document-replacing edit");
+        assert_eq!(result.mutations.len(), 1, "loading an example is one document-replacing edit");
         assert!(app.projection().expect("projection").positions.is_empty(), "the empty example clears every position feature");
     }
 }

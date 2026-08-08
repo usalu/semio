@@ -1,8 +1,8 @@
 //! 🧵️ Lowpoly play app commands — UV unwrap + seam marking (`unwrapActive`/`markUvSeam`/`clearSeam`).
 
-use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
-use crate::artifacts::lowpoly::op::LowpolyOperation;
+use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolyProjection;
 use semio_s_3d::mesh::EdgeId;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -16,7 +16,7 @@ pub mod unwrap_active {
     #[dsl(keyword = "unwrap-active")]
     pub struct UnwrapActive {}
 
-    pub fn handle(_payload: &UnwrapActive, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(_payload: &UnwrapActive, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(mesh_edit(doc.projection, cfg.projection, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.unwrap_uv().map_err(map_kernel_err)?;
             doc.sync_meshes_to_projection().map_err(|e| e.to_string())
@@ -36,7 +36,7 @@ pub mod mark_uv_seam {
         pub edge_ids: Option<Vec<u32>>,
     }
 
-    pub fn handle(payload: &MarkUvSeam, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(payload: &MarkUvSeam, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.projection, cfg.projection);
         let seam = payload.seam.unwrap_or(true);
         let edge_ids = payload.edge_ids.clone().unwrap_or_else(|| config.selection_ids.clone());
@@ -57,7 +57,7 @@ pub mod clear_seam {
     #[dsl(keyword = "clear-seam")]
     pub struct ClearSeam {}
 
-    pub fn handle(_payload: &ClearSeam, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    pub fn handle(_payload: &ClearSeam, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         mark_uv_seam::handle(&mark_uv_seam::MarkUvSeam { seam: Some(false), edge_ids: None }, doc, cfg, ctx)
     }
 }

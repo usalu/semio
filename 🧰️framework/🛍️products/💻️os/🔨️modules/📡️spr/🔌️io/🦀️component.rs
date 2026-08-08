@@ -384,7 +384,7 @@ mod native {
                 coalesce_key: None,
                 description: Some("a sample edit".to_string()),
                 ops: vec![crate::os_spr::history::OpPayload { text: Some("set x 1".to_string()), binary: None }],
-                backwards: Vec::new(),
+                inverse: Vec::new(),
                 meta: None,
             }
         }

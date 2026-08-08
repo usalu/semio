@@ -1,7 +1,7 @@
 //! 🗣️ Raster play app commands — active locale (view action, never a document operation).
 
-use crate::apps::raster::config::{RasterConfig, RasterConfigOperation};
-use crate::artifacts::raster::op::RasterOperation;
+use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
+use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::RasterProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
-        Ok(Emit::config(vec![RasterConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, RasterProjection>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+        Ok(Emit::config(vec![RasterConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

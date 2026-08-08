@@ -2,7 +2,7 @@
 
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::{build_manifest_json, evaluate_json};
-use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use semio_s_3d::brep::kernel::Brep;
 use std::collections::{HashMap, HashSet};
@@ -11,7 +11,7 @@ use std::sync::{Mutex, OnceLock, RwLock};
 macro_rules! geo_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
-        impl Operation for $name {
+        impl Operator for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel(|$k| {
                     let $i = input;
@@ -29,7 +29,7 @@ macro_rules! geo_operation {
 macro_rules! num_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
-        impl Operation for $name {
+        impl Operator for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
@@ -44,7 +44,7 @@ macro_rules! num_operation {
 macro_rules! point_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
-        impl Operation for $name {
+        impl Operator for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
@@ -59,7 +59,7 @@ macro_rules! point_operation {
 macro_rules! vec_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
-        impl Operation for $name {
+        impl Operator for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
@@ -74,7 +74,7 @@ macro_rules! vec_operation {
 macro_rules! text_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
-        impl Operation for $name {
+        impl Operator for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
@@ -94,7 +94,7 @@ geo_operation!(ConePrim, "solid", |k, i| k.cone_prim(read_channel_number(i, "rad
 geo_operation!(TorusPrim, "solid", |k, i| k.torus_prim(read_channel_number(i, "major")?, read_channel_number(i, "minor")?));
 
 struct ConvexHullPrim;
-impl Operation for ConvexHullPrim {
+impl Operator for ConvexHullPrim {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
@@ -112,7 +112,7 @@ geo_operation!(ArcCurve, "curve", |k, i| k.arc_curve(read_xyz(i, "center")?, rea
 geo_operation!(EllipseCurve, "curve", |k, i| k.ellipse_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "semiMajor")?, read_channel_number(i, "semiMinor")?,));
 
 struct PolylineWire;
-impl Operation for PolylineWire {
+impl Operator for PolylineWire {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
@@ -126,7 +126,7 @@ geo_operation!(RectangleWire, "wire", |k, i| k.rectangle_wire(read_channel_numbe
 geo_operation!(RegularPolygonWire, "wire", |k, i| k.regular_polygon_wire(read_channel_number(i, "radius")?, read_channel_number(i, "sides")? as usize));
 
 struct InterpolateCurve;
-impl Operation for InterpolateCurve {
+impl Operator for InterpolateCurve {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
@@ -138,7 +138,7 @@ impl Operation for InterpolateCurve {
 }
 
 struct ApproximateCurve;
-impl Operation for ApproximateCurve {
+impl Operator for ApproximateCurve {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
@@ -157,7 +157,7 @@ geo_operation!(HelixCurve, "curve", |k, i| k.helix_curve(read_xyz(i, "origin")?,
 geo_operation!(PlaneSurface, "surface", |k, i| k.plane_surface(read_xyz(i, "origin")?, read_xyz(i, "normal")?));
 
 struct PlanarFacePoints;
-impl Operation for PlanarFacePoints {
+impl Operator for PlanarFacePoints {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
@@ -170,7 +170,7 @@ impl Operation for PlanarFacePoints {
 geo_operation!(PlanarFaceWire, "face", |k, i| k.planar_face_from_wire(&read_geometry(i, "wire")?));
 
 struct NurbsGridSurface;
-impl Operation for NurbsGridSurface {
+impl Operator for NurbsGridSurface {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
@@ -185,7 +185,7 @@ impl Operation for NurbsGridSurface {
 }
 
 struct CoonsPatch;
-impl Operation for CoonsPatch {
+impl Operator for CoonsPatch {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let curves = read_nested_point_lists(input, "curves")?;
@@ -201,7 +201,7 @@ geo_operation!(ThickenFace, "solid", |k, i| k.thicken_face(&read_geometry(i, "fa
 
 // #region 🔖️Sweeps
 struct ExtrudeCurve;
-impl Operation for ExtrudeCurve {
+impl Operator for ExtrudeCurve {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let wire = read_geometry(input, "wire")?;
@@ -213,7 +213,7 @@ impl Operation for ExtrudeCurve {
 }
 
 struct ExtrudeFace;
-impl Operation for ExtrudeFace {
+impl Operator for ExtrudeFace {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let face = read_geometry(input, "face")?;
@@ -232,7 +232,7 @@ geo_operation!(Revolve, "solid", |k, i| k.revolve(&read_geometry(i, "face")?, re
 geo_operation!(Sweep, "solid", |k, i| k.sweep(&read_geometry(i, "profile")?, &read_geometry(i, "path")?));
 
 struct Loft;
-impl Operation for Loft {
+impl Operator for Loft {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let profiles = read_geometry_list(input, "profiles")?;
@@ -244,7 +244,7 @@ impl Operation for Loft {
 }
 
 struct Pipe;
-impl Operation for Pipe {
+impl Operator for Pipe {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let profile = read_geometry(input, "profile")?;
@@ -273,7 +273,7 @@ geo_operation!(Cut, "solid", |k, i| k.cut(&read_geometry(i, "a")?, &read_geometr
 geo_operation!(Intersect, "solid", |k, i| k.intersect(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
 
 struct CompoundCut;
-impl Operation for CompoundCut {
+impl Operator for CompoundCut {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let target = read_geometry(input, "target")?;
@@ -313,7 +313,7 @@ geo_operation!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geo
 // 🎯️ Selective-edge variants: fillet/chamfer only the given edges instead of the whole solid —
 // avoids the full-solid edge-count cost when a user selects just one or a few edges.
 struct FilletEdges;
-impl Operation for FilletEdges {
+impl Operator for FilletEdges {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -326,7 +326,7 @@ impl Operation for FilletEdges {
 }
 
 struct ChamferEdges;
-impl Operation for ChamferEdges {
+impl Operator for ChamferEdges {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -338,13 +338,13 @@ impl Operation for ChamferEdges {
     }
 }
 
-struct ShellOperation;
-impl Operation for ShellOperation {
+struct ShellMutation;
+impl Operator for ShellMutation {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let thickness = read_channel_number(input, "thickness")?;
-            let open_faces = read_geometry_list(input, "openFaces")?;
+            let open_faces = read_geometry_list(input, "openFaces").unwrap_or_default();
             let handle = block_on(kernel.shell(&geometry, thickness, &open_faces)).map_err(map_kernel_error)?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
@@ -352,7 +352,7 @@ impl Operation for ShellOperation {
 }
 
 struct Draft;
-impl Operation for Draft {
+impl Operator for Draft {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -366,7 +366,7 @@ impl Operation for Draft {
 geo_operation!(OffsetSolid, "solid", |k, i| k.offset_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
 
 struct Defeature;
-impl Operation for Defeature {
+impl Operator for Defeature {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -380,7 +380,7 @@ impl Operation for Defeature {
 
 // #region 🔖️Intersect
 struct Section;
-impl Operation for Section {
+impl Operator for Section {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let faces = block_on(kernel.section(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?)).map_err(map_kernel_error)?;
@@ -391,7 +391,7 @@ impl Operation for Section {
 }
 
 struct Split;
-impl Operation for Split {
+impl Operator for Split {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let (positive, _negative) = block_on(kernel.split(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?)).map_err(map_kernel_error)?;
@@ -401,7 +401,7 @@ impl Operation for Split {
 }
 
 struct CurveCurveIntersect;
-impl Operation for CurveCurveIntersect {
+impl Operator for CurveCurveIntersect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = block_on(kernel.curve_curve_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?)).map_err(map_kernel_error)?;
@@ -412,7 +412,7 @@ impl Operation for CurveCurveIntersect {
 }
 
 struct CurveSurfaceIntersect;
-impl Operation for CurveSurfaceIntersect {
+impl Operator for CurveSurfaceIntersect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = block_on(kernel.curve_surface_intersect(&read_geometry(input, "curve")?, &read_geometry(input, "surface")?, read_channel_number(input, "tolerance")?)).map_err(map_kernel_error)?;
@@ -423,7 +423,7 @@ impl Operation for CurveSurfaceIntersect {
 }
 
 struct SurfaceSurfaceIntersect;
-impl Operation for SurfaceSurfaceIntersect {
+impl Operator for SurfaceSurfaceIntersect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let wires = block_on(kernel.surface_surface_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?)).map_err(map_kernel_error)?;
@@ -439,7 +439,7 @@ point_operation!(CurvePoint, "point", |k, i| k.curve_point(&read_geometry(i, "cu
 vec_operation!(CurveTangent, "tangent", |k, i| k.curve_tangent(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
 
 struct CurveDomain;
-impl Operation for CurveDomain {
+impl Operator for CurveDomain {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let domain = block_on(kernel.curve_domain(&read_geometry(input, "curve")?)).map_err(map_kernel_error)?;
@@ -462,7 +462,7 @@ geo_operation!(BoundingBox, "box", |k, i| k.bounding_box(&read_geometry(i, "geom
 num_operation!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
 
 struct ClosestPoint;
-impl Operation for ClosestPoint {
+impl Operator for ClosestPoint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let result = block_on(kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?)).map_err(map_kernel_error)?;
@@ -472,7 +472,7 @@ impl Operation for ClosestPoint {
 }
 
 struct ClassifyPoint;
-impl Operation for ClassifyPoint {
+impl Operator for ClassifyPoint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let classification = block_on(kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?)).map_err(map_kernel_error)?;
@@ -489,7 +489,7 @@ geo_operation!(Vertex, "vertex", |k, i| k.vertex(read_xyz(i, "point")?));
 geo_operation!(FaceFromWire, "face", |k, i| k.face_from_wire(&read_geometry(i, "wire")?));
 
 struct SewFaces;
-impl Operation for SewFaces {
+impl Operator for SewFaces {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let faces = read_geometry_list(input, "faces")?;
@@ -506,7 +506,7 @@ geo_operation!(ConvertToNurbs, "geometry", |k, i| k.convert_to_nurbs(&read_geome
 
 // #region 🔖️IO
 struct ExportStep;
-impl Operation for ExportStep {
+impl Operator for ExportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -517,7 +517,7 @@ impl Operation for ExportStep {
 }
 
 struct ExportStl;
-impl Operation for ExportStl {
+impl Operator for ExportStl {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -529,7 +529,7 @@ impl Operation for ExportStl {
 }
 
 struct ExportObj;
-impl Operation for ExportObj {
+impl Operator for ExportObj {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -541,7 +541,7 @@ impl Operation for ExportObj {
 }
 
 struct ImportStep;
-impl Operation for ImportStep {
+impl Operator for ImportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = read_text(input, "data")?;
@@ -553,7 +553,7 @@ impl Operation for ImportStep {
 }
 
 struct ImportStl;
-impl Operation for ImportStl {
+impl Operator for ImportStl {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
@@ -565,7 +565,7 @@ impl Operation for ImportStl {
 }
 
 struct ImportObj;
-impl Operation for ImportObj {
+impl Operator for ImportObj {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = read_text(input, "data")?;
@@ -577,7 +577,7 @@ impl Operation for ImportObj {
 }
 
 struct ExportDwg;
-impl Operation for ExportDwg {
+impl Operator for ExportDwg {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -589,7 +589,7 @@ impl Operation for ExportDwg {
 }
 
 struct ImportDwg;
-impl Operation for ImportDwg {
+impl Operator for ImportDwg {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
@@ -628,7 +628,7 @@ pub fn register(registry: &mut Registry) {
             group: vec!["Schemas".into()],
             ..Default::default()
         },
-        vec![OperatorImpl { schemas: vec!["geometry".into()], operation: Box::new(BrepDeconstruct) }],
+        vec![OperatorImpl { schemas: vec!["geometry".into()], operator: Box::new(BrepDeconstruct) }],
         &["geometry", "list"],
     );
 
@@ -1119,7 +1119,7 @@ pub fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.shell"), number_channel("thickness", "brep.solid.shell", 0.1), list_channel("openFaces", "brep.solid.shell")],
         out_solid("ShelledSolid"),
         &["Features"],
-        Box::new(ShellOperation),
+        Box::new(ShellMutation),
     );
     reg_geo(
         registry,

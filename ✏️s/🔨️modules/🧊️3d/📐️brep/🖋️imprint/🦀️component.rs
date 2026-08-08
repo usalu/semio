@@ -137,21 +137,32 @@ pub fn split_planar_face_by_line(
             hits.len()
         )));
     }
+    // Same-edge double hits are supported: split higher curve_t first so the lower parameter stays valid.
     if hits[0].edge == hits[1].edge {
-        return Err(KernelError::Operation(
-            "cutting line intersects the same boundary edge twice — unsupported".into(),
-        ));
+        hits.sort_by(|a, b| b.curve_t.partial_cmp(&a.curve_t).unwrap_or(std::cmp::Ordering::Equal));
     }
 
     let mut rec = OpRecorder::new();
     let mut split_vertices = [VertexId::from_raw(0, 0); 2];
+    let mut surviving_same_edge: Option<(EdgeId, EdgeId)> = None;
     for (i, hit) in hits.iter().enumerate() {
         if let Some(v) = hit.vertex_hint {
             split_vertices[i] = v;
             continue;
         }
-        let (_e1, _e2, v) = split_edge(body, hit.edge, hit.curve_t, hit.point, &mut rec);
+        let edge_for_split = if i == 1 && hits[0].edge == hits[1].edge {
+            let (e1, e2) = surviving_same_edge.ok_or_else(|| {
+                KernelError::Operation("same-edge double hit missing first split survivors".into())
+            })?;
+            resolve_edge_containing_param(body, e1, e2, hit.curve_t)?
+        } else {
+            hit.edge
+        };
+        let (e1, e2, v) = split_edge(body, edge_for_split, hit.curve_t, hit.point, &mut rec);
         split_vertices[i] = v;
+        if i == 0 && hits[0].edge == hits[1].edge {
+            surviving_same_edge = Some((e1, e2));
+        }
     }
     let va = split_vertices[0];
     let vb = split_vertices[1];
@@ -358,6 +369,24 @@ fn member_chain(members: &[(EdgeId, bool)], from: usize, to: usize) -> Vec<(Edge
 
 // #endregion 🔖️UvArrange
 
+
+fn resolve_edge_containing_param(
+    body: &Body,
+    e1: EdgeId,
+    e2: EdgeId,
+    t: f64,
+) -> Result<EdgeId, KernelError> {
+    for edge_id in [e1, e2] {
+        let Some(edge) = body.edges.get(edge_id) else { continue };
+        if t > edge.range.0 + 1e-14 && t < edge.range.1 - 1e-14 {
+            return Ok(edge_id);
+        }
+    }
+    Err(KernelError::Operation(
+        "same-edge double hit: second parameter not found on either survivor".into(),
+    ))
+}
+
 // #region 🔖️Tests
 
 #[cfg(test)]
@@ -428,5 +457,33 @@ mod tests {
         assert!(matches!(err, KernelError::MissingEntity(_)));
     }
 }
+
+
+    #[test]
+    fn resolve_edge_containing_param_picks_survivor_after_split() {
+        let mut body = Body::new();
+        let face = crate::brep::primitives::make_planar_face_from_points(
+            &mut body,
+            &[
+                Pnt3::new(0.0, 0.0, 0.0),
+                Pnt3::new(4.0, 0.0, 0.0),
+                Pnt3::new(4.0, 2.0, 0.0),
+                Pnt3::new(0.0, 2.0, 0.0),
+            ],
+        )
+        .expect("rect face");
+        let outer = body.faces.get(face).unwrap().outer.unwrap();
+        let edge = body.coedges.get(body.loop_coedges(outer)[0]).unwrap().edge;
+        let e = body.edges.get(edge).unwrap().clone();
+        let mid_t = (e.range.0 + e.range.1) * 0.5;
+        let mid_p = body.curves3.get(e.curve).unwrap().eval(mid_t);
+        let mut rec = OpRecorder::new();
+        let (e1, e2, _) = split_edge(&mut body, edge, mid_t, mid_p, &mut rec);
+        let low_t = e.range.0 + (e.range.1 - e.range.0) * 0.25;
+        let high_t = e.range.0 + (e.range.1 - e.range.0) * 0.75;
+        let low_edge = resolve_edge_containing_param(&body, e1, e2, low_t).expect("low");
+        let high_edge = resolve_edge_containing_param(&body, e1, e2, high_t).expect("high");
+        assert_ne!(low_edge, high_edge);
+    }
 
 // #endregion 🔖️Tests

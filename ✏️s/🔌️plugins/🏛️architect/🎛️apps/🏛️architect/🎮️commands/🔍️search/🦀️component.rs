@@ -2,9 +2,9 @@
 //! appending the query to the config's search history.
 
 pub mod query {
-    use crate::apps::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigOperation};
+    use crate::apps::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::search::{search_plugin, SearchQuery};
-    use crate::artifacts::program::op::ProgramOperation;
+    use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::Program;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ pub mod query {
         pub query: String,
     }
 
-    pub fn handle(payload: &Search, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    pub fn handle(payload: &Search, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let base_config = cfg.projection;
         let mut history = parse_search_history(base_config);
         let hits = search_plugin(doc.projection, &SearchQuery { keywords: payload.query.split_whitespace().map(str::to_string).collect(), ..SearchQuery::default() }, None, Some(&mut history));

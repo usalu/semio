@@ -198,7 +198,7 @@ pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<String, Pr
     let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
     let (result, operations) = execute(graph, &parsed).map_err(TrinityRewriteError::Jack)?;
     if !operations.is_empty() {
-        let fixture = crate::artifacts::jack::op::apply_trinity_graph_operations(graph.to_fixture(), &operations)?;
+        let fixture = crate::artifacts::jack::op::apply_trinity_graph_mutations(graph.to_fixture(), &operations)?;
         *graph = Graph::from_fixture(fixture)?;
     }
     Ok(result)
@@ -475,3 +475,36 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("rewrite.spr"),
     });
 }
+
+
+//#region 🔖️ArtifactEngine
+pub struct RewriteRuleEngine {
+    projection: crate::artifacts::rewrite::RewriteRuleDocument,
+}
+
+impl RewriteRuleEngine {
+    pub fn new(projection: crate::artifacts::rewrite::RewriteRuleDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for RewriteRuleEngine {
+    type Projection = crate::artifacts::rewrite::RewriteRuleDocument;
+    type Mutation = crate::artifacts::rewrite::mutations::RewriteRuleMutation;
+    type Diff = crate::artifacts::rewrite::diff::RewriteRuleDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::rewrite::mutations::apply_rewrite_rule_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

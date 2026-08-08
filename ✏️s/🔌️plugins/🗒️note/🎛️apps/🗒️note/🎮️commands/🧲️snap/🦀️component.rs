@@ -1,7 +1,7 @@
 //! 🧲️ Note play app commands — snap-to-grid enabled/spacing. Document-mutating.
 
-use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
-use crate::artifacts::note::op::NoteOperation;
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
+use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,9 +16,9 @@ pub mod set_snap_enabled {
         pub value: Option<bool>,
     }
 
-    pub fn handle(payload: &SetSnapEnabled, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSnapEnabled, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let next = payload.value.unwrap_or(!doc.projection.snap_enabled.unwrap_or(false));
-        Ok(Emit::operations(vec![NoteOperation::SetSnapEnabled { enabled: Some(next) }]))
+        Ok(Emit::mutations(vec![NoteMutation::SetSnapEnabled { enabled: Some(next) }]))
     }
 }
 //#endregion 🔖️SetSnapEnabled
@@ -33,8 +33,8 @@ pub mod set_snap_grid_spacing {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSnapGridSpacing, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        Ok(Emit::operations(vec![NoteOperation::SetSnapGridSpacing { spacing: Some(payload.value.max(1.0)) }]))
+    pub fn handle(payload: &SetSnapGridSpacing, _doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![NoteMutation::SetSnapGridSpacing { spacing: Some(payload.value.max(1.0)) }]))
     }
 }
 //#endregion 🔖️SetSnapGridSpacing

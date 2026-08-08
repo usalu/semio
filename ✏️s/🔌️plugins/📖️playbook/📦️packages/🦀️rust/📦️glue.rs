@@ -15,13 +15,16 @@
 //! `spr` derive impls) is owned by the FRAMEWORK kernel crate `playbook`
 //! (`semio-framework-os-kernel-playbook`, untouched by this migration) — the same domain `📋️forms`
 //! builds on. This plugin owns only its own document schema id, `ArtifactKindSpec`, `PlaybookConfig`/
-//! `PlaybookConfigOperation`/`PlaybookCommand`, and the `PlaybookPlayApp` `DocumentApp` impl.
+//! `PlaybookConfigMutation`/`PlaybookCommand`, and the `PlaybookPlayApp` `DocumentApp` impl.
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework as semio_framework;
+extern crate flow;
+pub use flow::playbook;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<PlaybookOperation, PlaybookConfigOperation>, Fault>`, the exact signature
+// `Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
 // error type; boxing it here would diverge from the trait it must satisfy, and the lint does not fire on
 // the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
@@ -41,6 +44,95 @@ pub mod artifacts {
         pub mod diff;
         #[path = "../../🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs"]
         pub mod op;
+
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "."]
+            pub mod add_step {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-step/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod remove_step {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-step/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod move_step {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-step/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod add_block {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➕add-block/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod remove_block {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/➖remove-block/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod move_block {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/↔️move-block/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod update_block {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-block/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-block/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-block/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod update_step {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-step/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-step/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/🩹update-step/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+            #[path = "."]
+            pub mod update_playbook {
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/📖update-playbook/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/📖update-playbook/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+                #[path = "../../🗿️artifacts/📖️playbook/🧬️mutations/📖update-playbook/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+            }
+        }
+
         #[path = "../../🗿️artifacts/📖️playbook/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
         #[path = "../../🗿️artifacts/📖️playbook/🎒️pack/🦀️component.rs"]

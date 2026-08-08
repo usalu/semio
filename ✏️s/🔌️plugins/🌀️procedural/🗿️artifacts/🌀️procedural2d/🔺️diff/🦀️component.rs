@@ -10,8 +10,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::procedural2d::{widget_id, Procedural2dDocument};
 use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
-use flow::playbook::{apply_generation_operation, GenerationOperation};
-use protocol::OperationDiff;
+use flow::playbook::{apply_generation_mutation, GenerationMutation};
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Collections
@@ -78,10 +78,10 @@ pub struct Procedural2dDiff {
     pub camera: Option<CameraJson>,
     pub schema: Option<String>,
     #[serde(default)]
-    pub generation: Vec<GenerationOperation>,
+    pub generation: Vec<GenerationMutation>,
 }
 
-impl OperationDiff<Procedural2dDocument> for Procedural2dDiff {
+impl MutationDiff<Procedural2dDocument> for Procedural2dDiff {
     fn apply(&self, projection: &Procedural2dDocument) -> Procedural2dDocument {
         let mut next = projection.clone();
         apply_widgets_diff(&mut next.fixture.widgets, &self.widgets);
@@ -99,7 +99,7 @@ impl OperationDiff<Procedural2dDocument> for Procedural2dDiff {
             next.fixture.schema = schema.clone();
         }
         for operation in &self.generation {
-            apply_generation_operation(&mut next.generation, operation);
+            apply_generation_mutation(&mut next.generation, operation);
         }
         next
     }
@@ -139,7 +139,7 @@ mod tests {
             layout: LayoutDiff { removed: vec![], set: vec![("l1".into(), WidgetLayout { x: 3.0, y: 4.0 })] },
             camera: Some(CameraJson { x: 9.0, y: 9.0, zoom: 2.0 }),
             schema: Some("flow.fixture".into()),
-            generation: vec![GenerationOperation::Remove { id: "g1".into() }],
+            generation: vec![GenerationMutation::Remove { id: "g1".into() }],
         });
 
         assert_eq!(diff.widgets.removed, vec!["w1".to_string(), "w2".to_string()]);

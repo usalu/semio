@@ -119,11 +119,11 @@ pub fn command_json(command_id: &str, args_json: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neural_engine::{channel_output, Atom, ChannelSpec, EvalError, Operation, OperatorImpl, Value};
+    use neural_engine::{channel_output, Atom, ChannelSpec, EvalError, Operator, OperatorImpl, Value};
 
     struct Echo;
 
-    impl Operation for Echo {
+    impl Operator for Echo {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
             Ok(channel_output("x", input.clone()))
         }
@@ -144,7 +144,7 @@ mod tests {
                 outputs: vec![ChannelSpec::named("X", "x", "x", "Echoed")],
                 ..Default::default()
             },
-            vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
+            vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }],
             &[],
         );
         let json = build_manifest_json("test", "Test", "0.1.0", &reg, vec!["onStartup".into()], vec![], vec![], vec![]);
@@ -167,7 +167,7 @@ mod tests {
                 outputs: vec![ChannelSpec::named("X", "x", "x", "Echoed")],
                 ..Default::default()
             },
-            vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
+            vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }],
             &[],
         );
         let input = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0)));

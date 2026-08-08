@@ -349,3 +349,36 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("gisterrain.spr"),
     });
 }
+
+
+//#region 🔖️ArtifactEngine
+pub struct Gis3dTerrainEngine {
+    projection: crate::artifacts::gisterrain::Gis3dTerrainDocument,
+}
+
+impl Gis3dTerrainEngine {
+    pub fn new(projection: crate::artifacts::gisterrain::Gis3dTerrainDocument) -> Self {
+        Self { projection }
+    }
+}
+
+impl protocol::ArtifactEngine for Gis3dTerrainEngine {
+    type Projection = crate::artifacts::gisterrain::Gis3dTerrainDocument;
+    type Mutation = crate::artifacts::gisterrain::mutations::Gis3dTerrainMutation;
+    type Diff = crate::artifacts::gisterrain::diff::Gis3dTerrainDiff;
+
+    fn projection(&self) -> &Self::Projection {
+        &self.projection
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
+        crate::artifacts::gisterrain::mutations::apply_gis_3d_terrain_mutation(&mut self.projection, mutation);
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+    }
+}
+//#endregion 🔖️ArtifactEngine

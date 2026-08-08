@@ -28,6 +28,7 @@ semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 serde.workspace = true
 serde_json.workspace = true
+blake3 = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

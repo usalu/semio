@@ -206,7 +206,8 @@ function WasmEditorSurface({
   }, []);
 
   const sessionFactory = useCallback(() => {
-    if (wasmSession) return wasmSession;
+    // Empty pkg stub (`export class EditorSession {}`) must not replace the no-op host fallback.
+    if (wasmSession && typeof wasmSession.attachCanvas === "function") return wasmSession;
     return {
       attachCanvas: async () => undefined,
       setSize: () => {},

@@ -1,7 +1,7 @@
 //! 🗂️ Sourcing curate app commands — the preview/grid selection pointer (table row picks + world picks).
 
-use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigOperation};
-use crate::artifacts::curate::op::SourcingOperation;
+use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ pub mod select_row {
         pub object_id: Option<String>,
     }
 
-    pub fn handle(payload: &SelectRow, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
-        Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSelectedObject { object_id: payload.object_id.clone() }]))
+    pub fn handle(payload: &SelectRow, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+        Ok(Emit::config(vec![SourcingCurateConfigMutation::SetSelectedObject { object_id: payload.object_id.clone() }]))
     }
 }
 //#endregion 🔖️SelectRow
@@ -34,9 +34,9 @@ pub mod world_select {
 
     /// 🖱️ `worldSelect` keeps only the LAST id as the single selection (matches the pool/curated tables'
     /// single-select semantics — sourcing has no multi-select surface).
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, CurateDocument>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
         match payload.ids.last() {
-            Some(id) => Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSelectedObject { object_id: Some(id.clone()) }])),
+            Some(id) => Ok(Emit::config(vec![SourcingCurateConfigMutation::SetSelectedObject { object_id: Some(id.clone()) }])),
             None => Ok(Emit::default()),
         }
     }

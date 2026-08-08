@@ -1,7 +1,7 @@
 dialect protocol
 protocol gismap.spr
 version 1
-schema gis.map.operation
+schema gis.map.mutation
 start record
 framing record
 record gis.gismap-set-crs tag 1

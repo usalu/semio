@@ -1,8 +1,8 @@
 //! 🗺️ Trinity Jack app — document-mutating fixture commands (`setFixtureJson`, `deleteSelection`,
 //! `patchNodes`, `reorganize`) — dispatched as VCS operations with a true inverse.
 
-use crate::apps::jack::config::JackConfigOperation;
-use crate::artifacts::jack::op::TrinityGraphOperation;
+use crate::apps::jack::config::JackConfigMutation;
+use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::GraphFixture;
 use semio_framework_plugin::{Emit, Fault};
 
@@ -36,14 +36,14 @@ fn force_layout_fixture(fixture: &GraphFixture) -> Option<GraphFixture> {
 }
 
 /// 🧭️ Emits a `Reposition` operation for every node whose position differs between `before` and `after`.
-fn reposition_operations(before: &GraphFixture, after: &GraphFixture) -> Vec<TrinityGraphOperation> {
+fn reposition_operations(before: &GraphFixture, after: &GraphFixture) -> Vec<TrinityGraphMutation> {
     after
         .nodes
         .iter()
         .filter_map(|node| {
             let prev = before.nodes.iter().find(|entry| entry.id == node.id)?;
             if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-                Some(TrinityGraphOperation::Reposition { id: node.id.clone(), x: node.x, y: node.y })
+                Some(TrinityGraphMutation::Reposition { id: node.id.clone(), x: node.x, y: node.y })
             } else {
                 None
             }
@@ -51,35 +51,35 @@ fn reposition_operations(before: &GraphFixture, after: &GraphFixture) -> Vec<Tri
         .collect()
 }
 
-pub(crate) fn set_fixture_json(json: &str) -> Result<Emit<TrinityGraphOperation, JackConfigOperation>, Fault> {
+pub(crate) fn set_fixture_json(json: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     match GraphFixture::from_json(json) {
-        Ok(next) => Ok(Emit::operations(vec![TrinityGraphOperation::SetFixture { fixture: next }])),
+        Ok(next) => Ok(Emit::mutations(vec![TrinityGraphMutation::SetFixture { fixture: next }])),
         Err(_) => Ok(Emit::default()),
     }
 }
 
-pub(crate) fn delete_selection(fixture: &GraphFixture, selected_node_ids: &[String]) -> Result<Emit<TrinityGraphOperation, JackConfigOperation>, Fault> {
-    let deletes: Vec<TrinityGraphOperation> = selected_node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| TrinityGraphOperation::DeleteNode { id: id.clone() }).collect();
+pub(crate) fn delete_selection(fixture: &GraphFixture, selected_node_ids: &[String]) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+    let deletes: Vec<TrinityGraphMutation> = selected_node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| TrinityGraphMutation::DeleteNode { id: id.clone() }).collect();
     if deletes.is_empty() {
         Ok(Emit::default())
     } else {
-        Ok(Emit { document_operations: deletes, config_operations: vec![JackConfigOperation::SetSelection { node_ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { document_mutations: deletes, config_mutations: vec![JackConfigMutation::SetSelection { node_ids: Vec::new() }], ..Default::default() })
     }
 }
 
-pub(crate) fn patch_nodes(fixture: &GraphFixture, node_ids: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphOperation, JackConfigOperation>, Fault> {
+pub(crate) fn patch_nodes(fixture: &GraphFixture, node_ids: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     if field == "name" && !node_ids.is_empty() && !value.trim().is_empty() {
-        let operations: Vec<TrinityGraphOperation> = node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| TrinityGraphOperation::Rename { id: id.clone(), name: value.trim().into() }).collect();
-        Ok(Emit::operations(operations))
+        let operations: Vec<TrinityGraphMutation> = node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| TrinityGraphMutation::Rename { id: id.clone(), name: value.trim().into() }).collect();
+        Ok(Emit::mutations(operations))
     } else {
         Ok(Emit::default())
     }
 }
 
-pub(crate) fn reorganize(fixture: &GraphFixture, reorganize_epoch: u64) -> Result<Emit<TrinityGraphOperation, JackConfigOperation>, Fault> {
-    let config_operations = vec![JackConfigOperation::SetReorganizeEpoch { value: reorganize_epoch + 1 }];
+pub(crate) fn reorganize(fixture: &GraphFixture, reorganize_epoch: u64) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+    let config_mutations = vec![JackConfigMutation::SetReorganizeEpoch { value: reorganize_epoch + 1 }];
     match force_layout_fixture(fixture) {
-        Some(after) => Ok(Emit { document_operations: reposition_operations(fixture, &after), config_operations, ..Default::default() }),
-        None => Ok(Emit::config(config_operations)),
+        Some(after) => Ok(Emit { document_mutations: reposition_operations(fixture, &after), config_mutations, ..Default::default() }),
+        None => Ok(Emit::config(config_mutations)),
     }
 }

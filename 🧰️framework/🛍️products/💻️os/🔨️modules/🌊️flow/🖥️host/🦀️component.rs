@@ -117,7 +117,7 @@ pub struct FlowHost {
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
     ghost_node: Option<DagNodeSpec>,
-    /// ↩️ Undo/redo, backed by the standard `crate::os_store::DocumentStore<FlowFixture, FlowOperation>`
+    /// ↩️ Undo/redo, backed by the standard `crate::os_store::DocumentStore<FlowFixture, FlowMutation>`
     /// mechanism (see the `impl FlowHost`'s `🔖️History` region) instead of a hand-rolled snapshot stack.
     history_store: FlowStore,
     /// 🚩️ Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
@@ -1738,15 +1738,15 @@ impl FlowHost {
     }
 
     /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
-    /// invertible `FlowOperation::SetFixture` edit — the standard `crate::os_store::DocumentStore`/`Operation`/
-    /// `OperationDiff` mechanism (see `🔖️Operations`) driving undo/redo here instead of the old
+    /// invertible `FlowMutation::SetFixture` edit — the standard `crate::os_store::DocumentStore`/`Mutation`/
+    /// `MutationDiff` mechanism (see `🔖️Mutations`) driving undo/redo here instead of the old
     /// hand-rolled `Vec<FlowFixture>` snapshot stack. Unconditional once armed (no `content_changed`
     /// gate), mirroring the old stack's unconditional `past.push` on a discrete `begin_change` — only
     /// the gesture-coalescing path (`commit_gesture_history`) skips a no-op edit.
     fn flush_pending_change(&mut self) {
         if self.pending_change {
             self.pending_change = false;
-            let _ = self.history_store.dispatch(DocumentCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
+            let _ = self.history_store.dispatch(DocumentCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
         }
     }
 
@@ -1771,7 +1771,7 @@ impl FlowHost {
             self.gesture_active = false;
             let committed = self.history_store.projection().unwrap_or_else(|_| self.fixture.clone());
             if Self::content_changed(&committed, &self.fixture) {
-                let _ = self.history_store.dispatch(DocumentCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
+                let _ = self.history_store.dispatch(DocumentCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
             }
         }
     }
@@ -1991,8 +1991,11 @@ impl FlowEvalSession {
 
     /// 📨 Notes an in-flight tessellate; returns true when the caller should emit `InvokeExtension`.
     pub fn note_pending_tessellate(&mut self, node_hash: u64, handle: String) -> bool {
-        if self.preview_mesh_json_by_handle.contains_key(&handle) {
-            return false;
+        if let Some(json) = self.preview_mesh_json_by_handle.get(&handle) {
+            if preview_mesh_json_has_geometry(json) {
+                return false;
+            }
+            self.preview_mesh_json_by_handle.remove(&handle);
         }
         if self.pending_tessellate_by_hash.values().any(|pending| pending == &handle) {
             return false;
@@ -2006,14 +2009,38 @@ impl FlowEvalSession {
         let Some(handle) = self.pending_tessellate_by_hash.remove(&node_hash) else {
             return false;
         };
-        if let Ok(value) = serde_json::from_str::<serde_json::Value>(output_json) {
-            if value.get("error").is_some() {
-                return false;
-            }
+        if !preview_mesh_json_has_geometry(output_json) {
+            return false;
         }
         self.preview_mesh_json_by_handle.insert(handle, output_json.to_string());
         true
     }
+}
+
+fn preview_mesh_json_has_geometry(output_json: &str) -> bool {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(output_json) else {
+        return false;
+    };
+    if value.get("error").is_some() {
+        return false;
+    }
+    let positions = value
+        .get("positions")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+    let indices = value
+        .get("indices")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+    let edges = value
+        .get("edgePositions")
+        .or_else(|| value.get("edge_positions"))
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+    (indices > 0 && positions >= 9) || edges >= 6 || (positions >= 3 && indices == 0)
 }
 
 /// 🧬 Stable `nodeHash` for an extension tessellate request (mirrored through ShellHost).
@@ -2951,7 +2978,7 @@ mod tests {
         assert!(matches!(node.kind, DagNodeKind::Export { .. }));
     }
 
-    /// ↩️ Exercises the standard `crate::os_store::DocumentStore<FlowFixture, FlowOperation>` undo/redo
+    /// ↩️ Exercises the standard `crate::os_store::DocumentStore<FlowFixture, FlowMutation>` undo/redo
     /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
     /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
     /// hand-rolled `Vec<FlowFixture>` snapshot stack.
@@ -2968,7 +2995,7 @@ mod tests {
 
         let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
         let mut store = FlowStore::new(envelope);
-        store.dispatch(DocumentCommand::Apply { operations, description: None }).expect("apply add-widget operations");
+        store.dispatch(DocumentCommand::Apply { mutations, description: None }).expect("apply add-widget operations");
         assert_eq!(store.projection().expect("projection").widgets.len(), count_before + 1);
 
         store.dispatch(DocumentCommand::Undo).expect("undo");

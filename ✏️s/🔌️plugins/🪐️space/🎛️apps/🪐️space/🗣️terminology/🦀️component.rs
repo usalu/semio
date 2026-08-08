@@ -4,7 +4,7 @@ use semio_framework_plugin::app_labels;
 
 //#region 🔖️Terminology
 // 🗣️ Every operation/view-action/shell-action's German translation lives directly at its
-// `.operation()`/`.view_action()`/`.shell_action()` call site in `create_space_app`'s manifest.
+// `.mutation()`/`.view_action()`/`.shell_action()` call site in `create_space_app`'s manifest.
 app_labels! {
     pub struct SStudioLabels {
         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";

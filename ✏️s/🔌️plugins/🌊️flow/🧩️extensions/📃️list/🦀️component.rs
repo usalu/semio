@@ -1,12 +1,12 @@
 //! 📋️ Flow list module: list dictionary operators.
 
-use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, VariadicSpec};
+use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value, VariadicSpec};
 
 // #region 🔖️Empty
 /// 📭️ Creates an empty list dictionary.
 pub struct Empty;
 
-impl Operation for Empty {
+impl Operator for Empty {
     fn evaluate(&self, _input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("list", Dictionary::with_schema("list")))
     }
@@ -17,7 +17,7 @@ impl Operation for Empty {
 /// 📦️ Wraps input as a list dictionary.
 pub struct Pack;
 
-impl Operation for Pack {
+impl Operator for Pack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let mut out = Dictionary::with_schema("list");
         if let Some(value) = input.get("*") {
@@ -38,7 +38,7 @@ impl Operation for Pack {
 /// 🔍️ Reads a value by index from a list dictionary.
 pub struct Get;
 
-impl Operation for Get {
+impl Operator for Get {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
@@ -67,7 +67,7 @@ impl Operation for Get {
 /// ✏️ Replaces a value at an index.
 pub struct Set;
 
-impl Operation for Set {
+impl Operator for Set {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
@@ -81,7 +81,7 @@ impl Operation for Set {
 /// ➕️ Appends a value at the next index.
 pub struct Append;
 
-impl Operation for Append {
+impl Operator for Append {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
@@ -95,7 +95,7 @@ impl Operation for Append {
 /// 📏️ Reports the number of indexed elements.
 pub struct Size;
 
-impl Operation for Size {
+impl Operator for Size {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         Ok(channel_output("count", number_dictionary(list_indices(&list).len() as f64)))
@@ -107,7 +107,7 @@ impl Operation for Size {
 /// 🗑️ Removes an index and reindexes.
 pub struct Remove;
 
-impl Operation for Remove {
+impl Operator for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
@@ -120,7 +120,7 @@ impl Operation for Remove {
 /// 📐️ Builds an arithmetic sequence list.
 pub struct Range;
 
-impl Operation for Range {
+impl Operator for Range {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let start = read_number(input, "start")?;
         let step = read_number(input, "step").unwrap_or(1.0);
@@ -138,7 +138,7 @@ impl Operation for Range {
 /// 🔁️ Reverses indexed list elements.
 pub struct Reverse;
 
-impl Operation for Reverse {
+impl Operator for Reverse {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let indices = list_indices(&list);
@@ -207,8 +207,8 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: C
     OperatorInfo { id: id.into(), extension: "list".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📋️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }], produces);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
 }
 
 // #endregion 🔖️Helpers
@@ -228,7 +228,7 @@ pub fn register(registry: &mut Registry) {
                 ChannelSpec::named("V", "Val", "value", "ListValue"),
             )
         },
-        vec![OperatorImpl { schemas: vec!["list".into(), "number".into(), "boolean".into()], operation: Box::new(Get) }],
+        vec![OperatorImpl { schemas: vec!["list".into(), "number".into(), "boolean".into()], operator: Box::new(Get) }],
         &["value"],
     );
     register_simple(

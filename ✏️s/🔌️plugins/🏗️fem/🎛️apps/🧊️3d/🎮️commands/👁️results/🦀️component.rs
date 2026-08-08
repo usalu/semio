@@ -1,8 +1,8 @@
 //! 👁️ FEM 3D app commands — which case/combination and display mode the results window shows,
 //! config-only view state that never touches the document.
 
-use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigOperation};
-use crate::artifacts::fem3d::op::Fem3dOperation;
+use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,8 @@ pub mod set_result_display {
         pub mode_index: u32,
     }
 
-    pub fn handle(payload: &SetResultDisplay, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
-        Ok(Emit::config(vec![Fem3dConfigOperation::SetResultDisplay { source_id: payload.source_id.clone(), mode: payload.mode.clone(), mode_index: payload.mode_index }]))
+    pub fn handle(payload: &SetResultDisplay, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Fem3dConfigMutation::SetResultDisplay { source_id: payload.source_id.clone(), mode: payload.mode.clone(), mode_index: payload.mode_index }]))
     }
 }
 //#endregion 🔖️SetResultDisplay
@@ -34,7 +34,7 @@ mod tests {
     use crate::apps::fem3d::Fem3dCommand;
 
     #[test]
-    fn set_result_display_writes_config_not_document_operations() {
+    fn set_result_display_writes_config_not_document_mutations() {
         let mut app = fem3d_app();
         // 🎯️ No config accessor on `VcsDocumentApp` — dispatch must simply not panic/error, and the
         // results window render test (in `modes::edit::windows::results`) covers the resulting display.

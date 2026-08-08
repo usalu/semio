@@ -1,28 +1,28 @@
 //! 📥️ Forms play app commands — whole-document import: raw JSON staging and built-in example switching.
-//! Both replace the current spec with a new one through the existing `FormOperation` vocabulary (remove
+//! Both replace the current spec with a new one through the existing `FormMutation` vocabulary (remove
 //! every current step, retitle, re-add the new steps) so the edit still records a true inverse.
 
-use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
-use crate::apps::forms::reset_try_config_operations;
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::apps::forms::reset_try_config_mutations;
 use crate::artifacts::forms::engine::{default_example_spec, empty_forms_projection, onboarding_example_spec};
 // 🧷️ Aliased: the payload structs below derive the EXTERN `dsl` crate's `dsl::DslRecord` — importing the
 // artifact's own `dsl` submodule under the bare name would shadow it.
 use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{op::FormOperation, FormSpec};
+use crate::artifacts::forms::{op::FormMutation, FormSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shell
 /// ✏️ Emits the operations that replace the current form spec's title + steps with those of `next` — a
 /// legitimate whole-document swap for import/example-switch, expressed granularly through the existing
-/// `FormOperation` vocabulary so it still records a true inverse.
-fn replace_spec_operations(current: &FormSpec, next: &FormSpec) -> Vec<FormOperation> {
-    let mut operations: Vec<FormOperation> = current.steps.iter().map(|step| FormOperation::RemoveStep { step_id: step.id.clone() }).collect();
+/// `FormMutation` vocabulary so it still records a true inverse.
+fn replace_spec_operations(current: &FormSpec, next: &FormSpec) -> Vec<FormMutation> {
+    let mut operations: Vec<FormMutation> = current.steps.iter().map(|step| FormMutation::RemoveStep { step_id: step.id.clone() }).collect();
     if next.title != current.title {
-        operations.push(FormOperation::UpdatePlaybook { title: next.title.clone() });
+        operations.push(FormMutation::UpdatePlaybook { title: next.title.clone() });
     }
     for step in &next.steps {
-        operations.push(FormOperation::AddStep { step: step.clone(), index: None });
+        operations.push(FormMutation::AddStep { step: step.clone(), index: None });
     }
     operations
 }
@@ -38,13 +38,13 @@ pub mod set_spec_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetSpecJson, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSpecJson, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let Ok(next) = serde_json::from_str::<FormSpec>(&payload.json) else {
             return Ok(Emit::default());
         };
-        let mut config_operations = reset_try_config_operations();
-        config_operations.push(FormsConfigOperation::SetSelection { ids: Vec::new() });
-        Ok(Emit { document_operations: replace_spec_operations(doc.projection, &next), config_operations, ..Default::default() })
+        let mut config_mutations = reset_try_config_mutations();
+        config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
+        Ok(Emit { document_mutations: replace_spec_operations(doc.projection, &next), config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetSpecJson
@@ -59,7 +59,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let next = match payload.example_id.as_str() {
             "" => Some(empty_forms_projection()),
             "building-component" => forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
@@ -70,9 +70,9 @@ pub mod set_active_example {
         let Some(next) = next else {
             return Ok(Emit::default());
         };
-        let mut config_operations = reset_try_config_operations();
-        config_operations.push(FormsConfigOperation::SetSelection { ids: Vec::new() });
-        Ok(Emit { document_operations: replace_spec_operations(doc.projection, &next), config_operations, ..Default::default() })
+        let mut config_mutations = reset_try_config_mutations();
+        config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
+        Ok(Emit { document_mutations: replace_spec_operations(doc.projection, &next), config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

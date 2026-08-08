@@ -21,7 +21,7 @@ semio_framework_plugin::app_labels! {
         kind_group: native_en "Group", native_de "Gruppe", reuse_en "Group", reuse_de "Gruppe";
         kind_boolean: native_en "Boolean", native_de "Boolean", reuse_en "Boolean", reuse_de "Boolean";
         kind_trace: native_en "Trace", native_de "Nachzeichnung", reuse_en "Trace", reuse_de "Nachzeichnung";
-        boolean_operation: native_en "Boolean Operation", native_de "Boolean-Operation", reuse_en "Boolean Operation", reuse_de "Boolean-Operation";
+        boolean_operation: native_en "Boolean Mutation", native_de "Boolean-Mutation", reuse_en "Boolean Mutation", reuse_de "Boolean-Mutation";
         children: native_en "Children", native_de "Kinder", reuse_en "Children", reuse_de "Kinder";
         trace_threshold: native_en "Trace Threshold", native_de "Trace-Schwellenwert", reuse_en "Trace Threshold", reuse_de "Trace-Schwellenwert";
         simplify: native_en "Simplify", native_de "Vereinfachen", reuse_en "Simplify", reuse_de "Vereinfachen";

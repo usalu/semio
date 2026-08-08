@@ -1,4 +1,4 @@
-//! 🔺️ GIS terrain artifact — the operation diff and its `OperationDiff` law (split out of the old
+//! 🔺️ GIS terrain artifact — the operation diff and its `MutationDiff` law (split out of the old
 //! constitutional `op` crate).
 
 
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::gisterrain::Gis3dTerrainDocument;
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -22,7 +22,7 @@ pub struct Gis3dTerrainDiff {
     pub imported_features_json: Option<String>,
 }
 
-impl OperationDiff<Gis3dTerrainDocument> for Gis3dTerrainDiff {
+impl MutationDiff<Gis3dTerrainDocument> for Gis3dTerrainDiff {
     fn apply(&self, projection: &Gis3dTerrainDocument) -> Gis3dTerrainDocument {
         if let Some(document) = &self.document {
             return document.clone();

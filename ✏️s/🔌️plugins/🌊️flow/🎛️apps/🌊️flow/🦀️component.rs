@@ -9,16 +9,16 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::flow::commands::{catalogue, eval, extension, grid, layout, locale, lod, node_graph, selection, synapse, view, widget};
-use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
+use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::apps::flow::modes::edit::windows::{compiled, main};
 use crate::apps::flow::modes::generate::commands::generation;
 use crate::apps::flow::modes::generate::windows::{form, generations, preview};
 use crate::apps::flow::modes::{edit, generate};
 use crate::apps::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
-use crate::artifacts::flow::{op::FlowOperation, FlowFixture, FLOW_DOCUMENT_SCHEMA};
+use crate::artifacts::flow::{op::FlowMutation, FlowFixture, FLOW_DOCUMENT_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession, Widget};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
 };
@@ -57,7 +57,7 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break.**
-    pub enum FlowCommand for FlowFixture, FlowOperation, FlowConfig, FlowConfigOperation, ctx = FlowEvalSession {
+    pub enum FlowCommand for FlowFixture, FlowMutation, FlowConfig, FlowConfigMutation, ctx = FlowEvalSession {
         "addWidget" as "add-widget" => add_widget::AddWidget,
         "removeWidget" as "remove-widget" => remove_widget::RemoveWidget,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
@@ -200,7 +200,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowFixture, 
 
 //#region 🔖️FlowPlayApp
 /// 🧪️ Unit struct apart from `eval_session`: every former runtime field lives in [`FlowConfig`], written
-/// through [`FlowConfigOperation`]s. The eval session is the one piece of state that is neither document
+/// through [`FlowConfigMutation`]s. The eval session is the one piece of state that is neither document
 /// nor view — it is the off-main-thread evaluation driver, threaded into every command handler as the
 /// `app_commands!` dispatch context.
 #[derive(Default)]
@@ -208,11 +208,11 @@ pub struct FlowPlayApp;
 
 impl DocumentApp for FlowPlayApp {
     type Projection = FlowFixture;
-    type Operation = FlowOperation;
+    type Mutation = FlowMutation;
     type Config = FlowConfig;
-    type ConfigOperation = FlowConfigOperation;
+    type ConfigMutation = FlowConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = FlowCommand;
 
@@ -230,7 +230,7 @@ impl DocumentApp for FlowPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowOperation, FlowConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
@@ -295,20 +295,20 @@ pub fn create_flow_app() -> App {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("addWidget", LocalizedLabel::native("Add Widget", "Widget hinzufügen"))
-            .operation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
+            .mutation("addWidget", LocalizedLabel::native("Add Widget", "Widget hinzufügen"))
+            .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
             // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
-            .operation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
-            .operation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Anschlüsse verbinden"))
-            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
-            .operation("patchFlowWidgets", LocalizedLabel::native("Patch Widgets", "Widgets aktualisieren"))
-            .operation("renameFlowWidget", LocalizedLabel::native("Rename Widget", "Widget umbenennen"))
-            .operation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
-            .operation("spotlightCommit", LocalizedLabel::native("Spotlight Commit", "Spotlight bestätigen"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
+            .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Anschlüsse verbinden"))
+            .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .mutation("patchFlowWidgets", LocalizedLabel::native("Patch Widgets", "Widgets aktualisieren"))
+            .mutation("renameFlowWidget", LocalizedLabel::native("Rename Widget", "Widget umbenennen"))
+            .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
+            .mutation("spotlightCommit", LocalizedLabel::native("Spotlight Commit", "Spotlight bestätigen"))
             // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Mutation) })
             // 👁️ Ephemeral view/config actions — mutate config, emit no document operations.
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
             .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
@@ -499,13 +499,13 @@ mod tests {
             FlowCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
             FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "n1".into(), value: "renamed".into() }),
             FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations: vec![
+                mutations: vec![
                     node_graph::FlowNodeGraphEditOp::SetFixture { fixture_json: "{}".into() },
                     node_graph::FlowNodeGraphEditOp::DeleteSelection,
                     node_graph::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
                 ],
             }),
-            FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![node_graph::FlowNodeGraphEditOp::DeleteSelection] }),
+            FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { mutations: vec![node_graph::FlowNodeGraphEditOp::DeleteSelection] }),
             FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
             FlowCommand::Evaluate(evaluate::Evaluate {}),
             FlowCommand::SelectAll(select_all::SelectAll {}),

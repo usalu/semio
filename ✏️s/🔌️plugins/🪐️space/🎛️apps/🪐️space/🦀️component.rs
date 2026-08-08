@@ -2,7 +2,7 @@
 //! merged at app level).
 //!
 //! 🕳️ Deviation from the usual "general"/"ui" split: the Studio app has no document type of its own —
-//! its `DocumentApp::Projection`/`Operation` are `semio_framework_os::{WorkflowDocument, WorkflowOperation}`,
+//! its `DocumentApp::Projection`/`Mutation` are `semio_framework_os::{WorkflowDocument, WorkflowMutation}`,
 //! owned entirely by `framework/product/os/core/rs` (outside this plugin). There is therefore no
 //! `🗿️artifacts/🪐️space` node anywhere in this crate — this file carries what would otherwise be the
 //! artifact facade's constants (manifest/panel identifiers shared by `engine` config defaults and this
@@ -29,8 +29,8 @@ use crate::apps::space::commands::viewport::{node_graph_hover, node_graph_viewpo
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
-use semio_framework_os::{create_os_id, empty_workflow_document, MediaContract, WorkflowDocument, WorkflowEdge, WorkflowOperation};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
+use semio_framework_os::{create_os_id, empty_workflow_document, MediaContract, WorkflowDocument, WorkflowEdge, WorkflowMutation};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -61,8 +61,8 @@ pub(crate) fn negotiate_connect_or_notify(projection: &WorkflowDocument, source_
     crate::apps::space::engine::negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).map_err(|reason| HostEffect::Notify { message: reason })
 }
 
-pub(crate) fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> WorkflowOperation {
-    WorkflowOperation::ConnectPorts {
+pub(crate) fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> WorkflowMutation {
+    WorkflowMutation::ConnectPorts {
         edge: WorkflowEdge { id: create_os_id("edge"), source_node_id: source_node_id.into(), source_port_id: source_port_id.into(), target_node_id: target_node_id.into(), target_port_id: target_port_id.into(), contract },
     }
 }
@@ -73,12 +73,12 @@ pub(crate) fn primary_selected_node_id(config: &SpaceConfig) -> Option<String> {
     config.selected_node_ids.first().cloned().or_else(|| config.active_node_id.clone())
 }
 
-/// 🔧️ Small pure fold applying a batch of `SpaceConfigOperation`s onto a snapshot — used where a
+/// 🔧️ Small pure fold applying a batch of `SpaceConfigMutation`s onto a snapshot — used where a
 /// command handler needs the POST-command config (not the pre-command `cfg.projection`) to build a
 /// derived side value (the presence broadcast) in the very same call, without reaching back into a
 /// store this pure function doesn't own.
-pub(crate) fn apply_config_operations(config: &SpaceConfig, operations: &[crate::apps::space::config::SpaceConfigOperation]) -> SpaceConfig {
-    use protocol::Operation;
+pub(crate) fn apply_config_mutations(config: &SpaceConfig, operations: &[crate::apps::space::config::SpaceConfigMutation]) -> SpaceConfig {
+    use protocol::Mutation;
     operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc))
 }
 
@@ -97,12 +97,12 @@ struct SPresencePeerLocal {
 
 const S_PRESENCE_STALE_MS: f64 = 15_000.0;
 
-fn presence_refresh_needed(operations: &[crate::apps::space::config::SpaceConfigOperation]) -> bool {
-    use crate::apps::space::config::SpaceConfigOperation;
+fn presence_refresh_needed(operations: &[crate::apps::space::config::SpaceConfigMutation]) -> bool {
+    use crate::apps::space::config::SpaceConfigMutation;
     operations.iter().any(|operation| {
         matches!(
             operation,
-            SpaceConfigOperation::SetClient { .. } | SpaceConfigOperation::SetSelection { .. } | SpaceConfigOperation::Snapshot { .. }
+            SpaceConfigMutation::SetClient { .. } | SpaceConfigMutation::SetSelection { .. } | SpaceConfigMutation::Snapshot { .. }
         )
     })
 }
@@ -199,7 +199,7 @@ fn space_workflow_context_menu_items(
 app_commands! {
     /// 🎯️ `SpaceApp::Command` — the SOLE dispatch surface for the studio app's own behavior, one
     /// variant per action declared in `create_space_app`'s manifest.
-    pub enum SpaceCommand for WorkflowDocument, WorkflowOperation, SpaceConfig, crate::apps::space::config::SpaceConfigOperation {
+    pub enum SpaceCommand for WorkflowDocument, WorkflowMutation, SpaceConfig, crate::apps::space::config::SpaceConfigMutation {
         // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
         "patchParameter" as "patch-parameter" => patch_parameter::PatchParameter,
         "addParameter" as "add-parameter" => add_parameter::AddParameter,
@@ -223,7 +223,7 @@ app_commands! {
         "compiledDagEngagementSubmit" as "compiled-dag-engagement-submit" => compiled_dag_engagement_submit::CompiledDagEngagementSubmit,
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
 
-        // 👁️ Config-only — emit `config_operations`, never document operations.
+        // 👁️ Config-only — emit `config_mutations`, never document operations.
         "setActivePanelTab" as "active-panel-tab" => set_active_panel_tab::SetActivePanelTab,
         "selectInstance" as "select-instance" => select_instance::SelectInstance,
         "nodeGraphSelect" as "node-graph-select" => node_graph_select::NodeGraphSelect,
@@ -257,13 +257,11 @@ app_commands! {
 
 //#region 🔖️SpaceApp
 /// 🧪️ Unit struct — every former `StudioRuntimeState`/`self.config` field now lives in `SpaceConfig`,
-/// written through `SpaceConfigOperation`s. Ephemeral presence heartbeats live on the app instance.
-#[derive(Default)]
-pub #[derive(Default, Clone, Copy)]
-struct SpaceApp;
+/// written through `SpaceConfigMutation`s. Ephemeral presence heartbeats live on the app instance.
+#[derive(Default, Clone, Copy)]
+pub struct SpaceApp;
 
-impl DocumentApp for SpaceApp
-
+impl DocumentApp for SpaceApp {
     fn command_id(command: &SpaceCommand) -> &str {
         command.command_id()
     }
@@ -368,11 +366,11 @@ impl DocumentApp for SpaceApp
         }
     }
 
-    fn handle(command: &SpaceCommand, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &SpaceCommand, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
         let emit = command.dispatch(doc, cfg)?;
-        if presence_refresh_needed(&emit.config_operations) {
-            let next_config = apply_config_operations(cfg.projection, &emit.config_operations);
-            publish_presence(self, &next_config);
+        if presence_refresh_needed(&emit.config_mutations) {
+            let next_config = apply_config_mutations(cfg.projection, &emit.config_mutations);
+            publish_presence(&SpaceApp, &next_config);
         }
         Ok(emit)
     }
@@ -385,7 +383,7 @@ impl DocumentApp for SpaceApp
         // strip it so Space body keys still match.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
-            crate::apps::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::apps::space::modes::main::windows::workflow::render(self, projection, config),
+            crate::apps::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::apps::space::modes::main::windows::workflow::render(&SpaceApp, projection, config),
             crate::apps::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::apps::space::modes::main::windows::media_vfs::render(projection, &config.locale),
             crate::apps::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::apps::space::modes::main::windows::compiled_dag::render(projection),
             S_PLAY_CATALOGUE_BODY_KEY => crate::apps::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)),
@@ -434,27 +432,27 @@ pub fn create_space_app() -> App {
         .panel_tab_def(crate::apps::space::panels::parameters::definition())
         .panel_tab_def(crate::apps::space::panels::inspection::definition())
         .default_layout(space_play_layout())
-        .operation("patchParameter", LocalizedLabel::native("Patch Parameter", "Parameter aktualisieren"))
-        .operation("addParameter", LocalizedLabel::native("Add Parameter", "Parameter hinzufügen"))
-        .operation("removeParameter", LocalizedLabel::native("Remove Parameter", "Parameter entfernen"))
-        .operation("spawnApp", LocalizedLabel::native("Spawn App", "App erzeugen"))
-        .operation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben"))
-        .operation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden"))
-        .operation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen"))
-        .action_with(ActionDefinition::new_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Operation).with_category("selection"))
-        .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-        .action_with(ActionDefinition::new_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Operation).with_category("transfer"))
-        .action_with(ActionDefinition::new_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Operation).with_category("create"))
-        .action_with(ActionDefinition::new_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Operation).with_category("transfer"))
-        .action_with(ActionDefinition::new_catalog("renameAppInstance", LocalizedLabel::native("Rename App Instance", "App-Instanz umbenennen"), ActionKind::Operation).with_category("settings"))
-        .operation("patchMediaNodes", LocalizedLabel::native("Patch Media Nodes", "Medienknoten aktualisieren"))
-        .operation("patchAppInstances", LocalizedLabel::native("Patch App Instances", "App-Instanzen aktualisieren"))
-        .operation("bindParameterField", LocalizedLabel::native("Bind Parameter Field", "Parameterfeld verknüpfen"))
-        .operation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen"))
-        .action_with(ActionDefinition::new_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Operation).with_category("transform"))
-        .operation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen"))
-        .operation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"))
-        .operation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten"))
+        .mutation("patchParameter", LocalizedLabel::native("Patch Parameter", "Parameter aktualisieren"))
+        .mutation("addParameter", LocalizedLabel::native("Add Parameter", "Parameter hinzufügen"))
+        .mutation("removeParameter", LocalizedLabel::native("Remove Parameter", "Parameter entfernen"))
+        .mutation("spawnApp", LocalizedLabel::native("Spawn App", "App erzeugen"))
+        .mutation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben"))
+        .mutation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden"))
+        .mutation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen"))
+        .action_with(ActionDefinition::new_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Mutation).with_category("selection"))
+        .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+        .action_with(ActionDefinition::new_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Mutation).with_category("transfer"))
+        .action_with(ActionDefinition::new_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Mutation).with_category("create"))
+        .action_with(ActionDefinition::new_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Mutation).with_category("transfer"))
+        .action_with(ActionDefinition::new_catalog("renameAppInstance", LocalizedLabel::native("Rename App Instance", "App-Instanz umbenennen"), ActionKind::Mutation).with_category("settings"))
+        .mutation("patchMediaNodes", LocalizedLabel::native("Patch Media Nodes", "Medienknoten aktualisieren"))
+        .mutation("patchAppInstances", LocalizedLabel::native("Patch App Instances", "App-Instanzen aktualisieren"))
+        .mutation("bindParameterField", LocalizedLabel::native("Bind Parameter Field", "Parameterfeld verknüpfen"))
+        .mutation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen"))
+        .action_with(ActionDefinition::new_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Mutation).with_category("transform"))
+        .mutation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen"))
+        .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"))
+        .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten"))
         .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
         .view_action("selectInstance", LocalizedLabel::native("Select Instance", "Instanz auswählen"))
         .view_action("nodeGraphSelect", LocalizedLabel::native("Select Graph Node", "Graphknoten auswählen"))
@@ -535,7 +533,7 @@ pub fn create_space_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
-    use semio_framework_os::{apply_workflow_operation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
+    use semio_framework_os::{apply_workflow_mutation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
     use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel, SurfaceKind};
 
     pub(crate) fn empty_history() -> HistoryView {
@@ -546,7 +544,7 @@ pub(crate) mod testkit {
 
     
 
-    pub(crate) fn studio_emit(projection: &WorkflowDocument, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation>, Fault> {
+    pub(crate) fn studio_emit(projection: &WorkflowDocument, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation>, Fault> {
         STUDIO_TEST_APP.with(|app| {
             let history = empty_history();
             let doc = DocumentView { projection, history: &history };
@@ -560,13 +558,13 @@ pub(crate) mod testkit {
     }
 
     /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).
-    pub(crate) fn apply_operations(projection: &WorkflowDocument, operations: &[WorkflowOperation]) -> WorkflowDocument {
-        operations.iter().fold(projection.clone(), |current, operation| apply_workflow_operation(&current, operation))
+    pub(crate) fn apply_mutations(projection: &WorkflowDocument, operations: &[WorkflowMutation]) -> WorkflowDocument {
+        operations.iter().fold(projection.clone(), |current, operation| apply_workflow_mutation(&current, operation))
     }
 
     /// 📽️ Folds studio config operations onto a config snapshot the way the store would.
-    pub(crate) fn apply_config(config: &SpaceConfig, operations: &[crate::apps::space::config::SpaceConfigOperation]) -> SpaceConfig {
-        apply_config_operations(config, operations)
+    pub(crate) fn apply_config(config: &SpaceConfig, operations: &[crate::apps::space::config::SpaceConfigMutation]) -> SpaceConfig {
+        apply_config_mutations(config, operations)
     }
 
     fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) {
@@ -685,7 +683,7 @@ mod tests {
         let after_first = app.projection().expect("projection").graph.nodes.len();
         assert!(after_first > before);
         let files = app.document_pack().expect("document pack");
-        let parsed: store::ParsedDocumentText<WorkflowDocument, WorkflowOperation> = store::parse_document_pack(&files.pack, &files.spr).expect("parse document pack");
+        let parsed: store::ParsedDocumentText<WorkflowDocument, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).expect("parse document pack");
         let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
         app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn2");
         assert!(app.projection().expect("projection").graph.nodes.len() > after_first);

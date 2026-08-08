@@ -1,7 +1,7 @@
 dialect protocol
 protocol 2d.spr
 version 1
-schema fem.2d.operation
+schema fem.2d.mutation
 start record
 framing record
 record fem.2d-add-node tag 1

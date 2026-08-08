@@ -1,4 +1,4 @@
-//! 🔺️ `trinity.graph` artifact — diff structs + `OperationDiff` impl (constitutional: diff).
+//! 🔺️ `trinity.graph` artifact — diff structs + `MutationDiff` impl (constitutional: diff).
 
 
 //#region 📖️SemioGrammar
@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::jack::{GraphFixture, Node, PropertyValue};
-use protocol::OperationDiff;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 use vcs::{CollectionDiff, ItemPatch};
 
@@ -43,7 +43,7 @@ pub struct TrinityGraphDiff {
     pub recompute_derived: bool,
 }
 
-impl OperationDiff<GraphFixture> for TrinityGraphDiff {
+impl MutationDiff<GraphFixture> for TrinityGraphDiff {
     fn apply(&self, projection: &GraphFixture) -> GraphFixture {
         let mut next = self.set_fixture.clone().unwrap_or_else(|| projection.clone());
         for id in &self.nodes.removed {

@@ -1,8 +1,8 @@
 //! 🖼️ S Studio app — per-instance media export/import commands.
 
-use crate::apps::space::config::{SpaceConfig, SpaceConfigOperation};
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::apps::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
-use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, OsMediaFormat, WorkflowDocument, WorkflowOperation};
+use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, OsMediaFormat, WorkflowDocument, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde_json::{json, Value};
 
@@ -18,7 +18,7 @@ pub mod export_media {
         pub format: String,
     }
 
-    pub fn handle(payload: &ExportMedia, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &ExportMedia, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let projection = doc.projection;
         match projection.graph.nodes.iter().find(|row| row.id == payload.node_id) {
             Some(node) => {
@@ -50,9 +50,9 @@ pub mod import_media {
         pub format: String,
     }
 
-    pub fn handle(payload: &ImportMedia, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportMedia, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         Ok(Emit {
-            config_operations: vec![SpaceConfigOperation::SetPendingImport { node_id: Some(payload.node_id.clone()), format: Some(payload.format.clone()) }],
+            config_mutations: vec![SpaceConfigMutation::SetPendingImport { node_id: Some(payload.node_id.clone()), format: Some(payload.format.clone()) }],
             effects: vec![HostEffect::RequestFileOpen { accept: format!(".{}", payload.format), read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
             ..Default::default()
         })
@@ -71,11 +71,11 @@ pub mod import_media_payload {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportMediaPayload, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportMediaPayload, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let config = cfg.projection;
-        let mut config_operations = Vec::new();
+        let mut config_mutations = Vec::new();
         if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.clone(), config.pending_import_format.clone()) {
-            config_operations.push(SpaceConfigOperation::SetPendingImport { node_id: None, format: None });
+            config_mutations.push(SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
             if let Some(format) = OsMediaFormat::parse(&format_name) {
                 use base64::Engine;
                 let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
@@ -90,7 +90,7 @@ pub mod import_media_payload {
                 }
             }
         }
-        Ok(Emit::config(config_operations))
+        Ok(Emit::config(config_mutations))
     }
 }
 //#endregion 🔖️ImportMediaPayload
@@ -139,11 +139,11 @@ mod tests {
 
         let import = studio_emit(&projection, &config, &SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: node.id.clone(), format: "dwg".into() })).expect("handle");
         assert!(import.effects.iter().any(|effect| matches!(effect, HostEffect::RequestFileOpen { import_action, .. } if import_action == "importMediaPayload")));
-        assert_eq!(import.config_operations, vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node.id), format: Some("dwg".into()) }]);
+        assert_eq!(import.config_mutations, vec![SpaceConfigMutation::SetPendingImport { node_id: Some(node.id), format: Some("dwg".into()) }]);
 
-        let pending_config = apply_config(&config, &import.config_operations);
+        let pending_config = apply_config(&config, &import.config_mutations);
         let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).expect("handle");
-        assert!(payload.document_operations.is_empty());
+        assert!(payload.document_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

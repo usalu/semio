@@ -454,7 +454,7 @@ pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<Ca
     CadPaneId::all().into_iter().find(|pane| pane.model_definition_id() == model_definition_id)
 }
 
-/// 🪆️ `Box<CadProjection>` needs its own `dsl::DslField` binding for `CadOperation::SetScene` — `Box` is
+/// 🪆️ `Box<CadProjection>` needs its own `dsl::DslField` binding for `CadMutation::SetScene` — `Box` is
 /// `#[fundamental]` in `std`, so implementing a foreign trait (`dsl::DslField`) for `Box<CadProjection>`
 /// (a local type inside the foreign, fundamental `Box` wrapper) is permitted by the orphan rules;
 /// this delegates entirely to `CadProjection`'s own derive-generated `DslField` impl (from `DslDocument`).

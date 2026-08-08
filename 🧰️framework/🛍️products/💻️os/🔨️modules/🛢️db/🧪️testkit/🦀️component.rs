@@ -39,7 +39,7 @@ use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorag
 /// cryptography) — the same seed always produces the same draw sequence, matching `pack_testkit`'s
 /// `RecordValueGen` precedent (this crate hand-rolls its own rather than depending on
 /// `pack_testkit`'s, since that generator is `dsl_schema::RecordSpec`-shaped, not
-/// `protocol::OperationEnvelope`-shaped).
+/// `protocol::MutationEnvelope`-shaped).
 #[derive(Clone, Debug)]
 pub struct SplitMix64(u64);
 
@@ -69,7 +69,7 @@ impl SplitMix64 {
 
 //#region 🔖️Generators
 /// @emoji 🎲️ Deterministic seeded fabricator for the primitive pieces of a `protocol::
-/// OperationEnvelope` (paths, actors, JSON values, operation ids) — the unit `WorkloadGen` builds
+/// MutationEnvelope` (paths, actors, JSON values, operation ids) — the unit `WorkloadGen` builds
 /// whole envelopes from.
 pub struct CommandGen {
     rng: SplitMix64,
@@ -99,13 +99,13 @@ impl CommandGen {
     /// @emoji 🆔️ A fresh, seed-derived but still call-order-unique operation id — unique because
     /// `counter` (not just the rng draw) is folded in, so two draws never collide even if the rng
     /// itself repeats within one generator's lifetime.
-    pub fn next_operation_id(&mut self) -> protocol::OperationId {
+    pub fn next_operation_id(&mut self) -> protocol::MutationId {
         self.counter += 1;
-        protocol::OperationId(format!("gen-{:016x}-{}", self.rng.next_u64(), self.counter))
+        protocol::MutationId(format!("gen-{:016x}-{}", self.rng.next_u64(), self.counter))
     }
 }
 
-/// @emoji 🎲️ Builds whole, self-contained `protocol::OperationEnvelope` sequences from `CommandGen`
+/// @emoji 🎲️ Builds whole, self-contained `protocol::MutationEnvelope` sequences from `CommandGen`
 /// — the unit the law assertions and `CrashHarness` drive as their workload.
 pub struct WorkloadGen(CommandGen);
 
@@ -119,7 +119,7 @@ impl WorkloadGen {
     /// given `seed`, and disjoint so the final materialized state never depends on submit order,
     /// which is exactly the property `assert_sync_convergence`/`SimRuntime`'s interleaving tests
     /// need from their workload.
-    pub fn disjoint_batch(&mut self, document: &protocol::DocumentId, count: usize) -> Vec<protocol::OperationEnvelope> {
+    pub fn disjoint_batch(&mut self, document: &protocol::DocumentId, count: usize) -> Vec<protocol::MutationEnvelope> {
         (0..count)
             .map(|index| {
                 let path = format!("path-{index}");
@@ -129,13 +129,13 @@ impl WorkloadGen {
                 payload.insert(path.clone(), value);
                 let mut inverse_payload = serde_json::Map::with_capacity(1);
                 inverse_payload.insert(path, serde_json::Value::Null);
-                protocol::OperationEnvelope {
-                    operation_id: protocol::OperationId(format!("wg-{index}")),
+                protocol::MutationEnvelope {
+                    mutation_id: protocol::MutationId(format!("wg-{index}")),
                     document_id: document.clone(),
                     actor,
                     dependencies: Vec::new(),
                     diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-                    inverse: protocol::InverseOperation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
+                    inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
                     timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
                 }
             })
@@ -573,7 +573,7 @@ fn storage_as_dyn(storage: Arc<FaultStorage>) -> Arc<dyn DbStorage> {
     storage
 }
 
-fn run_workload_against(document: &protocol::DocumentId, ops: &[protocol::OperationEnvelope], storage: Arc<dyn DbStorage>) {
+fn run_workload_against(document: &protocol::DocumentId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
     let mut engine = db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
     for (i, envelope) in ops.iter().enumerate() {
         let batch = db_document::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
@@ -583,7 +583,7 @@ fn run_workload_against(document: &protocol::DocumentId, ops: &[protocol::Operat
 
 /// @emoji 💥️ Like `run_workload_against`, but stops silently at the first injected fault instead of
 /// panicking — the fault IS the point, simulating a crash mid-workload.
-fn run_workload_until_fault(document: &protocol::DocumentId, ops: &[protocol::OperationEnvelope], storage: Arc<dyn DbStorage>) {
+fn run_workload_until_fault(document: &protocol::DocumentId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
     let created = db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0);
     let mut engine = match created {
         Ok(engine) => engine,
@@ -597,7 +597,7 @@ fn run_workload_until_fault(document: &protocol::DocumentId, ops: &[protocol::Op
     }
 }
 
-fn recovered_state_matches_prefix(recovered: &db_document::DocumentEngine, ops: &[protocol::OperationEnvelope], expected_committed: usize) -> bool {
+fn recovered_state_matches_prefix(recovered: &db_document::DocumentEngine, ops: &[protocol::MutationEnvelope], expected_committed: usize) -> bool {
     if recovered.frontier().head_seq != expected_committed as u64 {
         return false;
     }
@@ -619,7 +619,7 @@ fn temp_dir(name: &str) -> std::path::PathBuf {
     dir
 }
 
-fn single_envelope_batch(envelope: protocol::OperationEnvelope) -> db_document::CommandBatch {
+fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_document::CommandBatch {
     db_document::CommandBatch::new(vec![envelope]).expect("testkit: single-envelope batch")
 }
 
@@ -731,7 +731,7 @@ impl db_projection::ProjectionClass for CountingProjection {
         0
     }
 
-    fn apply(&self, state: &u64, _envelope: &protocol::OperationEnvelope, _deps: &db_projection::DepView) -> Result<u64, DbError> {
+    fn apply(&self, state: &u64, _envelope: &protocol::MutationEnvelope, _deps: &db_projection::DepView) -> Result<u64, DbError> {
         Ok(state + 1)
     }
 }
@@ -767,18 +767,18 @@ pub fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: usize) 
     }
 }
 
-fn schema_erased_envelope(document: &protocol::DocumentId, operation_id: &str, actor: &str, path: &str, forward: serde_json::Value, inverse: serde_json::Value) -> protocol::OperationEnvelope {
+fn schema_erased_envelope(document: &protocol::DocumentId, mutation_id: &str, actor: &str, path: &str, forward: serde_json::Value, inverse: serde_json::Value) -> protocol::MutationEnvelope {
     let mut payload = serde_json::Map::with_capacity(1);
     payload.insert(path.to_string(), forward);
     let mut inverse_payload = serde_json::Map::with_capacity(1);
     inverse_payload.insert(path.to_string(), inverse);
-    protocol::OperationEnvelope {
-        operation_id: protocol::OperationId(operation_id.to_string()),
+    protocol::MutationEnvelope {
+        mutation_id: protocol::MutationId(mutation_id.to_string()),
         document_id: document.clone(),
         actor: protocol::ActorId(actor.to_string()),
         dependencies: Vec::new(),
         diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-        inverse: protocol::InverseOperation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
     }
 }
@@ -795,16 +795,16 @@ pub fn assert_inverse_undo_roundtrip(seed: u64) {
     let path = CommandGen::new(seed).random_path();
     let forward_value = serde_json::json!(seed % 1000);
     let envelope = schema_erased_envelope(&document, "op-forward", "actor-1", &path, forward_value.clone(), serde_json::Value::Null);
-    let target = envelope.operation_id.clone();
+    let target = envelope.mutation_id.clone();
     engine.submit(single_envelope_batch(envelope), db_document::SubmitOptions::default(), 1).expect("submit forward");
 
     let after_forward: serde_json::Value = serde_json::from_slice(&engine.get(&path).expect("forward value present")).expect("json");
     assert_eq!(after_forward, forward_value);
 
-    engine.undo(&target, protocol::OperationId("op-undo".to_string()), protocol::ActorId("actor-1".to_string()), 2).expect("undo");
+    engine.undo(&target, protocol::MutationId("op-undo".to_string()), protocol::ActorId("actor-1".to_string()), 2).expect("undo");
     assert!(engine.get(&path).is_none(), "undo must apply the recorded inverse — path deleted");
 
-    engine.undo(&protocol::OperationId("op-undo".to_string()), protocol::OperationId("op-redo".to_string()), protocol::ActorId("actor-1".to_string()), 3).expect("redo (undo of undo)");
+    engine.undo(&protocol::MutationId("op-undo".to_string()), protocol::MutationId("op-redo".to_string()), protocol::ActorId("actor-1".to_string()), 3).expect("redo (undo of undo)");
     let after_redo: serde_json::Value = serde_json::from_slice(&engine.get(&path).expect("redo value present")).expect("json");
     assert_eq!(after_redo, forward_value, "undoing the undo (redo) must restore the exact original value — inverse-of-inverse roundtrip");
 }
@@ -1014,7 +1014,7 @@ mod tests {
             let mut runtime = SimRuntime::new(seed);
             for (i, envelope) in ops.into_iter().enumerate() {
                 let engine = engine.clone();
-                runtime.schedule(envelope.operation_id.0.clone(), move |clock| {
+                runtime.schedule(envelope.mutation_id.0.clone(), move |clock| {
                     let now = clock.now_ms() + i as u64;
                     engine.borrow_mut().submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: DurabilityClass::Fsync }, now).expect("submit");
                 });

@@ -6959,6 +6959,7 @@ dependencies = [
  "pollster",
  "rayon",
  "semio-framework",
+ "semio-framework-os-kernel",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7018,6 +7019,7 @@ name = "semio-s-plugin-animate"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "blake3",
  "comemo",
  "ecow",
  "fontdb",
@@ -7353,7 +7355,9 @@ dependencies = [
 name = "semio-s-plugin-forms"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "semio-framework",
+ "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
@@ -7521,6 +7525,7 @@ dependencies = [
 name = "semio-s-plugin-note"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7533,8 +7538,11 @@ dependencies = [
 name = "semio-s-plugin-playbook"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
+ "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-ui",
  "serde",
  "serde_json",
 ]
@@ -7640,6 +7648,7 @@ dependencies = [
 name = "semio-s-plugin-puzzle"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "nalgebra 0.33.3",
  "parry3d",
  "semio-framework",
@@ -7659,6 +7668,7 @@ dependencies = [
 name = "semio-s-plugin-raster"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "semio-framework",
  "semio-framework-os",
  "semio-framework-os-kernel",

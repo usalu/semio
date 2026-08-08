@@ -1,7 +1,7 @@
 dialect protocol
 protocol cad.spr
 version 1
-schema cad.scene.operation.v2
+schema cad.scene.mutation.v2
 start record
 framing record
 field format u8

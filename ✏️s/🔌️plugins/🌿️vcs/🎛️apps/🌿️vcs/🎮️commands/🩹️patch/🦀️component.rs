@@ -1,45 +1,45 @@
 //! 🩹️ VCS play app commands — projection field patches and whole-document JSON edits.
 
-use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigOperation};
-use crate::artifacts::vcs::{op::VcsDemoOperation, VcsDemoProjection};
+use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
+use crate::artifacts::vcs::{op::VcsDemoMutation, VcsDemoProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Helpers
-/// 🩹️ Builds the `VcsDemoOperation` for a `patchProjection` field write — mirrors
+/// 🩹️ Builds the `VcsDemoMutation` for a `patchProjection` field write — mirrors
 /// `shooting_ui::shot_patch_for_field`'s string-keyed field dispatch.
-fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoOperation> {
+fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoMutation> {
     match field {
-        "title" => Some(VcsDemoOperation::SetTitle { title: value.into() }),
-        "counter" => value.parse::<i64>().ok().map(|counter| VcsDemoOperation::SetCounter { counter }),
-        "status" => Some(VcsDemoOperation::SetStatus { status: value.into() }),
-        "notes" => Some(VcsDemoOperation::SetNotes { notes: value.into() }),
+        "title" => Some(VcsDemoMutation::SetTitle { title: value.into() }),
+        "counter" => value.parse::<i64>().ok().map(|counter| VcsDemoMutation::SetCounter { counter }),
+        "status" => Some(VcsDemoMutation::SetStatus { status: value.into() }),
+        "notes" => Some(VcsDemoMutation::SetNotes { notes: value.into() }),
         _ => None,
     }
 }
 
-fn vcs_demo_projection_diff_operations(current: &VcsDemoProjection, next: &VcsDemoProjection) -> Vec<VcsDemoOperation> {
+fn vcs_demo_projection_diff_operations(current: &VcsDemoProjection, next: &VcsDemoProjection) -> Vec<VcsDemoMutation> {
     let mut operations = Vec::new();
     if next.title != current.title {
-        operations.push(VcsDemoOperation::SetTitle { title: next.title.clone() });
+        operations.push(VcsDemoMutation::SetTitle { title: next.title.clone() });
     }
     if next.counter != current.counter {
-        operations.push(VcsDemoOperation::SetCounter { counter: next.counter });
+        operations.push(VcsDemoMutation::SetCounter { counter: next.counter });
     }
     if next.status != current.status {
-        operations.push(VcsDemoOperation::SetStatus { status: next.status.clone() });
+        operations.push(VcsDemoMutation::SetStatus { status: next.status.clone() });
     }
     if next.notes != current.notes {
-        operations.push(VcsDemoOperation::SetNotes { notes: next.notes.clone() });
+        operations.push(VcsDemoMutation::SetNotes { notes: next.notes.clone() });
     }
     for tag in &next.tags {
         if !current.tags.contains(tag) {
-            operations.push(VcsDemoOperation::AddTag { tag: tag.clone() });
+            operations.push(VcsDemoMutation::AddTag { tag: tag.clone() });
         }
     }
     for tag in &current.tags {
         if !next.tags.contains(tag) {
-            operations.push(VcsDemoOperation::RemoveTag { tag: tag.clone() });
+            operations.push(VcsDemoMutation::RemoveTag { tag: tag.clone() });
         }
     }
     operations
@@ -57,9 +57,9 @@ pub mod patch_projection {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchProjection, _doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault> {
+    pub fn handle(payload: &PatchProjection, _doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         match vcs_patch_operation_for_field(&payload.field, &payload.value) {
-            Some(operation) => Ok(Emit::operations(vec![operation])),
+            Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }
     }
@@ -76,7 +76,7 @@ pub mod text_edit {
         pub text: String,
     }
 
-    pub fn handle(payload: &TextEdit, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault> {
+    pub fn handle(payload: &TextEdit, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(text_edit_operations(&payload.text, doc.projection))
     }
 }
@@ -93,7 +93,7 @@ pub mod edit {
         pub text: String,
     }
 
-    pub fn handle(payload: &Edit, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault> {
+    pub fn handle(payload: &Edit, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
         Ok(text_edit_operations(&payload.text, doc.projection))
     }
 }
@@ -101,14 +101,14 @@ pub mod edit {
 
 /// 🧩️ The former `TextEdit`/`Edit` match arm body, shared by both payload modules: parses the given
 /// text as a whole `VcsDemoProjection` and emits the diff against the current one.
-fn text_edit_operations(text: &str, current: &VcsDemoProjection) -> Emit<VcsDemoOperation, VcsDemoConfigOperation> {
+fn text_edit_operations(text: &str, current: &VcsDemoProjection) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
     match serde_json::from_str::<VcsDemoProjection>(text) {
         Ok(next_projection) => {
             let operations = vcs_demo_projection_diff_operations(current, &next_projection);
             if operations.is_empty() {
                 Emit::default()
             } else {
-                Emit::operations(operations)
+                Emit::mutations(operations)
             }
         }
         Err(_) => Emit::default(),
@@ -144,7 +144,7 @@ mod tests {
         edited.tags.push("edited-in-place".into());
         let text = serde_json::to_string_pretty(&edited).unwrap();
         let result = dispatch(&mut instance, VcsCommand::TextEdit(text_edit::TextEdit { text }));
-        assert!(!result.operations.is_empty());
+        assert!(!result.document_mutations.is_empty());
         let after = instance.projection().expect("materialize projection");
         assert_eq!(after.title, "Edited via JSON");
         assert_eq!(after.counter, before.counter + 41);
@@ -159,7 +159,7 @@ mod tests {
         edited.status = "reviewed".into();
         let text = serde_json::to_string(&edited).unwrap();
         let result = dispatch(&mut instance, VcsCommand::Edit(edit::Edit { text }));
-        assert!(!result.operations.is_empty());
+        assert!(!result.document_mutations.is_empty());
         assert_eq!(instance.projection().expect("materialize projection").status, "reviewed");
     }
 }

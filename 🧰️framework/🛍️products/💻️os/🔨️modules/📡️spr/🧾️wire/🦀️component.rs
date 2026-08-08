@@ -66,7 +66,7 @@ pub const REC_DOC: u8 = 0x01;
 pub const REC_ACTOR_DICT: u8 = 0x02;
 /// @emoji 🔤️ A delta into the general string dictionary.
 pub const REC_STR_DICT: u8 = 0x03;
-/// @emoji ✏️ One edit (a batch of forward ops, optionally backwards ops + explicit meta).
+/// @emoji ✏️ One edit (a batch of forward ops, optionally inverse ops + explicit meta).
 pub const REC_EDIT: u8 = 0x04;
 /// @emoji 💾️ One named change (a save point referencing edits).
 pub const REC_CHANGE: u8 = 0x05;
@@ -185,7 +185,7 @@ pub enum ConflictRule {
 
 //#region 🔖️StateClass
 // New: the explicit persistent/shared-ui/local-ui/preview/effect separation the db spec requires.
-// Carried on OperationDescriptor (protocol_command) and on wire envelopes (protocol_wire).
+// Carried on MutationDescriptor (protocol_command) and on wire envelopes (protocol_wire).
 
 /// @emoji 🗂️ Which durability/visibility class an operation's diffs belong to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -646,10 +646,10 @@ mod tests {
     //#region 🔖️Identifiers
     #[test]
     fn identifier_newtypes_serde_round_trip_transparently() {
-        let op = OperationId("op-1".to_string());
+        let op = MutationId("op-1".to_string());
         let json = serde_json::to_string(&op).unwrap();
         assert_eq!(json, "\"op-1\"");
-        assert_eq!(serde_json::from_str::<OperationId>(&json).unwrap(), op);
+        assert_eq!(serde_json::from_str::<MutationId>(&json).unwrap(), op);
 
         let version = DocumentVersion(42);
         let json = serde_json::to_string(&version).unwrap();

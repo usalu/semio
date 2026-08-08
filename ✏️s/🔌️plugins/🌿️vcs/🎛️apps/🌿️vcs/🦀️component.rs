@@ -8,13 +8,13 @@
 //! `definition()` per node.
 
 use crate::apps::vcs::commands::{canvas, counter, locale, patch, selection};
-use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigOperation};
+use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::apps::vcs::modes::edit;
 use crate::apps::vcs::modes::edit::windows::{editor, history};
 use crate::apps::vcs::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::vcs::terminology::vcs_play_labels;
-use crate::artifacts::vcs::{op::VcsDemoOperation, VcsDemoProjection, VCS_DEMO_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use crate::artifacts::vcs::{op::VcsDemoMutation, VcsDemoProjection, VCS_DEMO_SCHEMA};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
 use store::{DocumentCommand, DocumentStore};
@@ -41,14 +41,14 @@ semio_framework_plugin::app_commands! {
     /// (see `shooting_protocol::ShootingCommand`'s identical doc). Field shapes mirror each action's old
     /// JSON `args` object exactly. **Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.**
-    pub enum VcsCommand for VcsDemoProjection, VcsDemoOperation, VcsDemoConfig, VcsDemoConfigOperation {
+    pub enum VcsCommand for VcsDemoProjection, VcsDemoMutation, VcsDemoConfig, VcsDemoConfigMutation {
         "incrementCounter" as "increment-counter" => increment_counter::IncrementCounter,
         "patchProjection" as "patch-projection" => patch_projection::PatchProjection,
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "edit" as "edit" => edit_command::Edit,
         "setSelection" as "set-selection" => set_selection::SetSelection,
         "setLocale" as "locale" => set_locale::SetLocale,
-        "noOperation" as "no-operation" => no_operation::NoOperation,
+        "noMutation" as "no-operation" => no_operation::NoMutation,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "canvasPointerUp" as "canvas-pointer-up" => canvas_pointer_up::CanvasPointerUp,
@@ -78,77 +78,77 @@ fn demo_authors() -> Vec<vcs_kernel::Author> {
 /// whole point is exercising the history UI (swimlane graph, checkpoints, alternatives, undo/redo),
 /// so its "initial document" is itself a populated history, not a bare projection. Dispatched via
 /// `DocumentApp::seed`, called once by `VcsDocumentApp::new` right after store construction.
-fn seed_vcs_demo_history(store: &mut DocumentStore<VcsDemoProjection, VcsDemoOperation>) {
+fn seed_vcs_demo_history(store: &mut DocumentStore<VcsDemoProjection, VcsDemoMutation>) {
     let authors = demo_authors();
     let alice = authors[0].clone();
     let bob = authors[1].clone();
     let carol = authors[2].clone();
-    let last_checkpoint_id = |store: &DocumentStore<VcsDemoProjection, VcsDemoOperation>| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
+    let last_checkpoint_id = |store: &DocumentStore<VcsDemoProjection, VcsDemoMutation>| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
 
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetCounter { counter: 1 }, VcsDemoOperation::SetTitle { title: "VCS Demo".into() }], description: Some("bootstrap".into()) });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 1 }, VcsDemoMutation::SetTitle { title: "VCS Demo".into() }], description: Some("bootstrap".into()) });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Bootstrap".into()), authors: vec![alice.clone()] });
     let c1 = last_checkpoint_id(store);
 
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetNotes { notes: "main line".into() }, VcsDemoOperation::SetStatus { status: "draft".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetNotes { notes: "main line".into() }, VcsDemoMutation::SetStatus { status: "draft".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Annotate main draft".into()), authors: vec![alice.clone(), bob.clone()] });
     let c2 = last_checkpoint_id(store);
 
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetCounter { counter: 2 }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 2 }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Main milestone".into()), authors: vec![alice.clone(), bob.clone(), carol.clone()] });
     let c3 = last_checkpoint_id(store);
 
     let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
     let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetTitle { title: "Feature A".into() }, VcsDemoOperation::AddTag { tag: "feature-a".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Feature A".into() }, VcsDemoMutation::AddTag { tag: "feature-a".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Start feature A".into()), authors: vec![alice.clone()] });
     let c4 = last_checkpoint_id(store);
     let feature_a_id = store.envelope().active_alternative_id.clone().expect("feature-a alternative id");
 
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetCounter { counter: 10 }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 10 }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Feature A progress".into()), authors: vec![alice.clone(), bob.clone()] });
 
     let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
     let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "feature-b".into() });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetTitle { title: "Feature B".into() }, VcsDemoOperation::SetNotes { notes: "branch b".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Feature B".into() }, VcsDemoMutation::SetNotes { notes: "branch b".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Start feature B".into()), authors: vec![bob.clone()] });
     let feature_b_id = store.envelope().active_alternative_id.clone().expect("feature-b alternative id");
 
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetCounter { counter: 20 }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 20 }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Feature B try".into()), authors: vec![bob.clone(), carol.clone()] });
 
     let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c3 });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetStatus { status: "active".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetStatus { status: "active".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Resume main".into()), authors: vec![carol.clone()] });
     let c8 = last_checkpoint_id(store);
 
     let _ = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: feature_a_id });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetCounter { counter: 11 }, VcsDemoOperation::AddTag { tag: "wip".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 11 }, VcsDemoMutation::AddTag { tag: "wip".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Feature A sprint".into()), authors: vec![alice.clone(), carol.clone()] });
 
     let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c4 });
     let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a-hotfix".into() });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetStatus { status: "hotfix".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetStatus { status: "hotfix".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Hotfix off feature A".into()), authors: vec![bob.clone()] });
 
     let _ = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: feature_b_id });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::AddTag { tag: "review".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::AddTag { tag: "review".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Feature B review".into()), authors: vec![bob.clone()] });
 
     let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c8 });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetCounter { counter: 3 }, VcsDemoOperation::SetNotes { notes: "main polish".into() }, VcsDemoOperation::AddTag { tag: "release".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 3 }, VcsDemoMutation::SetNotes { notes: "main polish".into() }, VcsDemoMutation::AddTag { tag: "release".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Main batch polish".into()), authors: vec![alice.clone(), bob.clone(), carol.clone()] });
 
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetStatus { status: "done".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetStatus { status: "done".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Main release".into()), authors: vec![alice] });
 
     let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c2 });
     let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "docs".into() });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetNotes { notes: "documentation pass".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetNotes { notes: "documentation pass".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Docs branch".into()), authors: vec![carol.clone()] });
 
     let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c1 });
     let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "spike".into() });
-    let _ = store.dispatch(DocumentCommand::Apply { operations: vec![VcsDemoOperation::SetTitle { title: "Spike prototype".into() }], description: None });
+    let _ = store.dispatch(DocumentCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Spike prototype".into() }], description: None });
     let _ = store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("Spike experiment".into()), authors: vec![bob, carol] });
 }
 //#endregion 🔖️DocumentHelpers
@@ -156,17 +156,17 @@ fn seed_vcs_demo_history(store: &mut DocumentStore<VcsDemoProjection, VcsDemoOpe
 //#region 🔖️VcsPlayApp
 /// 🧪️ B1: unit struct — the former `VcsPlayApp::selected_checkpoint_ids` `RefCell` field now lives in
 /// `crate::apps::vcs::config::VcsDemoConfig` (see `DocumentApp::Config`), written through
-/// `VcsDemoConfigOperation`s.
+/// `VcsDemoConfigMutation`s.
 #[derive(Default)]
 pub struct VcsPlayApp;
 
 impl DocumentApp for VcsPlayApp {
     type Projection = VcsDemoProjection;
-    type Operation = VcsDemoOperation;
+    type Mutation = VcsDemoMutation;
     type Config = VcsDemoConfig;
-    type ConfigOperation = VcsDemoConfigOperation;
+    type ConfigMutation = VcsDemoConfigMutation;
     type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
+    type DraftMutation = NoDraftMutation;
 
     type Command = VcsCommand;
 
@@ -177,7 +177,7 @@ impl DocumentApp for VcsPlayApp {
         crate::artifacts::vcs::engine::empty_vcs_demo_projection()
     }
 
-    fn seed(store: &mut DocumentStore<VcsDemoProjection, VcsDemoOperation>) {
+    fn seed(store: &mut DocumentStore<VcsDemoProjection, VcsDemoMutation>) {
         seed_vcs_demo_history(store);
     }
 
@@ -188,7 +188,7 @@ impl DocumentApp for VcsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &VcsCommand, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &VcsCommand, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -220,12 +220,12 @@ pub fn create_vcs_app() -> App {
             .window_kind_def(history::definition())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .operation("incrementCounter", LocalizedLabel::native("Increment Counter", "Zähler erhöhen"))
-            .operation("patchProjection", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
-            .operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"))
-            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .mutation("incrementCounter", LocalizedLabel::native("Increment Counter", "Zähler erhöhen"))
+            .mutation("patchProjection", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
+            .mutation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"))
+            .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("noOperation", LocalizedLabel::native("No-operation", "Keine Aktion"))
+            .view_action("noMutation", LocalizedLabel::native("No-operation", "Keine Aktion"))
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
             .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
             .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
@@ -274,9 +274,9 @@ pub(crate) mod testkit {
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    pub fn seeded_envelope(instance: &VcsApp) -> DocumentEnvelope<VcsDemoProjection, VcsDemoOperation> {
+    pub fn seeded_envelope(instance: &VcsApp) -> DocumentEnvelope<VcsDemoProjection, VcsDemoMutation> {
         let files = instance.document_pack().expect("document pack");
-        store::parse_document_pack::<VcsDemoProjection, VcsDemoOperation>(&files.pack, &files.spr).expect("parse document pack").envelope
+        store::parse_document_pack::<VcsDemoProjection, VcsDemoMutation>(&files.pack, &files.spr).expect("parse document pack").envelope
     }
 }
 //#endregion 🧪️Testkit
@@ -340,7 +340,7 @@ mod tests {
             VcsCommand::Edit(edit_command::Edit { text: "{}".into() }),
             VcsCommand::SetSelection(set_selection::SetSelection { ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] }),
             VcsCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            VcsCommand::NoOperation(no_operation::NoOperation {}),
+            VcsCommand::NoMutation(no_operation::NoMutation {}),
             VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
             VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {}),
             VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
@@ -402,7 +402,7 @@ mod tests {
         let children_of_root_before = envelope_before.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
 
         let checkout = instance.handle_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": root_checkpoint_id })), &meta("local")).expect("checkout");
-        assert!(checkout.operations.is_empty(), "history actions never emit KernelOperations");
+        assert!(checkout.operations.is_empty(), "history actions never emit KernelMutations");
 
         dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
         instance.handle_action("commitCheckpoint", Some(&serde_json::json!({ "message": "forked from root" })), &meta("local")).expect("commit");
@@ -419,7 +419,7 @@ mod tests {
         dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
         assert_eq!(instance.projection().expect("materialize projection").counter, before + 1);
         let undo = instance.handle_action("undo", None, &meta("local")).expect("undo");
-        assert!(undo.operations.is_empty());
+        assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(instance.projection().expect("materialize projection").counter, before);
         instance.handle_action("redo", None, &meta("local")).expect("redo");

@@ -6,7 +6,7 @@
 //! (see `Contribution::PlaybookBlockKind` in `semio-framework-core`).
 
 use dsl::DslValue;
-use protocol::{Operation, OperationDiff};
+use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use store::{DocumentEnvelope, DocumentStore};
@@ -20,8 +20,8 @@ pub use builder_kit::{
 /// 🧬️ Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
 /// `playbook::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
 pub use generation_forms::{
-    add_generation, apply_generation_operation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body,
-    render_generation_preview_text, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationOperation, GenerationPlayState,
+    add_generation, apply_generation_mutation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body,
+    render_generation_preview_text, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationMutation, GenerationPlayState,
 };
 
 //#region 🔖️Domain
@@ -156,8 +156,8 @@ pub struct PlaybookSpec {
     pub steps: Vec<PlaybookStep>,
 }
 
-pub type PlaybookEnvelope = DocumentEnvelope<PlaybookSpec, PlaybookOperation>;
-pub type PlaybookStore = DocumentStore<PlaybookSpec, PlaybookOperation>;
+pub type PlaybookEnvelope = DocumentEnvelope<PlaybookSpec, PlaybookMutation>;
+pub type PlaybookStore = DocumentStore<PlaybookSpec, PlaybookMutation>;
 
 pub fn empty_playbook_projection() -> PlaybookSpec {
     PlaybookSpec { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, steps: vec![PlaybookStep { id: "s".into(), title: "Steps".into(), description: None, blocks: Vec::new() }] }
@@ -277,10 +277,10 @@ pub fn initial_values(spec: &PlaybookSpec, overrides: &serde_json::Map<String, s
 }
 //#endregion 🔖️Runtime
 
-//#region 🔖️Operations
+//#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-pub enum PlaybookOperation {
+#[serde(tag = "mutation", rename_all = "camelCase")]
+pub enum PlaybookMutation {
     AddStep {
         #[dsl(block)]
         step: PlaybookStep,
@@ -372,21 +372,21 @@ pub enum PlaybookDiff {
     },
 }
 
-impl OperationDiff<PlaybookSpec> for PlaybookDiff {
+impl MutationDiff<PlaybookSpec> for PlaybookDiff {
     fn apply(&self, projection: &PlaybookSpec) -> PlaybookSpec {
         let operation = match self {
             PlaybookDiff::Empty => return projection.clone(),
-            PlaybookDiff::AddStep { step, index } => PlaybookOperation::AddStep { step: step.clone(), index: *index },
-            PlaybookDiff::RemoveStep { step_id } => PlaybookOperation::RemoveStep { step_id: step_id.clone() },
-            PlaybookDiff::MoveStep { step_id, index } => PlaybookOperation::MoveStep { step_id: step_id.clone(), index: *index },
-            PlaybookDiff::AddBlock { step_id, block, index } => PlaybookOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
-            PlaybookDiff::RemoveBlock { step_id, block_id } => PlaybookOperation::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
-            PlaybookDiff::MoveBlock { block_id, from_step_id, to_step_id, index } => PlaybookOperation::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
-            PlaybookDiff::UpdateBlock { step_id, block } => PlaybookOperation::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
-            PlaybookDiff::UpdateStep { step } => PlaybookOperation::UpdateStep { step: step.clone() },
-            PlaybookDiff::UpdatePlaybook { title } => PlaybookOperation::UpdatePlaybook { title: title.clone() },
+            PlaybookDiff::AddStep { step, index } => PlaybookMutation::AddStep { step: step.clone(), index: *index },
+            PlaybookDiff::RemoveStep { step_id } => PlaybookMutation::RemoveStep { step_id: step_id.clone() },
+            PlaybookDiff::MoveStep { step_id, index } => PlaybookMutation::MoveStep { step_id: step_id.clone(), index: *index },
+            PlaybookDiff::AddBlock { step_id, block, index } => PlaybookMutation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
+            PlaybookDiff::RemoveBlock { step_id, block_id } => PlaybookMutation::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
+            PlaybookDiff::MoveBlock { block_id, from_step_id, to_step_id, index } => PlaybookMutation::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
+            PlaybookDiff::UpdateBlock { step_id, block } => PlaybookMutation::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
+            PlaybookDiff::UpdateStep { step } => PlaybookMutation::UpdateStep { step: step.clone() },
+            PlaybookDiff::UpdatePlaybook { title } => PlaybookMutation::UpdatePlaybook { title: title.clone() },
         };
-        apply_playbook_edit_operation(projection, &operation)
+        apply_playbook_edit_mutation(projection, &operation)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -396,77 +396,77 @@ impl OperationDiff<PlaybookSpec> for PlaybookDiff {
     }
 }
 
-impl Operation<PlaybookSpec> for PlaybookOperation {
+impl Mutation<PlaybookSpec> for PlaybookMutation {
     type Diff = PlaybookDiff;
 
     fn diff(&self, _projection: &PlaybookSpec) -> PlaybookDiff {
         match self {
-            PlaybookOperation::AddStep { step, index } => PlaybookDiff::AddStep { step: step.clone(), index: *index },
-            PlaybookOperation::RemoveStep { step_id } => PlaybookDiff::RemoveStep { step_id: step_id.clone() },
-            PlaybookOperation::MoveStep { step_id, index } => PlaybookDiff::MoveStep { step_id: step_id.clone(), index: *index },
-            PlaybookOperation::AddBlock { step_id, block, index } => PlaybookDiff::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
-            PlaybookOperation::RemoveBlock { step_id, block_id } => PlaybookDiff::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
-            PlaybookOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => PlaybookDiff::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
-            PlaybookOperation::UpdateBlock { step_id, block } => PlaybookDiff::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
-            PlaybookOperation::UpdateStep { step } => PlaybookDiff::UpdateStep { step: step.clone() },
-            PlaybookOperation::UpdatePlaybook { title } => PlaybookDiff::UpdatePlaybook { title: title.clone() },
+            PlaybookMutation::AddStep { step, index } => PlaybookDiff::AddStep { step: step.clone(), index: *index },
+            PlaybookMutation::RemoveStep { step_id } => PlaybookDiff::RemoveStep { step_id: step_id.clone() },
+            PlaybookMutation::MoveStep { step_id, index } => PlaybookDiff::MoveStep { step_id: step_id.clone(), index: *index },
+            PlaybookMutation::AddBlock { step_id, block, index } => PlaybookDiff::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
+            PlaybookMutation::RemoveBlock { step_id, block_id } => PlaybookDiff::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
+            PlaybookMutation::MoveBlock { block_id, from_step_id, to_step_id, index } => PlaybookDiff::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
+            PlaybookMutation::UpdateBlock { step_id, block } => PlaybookDiff::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
+            PlaybookMutation::UpdateStep { step } => PlaybookDiff::UpdateStep { step: step.clone() },
+            PlaybookMutation::UpdatePlaybook { title } => PlaybookDiff::UpdatePlaybook { title: title.clone() },
         }
     }
 
-    fn backwards(&self, projection: &PlaybookSpec) -> Vec<Self> {
+    fn inverse(&self, projection: &PlaybookSpec) -> Vec<Self> {
         match self {
-            PlaybookOperation::AddStep { step, .. } => vec![PlaybookOperation::RemoveStep { step_id: step.id.clone() }],
-            PlaybookOperation::RemoveStep { step_id } => projection.steps.iter().find(|s| s.id == *step_id).map(|step| vec![PlaybookOperation::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
-            PlaybookOperation::MoveStep { step_id, .. } => projection.steps.iter().position(|s| s.id == *step_id).map(|index| vec![PlaybookOperation::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
-            PlaybookOperation::AddBlock { step_id, block, index: _ } => vec![PlaybookOperation::RemoveBlock { step_id: step_id.clone(), block_id: block.id.clone() }],
-            PlaybookOperation::RemoveBlock { step_id, block_id } => {
+            PlaybookMutation::AddStep { step, .. } => vec![PlaybookMutation::RemoveStep { step_id: step.id.clone() }],
+            PlaybookMutation::RemoveStep { step_id } => projection.steps.iter().find(|s| s.id == *step_id).map(|step| vec![PlaybookMutation::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
+            PlaybookMutation::MoveStep { step_id, .. } => projection.steps.iter().position(|s| s.id == *step_id).map(|index| vec![PlaybookMutation::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
+            PlaybookMutation::AddBlock { step_id, block, index: _ } => vec![PlaybookMutation::RemoveBlock { step_id: step_id.clone(), block_id: block.id.clone() }],
+            PlaybookMutation::RemoveBlock { step_id, block_id } => {
                 for step in &projection.steps {
                     if step.id == *step_id {
                         if let Some(block) = step.blocks.iter().find(|b| b.id == *block_id) {
-                            return vec![PlaybookOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: None }];
+                            return vec![PlaybookMutation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: None }];
                         }
                     }
                 }
                 Vec::new()
             }
-            PlaybookOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+            PlaybookMutation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
                 for step in &projection.steps {
                     if step.id == *from_step_id {
                         if let Some(pos) = step.blocks.iter().position(|b| b.id == *block_id) {
-                            return vec![PlaybookOperation::MoveBlock { block_id: block_id.clone(), from_step_id: to_step_id.clone(), to_step_id: from_step_id.clone(), index: pos }];
+                            return vec![PlaybookMutation::MoveBlock { block_id: block_id.clone(), from_step_id: to_step_id.clone(), to_step_id: from_step_id.clone(), index: pos }];
                         }
                     }
                 }
                 let _ = index;
                 Vec::new()
             }
-            PlaybookOperation::UpdateBlock { step_id, block } => {
+            PlaybookMutation::UpdateBlock { step_id, block } => {
                 for step in &projection.steps {
                     if step.id == *step_id {
                         if let Some(prev) = step.blocks.iter().find(|b| b.id == block.id) {
-                            return vec![PlaybookOperation::UpdateBlock { step_id: step_id.clone(), block: prev.clone() }];
+                            return vec![PlaybookMutation::UpdateBlock { step_id: step_id.clone(), block: prev.clone() }];
                         }
                     }
                 }
                 Vec::new()
             }
-            PlaybookOperation::UpdateStep { step } => projection.steps.iter().find(|s| s.id == step.id).map(|prev| vec![PlaybookOperation::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
-            PlaybookOperation::UpdatePlaybook { .. } => vec![PlaybookOperation::UpdatePlaybook { title: projection.title.clone() }],
+            PlaybookMutation::UpdateStep { step } => projection.steps.iter().find(|s| s.id == step.id).map(|prev| vec![PlaybookMutation::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
+            PlaybookMutation::UpdatePlaybook { .. } => vec![PlaybookMutation::UpdatePlaybook { title: projection.title.clone() }],
         }
     }
 }
 
-pub fn apply_playbook_edit_operation(spec: &PlaybookSpec, operation: &PlaybookOperation) -> PlaybookSpec {
+pub fn apply_playbook_edit_mutation(spec: &PlaybookSpec, operation: &PlaybookMutation) -> PlaybookSpec {
     let mut next = spec.clone();
     match operation {
-        PlaybookOperation::AddStep { step, index } => {
+        PlaybookMutation::AddStep { step, index } => {
             let at = index.unwrap_or(next.steps.len());
             next.steps.insert(at.min(next.steps.len()), step.clone());
         }
-        PlaybookOperation::RemoveStep { step_id } => {
+        PlaybookMutation::RemoveStep { step_id } => {
             next.steps.retain(|step| step.id != *step_id);
         }
-        PlaybookOperation::MoveStep { step_id, index } => {
+        PlaybookMutation::MoveStep { step_id, index } => {
             let from = next.steps.iter().position(|step| step.id == *step_id);
             if let Some(from) = from {
                 let step = next.steps.remove(from);
@@ -474,7 +474,7 @@ pub fn apply_playbook_edit_operation(spec: &PlaybookSpec, operation: &PlaybookOp
                 next.steps.insert(at, step);
             }
         }
-        PlaybookOperation::AddBlock { step_id, block, index } => {
+        PlaybookMutation::AddBlock { step_id, block, index } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     let at = index.unwrap_or(step.blocks.len());
@@ -482,14 +482,14 @@ pub fn apply_playbook_edit_operation(spec: &PlaybookSpec, operation: &PlaybookOp
                 }
             }
         }
-        PlaybookOperation::RemoveBlock { step_id, block_id } => {
+        PlaybookMutation::RemoveBlock { step_id, block_id } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     step.blocks.retain(|block| block.id != *block_id);
                 }
             }
         }
-        PlaybookOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+        PlaybookMutation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
             let mut moving: Option<PlaybookBlock> = None;
             for step in &mut next.steps {
                 if step.id == *from_step_id {
@@ -507,7 +507,7 @@ pub fn apply_playbook_edit_operation(spec: &PlaybookSpec, operation: &PlaybookOp
                 }
             }
         }
-        PlaybookOperation::UpdateBlock { step_id, block } => {
+        PlaybookMutation::UpdateBlock { step_id, block } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     for entry in &mut step.blocks {
@@ -518,26 +518,121 @@ pub fn apply_playbook_edit_operation(spec: &PlaybookSpec, operation: &PlaybookOp
                 }
             }
         }
-        PlaybookOperation::UpdateStep { step } => {
+        PlaybookMutation::UpdateStep { step } => {
             for entry in &mut next.steps {
                 if entry.id == step.id {
                     *entry = step.clone();
                 }
             }
         }
-        PlaybookOperation::UpdatePlaybook { title } => {
+        PlaybookMutation::UpdatePlaybook { title } => {
             next.title = title.clone();
         }
     }
     next
 }
-//#endregion 🔖️Operations
+//#endregion 🔖️Mutations
 
 //#region 🔖️Dsl
-// 🧬️ `store::DocumentDsl` for `PlaybookSpec` and `store::OpText` for `PlaybookOperation` are both
+// 🧬️ `store::DocumentDsl` for `PlaybookSpec` and `store::OpText` for `PlaybookMutation` are both
 // generated by the `dsl::DslDocument`/`dsl::DslOps` derives on their struct/enum definitions
-// above (see {@link PlaybookSpec} and {@link PlaybookOperation}) — no hand-rolled parser module.
+// above (see {@link PlaybookSpec} and {@link PlaybookMutation}) — no hand-rolled parser module.
 //#endregion 🔖️Dsl
+
+
+//#region 🔖️HandcraftedDocumentAndOpCodecs
+/// 🧬️ P6: `DslDocument`/`DslOps` emit helpers/`DslVariants` only — trait impls are handcrafted here.
+impl store::DocumentDsl for PlaybookSpec {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::DocumentPack for PlaybookSpec {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+
+impl protocol::OpText for PlaybookMutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(
+                    line,
+                    &spec_fn(),
+                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
+                )?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+impl protocol::OpBinary for PlaybookMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+//#endregion 🔖️HandcraftedDocumentAndOpCodecs
+
 
 //#region 🔖️GenerationForms
 pub mod generation_forms {
@@ -675,13 +770,13 @@ pub mod generation_forms {
     }
     //#endregion 🔖️Crud
 
-    //#region 🔖️Operations
+    //#region 🔖️Mutations
     /// @emoji 🧬️ Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
-    /// `forms/module/procedural`'s own `Operation` enum so generation edits flow through the document store with
+    /// `forms/module/procedural`'s own `Mutation` enum so generation edits flow through the document store with
     /// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(tag = "kind", rename_all = "camelCase")]
-    pub enum GenerationOperation {
+    pub enum GenerationMutation {
         Add { generation: FormGeneration },
         Remove { id: String },
         Rename { id: String, name: String },
@@ -691,54 +786,54 @@ pub mod generation_forms {
     /// @emoji 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
     /// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
     /// nothing; the caller applies the returned operations through its store.
-    pub fn generation_operations(action: &str, args: Option<&Value>, state: &GenerationPlayState, spec: &PlaybookSpec) -> Option<Vec<GenerationOperation>> {
+    pub fn generation_operations(action: &str, args: Option<&Value>, state: &GenerationPlayState, spec: &PlaybookSpec) -> Option<Vec<GenerationMutation>> {
         let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
-            "addGeneration" => Some(vec![GenerationOperation::Add { generation: FormGeneration { id: next_generation_id(&state.generations), name: next_generation_name(&state.generations), values: initial_generation_values(spec) } }]),
-            "removeGeneration" => arg_str("id").map(|id| vec![GenerationOperation::Remove { id }]),
+            "addGeneration" => Some(vec![GenerationMutation::Add { generation: FormGeneration { id: next_generation_id(&state.generations), name: next_generation_name(&state.generations), values: initial_generation_values(spec) } }]),
+            "removeGeneration" => arg_str("id").map(|id| vec![GenerationMutation::Remove { id }]),
             "renameGeneration" => {
                 let id = arg_str("id")?;
                 let name = arg_str("name")?;
-                Some(vec![GenerationOperation::Rename { id, name }])
+                Some(vec![GenerationMutation::Rename { id, name }])
             }
             "updateGenerationValues" => {
                 let id = arg_str("generationId").or_else(|| state.selected_generation_id.clone())?;
                 let question_id = arg_str("questionId")?;
                 let value = args.and_then(|value| value.get("value")).cloned()?;
-                Some(vec![GenerationOperation::UpdateValues { id, question_id, value }])
+                Some(vec![GenerationMutation::UpdateValues { id, question_id, value }])
             }
             _ => None,
         }
     }
 
-    /// @emoji ▶️ Applies a {@link GenerationOperation} to `state` in place.
-    pub fn apply_generation_operation(state: &mut GenerationPlayState, operation: &GenerationOperation) {
+    /// @emoji ▶️ Applies a {@link GenerationMutation} to `state` in place.
+    pub fn apply_generation_mutation(state: &mut GenerationPlayState, operation: &GenerationMutation) {
         match operation {
-            GenerationOperation::Add { generation } => {
+            GenerationMutation::Add { generation } => {
                 state.generations.push(generation.clone());
                 state.selected_generation_id = Some(generation.id.clone());
             }
-            GenerationOperation::Remove { id } => remove_generation(state, id),
-            GenerationOperation::Rename { id, name } => rename_generation(state, id, name),
-            GenerationOperation::UpdateValues { id, question_id, value } => update_generation_values(state, id, question_id, value.clone()),
+            GenerationMutation::Remove { id } => remove_generation(state, id),
+            GenerationMutation::Rename { id, name } => rename_generation(state, id, name),
+            GenerationMutation::UpdateValues { id, question_id, value } => update_generation_values(state, id, question_id, value.clone()),
         }
     }
 
-    /// @emoji ↩️ Computes the inverse of a {@link GenerationOperation} from the pre-state `state`.
-    pub fn invert_generation_operation(state: &GenerationPlayState, operation: &GenerationOperation) -> Vec<GenerationOperation> {
+    /// @emoji ↩️ Computes the inverse of a {@link GenerationMutation} from the pre-state `state`.
+    pub fn invert_generation_operation(state: &GenerationPlayState, operation: &GenerationMutation) -> Vec<GenerationMutation> {
         match operation {
-            GenerationOperation::Add { generation } => vec![GenerationOperation::Remove { id: generation.id.clone() }],
-            GenerationOperation::Remove { id } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationOperation::Add { generation: entry.clone() }]).unwrap_or_default(),
-            GenerationOperation::Rename { id, .. } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationOperation::Rename { id: id.clone(), name: entry.name.clone() }]).unwrap_or_default(),
-            GenerationOperation::UpdateValues { id, question_id, .. } => state
+            GenerationMutation::Add { generation } => vec![GenerationMutation::Remove { id: generation.id.clone() }],
+            GenerationMutation::Remove { id } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationMutation::Add { generation: entry.clone() }]).unwrap_or_default(),
+            GenerationMutation::Rename { id, .. } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationMutation::Rename { id: id.clone(), name: entry.name.clone() }]).unwrap_or_default(),
+            GenerationMutation::UpdateValues { id, question_id, .. } => state
                 .generations
                 .iter()
                 .find(|entry| entry.id == *id)
-                .map(|entry| vec![GenerationOperation::UpdateValues { id: id.clone(), question_id: question_id.clone(), value: entry.values.get(question_id).cloned().unwrap_or(Value::Null) }])
+                .map(|entry| vec![GenerationMutation::UpdateValues { id: id.clone(), question_id: question_id.clone(), value: entry.values.get(question_id).cloned().unwrap_or(Value::Null) }])
                 .unwrap_or_default(),
         }
     }
-    //#endregion 🔖️Operations
+    //#endregion 🔖️Mutations
 
     //#region 🔖️Render
     fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1096,7 +1191,7 @@ pub mod builder_kit {
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
     //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
 
-    use super::{PlaybookBlock, PlaybookOperation, PlaybookSpec, PlaybookStep};
+    use super::{PlaybookBlock, PlaybookMutation, PlaybookSpec, PlaybookStep};
     use serde_json::Value;
     use ui_wgpu::wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
@@ -1123,32 +1218,32 @@ pub mod builder_kit {
     //#endregion 🔖️Config
 
     //#region 🔖️OpBuilders
-    pub fn add_step_operation(spec: &PlaybookSpec, step_id: String) -> PlaybookOperation {
-        PlaybookOperation::AddStep { step: PlaybookStep { id: step_id, title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() }, index: None }
+    pub fn add_step_operation(spec: &PlaybookSpec, step_id: String) -> PlaybookMutation {
+        PlaybookMutation::AddStep { step: PlaybookStep { id: step_id, title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() }, index: None }
     }
 
-    pub fn remove_step_operation(step_id: &str) -> PlaybookOperation {
-        PlaybookOperation::RemoveStep { step_id: step_id.into() }
+    pub fn remove_step_operation(step_id: &str) -> PlaybookMutation {
+        PlaybookMutation::RemoveStep { step_id: step_id.into() }
     }
 
-    pub fn move_step_operation(step_id: &str, index: usize) -> PlaybookOperation {
-        PlaybookOperation::MoveStep { step_id: step_id.into(), index }
+    pub fn move_step_operation(step_id: &str, index: usize) -> PlaybookMutation {
+        PlaybookMutation::MoveStep { step_id: step_id.into(), index }
     }
 
-    pub fn add_block_operation(step_id: &str, block: PlaybookBlock, index: Option<usize>) -> PlaybookOperation {
-        PlaybookOperation::AddBlock { step_id: step_id.into(), block, index }
+    pub fn add_block_operation(step_id: &str, block: PlaybookBlock, index: Option<usize>) -> PlaybookMutation {
+        PlaybookMutation::AddBlock { step_id: step_id.into(), block, index }
     }
 
-    pub fn remove_block_operation(step_id: &str, block_id: &str) -> PlaybookOperation {
-        PlaybookOperation::RemoveBlock { step_id: step_id.into(), block_id: block_id.into() }
+    pub fn remove_block_operation(step_id: &str, block_id: &str) -> PlaybookMutation {
+        PlaybookMutation::RemoveBlock { step_id: step_id.into(), block_id: block_id.into() }
     }
 
-    pub fn move_block_operation(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> PlaybookOperation {
-        PlaybookOperation::MoveBlock { block_id: block_id.into(), from_step_id: from_step_id.into(), to_step_id: to_step_id.into(), index }
+    pub fn move_block_operation(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> PlaybookMutation {
+        PlaybookMutation::MoveBlock { block_id: block_id.into(), from_step_id: from_step_id.into(), to_step_id: to_step_id.into(), index }
     }
 
-    pub fn update_playbook_title_operation(title: Option<String>) -> PlaybookOperation {
-        PlaybookOperation::UpdatePlaybook { title }
+    pub fn update_playbook_title_operation(title: Option<String>) -> PlaybookMutation {
+        PlaybookMutation::UpdatePlaybook { title }
     }
     //#endregion 🔖️OpBuilders
 
@@ -1212,7 +1307,7 @@ pub mod builder_kit {
         fn add_step_op_names_step_by_position() {
             let spec = empty_playbook_projection();
             let operation = add_step_operation(&spec, "step-2".into());
-            assert_eq!(operation, PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Step 2".into(), description: None, blocks: Vec::new() }, index: None });
+            assert_eq!(operation, PlaybookMutation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Step 2".into(), description: None, blocks: Vec::new() }, index: None });
         }
 
         #[test]
@@ -1299,12 +1394,12 @@ mod tests {
     #[test]
     fn update_playbook_op_sets_and_reverts_title() {
         let spec = empty_playbook_projection();
-        let operation = PlaybookOperation::UpdatePlaybook { title: Some("Renamed".into()) };
-        let next = apply_playbook_edit_operation(&spec, &operation);
+        let operation = PlaybookMutation::UpdatePlaybook { title: Some("Renamed".into()) };
+        let next = apply_playbook_edit_mutation(&spec, &operation);
         assert_eq!(next.title.as_deref(), Some("Renamed"));
-        let inverse = operation.backwards(&spec);
-        assert_eq!(inverse, vec![PlaybookOperation::UpdatePlaybook { title: spec.title.clone() }]);
-        let reverted = inverse.iter().fold(next.clone(), |current, operation| apply_playbook_edit_operation(&current, operation));
+        let inverse = operation.inverse(&spec);
+        assert_eq!(inverse, vec![PlaybookMutation::UpdatePlaybook { title: spec.title.clone() }]);
+        let reverted = inverse.iter().fold(next.clone(), |current, operation| apply_playbook_edit_mutation(&current, operation));
         assert_eq!(reverted.title, spec.title);
         assert_eq!(operation.diff(&spec).apply(&spec).title.as_deref(), Some("Renamed"));
     }
@@ -1313,10 +1408,10 @@ mod tests {
     fn add_step_op_replays() {
         let mut store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
         let step = PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
-        let backwards = store.projection().expect("projection");
-        store.dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::AddStep { step: step.clone(), index: None }], description: None }).expect("apply");
+        let inverse = store.projection().expect("projection");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![PlaybookMutation::AddStep { step: step.clone(), index: None }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").steps.len(), 2);
-        let _ = backwards;
+        let _ = inverse;
     }
 
     #[test]
@@ -1488,60 +1583,60 @@ mod tests {
 
     #[test]
     fn add_step_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: Some("desc".into()), blocks: vec![minimal_block("b1", "text")] }, index: Some(1) });
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::AddStep { step: PlaybookStep { id: "step-3".into(), title: "Final".into(), description: None, blocks: Vec::new() }, index: None });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: Some("desc".into()), blocks: vec![minimal_block("b1", "text")] }, index: Some(1) });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::AddStep { step: PlaybookStep { id: "step-3".into(), title: "Final".into(), description: None, blocks: Vec::new() }, index: None });
     }
 
     #[test]
     fn remove_step_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::RemoveStep { step_id: "s1".into() });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::RemoveStep { step_id: "s1".into() });
     }
 
     #[test]
     fn move_step_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::MoveStep { step_id: "s1".into(), index: 2 });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::MoveStep { step_id: "s1".into(), index: 2 });
     }
 
     #[test]
     fn add_block_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::AddBlock { step_id: "s1".into(), block: fully_populated_block(), index: Some(0) });
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::AddBlock { step_id: "s1".into(), block: minimal_block("b2", "boolean"), index: None });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::AddBlock { step_id: "s1".into(), block: fully_populated_block(), index: Some(0) });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::AddBlock { step_id: "s1".into(), block: minimal_block("b2", "boolean"), index: None });
     }
 
     #[test]
     fn remove_block_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::RemoveBlock { step_id: "s1".into(), block_id: "b1".into() });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::RemoveBlock { step_id: "s1".into(), block_id: "b1".into() });
     }
 
     #[test]
     fn move_block_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::MoveBlock { block_id: "b1".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 3 });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::MoveBlock { block_id: "b1".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 3 });
     }
 
     #[test]
     fn update_block_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdateBlock { step_id: "s1".into(), block: fully_populated_block() });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::UpdateBlock { step_id: "s1".into(), block: fully_populated_block() });
     }
 
     #[test]
     fn update_step_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdateStep { step: PlaybookStep { id: "s1".into(), title: "Basics".into(), description: Some("d".into()), blocks: vec![fully_populated_block()] } });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::UpdateStep { step: PlaybookStep { id: "s1".into(), title: "Basics".into(), description: Some("d".into()), blocks: vec![fully_populated_block()] } });
     }
 
     #[test]
     fn update_playbook_op_round_trips() {
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdatePlaybook { title: Some("Renamed".into()) });
-        store::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdatePlaybook { title: None });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::UpdatePlaybook { title: Some("Renamed".into()) });
+        store::test_support::assert_op_line_round_trip(&PlaybookMutation::UpdatePlaybook { title: None });
     }
 
     #[test]
     fn document_text_round_trips_after_applied_operations() {
         let mut store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
         store
-            .dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }], description: None })
+            .dispatch(DocumentCommand::Apply { mutations: vec![PlaybookMutation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }], description: None })
             .expect("add step");
-        store.dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::AddBlock { step_id: "step-2".into(), block: fully_populated_block(), index: None }], description: None }).expect("add block");
-        store.dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::UpdatePlaybook { title: Some("Recipe".into()) }], description: None }).expect("update title");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![PlaybookMutation::AddBlock { step_id: "step-2".into(), block: fully_populated_block(), index: None }], description: None }).expect("add block");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![PlaybookMutation::UpdatePlaybook { title: Some("Recipe".into()) }], description: None }).expect("update title");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

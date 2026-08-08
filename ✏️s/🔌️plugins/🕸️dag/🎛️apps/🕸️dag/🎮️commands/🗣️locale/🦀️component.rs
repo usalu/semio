@@ -5,8 +5,8 @@
 //! `"set-locale"` its command id would suggest — mirrors `shooting_protocol::ShootingCommand::SetLocale`'s
 //! equally-undeclared precedent; see the `as` literal in `crate::apps::dag`'s `app_commands!` invocation.
 
-use crate::apps::dag::config::{DagConfig, DagConfigOperation};
-use crate::artifacts::dag::op::DagOperation;
+use crate::apps::dag::config::{DagConfig, DagConfigMutation};
+use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagDocument;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,8 +21,8 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
-        Ok(Emit::config(vec![DagConfigOperation::SetLocale { value: payload.value.clone() }]))
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+        Ok(Emit::config(vec![DagConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
 //#endregion 🔖️SetLocale

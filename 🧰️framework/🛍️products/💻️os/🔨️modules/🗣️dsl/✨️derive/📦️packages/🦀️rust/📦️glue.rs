@@ -918,7 +918,7 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
 
 //#region 🔖️DslEnum
 /// @emoji 🌳️ Tagged-record enum whose variants are plain data (a recursive block tree, a wire
-/// node kind, ...) rather than an `Operation` — implements `::dsl::DslVariants` only, so it can be
+/// node kind, ...) rather than a `Mutation` — implements `::dsl::DslVariants` only, so it can be
 /// used inside `#[dsl(statements)]`/`#[dsl(statements, block)]` collection fields without also
 /// gaining (and having to satisfy the bounds of) `store::OpText`.
 #[proc_macro_derive(DslEnum, attributes(dsl))]

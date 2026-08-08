@@ -1,18 +1,18 @@
 //! 🧮️ Process 3d play app — view state (`Process3dConfig`) and its operation enum
-//! (`Process3dConfigOperation`), moved out of the old `⚙️engine`/`🔧️op` crates: this is APP state (view
+//! (`Process3dConfigMutation`), moved out of the old `⚙️engine`/`🔧️op` crates: this is APP state (view
 //! state, never document content), so it belongs next to the app that owns it, not the artifact.
 //!
 //! B1: absorbs every field that used to live in the old UI crate's `Process3dRuntime` app-struct
 //! `RefCell` (selection, hover, face pick, selection method, engagement input, camera, sun) plus the two
 //! `ViewModel` fields process3d actually read (`active_utility_id`/`locale`) — session-only view state
 //! now round-trips through the config `DocumentStore` exactly like document content, with a real
-//! `backwards` per [`Process3dConfigOperation`], mirroring the `shooting_engine::ShootingConfig` pilot.
+//! `backwards` per [`Process3dConfigMutation`], mirroring the `shooting_engine::ShootingConfig` pilot.
 //! The camera (was `Process3dCamera`) and sun (was `WorldSunConfig`) are flattened into scalar fields
 //! rather than embedded as DSL blocks — neither type derives `dsl::DslRecord`, and `WorldSunConfig` is
 //! shared framework state out of scope for this migration (mirrors `lowpoly_engine::LowpolyConfig`'s
 //! identical flattening of its own world camera/sun).
 
-use protocol::Operation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 /// 🧰️ The utility active when the config carries no explicit override.
@@ -160,7 +160,7 @@ impl Process3dConfig {
 store::impl_whole_record_config!(Process3dConfig);
 
 /// 🪆️ `Box<Process3dConfig>` needs its own `dsl::DslField` binding for
-/// `Process3dConfigOperation::Snapshot` (boxed to fix clippy's `large_enum_variant` — the snapshot
+/// `Process3dConfigMutation::Snapshot` (boxed to fix clippy's `large_enum_variant` — the snapshot
 /// variant was ~5x every other row's size) — `Box` is `#[fundamental]` in `std`, so implementing a
 /// foreign trait (`dsl::DslField`) for `Box<Process3dConfig>` (a local type inside the foreign,
 /// fundamental `Box` wrapper) is permitted by the orphan rules; this delegates entirely to
@@ -186,7 +186,7 @@ impl dsl::DslField for Box<Process3dConfig> {
 /// pattern: a config-only dispatch is always a plain `Apply` (never `AmendLast`), so "undo this tick" =
 /// "restore the whole-config snapshot from just before it", the simplest correct inverse.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Process3dConfigOperation {
+pub enum Process3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -219,7 +219,7 @@ pub enum Process3dConfigOperation {
 }
 
 //#region 🔖️OpCodec
-impl protocol::OpText for Process3dConfigOperation {
+impl protocol::OpText for Process3dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -233,7 +233,7 @@ impl protocol::OpText for Process3dConfigOperation {
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -244,7 +244,7 @@ impl protocol::OpText for Process3dConfigOperation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Process3dConfigOperation {
+impl protocol::OpBinary for Process3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
@@ -290,32 +290,32 @@ impl protocol::OpBinary for Process3dConfigOperation {
 //#endregion 🔖️OpCodec
 
 
-impl Operation<Process3dConfig> for Process3dConfigOperation {
+impl Mutation<Process3dConfig> for Process3dConfigMutation {
     type Diff = Process3dConfig;
 
     fn diff(&self, base: &Process3dConfig) -> Process3dConfig {
         let mut next = base.clone();
         match self {
-            Process3dConfigOperation::Snapshot { config } => return config.as_ref().clone(),
-            Process3dConfigOperation::SetSelectedId { value } => next.selected_id = value.clone(),
-            Process3dConfigOperation::SetHoveredId { value } => next.hovered_id = value.clone(),
-            Process3dConfigOperation::SetSelectedFaceId { value } => next.selected_face_id = *value,
-            Process3dConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            Process3dConfigOperation::SetCamera { position, target, fov } => {
+            Process3dConfigMutation::Snapshot { config } => return config.as_ref().clone(),
+            Process3dConfigMutation::SetSelectedId { value } => next.selected_id = value.clone(),
+            Process3dConfigMutation::SetHoveredId { value } => next.hovered_id = value.clone(),
+            Process3dConfigMutation::SetSelectedFaceId { value } => next.selected_face_id = *value,
+            Process3dConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            Process3dConfigMutation::SetCamera { position, target, fov } => {
                 next.camera_position = *position;
                 next.camera_target = *target;
                 next.camera_fov = *fov;
             }
-            Process3dConfigOperation::SetSun { enabled, azimuth, elevation, intensity, color } => {
+            Process3dConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => {
                 next.sun_enabled = *enabled;
                 next.sun_azimuth = *azimuth;
                 next.sun_elevation = *elevation;
                 next.sun_intensity = *intensity;
                 next.sun_color = color.clone();
             }
-            Process3dConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            Process3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
-            Process3dConfigOperation::SetContributions { json } => {
+            Process3dConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            Process3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            Process3dConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
                 crate::artifacts::process3d::engine::sync_process_machine_contributions(json);
             }
@@ -323,8 +323,8 @@ impl Operation<Process3dConfig> for Process3dConfigOperation {
         next
     }
 
-    fn backwards(&self, base: &Process3dConfig) -> Vec<Self> {
-        vec![Process3dConfigOperation::Snapshot { config: Box::new(base.clone()) }]
+    fn inverse(&self, base: &Process3dConfig) -> Vec<Self> {
+        vec![Process3dConfigMutation::Snapshot { config: Box::new(base.clone()) }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -346,20 +346,20 @@ mod tests {
     #[test]
     fn process3d_config_operation_backwards_is_always_a_snapshot_of_base() {
         let base = Process3dConfig::default();
-        let operation = Process3dConfigOperation::SetSelectedId { value: Some("step-0".into()) };
-        let inverse = operation.backwards(&base);
-        assert_eq!(inverse, vec![Process3dConfigOperation::Snapshot { config: Box::new(base) }]);
+        let operation = Process3dConfigMutation::SetSelectedId { value: Some("step-0".into()) };
+        let inverse = operation.inverse(&base);
+        assert_eq!(inverse, vec![Process3dConfigMutation::Snapshot { config: Box::new(base) }]);
     }
 
     #[test]
     fn process3d_config_operation_diff_applies_expected_fields() {
         let base = Process3dConfig::default();
-        let next = Process3dConfigOperation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base);
+        let next = Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base);
         assert_eq!(next.camera_position, [1.0, 2.0, 3.0]);
         assert_eq!(next.camera_target, [0.1, 0.2, 0.3]);
         assert_eq!(next.camera_fov, 60.0);
 
-        let next = Process3dConfigOperation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base);
+        let next = Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base);
         assert!(next.sun_enabled);
         assert_eq!(next.sun_azimuth, 10.0);
         assert_eq!(next.sun_elevation, 20.0);
@@ -370,18 +370,18 @@ mod tests {
     #[test]
     fn process3d_config_op_text_round_trips_every_variant() {
         let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(2), active_utility_id: "cut".into(), ..Process3dConfig::default() };
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::Snapshot { config: Box::new(config) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedId { value: Some("stock".into()) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedId { value: None });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetHoveredId { value: Some("step-0".into()) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedFaceId { value: Some(3) });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedFaceId { value: None });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetEngagementInput { value: "cut".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetActiveUtility { utility_id: "cut".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetContributions { json: "[]".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::Snapshot { config: Box::new(config) });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: Some("stock".into()) });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: None });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetHoveredId { value: Some("step-0".into()) });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: Some(3) });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: None });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetEngagementInput { value: "cut".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetActiveUtility { utility_id: "cut".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetContributions { json: "[]".into() });
     }
 
     #[test]

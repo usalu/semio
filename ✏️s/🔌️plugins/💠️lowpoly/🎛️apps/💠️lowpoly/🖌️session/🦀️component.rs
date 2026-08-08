@@ -8,7 +8,7 @@
 use crate::apps::lowpoly::config::LowpolyConfig;
 use crate::apps::lowpoly::view::build_doc;
 use crate::artifacts::lowpoly::engine::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush, LowpolyDocument};
-use crate::artifacts::lowpoly::op::{LowpolyOperation, PixelRun};
+use crate::artifacts::lowpoly::op::{LowpolyMutation, PixelRun};
 use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolyProjection, LOWPOLY_PAINT_TEXTURE_SIZE};
 use base64::Engine;
 use semio_s_3d::mesh::Vec3;
@@ -149,7 +149,7 @@ fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
 /// @emoji 🔧️ Runs a kernel mesh edit against a compute session built from the projection + config, then
 /// returns the resulting `Objects(Patch)` capturing only the changed object fields. Stateless — takes no
 /// `LowpolyScratch` context, unlike its paint/transform siblings below.
-pub fn mesh_edit(projection: &LowpolyProjection, config: &LowpolyConfig, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+pub fn mesh_edit(projection: &LowpolyProjection, config: &LowpolyConfig, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
     let Some(mut doc) = build_doc(projection, config) else {
         return Emit::default();
     };
@@ -170,13 +170,13 @@ pub fn mesh_edit(projection: &LowpolyProjection, config: &LowpolyConfig, edit: i
     if patch == LowpolyObjectPatch::default() {
         return Emit::default();
     }
-    Emit::operations(vec![LowpolyOperation::ObjectsPatch { id: object_id, patch }])
+    Emit::mutations(vec![LowpolyMutation::ObjectsPatch { id: object_id, patch }])
 }
 //#endregion 🔖️Transform
 
 //#region 🔖️LowpolyScratch
 /// @emoji 🖌️ B1: `LowpolyPlayApp` sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime
-/// field now lives in `LowpolyConfig`, written through `LowpolyConfigOperation`s emitted from `handle`.
+/// field now lives in `LowpolyConfig`, written through `LowpolyConfigMutation`s emitted from `handle`.
 /// This struct holds the genuine mid-gesture scratch state the `DocumentApp` trait sanctions.
 #[derive(Default)]
 pub struct LowpolyScratch {
@@ -223,7 +223,7 @@ impl LowpolyScratch {
     }
 
     /// ⏹️ `paintStrokeEnd`: disarms the drag flag and commits the accumulated scratch as one edit.
-    pub fn end_stroke_drag(&mut self) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn end_stroke_drag(&mut self) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
         self.stroke_drag_active = false;
         self.commit_stroke()
     }
@@ -235,7 +235,7 @@ impl LowpolyScratch {
     }
 
     /// ⏹️ `transformEnd`: disarms the drag flag and commits the accumulated scratch as one edit.
-    pub fn end_transform_drag(&mut self) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn end_transform_drag(&mut self) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
         self.transform_drag_active = false;
         self.commit_transform()
     }
@@ -289,7 +289,7 @@ impl LowpolyScratch {
 
     /// @emoji 📌️ Commits the accumulated paint scratch as ONE described `PaintStroke` edit (scratch-commit
     /// pattern b — the whole drag is one undoable edit; megabyte pixel buffers never coalesce per tick).
-    pub fn commit_stroke(&mut self) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn commit_stroke(&mut self) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
         let Some(session) = self.stroke.take() else {
             return Emit::default();
         };
@@ -298,13 +298,13 @@ impl LowpolyScratch {
         if runs.is_empty() {
             return Emit::default();
         }
-        Emit::commit(vec![LowpolyOperation::PaintStroke { object_id: session.object_id, layer_index: session.layer_index, runs }], "Paint stroke")
+        Emit::commit(vec![LowpolyMutation::PaintStroke { object_id: session.object_id, layer_index: session.layer_index, runs }], "Paint stroke")
     }
 
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
     /// the paint color (as a `SetPaintColor` config op). Emits ZERO document operations — the stroke
     /// commits only on `paintStrokeEnd` (View-kind safe).
-    pub fn paint_tick(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, object_id: &str, u: f32, v: f32) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn paint_tick(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, object_id: &str, u: f32, v: f32) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
         let utility = config.paint_utility.clone();
         if utility == "eyedropper" {
             let Some(object) = projection.objects.iter().find(|object| object.id == object_id) else {
@@ -312,7 +312,7 @@ impl LowpolyScratch {
             };
             let composite = composite_layer_pixels(&object.paint_layers);
             let color = sample_pixel_from(&composite, u, v);
-            return Emit::config(vec![crate::apps::lowpoly::config::LowpolyConfigOperation::SetPaintColor { r: color[0], g: color[1], b: color[2], a: color[3] }]);
+            return Emit::config(vec![crate::apps::lowpoly::config::LowpolyConfigMutation::SetPaintColor { r: color[0], g: color[1], b: color[2], a: color[3] }]);
         }
         let layer_index = config.active_paint_layer as usize;
         let need_new = match &self.stroke {
@@ -341,7 +341,7 @@ impl LowpolyScratch {
 
     /// @emoji 🪣️ A single-shot flood fill emitted as ONE `PaintStroke` edit (the `fillBucket`/`paintFill`
     /// operation path — not drag-bracketed, so it commits immediately).
-    pub fn fill_at(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, object_id: String, u: f32, v: f32) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn fill_at(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, object_id: String, u: f32, v: f32) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
         let layer_index = config.active_paint_layer as usize;
         let color = [config.paint_color_r, config.paint_color_g, config.paint_color_b, config.paint_color_a];
         let Some(layer) = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)) else {
@@ -354,12 +354,12 @@ impl LowpolyScratch {
             return Emit::default();
         }
         self.stroke_dirty += 1;
-        Emit::commit(vec![LowpolyOperation::PaintStroke { object_id, layer_index, runs }], "Fill")
+        Emit::commit(vec![LowpolyMutation::PaintStroke { object_id, layer_index, runs }], "Fill")
     }
 
     /// @emoji 🧲️ Runs one gumball transform delta against a working scratch document. Mid-drag it emits
     /// nothing; only `transformEnd` (or an unbracketed single dispatch) commits the accumulated diff.
-    pub fn transform_selection(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, mode: &str, ids: Vec<u32>, transform: Transform, description: &str) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn transform_selection(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, mode: &str, ids: Vec<u32>, transform: Transform, description: &str) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
         if self.transform_drag_active {
             if self.transform.is_none() {
                 self.begin_transform_session(projection, config);
@@ -379,10 +379,10 @@ impl LowpolyScratch {
             }
             apply_transform(doc, transform)
         });
-        if emitted.document_operations.is_empty() {
+        if emitted.document_mutations.is_empty() {
             Emit::default()
         } else {
-            Emit::commit(emitted.document_operations, description)
+            Emit::commit(emitted.document_mutations, description)
         }
     }
 
@@ -399,7 +399,7 @@ impl LowpolyScratch {
     }
 
     /// @emoji 📌️ Commits the whole gumball drag as ONE `Objects(Patch)` diff (base → final mesh).
-    pub fn commit_transform(&mut self) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn commit_transform(&mut self) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
         let Some(mut session) = self.transform.take() else {
             return Emit::default();
         };
@@ -413,7 +413,7 @@ impl LowpolyScratch {
         if patch == LowpolyObjectPatch::default() {
             return Emit::default();
         }
-        Emit::commit(vec![LowpolyOperation::ObjectsPatch { id: session.object_id, patch }], "Transform selection")
+        Emit::commit(vec![LowpolyMutation::ObjectsPatch { id: session.object_id, patch }], "Transform selection")
     }
 
     //#region 🔖️GesturePreview
@@ -426,7 +426,7 @@ impl LowpolyScratch {
     /// chain of prior preview messages. `apply_transform` already calls `sync_meshes_to_projection`
     /// every tick (mid-drag world-scene rendering needs it regardless), so reading
     /// `session.doc.projection()` here adds no new per-tick cost. `None` outside an active drag; this
-    /// reads `TransformSession` only, never emits or mutates a `LowpolyOperation`.
+    /// reads `TransformSession` only, never emits or mutates a `LowpolyMutation`.
     ///
     /// 🚧️ Deliberately unwired beyond this accessor — same gap as `draw-plugin`'s
     /// `draw_gesture_preview_payload`: `framework/sync::SyncSession::publish_preview` is host-only
@@ -466,7 +466,7 @@ mod tests {
         scratch.set_transform_drag_active(true);
 
         let tick_a = scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(0.5, 0.0, 0.0)), "translate");
-        assert!(tick_a.document_operations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+        assert!(tick_a.document_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
         let (key, seq_after_a, payload_a) = scratch.gesture_preview().expect("a live gumball drag is previewable");
         assert_eq!(key, "gesture:transform");
         let value_a: serde_json::Value = serde_json::from_slice(&payload_a).expect("payload is valid json");
@@ -474,13 +474,13 @@ mod tests {
         assert_ne!(value_a["patch"], serde_json::json!(LowpolyObjectPatch::default()), "the patch anchored to the drag-start snapshot must reflect the first tick");
 
         let tick_b = scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(0.25, 0.0, 0.0)), "translate");
-        assert!(tick_b.document_operations.is_empty());
+        assert!(tick_b.document_mutations.is_empty());
         let (_, seq_after_b, payload_b) = scratch.gesture_preview().expect("still live mid-drag");
         assert!(seq_after_b > seq_after_a, "seq is monotone per tick, for staleness detection on the receiving end");
         assert_ne!(payload_a, payload_b, "the base-anchored patch accumulates both ticks, not just the latest one");
 
         let end = scratch.commit_transform();
-        assert_eq!(end.document_operations.len(), 1, "the whole drag commits as exactly one real operation");
+        assert_eq!(end.document_mutations.len(), 1, "the whole drag commits as exactly one real operation");
         assert!(scratch.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
     }
 
