@@ -1,0 +1,48 @@
+syntax = "proto3";
+package semio.s.lowpoly.lowpoly.snapshot;
+
+// 🧬️ Lowpoly snapshot schema — persistent fields only.
+
+message LowpolySnapshot {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  repeated LowpolyObject objects = 2;
+}
+
+message LowpolySelectionTargets {
+  bool mesh = 1;
+  bool vertex = 2;
+  bool edge = 3;
+  bool face = 4;
+}
+
+message LowpolySelection {
+  LowpolySelectionTargets targets = 1;
+  repeated string keys = 2;
+  string mode = 3;
+  repeated uint32 ids = 4;
+}
+
+message LowpolyTransform {
+  repeated float position = 1;
+  repeated float rotation = 2;
+  repeated float scale = 3;
+}
+
+message LowpolyPaintLayer {
+  string name = 1;
+  bool visible = 2;
+  float opacity = 3;
+  string blend_mode = 4;
+  bytes pixels = 5;
+}
+
+message LowpolyObject {
+  string id = 1;
+  string name = 2;
+  LowpolyTransform transform = 3;
+  bool smooth_shading = 4;
+  string mesh_json = 5;
+  repeated LowpolyPaintLayer paint_layers = 6;
+}

@@ -17,7 +17,7 @@ use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::{format_selection_targets_label, selection_targets_from_config, utility_param_f64, LowpolyView};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::{artifact_kind, mesh_artifact_kind, LowpolyProjection, LOWPOLY_DOCUMENT_SCHEMA};
+use crate::artifacts::lowpoly::{artifact_kind, mesh_artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
@@ -164,7 +164,7 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `LowpolyPlayApp::Command` — the SOLE dispatch surface for lowpoly's own behavior, covering
     /// every declared action. Row order is the binary variant ordinal: appending is safe, reordering is
     /// a wire-format break.
-    pub enum LowpolyCommand for LowpolyProjection, LowpolyMutation, LowpolyConfig, LowpolyConfigMutation, ctx = LowpolyScratch {
+    pub enum LowpolyCommand for LowpolySnapshot, LowpolyMutation, LowpolyConfig, LowpolyConfigMutation, ctx = LowpolyScratch {
         "addPrimitive" as "add-primitive" => add_primitive::AddPrimitive,
         "patchObject" as "patch-object" => patch_object::PatchObject,
         "extrude" as "extrude" => extrude::Extrude,
@@ -191,7 +191,7 @@ semio_framework_plugin::app_commands! {
         "paintFill" as "paint-fill" => paint_fill::PaintFill,
         "fillBucket" as "fill-bucket" => fill_bucket::FillBucket,
         "transformEnd" as "transform-end" => transform_end::TransformEnd,
-        "setProjectionJson" as "set-projection-json" => set_projection_json::SetProjectionJson,
+        "setSnapshotJson" as "set-snapshot-json" => set_snapshot_json::SetSnapshotJson,
         "setFixtureJson" as "set-fixture-json" => set_fixture_json::SetFixtureJson,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setActiveObject" as "set-active-object" => set_active_object::SetActiveObject,
@@ -238,7 +238,7 @@ use camera::set_camera;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use utility::{set_active_utility, set_utility_param};
 use engagement::{engagement_input, engagement_submit};
-use fixture::{set_fixture_json, set_projection_json};
+use fixture::{set_fixture_json, set_snapshot_json};
 use chrome::toggle_show_edges;
 //#endregion 🔖️Commands
 
@@ -251,7 +251,7 @@ use chrome::toggle_show_edges;
 pub struct LowpolyPlayApp;
 
 impl DocumentApp for LowpolyPlayApp {
-    type Projection = LowpolyProjection;
+    type Snapshot = LowpolySnapshot;
     type Mutation = LowpolyMutation;
     type Config = LowpolyConfig;
     type ConfigMutation = LowpolyConfigMutation;
@@ -263,25 +263,25 @@ impl DocumentApp for LowpolyPlayApp {
     const APP_ID: &'static str = LOWPOLY_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> LowpolyProjection {
-        crate::artifacts::lowpoly::engine::default_projection()
+    fn initial_snapshot() -> LowpolySnapshot {
+        crate::artifacts::lowpoly::engine::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::lowpoly::engine::lowpoly_io())
     }
 
-    fn whole_document_operation(projection: LowpolyProjection) -> Option<LowpolyMutation> {
-        Some(LowpolyMutation::SetProjection { projection })
+    fn whole_document_operation(snapshot: LowpolySnapshot) -> Option<LowpolyMutation> {
+        Some(LowpolyMutation::SetSnapshot { snapshot })
     }
 
-    /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.projection`, replicated
+    /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated
     /// inline — overriding `export_media` shadows the trait's provided body for every port on this app,
     /// not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, LowpolyProjection>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, LowpolySnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
-                let document_json = serde_json::to_value(doc.projection).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                let document_json = serde_json::to_value(doc.snapshot).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 let mesh = crate::artifacts::lowpoly::engine::lowpoly_mesh_from_document(&document_json).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let mesh_document = crate::artifacts::lowpoly::engine::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let json = serde_json::to_string(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
@@ -289,17 +289,17 @@ impl DocumentApp for LowpolyPlayApp {
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `SetProjection` op; `document:in`
+    /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `SetSnapshot` op; `document:in`
     /// replicates the trait's default whole-pack import inline (overriding `import_media` shadows the
     /// default for every port on this app, not just the new one).
-    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LowpolyProjection>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LowpolySnapshot>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "mesh:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -308,15 +308,15 @@ impl DocumentApp for LowpolyPlayApp {
                 let mesh_document: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 let mesh = crate::artifacts::lowpoly::engine::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let projection_json = crate::artifacts::lowpoly::engine::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
-                let projection: LowpolyProjection = serde_json::from_value(projection_json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                Ok(Emit::mutations(vec![LowpolyMutation::SetProjection { projection }]))
+                let snapshot: LowpolySnapshot = serde_json::from_value(projection_json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                Ok(Emit::mutations(vec![LowpolyMutation::SetSnapshot { snapshot }]))
             }
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.into(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                let projection = <LowpolyProjection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                let projection = <LowpolySnapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -330,13 +330,13 @@ impl DocumentApp for LowpolyPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &LowpolyCommand, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
         LOWPOLY_SCRATCH.with(|scratch| command.dispatch(doc, cfg, &mut scratch.borrow_mut()))
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
-        let projection = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
+        let projection = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
         let active_utility = config.active_utility_id.as_str();
         let (scratch_projection, texture_cache) = LOWPOLY_SCRATCH.with(|scratch| {
@@ -347,7 +347,7 @@ impl DocumentApp for LowpolyPlayApp {
             (scratch.transform_projection(), scratch.textures().clone())
         });
         let render_projection = scratch_projection.as_ref().unwrap_or(projection);
-        let view = LowpolyView { projection: render_projection, config };
+        let view = LowpolyView { snapshot: render_projection, config };
         let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT).then(|| crate::apps::lowpoly::view::build_doc(projection, config)).flatten();
         match body_key {
             LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
@@ -363,16 +363,16 @@ impl DocumentApp for LowpolyPlayApp {
         }
     }
 
-    fn window_engagements(doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
-        let config = cfg.projection;
+    fn window_engagements(doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.snapshot;
         let active_utility = config.active_utility_id.as_str();
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
-        let engagement = lowpoly_window_engagement(LowpolyView { projection: doc.projection, config }, active_utility, labels);
+        let engagement = lowpoly_window_engagement(LowpolyView { snapshot: doc.snapshot, config }, active_utility, labels);
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
-    fn window_measures(_doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
+    fn window_measures(_doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.snapshot;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
         let measures = lowpoly_window_measures(config, labels);
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), measures.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), measures)])
@@ -391,7 +391,7 @@ fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group
 /// Only the leaf action/keybinding/utility declarations (which have no dedicated `_def` passthrough)
 /// stay written out inline.
 pub fn create_lowpoly_app() -> App {
-    let default_example = serde_json::to_string(&crate::artifacts::lowpoly::engine::default_projection()).expect("lowpoly default example");
+    let default_example = serde_json::to_string(&crate::artifacts::lowpoly::engine::default_snapshot()).expect("lowpoly default example");
     App::from_builder(
         App::builder(LOWPOLY_PLAY_APP_ID, LocalizedLabel::native("Lowpoly", "Lowpoly"))
             .document(["semio", "lowpoly"])
@@ -436,7 +436,7 @@ pub fn create_lowpoly_app() -> App {
             .mutation("paintStrokeEnd", LocalizedLabel::native("Paint Stroke End", "Malstrich beenden"))
             .mutation("paintFill", LocalizedLabel::native("Paint Fill", "Füllen malen"))
             .mutation("fillBucket", LocalizedLabel::native("Fill Bucket", "Fülleimer"))
-            .mutation("setProjectionJson", LocalizedLabel::native("Set Projection Json", "Projektions-JSON festlegen"))
+            .mutation("setSnapshotJson", LocalizedLabel::native("Set Projection Json", "Projektions-JSON festlegen"))
             .mutation("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
@@ -613,7 +613,7 @@ mod tests {
             LowpolyCommand::PaintFill(paint_fill::PaintFill { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
             LowpolyCommand::FillBucket(fill_bucket::FillBucket { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
             LowpolyCommand::TransformEnd(transform_end::TransformEnd {}),
-            LowpolyCommand::SetProjectionJson(set_projection_json::SetProjectionJson { json: "{}".into() }),
+            LowpolyCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() }),
             LowpolyCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
             LowpolyCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("extrude".into()) }),
             LowpolyCommand::SetActiveObject(set_active_object::SetActiveObject { object_id: "obj-1".into() }),
@@ -671,13 +671,13 @@ mod tests {
             "mem://lowpoly-convergence",
             LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Renamed By A").unwrap()) }),
             LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("box".into()) }),
-            |app| app.projection().expect("projection"),
+            |app| app.snapshot().expect("projection"),
         );
     }
 
     #[test]
     fn ingest_operations_is_idempotent() {
-        testkit::assert_ingest_idempotent::<LowpolyPlayApp, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| app.projection().expect("projection"));
+        testkit::assert_ingest_idempotent::<LowpolyPlayApp, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| app.snapshot().expect("projection"));
     }
 
     #[test]
@@ -701,20 +701,20 @@ mod tests {
     }
 
     #[test]
-    fn import_media_mesh_in_round_trips_into_set_projection() {
+    fn import_media_mesh_in_round_trips_into_set_snapshot() {
         let mesh = semio_framework_plugin::mesh_from_kind("box");
         let mesh_document = crate::artifacts::lowpoly::engine::mesh_document_from_mesh(&mesh).expect("mesh document");
         let json = serde_json::to_string(&mesh_document).expect("mesh document json");
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
         let lowpoly_app = LowpolyPlayApp::default();
-        let projection = crate::artifacts::lowpoly::engine::default_projection();
+        let projection = crate::artifacts::lowpoly::engine::default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &projection, history: &history };
+        let doc = DocumentView { snapshot: &projection, history: &history };
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
         assert_eq!(emit.document_mutations.len(), 1);
         match &emit.document_mutations[0] {
-            LowpolyMutation::SetProjection { projection } => assert_eq!(projection.objects.len(), 1),
-            other => panic!("expected SetProjection, got {other:?}"),
+            LowpolyMutation::SetSnapshot { snapshot } => assert_eq!(projection.objects.len(), 1),
+            other => panic!("expected SetSnapshot, got {other:?}"),
         }
     }
     //#endregion 🔖️MediaPorts
@@ -724,7 +724,7 @@ mod tests {
     fn registry_wired_app_dispatches_add_primitive() {
         let mut a = app_with_registry();
         crate::apps::lowpoly::testkit::dispatch(&mut a, LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("plane".into()) }));
-        assert_eq!(a.projection().expect("projection").objects.len(), 2);
+        assert_eq!(a.snapshot().expect("projection").objects.len(), 2);
     }
     //#endregion 🔖️ContextMenuRegistry
 }

@@ -10,6 +10,8 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - You MUST NOT create any other script files other than `script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
+- You SHOULD NOT use external libraries for runtime purposes.
+  - You SHOULD use as many existing libraries as possible to test our implementation.
 - All devs are using `launch.json` and never use the cli.
   - You MUST register all executable commands there by following the existing order, grouping and naming.
 - You MUST work simultaneously with others on the same files.

@@ -503,10 +503,14 @@ fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
     payload.target_vortex_full_id.hash(&mut hasher);
     payload.object_kind_id.hash(&mut hasher);
     payload.source_vortex_index.hash(&mut hasher);
-    payload.origin.hash(&mut hasher);
-    payload.orientation.hash(&mut hasher);
+    for axis in &payload.origin {
+        axis.to_bits().hash(&mut hasher);
+    }
+    for axis in &payload.orientation {
+        axis.to_bits().hash(&mut hasher);
+    }
     if let Some(scale) = &payload.scale {
-        scale.hash(&mut hasher);
+        format!("{scale:?}").hash(&mut hasher);
     }
     format!("puzzle3d.brush.{:016x}", hasher.finish())
 }

@@ -3,7 +3,7 @@
 use crate::apps::procedural3d::config::Procedural3dConfig;
 use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use crate::artifacts::procedural3d::engine::{preview_camera_json, preview_payload_from_eval_with_session, preview_scene_status_json, preview_selection_json, preview_status_json};
-use crate::artifacts::procedural3d::Procedural3dDocument;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene, world3d_sun_measures, ActionDescriptor, LocalizedLabel, MeasureSelectItem, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
@@ -58,7 +58,7 @@ pub fn preview_window_measures(config: &Procedural3dConfig, procedural_action: i
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural3dDocument, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> UiNode {
+pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> UiNode {
     let eval_json = session.eval_json().to_string();
     let (meshes_json, instances_json) = preview_payload_from_eval_with_session(&eval_json, &document.fixture, config, Some(session));
     let preview_status = preview_status_json(&eval_json, &document.fixture);

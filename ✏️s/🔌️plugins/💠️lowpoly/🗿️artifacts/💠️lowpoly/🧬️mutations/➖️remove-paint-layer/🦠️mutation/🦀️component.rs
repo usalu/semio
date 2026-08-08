@@ -1,5 +1,5 @@
 //! ➖️ Lowpoly mutation — `RemovePaintLayer` payload + builder + apply.
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use crate::artifacts::lowpoly::mutations::LowpolyMutation;
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub fn remove_paint_layer(object_id: impl Into<String>, index: usize) -> Lowpoly
     LowpolyMutation::RemovePaintLayer { object_id: object_id.into(), index }
 }
 
-pub fn apply(projection: &mut LowpolyProjection, object_id: &str, index: usize) {
+pub fn apply(projection: &mut LowpolySnapshot, object_id: &str, index: usize) {
     if let Some(object) = crate::artifacts::lowpoly::engine::object_mut(projection, object_id) {
         if index < object.paint_layers.len() {
             object.paint_layers.remove(index);

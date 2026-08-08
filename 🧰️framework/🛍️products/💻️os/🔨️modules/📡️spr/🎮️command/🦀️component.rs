@@ -10,8 +10,8 @@
 //! interprets an `Op`'s fields, only threads it through the trait seams a technology implements.
 
 //#region 🔖️Mutation
-/// @emoji 📦️ Centralized projection mutation — one `apply` per technology. Moved from
-/// `crate::os_store::MutationDiff` verbatim (only the parameter name `projection` → `base`).
+/// @emoji 📦️ Centralized snapshot mutation — one `apply` per technology. Moved from
+/// `crate::os_store::MutationDiff` verbatim (only the parameter name `snapshot` → `base`).
 pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
     fn apply(&self, base: &P) -> P;
     fn absorb(&mut self, other: Self);
@@ -64,11 +64,11 @@ pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     }
     /// @emoji 🤝️ Post-materialization reconciliation pass (e.g. cross-document studio graph checks).
     /// Defaults to a no-op so every existing document kind keeps its exact prior behavior.
-    fn reconcile(&self, projection: P) -> (P, Vec<ReconcileReport>) {
-        (projection, Vec::new())
+    fn reconcile(&self, snapshot: P) -> (P, Vec<ReconcileReport>) {
+        (snapshot, Vec::new())
     }
-    /// @emoji 🛂️ Pre-apply validation against the current projection. Defaults to `Ok`.
-    fn validate(&self, _projection: &P) -> Result<(), String> {
+    /// @emoji 🛂️ Pre-apply validation against the current snapshot. Defaults to `Ok`.
+    fn validate(&self, _snapshot: &P) -> Result<(), String> {
         Ok(())
     }
 }
@@ -379,8 +379,8 @@ mod tests {
         assert_eq!(op.conflict_rule(), crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::LwwRegister));
         assert_eq!(op.state_class(), crate::os_spr::StateClass::Persistent);
         assert!(op.validate(&0).is_ok());
-        let (projection, reports) = op.reconcile(42);
-        assert_eq!(projection, 42);
+        let (snapshot, reports) = op.reconcile(42);
+        assert_eq!(snapshot, 42);
         assert!(reports.is_empty());
     }
     //#endregion 🧪️MutationLaws

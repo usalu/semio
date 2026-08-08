@@ -1,4 +1,4 @@
-//! ⚙️ CAD artifact — headless compute over the `CadProjection` projection: the shared brep kernel, the
+//! ⚙️ CAD artifact — headless compute over the `CadSnapshot` projection: the shared brep kernel, the
 //! quad play fixture importer, mesh/typology tessellation, native geometry import/export, and the
 //! plugin-level `register()` that wires cad's exporters/importers into the host.
 //!
@@ -10,7 +10,7 @@
 //! that consumer's file; two or more consumers put it here.
 
 use base64::Engine as _;
-use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadProjection, CAD_PLAY_DOCUMENT_SCHEMA};
+use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
 use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
 use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
@@ -211,8 +211,8 @@ pub fn typology_mesh_kind(typology: &str) -> &'static str {
     }
 }
 
-pub fn default_document() -> CadProjection {
-    CadProjection {
+pub fn default_document() -> CadSnapshot {
+    CadSnapshot {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
         objects: vec![CadObject {
@@ -245,12 +245,12 @@ pub fn default_document() -> CadProjection {
 /// @emoji 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
 /// sourced from their own model definition inside the shared fixture JSON. Empty panes stay empty —
 /// never collapse to `default_document` (that single-box placeholder was the cut-concrete bug).
-fn forest_play_document(source_json: &str, id: &str) -> CadProjection {
+fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
     let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
     let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
     let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
     let (structure_classic_objects, structure_classic_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
-    CadProjection {
+    CadSnapshot {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: id.into(),
         objects: shape_objects,
@@ -267,11 +267,11 @@ fn forest_play_document(source_json: &str, id: &str) -> CadProjection {
     }
 }
 
-/// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadProjection` (no runtime/history),
+/// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadSnapshot` (no runtime/history),
 /// wrapped into a `DocumentStore` by `VcsDocumentApp` when spawned. Cached so manifest registration,
 /// `initial_projection`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
-pub fn forest_play_scene() -> CadProjection {
-    static FOREST_PLAY_SCENE: OnceLock<CadProjection> = OnceLock::new();
+pub fn forest_play_scene() -> CadSnapshot {
+    static FOREST_PLAY_SCENE: OnceLock<CadSnapshot> = OnceLock::new();
     FOREST_PLAY_SCENE.get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)).clone()
 }
 
@@ -282,7 +282,7 @@ pub fn next_cad_id(prefix: &str) -> String {
 }
 
 /// 🌲️ The initial per-pane camera for the Concrete Forest Left example — session-only runtime state
-/// now (camera moved off `CadProjection`), matching the pose the document used to carry before the
+/// now (camera moved off `CadSnapshot`), matching the pose the document used to carry before the
 /// camera-as-View-action refactor.
 pub fn forest_play_camera() -> CadCamera {
     CadCamera { position: [12.0, -12.0, 8.0], target: [5.4, 2.34, 1.5], zoom: 1.0, fov: 50.0, projection: CadProjectionDsl::default() }
@@ -467,7 +467,7 @@ pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
     Some(raw.clone())
 }
 
-pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadProjection> {
+pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadSnapshot> {
     if payload.get("schema").and_then(|value| value.as_str()) == Some("spatial.modelspace") {
         let models = payload.get("models")?.as_array()?;
         let mut scene = default_document();
@@ -583,7 +583,7 @@ pub fn object_scale_json(object: &CadObject) -> [f64; 3] {
 /// @emoji 🧵️ Tessellates a representative mesh for the OS mesh-exporter boundary — the document's
 /// first object across panes, or the default box typology for an empty scene (no runtime selection
 /// exists at this boundary).
-pub fn export_mesh_from_scene(document: &CadProjection) -> MeshData {
+pub fn export_mesh_from_scene(document: &CadSnapshot) -> MeshData {
     let first = cad_all_objects(document).next();
     let typology = first.map_or("spatial.shape.primitive.box", |(object, _)| object.typology.as_str());
     let extent = first.and_then(|(object, _)| object.extent);
@@ -593,7 +593,7 @@ pub fn export_mesh_from_scene(document: &CadProjection) -> MeshData {
 }
 
 pub fn cad_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let scene: CadProjection = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+    let scene: CadSnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_scene(&scene))
 }
 
@@ -620,7 +620,7 @@ pub fn cad_document_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<Va
     serde_json::to_value(&scene).map_err(|err| err.to_string())
 }
 
-/// @emoji 🧵️ Bridges a `MeshImporter`-decoded mesh (currently only GLB) back into a bare `CadProjection`
+/// @emoji 🧵️ Bridges a `MeshImporter`-decoded mesh (currently only GLB) back into a bare `CadSnapshot`
 /// document, reusing the same OBJ-text-roundtrip kernel import as the DWG/STL/`importCadFile` paths.
 pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let mut scene = default_document();
@@ -640,8 +640,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("cad.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -670,8 +670,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("cad.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -717,8 +717,9 @@ pub fn sync_cad_computer_contributions(contributions_json: &str) {
 /// the cad play app plus every native geometry exporter/importer the `3d.cad` artifact kind
 /// advertises. Was the bundle crate's `register_cad_exports`.
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
-    // 📦️ pack binary codec for `CadProjection` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
+    // 📦️ pack binary codec for `CadSnapshot` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::cad::CadPlayApp>(crate::artifacts::cad::CAD_DOCUMENT_SCHEMA);
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::ObjSolidExporter));
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::StlSolidExporter));
@@ -733,39 +734,63 @@ pub fn register() {
 }
 //#endregion 🔖️Register
 
+
+//#region 🔖️ArtifactSchemaRegistry
+static CAD_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the cad artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = CAD_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::cad::schema::cad_artifact_schema_descriptor());
+}
+//#endregion 🔖️ArtifactSchemaRegistry
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct CadEngine {
-    projection: crate::artifacts::cad::CadProjection,
+    artifact: crate::artifacts::cad::schema::CadArtifact,
+    snapshot: crate::artifacts::cad::CadSnapshot,
 }
 
 impl CadEngine {
-    pub fn new(projection: crate::artifacts::cad::CadProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::cad::CadSnapshot) -> Self {
+        let artifact = crate::artifacts::cad::schema::CadArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::cad::CadProjection {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::cad::CadSnapshot {
+        self.snapshot
     }
+
 }
 
 impl protocol::ArtifactEngine for CadEngine {
-    type Projection = crate::artifacts::cad::CadProjection;
+    type Artifact = crate::artifacts::cad::schema::CadArtifact;
+    type Snapshot = crate::artifacts::cad::CadSnapshot;
     type Mutation = crate::artifacts::cad::mutations::CadMutation;
     type Diff = crate::artifacts::cad::diff::CadDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = <Self::Diff as protocol::MutationDiff<Self::Projection>>::apply(&diff, &self.projection);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

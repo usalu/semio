@@ -118,6 +118,7 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "cadcfg")]
+#[dsl(id = "cad.config")]
 #[dsl(layout = "lines")]
 pub struct CadConfig {
     /// 👁️ Was `CadPlayRuntime::selected_object_ids` (`SelectionSet`).
@@ -306,7 +307,7 @@ store::impl_whole_record_config!(CadConfig);
 /// operation enum. Unlike `CadMutation` (many narrow document-mutating variants), this is a single
 /// whole-record `Snapshot`: `cad_ui`'s pure `handle()` converts its (former `RefCell`-backed)
 /// `CadPlayRuntime` scratch struct into the next `CadConfig` once per dispatch and diffs it against the
-/// pre-command config, exactly like `CadMutation::SetScene`'s existing "whole-document replace"
+/// pre-command config, exactly like `CadMutation::SetSnapshot`'s existing "whole-document replace"
 /// pattern — session state (selection/hover/camera/engagement/…) mutates in tight clusters (e.g.
 /// `worldSelect` touches 5+ fields together), so per-field variants would just be wide-argument
 /// snapshots in miniature with none of a real granular diff's benefit. `backwards()` restores the
@@ -479,7 +480,7 @@ mod tests {
         assert_eq!(backwards, vec![CadConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
         assert_eq!(restored, base);
-        store::test_support::assert_op_line_round_trip(&operation);
+        store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
@@ -489,7 +490,7 @@ mod tests {
         let operation = CadConfigMutation::SetContributions { json: json.into() };
         let next = operation.diff(&base);
         assert_eq!(next.contributions_json, json);
-        store::test_support::assert_op_line_round_trip(&operation);
+        store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 }
 //#endregion 🧪️Tests

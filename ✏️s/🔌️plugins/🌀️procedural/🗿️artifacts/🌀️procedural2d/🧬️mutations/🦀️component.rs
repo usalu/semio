@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::procedural2d::diff::Procedural2dDiff;
-use crate::artifacts::procedural2d::{widget_id, Procedural2dDocument};
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{invert_generation_operation, GenerationMutation};
 use protocol::Mutation;
@@ -41,26 +41,83 @@ fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.synapses.iter().position(|synapse| synapse.id == id)
 }
 
-impl Mutation<Procedural2dDocument> for Procedural2dMutation {
+impl Mutation<Procedural2dSnapshot> for Procedural2dMutation {
     type Diff = Procedural2dDiff;
 
-    fn diff(&self, _projection: &Procedural2dDocument) -> Procedural2dDiff {
-        let mut diff = Procedural2dDiff::default();
+    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+        use crate::artifacts::procedural2d::diff::{
+            diff_fixture_from_helpers, diff_generation_from_ops, LayoutDiff, SynapsesDiff, WidgetsDiff,
+        };
         match self {
-            Procedural2dMutation::SetWidget { index, widget } => diff.widgets.set.push((*index, widget.clone())),
-            Procedural2dMutation::RemoveWidget { id } => diff.widgets.removed.push(id.clone()),
-            Procedural2dMutation::SetSynapse { index, synapse } => diff.synapses.set.push((*index, synapse.clone())),
-            Procedural2dMutation::RemoveSynapse { id } => diff.synapses.removed.push(id.clone()),
-            Procedural2dMutation::SetLayout { id, layout } => diff.layout.set.push((id.clone(), layout.clone())),
-            Procedural2dMutation::RemoveLayout { id } => diff.layout.removed.push(id.clone()),
-            Procedural2dMutation::SetCamera { camera } => diff.camera = Some(camera.clone()),
-            Procedural2dMutation::SetSchema { schema } => diff.schema = Some(schema.clone()),
-            Procedural2dMutation::Generation(operation) => diff.generation.push(operation.clone()),
+            Procedural2dMutation::SetWidget { index, widget } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff { removed: vec![], set: vec![(*index, widget.clone())] },
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::RemoveWidget { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff { removed: vec![id.clone()], set: vec![] },
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::SetSynapse { index, synapse } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff { removed: vec![], set: vec![(*index, synapse.clone())] },
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::RemoveSynapse { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff { removed: vec![id.clone()], set: vec![] },
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::SetLayout { id, layout } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff { removed: vec![], set: vec![(id.clone(), layout.clone())] },
+                None,
+                None,
+            ),
+            Procedural2dMutation::RemoveLayout { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff { removed: vec![id.clone()], set: vec![] },
+                None,
+                None,
+            ),
+            Procedural2dMutation::SetCamera { camera } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                Some(camera.clone()),
+                None,
+            ),
+            Procedural2dMutation::SetSchema { schema } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                Some(schema.clone()),
+            ),
+            Procedural2dMutation::Generation(operation) => diff_generation_from_ops(base, vec![operation.clone()]),
         }
-        diff
     }
 
-    fn inverse(&self, projection: &Procedural2dDocument) -> Vec<Self> {
+    fn inverse(&self, projection: &Procedural2dSnapshot) -> Vec<Self> {
         let fixture = &projection.fixture;
         match self {
             Procedural2dMutation::SetWidget { widget, .. } => match widget_index(fixture, widget_id(widget)) {
@@ -129,18 +186,18 @@ pub fn procedural2d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 }
 //#endregion 🔖️Operation
 
-pub type Procedural2dEnvelope = DocumentEnvelope<Procedural2dDocument, Procedural2dMutation>;
-pub type Procedural2dStore = DocumentStore<Procedural2dDocument, Procedural2dMutation>;
+pub type Procedural2dEnvelope = DocumentEnvelope<Procedural2dSnapshot, Procedural2dMutation>;
+pub type Procedural2dStore = DocumentStore<Procedural2dSnapshot, Procedural2dMutation>;
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::procedural2d::diff::{SynapsesDiff, WidgetsDiff};
-    use crate::artifacts::procedural2d::engine::empty_procedural2d_projection;
+    use crate::artifacts::procedural2d::engine::empty_procedural2d_snapshot;
     use vcs::apply_mutation;
 
-    fn round_trip(projection: &Procedural2dDocument, operation: &Procedural2dMutation) -> Procedural2dDocument {
+    fn round_trip(projection: &Procedural2dSnapshot, operation: &Procedural2dMutation) -> Procedural2dSnapshot {
         let forward = apply_mutation(projection, operation);
         let mut restored = forward.clone();
         for back in operation.inverse(projection) {
@@ -161,7 +218,7 @@ mod tests {
 
     #[test]
     fn remove_and_readd_widget_round_trips() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let removed_id = widget_id(&base.fixture.widgets[0]).to_string();
         let after = round_trip(&base, &Procedural2dMutation::RemoveWidget { id: removed_id.clone() });
         assert!(!after.fixture.widgets.iter().any(|w| widget_id(w) == removed_id));
@@ -178,7 +235,7 @@ mod tests {
 
     #[test]
     fn generation_op_round_trips() {
-        let before = empty_procedural2d_projection();
+        let before = empty_procedural2d_snapshot();
         let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural2dMutation::Generation(GenerationMutation::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
@@ -187,21 +244,21 @@ mod tests {
     //#region 🔖️OperationBackwardsTests
     #[test]
     fn set_widget_backwards_restores_replaced_widget() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let id = widget_id(&base.fixture.widgets[1]).to_string();
         round_trip(&base, &Procedural2dMutation::SetWidget { index: 1, widget: Widget::InputNote { id, text: "replaced".into() } });
     }
 
     #[test]
     fn set_widget_backwards_removes_newly_inserted_widget() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let after = round_trip(&base, &Procedural2dMutation::SetWidget { index: 0, widget: Widget::InputNote { id: "brand-new".into(), text: String::new() } });
         assert!(after.fixture.widgets.iter().any(|w| widget_id(w) == "brand-new"));
     }
 
     #[test]
     fn remove_widget_on_unknown_id_is_a_noop_with_no_backwards_ops() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let op = Procedural2dMutation::RemoveWidget { id: "does-not-exist".into() };
         assert!(op.inverse(&base).is_empty());
         let after = round_trip(&base, &op);
@@ -210,14 +267,14 @@ mod tests {
 
     #[test]
     fn set_synapse_backwards_restores_replaced_synapse() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
         round_trip(&base, &Procedural2dMutation::SetSynapse { index: 0, synapse: SynapseSpec { id, from: "add".into(), to: "preview".into(), from_port: "sum".into(), to_port: "changed".into() } });
     }
 
     #[test]
     fn set_synapse_backwards_removes_newly_inserted_synapse() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let synapse = SynapseSpec { id: "brand-new-synapse".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "b".into() };
         let after = round_trip(&base, &Procedural2dMutation::SetSynapse { index: 0, synapse });
         assert!(after.fixture.synapses.iter().any(|s| s.id == "brand-new-synapse"));
@@ -225,28 +282,28 @@ mod tests {
 
     #[test]
     fn remove_synapse_backwards_restores_removed_synapse() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
         round_trip(&base, &Procedural2dMutation::RemoveSynapse { id });
     }
 
     #[test]
     fn remove_synapse_on_unknown_id_is_a_noop_with_no_backwards_ops() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let op = Procedural2dMutation::RemoveSynapse { id: "missing".into() };
         assert!(op.inverse(&base).is_empty());
     }
 
     #[test]
     fn set_layout_backwards_restores_prior_layout_entry() {
-        let mut base = empty_procedural2d_projection();
+        let mut base = empty_procedural2d_snapshot();
         base.fixture.layout.insert("slider".into(), WidgetLayout { x: 1.0, y: 1.0 });
         round_trip(&base, &Procedural2dMutation::SetLayout { id: "slider".into(), layout: WidgetLayout { x: 9.0, y: 9.0 } });
     }
 
     #[test]
     fn set_layout_backwards_removes_newly_created_layout_entry() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         assert!(base.fixture.layout.is_empty());
         let after = round_trip(&base, &Procedural2dMutation::SetLayout { id: "slider".into(), layout: WidgetLayout { x: 2.0, y: 2.0 } });
         assert!(after.fixture.layout.contains_key("slider"));
@@ -254,27 +311,27 @@ mod tests {
 
     #[test]
     fn remove_layout_backwards_restores_removed_layout_entry() {
-        let mut base = empty_procedural2d_projection();
+        let mut base = empty_procedural2d_snapshot();
         base.fixture.layout.insert("slider".into(), WidgetLayout { x: 4.0, y: 5.0 });
         round_trip(&base, &Procedural2dMutation::RemoveLayout { id: "slider".into() });
     }
 
     #[test]
     fn remove_layout_on_unknown_id_is_a_noop_with_no_backwards_ops() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         let op = Procedural2dMutation::RemoveLayout { id: "missing".into() };
         assert!(op.inverse(&base).is_empty());
     }
 
     #[test]
     fn set_camera_backwards_restores_prior_camera() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         round_trip(&base, &Procedural2dMutation::SetCamera { camera: CameraJson { x: 42.0, y: -3.0, zoom: 5.0 } });
     }
 
     #[test]
     fn set_schema_backwards_restores_prior_schema() {
-        let base = empty_procedural2d_projection();
+        let base = empty_procedural2d_snapshot();
         round_trip(&base, &Procedural2dMutation::SetSchema { schema: "changed.schema".into() });
     }
     //#endregion 🔖️OperationBackwardsTests
@@ -324,10 +381,10 @@ mod tests {
 //#endregion 🧪️Tests
 
 
-pub fn apply_procedural2d_mutation(projection: &mut Procedural2dDocument, mutation: &Procedural2dMutation) {
+pub fn apply_procedural2d_mutation(projection: &mut Procedural2dSnapshot, mutation: &Procedural2dMutation) {
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_procedural2d_mutation(projection: &Procedural2dDocument, mutation: &Procedural2dMutation) -> Vec<Procedural2dMutation> {
+pub fn inverse_procedural2d_mutation(projection: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Vec<Procedural2dMutation> {
     mutation.inverse(projection)
 }

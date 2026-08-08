@@ -1,22 +1,21 @@
-//! 🔺️ Diff fragment for `Organizational`.
-use crate::artifacts::program::mutations::ProgramMutation;
-use crate::artifacts::program::Program;
-use protocol::MutationDiff;
+//! 🔺️ Diff fragment yielded by `Organizational`.
+use crate::artifacts::program::diff::ProgramDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
+/// @emoji 🔺️ Diff produced by one `Organizational` mutation — a sparse [`ProgramDiff`].
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct OrganizationalDiff { pub mutation: Option<ProgramMutation> }
-impl OrganizationalDiff {
-    pub fn from_mutation(mutation: ProgramMutation) -> Self { Self { mutation: Some(mutation) } }
+pub struct OrganizationalDiff {
+    pub diff: ProgramDiff,
 }
-impl MutationDiff<Program> for OrganizationalDiff {
-    fn apply(&self, projection: &Program) -> Program {
-        match &self.mutation {
-            Some(m) => { let mut next = projection.clone(); crate::artifacts::program::mutations::apply_program_mutation(&mut next, m); next }
-            None => projection.clone(),
-        }
+
+impl OrganizationalDiff {
+    pub fn from_diff(diff: ProgramDiff) -> Self {
+        Self { diff }
     }
-    fn absorb(&mut self, other: Self) { if other.mutation.is_some() { *self = other; } }
+
+    pub fn into_program_diff(self) -> ProgramDiff {
+        self.diff
+    }
 }
 //#endregion 🔖️Diff

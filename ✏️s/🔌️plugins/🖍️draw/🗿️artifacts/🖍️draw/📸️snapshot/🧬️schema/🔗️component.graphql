@@ -1,0 +1,31 @@
+# 🧬️ Draw snapshot schema — persistent fields only.
+
+type DrawSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: [DrawLayerNode!]! @state(class: PERSISTENT)
+  assets: [DrawImageAssetEntry!]! @state(class: PERSISTENT)
+  artboard: DrawArtboard @state(class: PERSISTENT)
+}
+
+type DrawLayerNode {
+  kind: String!
+}
+
+type DrawImageAssetEntry {
+  key: String!
+  value: DrawImageAsset!
+}
+
+type DrawImageAsset {
+  mime: String!
+  data: String!
+  width: Int
+  height: Int
+}
+
+type DrawArtboard {
+  width: Float!
+  height: Float!
+}

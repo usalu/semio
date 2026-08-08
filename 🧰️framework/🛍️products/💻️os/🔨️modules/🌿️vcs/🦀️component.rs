@@ -118,7 +118,7 @@ pub struct Alternative {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocumentVcs<P, Mutation> {
-    pub initial_projection: P,
+    pub initial_snapshot: P,
     pub edits: Vec<Edit<Mutation>>,
     pub changes: Vec<Change>,
     pub checkpoints: Vec<Checkpoint>,
@@ -292,14 +292,14 @@ where
 }
 //#endregion 🔖️CollectionMutation
 //#region 🔖️Mutation
-// 🎞️ `Mutation`/`MutationDiff` live in `protocol_command`; this region just replays a projection
+// 🎞️ `Mutation`/`MutationDiff` live in `protocol_command`; this region just replays a snapshot
 // through an operation's forward diff — the pure per-step transform every store-level replay uses.
 
-pub fn apply_mutation<P, Mutation>(projection: &P, operation: &Mutation) -> P
+pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> P
 where
     Mutation: self::Mutation<P>,
 {
-    operation.diff(projection).apply(projection)
+    operation.diff(snapshot).apply(snapshot)
 }
 
 //#endregion 🔖️Mutation

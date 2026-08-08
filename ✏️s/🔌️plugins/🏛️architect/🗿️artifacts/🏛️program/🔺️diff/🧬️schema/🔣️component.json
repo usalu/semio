@@ -1,0 +1,4549 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/s/architect/program/diff.json",
+  "title": "ProgramDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "ProgramArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/ProgramMeta",
+      "x-semio-state": "persistent"
+    },
+    "project": {
+      "$ref": "#/$defs/ProjectDefinition",
+      "x-semio-state": "persistent"
+    },
+    "stakeholders": {
+      "$ref": "#/$defs/ProgramStakeholdersDelta",
+      "x-semio-state": "persistent"
+    },
+    "users": {
+      "$ref": "#/$defs/ProgramUsersDelta",
+      "x-semio-state": "persistent"
+    },
+    "activities": {
+      "$ref": "#/$defs/ProgramActivitiesDelta",
+      "x-semio-state": "persistent"
+    },
+    "functions": {
+      "$ref": "#/$defs/ProgramFunctionsDelta",
+      "x-semio-state": "persistent"
+    },
+    "elements": {
+      "$ref": "#/$defs/ProgramElementsDelta",
+      "x-semio-state": "persistent"
+    },
+    "quantities": {
+      "$ref": "#/$defs/ProgramQuantitiesDelta",
+      "x-semio-state": "persistent"
+    },
+    "relationships": {
+      "$ref": "#/$defs/ProgramRelationshipsDelta",
+      "x-semio-state": "persistent"
+    },
+    "adjacencies": {
+      "$ref": "#/$defs/ProgramAdjacenciesDelta",
+      "x-semio-state": "persistent"
+    },
+    "processes": {
+      "$ref": "#/$defs/ProgramProcessesDelta",
+      "x-semio-state": "persistent"
+    },
+    "flows": {
+      "$ref": "#/$defs/ProgramFlowsDelta",
+      "x-semio-state": "persistent"
+    },
+    "accessRules": {
+      "$ref": "#/$defs/ProgramAccessRulesDelta",
+      "x-semio-state": "persistent"
+    },
+    "operations": {
+      "$ref": "#/$defs/ProgramOperationsDelta",
+      "x-semio-state": "persistent"
+    },
+    "equipment": {
+      "$ref": "#/$defs/ProgramEquipmentDelta",
+      "x-semio-state": "persistent"
+    },
+    "resources": {
+      "$ref": "#/$defs/ProgramResourcesDelta",
+      "x-semio-state": "persistent"
+    },
+    "storage": {
+      "$ref": "#/$defs/ProgramStorageDelta",
+      "x-semio-state": "persistent"
+    },
+    "environmental": {
+      "$ref": "#/$defs/ProgramEnvironmentalDelta",
+      "x-semio-state": "persistent"
+    },
+    "humanFactors": {
+      "$ref": "#/$defs/ProgramHumanFactorsDelta",
+      "x-semio-state": "persistent"
+    },
+    "accessibility": {
+      "$ref": "#/$defs/ProgramAccessibilityDelta",
+      "x-semio-state": "persistent"
+    },
+    "privacy": {
+      "$ref": "#/$defs/ProgramPrivacyDelta",
+      "x-semio-state": "persistent"
+    },
+    "safety": {
+      "$ref": "#/$defs/ProgramSafetyDelta",
+      "x-semio-state": "persistent"
+    },
+    "security": {
+      "$ref": "#/$defs/ProgramSecurityDelta",
+      "x-semio-state": "persistent"
+    },
+    "regulatory": {
+      "$ref": "#/$defs/ProgramRegulatoryDelta",
+      "x-semio-state": "persistent"
+    },
+    "siteContext": {
+      "$ref": "#/$defs/ProgramSiteContextDelta",
+      "x-semio-state": "persistent"
+    },
+    "organizational": {
+      "$ref": "#/$defs/ProgramOrganizationalDelta",
+      "x-semio-state": "persistent"
+    },
+    "services": {
+      "$ref": "#/$defs/ProgramServicesDelta",
+      "x-semio-state": "persistent"
+    },
+    "infrastructure": {
+      "$ref": "#/$defs/ProgramInfrastructureDelta",
+      "x-semio-state": "persistent"
+    },
+    "information": {
+      "$ref": "#/$defs/ProgramInformationDelta",
+      "x-semio-state": "persistent"
+    },
+    "communication": {
+      "$ref": "#/$defs/ProgramCommunicationDelta",
+      "x-semio-state": "persistent"
+    },
+    "wayfinding": {
+      "$ref": "#/$defs/ProgramWayfindingDelta",
+      "x-semio-state": "persistent"
+    },
+    "schedules": {
+      "$ref": "#/$defs/ProgramSchedulesDelta",
+      "x-semio-state": "persistent"
+    },
+    "flexibility": {
+      "$ref": "#/$defs/ProgramFlexibilityDelta",
+      "x-semio-state": "persistent"
+    },
+    "growth": {
+      "$ref": "#/$defs/ProgramGrowthDelta",
+      "x-semio-state": "persistent"
+    },
+    "sustainability": {
+      "$ref": "#/$defs/ProgramSustainabilityDelta",
+      "x-semio-state": "persistent"
+    },
+    "resilience": {
+      "$ref": "#/$defs/ProgramResilienceDelta",
+      "x-semio-state": "persistent"
+    },
+    "costs": {
+      "$ref": "#/$defs/ProgramCostsDelta",
+      "x-semio-state": "persistent"
+    },
+    "delivery": {
+      "$ref": "#/$defs/ProgramDeliveryDelta",
+      "x-semio-state": "persistent"
+    },
+    "risks": {
+      "$ref": "#/$defs/ProgramRisksDelta",
+      "x-semio-state": "persistent"
+    },
+    "conflicts": {
+      "$ref": "#/$defs/ProgramConflictsDelta",
+      "x-semio-state": "persistent"
+    },
+    "requirements": {
+      "$ref": "#/$defs/ProgramRequirementsDelta",
+      "x-semio-state": "persistent"
+    },
+    "priorities": {
+      "$ref": "#/$defs/ProgramPrioritiesDelta",
+      "x-semio-state": "persistent"
+    },
+    "scenarios": {
+      "$ref": "#/$defs/ProgramScenariosDelta",
+      "x-semio-state": "persistent"
+    },
+    "options": {
+      "$ref": "#/$defs/ProgramOptionsDelta",
+      "x-semio-state": "persistent"
+    },
+    "decisions": {
+      "$ref": "#/$defs/ProgramDecisionsDelta",
+      "x-semio-state": "persistent"
+    },
+    "validations": {
+      "$ref": "#/$defs/ProgramValidationsDelta",
+      "x-semio-state": "persistent"
+    },
+    "performance": {
+      "$ref": "#/$defs/ProgramPerformanceDelta",
+      "x-semio-state": "persistent"
+    },
+    "quality": {
+      "$ref": "#/$defs/ProgramQualityDelta",
+      "x-semio-state": "persistent"
+    },
+    "documents": {
+      "$ref": "#/$defs/ProgramDocumentsDelta",
+      "x-semio-state": "persistent"
+    },
+    "assumptions": {
+      "$ref": "#/$defs/ProgramAssumptionsDelta",
+      "x-semio-state": "persistent"
+    },
+    "constraints": {
+      "$ref": "#/$defs/ProgramConstraintsDelta",
+      "x-semio-state": "persistent"
+    },
+    "complianceRecords": {
+      "$ref": "#/$defs/ProgramComplianceRecordsDelta",
+      "x-semio-state": "persistent"
+    },
+    "approvals": {
+      "$ref": "#/$defs/ProgramApprovalsDelta",
+      "x-semio-state": "persistent"
+    },
+    "meetings": {
+      "$ref": "#/$defs/ProgramMeetingsDelta",
+      "x-semio-state": "persistent"
+    },
+    "changes": {
+      "$ref": "#/$defs/ProgramChangesDelta",
+      "x-semio-state": "persistent"
+    },
+    "collaboration": {
+      "$ref": "#/$defs/ProgramCollaborationDelta",
+      "x-semio-state": "persistent"
+    },
+    "analyses": {
+      "$ref": "#/$defs/ProgramAnalysesDelta",
+      "x-semio-state": "persistent"
+    },
+    "reports": {
+      "$ref": "#/$defs/ProgramReportsDelta",
+      "x-semio-state": "persistent"
+    },
+    "searchFilters": {
+      "$ref": "#/$defs/ProgramSearchFiltersDelta",
+      "x-semio-state": "persistent"
+    },
+    "statusRecords": {
+      "$ref": "#/$defs/ProgramStatusRecordsDelta",
+      "x-semio-state": "persistent"
+    },
+    "workshops": {
+      "$ref": "#/$defs/ProgramWorkshopsDelta",
+      "x-semio-state": "persistent"
+    },
+    "surveys": {
+      "$ref": "#/$defs/ProgramSurveysDelta",
+      "x-semio-state": "persistent"
+    },
+    "issues": {
+      "$ref": "#/$defs/ProgramIssuesDelta",
+      "x-semio-state": "persistent"
+    },
+    "auditEvents": {
+      "$ref": "#/$defs/ProgramAuditEventsDelta",
+      "x-semio-state": "persistent"
+    },
+    "templates": {
+      "$ref": "#/$defs/ProgramTemplatesDelta",
+      "x-semio-state": "persistent"
+    },
+    "knowledge": {
+      "$ref": "#/$defs/ProgramKnowledgeDelta",
+      "x-semio-state": "persistent"
+    },
+    "benchmarks": {
+      "$ref": "#/$defs/ProgramBenchmarksDelta",
+      "x-semio-state": "persistent"
+    },
+    "traces": {
+      "$ref": "#/$defs/ProgramTracesDelta",
+      "x-semio-state": "persistent"
+    },
+    "governance": {
+      "$ref": "#/$defs/Governance",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/ProgramStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeRegister": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "adjacencyKindFilter": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/AdjacencyKind"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    },
+    "activeReportJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "shared-ui"
+    },
+    "searchQuery": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "searchHistoryJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "lastResultJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "lastAnalysisJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "graphCameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "graphCameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "graphCameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "AccessRule": {
+      "title": "AccessRule",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AccessibilityRequirement": {
+      "title": "AccessibilityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Activity": {
+      "title": "Activity",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Adjacency": {
+      "title": "Adjacency",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AdjacencyKind": {
+      "title": "AdjacencyKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AnalysisRecord": {
+      "title": "AnalysisRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ApprovalRecord": {
+      "title": "ApprovalRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Assumption": {
+      "title": "Assumption",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AuditEvent": {
+      "title": "AuditEvent",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BenchmarkRecord": {
+      "title": "BenchmarkRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ChangeRecord": {
+      "title": "ChangeRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "CollaborationRecord": {
+      "title": "CollaborationRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "CommunicationRequirement": {
+      "title": "CommunicationRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ComplianceRecord": {
+      "title": "ComplianceRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Conflict": {
+      "title": "Conflict",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ConstraintRecord": {
+      "title": "ConstraintRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "CostRequirement": {
+      "title": "CostRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Decision": {
+      "title": "Decision",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "DeliveryConstraint": {
+      "title": "DeliveryConstraint",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "DocumentRecord": {
+      "title": "DocumentRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "EnvironmentalRequirement": {
+      "title": "EnvironmentalRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Equipment": {
+      "title": "Equipment",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "FlexibilityRequirement": {
+      "title": "FlexibilityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "FlowRequirement": {
+      "title": "FlowRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Function": {
+      "title": "Function",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Governance": {
+      "title": "Governance",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "GrowthPlan": {
+      "title": "GrowthPlan",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "HumanFactorRequirement": {
+      "title": "HumanFactorRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "InformationRequirement": {
+      "title": "InformationRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "InfrastructureRequirement": {
+      "title": "InfrastructureRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Issue": {
+      "title": "Issue",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "KnowledgeRecord": {
+      "title": "KnowledgeRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "MeetingRecord": {
+      "title": "MeetingRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "OperationalRequirement": {
+      "title": "OperationalRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "OptionEvaluation": {
+      "title": "OptionEvaluation",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "OrganizationalRequirement": {
+      "title": "OrganizationalRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "PerformanceCriterion": {
+      "title": "PerformanceCriterion",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "PriorityRecord": {
+      "title": "PriorityRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "PrivacyRequirement": {
+      "title": "PrivacyRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Process": {
+      "title": "Process",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramElement": {
+      "title": "ProgramElement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramMeta": {
+      "title": "ProgramMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProjectDefinition": {
+      "title": "ProjectDefinition",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "QualityRecord": {
+      "title": "QualityRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "QuantityRequirement": {
+      "title": "QuantityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "RegulatoryRequirement": {
+      "title": "RegulatoryRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Relationship": {
+      "title": "Relationship",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ReportRecord": {
+      "title": "ReportRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Requirement": {
+      "title": "Requirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ResilienceRequirement": {
+      "title": "ResilienceRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Resource": {
+      "title": "Resource",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Risk": {
+      "title": "Risk",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SafetyRequirement": {
+      "title": "SafetyRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Scenario": {
+      "title": "Scenario",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ScheduleRequirement": {
+      "title": "ScheduleRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SearchFilter": {
+      "title": "SearchFilter",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SecurityRequirement": {
+      "title": "SecurityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ServiceRequirement": {
+      "title": "ServiceRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SiteContext": {
+      "title": "SiteContext",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Stakeholder": {
+      "title": "Stakeholder",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "StatusRecord": {
+      "title": "StatusRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "StorageRequirement": {
+      "title": "StorageRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Survey": {
+      "title": "Survey",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SustainabilityRequirement": {
+      "title": "SustainabilityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "TemplateRecord": {
+      "title": "TemplateRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "TraceLink": {
+      "title": "TraceLink",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ValidationRecord": {
+      "title": "ValidationRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "WayfindingRequirement": {
+      "title": "WayfindingRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Workshop": {
+      "title": "Workshop",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramStakeholdersDelta": {
+      "title": "ProgramStakeholdersDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Stakeholder"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStakeholdersPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramUsersDelta": {
+      "title": "ProgramUsersDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UserProfile"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramUsersPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramActivitiesDelta": {
+      "title": "ProgramActivitiesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Activity"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramActivitiesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramFunctionsDelta": {
+      "title": "ProgramFunctionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Function"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFunctionsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramElementsDelta": {
+      "title": "ProgramElementsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramElement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramElementsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramQuantitiesDelta": {
+      "title": "ProgramQuantitiesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantityRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramQuantitiesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramRelationshipsDelta": {
+      "title": "ProgramRelationshipsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Relationship"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRelationshipsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramAdjacenciesDelta": {
+      "title": "ProgramAdjacenciesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Adjacency"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAdjacenciesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramProcessesDelta": {
+      "title": "ProgramProcessesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Process"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramProcessesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramFlowsDelta": {
+      "title": "ProgramFlowsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFlowsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramAccessRulesDelta": {
+      "title": "ProgramAccessRulesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AccessRule"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAccessRulesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramOperationsDelta": {
+      "title": "ProgramOperationsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OperationalRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOperationsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramEquipmentDelta": {
+      "title": "ProgramEquipmentDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Equipment"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramEquipmentPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramResourcesDelta": {
+      "title": "ProgramResourcesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Resource"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramResourcesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramStorageDelta": {
+      "title": "ProgramStorageDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StorageRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStoragePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramEnvironmentalDelta": {
+      "title": "ProgramEnvironmentalDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EnvironmentalRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramEnvironmentalPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramHumanFactorsDelta": {
+      "title": "ProgramHumanFactorsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HumanFactorRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramHumanFactorsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramAccessibilityDelta": {
+      "title": "ProgramAccessibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AccessibilityRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAccessibilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramPrivacyDelta": {
+      "title": "ProgramPrivacyDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PrivacyRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPrivacyPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramSafetyDelta": {
+      "title": "ProgramSafetyDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SafetyRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSafetyPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramSecurityDelta": {
+      "title": "ProgramSecurityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SecurityRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSecurityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramRegulatoryDelta": {
+      "title": "ProgramRegulatoryDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RegulatoryRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRegulatoryPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramSiteContextDelta": {
+      "title": "ProgramSiteContextDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SiteContext"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSiteContextPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramOrganizationalDelta": {
+      "title": "ProgramOrganizationalDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OrganizationalRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOrganizationalPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramServicesDelta": {
+      "title": "ProgramServicesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ServiceRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramServicesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramInfrastructureDelta": {
+      "title": "ProgramInfrastructureDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InfrastructureRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramInfrastructurePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramInformationDelta": {
+      "title": "ProgramInformationDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InformationRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramInformationPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramCommunicationDelta": {
+      "title": "ProgramCommunicationDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CommunicationRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCommunicationPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramWayfindingDelta": {
+      "title": "ProgramWayfindingDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WayfindingRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramWayfindingPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramSchedulesDelta": {
+      "title": "ProgramSchedulesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScheduleRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSchedulesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramFlexibilityDelta": {
+      "title": "ProgramFlexibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlexibilityRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramFlexibilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramGrowthDelta": {
+      "title": "ProgramGrowthDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GrowthPlan"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramGrowthPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramSustainabilityDelta": {
+      "title": "ProgramSustainabilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SustainabilityRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSustainabilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramResilienceDelta": {
+      "title": "ProgramResilienceDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResilienceRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramResiliencePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramCostsDelta": {
+      "title": "ProgramCostsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CostRequirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCostsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramDeliveryDelta": {
+      "title": "ProgramDeliveryDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DeliveryConstraint"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramDeliveryPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramRisksDelta": {
+      "title": "ProgramRisksDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Risk"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRisksPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramConflictsDelta": {
+      "title": "ProgramConflictsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Conflict"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramConflictsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramRequirementsDelta": {
+      "title": "ProgramRequirementsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramRequirementsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramPrioritiesDelta": {
+      "title": "ProgramPrioritiesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PriorityRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPrioritiesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramScenariosDelta": {
+      "title": "ProgramScenariosDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramScenariosPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramOptionsDelta": {
+      "title": "ProgramOptionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OptionEvaluation"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramOptionsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramDecisionsDelta": {
+      "title": "ProgramDecisionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Decision"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramDecisionsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramValidationsDelta": {
+      "title": "ProgramValidationsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ValidationRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramValidationsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramPerformanceDelta": {
+      "title": "ProgramPerformanceDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PerformanceCriterion"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramPerformancePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramQualityDelta": {
+      "title": "ProgramQualityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QualityRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramQualityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramDocumentsDelta": {
+      "title": "ProgramDocumentsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramDocumentsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramAssumptionsDelta": {
+      "title": "ProgramAssumptionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Assumption"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAssumptionsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramConstraintsDelta": {
+      "title": "ProgramConstraintsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConstraintRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramConstraintsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramComplianceRecordsDelta": {
+      "title": "ProgramComplianceRecordsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComplianceRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramComplianceRecordsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramApprovalsDelta": {
+      "title": "ProgramApprovalsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ApprovalRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramApprovalsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramMeetingsDelta": {
+      "title": "ProgramMeetingsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MeetingRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramMeetingsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramChangesDelta": {
+      "title": "ProgramChangesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChangeRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramChangesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramCollaborationDelta": {
+      "title": "ProgramCollaborationDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CollaborationRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramCollaborationPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramAnalysesDelta": {
+      "title": "ProgramAnalysesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnalysisRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAnalysesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramReportsDelta": {
+      "title": "ProgramReportsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ReportRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramReportsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramSearchFiltersDelta": {
+      "title": "ProgramSearchFiltersDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SearchFilter"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSearchFiltersPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramStatusRecordsDelta": {
+      "title": "ProgramStatusRecordsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StatusRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramStatusRecordsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramWorkshopsDelta": {
+      "title": "ProgramWorkshopsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Workshop"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramWorkshopsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramSurveysDelta": {
+      "title": "ProgramSurveysDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Survey"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramSurveysPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramIssuesDelta": {
+      "title": "ProgramIssuesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Issue"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramIssuesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramAuditEventsDelta": {
+      "title": "ProgramAuditEventsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AuditEvent"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramAuditEventsPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramTemplatesDelta": {
+      "title": "ProgramTemplatesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TemplateRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramTemplatesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramKnowledgeDelta": {
+      "title": "ProgramKnowledgeDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramKnowledgePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramBenchmarksDelta": {
+      "title": "ProgramBenchmarksDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BenchmarkRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramBenchmarksPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramTracesDelta": {
+      "title": "ProgramTracesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TraceLink"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramTracesPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProgramStringList": {
+      "title": "ProgramStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "StakeholderPatch": {
+      "title": "StakeholderPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramStakeholdersPatchEntry": {
+      "title": "ProgramStakeholdersPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/StakeholderPatch"
+        }
+      }
+    },
+    "UserProfilePatch": {
+      "title": "UserProfilePatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramUsersPatchEntry": {
+      "title": "ProgramUsersPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/UserProfilePatch"
+        }
+      }
+    },
+    "ActivityPatch": {
+      "title": "ActivityPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramActivitiesPatchEntry": {
+      "title": "ProgramActivitiesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ActivityPatch"
+        }
+      }
+    },
+    "FunctionPatch": {
+      "title": "FunctionPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramFunctionsPatchEntry": {
+      "title": "ProgramFunctionsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/FunctionPatch"
+        }
+      }
+    },
+    "ProgramElementPatch": {
+      "title": "ProgramElementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramElementsPatchEntry": {
+      "title": "ProgramElementsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ProgramElementPatch"
+        }
+      }
+    },
+    "QuantityRequirementPatch": {
+      "title": "QuantityRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramQuantitiesPatchEntry": {
+      "title": "ProgramQuantitiesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/QuantityRequirementPatch"
+        }
+      }
+    },
+    "RelationshipPatch": {
+      "title": "RelationshipPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramRelationshipsPatchEntry": {
+      "title": "ProgramRelationshipsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/RelationshipPatch"
+        }
+      }
+    },
+    "AdjacencyPatch": {
+      "title": "AdjacencyPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramAdjacenciesPatchEntry": {
+      "title": "ProgramAdjacenciesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/AdjacencyPatch"
+        }
+      }
+    },
+    "ProcessPatch": {
+      "title": "ProcessPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramProcessesPatchEntry": {
+      "title": "ProgramProcessesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ProcessPatch"
+        }
+      }
+    },
+    "FlowRequirementPatch": {
+      "title": "FlowRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramFlowsPatchEntry": {
+      "title": "ProgramFlowsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/FlowRequirementPatch"
+        }
+      }
+    },
+    "AccessRulePatch": {
+      "title": "AccessRulePatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramAccessRulesPatchEntry": {
+      "title": "ProgramAccessRulesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/AccessRulePatch"
+        }
+      }
+    },
+    "OperationalRequirementPatch": {
+      "title": "OperationalRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramOperationsPatchEntry": {
+      "title": "ProgramOperationsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/OperationalRequirementPatch"
+        }
+      }
+    },
+    "EquipmentPatch": {
+      "title": "EquipmentPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramEquipmentPatchEntry": {
+      "title": "ProgramEquipmentPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/EquipmentPatch"
+        }
+      }
+    },
+    "ResourcePatch": {
+      "title": "ResourcePatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramResourcesPatchEntry": {
+      "title": "ProgramResourcesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ResourcePatch"
+        }
+      }
+    },
+    "StorageRequirementPatch": {
+      "title": "StorageRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramStoragePatchEntry": {
+      "title": "ProgramStoragePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/StorageRequirementPatch"
+        }
+      }
+    },
+    "EnvironmentalRequirementPatch": {
+      "title": "EnvironmentalRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramEnvironmentalPatchEntry": {
+      "title": "ProgramEnvironmentalPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/EnvironmentalRequirementPatch"
+        }
+      }
+    },
+    "HumanFactorRequirementPatch": {
+      "title": "HumanFactorRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramHumanFactorsPatchEntry": {
+      "title": "ProgramHumanFactorsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/HumanFactorRequirementPatch"
+        }
+      }
+    },
+    "AccessibilityRequirementPatch": {
+      "title": "AccessibilityRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramAccessibilityPatchEntry": {
+      "title": "ProgramAccessibilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/AccessibilityRequirementPatch"
+        }
+      }
+    },
+    "PrivacyRequirementPatch": {
+      "title": "PrivacyRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramPrivacyPatchEntry": {
+      "title": "ProgramPrivacyPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/PrivacyRequirementPatch"
+        }
+      }
+    },
+    "SafetyRequirementPatch": {
+      "title": "SafetyRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramSafetyPatchEntry": {
+      "title": "ProgramSafetyPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SafetyRequirementPatch"
+        }
+      }
+    },
+    "SecurityRequirementPatch": {
+      "title": "SecurityRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramSecurityPatchEntry": {
+      "title": "ProgramSecurityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SecurityRequirementPatch"
+        }
+      }
+    },
+    "RegulatoryRequirementPatch": {
+      "title": "RegulatoryRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramRegulatoryPatchEntry": {
+      "title": "ProgramRegulatoryPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/RegulatoryRequirementPatch"
+        }
+      }
+    },
+    "SiteContextPatch": {
+      "title": "SiteContextPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramSiteContextPatchEntry": {
+      "title": "ProgramSiteContextPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SiteContextPatch"
+        }
+      }
+    },
+    "OrganizationalRequirementPatch": {
+      "title": "OrganizationalRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramOrganizationalPatchEntry": {
+      "title": "ProgramOrganizationalPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/OrganizationalRequirementPatch"
+        }
+      }
+    },
+    "ServiceRequirementPatch": {
+      "title": "ServiceRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramServicesPatchEntry": {
+      "title": "ProgramServicesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ServiceRequirementPatch"
+        }
+      }
+    },
+    "InfrastructureRequirementPatch": {
+      "title": "InfrastructureRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramInfrastructurePatchEntry": {
+      "title": "ProgramInfrastructurePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/InfrastructureRequirementPatch"
+        }
+      }
+    },
+    "InformationRequirementPatch": {
+      "title": "InformationRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramInformationPatchEntry": {
+      "title": "ProgramInformationPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/InformationRequirementPatch"
+        }
+      }
+    },
+    "CommunicationRequirementPatch": {
+      "title": "CommunicationRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramCommunicationPatchEntry": {
+      "title": "ProgramCommunicationPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CommunicationRequirementPatch"
+        }
+      }
+    },
+    "WayfindingRequirementPatch": {
+      "title": "WayfindingRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramWayfindingPatchEntry": {
+      "title": "ProgramWayfindingPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/WayfindingRequirementPatch"
+        }
+      }
+    },
+    "ScheduleRequirementPatch": {
+      "title": "ScheduleRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramSchedulesPatchEntry": {
+      "title": "ProgramSchedulesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ScheduleRequirementPatch"
+        }
+      }
+    },
+    "FlexibilityRequirementPatch": {
+      "title": "FlexibilityRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramFlexibilityPatchEntry": {
+      "title": "ProgramFlexibilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/FlexibilityRequirementPatch"
+        }
+      }
+    },
+    "GrowthPlanPatch": {
+      "title": "GrowthPlanPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramGrowthPatchEntry": {
+      "title": "ProgramGrowthPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/GrowthPlanPatch"
+        }
+      }
+    },
+    "SustainabilityRequirementPatch": {
+      "title": "SustainabilityRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramSustainabilityPatchEntry": {
+      "title": "ProgramSustainabilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SustainabilityRequirementPatch"
+        }
+      }
+    },
+    "ResilienceRequirementPatch": {
+      "title": "ResilienceRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramResiliencePatchEntry": {
+      "title": "ProgramResiliencePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ResilienceRequirementPatch"
+        }
+      }
+    },
+    "CostRequirementPatch": {
+      "title": "CostRequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramCostsPatchEntry": {
+      "title": "ProgramCostsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CostRequirementPatch"
+        }
+      }
+    },
+    "DeliveryConstraintPatch": {
+      "title": "DeliveryConstraintPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramDeliveryPatchEntry": {
+      "title": "ProgramDeliveryPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/DeliveryConstraintPatch"
+        }
+      }
+    },
+    "RiskPatch": {
+      "title": "RiskPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramRisksPatchEntry": {
+      "title": "ProgramRisksPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/RiskPatch"
+        }
+      }
+    },
+    "ConflictPatch": {
+      "title": "ConflictPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramConflictsPatchEntry": {
+      "title": "ProgramConflictsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ConflictPatch"
+        }
+      }
+    },
+    "RequirementPatch": {
+      "title": "RequirementPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramRequirementsPatchEntry": {
+      "title": "ProgramRequirementsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/RequirementPatch"
+        }
+      }
+    },
+    "PriorityRecordPatch": {
+      "title": "PriorityRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramPrioritiesPatchEntry": {
+      "title": "ProgramPrioritiesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/PriorityRecordPatch"
+        }
+      }
+    },
+    "ScenarioPatch": {
+      "title": "ScenarioPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramScenariosPatchEntry": {
+      "title": "ProgramScenariosPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ScenarioPatch"
+        }
+      }
+    },
+    "OptionEvaluationPatch": {
+      "title": "OptionEvaluationPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramOptionsPatchEntry": {
+      "title": "ProgramOptionsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/OptionEvaluationPatch"
+        }
+      }
+    },
+    "DecisionPatch": {
+      "title": "DecisionPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramDecisionsPatchEntry": {
+      "title": "ProgramDecisionsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/DecisionPatch"
+        }
+      }
+    },
+    "ValidationRecordPatch": {
+      "title": "ValidationRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramValidationsPatchEntry": {
+      "title": "ProgramValidationsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ValidationRecordPatch"
+        }
+      }
+    },
+    "PerformanceCriterionPatch": {
+      "title": "PerformanceCriterionPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramPerformancePatchEntry": {
+      "title": "ProgramPerformancePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/PerformanceCriterionPatch"
+        }
+      }
+    },
+    "QualityRecordPatch": {
+      "title": "QualityRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramQualityPatchEntry": {
+      "title": "ProgramQualityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/QualityRecordPatch"
+        }
+      }
+    },
+    "DocumentRecordPatch": {
+      "title": "DocumentRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramDocumentsPatchEntry": {
+      "title": "ProgramDocumentsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/DocumentRecordPatch"
+        }
+      }
+    },
+    "AssumptionPatch": {
+      "title": "AssumptionPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramAssumptionsPatchEntry": {
+      "title": "ProgramAssumptionsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/AssumptionPatch"
+        }
+      }
+    },
+    "ConstraintRecordPatch": {
+      "title": "ConstraintRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramConstraintsPatchEntry": {
+      "title": "ProgramConstraintsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ConstraintRecordPatch"
+        }
+      }
+    },
+    "ComplianceRecordPatch": {
+      "title": "ComplianceRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramComplianceRecordsPatchEntry": {
+      "title": "ProgramComplianceRecordsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ComplianceRecordPatch"
+        }
+      }
+    },
+    "ApprovalRecordPatch": {
+      "title": "ApprovalRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramApprovalsPatchEntry": {
+      "title": "ProgramApprovalsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ApprovalRecordPatch"
+        }
+      }
+    },
+    "MeetingRecordPatch": {
+      "title": "MeetingRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramMeetingsPatchEntry": {
+      "title": "ProgramMeetingsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/MeetingRecordPatch"
+        }
+      }
+    },
+    "ChangeRecordPatch": {
+      "title": "ChangeRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramChangesPatchEntry": {
+      "title": "ProgramChangesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ChangeRecordPatch"
+        }
+      }
+    },
+    "CollaborationRecordPatch": {
+      "title": "CollaborationRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramCollaborationPatchEntry": {
+      "title": "ProgramCollaborationPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CollaborationRecordPatch"
+        }
+      }
+    },
+    "AnalysisRecordPatch": {
+      "title": "AnalysisRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramAnalysesPatchEntry": {
+      "title": "ProgramAnalysesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/AnalysisRecordPatch"
+        }
+      }
+    },
+    "ReportRecordPatch": {
+      "title": "ReportRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramReportsPatchEntry": {
+      "title": "ProgramReportsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/ReportRecordPatch"
+        }
+      }
+    },
+    "SearchFilterPatch": {
+      "title": "SearchFilterPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramSearchFiltersPatchEntry": {
+      "title": "ProgramSearchFiltersPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SearchFilterPatch"
+        }
+      }
+    },
+    "StatusRecordPatch": {
+      "title": "StatusRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramStatusRecordsPatchEntry": {
+      "title": "ProgramStatusRecordsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/StatusRecordPatch"
+        }
+      }
+    },
+    "WorkshopPatch": {
+      "title": "WorkshopPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramWorkshopsPatchEntry": {
+      "title": "ProgramWorkshopsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/WorkshopPatch"
+        }
+      }
+    },
+    "SurveyPatch": {
+      "title": "SurveyPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramSurveysPatchEntry": {
+      "title": "ProgramSurveysPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/SurveyPatch"
+        }
+      }
+    },
+    "IssuePatch": {
+      "title": "IssuePatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramIssuesPatchEntry": {
+      "title": "ProgramIssuesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/IssuePatch"
+        }
+      }
+    },
+    "AuditEventPatch": {
+      "title": "AuditEventPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramAuditEventsPatchEntry": {
+      "title": "ProgramAuditEventsPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/AuditEventPatch"
+        }
+      }
+    },
+    "TemplateRecordPatch": {
+      "title": "TemplateRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramTemplatesPatchEntry": {
+      "title": "ProgramTemplatesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/TemplateRecordPatch"
+        }
+      }
+    },
+    "KnowledgeRecordPatch": {
+      "title": "KnowledgeRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramKnowledgePatchEntry": {
+      "title": "ProgramKnowledgePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/KnowledgeRecordPatch"
+        }
+      }
+    },
+    "BenchmarkRecordPatch": {
+      "title": "BenchmarkRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramBenchmarksPatchEntry": {
+      "title": "ProgramBenchmarksPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/BenchmarkRecordPatch"
+        }
+      }
+    },
+    "TraceLinkPatch": {
+      "title": "TraceLinkPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramTracesPatchEntry": {
+      "title": "ProgramTracesPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/TraceLinkPatch"
+        }
+      }
+    }
+  }
+}

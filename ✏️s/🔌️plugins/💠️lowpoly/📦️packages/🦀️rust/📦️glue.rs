@@ -11,6 +11,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -27,8 +28,20 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/💠️lowpoly/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/💠️lowpoly/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/💠️lowpoly/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/💠️lowpoly/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+
         #[path = "../../🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs"]
         pub mod op;
 
@@ -119,20 +132,27 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_projection {
-                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-projection/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-projection/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-projection/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💠️lowpoly/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
         }
 
         #[path = "../../🗿️artifacts/💠️lowpoly/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/💠️lowpoly/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/💠️lowpoly/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/💠️lowpoly/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
         #[path = "../../🗿️artifacts/💠️lowpoly/📡️spr/🦀️component.rs"]
         pub mod spr;
 

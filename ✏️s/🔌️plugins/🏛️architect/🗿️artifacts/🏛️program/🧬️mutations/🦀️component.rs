@@ -2,9 +2,9 @@
 
 use crate::artifacts::program::diff::ProgramDiff;
 use crate::artifacts::program::engine::adjacency::{clear_adjacency, set_adjacency};
-use crate::artifacts::program::kernel::{EntityId, TraceLink};
+use crate::artifacts::program::kernel::{EntityId, TraceLink, TraceLinkPatch};
 use crate::artifacts::program::registers::*;
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use protocol::{apply_collection_mutation, inverse_collection_mutation, CollectionMutation, Mutation, Patchable};
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "~65 variants each wrap CollectionMutation<EntityId, T, TPatch> for a different program register T (Stakeholder..Benchmark); sizes inherently vary with T and boxing every payload is a much larger, separately-scoped restructuring (all apply_collection_mutation/inverse_collection_mutation call sites + external construction sites) — SetProgram (the one outsized, genuinely-fixable single-field outlier) is already boxed"
+    reason = "~65 variants each wrap CollectionMutation<EntityId, T, TPatch> for a different program register T (Stakeholder..Benchmark); sizes inherently vary with T and boxing every payload is a much larger, separately-scoped restructuring (all apply_collection_mutation/inverse_collection_mutation call sites + external construction sites) — SetSnapshot (the one outsized, genuinely-fixable single-field outlier) is already boxed"
 )]
 pub enum ProgramMutation {
     Stakeholders(CollectionMutation<EntityId, Stakeholder, StakeholderPatch>),
@@ -88,50 +88,14 @@ pub enum ProgramMutation {
     UpdateGovernance { patch: GovernancePatch },
     SetAdjacency { adjacency: Adjacency },
     ClearAdjacency { id: EntityId },
-    SetProgram { program: Box<Program> },
+    SetSnapshot { snapshot: Box<ProgramSnapshot> },
 }
 
-/// @emoji 🩹️ Inverse patch carrier for trace link collection operations.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TraceLinkPatch {
-    pub from_id: Option<EntityId>,
-    pub to_id: Option<EntityId>,
-    pub kind: Option<crate::artifacts::program::kernel::TraceKind>,
-    pub label: Option<Option<String>>,
-}
-
-
-impl Patchable<TraceLinkPatch> for TraceLink {
-    fn apply_patch(&mut self, patch: &TraceLinkPatch) {
-        if let Some(value) = &patch.from_id {
-            self.from_id = value.clone();
-        }
-        if let Some(value) = &patch.to_id {
-            self.to_id = value.clone();
-        }
-        if let Some(value) = &patch.kind {
-            self.kind = value.clone();
-        }
-        if let Some(value) = &patch.label {
-            self.label = value.clone();
-        }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
-        Some(TraceLinkPatch {
-            from_id: Some(other.from_id.clone()),
-            to_id: Some(other.to_id.clone()),
-            kind: Some(other.kind.clone()),
-            label: Some(other.label.clone()),
-        })
-    }
-}
 // #endregion
 
 // #region 🔖️Apply
 /// @emoji ▶️ Applies one plugin operation to the document in place.
-pub fn apply_program_mutation(program: &mut Program, operation: &ProgramMutation) {
+pub fn apply_program_mutation(program: &mut ProgramSnapshot, operation: &ProgramMutation) {
     match operation {
         ProgramMutation::Stakeholders(collection_operation) => apply_collection_mutation(&mut program.stakeholders, collection_operation),
         ProgramMutation::Users(collection_operation) => apply_collection_mutation(&mut program.users, collection_operation),
@@ -212,12 +176,12 @@ pub fn apply_program_mutation(program: &mut Program, operation: &ProgramMutation
         }
         ProgramMutation::SetAdjacency { adjacency } => set_adjacency(program, adjacency.clone()),
         ProgramMutation::ClearAdjacency { id } => clear_adjacency(program, id),
-        ProgramMutation::SetProgram { program: replacement } => *program = (**replacement).clone(),
+        ProgramMutation::SetSnapshot { snapshot: replacement } => *program = (**replacement).clone(),
     }
 }
 
 /// @emoji ↩️ Computes the inverse operation from pre-state for undo.
-pub fn inverse_program_mutation(program: &Program, operation: &ProgramMutation) -> ProgramMutation {
+pub fn inverse_program_mutation(program: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramMutation {
     match operation {
         ProgramMutation::Stakeholders(collection_operation) => ProgramMutation::Stakeholders(inverse_collection_mutation(&program.stakeholders, collection_operation)),
         ProgramMutation::Users(collection_operation) => ProgramMutation::Users(inverse_collection_mutation(&program.users, collection_operation)),
@@ -317,20 +281,105 @@ pub fn inverse_program_mutation(program: &Program, operation: &ProgramMutation) 
             Some(existing) => ProgramMutation::SetAdjacency { adjacency: existing },
             None => ProgramMutation::ClearAdjacency { id: id.clone() },
         },
-        ProgramMutation::SetProgram { .. } => ProgramMutation::SetProgram { program: Box::new(program.clone()) },
+        ProgramMutation::SetSnapshot { .. } => ProgramMutation::SetSnapshot { snapshot: Box::new(program.clone()) },
     }
 }
 // #endregion
 
 // #region 🔖️Mutation
-impl Mutation<Program> for ProgramMutation {
+impl Mutation<ProgramSnapshot> for ProgramMutation {
     type Diff = ProgramDiff;
 
-    fn diff(&self, _projection: &Program) -> ProgramDiff {
-        ProgramDiff { mutations: vec![self.clone()] }
+    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+        match self {
+        ProgramMutation::Stakeholders(m) => crate::artifacts::program::diff::diff_stakeholders(m, &base.stakeholders),
+        ProgramMutation::Users(m) => crate::artifacts::program::diff::diff_users(m, &base.users),
+        ProgramMutation::Activities(m) => crate::artifacts::program::diff::diff_activities(m, &base.activities),
+        ProgramMutation::Functions(m) => crate::artifacts::program::diff::diff_functions(m, &base.functions),
+        ProgramMutation::Elements(m) => crate::artifacts::program::diff::diff_elements(m, &base.elements),
+        ProgramMutation::Quantities(m) => crate::artifacts::program::diff::diff_quantities(m, &base.quantities),
+        ProgramMutation::Relationships(m) => crate::artifacts::program::diff::diff_relationships(m, &base.relationships),
+        ProgramMutation::Adjacencies(m) => crate::artifacts::program::diff::diff_adjacencies(m, &base.adjacencies),
+        ProgramMutation::Processes(m) => crate::artifacts::program::diff::diff_processes(m, &base.processes),
+        ProgramMutation::Flows(m) => crate::artifacts::program::diff::diff_flows(m, &base.flows),
+        ProgramMutation::AccessRules(m) => crate::artifacts::program::diff::diff_access_rules(m, &base.access_rules),
+        ProgramMutation::Operations(m) => crate::artifacts::program::diff::diff_operations(m, &base.operations),
+        ProgramMutation::Equipment(m) => crate::artifacts::program::diff::diff_equipment(m, &base.equipment),
+        ProgramMutation::Resources(m) => crate::artifacts::program::diff::diff_resources(m, &base.resources),
+        ProgramMutation::Storage(m) => crate::artifacts::program::diff::diff_storage(m, &base.storage),
+        ProgramMutation::Environmental(m) => crate::artifacts::program::diff::diff_environmental(m, &base.environmental),
+        ProgramMutation::HumanFactors(m) => crate::artifacts::program::diff::diff_human_factors(m, &base.human_factors),
+        ProgramMutation::Accessibility(m) => crate::artifacts::program::diff::diff_accessibility(m, &base.accessibility),
+        ProgramMutation::Privacy(m) => crate::artifacts::program::diff::diff_privacy(m, &base.privacy),
+        ProgramMutation::Safety(m) => crate::artifacts::program::diff::diff_safety(m, &base.safety),
+        ProgramMutation::Security(m) => crate::artifacts::program::diff::diff_security(m, &base.security),
+        ProgramMutation::Regulatory(m) => crate::artifacts::program::diff::diff_regulatory(m, &base.regulatory),
+        ProgramMutation::SiteContext(m) => crate::artifacts::program::diff::diff_site_context(m, &base.site_context),
+        ProgramMutation::Organizational(m) => crate::artifacts::program::diff::diff_organizational(m, &base.organizational),
+        ProgramMutation::Services(m) => crate::artifacts::program::diff::diff_services(m, &base.services),
+        ProgramMutation::Infrastructure(m) => crate::artifacts::program::diff::diff_infrastructure(m, &base.infrastructure),
+        ProgramMutation::Information(m) => crate::artifacts::program::diff::diff_information(m, &base.information),
+        ProgramMutation::Communication(m) => crate::artifacts::program::diff::diff_communication(m, &base.communication),
+        ProgramMutation::Wayfinding(m) => crate::artifacts::program::diff::diff_wayfinding(m, &base.wayfinding),
+        ProgramMutation::Schedules(m) => crate::artifacts::program::diff::diff_schedules(m, &base.schedules),
+        ProgramMutation::Flexibility(m) => crate::artifacts::program::diff::diff_flexibility(m, &base.flexibility),
+        ProgramMutation::Growth(m) => crate::artifacts::program::diff::diff_growth(m, &base.growth),
+        ProgramMutation::Sustainability(m) => crate::artifacts::program::diff::diff_sustainability(m, &base.sustainability),
+        ProgramMutation::Resilience(m) => crate::artifacts::program::diff::diff_resilience(m, &base.resilience),
+        ProgramMutation::Costs(m) => crate::artifacts::program::diff::diff_costs(m, &base.costs),
+        ProgramMutation::Delivery(m) => crate::artifacts::program::diff::diff_delivery(m, &base.delivery),
+        ProgramMutation::Risks(m) => crate::artifacts::program::diff::diff_risks(m, &base.risks),
+        ProgramMutation::Conflicts(m) => crate::artifacts::program::diff::diff_conflicts(m, &base.conflicts),
+        ProgramMutation::Requirements(m) => crate::artifacts::program::diff::diff_requirements(m, &base.requirements),
+        ProgramMutation::Priorities(m) => crate::artifacts::program::diff::diff_priorities(m, &base.priorities),
+        ProgramMutation::Scenarios(m) => crate::artifacts::program::diff::diff_scenarios(m, &base.scenarios),
+        ProgramMutation::Options(m) => crate::artifacts::program::diff::diff_options(m, &base.options),
+        ProgramMutation::Decisions(m) => crate::artifacts::program::diff::diff_decisions(m, &base.decisions),
+        ProgramMutation::Validations(m) => crate::artifacts::program::diff::diff_validations(m, &base.validations),
+        ProgramMutation::Performance(m) => crate::artifacts::program::diff::diff_performance(m, &base.performance),
+        ProgramMutation::Quality(m) => crate::artifacts::program::diff::diff_quality(m, &base.quality),
+        ProgramMutation::Documents(m) => crate::artifacts::program::diff::diff_documents(m, &base.documents),
+        ProgramMutation::Assumptions(m) => crate::artifacts::program::diff::diff_assumptions(m, &base.assumptions),
+        ProgramMutation::Constraints(m) => crate::artifacts::program::diff::diff_constraints(m, &base.constraints),
+        ProgramMutation::ComplianceRecords(m) => crate::artifacts::program::diff::diff_compliance_records(m, &base.compliance_records),
+        ProgramMutation::Approvals(m) => crate::artifacts::program::diff::diff_approvals(m, &base.approvals),
+        ProgramMutation::Meetings(m) => crate::artifacts::program::diff::diff_meetings(m, &base.meetings),
+        ProgramMutation::Changes(m) => crate::artifacts::program::diff::diff_changes(m, &base.changes),
+        ProgramMutation::Collaboration(m) => crate::artifacts::program::diff::diff_collaboration(m, &base.collaboration),
+        ProgramMutation::Analyses(m) => crate::artifacts::program::diff::diff_analyses(m, &base.analyses),
+        ProgramMutation::Reports(m) => crate::artifacts::program::diff::diff_reports(m, &base.reports),
+        ProgramMutation::SearchFilters(m) => crate::artifacts::program::diff::diff_search_filters(m, &base.search_filters),
+        ProgramMutation::StatusRecords(m) => crate::artifacts::program::diff::diff_status_records(m, &base.status_records),
+        ProgramMutation::Workshops(m) => crate::artifacts::program::diff::diff_workshops(m, &base.workshops),
+        ProgramMutation::Surveys(m) => crate::artifacts::program::diff::diff_surveys(m, &base.surveys),
+        ProgramMutation::Issues(m) => crate::artifacts::program::diff::diff_issues(m, &base.issues),
+        ProgramMutation::AuditEvents(m) => crate::artifacts::program::diff::diff_audit_events(m, &base.audit_events),
+        ProgramMutation::Templates(m) => crate::artifacts::program::diff::diff_templates(m, &base.templates),
+        ProgramMutation::Knowledge(m) => crate::artifacts::program::diff::diff_knowledge(m, &base.knowledge),
+        ProgramMutation::Benchmarks(m) => crate::artifacts::program::diff::diff_benchmarks(m, &base.benchmarks),
+        ProgramMutation::Traces(m) => crate::artifacts::program::diff::diff_traces(m, &base.traces),
+        ProgramMutation::UpdateMeta { patch } => {
+            let mut meta = base.meta.clone();
+            meta.apply_patch(patch);
+            crate::artifacts::program::diff::diff_meta(meta)
+        }
+        ProgramMutation::UpdateProject { patch } => {
+            let mut project = base.project.clone();
+            project.apply_patch(patch);
+            crate::artifacts::program::diff::diff_project(project)
+        }
+        ProgramMutation::UpdateGovernance { patch } => {
+            let mut governance = base.governance.clone();
+            governance.apply_patch(patch);
+            crate::artifacts::program::diff::diff_governance(governance)
+        }
+        ProgramMutation::SetAdjacency { adjacency } => crate::artifacts::program::diff::diff_adjacencies_set(adjacency.clone(), &base.adjacencies),
+        ProgramMutation::ClearAdjacency { id } => crate::artifacts::program::diff::diff_adjacencies_clear(id),
+        ProgramMutation::SetSnapshot { snapshot } => crate::artifacts::program::diff::diff_replace_snapshot(base, snapshot),
+        }
     }
 
-    fn inverse(&self, projection: &Program) -> Vec<Self> {
+    fn inverse(&self, projection: &ProgramSnapshot) -> Vec<Self> {
         vec![inverse_program_mutation(projection, self)]
     }
 }
@@ -398,7 +447,7 @@ mod tests {
     fn set_plugin_bulk_replace() {
         let mut program = empty_plugin();
         let sample = sample_plugin();
-        apply_program_mutation(&mut program, &ProgramMutation::SetProgram { program: Box::new(sample.clone()) });
+        apply_program_mutation(&mut program, &ProgramMutation::SetSnapshot { snapshot: Box::new(sample.clone()) });
         assert_eq!(program.elements.len(), sample.elements.len());
     }
 
@@ -2678,7 +2727,7 @@ mod tests {
     // #region 🔖️OpText
     #[test]
     fn update_meta_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&ProgramMutation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } });
     }
 
     #[test]
@@ -2711,26 +2760,26 @@ mod tests {
             success_metrics: Vec::new(),
         };
         let operation = ProgramMutation::Stakeholders(CollectionMutation::Add { index: 0, item: stakeholder });
-        store::test_support::assert_op_line_round_trip(&operation);
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn remove_and_move_op_text_round_trip() {
-        store::test_support::assert_op_line_round_trip(&ProgramMutation::Stakeholders(CollectionMutation::Remove { id: EntityId::new_serial("stakeholder", "stakeholder") }));
-        store::test_support::assert_op_line_round_trip(&ProgramMutation::Stakeholders(CollectionMutation::Move { id: EntityId::new_serial("stakeholder", "stakeholder"), to_index: 2 }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::Stakeholders(CollectionMutation::Remove { id: EntityId::new_serial("stakeholder", "stakeholder") }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::Stakeholders(CollectionMutation::Move { id: EntityId::new_serial("stakeholder", "stakeholder"), to_index: 2 }));
     }
 
     #[test]
     fn set_adjacency_and_clear_adjacency_op_text_round_trip() {
         let program = sample_plugin();
         let adjacency = program.adjacencies[0].clone();
-        store::test_support::assert_op_line_round_trip(&ProgramMutation::SetAdjacency { adjacency });
-        store::test_support::assert_op_line_round_trip(&ProgramMutation::ClearAdjacency { id: EntityId::new_serial("adjacency", "adjacency") });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::SetAdjacency { adjacency });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::ClearAdjacency { id: EntityId::new_serial("adjacency", "adjacency") });
     }
 
     #[test]
     fn set_plugin_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&ProgramMutation::SetProgram { program: Box::new(sample_plugin()) });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::SetSnapshot { snapshot: Box::new(sample_plugin()) });
     }
 
     #[test]

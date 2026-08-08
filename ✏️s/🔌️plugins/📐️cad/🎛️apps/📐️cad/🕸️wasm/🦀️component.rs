@@ -5,7 +5,7 @@
 #[cfg(target_arch = "wasm32")]
 mod bridge {
     use crate::artifacts::cad::spr::{CadEnvelope, CadStore};
-    use crate::artifacts::cad::{empty_cad_projection, CAD_DOCUMENT_SCHEMA};
+    use crate::artifacts::cad::{empty_cad_snapshot, CAD_DOCUMENT_SCHEMA};
     use std::cell::RefCell;
     use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
@@ -24,7 +24,7 @@ mod bridge {
                     let envelope: CadEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     CadStore::new(envelope)
                 }
-                None => CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None)),
+                None => CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -40,7 +40,7 @@ mod bridge {
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
             self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }

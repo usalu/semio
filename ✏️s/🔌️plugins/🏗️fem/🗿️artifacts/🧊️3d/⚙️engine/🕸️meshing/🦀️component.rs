@@ -5,7 +5,7 @@
 //! `modal_buckling.rs`.
 
 use crate::artifacts::fem3d::engine::Fem3dError;
-use crate::artifacts::fem3d::{Fem3dDocument, FemElement, FemLoad};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, FemLoad};
 use crate::model::{Bar3, Dof, Element, Frame3, MemberUdl, NodalLoad, Node, Support};
 use std::collections::HashMap;
 
@@ -32,14 +32,14 @@ pub struct MeshedSolid {
 /// 🧩️ `resolve_geometry`'s resolved `(nodes, elements, meshed solids, supports)` quadruple.
 pub type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedSolid>, Vec<Support>);
 
-/// 🌉️ Resolves a `Fem3dDocument`'s nodes/elements/supports (materials/sections looked up by id) plus
+/// 🌉️ Resolves a `Fem3dSnapshot`'s nodes/elements/supports (materials/sections looked up by id) plus
 /// every `FemSolid` meshed into `Tet4` elements (footprint triangulated via `crate::mesh::triangulate`,
 /// extruded via `extrude_tri_mesh`, split via `split_to_tets` — mirrors `fem_2d::build_nodes_and_elements`'s
 /// `Tri3Cst` region meshing) — the geometry shared by `build_model`, `fem3d_solve_all`, modal, and
 /// buckling. A solid boundary point coinciding (within `1e-9`, all of x/y/z) with an existing document
 /// node reuses that node's id; otherwise a node is synthesized once per unique mesh point as
 /// `{solid_id}_m{point_index}`.
-pub fn resolve_geometry(doc: &Fem3dDocument) -> Result<ResolvedGeometry, Fem3dError> {
+pub fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dError> {
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|node| Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).collect();
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut elements: Vec<Box<dyn Element>> = Vec::with_capacity(doc.elements.len());

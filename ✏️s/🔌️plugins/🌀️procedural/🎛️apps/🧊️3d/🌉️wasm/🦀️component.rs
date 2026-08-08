@@ -1,8 +1,8 @@
-//! 🕸️ Procedural3d play app — the `wasm32` JS bridge (`Procedural3dDocumentVcs`).
+//! 🕸️ Procedural3d play app — the `wasm32` JS bridge (`Procedural3dSnapshotVcs`).
 
 #![cfg(target_arch = "wasm32")]
 
-use crate::artifacts::procedural3d::engine::empty_procedural3d_projection;
+use crate::artifacts::procedural3d::engine::empty_procedural3d_snapshot;
 use crate::artifacts::procedural3d::mutations::{Procedural3dEnvelope, Procedural3dStore};
 use crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA;
 use std::cell::RefCell;
@@ -10,20 +10,20 @@ use store::create_document_envelope;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct Procedural3dDocumentVcs {
+pub struct Procedural3dSnapshotVcs {
     store: RefCell<Procedural3dStore>,
 }
 
 #[wasm_bindgen]
-impl Procedural3dDocumentVcs {
+impl Procedural3dSnapshotVcs {
     #[wasm_bindgen(constructor)]
-    pub fn new(envelope_json: Option<String>) -> Result<Procedural3dDocumentVcs, JsValue> {
+    pub fn new(envelope_json: Option<String>) -> Result<Procedural3dSnapshotVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: Procedural3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Procedural3dStore::new(envelope)
             }
-            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None)),
+            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)),
         };
         Ok(Self { store: RefCell::new(store) })
     }
@@ -38,9 +38,9 @@ impl Procedural3dDocumentVcs {
         self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
-    #[wasm_bindgen(js_name = projectionJson)]
-    pub fn projection_json(&self) -> Result<String, JsValue> {
-        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+    #[wasm_bindgen(js_name = snapshotJson)]
+    pub fn snapshot_json(&self) -> Result<String, JsValue> {
+        self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = envelopeJson)]

@@ -4,7 +4,7 @@
 //! `⚙️engine` because they take/return app-facing `semio_framework_plugin` scene types and their only
 //! two consumers are these two sibling windows, both at app level.
 
-use crate::artifacts::fem2d::{element_id, Fem2dDocument, FemCamera, FemElement};
+use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera, FemElement};
 use crate::model::Dof;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, UiNode};
 use serde_json::json;
@@ -45,7 +45,7 @@ pub(crate) fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every region outline vertex — the
 /// reference length `MODE_SHAPE_AMPLITUDE_RATIO` scales a normalized mode shape against. Falls back to
 /// `1.0` for a degenerate (empty or point-like) model so mode-shape rendering never divides by zero.
-pub(crate) fn fem2d_model_extent(doc: &Fem2dDocument) -> f64 {
+pub(crate) fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
     let mut min = [f64::INFINITY; 2];
     let mut max = [f64::NEG_INFINITY; 2];
     let mut expand = |x: f64, y: f64| {
@@ -71,7 +71,7 @@ pub(crate) fn fem2d_model_extent(doc: &Fem2dDocument) -> f64 {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — shared by this window (bright colors) and the results
 /// window's faint undeformed backdrop (a single muted color for every layer kind).
-pub(crate) fn fem2d_structure_layers(doc: &Fem2dDocument, node_color: &str, line_color: &str, support_color: &str) -> Vec<serde_json::Value> {
+pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<serde_json::Value> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
@@ -98,7 +98,7 @@ pub(crate) fn fem2d_structure_layers(doc: &Fem2dDocument, node_color: &str, line
 /// element id matches `fem2d_solve`/`fem2d_solve_all`'s `Tri3Cst` ids (`"{region_id}_t{tri_index}"`),
 /// so callers can correlate a solved `ElementResult::Plane` back to on-screen triangle geometry. A
 /// mesh failure for one region silently yields fewer triangles rather than failing the whole render.
-pub(crate) fn fem2d_region_triangles(doc: &Fem2dDocument) -> Vec<(String, [(f64, f64); 3])> {
+pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
     let mut out = Vec::new();
     let Ok(meshes) = crate::artifacts::fem2d::engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
@@ -116,7 +116,7 @@ pub(crate) fn fem2d_region_triangles(doc: &Fem2dDocument) -> Vec<(String, [(f64,
 /// 🗺️ Every meshed region's triangles as `(element_id, screen points, node ids)` — like
 /// `fem2d_region_triangles` but also carrying each vertex's mesh node id, needed to look values up in
 /// `fem2d_nodal_von_mises`'s node-keyed map for banded contour rendering.
-pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dDocument) -> Vec<(String, [(f64, f64); 3], [String; 3])> {
+pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3], [String; 3])> {
     let mut out = Vec::new();
     let Ok(meshes) = crate::artifacts::fem2d::engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
@@ -134,7 +134,7 @@ pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dDocument) -> Vec<(String, [
 
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
-pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dDocument, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<serde_json::Value> {
+pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<serde_json::Value> {
     let mut layers = Vec::new();
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -159,7 +159,7 @@ pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dDocument, disp_map: &HashMa
 //#endregion 🔖️SharedDrawHelpers
 
 //#region 🔖️Render
-pub fn render(doc: &Fem2dDocument, camera: &FemCamera) -> UiNode {
+pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> UiNode {
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn fem2d_model_extent_degenerate_model_returns_one() {
-        assert_eq!(fem2d_model_extent(&crate::artifacts::fem2d::engine::empty_fem2d_projection()), 1.0);
+        assert_eq!(fem2d_model_extent(&crate::artifacts::fem2d::engine::empty_fem2d_snapshot()), 1.0);
     }
 }
 //#endregion 🧪️Tests

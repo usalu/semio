@@ -1,0 +1,494 @@
+{
+  "persistent": [
+    {
+      "name": "schema",
+      "rust": "schema",
+      "type": "String",
+      "state": "persistent"
+    },
+    {
+      "name": "meta",
+      "rust": "meta",
+      "type": "ProgramMeta",
+      "state": "persistent"
+    },
+    {
+      "name": "project",
+      "rust": "project",
+      "type": "ProjectDefinition",
+      "state": "persistent"
+    },
+    {
+      "name": "stakeholders",
+      "rust": "stakeholders",
+      "type": "Vec<Stakeholder>",
+      "state": "persistent"
+    },
+    {
+      "name": "users",
+      "rust": "users",
+      "type": "Vec<UserProfile>",
+      "state": "persistent"
+    },
+    {
+      "name": "activities",
+      "rust": "activities",
+      "type": "Vec<Activity>",
+      "state": "persistent"
+    },
+    {
+      "name": "functions",
+      "rust": "functions",
+      "type": "Vec<Function>",
+      "state": "persistent"
+    },
+    {
+      "name": "elements",
+      "rust": "elements",
+      "type": "Vec<ProgramElement>",
+      "state": "persistent"
+    },
+    {
+      "name": "quantities",
+      "rust": "quantities",
+      "type": "Vec<QuantityRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "relationships",
+      "rust": "relationships",
+      "type": "Vec<Relationship>",
+      "state": "persistent"
+    },
+    {
+      "name": "adjacencies",
+      "rust": "adjacencies",
+      "type": "Vec<Adjacency>",
+      "state": "persistent"
+    },
+    {
+      "name": "processes",
+      "rust": "processes",
+      "type": "Vec<Process>",
+      "state": "persistent"
+    },
+    {
+      "name": "flows",
+      "rust": "flows",
+      "type": "Vec<FlowRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "accessRules",
+      "rust": "access_rules",
+      "type": "Vec<AccessRule>",
+      "state": "persistent"
+    },
+    {
+      "name": "operations",
+      "rust": "operations",
+      "type": "Vec<OperationalRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "equipment",
+      "rust": "equipment",
+      "type": "Vec<Equipment>",
+      "state": "persistent"
+    },
+    {
+      "name": "resources",
+      "rust": "resources",
+      "type": "Vec<Resource>",
+      "state": "persistent"
+    },
+    {
+      "name": "storage",
+      "rust": "storage",
+      "type": "Vec<StorageRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "environmental",
+      "rust": "environmental",
+      "type": "Vec<EnvironmentalRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "humanFactors",
+      "rust": "human_factors",
+      "type": "Vec<HumanFactorRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "accessibility",
+      "rust": "accessibility",
+      "type": "Vec<AccessibilityRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "privacy",
+      "rust": "privacy",
+      "type": "Vec<PrivacyRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "safety",
+      "rust": "safety",
+      "type": "Vec<SafetyRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "security",
+      "rust": "security",
+      "type": "Vec<SecurityRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "regulatory",
+      "rust": "regulatory",
+      "type": "Vec<RegulatoryRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "siteContext",
+      "rust": "site_context",
+      "type": "Vec<SiteContext>",
+      "state": "persistent"
+    },
+    {
+      "name": "organizational",
+      "rust": "organizational",
+      "type": "Vec<OrganizationalRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "services",
+      "rust": "services",
+      "type": "Vec<ServiceRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "infrastructure",
+      "rust": "infrastructure",
+      "type": "Vec<InfrastructureRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "information",
+      "rust": "information",
+      "type": "Vec<InformationRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "communication",
+      "rust": "communication",
+      "type": "Vec<CommunicationRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "wayfinding",
+      "rust": "wayfinding",
+      "type": "Vec<WayfindingRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "schedules",
+      "rust": "schedules",
+      "type": "Vec<ScheduleRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "flexibility",
+      "rust": "flexibility",
+      "type": "Vec<FlexibilityRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "growth",
+      "rust": "growth",
+      "type": "Vec<GrowthPlan>",
+      "state": "persistent"
+    },
+    {
+      "name": "sustainability",
+      "rust": "sustainability",
+      "type": "Vec<SustainabilityRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "resilience",
+      "rust": "resilience",
+      "type": "Vec<ResilienceRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "costs",
+      "rust": "costs",
+      "type": "Vec<CostRequirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "delivery",
+      "rust": "delivery",
+      "type": "Vec<DeliveryConstraint>",
+      "state": "persistent"
+    },
+    {
+      "name": "risks",
+      "rust": "risks",
+      "type": "Vec<Risk>",
+      "state": "persistent"
+    },
+    {
+      "name": "conflicts",
+      "rust": "conflicts",
+      "type": "Vec<Conflict>",
+      "state": "persistent"
+    },
+    {
+      "name": "requirements",
+      "rust": "requirements",
+      "type": "Vec<Requirement>",
+      "state": "persistent"
+    },
+    {
+      "name": "priorities",
+      "rust": "priorities",
+      "type": "Vec<PriorityRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "scenarios",
+      "rust": "scenarios",
+      "type": "Vec<Scenario>",
+      "state": "persistent"
+    },
+    {
+      "name": "options",
+      "rust": "options",
+      "type": "Vec<OptionEvaluation>",
+      "state": "persistent"
+    },
+    {
+      "name": "decisions",
+      "rust": "decisions",
+      "type": "Vec<Decision>",
+      "state": "persistent"
+    },
+    {
+      "name": "validations",
+      "rust": "validations",
+      "type": "Vec<ValidationRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "performance",
+      "rust": "performance",
+      "type": "Vec<PerformanceCriterion>",
+      "state": "persistent"
+    },
+    {
+      "name": "quality",
+      "rust": "quality",
+      "type": "Vec<QualityRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "documents",
+      "rust": "documents",
+      "type": "Vec<DocumentRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "assumptions",
+      "rust": "assumptions",
+      "type": "Vec<Assumption>",
+      "state": "persistent"
+    },
+    {
+      "name": "constraints",
+      "rust": "constraints",
+      "type": "Vec<ConstraintRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "complianceRecords",
+      "rust": "compliance_records",
+      "type": "Vec<ComplianceRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "approvals",
+      "rust": "approvals",
+      "type": "Vec<ApprovalRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "meetings",
+      "rust": "meetings",
+      "type": "Vec<MeetingRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "changes",
+      "rust": "changes",
+      "type": "Vec<ChangeRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "collaboration",
+      "rust": "collaboration",
+      "type": "Vec<CollaborationRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "analyses",
+      "rust": "analyses",
+      "type": "Vec<AnalysisRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "reports",
+      "rust": "reports",
+      "type": "Vec<ReportRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "searchFilters",
+      "rust": "search_filters",
+      "type": "Vec<SearchFilter>",
+      "state": "persistent"
+    },
+    {
+      "name": "statusRecords",
+      "rust": "status_records",
+      "type": "Vec<StatusRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "workshops",
+      "rust": "workshops",
+      "type": "Vec<Workshop>",
+      "state": "persistent"
+    },
+    {
+      "name": "surveys",
+      "rust": "surveys",
+      "type": "Vec<Survey>",
+      "state": "persistent"
+    },
+    {
+      "name": "issues",
+      "rust": "issues",
+      "type": "Vec<Issue>",
+      "state": "persistent"
+    },
+    {
+      "name": "auditEvents",
+      "rust": "audit_events",
+      "type": "Vec<AuditEvent>",
+      "state": "persistent"
+    },
+    {
+      "name": "templates",
+      "rust": "templates",
+      "type": "Vec<TemplateRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "knowledge",
+      "rust": "knowledge",
+      "type": "Vec<KnowledgeRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "benchmarks",
+      "rust": "benchmarks",
+      "type": "Vec<BenchmarkRecord>",
+      "state": "persistent"
+    },
+    {
+      "name": "traces",
+      "rust": "traces",
+      "type": "Vec<TraceLink>",
+      "state": "persistent"
+    },
+    {
+      "name": "governance",
+      "rust": "governance",
+      "type": "Governance",
+      "state": "persistent"
+    }
+  ],
+  "shared_ui": [
+    {
+      "name": "selectedIds",
+      "rust": "selected_ids",
+      "type": "Vec<String>",
+      "state": "shared-ui"
+    },
+    {
+      "name": "activeRegister",
+      "rust": "active_register",
+      "type": "String",
+      "state": "shared-ui"
+    },
+    {
+      "name": "adjacencyKindFilter",
+      "rust": "adjacency_kind_filter",
+      "type": "Option<AdjacencyKind>",
+      "state": "shared-ui"
+    },
+    {
+      "name": "activeReportJson",
+      "rust": "active_report_json",
+      "type": "String",
+      "state": "shared-ui"
+    }
+  ],
+  "local_ui": [
+    {
+      "name": "searchQuery",
+      "rust": "search_query",
+      "type": "String",
+      "state": "local-ui"
+    },
+    {
+      "name": "searchHistoryJson",
+      "rust": "search_history_json",
+      "type": "String",
+      "state": "local-ui"
+    },
+    {
+      "name": "lastResultJson",
+      "rust": "last_result_json",
+      "type": "String",
+      "state": "local-ui"
+    },
+    {
+      "name": "lastAnalysisJson",
+      "rust": "last_analysis_json",
+      "type": "String",
+      "state": "local-ui"
+    },
+    {
+      "name": "graphCameraX",
+      "rust": "graph_camera_x",
+      "type": "f64",
+      "state": "local-ui"
+    },
+    {
+      "name": "graphCameraY",
+      "rust": "graph_camera_y",
+      "type": "f64",
+      "state": "local-ui"
+    },
+    {
+      "name": "graphCameraZoom",
+      "rust": "graph_camera_zoom",
+      "type": "f64",
+      "state": "local-ui"
+    }
+  ]
+}

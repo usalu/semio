@@ -348,7 +348,7 @@
                 "label": "Start",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -364,7 +364,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -395,7 +395,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -428,7 +428,7 @@
                 "label": "Point",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -455,7 +455,7 @@
                 "label": "Diagonal",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -482,7 +482,7 @@
                 "label": "3Point",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -509,7 +509,7 @@
                 "label": "Vertical",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -536,7 +536,7 @@
                 "label": "Center",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -563,7 +563,7 @@
                 "target": "first_corner_other_or_length",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -585,7 +585,7 @@
                     }
                   },
                   {
-                    "operation": "clear",
+                    "mutation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -603,7 +603,7 @@
                 "target": "diagonal_rubber",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -625,7 +625,7 @@
                     }
                   },
                   {
-                    "operation": "clear",
+                    "mutation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -643,7 +643,7 @@
                 "target": "three_point_edge",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -665,7 +665,7 @@
                     }
                   },
                   {
-                    "operation": "clear",
+                    "mutation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -683,7 +683,7 @@
                 "target": "vertical_end",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -705,7 +705,7 @@
                     }
                   },
                   {
-                    "operation": "clear",
+                    "mutation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -717,7 +717,7 @@
                     }
                   },
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.initPeakAboveOrigin",
                     "params": {}
                   }
@@ -728,7 +728,7 @@
                 "target": "center_corner",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -750,7 +750,7 @@
                     }
                   },
                   {
-                    "operation": "clear",
+                    "mutation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -787,7 +787,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -819,7 +819,7 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -841,7 +841,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -904,12 +904,12 @@
                 "label": "Apply L×W",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.cornerFromLengthWidth",
                     "params": {}
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -950,7 +950,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -982,12 +982,12 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.aabbFromDiagonalCorners",
                     "params": {}
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1015,7 +1015,7 @@
                 "label": "Cube",
                 "effects": [
                   {
-                    "operation": "clear",
+                    "mutation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1052,7 +1052,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1084,12 +1084,12 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.aabbFromDiagonalCorners",
                     "params": {}
                   },
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.setCubeHeightFromFootprint",
                     "params": {}
                   }
@@ -1119,7 +1119,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1151,7 +1151,7 @@
                 "target": "three_point_width",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1173,7 +1173,7 @@
                     }
                   },
                   {
-                    "operation": "clear",
+                    "mutation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1210,7 +1210,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.tripletRubber",
                     "params": {}
                   }
@@ -1225,12 +1225,12 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.tripletCommit",
                     "params": {}
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1271,7 +1271,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.peakFromOriginZ",
                     "params": {}
                   }
@@ -1309,7 +1309,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.verticalRubberCorner",
                     "params": {}
                   }
@@ -1324,7 +1324,7 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.verticalFinalizeFootprint",
                     "params": {}
                   }
@@ -1354,7 +1354,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.rubberCornerFromCenter",
                     "params": {}
                   }
@@ -1369,12 +1369,12 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.rubberCornerFromCenter",
                     "params": {}
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1425,7 +1425,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.rubberSquareFromCenter",
                     "params": {}
                   }
@@ -1440,12 +1440,12 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.rubberSquareFromCenter",
                     "params": {}
                   },
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.setCubeHeightFromFootprint",
                     "params": {}
                   }
@@ -1475,7 +1475,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.snapSquareFootprint",
                     "params": {}
                   }
@@ -1490,12 +1490,12 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.snapSquareFootprint",
                     "params": {}
                   },
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "box.setCubeHeightFromFootprint",
                     "params": {}
                   }
@@ -1525,7 +1525,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1610,7 +1610,7 @@
                 "label": "Apply typed height",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

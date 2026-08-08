@@ -1,0 +1,241 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json",
+  "title": "Puzzle5dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "domain",
+    "meta",
+    "kindCompatibility",
+    "parts",
+    "fasteners",
+    "selectedPartIds",
+    "selectedGripIds",
+    "selectedFastenerIds",
+    "activeUtilityId",
+    "camera2dX",
+    "camera2dY",
+    "camera2dZoom",
+    "camera3dPositionX",
+    "camera3dPositionY",
+    "camera3dPositionZ",
+    "camera3dTargetX",
+    "camera3dTargetY",
+    "camera3dTargetZ",
+    "camera3dZoom",
+    "selectionMethod",
+    "gridSnapEnabled",
+    "gridFactor",
+    "suggestionOffset",
+    "overlapBudget",
+    "fillCount",
+    "brushCandidateIndex",
+    "lodMode",
+    "locale",
+    "runtimeExtrasJson",
+    "previewSeq"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "domain": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "label": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle5dMeta",
+      "x-semio-state": "persistent"
+    },
+    "kindCatalogs": {
+      "$ref": "#/$defs/Puzzle5dKindCatalogs",
+      "x-semio-state": "persistent"
+    },
+    "kindCompatibility": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle5dKindCompatibility"
+      },
+      "x-semio-state": "persistent"
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle5dPart"
+      },
+      "x-semio-state": "persistent"
+    },
+    "fasteners": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle5dFastener"
+      },
+      "x-semio-state": "persistent"
+    },
+    "selectedPartIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedGripIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedFastenerIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera2dX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera2dY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera2dZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dPositionX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dPositionY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dPositionZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dTargetX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dTargetY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dTargetZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionOffset": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "overlapBudget": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "runtimeExtrasJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredPartId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "previewSeq": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Puzzle5dMeta": {
+      "title": "Puzzle5dMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dKindCatalogs": {
+      "title": "Puzzle5dKindCatalogs",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dKindCompatibility": {
+      "title": "Puzzle5dKindCompatibility",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dPart": {
+      "title": "Puzzle5dPart",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dFastener": {
+      "title": "Puzzle5dFastener",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

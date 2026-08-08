@@ -46,7 +46,7 @@
                 "label": "Start",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -62,7 +62,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -78,7 +78,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -109,7 +109,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -141,7 +141,7 @@
                 "target": "start_of_arc",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -180,7 +180,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -212,7 +212,7 @@
                 "target": "end_point_or_angle",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -251,7 +251,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -283,7 +283,7 @@
                 "target": "committed",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -319,7 +319,7 @@
                 "label": "Apply Number",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

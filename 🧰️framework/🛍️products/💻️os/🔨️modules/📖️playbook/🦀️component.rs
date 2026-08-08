@@ -159,7 +159,7 @@ pub struct PlaybookSpec {
 pub type PlaybookEnvelope = DocumentEnvelope<PlaybookSpec, PlaybookMutation>;
 pub type PlaybookStore = DocumentStore<PlaybookSpec, PlaybookMutation>;
 
-pub fn empty_playbook_projection() -> PlaybookSpec {
+pub fn empty_playbook_snapshot() -> PlaybookSpec {
     PlaybookSpec { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, steps: vec![PlaybookStep { id: "s".into(), title: "Steps".into(), description: None, blocks: Vec::new() }] }
 }
 //#endregion 🔖️Domain
@@ -373,9 +373,9 @@ pub enum PlaybookDiff {
 }
 
 impl MutationDiff<PlaybookSpec> for PlaybookDiff {
-    fn apply(&self, projection: &PlaybookSpec) -> PlaybookSpec {
+    fn apply(&self, snapshot: &PlaybookSpec) -> PlaybookSpec {
         let operation = match self {
-            PlaybookDiff::Empty => return projection.clone(),
+            PlaybookDiff::Empty => return snapshot.clone(),
             PlaybookDiff::AddStep { step, index } => PlaybookMutation::AddStep { step: step.clone(), index: *index },
             PlaybookDiff::RemoveStep { step_id } => PlaybookMutation::RemoveStep { step_id: step_id.clone() },
             PlaybookDiff::MoveStep { step_id, index } => PlaybookMutation::MoveStep { step_id: step_id.clone(), index: *index },
@@ -386,7 +386,7 @@ impl MutationDiff<PlaybookSpec> for PlaybookDiff {
             PlaybookDiff::UpdateStep { step } => PlaybookMutation::UpdateStep { step: step.clone() },
             PlaybookDiff::UpdatePlaybook { title } => PlaybookMutation::UpdatePlaybook { title: title.clone() },
         };
-        apply_playbook_edit_mutation(projection, &operation)
+        apply_playbook_edit_mutation(snapshot, &operation)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -413,14 +413,14 @@ impl Mutation<PlaybookSpec> for PlaybookMutation {
         }
     }
 
-    fn inverse(&self, projection: &PlaybookSpec) -> Vec<Self> {
+    fn inverse(&self, snapshot: &PlaybookSpec) -> Vec<Self> {
         match self {
             PlaybookMutation::AddStep { step, .. } => vec![PlaybookMutation::RemoveStep { step_id: step.id.clone() }],
-            PlaybookMutation::RemoveStep { step_id } => projection.steps.iter().find(|s| s.id == *step_id).map(|step| vec![PlaybookMutation::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
-            PlaybookMutation::MoveStep { step_id, .. } => projection.steps.iter().position(|s| s.id == *step_id).map(|index| vec![PlaybookMutation::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
+            PlaybookMutation::RemoveStep { step_id } => snapshot.steps.iter().find(|s| s.id == *step_id).map(|step| vec![PlaybookMutation::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
+            PlaybookMutation::MoveStep { step_id, .. } => snapshot.steps.iter().position(|s| s.id == *step_id).map(|index| vec![PlaybookMutation::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
             PlaybookMutation::AddBlock { step_id, block, index: _ } => vec![PlaybookMutation::RemoveBlock { step_id: step_id.clone(), block_id: block.id.clone() }],
             PlaybookMutation::RemoveBlock { step_id, block_id } => {
-                for step in &projection.steps {
+                for step in &snapshot.steps {
                     if step.id == *step_id {
                         if let Some(block) = step.blocks.iter().find(|b| b.id == *block_id) {
                             return vec![PlaybookMutation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: None }];
@@ -430,7 +430,7 @@ impl Mutation<PlaybookSpec> for PlaybookMutation {
                 Vec::new()
             }
             PlaybookMutation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
-                for step in &projection.steps {
+                for step in &snapshot.steps {
                     if step.id == *from_step_id {
                         if let Some(pos) = step.blocks.iter().position(|b| b.id == *block_id) {
                             return vec![PlaybookMutation::MoveBlock { block_id: block_id.clone(), from_step_id: to_step_id.clone(), to_step_id: from_step_id.clone(), index: pos }];
@@ -441,7 +441,7 @@ impl Mutation<PlaybookSpec> for PlaybookMutation {
                 Vec::new()
             }
             PlaybookMutation::UpdateBlock { step_id, block } => {
-                for step in &projection.steps {
+                for step in &snapshot.steps {
                     if step.id == *step_id {
                         if let Some(prev) = step.blocks.iter().find(|b| b.id == block.id) {
                             return vec![PlaybookMutation::UpdateBlock { step_id: step_id.clone(), block: prev.clone() }];
@@ -450,8 +450,8 @@ impl Mutation<PlaybookSpec> for PlaybookMutation {
                 }
                 Vec::new()
             }
-            PlaybookMutation::UpdateStep { step } => projection.steps.iter().find(|s| s.id == step.id).map(|prev| vec![PlaybookMutation::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
-            PlaybookMutation::UpdatePlaybook { .. } => vec![PlaybookMutation::UpdatePlaybook { title: projection.title.clone() }],
+            PlaybookMutation::UpdateStep { step } => snapshot.steps.iter().find(|s| s.id == step.id).map(|prev| vec![PlaybookMutation::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
+            PlaybookMutation::UpdatePlaybook { .. } => vec![PlaybookMutation::UpdatePlaybook { title: snapshot.title.clone() }],
         }
     }
 }
@@ -1297,7 +1297,7 @@ pub mod builder_kit {
     #[cfg(test)]
     mod builder_kit_tests {
         use super::*;
-        use super::empty_playbook_projection;
+        use super::empty_playbook_snapshot;
 
         fn sample_config() -> PlaybookBuilderConfig {
             PlaybookBuilderConfig { action_namespace: "playbook-play", controller_id: "playbook-play", labels: PLAYBOOK_BUILDER_LABELS_EN }
@@ -1305,14 +1305,14 @@ pub mod builder_kit {
 
         #[test]
         fn add_step_op_names_step_by_position() {
-            let spec = empty_playbook_projection();
+            let spec = empty_playbook_snapshot();
             let operation = add_step_operation(&spec, "step-2".into());
             assert_eq!(operation, PlaybookMutation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Step 2".into(), description: None, blocks: Vec::new() }, index: None });
         }
 
         #[test]
         fn render_playbook_builder_emits_block_list_component_scene() {
-            let spec = empty_playbook_projection();
+            let spec = empty_playbook_snapshot();
             let config = sample_config();
             let node = render_playbook_builder("surface", &spec, &[], None, &config);
             let json = serde_json::to_string(&node).unwrap();
@@ -1345,7 +1345,7 @@ mod wasm_bridge {
                     let envelope: PlaybookEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     PlaybookStore::new(envelope)
                 }
-                None => PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None)),
+                None => PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -1360,9 +1360,9 @@ mod wasm_bridge {
             self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = snapshotJson)]
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
@@ -1386,14 +1386,14 @@ mod tests {
 
     #[test]
     fn playbook_document_vcs_materializes() {
-        let store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
-        let projection = store.projection().expect("projection");
-        assert_eq!(projection.schema, PLAYBOOK_DOCUMENT_SCHEMA);
+        let store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_snapshot(), None));
+        let projection = store.snapshot().expect("projection");
+        assert_eq!(snapshot.schema, PLAYBOOK_DOCUMENT_SCHEMA);
     }
 
     #[test]
     fn update_playbook_op_sets_and_reverts_title() {
-        let spec = empty_playbook_projection();
+        let spec = empty_playbook_snapshot();
         let operation = PlaybookMutation::UpdatePlaybook { title: Some("Renamed".into()) };
         let next = apply_playbook_edit_mutation(&spec, &operation);
         assert_eq!(next.title.as_deref(), Some("Renamed"));
@@ -1406,11 +1406,11 @@ mod tests {
 
     #[test]
     fn add_step_op_replays() {
-        let mut store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
+        let mut store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_snapshot(), None));
         let step = PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
-        let inverse = store.projection().expect("projection");
+        let inverse = store.snapshot().expect("projection");
         store.dispatch(DocumentCommand::Apply { mutations: vec![PlaybookMutation::AddStep { step: step.clone(), index: None }], description: None }).expect("apply");
-        assert_eq!(store.projection().expect("projection").steps.len(), 2);
+        assert_eq!(store.snapshot().expect("projection").steps.len(), 2);
         let _ = inverse;
     }
 
@@ -1570,9 +1570,9 @@ mod tests {
     }
 
     #[test]
-    fn empty_playbook_projection_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&empty_playbook_projection());
-        store::test_support::assert_dsl_pack_equivalence(&empty_playbook_projection());
+    fn empty_playbook_snapshot_dsl_round_trips() {
+        store::test_support::assert_dsl_round_trip(&empty_playbook_snapshot());
+        store::test_support::assert_dsl_pack_equivalence(&empty_playbook_snapshot());
     }
 
     #[test]
@@ -1631,7 +1631,7 @@ mod tests {
 
     #[test]
     fn document_text_round_trips_after_applied_operations() {
-        let mut store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
+        let mut store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_snapshot(), None));
         store
             .dispatch(DocumentCommand::Apply { mutations: vec![PlaybookMutation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }], description: None })
             .expect("add step");

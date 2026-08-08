@@ -16,6 +16,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<DrawMutation, DrawConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -41,8 +42,19 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🖍️draw/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "../../🗿️artifacts/🖍️draw/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🖍️draw/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🖍️draw/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -192,12 +204,12 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_document {
-                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/📄set-document/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/📄set-document/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/📄set-document/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
 
@@ -205,8 +217,13 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/🖍️draw/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🖍️draw/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🖍️draw/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🖍️draw/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🖍️draw/📡️spr/🦀️component.rs"]
         pub mod spr;
         #[path = "../../🗿️artifacts/🖍️draw/⚙️engine/🦀️component.rs"]

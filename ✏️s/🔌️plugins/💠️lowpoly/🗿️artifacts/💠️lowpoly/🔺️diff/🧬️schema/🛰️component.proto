@@ -1,0 +1,128 @@
+syntax = "proto3";
+package semio.s.lowpoly.lowpoly.diff;
+
+// 🧬️ Lowpoly diff schema — sparse field delta.
+
+message LowpolyDiff {
+  // @state persistent
+  optional LowpolyArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional LowpolyObjectsDelta objects = 3;
+  // @state shared-ui
+  optional string active_object_id = 4;
+  // @state shared-ui
+  optional LowpolySelection selection = 5;
+  // @state shared-ui
+  optional LowpolyStringList selected_object_ids = 6;
+  // @state shared-ui
+  optional string paint_utility = 7;
+  // @state shared-ui
+  optional uint32 active_paint_layer = 8;
+  // @state shared-ui
+  optional string active_utility_id = 9;
+  // @state local-ui
+  optional bool show_edges = 10;
+  // @state local-ui
+  optional bool sun_enabled = 11;
+  // @state local-ui
+  optional double sun_azimuth = 12;
+  // @state local-ui
+  optional double sun_elevation = 13;
+  // @state local-ui
+  optional double sun_intensity = 14;
+  // @state local-ui
+  optional string sun_color = 15;
+  // @state local-ui
+  optional double world_camera_position_x = 16;
+  // @state local-ui
+  optional double world_camera_position_y = 17;
+  // @state local-ui
+  optional double world_camera_position_z = 18;
+  // @state local-ui
+  optional double world_camera_target_x = 19;
+  // @state local-ui
+  optional double world_camera_target_y = 20;
+  // @state local-ui
+  optional double world_camera_target_z = 21;
+  // @state local-ui
+  optional double world_camera_fov = 22;
+  // @state local-ui
+  optional string utility_params_json = 23;
+  // @state local-ui
+  optional uint32 paint_color_r = 24;
+  // @state local-ui
+  optional uint32 paint_color_g = 25;
+  // @state local-ui
+  optional uint32 paint_color_b = 26;
+  // @state local-ui
+  optional uint32 paint_color_a = 27;
+  // @state local-ui
+  optional string selection_method = 28;
+  // @state local-ui
+  optional string selection_mode_default = 29;
+  // @state local-ui
+  optional string engagement_input = 30;
+  // @state local-ui
+  optional string locale = 31;
+  // @state preview
+  optional string hovered_object_id = 32;
+  // @state preview
+  optional string hovered_target_object_id = 33;
+  // @state preview
+  optional string hovered_target_mode = 34;
+  // @state preview
+  optional uint32 hovered_target_id = 35;
+  // @state preview
+  optional bool stroke_drag_active = 36;
+  // @state preview
+  optional bool transform_drag_active = 37;
+  // @state preview
+  optional int64 preview_seq = 38;
+}
+
+message LowpolyStringList {
+  repeated string values = 1;
+}
+
+message LowpolyObjectsDelta {
+  repeated LowpolyObject added = 1;
+  repeated string removed = 2;
+  repeated LowpolyObjectPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message LowpolyObjectPatchEntry {
+  string id = 1;
+  LowpolyObjectPatch patch = 2;
+}
+
+message LowpolyObjectPatch {
+  optional string name = 1;
+  optional bool smooth_shading = 2;
+  optional LowpolyTransform transform = 3;
+  optional string mesh_json = 4;
+}
+
+message LowpolyArtifact {
+  string schema = 1;
+  repeated LowpolyObject objects = 2;
+}
+
+message LowpolySelection {
+  string mode = 1;
+  repeated uint32 ids = 2;
+  repeated string keys = 3;
+}
+
+message LowpolyTransform {
+  repeated float position = 1;
+  repeated float rotation = 2;
+  repeated float scale = 3;
+}
+
+message LowpolyObject {
+  string id = 1;
+  string name = 2;
+}

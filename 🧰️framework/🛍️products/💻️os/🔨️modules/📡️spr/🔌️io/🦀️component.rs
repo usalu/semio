@@ -99,10 +99,10 @@ mod native {
         /// corrupts the file. Caveat: `HistoryLog` (protocol_history's model) has no slot for
         /// `REC_PROJECTION`/`REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` records, so a resume drops any
         /// of those (this crate deliberately has no `protocol_materialize` dependency to decode
-        /// projection bodies with). The op log itself — every edit/change/checkpoint/alternative — is
+        /// snapshot bodies with). The op log itself — every edit/change/checkpoint/alternative — is
         /// fully preserved; only acceleration/snapshot data is lost, which the wider system already
         /// tolerates gracefully (`crate::os_spr::materialize::resolve_plan` falls back to full replay from
-        /// genesis when a projection is missing/corrupt).
+        /// genesis when a snapshot is missing/corrupt).
         pub fn open_append(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
             let source = crate::os_pack::io::FilePackSource::open(path)?;
             let recovery = recover_records(&source, limits, RecoveryMode::LastCommit)?;
@@ -301,7 +301,7 @@ mod native {
     /// no additional filtering effect at this layer today: `HistoryLog` has no `REC_PROJECTION`/
     /// `REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` slot to filter in the first place (see
     /// `HistoryFile::open_append`'s doc for the same crate-boundary caveat — this crate has no
-    /// `protocol_materialize` dependency to interpret projection bodies with).
+    /// `protocol_materialize` dependency to interpret snapshot bodies with).
     pub fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits) -> Result<(), ProtocolError> {
         let source = crate::os_pack::io::FilePackSource::open(path)?;
         let recovery = recover_records(&source, limits, RecoveryMode::LastCommit)?;

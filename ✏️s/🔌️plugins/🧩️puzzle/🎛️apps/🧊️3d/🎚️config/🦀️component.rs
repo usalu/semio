@@ -288,7 +288,7 @@ impl Default for Puzzle3dRuntime {
 
 /// 🧮️ B1: puzzle3d's real `DocumentApp::Config` — `Puzzle3dRuntime` itself doubles as the config
 /// record (an alias, not a new type) so every helper taking `&Puzzle3dRuntime`/`&mut Puzzle3dRuntime`
-/// keeps working unchanged; every read comes from `cfg.projection`, every write flows out as a
+/// keeps working unchanged; every read comes from `cfg.snapshot`, every write flows out as a
 /// `Puzzle3dConfigMutation` in the returned `Emit` instead of a silent `self` mutation.
 pub type Puzzle3dConfig = Puzzle3dRuntime;
 

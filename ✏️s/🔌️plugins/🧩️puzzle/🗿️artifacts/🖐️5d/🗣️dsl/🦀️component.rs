@@ -9,20 +9,20 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::puzzle5d::Puzzle5dProjection;
+use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle5d` DSL.
 pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio");
 /// 📄️ The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle5d` DSL.
 pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio");
 
-/// 📖️ Parses `.puzzle5d` DSL text into a `Puzzle5dProjection`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle5dProjection, store::TextError> {
-    <Puzzle5dProjection as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.puzzle5d` DSL text into a `Puzzle5dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, store::TextError> {
+    <Puzzle5dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Puzzle5dProjection` back to `.puzzle5d` DSL text.
-pub fn print_dsl(document: &Puzzle5dProjection) -> String {
+/// 🖨️ Prints a `Puzzle5dSnapshot` back to `.puzzle5d` DSL text.
+pub fn print_dsl(document: &Puzzle5dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -34,10 +34,10 @@ mod tests {
 
     #[test]
     fn puzzle5d_projection_dsl_round_trips() {
-        let empty = Puzzle5dProjection::default();
-        store::test_support::assert_dsl_round_trip(&empty);
-        store::test_support::assert_dsl_pack_equivalence(&empty);
-        let mut projection = Puzzle5dProjection { label: Some("Concrete Forest".into()), meta: Puzzle5dMeta { description: "Unified puzzle 5d source".into() }, ..Default::default() };
+        let empty = Puzzle5dSnapshot::default();
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+        let mut projection = Puzzle5dSnapshot { label: Some("Concrete Forest".into()), meta: Puzzle5dMeta { description: "Unified puzzle 5d source".into() }, ..Default::default() };
         projection.parts.push(Puzzle5dPart {
             id: "seed-left-001".into(),
             part_kind: Some("Hexagonal Cut Concrete Forest Left".into()),
@@ -73,8 +73,8 @@ mod tests {
         });
         projection.fasteners.push(Puzzle5dFastener { id: "f1".into(), source: "seed-left-001:v0".into(), target: "seed-right-001:v0".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
         projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true });
-        store::test_support::assert_dsl_round_trip(&projection);
-        store::test_support::assert_dsl_pack_equivalence(&projection);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     /// 📜️ Both real example fixtures (migrated from the legacy `.5d.json` shape — see ticket
@@ -84,7 +84,7 @@ mod tests {
     fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE5D_NAKAGIN_EXAMPLE_TEXT] {
             let projection = parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            store::test_support::assert_dsl_round_trip(&projection);
+            semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
             // 🚧️ `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: same
             // `pack/value/rs` table-column bug as `puzzle5d_projection_dsl_round_trips` above
             // (this fixture's `parts` rows have the identical shape).
@@ -105,11 +105,11 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle5dStore::new(create_document_envelope(crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dProjection::default(), None));
+        let mut store = Puzzle5dStore::new(create_document_envelope(crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None));
         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
         store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
         let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<Puzzle5dProjection, Puzzle5dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

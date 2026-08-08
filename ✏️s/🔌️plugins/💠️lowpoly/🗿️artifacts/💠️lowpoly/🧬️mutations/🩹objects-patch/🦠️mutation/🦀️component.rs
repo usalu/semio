@@ -1,5 +1,5 @@
 //! 🩹 Lowpoly mutation — `ObjectsPatch` payload + builder + apply.
-use crate::artifacts::lowpoly::{LowpolyObjectPatch, LowpolyProjection};
+use crate::artifacts::lowpoly::{LowpolyObjectPatch, LowpolySnapshot};
 use crate::artifacts::lowpoly::mutations::LowpolyMutation;
 use serde::{Deserialize, Serialize};
 use protocol::{apply_collection_mutation, CollectionMutation};
@@ -18,7 +18,7 @@ pub fn objects_patch(id: impl Into<String>, patch: LowpolyObjectPatch) -> Lowpol
     LowpolyMutation::ObjectsPatch { id: id.into(), patch }
 }
 
-pub fn apply(projection: &mut LowpolyProjection, id: &str, patch: &LowpolyObjectPatch) {
+pub fn apply(projection: &mut LowpolySnapshot, id: &str, patch: &LowpolyObjectPatch) {
     apply_collection_mutation(&mut projection.objects, &CollectionMutation::Patch { id: id.to_string(), patch: patch.clone() });
 }
 //#endregion 🔖️Mutation

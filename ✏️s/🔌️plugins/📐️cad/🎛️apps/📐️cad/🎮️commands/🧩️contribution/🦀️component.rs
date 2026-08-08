@@ -2,7 +2,7 @@
 
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut crate::apps::cad::CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SetContributions, _doc: &DocumentView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut crate::apps::cad::CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::config(vec![CadConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }

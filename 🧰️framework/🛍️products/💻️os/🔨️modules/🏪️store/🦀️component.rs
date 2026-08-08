@@ -162,9 +162,9 @@ pub type DraftStore<P, Mutation> = DocumentStore<P, Mutation>;
 /// every existing `crate::os_store::TextSpan`/`crate::os_store::TextError` import across the workspace keeps compiling.
 pub use crate::os_dsl::{TextError, TextSpan};
 
-/// @emoji 📜️ Handcrafted textual representation of a document projection, implemented once per
-/// technology next to its `Projection` type. LAW: `P::parse_dsl(&projection.print_dsl())` recovers
-/// an equal projection — canonical `print_dsl` output is always a `parse_dsl` fixpoint; hand-written
+/// @emoji 📜️ Handcrafted textual representation of a document snapshot, implemented once per
+/// technology next to its `Snapshot` type. LAW: `P::parse_dsl(&snapshot.print_dsl())` recovers
+/// an equal snapshot — canonical `print_dsl` output is always a `parse_dsl` fixpoint; hand-written
 /// text may normalize (whitespace, ordering) before reaching that fixpoint.
 pub trait DocumentDsl: Sized {
     /// @emoji 🏷️ Legacy single-segment suffix used by fixture paths and codecs.
@@ -522,7 +522,7 @@ impl DocumentCodec {
         {
             let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(dsl, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
             let pack_files = print_document_pack(&parsed.envelope)?;
-            let dsl_mirror = parsed.envelope.vcs.initial_projection.print_dsl();
+            let dsl_mirror = parsed.envelope.vcs.initial_snapshot.print_dsl();
             Ok((pack_files, dsl_mirror))
         }
 
@@ -683,14 +683,14 @@ where
 pub type ConfigEnvelope<C, ConfigMutation> = DocumentEnvelope<C, ConfigMutation>;
 pub type ConfigStore<C, ConfigMutation> = DocumentStore<C, ConfigMutation>;
 
-pub fn create_config_envelope<C, ConfigMutation>(schema: &str, id: &str, initial_projection: C, backbone: Option<DocumentBackboneRef>) -> ConfigEnvelope<C, ConfigMutation>
+pub fn create_config_envelope<C, ConfigMutation>(schema: &str, id: &str, initial_snapshot: C, backbone: Option<DocumentBackboneRef>) -> ConfigEnvelope<C, ConfigMutation>
 where
     C: Clone,
 {
-    create_document_envelope(schema, id, initial_projection, backbone)
+    create_document_envelope(schema, id, initial_snapshot, backbone)
 }
 
-/// @emoji 🧮️ Config projections use the same DSL law as documents — `ConfigRecord` marks config types.
+/// @emoji 🧮️ Config snapshots use the same DSL law as documents — `ConfigRecord` marks config types.
 pub trait ConfigRecord: DocumentDsl {}
 
 /// @emoji 🎯️ Marks `$ty` as whole-record (no field-level diff — an operation replaces the entire
@@ -719,11 +719,11 @@ macro_rules! impl_whole_record_config {
 //#endregion 🔖️Config
 
 //#region 🔖️Materialize
-pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_projection: P, backbone: Option<DocumentBackboneRef>) -> DocumentEnvelope<P, Mutation>
+pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_snapshot: P, backbone: Option<DocumentBackboneRef>) -> DocumentEnvelope<P, Mutation>
 where
     P: Clone,
 {
-    DocumentEnvelope { schema: schema.into(), id: id.into(), vcs: DocumentVcs { initial_projection, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None }
+    DocumentEnvelope { schema: schema.into(), id: id.into(), vcs: DocumentVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None }
 }
 
 pub fn edit_ids_for_changes<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
@@ -740,57 +740,57 @@ where
     edit_ids
 }
 
-pub fn materialize_document_projection<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+pub fn materialize_document_snapshot<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P>,
 {
-    materialize_document_projection_with_conflicts(envelope, applied_edit_ids).map(|(projection, _conflicts)| projection)
+    materialize_document_snapshot_with_conflicts(envelope, applied_edit_ids).map(|(snapshot, _conflicts)| snapshot)
 }
 
 /// @emoji 🤝️ Adapts `crate::os_spr::command::Mutation::reconcile`'s new instance-based signature (`&self`,
 /// was a per-TYPE associated fn taking no instance at all) to the once-per-materialization call this
 /// crate's replay/store paths always performed: runs the LAST applied operation's `reconcile` hook
-/// against `projection`, or passes `projection` through unchanged (matching the trait's own no-op
+/// against `snapshot`, or passes `snapshot` through unchanged (matching the trait's own no-op
 /// default) if no operation has ever been applied yet. Every real `Mutation` impl in this crate
 /// (`SpaceHistoryMutation`/`DemoMutation`/`TimestampedMutation`) inherits the default no-op
-/// `reconcile`, which ignores `self` entirely and only inspects `projection` — so which specific
+/// `reconcile`, which ignores `self` entirely and only inspects `snapshot` — so which specific
 /// operation instance triggers the call is immaterial for every one of them; a technology that
 /// overrides `reconcile` to do real cross-document/graph validation (see
 /// `framework/product/os/core`'s `OsMutation`) is documented as inspecting the resulting
-/// `projection`, not `self`, for the same reason. Maps `crate::os_spr::ReconcileReport` to this crate's
+/// `snapshot`, not `self`, for the same reason. Maps `crate::os_spr::ReconcileReport` to this crate's
 /// own `SpaceConflict` at this edge — `protocol_command` deliberately doesn't know about space
 /// types (see its `Mutation::reconcile` doc comment).
-fn reconcile_with_last<P, Op: Mutation<P>>(last_operation: Option<&Op>, projection: P) -> (P, Vec<SpaceConflict>) {
+fn reconcile_with_last<P, Op: Mutation<P>>(last_operation: Option<&Op>, snapshot: P) -> (P, Vec<SpaceConflict>) {
     match last_operation {
         Some(operation) => {
-            let (projection, reports) = operation.reconcile(projection);
-            (projection, reports.into_iter().map(SpaceConflict::from).collect())
+            let (snapshot, reports) = operation.reconcile(snapshot);
+            (snapshot, reports.into_iter().map(SpaceConflict::from).collect())
         }
-        None => (projection, Vec::new()),
+        None => (snapshot, Vec::new()),
     }
 }
 
-/// @emoji 🤝️ Same replay as {@link materialize_document_projection}, additionally surfacing whatever
-/// {@link Mutation::reconcile} reports for the resulting projection. Kept as a twin function (rather
-/// than changing `materialize_document_projection`'s signature) so every existing caller across the
+/// @emoji 🤝️ Same replay as {@link materialize_document_snapshot}, additionally surfacing whatever
+/// {@link Mutation::reconcile} reports for the resulting snapshot. Kept as a twin function (rather
+/// than changing `materialize_document_snapshot`'s signature) so every existing caller across the
 /// workspace is unaffected; call sites that care about conflicts (e.g. `DocumentStore`) opt into
 /// this one instead.
-pub fn materialize_document_projection_with_conflicts<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<(P, Vec<SpaceConflict>), VcsError>
+pub fn materialize_document_snapshot_with_conflicts<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<(P, Vec<SpaceConflict>), VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P>,
 {
-    let mut projection = envelope.vcs.initial_projection.clone();
+    let mut snapshot = envelope.vcs.initial_snapshot.clone();
     let mut last_operation: Option<&Mutation> = None;
     for edit_id in applied_edit_ids {
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
-            projection = apply_mutation(&projection, operation);
+            snapshot = apply_mutation(&snapshot, operation);
             last_operation = Some(operation);
         }
     }
-    Ok(reconcile_with_last(last_operation, projection))
+    Ok(reconcile_with_last(last_operation, snapshot))
 }
 
 /// 🕰️ Single timestamp source for `Edit.started_at`/`Checkpoint.timestamp` — re-exported so
@@ -825,7 +825,7 @@ where
 
 //#region 🔖️TextFormat
 //#region 🔖️TextFormat
-/// @emoji 📄️ The two files a textual VCS document is made of: the DSL text (initial projection) and
+/// @emoji 📄️ The two files a textual VCS document is made of: the DSL text (initial snapshot) and
 /// the append-only op log (every edit ever created, forwards-only — see {@link parse_document_text}).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct DocumentTextFiles {
@@ -834,11 +834,11 @@ pub struct DocumentTextFiles {
 }
 
 /// @emoji 🧩️ The result of loading a document from text: the reconstructed envelope plus the live
-/// projection folded from every edit, so a caller never has to replay again after loading.
+/// snapshot folded from every edit, so a caller never has to replay again after loading.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ParsedDocumentText<P, Mutation> {
     pub envelope: DocumentEnvelope<P, Mutation>,
-    pub projection: P,
+    pub snapshot: P,
 }
 
 //#region 🔖️OpsHeaderGrammar
@@ -1018,8 +1018,8 @@ pub fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result<Strin
 /// @emoji 📤️ Builds just the op-log half of a textual/pack document — `doc` header, every edit ever
 /// created as an `edit` block, then `change`/`checkpoint`/`alternative`/`active` records. Shared by
 /// `print_document_text` and `print_document_pack`: the op-log grammar never touches
-/// `initial_projection`, so it is provably format-invariant and both printers thin out to this plus
-/// their own initial-projection encoding.
+/// `initial_snapshot`, so it is provably format-invariant and both printers thin out to this plus
+/// their own initial-snapshot encoding.
 fn print_ops_log<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Result<String, VcsError>
 where
     Mutation: OpText,
@@ -1064,7 +1064,7 @@ where
     Ok(ops)
 }
 
-/// @emoji 📤️ Prints the full textual VCS document: the DSL text (initial projection) and the complete
+/// @emoji 📤️ Prints the full textual VCS document: the DSL text (initial snapshot) and the complete
 /// op log (`doc` header, every edit ever created as an `edit` block, then `change`/`checkpoint`/
 /// `alternative`/`active` records). Replaces the JSON envelope as the canonical persisted form.
 pub fn print_document_text<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Result<DocumentTextFiles, VcsError>
@@ -1072,7 +1072,7 @@ where
     P: DocumentDsl,
     Mutation: OpText,
 {
-    let dsl = envelope.vcs.initial_projection.print_dsl();
+    let dsl = envelope.vcs.initial_snapshot.print_dsl();
     let ops = print_ops_log(envelope)?;
     Ok(DocumentTextFiles { dsl, ops })
 }
@@ -1153,11 +1153,11 @@ fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>) -> Result<c
 }
 
 /// @emoji 🎯️ Encodes a bare, edit-free `.spr` op log for `schema` — the counterpart to a `.pack`
-/// file carrying only an initial projection with no history yet (e.g. a single dropped `.pack`
+/// file carrying only an initial snapshot with no history yet (e.g. a single dropped `.pack`
 /// file with no accompanying `.spr` sidecar). `doc_id` may be empty when the caller mints a fresh
 /// id downstream (as `parse_document_spr` never cross-checks it against the pack). LAW:
 /// `parse_document_spr(pack, &empty_document_spr(id, schema))` recovers exactly `P::decode_pack(pack)`
-/// as both the initial and live projection, with zero edits.
+/// as both the initial and live snapshot, with zero edits.
 pub fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
     let log = crate::os_spr::HistoryLog { doc_id: doc_id.to_string(), schema: schema.to_string(), ..crate::os_spr::HistoryLog::default() };
     crate::os_spr::encode_history(&log, &crate::os_spr::EncodeOptions::default()).expect("encoding an edit-free HistoryLog is infallible")
@@ -1165,7 +1165,7 @@ pub fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
 
 /// @emoji ➕️ Appends `edits` to an already-encoded `.spr` byte log — decode, extend, re-encode.
 /// **Also refreshes `log.cursor.applied_edit_ids`** with the newly-appended edits' own ids: the
-/// live projection a later `parse_document_spr` call folds is exactly `cursor.applied_edit_ids`
+/// live snapshot a later `parse_document_spr` call folds is exactly `cursor.applied_edit_ids`
 /// (see that function's doc); skipping this step would make appended edits durable but invisible
 /// to the next reader. Only touches the cursor if one is already present (an edit-free/cursor-free
 /// log has no undo/redo position to preserve). O(history) per call — a caller appending many
@@ -1220,14 +1220,14 @@ where
 /// @emoji 🎯️ Inverse of [`print_document_spr`]: rebuilds an envelope's `edits`/`changes`/
 /// `checkpoints`/`alternatives`/`cursor` from a decoded `HistoryLog`, recovering `inverse` and
 /// `mutation_meta` from the persisted data (never replay-recomputed, unlike the text path) — the
-/// initial projection comes from `pack` via `DocumentPack::decode_pack`, matching
+/// initial snapshot comes from `pack` via `DocumentPack::decode_pack`, matching
 /// `parse_document_pack`'s contract.
 pub fn parse_document_spr<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + DocumentPack,
     Mutation: OpText + OpBinary + self::Mutation<P>,
 {
-    let initial_projection = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+    let initial_snapshot = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
     let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
 
     let decode_op = |payload: &crate::os_spr::OpPayload| -> Result<Mutation, TextError> {
@@ -1238,7 +1238,7 @@ where
         }
     };
 
-    let mut projection = initial_projection.clone();
+    let mut snapshot = initial_snapshot.clone();
     let mut edits: Vec<Edit<Mutation>> = Vec::with_capacity(log.edits.len());
     for (index, history_edit) in log.edits.into_iter().enumerate() {
         let forwards = history_edit.ops.iter().map(decode_op).collect::<Result<Vec<_>, _>>()?;
@@ -1250,7 +1250,7 @@ where
             let mut inverse = Vec::with_capacity(forwards.len());
             let mut mutation_meta = Vec::with_capacity(forwards.len());
             for operation in &forwards {
-                let mut back = operation.inverse(&projection);
+                let mut back = operation.inverse(&snapshot);
                 back.reverse();
                 inverse.extend(back);
                 mutation_meta.push(MutationMeta {
@@ -1266,7 +1266,7 @@ where
             (inverse, mutation_meta)
         };
         for operation in &forwards {
-            projection = apply_mutation(&projection, operation);
+            snapshot = apply_mutation(&snapshot, operation);
         }
         edits.push(Edit {
             id: history_edit.id,
@@ -1287,7 +1287,7 @@ where
         schema: log.schema,
         id: log.doc_id,
         vcs: DocumentVcs {
-            initial_projection,
+            initial_snapshot,
             edits,
             changes: log.changes.into_iter().map(|change| Change { id: change.id, edit_ids: change.edit_ids, description: change.description, saved_at: change.saved_at }).collect(),
             checkpoints: log
@@ -1309,8 +1309,8 @@ where
         cursor: cursor.clone(),
     };
 
-    let projection = if let Some(cursor) = &cursor {
-        let mut folded = envelope.vcs.initial_projection.clone();
+    let snapshot = if let Some(cursor) = &cursor {
+        let mut folded = envelope.vcs.initial_snapshot.clone();
         let mut last_operation = None;
         for edit_id in &cursor.applied_edit_ids {
             if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
@@ -1324,14 +1324,14 @@ where
         reconciled
     } else {
         let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
-        let (reconciled, _conflicts) = reconcile_with_last(last_operation, projection);
+        let (reconciled, _conflicts) = reconcile_with_last(last_operation, snapshot);
         reconciled
     };
-    Ok(ParsedDocumentText { envelope, projection })
+    Ok(ParsedDocumentText { envelope, snapshot })
 }
 
 /// @emoji 📤️ Pack counterpart of `print_document_text`: identical op-log TEXT body (`print_ops_log`)
-/// for the human-readable mirror, but the initial projection is encoded to pack bytes
+/// for the human-readable mirror, but the initial snapshot is encoded to pack bytes
 /// (`DocumentPack::encode_pack`) instead of printed to DSL text — plus the AUTHORITATIVE `.spr`
 /// binary op log (`print_document_spr`), which carries real inverse/binary payloads/cursor.
 pub fn print_document_pack<P, Mutation>(envelope: &DocumentEnvelope<P, Mutation>) -> Result<DocumentPackFiles, VcsError>
@@ -1339,20 +1339,20 @@ where
     P: DocumentPack,
     Mutation: OpText + OpBinary,
 {
-    let pack = envelope.vcs.initial_projection.encode_pack();
+    let pack = envelope.vcs.initial_snapshot.encode_pack();
     let spr = print_document_spr(envelope)?;
     let ops = print_ops_log(envelope)?;
     Ok(DocumentPackFiles { pack, spr, ops })
 }
 
-/// @emoji 📥️ Replays `ops` against an already-obtained `initial_projection` — the parse-independent
-/// tail shared by `parse_document_text` (which obtains the projection via `P::parse_dsl`) and
+/// @emoji 📥️ Replays `ops` against an already-obtained `initial_snapshot` — the parse-independent
+/// tail shared by `parse_document_text` (which obtains the snapshot via `P::parse_dsl`) and
 /// `parse_document_pack` (via `P::decode_pack`). When the log carries a `cursor` line, the
-/// returned live projection reflects exactly `cursor.applied_edit_ids`, restoring the exact
+/// returned live snapshot reflects exactly `cursor.applied_edit_ids`, restoring the exact
 /// undo/redo position across a save/load cycle. Absent a cursor (logs predating this field, or a
 /// caller that never persisted one), every `edit` is treated as applied, in file order — the
 /// original JSON `load_document`-compatible behavior.
-fn replay_ops<P, Mutation>(initial_projection: P, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone,
     Mutation: OpText + self::Mutation<P>,
@@ -1365,11 +1365,11 @@ where
     let mut alternatives: Vec<Alternative> = Vec::new();
     let mut active_alternative_id: Option<String> = None;
     let mut cursor: Option<DocumentCursor> = None;
-    let mut projection = initial_projection.clone();
+    let mut snapshot = initial_snapshot.clone();
 
     /// @emoji 🕰️ An `edit` header line's fields, held until its trailing indented op-lines are all
     /// read (its final `Edit` can only be built once `forwards` — and therefore `inverse`/
-    /// `mutation_meta`, both computed by replaying against `projection` — are known).
+    /// `mutation_meta`, both computed by replaying against `snapshot` — are known).
     struct PendingEdit {
         line_no: u32,
         id: String,
@@ -1382,7 +1382,7 @@ where
     let mut pending_edit: Option<PendingEdit> = None;
     let mut pending_forwards: Vec<Mutation> = Vec::new();
 
-    let flush_pending_edit = |pending_edit: &mut Option<PendingEdit>, pending_forwards: &mut Vec<Mutation>, edits: &mut Vec<Edit<Mutation>>, projection: &mut P| -> Result<(), TextError> {
+    let flush_pending_edit = |pending_edit: &mut Option<PendingEdit>, pending_forwards: &mut Vec<Mutation>, edits: &mut Vec<Edit<Mutation>>, snapshot: &mut P| -> Result<(), TextError> {
         let Some(header) = pending_edit.take() else {
             return Ok(());
         };
@@ -1390,8 +1390,8 @@ where
         let mut inverse = Vec::with_capacity(forwards.len());
         let mut mutation_meta = Vec::with_capacity(forwards.len());
         for operation in &forwards {
-            operation.validate(projection).map_err(|message| TextError::new(message, TextSpan::at(header.line_no, 1)))?;
-            let mut back = operation.inverse(projection);
+            operation.validate(snapshot).map_err(|message| TextError::new(message, TextSpan::at(header.line_no, 1)))?;
+            let mut back = operation.inverse(snapshot);
             back.reverse();
             inverse.extend(back);
             mutation_meta.push(MutationMeta {
@@ -1403,7 +1403,7 @@ where
                 undo_policy: operation.undo_policy(),
                 payload_hash: None,
             });
-            *projection = apply_mutation(projection, operation);
+            *snapshot = apply_mutation(snapshot, operation);
         }
         edits.push(Edit {
             id: header.id,
@@ -1431,7 +1431,7 @@ where
             pending_forwards.push(operation);
             continue;
         }
-        flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut projection)?;
+        flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut snapshot)?;
         let line = OpsHeaderLine::parse_op(trimmed).map_err(|error| TextError::new(error.message, TextSpan::at(line_no, error.span.column)))?;
         match line {
             OpsHeaderLine::Doc { id: doc_id, schema: doc_schema } => {
@@ -1459,17 +1459,17 @@ where
             }
         }
     }
-    flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut projection)?;
+    flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut snapshot)?;
 
-    let envelope = DocumentEnvelope { schema, id, vcs: DocumentVcs { initial_projection, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone() };
+    let envelope = DocumentEnvelope { schema, id, vcs: DocumentVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone() };
     // 🎯️ W4: every edit is still folded above in file order (needed for correct inverse/meta —
-    // an edit's inverse depends on the projection state at the time it was made, which requires
+    // an edit's inverse depends on the snapshot state at the time it was made, which requires
     // walking the FULL sequence regardless of undo/redo position). Only the RETURNED live
-    // projection differs: when a cursor is present, it reflects only `cursor.applied_edit_ids`
+    // snapshot differs: when a cursor is present, it reflects only `cursor.applied_edit_ids`
     // (the store's actual undo/redo position); absent a cursor, every edit is still treated as
     // applied, preserving the pre-W4 behavior for logs that predate this field.
-    let projection = if let Some(cursor) = &cursor {
-        let mut folded = envelope.vcs.initial_projection.clone();
+    let snapshot = if let Some(cursor) = &cursor {
+        let mut folded = envelope.vcs.initial_snapshot.clone();
         let mut last_operation = None;
         for edit_id in &cursor.applied_edit_ids {
             if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
@@ -1483,21 +1483,21 @@ where
         reconciled
     } else {
         let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
-        let (reconciled, _conflicts) = reconcile_with_last(last_operation, projection);
+        let (reconciled, _conflicts) = reconcile_with_last(last_operation, snapshot);
         reconciled
     };
-    Ok(ParsedDocumentText { envelope, projection })
+    Ok(ParsedDocumentText { envelope, snapshot })
 }
 
 /// @emoji 📥️ Parses the textual VCS document back into an envelope plus its live (fully-replayed)
-/// projection — obtains the initial projection via `P::parse_dsl` then shares `replay_ops`.
+/// snapshot — obtains the initial snapshot via `P::parse_dsl` then shares `replay_ops`.
 pub fn parse_document_text<P, Mutation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + DocumentDsl,
     Mutation: OpText + self::Mutation<P>,
 {
-    let initial_projection = P::parse_dsl(dsl)?;
-    replay_ops(initial_projection, ops)
+    let initial_snapshot = P::parse_dsl(dsl)?;
+    replay_ops(initial_snapshot, ops)
 }
 
 /// @emoji 📥️ spr-first pack counterpart of `parse_document_text`: pack+spr are the AUTHORITATIVE
@@ -2150,16 +2150,16 @@ where
     /// remote ingestion (see {@link ingest_envelope}). Empty for every document kind that keeps the
     /// default no-operation `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
     conflicts: Vec<SpaceConflict>,
-    /// @emoji ⚡️ The live, incrementally-maintained RAW fold of `initial_projection` over every
+    /// @emoji ⚡️ The live, incrementally-maintained RAW fold of `initial_snapshot` over every
     /// `forwards` operation in `applied_edit_ids` order — i.e. exactly what a full
-    /// {@link materialize_document_projection} replay computes BEFORE its single final
+    /// {@link materialize_document_snapshot} replay computes BEFORE its single final
     /// {@link Mutation::reconcile} call. Kept in lock-step by every mutating command below instead of
-    /// replaying on every read, so `projection()`/`Apply`/`AmendLast` are O(new work) instead of
+    /// replaying on every read, so `snapshot()`/`Apply`/`AmendLast` are O(new work) instead of
     /// O(total history). Cold-path commands (checkout/switch/set_state, which reassign
     /// `applied_edit_ids` wholesale rather than appending) fall back to a full raw-fold recompute —
     /// see `fold_current`. Differential ground truth: `test_support::assert_live_equals_replay`.
     current: P,
-    /// @emoji 🪢️ `(edit_id, projection right before that edit's forwards were first applied)` for
+    /// @emoji 🪢️ `(edit_id, snapshot right before that edit's forwards were first applied)` for
     /// whichever edit is CURRENTLY the tail of `applied_edit_ids` — refreshed by `Apply`/`AmendLast`
     /// (fresh-edit branch)/`Redo`, left untouched by further amends to the same edit (so it always
     /// points at the state before the edit as a whole, not before its latest increment). Powers an
@@ -2193,7 +2193,7 @@ where
     pub fn new(envelope: DocumentEnvelope<P, Mutation>) -> Self {
         let (applied_edit_ids, redo_edit_ids, current_checkpoint_id, current, local_actor_id) = match &envelope.cursor {
             Some(cursor) => {
-                let mut folded = envelope.vcs.initial_projection.clone();
+                let mut folded = envelope.vcs.initial_snapshot.clone();
                 let mut last_actor: Option<String> = None;
                 for edit_id in &cursor.applied_edit_ids {
                     if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
@@ -2208,7 +2208,7 @@ where
             }
             None => {
                 let checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
-                (Vec::new(), Vec::new(), checkpoint_id, envelope.vcs.initial_projection.clone(), None)
+                (Vec::new(), Vec::new(), checkpoint_id, envelope.vcs.initial_snapshot.clone(), None)
             }
         };
         Self { envelope, backbone: None, dag: crate::os_spr::MutationDag::new(), applied_edit_ids, redo_edit_ids, edit_sequence: 0, generation: 0, current_checkpoint_id, local_actor_id, conflicts: Vec::new(), current, tail_undo_cache: None }
@@ -2319,16 +2319,16 @@ where
         self.current = self.fold_current().expect("checkout: fold_current should not fail for a consistent envelope");
     }
 
-    /// @emoji ⚡️ The live projection: `Mutation::reconcile` applied to the incrementally-maintained
+    /// @emoji ⚡️ The live snapshot: `Mutation::reconcile` applied to the incrementally-maintained
     /// `current` fold. Always `Ok` in practice (kept as `Result` for API stability); O(1) instead of a
     /// full replay. See the `current` field doc for the maintenance invariant.
-    pub fn projection(&self) -> Result<P, VcsError> {
+    pub fn snapshot(&self) -> Result<P, VcsError> {
         Ok(reconcile_with_last(self.last_applied_operation(), self.current.clone()).0)
     }
 
     /// @emoji 🤝️ `current` reconciled, plus whatever conflicts {@link Mutation::reconcile} reports.
-    /// O(1) instead of a full replay — see {@link projection}.
-    pub fn projection_with_conflicts(&self) -> Result<(P, Vec<SpaceConflict>), VcsError> {
+    /// O(1) instead of a full replay — see {@link snapshot}.
+    pub fn snapshot_with_conflicts(&self) -> Result<(P, Vec<SpaceConflict>), VcsError> {
         Ok(reconcile_with_last(self.last_applied_operation(), self.current.clone()))
     }
 
@@ -2339,19 +2339,19 @@ where
         self.applied_edit_ids.last().and_then(|edit_id| self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.forwards.last())
     }
 
-    /// @emoji 🔂️ Full raw fold of `initial_projection` over every `forwards` op in `applied_edit_ids`
+    /// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
     /// order, WITHOUT the final `Mutation::reconcile` pass — the from-scratch computation `current`
     /// is an incrementally-maintained cache of. Used to recompute `current` on the cold paths that
     /// reassign `applied_edit_ids` wholesale instead of appending/popping its tail.
     fn fold_current(&self) -> Result<P, VcsError> {
-        let mut projection = self.envelope.vcs.initial_projection.clone();
+        let mut snapshot = self.envelope.vcs.initial_snapshot.clone();
         for edit_id in &self.applied_edit_ids {
             let edit = self.envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
             for operation in &edit.forwards {
-                projection = apply_mutation(&projection, operation);
+                snapshot = apply_mutation(&snapshot, operation);
             }
         }
-        Ok(projection)
+        Ok(snapshot)
     }
 
     /// @emoji 🤝️ Conflicts from the last reconciliation pass (see {@link conflicts} field doc).
@@ -2504,14 +2504,14 @@ where
                 let started_at = now_iso();
                 // ⚡️ `current` is always up to date (maintained by every mutating command below), so
                 // this is an O(1) clone instead of a full replay — see the `current` field doc.
-                let pre_projection = self.current.clone();
-                let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_projection, mutations);
+                let pre_snapshot = self.current.clone();
+                let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
                 let actor = edit_actor_from_meta(&mutation_meta);
                 self.local_actor_id = actor.clone();
                 self.edit_sequence += 1;
                 let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
                 let edit = Edit { id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint), actor, forwards, inverse, mutation_meta, description, coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
-                self.tail_undo_cache = Some((edit.id.clone(), pre_projection));
+                self.tail_undo_cache = Some((edit.id.clone(), pre_snapshot));
                 self.applied_edit_ids.push(edit.id.clone());
                 self.envelope.vcs.edits.push(edit);
                 self.current = post;
@@ -2532,8 +2532,8 @@ where
                     // ⚡️ `current` already reflects this edit's existing forwards (it was folded in
                     // when the edit was created or last amended), so it's always the correct base for
                     // the NEW operations — O(1) instead of the old cache-validity dance.
-                    let pre_projection = self.current.clone();
-                    let (new_forwards, new_inverse, new_mutation_meta, post) = Self::replay_mutations(&pre_projection, mutations);
+                    let pre_snapshot = self.current.clone();
+                    let (new_forwards, new_inverse, new_mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
                     if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
                         edit.forwards.extend(new_forwards);
                         edit.inverse.extend(new_inverse);
@@ -2546,15 +2546,15 @@ where
                     Ok(())
                 } else {
                     let started_at = now_iso();
-                    let pre_projection = self.current.clone();
-                    let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_projection, mutations);
+                    let pre_snapshot = self.current.clone();
+                    let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
                     let actor = edit_actor_from_meta(&mutation_meta);
                     self.local_actor_id = actor.clone();
                     self.edit_sequence += 1;
                     let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
                     let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint);
                     let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
-                    self.tail_undo_cache = Some((edit_id, pre_projection));
+                    self.tail_undo_cache = Some((edit_id, pre_snapshot));
                     self.applied_edit_ids.push(edit.id.clone());
                     self.envelope.vcs.edits.push(edit);
                     self.current = post;
@@ -2574,17 +2574,17 @@ where
         }
     }
 
-    /// @emoji 🔂️ Replays `operations` over `pre_projection`, returning forwards, reversed-inverse,
-    /// per-operation metadata, and the resulting projection. Shared by `Apply` and `AmendLast`.
+    /// @emoji 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
+    /// per-operation metadata, and the resulting snapshot. Shared by `Apply` and `AmendLast`.
     // TODO(OPERATIONS-TO-MUTATIONS Wave 1): prefer driving apply/inverse via
     // `crate::os_engine::ArtifactEngine` once DocumentStore owns an engine; currently still calls Mutation::diff/inverse directly.
-    fn replay_mutations(pre_projection: &P, mutations: Vec<Mutation>) -> (Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P) {
-        let mut projection = pre_projection.clone();
+    fn replay_mutations(pre_snapshot: &P, mutations: Vec<Mutation>) -> (Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P) {
+        let mut snapshot = pre_snapshot.clone();
         let mut forwards = Vec::with_capacity(mutations.len());
         let mut inverse = Vec::new();
         let mut mutation_meta = Vec::with_capacity(mutations.len());
         for mutation in mutations {
-            let mut back = mutation.inverse(&projection);
+            let mut back = mutation.inverse(&snapshot);
             back.reverse();
             inverse.extend(back);
             mutation_meta.push(MutationMeta {
@@ -2602,10 +2602,10 @@ where
                 // via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.
                 payload_hash: Some(crate::os_spr::PayloadHash(*blake3::hash(&mutation.encode_op().unwrap_or_default()).as_bytes())),
             });
-            projection = apply_mutation(&projection, &mutation);
+            snapshot = apply_mutation(&snapshot, &mutation);
             forwards.push(mutation);
         }
-        (forwards, inverse, mutation_meta, projection)
+        (forwards, inverse, mutation_meta, snapshot)
     }
 
     /// @emoji 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
@@ -2636,12 +2636,12 @@ where
         print_document_pack(&self.envelope)
     }
 
-    pub fn projection_json(&self) -> Result<String, VcsError> {
-        let projection = self.projection()?;
-        serde_json::to_string(&projection).map_err(|e| VcsError::Serialize(e.to_string()))
+    pub fn snapshot_json(&self) -> Result<String, VcsError> {
+        let snapshot = self.snapshot()?;
+        serde_json::to_string(&snapshot).map_err(|e| VcsError::Serialize(e.to_string()))
     }
 
-    /// @emoji 📦️ Serializes the full document envelope (projection + VCS history) as JSON.
+    /// @emoji 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON.
     pub fn envelope_json(&self) -> Result<String, VcsError> {
         serde_json::to_string(&self.envelope).map_err(|e| VcsError::Serialize(e.to_string()))
     }
@@ -2713,7 +2713,7 @@ where
         self.envelope.vcs.edits.push(edit);
         self.applied_edit_ids.push(edit_id);
         self.tail_undo_cache = None;
-        // 🤝️ Tail reconciliation hook: remote ingestion is the one path where this store's projection
+        // 🤝️ Tail reconciliation hook: remote ingestion is the one path where this store's snapshot
         // can diverge from what a local `Apply` alone would produce, so refresh conflicts here.
         let (_, conflicts) = reconcile_with_last(self.last_applied_operation(), self.current.clone());
         self.conflicts = conflicts;
@@ -3507,16 +3507,16 @@ pub struct SpaceAlternative {
 /// unified `s.` schema lattice alongside `space::S_SPACE_SCHEMA`/`space::S_COLLECTION_SCHEMA` (this
 /// crate sits below `space` in the dependency graph, so it declares its own constant rather than
 /// depending on that crate's). Renamed from `"os.space.history"` — the `.spr` extension
-/// (`SpaceHistoryProjection::EXTENSION`, `"space-history"`) is unchanged.
+/// (`SpaceHistorySnapshot::EXTENSION`, `"space-history"`) is unchanged.
 pub const S_SPACE_HISTORY_SCHEMA: &str = "s.space.history";
 
-/// @emoji 🗄️ Projection of the `S_SPACE_HISTORY_SCHEMA` (`"s.space.history"`) meta-document: itself
+/// @emoji 🗄️ Snapshot of the `S_SPACE_HISTORY_SCHEMA` (`"s.space.history"`) meta-document: itself
 /// an ordinary `DocumentVcs` document kind (dogfooded — no bespoke transport), holding the
 /// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
 /// member's own history.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SpaceHistoryProjection {
+pub struct SpaceHistorySnapshot {
     pub checkpoints: Vec<SpaceCheckpoint>,
     pub alternatives: Vec<SpaceAlternative>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3566,9 +3566,9 @@ pub struct SpaceHistoryDiff {
     pub set_active_alternative_id: Option<Option<String>>,
 }
 
-impl MutationDiff<SpaceHistoryProjection> for SpaceHistoryDiff {
-    fn apply(&self, projection: &SpaceHistoryProjection) -> SpaceHistoryProjection {
-        let mut next = projection.clone();
+impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
+    fn apply(&self, snapshot: &SpaceHistorySnapshot) -> SpaceHistorySnapshot {
+        let mut next = snapshot.clone();
         if let Some(checkpoint) = &self.add_checkpoint {
             next.checkpoints.push(checkpoint.clone());
         }
@@ -3606,10 +3606,10 @@ impl MutationDiff<SpaceHistoryProjection> for SpaceHistoryDiff {
     }
 }
 
-impl Mutation<SpaceHistoryProjection> for SpaceHistoryMutation {
+impl Mutation<SpaceHistorySnapshot> for SpaceHistoryMutation {
     type Diff = SpaceHistoryDiff;
 
-    fn diff(&self, _projection: &SpaceHistoryProjection) -> SpaceHistoryDiff {
+    fn diff(&self, _snapshot: &SpaceHistorySnapshot) -> SpaceHistoryDiff {
         match self {
             SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint } => SpaceHistoryDiff { add_checkpoint: Some(checkpoint.clone()), ..Default::default() },
             SpaceHistoryMutation::CreateSpaceAlternative { alternative } => SpaceHistoryDiff { add_alternative: Some(alternative.clone()), set_active_alternative_id: Some(Some(alternative.id.clone())), ..Default::default() },
@@ -3620,22 +3620,22 @@ impl Mutation<SpaceHistoryProjection> for SpaceHistoryMutation {
         }
     }
 
-    fn inverse(&self, projection: &SpaceHistoryProjection) -> Vec<Self> {
+    fn inverse(&self, snapshot: &SpaceHistorySnapshot) -> Vec<Self> {
         match self {
             SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint } => {
                 vec![SpaceHistoryMutation::RemoveSpaceCheckpoint { checkpoint_id: checkpoint.id.clone() }]
             }
             SpaceHistoryMutation::CreateSpaceAlternative { alternative } => {
-                vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: projection.active_alternative_id.clone() }, SpaceHistoryMutation::RemoveSpaceAlternative { alternative_id: alternative.id.clone() }]
+                vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: snapshot.active_alternative_id.clone() }, SpaceHistoryMutation::RemoveSpaceAlternative { alternative_id: alternative.id.clone() }]
             }
-            SpaceHistoryMutation::SwitchSpaceAlternative { .. } => vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: projection.active_alternative_id.clone() }],
+            SpaceHistoryMutation::SwitchSpaceAlternative { .. } => vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: snapshot.active_alternative_id.clone() }],
             SpaceHistoryMutation::RemoveSpaceCheckpoint { checkpoint_id } => {
-                projection.checkpoints.iter().find(|checkpoint| checkpoint.id == *checkpoint_id).map(|checkpoint| vec![SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() }]).unwrap_or_default()
+                snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == *checkpoint_id).map(|checkpoint| vec![SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() }]).unwrap_or_default()
             }
             SpaceHistoryMutation::RemoveSpaceAlternative { alternative_id } => {
-                projection.alternatives.iter().find(|alternative| alternative.id == *alternative_id).map(|alternative| vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative: alternative.clone() }]).unwrap_or_default()
+                snapshot.alternatives.iter().find(|alternative| alternative.id == *alternative_id).map(|alternative| vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative: alternative.clone() }]).unwrap_or_default()
             }
-            SpaceHistoryMutation::SetActiveSpaceAlternative { .. } => vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: projection.active_alternative_id.clone() }],
+            SpaceHistoryMutation::SetActiveSpaceAlternative { .. } => vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: snapshot.active_alternative_id.clone() }],
         }
     }
 }
@@ -3677,16 +3677,16 @@ impl OpBinary for SpaceHistoryMutation {
         from_dsl_value(renormalize_whole_number_floats(value)).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error })
     }
 }
-impl DocumentDsl for SpaceHistoryProjection {
+impl DocumentDsl for SpaceHistorySnapshot {
     const EXTENSION: &'static str = "space-history";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        serde_json::to_string(self).expect("SpaceHistoryProjection serializes infallibly")
+        serde_json::to_string(self).expect("SpaceHistorySnapshot serializes infallibly")
     }
 }
-impl DocumentPack for SpaceHistoryProjection {
+impl DocumentPack for SpaceHistorySnapshot {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let value = to_dsl_value(self).map_err(PackError::Schema)?;
         Ok(pack_rt::encode_pack_value(&value))
@@ -3704,7 +3704,7 @@ impl DocumentPack for SpaceHistoryProjection {
 /// meta-document. App-agnostic: this crate has no notion of what a member document *is*, only that
 /// it satisfies `SpaceMember`.
 pub struct SpaceHost {
-    meta: DocumentStore<SpaceHistoryProjection, SpaceHistoryMutation>,
+    meta: DocumentStore<SpaceHistorySnapshot, SpaceHistoryMutation>,
     members: HashMap<String, Box<dyn SpaceMember>>,
 }
 
@@ -3713,7 +3713,7 @@ pub struct SpaceHost {
 
 
 impl SpaceHost {
-    pub fn new(meta_envelope: DocumentEnvelope<SpaceHistoryProjection, SpaceHistoryMutation>) -> Self {
+    pub fn new(meta_envelope: DocumentEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation>) -> Self {
         Self { meta: DocumentStore::new(meta_envelope), members: HashMap::new() }
     }
 
@@ -3724,7 +3724,7 @@ impl SpaceHost {
     /// @emoji 📚️ Batch counterpart to `register_member`: registers a space's manifest document, its
     /// collection documents, and any currently-open artifact documents together in one call, so the
     /// very next `commit_space_checkpoint` pins all of them atomically in the SAME space-wide
-    /// checkpoint (see `🪐️space`'s `SpaceProjection`/`CollectionProjection`/document-artifact
+    /// checkpoint (see `🪐️space`'s `SpaceSnapshot`/`CollectionSnapshot`/document-artifact
     /// stores, W4's storage wiring — this crate stays app-agnostic and never names those types
     /// directly, only their common `SpaceMember` façade). Purely additive sugar over calling
     /// `register_member` three times in this order; no new mechanism.
@@ -3753,8 +3753,8 @@ impl SpaceHost {
         }
     }
 
-    pub fn meta_projection(&self) -> Result<SpaceHistoryProjection, VcsError> {
-        self.meta.projection()
+    pub fn meta_snapshot(&self) -> Result<SpaceHistorySnapshot, VcsError> {
+        self.meta.snapshot()
     }
 
     /// @emoji 🔗️ Attaches a backbone to the space-wide meta-document, same runtime-attach/detach
@@ -3799,7 +3799,7 @@ impl SpaceHost {
         space_checkpoint_payload.push(0);
         space_checkpoint_payload.extend_from_slice(&pins_fingerprint);
         let checkpoint_id = content_addressed_entity_id("space-checkpoint", &space_checkpoint_payload);
-        let parent_id = self.meta.projection()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
+        let parent_id = self.meta.snapshot()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         let checkpoint = SpaceCheckpoint { id: checkpoint_id.clone(), parent_id, message: message.clone(), authors, timestamp: HybridLogicalTimestamp::new(0, now_ms()), members: pins };
         // 🎯️ W6: the `Apply` below uses `dispatch_inner` (not `dispatch`), skipping its automatic
         // per-dispatch `flush_outbound` — the very next `CommitCheckpoint` dispatch flushes a full
@@ -3817,7 +3817,7 @@ impl SpaceHost {
     /// @emoji 🌿️ Records a `SpaceAlternative` pinned at the current space checkpoint tip (or none,
     /// if nothing has been committed yet), so it can later be switched back into.
     pub fn create_space_alternative(&mut self, name: String) -> Result<String, VcsError> {
-        let checkpoint_ids: Vec<String> = self.meta.projection()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone()).into_iter().collect();
+        let checkpoint_ids: Vec<String> = self.meta.snapshot()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone()).into_iter().collect();
         let mut space_alternative_payload = name.as_bytes().to_vec();
         space_alternative_payload.push(0);
         space_alternative_payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
@@ -3830,8 +3830,8 @@ impl SpaceHost {
     /// @emoji 🔀️ Fans out to every member pinned by `checkpoint_id`'s `SpaceCheckpoint`, restoring
     /// each to its exact recorded `(checkpoint, alternative)`.
     pub fn checkout_space_checkpoint(&mut self, checkpoint_id: &str) -> Result<(), VcsError> {
-        let projection = self.meta.projection()?;
-        let checkpoint = projection.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or(VcsError::NoCheckpoint)?;
+        let snapshot = self.meta.snapshot()?;
+        let checkpoint = snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or(VcsError::NoCheckpoint)?;
         for pin in &checkpoint.members {
             if let Some(member) = self.members.get_mut(&pin.document_id) {
                 member.checkout(&pin.checkpoint_id, &pin.alternative_id)?;
@@ -3842,8 +3842,8 @@ impl SpaceHost {
 
     /// @emoji 🔀️ Switches the studio's active alternative and fans out to its tip checkpoint's pins.
     pub fn switch_space_alternative(&mut self, alternative_id: &str) -> Result<(), VcsError> {
-        let projection = self.meta.projection()?;
-        let alternative = projection.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
+        let snapshot = self.meta.snapshot()?;
+        let alternative = snapshot.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
         self.meta.dispatch(DocumentCommand::Apply { mutations: vec![SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: alternative_id.to_string() }], description: None })?;
         self.checkout_space_checkpoint(&checkpoint_id)
@@ -3885,12 +3885,12 @@ pub mod test_support {
         let post = apply_mutation(pre, &operation);
         let mut inverse = operation.inverse(pre);
         inverse.reverse();
-        let restored = inverse.iter().fold(post, |projection, back_operation| apply_mutation(&projection, back_operation));
+        let restored = inverse.iter().fold(post, |snapshot, back_operation| apply_mutation(&snapshot, back_operation));
         assert_eq!(&restored, pre, "operation inverse did not restore pre-state");
     }
 
     /// @emoji 🗄️ Asserts a full store round trip: Apply→Undo restores `initial`, Redo restores the
-    /// post-apply projection, and replay-materialization agrees with the live store projection.
+    /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
     pub fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
         P: Clone + Serialize + DeserializeOwned + DocumentPack + PartialEq + std::fmt::Debug,
@@ -3899,33 +3899,33 @@ pub mod test_support {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
-        let post = store.projection().expect("post projection");
+        let post = store.snapshot().expect("post snapshot");
         store.dispatch(DocumentCommand::Undo).expect("undo");
-        assert_eq!(store.projection().expect("undo projection"), initial, "undo did not restore initial projection");
+        assert_eq!(store.snapshot().expect("undo snapshot"), initial, "undo did not restore initial snapshot");
         store.dispatch(DocumentCommand::Redo).expect("redo");
-        assert_eq!(store.projection().expect("redo projection"), post, "redo did not restore post projection");
-        let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
-        assert_eq!(replayed, post, "materialization from replay diverged from store projection");
+        assert_eq!(store.snapshot().expect("redo snapshot"), post, "redo did not restore post snapshot");
+        let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
+        assert_eq!(replayed, post, "materialization from replay diverged from store snapshot");
     }
 
-    /// @emoji 📜️ Asserts a DSL round trip: `P::parse_dsl(&projection.print_dsl())` recovers an equal
-    /// projection. The compile-time validation ground truth for every technology's `🔖️Dsl` region —
+    /// @emoji 📜️ Asserts a DSL round trip: `P::parse_dsl(&snapshot.print_dsl())` recovers an equal
+    /// snapshot. The compile-time validation ground truth for every technology's `🔖️Dsl` region —
     /// call this from a `#[test]` over every `include_str!` fixture.
-    pub fn assert_dsl_round_trip<P>(projection: &P)
+    pub fn assert_dsl_round_trip<P>(snapshot: &P)
     where
         P: DocumentDsl + PartialEq + std::fmt::Debug,
     {
-        let printed = projection.print_dsl();
+        let printed = snapshot.print_dsl();
         let parsed = P::parse_dsl(&printed).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
-        assert_eq!(&parsed, projection, "dsl round trip diverged;\nprinted:\n{printed}");
+        assert_eq!(&parsed, snapshot, "dsl round trip diverged;\nprinted:\n{printed}");
     }
 
-    /// @emoji 🧮️ Config artifact twin of [`assert_dsl_round_trip`] — same law for `ConfigRecord` projections.
-    pub fn assert_config_round_trip<C>(projection: &C)
+    /// @emoji 🧮️ Config artifact twin of [`assert_dsl_round_trip`] — same law for `ConfigRecord` snapshots.
+    pub fn assert_config_round_trip<C>(snapshot: &C)
     where
         C: ConfigRecord + PartialEq + std::fmt::Debug,
     {
-        assert_dsl_round_trip(projection);
+        assert_dsl_round_trip(snapshot);
     }
 
     /// @emoji 🧭️ Non-panicking twin of [`assert_dsl_round_trip`] for a repo-wide fixture-law SWEEP
@@ -3966,28 +3966,28 @@ pub mod test_support {
         Ok(())
     }
 
-    /// @emoji 📦️ Asserts a pack round trip: `P::decode_pack(&projection.encode_pack())` recovers an
-    /// equal projection — the pack sibling of `assert_dsl_round_trip`.
-    pub fn assert_pack_round_trip<P>(projection: &P)
+    /// @emoji 📦️ Asserts a pack round trip: `P::decode_pack(&snapshot.encode_pack())` recovers an
+    /// equal snapshot — the pack sibling of `assert_dsl_round_trip`.
+    pub fn assert_pack_round_trip<P>(snapshot: &P)
     where
         P: DocumentPack + PartialEq + std::fmt::Debug,
     {
-        let bytes = projection.encode_pack();
+        let bytes = snapshot.encode_pack();
         let decoded = P::decode_pack(&bytes).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
-        assert_eq!(&decoded, projection, "pack round trip diverged");
+        assert_eq!(&decoded, snapshot, "pack round trip diverged");
     }
 
-    /// @emoji ⚖️ Asserts dsl and pack are two projections of the SAME value: `decode_pack(
+    /// @emoji ⚖️ Asserts dsl and pack are two encodings of the SAME value: `decode_pack(
     /// encode_pack(p)) == parse_dsl(print_dsl(p)) == p` — the compile-time validation ground truth
     /// for the whole pack rollout's central LAW (see `DocumentPack`'s doc comment).
-    pub fn assert_dsl_pack_equivalence<P>(projection: &P)
+    pub fn assert_dsl_pack_equivalence<P>(snapshot: &P)
     where
         P: DocumentDsl + DocumentPack + Clone + PartialEq + std::fmt::Debug,
     {
-        let via_pack = P::decode_pack(&projection.encode_pack()).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
-        let via_dsl = P::parse_dsl(&projection.print_dsl()).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
-        assert_eq!(&via_pack, projection, "pack round trip diverged from source projection");
-        assert_eq!(&via_dsl, projection, "dsl round trip diverged from source projection");
+        let via_pack = P::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
+        let via_dsl = P::parse_dsl(&snapshot.print_dsl()).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
+        assert_eq!(&via_pack, snapshot, "pack round trip diverged from source snapshot");
+        assert_eq!(&via_dsl, snapshot, "dsl round trip diverged from source snapshot");
         assert_eq!(via_pack, via_dsl, "pack and dsl round trips diverged from each other");
     }
 
@@ -4004,7 +4004,7 @@ pub mod test_support {
         assert_eq!(&parsed, operation, "op-text round trip diverged; printed: {printed:?}");
     }
 
-    /// @emoji ⚖️ Asserts op text and op binary are two projections of the SAME operation:
+    /// @emoji ⚖️ Asserts op text and op binary are two encodings of the SAME operation:
     /// `decode_op(encode_op(op)) == parse_op(print_op(op)) == op`, and the binary encoding is
     /// deterministic. The compile-time validation ground truth for every technology's `OpBinary`
     /// impl — the op-level mirror of {@link assert_dsl_pack_equivalence}.
@@ -4020,7 +4020,7 @@ pub mod test_support {
         assert_eq!(&decoded, operation, "op-binary round trip diverged from source operation");
     }
 
-    /// @emoji ⚖️ Asserts command text and command binary are two projections of the SAME command:
+    /// @emoji ⚖️ Asserts command text and command binary are two encodings of the SAME command:
     /// `DocumentCommand::decode_op(&c.encode_op()) == parse_command(print_command(c)) == c`, and the
     /// binary encoding is deterministic. The compile-time validation ground truth for
     /// `DocumentCommand`'s text/binary pair — the command-level mirror of
@@ -4040,36 +4040,36 @@ pub mod test_support {
     }
 
     /// @emoji 📄️ Asserts that printing a store's envelope to text and parsing it back yields the same
-    /// live projection the store already holds — the ground truth for {@link print_document_text}/
+    /// live snapshot the store already holds — the ground truth for {@link print_document_text}/
     /// {@link parse_document_text} on any technology once it implements `DocumentDsl` + `OpText`.
     pub fn assert_document_text_round_trip<P, Mutation>(store: &DocumentStore<P, Mutation>)
     where
         P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Mutation: Clone + OpText + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpBinary,
     {
-        let live = store.projection().expect("store projection");
+        let live = store.snapshot().expect("store snapshot");
         let files = print_document_text(store.envelope()).expect("print document text");
         let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(&files.dsl, &files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
-        assert_eq!(parsed.projection, live, "document-text round trip diverged from store projection");
+        assert_eq!(parsed.snapshot, live, "document-text round trip diverged from store snapshot");
     }
 
     /// @emoji 🗄️ Asserts a full pack-based document round trip: mirrors
     /// `assert_document_text_round_trip` but via `print_document_pack`/`parse_document_pack`, and
-    /// additionally asserts the pack path's parsed projection agrees with the text path's — the two
+    /// additionally asserts the pack path's parsed snapshot agrees with the text path's — the two
     /// storage formats must never diverge on the same store.
     pub fn assert_document_pack_round_trip<P, Mutation>(store: &DocumentStore<P, Mutation>)
     where
         P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Mutation: Clone + OpText + OpBinary + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned,
     {
-        let live = store.projection().expect("store projection");
+        let live = store.snapshot().expect("store snapshot");
         let pack_files = print_document_pack(store.envelope()).expect("print document pack");
         let parsed_pack: ParsedDocumentText<P, Mutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
-        assert_eq!(parsed_pack.projection, live, "document-pack round trip diverged from store projection");
+        assert_eq!(parsed_pack.snapshot, live, "document-pack round trip diverged from store snapshot");
 
         let text_files = print_document_text(store.envelope()).expect("print document text");
         let parsed_text: ParsedDocumentText<P, Mutation> = parse_document_text(&text_files.dsl, &text_files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
-        assert_eq!(parsed_pack.projection, parsed_text.projection, "document-pack path diverged from document-text path");
+        assert_eq!(parsed_pack.snapshot, parsed_text.snapshot, "document-pack path diverged from document-text path");
     }
 
     /// @emoji ✉️ Asserts that converting an `Edit<Mutation>` into `crate::os_spr::MutationEnvelope`s
@@ -4126,7 +4126,7 @@ pub mod test_support {
         }
     }
 
-    /// @emoji 🩺️ Asserts the store's incrementally-maintained live projection agrees with a
+    /// @emoji 🩺️ Asserts the store's incrementally-maintained live snapshot agrees with a
     /// from-scratch full replay — the differential check for `DocumentStore`'s stateful `current`
     /// field. Call after arbitrary command sequences (apply/amend/undo/redo/checkpoint/switch
     /// interleavings) in a tech's own tests to confirm the incremental fast paths never diverge from
@@ -4136,9 +4136,9 @@ pub mod test_support {
         P: Clone + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
     {
-        let live = store.projection().expect("store projection");
-        let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
-        assert_eq!(live, replayed, "store's live projection diverged from full-replay materialization");
+        let live = store.snapshot().expect("store snapshot");
+        let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
+        assert_eq!(live, replayed, "store's live snapshot diverged from full-replay materialization");
     }
 }
 //#endregion 🔖️TestSupport
@@ -4150,13 +4150,13 @@ mod tests {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslDocument)]
     #[dsl(extension = "demo")]
-    struct DemoProjection {
+    struct DemoSnapshot {
         n: i32,
     }
 
 //#region 🔖️DocumentCodec
 /// 📜️ Handcrafted DocumentDsl (P6).
-impl DocumentDsl for DemoProjection {
+impl DocumentDsl for DemoSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
@@ -4171,7 +4171,7 @@ impl DocumentDsl for DemoProjection {
     }
 }
 /// 📦️ Handcrafted DocumentPack (P6).
-impl DocumentPack for DemoProjection {
+impl DocumentPack for DemoSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as DocumentDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
@@ -4190,9 +4190,9 @@ impl DocumentPack for DemoProjection {
 //#endregion 🔖️DocumentCodec
 
 
-    // `impl crate::os_store::DocumentPack for DemoProjection` is now generated automatically by
+    // `impl crate::os_store::DocumentPack for DemoSnapshot` is now generated automatically by
     // `#[derive(crate::os_dsl::DslDocument)]` above (see dsl/derive/rs/lib.rs's `🔖️DslDocument` region) —
-    // same seam as its `impl crate::os_store::DocumentDsl for DemoProjection` sibling.
+    // same seam as its `impl crate::os_store::DocumentDsl for DemoSnapshot` sibling.
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     struct DemoDiff {
@@ -4201,9 +4201,9 @@ impl DocumentPack for DemoProjection {
 
 
 
-    impl MutationDiff<DemoProjection> for DemoDiff {
-        fn apply(&self, projection: &DemoProjection) -> DemoProjection {
-            DemoProjection { n: self.n.unwrap_or(projection.n) }
+    impl MutationDiff<DemoSnapshot> for DemoDiff {
+        fn apply(&self, snapshot: &DemoSnapshot) -> DemoSnapshot {
+            DemoSnapshot { n: self.n.unwrap_or(snapshot.n) }
         }
 
         fn absorb(&mut self, other: Self) {
@@ -4292,17 +4292,17 @@ impl OpBinary for DemoMutation {
 //#endregion 🔖️OpCodec
 
 
-    impl Mutation<DemoProjection> for DemoMutation {
+    impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
 
-        fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
+        fn diff(&self, _snapshot: &DemoSnapshot) -> DemoDiff {
             match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
             }
         }
 
-        fn inverse(&self, projection: &DemoProjection) -> Vec<Self> {
-            vec![DemoMutation::SetN { n: projection.n }]
+        fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
+            vec![DemoMutation::SetN { n: snapshot.n }]
         }
     }
 
@@ -4310,12 +4310,12 @@ impl OpBinary for DemoMutation {
 
     /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
     fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> crate::os_spr::MutationEnvelope {
-        let mut peer = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let mut peer = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
         peer.dispatch(DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("peer apply");
         let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
         let document_id = DocumentId(peer.envelope().id.clone());
         let schema = SchemaId(peer.envelope().schema.clone());
-        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoProjection, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
+        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
         let mut envelope = envelopes.pop().expect("exactly one op envelope for a single-op edit");
         envelope.actor = ActorId(actor.to_string());
         envelope
@@ -4323,27 +4323,27 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn materialize_replays_forward_mutations() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        assert_eq!(store.projection().expect("projection").n, 1);
+        assert_eq!(store.snapshot().expect("snapshot").n, 1);
         assert_eq!(store.envelope().vcs.edits.len(), 1);
     }
 
     #[test]
     fn undo_redo_round_trip() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::Undo).expect("undo");
-        assert_eq!(store.projection().expect("projection").n, 0);
+        assert_eq!(store.snapshot().expect("snapshot").n, 0);
         store.dispatch(DocumentCommand::Redo).expect("redo");
-        assert_eq!(store.projection().expect("projection").n, 1);
+        assert_eq!(store.snapshot().expect("snapshot").n, 1);
     }
 
     #[test]
     fn apply_computes_backwards_from_pre_state() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
         let edit = &store.envelope().vcs.edits[0];
@@ -4352,7 +4352,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn commit_checkpoint_wraps_edits_into_change() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
@@ -4363,32 +4363,32 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn checkout_checkpoint_restores_applied_edits() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
         let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply2");
-        assert_eq!(store.projection().expect("projection").n, 9);
+        assert_eq!(store.snapshot().expect("snapshot").n, 9);
         store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id }).expect("checkout");
-        assert_eq!(store.projection().expect("projection").n, 1);
+        assert_eq!(store.snapshot().expect("snapshot").n, 1);
     }
 
     #[test]
     fn alternatives_switch_restores_checkpoint_chain() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CreateAlternative { name: "branch-a".into() }).expect("create alternative");
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on branch");
         store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: alt_id }).expect("switch");
-        assert_eq!(store.projection().expect("projection").n, 1);
+        assert_eq!(store.snapshot().expect("snapshot").n, 1);
     }
 
     #[test]
     fn checkout_old_checkpoint_then_commit_creates_a_fork() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
@@ -4405,7 +4405,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
@@ -4418,7 +4418,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn history_columns_orders_newest_first_and_labels_trunk_root() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
@@ -4436,7 +4436,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
@@ -4500,7 +4500,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn no_backbone_by_default() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
         let store = DocumentStore::new(envelope);
         assert!(store.backbone_ref().is_none());
@@ -4509,8 +4509,8 @@ impl OpBinary for DemoMutation {
     #[test]
     fn memory_backbone_pair_propagates_edits_bidirectionally() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope_a: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let envelope_b: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope_a: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let envelope_b: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store_a = DocumentStore::new(envelope_a);
         let mut store_b = DocumentStore::new(envelope_b);
         store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
@@ -4518,17 +4518,17 @@ impl OpBinary for DemoMutation {
 
         store_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on a");
         store_b.tick().expect("tick b");
-        assert_eq!(store_b.projection().expect("projection b").n, 1, "b receives a's edit");
+        assert_eq!(store_b.snapshot().expect("snapshot b").n, 1, "b receives a's edit");
 
         store_b.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on b");
         store_a.tick().expect("tick a");
-        assert_eq!(store_a.projection().expect("projection a").n, 2, "a receives b's edit");
+        assert_eq!(store_a.snapshot().expect("snapshot a").n, 2, "a receives b's edit");
     }
 
     #[test]
     fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store_a = DocumentStore::new(envelope.clone());
         let mut store_b = DocumentStore::new(envelope);
         store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
@@ -4537,22 +4537,22 @@ impl OpBinary for DemoMutation {
         assert!(store_a.backbone_ref().is_none());
 
         store_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply after detach still works on the in-memory graph");
-        assert_eq!(store_a.projection().expect("projection a").n, 9);
+        assert_eq!(store_a.snapshot().expect("snapshot a").n, 9);
         store_b.tick().expect("tick b");
-        assert_eq!(store_b.projection().expect("projection b").n, 0, "detached edits never reach the peer");
+        assert_eq!(store_b.snapshot().expect("snapshot b").n, 0, "detached edits never reach the peer");
     }
 
     #[test]
     fn deserialized_envelope_with_stale_backbone_ref_never_auto_attaches() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut stale_json: serde_json::Value = serde_json::to_value(&envelope).expect("serialize envelope");
         stale_json["backbone"] = serde_json::json!({ "uri": "folder:///nonexistent/path" });
-        let stale_envelope: DocumentEnvelope<DemoProjection, DemoMutation> = serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
+        let stale_envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
 
         let mut store = DocumentStore::new(stale_envelope.clone());
         assert!(store.tick().expect("tick with no live backbone is a no-operation") == false, "no backbone was ever attached, so there is nothing to pump");
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply works purely against the in-memory graph");
-        assert_eq!(store.projection().expect("projection").n, 1);
+        assert_eq!(store.snapshot().expect("snapshot").n, 1);
 
         store.reset(stale_envelope, Vec::new(), Vec::new()).expect("reset");
         assert!(store.tick().expect("tick after set_state with no live backbone is a no-operation") == false, "set_state must not resurrect IO from a stale backbone descriptor either");
@@ -4560,15 +4560,15 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
-        let codec = DocumentCodec::of::<DemoProjection, DemoMutation>("demo/v1");
+        let codec = DocumentCodec::of::<DemoSnapshot, DemoMutation>("demo/v1");
         assert_eq!(codec.schema, "demo/v1");
         assert_eq!(codec.extension, "demo");
 
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 4 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 4 }, None);
         let text_files = print_document_text(&envelope).expect("print document text");
 
         let (pack_files, dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).expect("codec compile_dsl");
-        assert_eq!(dsl_mirror, DemoProjection { n: 4 }.print_dsl(), "dsl mirror matches the initial projection's print_dsl");
+        assert_eq!(dsl_mirror, DemoSnapshot { n: 4 }.print_dsl(), "dsl mirror matches the initial snapshot's print_dsl");
 
         let mirrored = (codec.print_mirror)(&pack_files.pack, &pack_files.spr).expect("codec print_mirror");
         assert_eq!(mirrored.dsl, dsl_mirror, "print_mirror's dsl text agrees with compile_dsl's own mirror, no JSON round trip");
@@ -4587,7 +4587,7 @@ impl OpBinary for DemoMutation {
             started_at: "0".into(),
             finished_at: None,
         };
-        let mut op_envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoProjection, DemoMutation>(&edit, &document_id, &schema).expect("op envelopes");
+        let mut op_envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("op envelopes");
         let op_envelope = op_envelopes.pop().expect("exactly one op envelope for a single-op edit");
         let edit_text = (codec.edit_text_from_envelope)(&op_envelope).expect("codec edit_text_from_envelope");
         assert!(edit_text.contains("set-n"), "edit text contains the printed op line: {edit_text:?}");
@@ -4601,22 +4601,22 @@ impl OpBinary for DemoMutation {
     #[test]
     fn attach_reconciles_a_pushed_snapshot() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let seeded: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let seeded: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut seed_store = DocumentStore::new(seeded);
         seed_store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
         let seed_files = seed_store.snapshot_pack().expect("seed snapshot");
         remote.push(BackboneMessage::Snapshot { pack: seed_files.pack, spr: seed_files.spr }).expect("push snapshot");
 
-        let fresh: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let fresh: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(fresh);
         store.attach_backbone(Box::new(channel)).expect("attach reconciles the pushed snapshot");
-        assert_eq!(store.projection().expect("projection").n, 5, "adopted the pushed snapshot's edit");
+        assert_eq!(store.snapshot().expect("snapshot").n, 5, "adopted the pushed snapshot's edit");
     }
 
     #[test]
     fn channel_backbone_round_trips_between_store_and_actor() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
         let attach_flush = remote.drain().expect("drain attach");
@@ -4628,13 +4628,13 @@ impl OpBinary for DemoMutation {
 
         remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[foreign_mutation_envelope("peer", DemoMutation::SetN { n: 8 })]) }).expect("push inbound operations");
         store.tick().expect("tick");
-        assert_eq!(store.projection().expect("projection").n, 8, "store ingests the actor's inbound operations");
+        assert_eq!(store.snapshot().expect("snapshot").n, 8, "store ingests the actor's inbound operations");
     }
 
     #[test]
     fn pump_acks_ingested_operations() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
         let _ = remote.drain().expect("drain attach snapshot");
@@ -4643,7 +4643,7 @@ impl OpBinary for DemoMutation {
         let mutation_id = inbound.mutation_id.0.clone();
         remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[inbound]) }).expect("push inbound operations");
         store.tick().expect("tick");
-        assert_eq!(store.projection().expect("projection").n, 7, "ingested the inbound operation");
+        assert_eq!(store.snapshot().expect("snapshot").n, 7, "ingested the inbound operation");
 
         let outbound = remote.drain().expect("drain ack");
         assert!(outbound.iter().any(|message| matches!(message, BackboneMessage::Ack { op_ids } if op_ids == &vec![mutation_id.clone()])), "successful operations ingest emits an Ack for the ingested operation ids: {outbound:?}");
@@ -4651,20 +4651,20 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn exact_base_only_undo_refuses_a_foreign_tail() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
         store.dispatch(DocumentCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 }) }).expect("ingest foreign");
-        assert_eq!(store.projection().expect("projection").n, 2, "foreign edit sits at the tail");
+        assert_eq!(store.snapshot().expect("snapshot").n, 2, "foreign edit sits at the tail");
 
         let error = store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).expect_err("undo must refuse a foreign tail");
         assert!(matches!(error, VcsError::ForeignEdit(_)), "got {error:?}");
-        assert_eq!(store.projection().expect("projection").n, 2, "the timeline is untouched after refusal");
+        assert_eq!(store.snapshot().expect("snapshot").n, 2, "the timeline is untouched after refusal");
     }
 
     #[test]
     fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
         let local_edit_id = store.applied_edit_ids()[0].clone();
@@ -4676,26 +4676,26 @@ impl OpBinary for DemoMutation {
         store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).expect("transform undo removes the local edit from mid-timeline");
         assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&foreign_id), "only the local edit is removed; the concurrent foreign edit stays applied");
         assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_edit_id), "the local edit is on the redo stack");
-        assert_eq!(store.projection().expect("projection").n, 2, "projection re-materializes from the foreign edit alone");
+        assert_eq!(store.snapshot().expect("snapshot").n, 2, "snapshot re-materializes from the foreign edit alone");
 
         store.dispatch(DocumentCommand::Redo).expect("redo brings the local edit back");
         assert_eq!(store.applied_edit_ids().len(), 2);
-        assert_eq!(store.projection().expect("projection").n, 1, "redo re-applies the local edit at the tail");
+        assert_eq!(store.snapshot().expect("snapshot").n, 1, "redo re-applies the local edit at the tail");
     }
 
     #[test]
     fn compensating_undo_dispatches_semantic_command() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
         let undo_apply = DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 0 }], description: Some("compensate".into()) };
         store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).expect("compensating undo");
-        assert_eq!(store.projection().expect("projection").n, 0);
+        assert_eq!(store.snapshot().expect("snapshot").n, 0);
     }
 
     #[test]
     fn edit_mutations_exposes_the_latest_edit() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         assert!(store.edit_mutations().is_none(), "no edits yet");
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
@@ -4707,23 +4707,23 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn amend_last_absorbs_into_matching_coalesce_key() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("second amend");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced into a single edit");
-        assert_eq!(store.projection().expect("projection").n, 2);
+        assert_eq!(store.snapshot().expect("snapshot").n, 2);
         store.dispatch(DocumentCommand::Undo).expect("undo");
-        assert_eq!(store.projection().expect("projection after undo").n, 0, "undo restores pre-gesture state in one step");
+        assert_eq!(store.snapshot().expect("snapshot after undo").n, 0, "undo restores pre-gesture state in one step");
     }
 
     #[test]
     fn amend_last_incremental_path_matches_full_replay_over_many_amends() {
         // 🪢️ Regression guard for the incremental `AmendLast` path (see `AmendCache`): many sequential
         // amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
-        // same edit (forwards/inverse/mutation_meta length, final projection, one-step undo) as the
+        // same edit (forwards/inverse/mutation_meta length, final snapshot, one-step undo) as the
         // previous full-replay-every-time implementation, just without re-replaying history each time.
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         for n in 1..=50 {
             store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n }], coalesce_key: Some("drag".into()) }).expect("amend");
@@ -4733,31 +4733,31 @@ impl OpBinary for DemoMutation {
         assert_eq!(edit.forwards.len(), 50);
         assert_eq!(edit.inverse.len(), 50);
         assert_eq!(edit.mutation_meta.len(), 50);
-        assert_eq!(store.projection().expect("projection").n, 50);
+        assert_eq!(store.snapshot().expect("snapshot").n, 50);
         store.dispatch(DocumentCommand::Undo).expect("undo");
-        assert_eq!(store.projection().expect("projection after undo").n, 0, "one undo reverts the whole 50-step coalesced gesture");
+        assert_eq!(store.snapshot().expect("snapshot after undo").n, 0, "one undo reverts the whole 50-step coalesced gesture");
     }
 
     #[test]
     fn amend_last_incremental_cache_survives_undo_redo_round_trip() {
         // 🪢️ Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
-        // an edit's own `forwards`, so a cached post-projection keyed by `(edit_id, forwards_len)` stays
+        // an edit's own `forwards`, so a cached post-snapshot keyed by `(edit_id, forwards_len)` stays
         // valid across an undo immediately followed by a redo of the very same coalesced edit.
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
         store.dispatch(DocumentCommand::Undo).expect("undo");
         store.dispatch(DocumentCommand::Redo).expect("redo");
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after undo/redo");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "still coalesced into the original edit");
-        assert_eq!(store.projection().expect("projection").n, 2);
+        assert_eq!(store.snapshot().expect("snapshot").n, 2);
         store.dispatch(DocumentCommand::Undo).expect("undo again");
-        assert_eq!(store.projection().expect("projection after undo").n, 0);
+        assert_eq!(store.snapshot().expect("snapshot after undo").n, 0);
     }
 
     #[test]
     fn amend_last_starts_new_edit_when_coalesce_key_differs() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag-a".into()) }).expect("first drag");
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag-b".into()) }).expect("second drag");
@@ -4766,7 +4766,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn amend_last_does_not_absorb_into_committed_edit() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("amend");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("commit");
@@ -4776,8 +4776,8 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn test_support_round_trip_helpers_pass_for_demo_operation() {
-        test_support::assert_operation_round_trip(&DemoProjection { n: 4 }, DemoMutation::SetN { n: 9 });
-        test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoMutation::SetN { n: 9 });
+        test_support::assert_operation_round_trip(&DemoSnapshot { n: 4 }, DemoMutation::SetN { n: 9 });
+        test_support::assert_store_roundtrip(DemoSnapshot { n: 4 }, DemoMutation::SetN { n: 9 });
 
         let edit = Edit::<DemoMutation> {
             id: "edit-command-envelope".into(),
@@ -4799,7 +4799,7 @@ impl OpBinary for DemoMutation {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        test_support::assert_command_envelope_round_trip::<DemoProjection, DemoMutation>(&edit, &DocumentId("doc-command-envelope".into()), &SchemaId("demo/v1".into()));
+        test_support::assert_command_envelope_round_trip::<DemoSnapshot, DemoMutation>(&edit, &DocumentId("doc-command-envelope".into()), &SchemaId("demo/v1".into()));
     }
 
     /// @emoji 🪤️ Proves `assert_command_envelope_round_trip` is not a trivially-true check: a hand-rolled
@@ -4813,9 +4813,9 @@ impl OpBinary for DemoMutation {
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
         struct LossyDiff;
 
-        impl MutationDiff<DemoProjection> for LossyDiff {
-            fn apply(&self, projection: &DemoProjection) -> DemoProjection {
-                projection.clone()
+        impl MutationDiff<DemoSnapshot> for LossyDiff {
+            fn apply(&self, snapshot: &DemoSnapshot) -> DemoSnapshot {
+                snapshot.clone()
             }
             fn absorb(&mut self, _other: Self) {}
         }
@@ -4837,12 +4837,12 @@ impl OpBinary for DemoMutation {
             }
         }
 
-        impl Mutation<DemoProjection> for LossyMutation {
+        impl Mutation<DemoSnapshot> for LossyMutation {
             type Diff = LossyDiff;
-            fn diff(&self, _projection: &DemoProjection) -> LossyDiff {
+            fn diff(&self, _snapshot: &DemoSnapshot) -> LossyDiff {
                 LossyDiff
             }
-            fn inverse(&self, _projection: &DemoProjection) -> Vec<Self> {
+            fn inverse(&self, _snapshot: &DemoSnapshot) -> Vec<Self> {
                 vec![self.clone()]
             }
         }
@@ -4868,22 +4868,22 @@ impl OpBinary for DemoMutation {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        test_support::assert_command_envelope_round_trip::<DemoProjection, LossyMutation>(&edit, &DocumentId("doc-lossy".into()), &SchemaId("lossy/v1".into()));
+        test_support::assert_command_envelope_round_trip::<DemoSnapshot, LossyMutation>(&edit, &DocumentId("doc-lossy".into()), &SchemaId("lossy/v1".into()));
     }
 
-    // `DemoProjection`'s `crate::os_store::DocumentDsl` impl and `DemoMutation`'s `crate::os_store::OpText` impl are now
+    // `DemoSnapshot`'s `crate::os_store::DocumentDsl` impl and `DemoMutation`'s `crate::os_store::OpText` impl are now
     // generated by `#[derive(crate::os_dsl::DslDocument)]`/`#[derive(crate::os_dsl::DslOps)]` on the type definitions
-    // themselves (see `DemoProjection`/`DemoMutation` above) — the `dsl_schema` grammar replaces
+    // themselves (see `DemoSnapshot`/`DemoMutation` above) — the `dsl_schema` grammar replaces
     // this crate's own hand-rolled `"n <value>"`/`"set-n <value>"` printer/parser.
 
     #[test]
     fn demo_dsl_round_trips() {
-        test_support::assert_dsl_round_trip(&DemoProjection { n: 42 });
+        test_support::assert_dsl_round_trip(&DemoSnapshot { n: 42 });
     }
 
     #[test]
     fn demo_dsl_pack_equivalence() {
-        test_support::assert_dsl_pack_equivalence(&DemoProjection { n: 42 });
+        test_support::assert_dsl_pack_equivalence(&DemoSnapshot { n: 42 });
     }
 
     #[test]
@@ -4916,7 +4916,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn print_edit_lines_emits_one_indented_line_per_forward_op() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         let edit = store.envelope().vcs.edits.last().expect("edit");
@@ -4927,7 +4927,7 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn document_text_round_trips_after_apply_and_checkpoint() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: Some("bump".into()) }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
@@ -4938,23 +4938,23 @@ impl OpBinary for DemoMutation {
     #[test]
     fn parse_document_text_rejects_invalid_op_line_with_span() {
         let files = DocumentTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 started=\"1\"\n  not-an-op\n".to_string() };
-        let error = parse_document_text::<DemoProjection, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
+        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
         assert_eq!(error.span.line, 3);
     }
 
     /// @emoji 🩺️ Stresses the stateful `current`/`tail_undo_cache` fast paths — multi-op edits, amend
     /// gestures, undo/redo, and a checkpoint (cold-path recompute) all interleaved — against the
     /// full-replay differential oracle, so any divergence between the incremental paths and a
-    /// from-scratch replay fails loudly here rather than surfacing as a silent projection bug later.
+    /// from-scratch replay fails loudly here rather than surfacing as a silent snapshot bug later.
     #[test]
     fn stateful_current_matches_full_replay_across_interleaved_commands() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
 
         // Multi-operation edit: current must fold both ops, matching a from-scratch replay.
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }, DemoMutation::SetN { n: 2 }], description: None }).expect("apply multi-op edit");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.projection().expect("projection").n, 2);
+        assert_eq!(store.snapshot().expect("snapshot").n, 2);
 
         // Amend gesture: the first `AmendLast` cannot merge into the preceding `Apply`-created edit
         // (`Apply` never sets a `coalesce_key`, so it can never match), so it starts a NEW edit; the
@@ -4963,17 +4963,17 @@ impl OpBinary for DemoMutation {
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".into()) }).expect("amend 1");
         store.dispatch(DocumentCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 4 }], coalesce_key: Some("drag".into()) }).expect("amend 2");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.projection().expect("projection").n, 4);
+        assert_eq!(store.snapshot().expect("snapshot").n, 4);
         assert_eq!(store.envelope().vcs.edits.len(), 2, "the amend gesture started its own edit, not a third");
 
         // Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
-        // the initial projection — only the amend gesture's edit is undone here.
+        // the initial snapshot — only the amend gesture's edit is undone here.
         store.dispatch(DocumentCommand::Undo).expect("undo");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.projection().expect("projection").n, 2);
+        assert_eq!(store.snapshot().expect("snapshot").n, 2);
         store.dispatch(DocumentCommand::Redo).expect("redo");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.projection().expect("projection").n, 4);
+        assert_eq!(store.snapshot().expect("snapshot").n, 4);
 
         // Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
         // itself, but a following apply + a second, older undo still must agree with replay).
@@ -4982,7 +4982,7 @@ impl OpBinary for DemoMutation {
         test_support::assert_live_equals_replay(&store);
         store.dispatch(DocumentCommand::Undo).expect("undo after checkpoint");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.projection().expect("projection").n, 4);
+        assert_eq!(store.snapshot().expect("snapshot").n, 4);
     }
 
     //#region 🏛️SpaceTests
@@ -5069,17 +5069,17 @@ impl OpBinary for TimestampedMutation {
 
 
 
-    impl Mutation<DemoProjection> for TimestampedMutation {
+    impl Mutation<DemoSnapshot> for TimestampedMutation {
         type Diff = DemoDiff;
 
-        fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
+        fn diff(&self, _snapshot: &DemoSnapshot) -> DemoDiff {
             match self {
                 TimestampedMutation::SetN { n, .. } => DemoDiff { n: Some(*n) },
             }
         }
 
-        fn inverse(&self, projection: &DemoProjection) -> Vec<Self> {
-            vec![TimestampedMutation::SetN { n: projection.n, physical_ms: 0 }]
+        fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
+            vec![TimestampedMutation::SetN { n: snapshot.n, physical_ms: 0 }]
         }
 
         fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
@@ -5090,8 +5090,8 @@ impl OpBinary for TimestampedMutation {
     }
 
     /// @emoji 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
-    fn demo_member<'a, Mutation: self::Mutation<DemoProjection> + 'static>(host: &'a mut SpaceHost, document_id: &str) -> &'a mut DocumentStore<DemoProjection, Mutation> {
-        host.member_mut(document_id).expect("member registered").as_any_mut().downcast_mut::<DocumentStore<DemoProjection, Mutation>>().expect("concrete member type matches")
+    fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static>(host: &'a mut SpaceHost, document_id: &str) -> &'a mut DocumentStore<DemoSnapshot, Mutation> {
+        host.member_mut(document_id).expect("member registered").as_any_mut().downcast_mut::<DocumentStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
     }
 
     #[test]
@@ -5101,16 +5101,16 @@ impl OpBinary for TimestampedMutation {
         // member with zero edits and zero checkpoints has no `current_checkpoint_id` yet, which
         // `commit_space_checkpoint` requires of every registered member (dirty ones are auto-committed,
         // already-clean ones just need a prior checkpoint).
-        let mut manifest = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "space-manifest", DemoProjection { n: 0 }, None));
+        let mut manifest = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: 0 }, None));
         manifest.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply manifest edit");
-        let mut collection_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "collection-a", DemoProjection { n: 0 }, None));
+        let mut collection_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: 0 }, None));
         collection_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply collection a edit");
-        let mut collection_b = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "collection-b", DemoProjection { n: 0 }, None));
+        let mut collection_b = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: 0 }, None));
         collection_b.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply collection b edit");
-        let mut artifact_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "artifact-a", DemoProjection { n: 0 }, None));
+        let mut artifact_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: 0 }, None));
         artifact_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply artifact edit");
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_space_documents(Box::new(manifest), vec![Box::new(collection_a), Box::new(collection_b)], vec![Box::new(artifact_a)]);
 
         assert!(host.member("space-manifest").is_some(), "manifest registered");
@@ -5119,8 +5119,8 @@ impl OpBinary for TimestampedMutation {
         assert!(host.member("artifact-a").is_some(), "artifact registered");
 
         let space_checkpoint_id = host.commit_space_checkpoint("initial space checkpoint".into(), Vec::new()).expect("commit space checkpoint");
-        let projection = host.meta_projection().expect("meta projection");
-        let checkpoint = projection.checkpoints.iter().find(|checkpoint| checkpoint.id == space_checkpoint_id).expect("checkpoint recorded");
+        let snapshot = host.meta_snapshot().expect("meta snapshot");
+        let checkpoint = snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == space_checkpoint_id).expect("checkpoint recorded");
         assert_eq!(checkpoint.members.len(), 4, "manifest + 2 collections + 1 artifact all pinned atomically in one space checkpoint");
         let pinned_ids: HashSet<&str> = checkpoint.members.iter().map(|pin| pin.document_id.as_str()).collect();
         assert_eq!(pinned_ids, HashSet::from(["space-manifest", "collection-a", "collection-b", "artifact-a"]));
@@ -5128,23 +5128,23 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
-        let mut member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "member-a", DemoProjection { n: 0 }, None));
+        let mut member_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
         member_a.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply a");
 
-        let mut member_b = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "member-b", DemoProjection { n: 0 }, None));
+        let mut member_b = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: 0 }, None));
         member_b.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply b");
         member_b.dispatch(DocumentCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).expect("commit b upfront, so it starts clean");
         let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_member(Box::new(member_a));
         host.register_member(Box::new(member_b));
 
         let space_checkpoint_id = host.commit_space_checkpoint("studio init".into(), vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }]).expect("commit space checkpoint");
 
-        let projection = host.meta_projection().expect("meta projection");
-        assert_eq!(projection.checkpoints.len(), 1);
-        let checkpoint = &projection.checkpoints[0];
+        let snapshot = host.meta_snapshot().expect("meta snapshot");
+        assert_eq!(snapshot.checkpoints.len(), 1);
+        let checkpoint = &snapshot.checkpoints[0];
         assert_eq!(checkpoint.id, space_checkpoint_id);
         assert_eq!(checkpoint.members.len(), 2, "pins one entry per registered member");
         let pin_b = checkpoint.members.iter().find(|pin| pin.document_id == "member-b").expect("pin b");
@@ -5155,7 +5155,7 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
-        let meta_envelope: DocumentEnvelope<SpaceHistoryProjection, SpaceHistoryMutation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None);
+        let meta_envelope: DocumentEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None);
         let mut host_a = SpaceHost::new(meta_envelope.clone());
         let mut host_b = SpaceHost::new(meta_envelope);
         assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other DocumentStore");
@@ -5164,25 +5164,25 @@ impl OpBinary for TimestampedMutation {
         host_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
         assert!(host_a.backbone_ref().is_some());
 
-        let mut member = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "member-a", DemoProjection { n: 0 }, None));
+        let mut member = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
         member.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on member, so it's dirty and can be committed");
         host_a.register_member(Box::new(member));
         host_a.commit_space_checkpoint("studio init".into(), Vec::new()).expect("commit space checkpoint on a");
 
         host_b.tick().expect("tick b");
-        assert_eq!(host_b.meta_projection().expect("meta projection b").checkpoints.len(), 1, "the space-wide checkpoint replicates through the meta-document's backbone");
+        assert_eq!(host_b.meta_snapshot().expect("meta snapshot b").checkpoints.len(), 1, "the space-wide checkpoint replicates through the meta-document's backbone");
 
         host_a.detach_backbone();
         assert!(host_a.backbone_ref().is_none());
         host_a.commit_space_checkpoint("studio offline".into(), Vec::new()).expect("meta history keeps working purely in memory once detached");
         host_b.tick().expect("tick b again");
-        assert_eq!(host_b.meta_projection().expect("meta projection b unchanged").checkpoints.len(), 1, "detached space edits never reach the peer");
+        assert_eq!(host_b.meta_snapshot().expect("meta snapshot b unchanged").checkpoints.len(), 1, "detached space edits never reach the peer");
     }
 
     #[test]
     fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "member-a", DemoProjection { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
+        let member_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
@@ -5190,16 +5190,16 @@ impl OpBinary for TimestampedMutation {
 
         demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
         host.commit_space_checkpoint("second".into(), Vec::new()).expect("commit 2");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").projection().expect("projection").n, 2, "member reflects the second space checkpoint before checking out the first");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 2, "member reflects the second space checkpoint before checking out the first");
 
         host.checkout_space_checkpoint(&space_checkpoint_1).expect("checkout space checkpoint 1");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").projection().expect("projection").n, 1, "checking out the first space checkpoint fans out and restores member-a's pinned state");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 1, "checking out the first space checkpoint fans out and restores member-a's pinned state");
     }
 
     #[test]
     fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "member-a", DemoProjection { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
+        let member_a = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
@@ -5208,45 +5208,45 @@ impl OpBinary for TimestampedMutation {
         let alt_id = host.create_space_alternative("branch-a".into()).expect("create alternative");
 
         demo_member::<DemoMutation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2 (uncommitted at the studio level)");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").projection().expect("projection").n, 2, "uncommitted edit is live before switching");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 2, "uncommitted edit is live before switching");
 
         host.switch_space_alternative(&alt_id).expect("switch alternative fans out to its pinned checkpoint");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").projection().expect("projection").n, 1, "switching alternatives restores each member to its pinned checkpoint, discarding the uncommitted edit");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 1, "switching alternatives restores each member to its pinned checkpoint, discarding the uncommitted edit");
     }
 
     #[test]
     fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
-        let mut member_early = DocumentStore::new(create_document_envelope::<DemoProjection, TimestampedMutation>("demo-ts/v1", "member-early", DemoProjection { n: 0 }, None));
+        let mut member_early = DocumentStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: 0 }, None));
         member_early.dispatch(DocumentCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 1, physical_ms: 1_000 }], description: None }).expect("apply early");
 
-        let mut member_late = DocumentStore::new(create_document_envelope::<DemoProjection, TimestampedMutation>("demo-ts/v1", "member-late", DemoProjection { n: 0 }, None));
+        let mut member_late = DocumentStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: 0 }, None));
         member_late.dispatch(DocumentCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 9, physical_ms: 2_000 }], description: None }).expect("apply late");
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
         host.register_member(Box::new(member_early));
         host.register_member(Box::new(member_late));
 
         host.undo().expect("space undo targets the member with the higher HLT");
-        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-early").projection().expect("early projection").n, 1, "earlier local edit (lower HLT) is untouched");
-        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").projection().expect("late projection").n, 0, "later local edit (higher HLT) is the one undone");
+        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-early").snapshot().expect("early snapshot").n, 1, "earlier local edit (lower HLT) is untouched");
+        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").snapshot().expect("late snapshot").n, 0, "later local edit (higher HLT) is the one undone");
 
         host.redo().expect("studio redo targets the most recently undone edit");
-        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").projection().expect("late projection after redo").n, 9, "redo restores the member's most recently undone edit");
+        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").snapshot().expect("late snapshot after redo").n, 9, "redo restores the member's most recently undone edit");
     }
 
     #[test]
     fn default_reconcile_hook_is_a_no_op_for_existing_document_kinds() {
-        let projection = DemoProjection { n: 4 };
-        let (reconciled, conflicts) = DemoMutation::SetN { n: 4 }.reconcile(projection.clone());
-        assert_eq!(reconciled, projection, "default reconcile leaves the projection untouched");
+        let snapshot = DemoSnapshot { n: 4 };
+        let (reconciled, conflicts) = DemoMutation::SetN { n: 4 }.reconcile(snapshot.clone());
+        assert_eq!(reconciled, snapshot, "default reconcile leaves the snapshot untouched");
         assert!(conflicts.is_empty(), "default reconcile reports no conflicts");
 
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
-        let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
-        assert_eq!(replayed.n, 3, "materialize_document_projection is unaffected by the no-operation default reconcile hook");
-        let (with_conflicts, conflicts) = store.projection_with_conflicts().expect("projection with conflicts");
+        let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
+        assert_eq!(replayed.n, 3, "materialize_document_snapshot is unaffected by the no-operation default reconcile hook");
+        let (with_conflicts, conflicts) = store.snapshot_with_conflicts().expect("snapshot with conflicts");
         assert_eq!(with_conflicts.n, 3);
         assert!(conflicts.is_empty());
         assert!(store.conflicts().is_empty(), "no remote ingestion happened, so the store's conflict buffer stays empty");
@@ -5262,13 +5262,13 @@ impl OpBinary for TimestampedMutation {
             timestamp: HybridLogicalTimestamp::new(0, 1),
             members: vec![SpaceMemberPin { document_id: "member-a".into(), checkpoint_id: "cp-1".into(), alternative_id: String::new() }],
         };
-        test_support::assert_operation_round_trip(&SpaceHistoryProjection::default(), SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() });
+        test_support::assert_operation_round_trip(&SpaceHistorySnapshot::default(), SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() });
 
-        let with_checkpoint = SpaceHistoryProjection { checkpoints: vec![checkpoint], alternatives: Vec::new(), active_alternative_id: None };
+        let with_checkpoint = SpaceHistorySnapshot { checkpoints: vec![checkpoint], alternatives: Vec::new(), active_alternative_id: None };
         let alternative = SpaceAlternative { id: "sa-1".into(), name: "branch".into(), checkpoint_ids: vec!["sc-1".into()] };
         test_support::assert_operation_round_trip(&with_checkpoint, SpaceHistoryMutation::CreateSpaceAlternative { alternative });
 
-        let with_alternative_active = SpaceHistoryProjection { active_alternative_id: Some("sa-1".into()), ..with_checkpoint };
+        let with_alternative_active = SpaceHistorySnapshot { active_alternative_id: Some("sa-1".into()), ..with_checkpoint };
         test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: "sa-other".into() });
     }
 
@@ -5327,7 +5327,7 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn parse_document_text_rejects_a_header_line_missing_its_required_positional_id() {
         let files = DocumentTextFiles { dsl: "n=0\n".to_string(), ops: "active\n".to_string() };
-        let error = parse_document_text::<DemoProjection, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
+        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
         assert!(error.message.contains("expected Text"), "got {error:?}");
         assert_eq!(error.span.line, 1);
     }
@@ -5335,14 +5335,14 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn parse_document_text_rejects_an_unknown_header_line_keyword() {
         let files = DocumentTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nbogus id=x\n".to_string() };
-        let error = parse_document_text::<DemoProjection, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
+        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
         assert!(error.message.contains("unknown operation line"), "got {error:?}");
         assert_eq!(error.span.line, 2);
     }
 
     #[test]
     fn document_text_round_trips_with_an_active_alternative_and_a_quoted_description() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: Some("said \"hi\" and used a \\ backslash".into()) }).expect("apply");
         store.dispatch(DocumentCommand::CreateAlternative { name: "branch \"a\"".into() }).expect("create alternative (auto-commits and activates it)");
@@ -5355,7 +5355,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
         store.dispatch(DocumentCommand::Undo).expect("undo e1");
@@ -5365,47 +5365,47 @@ impl OpBinary for TimestampedMutation {
         assert_eq!(store.applied_edit_ids().len(), 1, "only e2 is applied");
         let files = print_document_text(store.envelope()).expect("print document text");
         assert!(files.ops.lines().any(|line| line.starts_with("cursor ")), "a synced cursor must print a `cursor` header line: {}", files.ops);
-        let parsed = parse_document_text::<DemoProjection, DemoMutation>(&files.dsl, &files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+        let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
         assert_eq!(parsed.envelope.cursor, store.envelope().cursor.clone(), "cursor diverged across a print/parse round trip");
-        assert_eq!(parsed.projection.n, 2, "restored projection must reflect only the applied edit (e2), not both");
+        assert_eq!(parsed.snapshot.n, 2, "restored snapshot must reflect only the applied edit (e2), not both");
     }
 
     /// @emoji 🔐️ The save→load→undo proof (contract's runtime-behavior requirement): a store's
-    /// undo/redo position survives a full pack+spr save/load cycle, not just its projection value.
+    /// undo/redo position survives a full pack+spr save/load cycle, not just its snapshot value.
     #[test]
     fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position() {
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
-        let post_e1 = store.projection().expect("post-e1 projection");
+        let post_e1 = store.snapshot().expect("post-e1 snapshot");
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
-        let post_e2 = store.projection().expect("post-e2 projection");
+        let post_e2 = store.snapshot().expect("post-e2 snapshot");
         store.dispatch(DocumentCommand::Undo).expect("undo e2");
-        assert_eq!(store.projection().expect("live projection"), post_e1, "precondition: live store is back at post-e1");
+        assert_eq!(store.snapshot().expect("live snapshot"), post_e1, "precondition: live store is back at post-e1");
         test_support::assert_live_equals_replay(&store);
 
-        // Save: print_document_pack persists pack (initial projection) + spr (real inverse/meta,
+        // Save: print_document_pack persists pack (initial snapshot) + spr (real inverse/meta,
         // AND the cursor reflecting exactly "e1 applied, e2 in redo").
         let pack_files = print_document_pack(store.envelope()).expect("print document pack");
         assert!(!pack_files.spr.is_empty(), "spr bytes must be non-empty once an edit exists");
 
         // Load: a FRESH store built only from persisted bytes — no access to the original `store`.
-        let parsed: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
-        assert_eq!(parsed.projection, post_e1, "loaded projection must equal post-e1, proving undo position survived the save");
+        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
+        assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1, proving undo position survived the save");
         let mut reloaded = DocumentStore::new(parsed.envelope);
-        assert_eq!(reloaded.projection().expect("reloaded projection"), post_e1, "DocumentStore::new must seed live state from the persisted cursor");
+        assert_eq!(reloaded.snapshot().expect("reloaded snapshot"), post_e1, "DocumentStore::new must seed live state from the persisted cursor");
         assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");
         test_support::assert_live_equals_replay(&reloaded);
 
         // Redo restores e2 — proving the redo stack (not just applied_edit_ids) survived.
         reloaded.dispatch(DocumentCommand::Redo).expect("redo e2 after reload");
-        assert_eq!(reloaded.projection().expect("post-redo projection"), post_e2);
+        assert_eq!(reloaded.snapshot().expect("post-redo snapshot"), post_e2);
         test_support::assert_live_equals_replay(&reloaded);
 
         // Undo twice from here reaches the true initial state.
         reloaded.dispatch(DocumentCommand::Undo).expect("undo e2 again");
         reloaded.dispatch(DocumentCommand::Undo).expect("undo e1");
-        assert_eq!(reloaded.projection().expect("final projection"), DemoProjection { n: 0 });
+        assert_eq!(reloaded.snapshot().expect("final snapshot"), DemoSnapshot { n: 0 });
         test_support::assert_live_equals_replay(&reloaded);
     }
 
@@ -5414,7 +5414,7 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️CommandErrorPaths
     #[test]
     fn apply_with_no_mutations_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         let error = store.dispatch(DocumentCommand::Apply { mutations: Vec::new(), description: None }).unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
@@ -5422,7 +5422,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn amend_last_with_no_mutations_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         let error = store.dispatch(DocumentCommand::AmendLast { mutations: Vec::new(), coalesce_key: None }).unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
@@ -5430,21 +5430,21 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn undo_with_nothing_applied_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         assert_eq!(store.dispatch(DocumentCommand::Undo).unwrap_err(), VcsError::NothingToUndo);
     }
 
     #[test]
     fn redo_with_nothing_undone_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         assert_eq!(store.dispatch(DocumentCommand::Redo).unwrap_err(), VcsError::NothingToRedo);
     }
 
     #[test]
     fn checkout_of_an_unknown_checkpoint_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         let error = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }).unwrap_err();
         assert_eq!(error, VcsError::UnknownChange("nope".into()));
@@ -5452,7 +5452,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn switch_to_an_unknown_alternative_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         let error = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: "nope".into() }).unwrap_err();
         assert_eq!(error, VcsError::UnknownAlternative("nope".into()));
@@ -5460,7 +5460,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn switch_to_an_alternative_whose_pinned_checkpoint_is_missing_is_rejected() {
-        let mut envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         envelope.vcs.alternatives.push(Alternative { id: "alt-dangling".into(), name: "dangling".into(), checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()] });
         let mut store = DocumentStore::new(envelope);
         let error = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: "alt-dangling".into() }).unwrap_err();
@@ -5469,7 +5469,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn create_alternative_with_no_edits_and_no_checkpoints_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         let error = store.dispatch(DocumentCommand::CreateAlternative { name: "x".into() }).unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint, "the auto-commit has nothing pending, so there is still no checkpoint to branch from");
@@ -5477,7 +5477,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn compensating_undo_without_a_semantic_command_is_rejected() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         let error = store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }).unwrap_err();
@@ -5485,19 +5485,19 @@ impl OpBinary for TimestampedMutation {
     }
 
     #[test]
-    fn materialize_document_projection_rejects_an_unknown_edit_id() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let error = materialize_document_projection(&envelope, &["missing-edit".to_string()]).unwrap_err();
+    fn materialize_document_snapshot_rejects_an_unknown_edit_id() {
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let error = materialize_document_snapshot(&envelope, &["missing-edit".to_string()]).unwrap_err();
         assert_eq!(error, VcsError::UnknownEdit("missing-edit".into()));
     }
 
     #[test]
-    fn dispatch_text_applies_a_command_block_and_projection_json_reflects_it() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+    fn dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it() {
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         let command_text = print_command(&DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("print command");
         store.dispatch_text(&command_text).expect("dispatch text");
-        assert_eq!(store.projection_json().expect("projection json"), serde_json::to_string(&DemoProjection { n: 7 }).unwrap());
+        assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
 
         let error = store.dispatch_text("not a command").unwrap_err();
         assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
@@ -5505,11 +5505,11 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         let command_bytes = DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }.encode_op().expect("encode command");
         store.dispatch_binary(&command_bytes).expect("dispatch binary");
-        assert_eq!(store.projection_json().expect("projection json"), serde_json::to_string(&DemoProjection { n: 7 }).unwrap());
+        assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
 
         let mut wrong_format = command_bytes.clone();
         wrong_format[0] = 9;
@@ -5544,14 +5544,14 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️ReconcileAlternative
     #[test]
     fn reconcile_alternative_requires_an_existing_checkpoint() {
-        let mut envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new()).unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint);
     }
 
     #[test]
     fn reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records_a_reconciliation_checkpoint() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
@@ -5576,7 +5576,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_commits() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).expect("commit 1");
@@ -5591,7 +5591,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn merge_base_finds_the_nearest_common_ancestor_across_a_fork() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply root");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
@@ -5615,7 +5615,7 @@ impl OpBinary for TimestampedMutation {
 
     #[test]
     fn merge_base_is_none_for_a_dangling_unknown_checkpoint_id() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit");
@@ -5629,7 +5629,7 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️RemoteSnapshotMerge
     #[test]
     fn snapshot_merge_into_a_nonempty_store_adds_only_the_new_remote_edits_and_records() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() }).expect("local commit");
@@ -5648,7 +5648,7 @@ impl OpBinary for TimestampedMutation {
 
         assert_eq!(store.envelope().vcs.edits.len(), 2, "the shared original edit is deduped, only the new remote edit is added");
         assert_eq!(store.envelope().vcs.checkpoints.len(), 2, "the remote's new checkpoint is merged in by id");
-        assert_eq!(store.projection().expect("projection").n, 2, "current folds in the newly merged edit's forwards");
+        assert_eq!(store.snapshot().expect("snapshot").n, 2, "current folds in the newly merged edit's forwards");
     }
 
     //#endregion 🔖️RemoteSnapshotMerge
@@ -5656,7 +5656,7 @@ impl OpBinary for TimestampedMutation {
     //#region 🔖️SpaceMemberCheckoutRouting
     #[test]
     fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale() {
-        let envelope: DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
         store.dispatch(DocumentCommand::CreateAlternative { name: "feature".into() }).expect("create alternative (auto-commits since no checkpoint existed yet)");
@@ -5670,7 +5670,7 @@ impl OpBinary for TimestampedMutation {
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2, advancing the alt's tip past `tip`");
 
         SpaceMember::checkout(&mut store, &tip, &alt_id).expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
-        assert_eq!(store.projection().expect("projection").n, 1, "restored the old checkpoint's state");
+        assert_eq!(store.snapshot().expect("snapshot").n, 1, "restored the old checkpoint's state");
         assert_eq!(store.envelope().active_alternative_id, None, "the checked-out checkpoint is no longer any alternative's tip, so nothing is active");
     }
 

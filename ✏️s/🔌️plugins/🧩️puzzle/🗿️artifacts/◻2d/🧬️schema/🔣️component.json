@@ -1,0 +1,191 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json",
+  "title": "Puzzle2dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "camera",
+    "nodes",
+    "edges",
+    "meta",
+    "selectedIds",
+    "activeUtilityId",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "selectionMethod",
+    "gridSnapEnabled",
+    "gridFactor",
+    "suggestionOffset",
+    "fillCount",
+    "brushCandidateIndex",
+    "brushCandidateSourceHandleId",
+    "locale",
+    "terminology",
+    "lodModeByPaneJson",
+    "engagementInputByPaneJson",
+    "brushCandidatesJson",
+    "nodeKindWeightsJson",
+    "handleKindWeightsJson",
+    "activeUtilityByWindowIdJson",
+    "previewSeq"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/Puzzle2dCamera",
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dEdge"
+      },
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle2dMeta",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionOffset": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateSourceHandleId": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "terminology": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "lodModeByPaneJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInputByPaneJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidatesJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "nodeKindWeightsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "handleKindWeightsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "activeUtilityByWindowIdJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredNodeId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "previewSeq": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Puzzle2dCamera": {
+      "title": "Puzzle2dCamera",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dNode": {
+      "title": "Puzzle2dNode",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dEdge": {
+      "title": "Puzzle2dEdge",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dMeta": {
+      "title": "Puzzle2dMeta",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

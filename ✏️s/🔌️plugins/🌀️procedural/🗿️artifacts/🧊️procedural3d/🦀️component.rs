@@ -1,25 +1,14 @@
-//! 📐️ Procedural3d artifact — the document entity the 🧊️3d app edits (constitutional: general).
+//! 📐️ Procedural3d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
-use flow::{FlowFixture, Widget};
-use flow::playbook::GenerationPlayState;
+use flow::Widget;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat};
-use serde::{Deserialize, Serialize};
 
 pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
 
-//#region 🔖️Document
-/// 🧾️ Persistent procedural-3d document — the flow fixture plus the generation vocabulary state.
-/// Ephemeral view state (selection, sun, LOD, preview caches) lives in the app's config
-/// (`crate::apps::procedural3d::config::Procedural3dConfig`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Procedural3dDocument {
-    pub fixture: FlowFixture,
-    #[serde(default)]
-    pub generation: GenerationPlayState,
-}
+pub use crate::artifacts::procedural3d::snapshot::schema::Procedural3dSnapshot;
 
-/// 🪪️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
+//#region 🔖️Helpers
+/// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
 pub fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
@@ -33,7 +22,7 @@ pub fn widget_id(widget: &Widget) -> &str {
         | Widget::Cluster { id, .. } => id,
     }
 }
-//#endregion 🔖️Document
+//#endregion 🔖️Helpers
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by

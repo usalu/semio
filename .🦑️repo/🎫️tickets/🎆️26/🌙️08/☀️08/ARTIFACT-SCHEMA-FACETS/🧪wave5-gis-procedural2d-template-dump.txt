@@ -1,0 +1,1399 @@
+===== 📸️snapshot/🎒️pack/📡️component.protocol.semio =====
+dialect protocol
+protocol procedural2d.pack
+version 1
+schema procedural.2d
+start frame
+framing magic 0x895368ad120c0d0a
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
+field header_crc32 u32
+segment mesh-chunk u8
+segment mesh-xfm u8
+segment flags u8
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32
+
+
+===== 📸️snapshot/🧬️schema/🔗️component.graphql =====
+# 🧬️ Procedural2d snapshot schema — persistent fields only.
+
+type Procedural2dSnapshot {
+  fixture: FlowFixture! @state(class: PERSISTENT)
+  generation: GenerationPlayState! @state(class: PERSISTENT)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+scalar Widget
+type FlowFixture {
+  schema: String!
+  camera: CameraJson!
+  widgets: [Widget!]!
+  synapses: [SynapseSpec!]!
+  layout: [FlowFixtureLayoutEntry!]!
+}
+type FlowFixtureLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+type FormGeneration {
+  id: String!
+  name: String!
+  valuesJson: String!
+}
+type GenerationPlayState {
+  generations: [FormGeneration!]!
+  selectedGenerationId: String
+  previewText: String
+}
+
+
+===== 📸️snapshot/🧬️schema/🔣️component.json =====
+{
+  "$id": "https://semio.tech/schema/s/procedural/procedural2d/snapshot.json",
+  "title": "Procedural2dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture",
+    "generation"
+  ],
+  "properties": {
+    "fixture": {
+      "$ref": "#/$defs/FlowFixture",
+      "x-semio-state": "persistent"
+    },
+    "generation": {
+      "$ref": "#/$defs/GenerationPlayState",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    },
+    "FlowFixture": {
+      "title": "FlowFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Widget"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/WidgetLayout"
+          }
+        }
+      }
+    },
+    "FormGeneration": {
+      "title": "FormGeneration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "valuesJson"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "valuesJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    },
+    "GenerationPlayState": {
+      "title": "GenerationPlayState",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generations"
+      ],
+      "properties": {
+        "generations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormGeneration"
+          }
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "previewText": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+
+
+===== 📸️snapshot/🧬️schema/🛰️component.proto =====
+syntax = "proto3";
+package semio.s.procedural.procedural2d.snapshot;
+
+// 🧬️ Procedural2d snapshot schema — persistent fields only.
+
+message Procedural2dSnapshot {
+  // @state persistent
+  FlowFixture fixture = 1;
+  // @state persistent
+  GenerationPlayState generation = 2;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+message Widget {
+  string json = 1;
+}
+message FlowFixture {
+  string schema = 1;
+  CameraJson camera = 2;
+  repeated Widget widgets = 3;
+  repeated SynapseSpec synapses = 4;
+  map<string, WidgetLayout> layout = 5;
+}
+message FormGeneration {
+  string id = 1;
+  string name = 2;
+  string values_json = 3;
+}
+message GenerationPlayState {
+  repeated FormGeneration generations = 1;
+  optional string selected_generation_id = 2;
+  optional string preview_text = 3;
+}
+
+
+===== 📸️snapshot/🧬️schema/🟦️component.ts =====
+/** 🧬️ Procedural2d snapshot schema — persistent fields only. */
+
+export interface Procedural2dSnapshot {
+  /** @state persistent */
+  fixture: FlowFixture;
+  /** @state persistent */
+  generation: GenerationPlayState;
+}
+
+export type CameraJson = { x: number; y: number; zoom: number };
+export type WidgetLayout = { x: number; y: number };
+export type SynapseSpec = { id: string; from: string; to: string; fromPort: string; toPort: string };
+/** @description Polymorphic flow widget — JSON blob. */
+export type Widget = string;
+export type FlowFixture = {
+  schema: string;
+  camera: CameraJson;
+  widgets: Widget[];
+  synapses: SynapseSpec[];
+  layout: Record<string, WidgetLayout>;
+};
+export type FormGeneration = { id: string; name: string; valuesJson: string };
+export type GenerationPlayState = {
+  generations: FormGeneration[];
+  selectedGenerationId?: string;
+  previewText?: string;
+};
+
+
+===== 📸️snapshot/🧬️schema/🦀️component.rs =====
+//! 🧬️ Procedural2d snapshot schema — persistent fields only.
+
+use flow::FlowFixture;
+use flow::playbook::GenerationPlayState;
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Procedural2dSnapshot
+/// 🧬️ Procedural2dSnapshot facet type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.procedural.procedural2d")]
+
+pub struct Procedural2dSnapshot {
+    #[state(persistent)] pub fixture: FlowFixture,
+    #[state(persistent)] pub generation: GenerationPlayState,
+}
+//#endregion 🔖️Procedural2dSnapshot
+
+impl Default for Procedural2dSnapshot {
+    fn default() -> Self {
+        Self {
+            fixture: FlowFixture::default(),
+            generation: GenerationPlayState::default(),
+        }
+    }
+}
+
+
+===== 🔺️diff/🧬️schema/🔗️component.graphql =====
+# 🧬️ Procedural2d diff schema — sparse field delta.
+
+type Procedural2dDiff {
+  artifact: Procedural2dArtifact @state(class: PERSISTENT)
+  fixture: FlowFixture @state(class: PERSISTENT)
+  generation: GenerationPlayState @state(class: PERSISTENT)
+  selectedIds: Procedural2dStringList @state(class: SHARED_UI)
+  graphCamera: CameraJson @state(class: LOCAL_UI)
+  showMode: String @state(class: LOCAL_UI)
+  selectedGenerationId: String @state(class: SHARED_UI)
+  generationPreviewText: String @state(class: PREVIEW)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+scalar Widget
+type FlowFixture {
+  schema: String!
+  camera: CameraJson!
+  widgets: [Widget!]!
+  synapses: [SynapseSpec!]!
+  layout: [FlowFixtureLayoutEntry!]!
+}
+type FlowFixtureLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+type FormGeneration {
+  id: String!
+  name: String!
+  valuesJson: String!
+}
+type GenerationPlayState {
+  generations: [FormGeneration!]!
+  selectedGenerationId: String
+  previewText: String
+}
+type Procedural2dStringList {
+  values: [String!]!
+}
+type Procedural2dArtifact {
+  fixture: FlowFixture!
+  generation: GenerationPlayState!
+}
+
+
+===== 🔺️diff/🧬️schema/🔣️component.json =====
+{
+  "$id": "https://semio.tech/schema/s/procedural/procedural2d/diff.json",
+  "title": "Procedural2dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "$ref": "#/$defs/Procedural2dArtifact",
+      "x-semio-state": "persistent"
+    },
+    "fixture": {
+      "$ref": "#/$defs/FlowFixture",
+      "x-semio-state": "persistent"
+    },
+    "generation": {
+      "$ref": "#/$defs/GenerationPlayState",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/Procedural2dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "graphCamera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "local-ui"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedGenerationId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    },
+    "generationPreviewText": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    },
+    "FlowFixture": {
+      "title": "FlowFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Widget"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/WidgetLayout"
+          }
+        }
+      }
+    },
+    "FormGeneration": {
+      "title": "FormGeneration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "valuesJson"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "valuesJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    },
+    "GenerationPlayState": {
+      "title": "GenerationPlayState",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generations"
+      ],
+      "properties": {
+        "generations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormGeneration"
+          }
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "previewText": {
+          "type": "string"
+        }
+      }
+    },
+    "Procedural2dStringList": {
+      "title": "Procedural2dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Procedural2dArtifact": {
+      "title": "Procedural2dArtifact",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture",
+        "generation",
+        "selectedIds",
+        "graphCamera",
+        "showMode",
+        "locale"
+      ],
+      "properties": {
+        "fixture": {
+          "$ref": "#/$defs/FlowFixture"
+        },
+        "generation": {
+          "$ref": "#/$defs/GenerationPlayState"
+        },
+        "selectedIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "graphCamera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "showMode": {
+          "type": "string"
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "generationPreviewText": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+
+
+===== 🔺️diff/🧬️schema/🛰️component.proto =====
+syntax = "proto3";
+package semio.s.procedural.procedural2d.diff;
+
+// 🧬️ Procedural2d diff schema — sparse field delta.
+
+message Procedural2dDiff {
+  // @state persistent
+  optional Procedural2dArtifact artifact = 1;
+  // @state persistent
+  optional FlowFixture fixture = 2;
+  // @state persistent
+  optional GenerationPlayState generation = 3;
+  // @state shared-ui
+  optional Procedural2dStringList selected_ids = 4;
+  // @state local-ui
+  optional CameraJson graph_camera = 5;
+  // @state local-ui
+  optional string show_mode = 6;
+  // @state shared-ui
+  optional string selected_generation_id = 7;
+  // @state preview
+  optional string generation_preview_text = 8;
+  // @state local-ui
+  optional string locale = 9;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+message Widget {
+  string json = 1;
+}
+message FlowFixture {
+  string schema = 1;
+  CameraJson camera = 2;
+  repeated Widget widgets = 3;
+  repeated SynapseSpec synapses = 4;
+  map<string, WidgetLayout> layout = 5;
+}
+message FormGeneration {
+  string id = 1;
+  string name = 2;
+  string values_json = 3;
+}
+message GenerationPlayState {
+  repeated FormGeneration generations = 1;
+  optional string selected_generation_id = 2;
+  optional string preview_text = 3;
+}
+message Procedural2dStringList {
+  repeated string values = 1;
+}
+message Procedural2dArtifact {
+  FlowFixture fixture = 1;
+  GenerationPlayState generation = 2;
+}
+
+
+===== 🔺️diff/🧬️schema/🟦️component.ts =====
+/** 🧬️ Procedural2d diff schema — sparse field delta. */
+
+export interface Procedural2dDiff {
+  /** @state persistent */
+  artifact?: Procedural2dArtifact;
+  /** @state persistent */
+  fixture?: FlowFixture;
+  /** @state persistent */
+  generation?: GenerationPlayState;
+  /** @state shared-ui */
+  selectedIds?: Procedural2dStringList;
+  /** @state local-ui */
+  graphCamera?: CameraJson;
+  /** @state local-ui */
+  showMode?: string;
+  /** @state shared-ui */
+  selectedGenerationId?: string | null;
+  /** @state preview */
+  generationPreviewText?: string | null;
+  /** @state local-ui */
+  locale?: string;
+}
+
+export type Procedural2dStringList = { values: string[] };
+export interface Procedural2dArtifact { /* see artifact facet */ }
+
+export type CameraJson = { x: number; y: number; zoom: number };
+export type WidgetLayout = { x: number; y: number };
+export type SynapseSpec = { id: string; from: string; to: string; fromPort: string; toPort: string };
+/** @description Polymorphic flow widget — JSON blob. */
+export type Widget = string;
+export type FlowFixture = {
+  schema: string;
+  camera: CameraJson;
+  widgets: Widget[];
+  synapses: SynapseSpec[];
+  layout: Record<string, WidgetLayout>;
+};
+export type FormGeneration = { id: string; name: string; valuesJson: string };
+export type GenerationPlayState = {
+  generations: FormGeneration[];
+  selectedGenerationId?: string;
+  previewText?: string;
+};
+
+
+===== 🔺️diff/🧬️schema/🦀️component.rs =====
+//! 🧬️ Procedural2d diff schema — sparse field delta over the artifact.
+
+use crate::artifacts::procedural2d::schema::Procedural2dArtifact;
+use flow::CameraJson;
+use flow::FlowFixture;
+use flow::playbook::GenerationPlayState;
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Procedural2dDiff
+/// 🧬️ Procedural2dDiff facet type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase", default)]
+#[artifact_schema(id = "s.procedural.procedural2d")]
+
+pub struct Procedural2dDiff {
+    #[state(persistent)] pub artifact: Option<Box<Procedural2dArtifact>>,
+    #[state(persistent)] pub fixture: Option<FlowFixture>,
+    #[state(persistent)] pub generation: Option<GenerationPlayState>,
+    #[state(shared_ui)] pub selected_ids: Option<Procedural2dStringList>,
+    #[state(local_ui)] pub graph_camera: Option<CameraJson>,
+    #[state(local_ui)] pub show_mode: Option<String>,
+    #[state(shared_ui)] pub selected_generation_id: Option<Option<String>>,
+    #[state(preview)] pub generation_preview_text: Option<Option<String>>,
+    #[state(local_ui)] pub locale: Option<String>,
+}
+//#endregion 🔖️Procedural2dDiff
+
+//#region 🔖️Helpers
+/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Procedural2dStringList {
+    pub values: Vec<String>,
+}
+//#endregion 🔖️Helpers
+
+
+===== 🧬️mutations/🎛set-schema/↩️inverse/🟦️component.ts =====
+/** 🧩 procedural2d 🎛set-schema/↩️inverse facade stub. */
+export {};
+
+
+===== 🧬️mutations/🎛set-schema/↩️inverse/🦀️component.rs =====
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
+
+pub fn inverse(base: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Vec<Procedural2dMutation> {
+    <Procedural2dMutation as protocol::Mutation<Procedural2dSnapshot>>::inverse(mutation, base)
+}
+
+
+===== 🧬️mutations/🎛set-schema/🔺️diff/🟦️component.ts =====
+/** 🧩 procedural2d 🎛set-schema/🔺️diff facade stub. */
+export {};
+
+
+===== 🧬️mutations/🎛set-schema/🔺️diff/🦀️component.rs =====
+use crate::artifacts::procedural2d::diff::Procedural2dDiff;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
+use protocol::MutationDiff;
+
+pub fn diff_for(mutation: &Procedural2dMutation, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    <Procedural2dMutation as protocol::Mutation<Procedural2dSnapshot>>::diff(mutation, base)
+}
+
+
+===== 🧬️mutations/🎛set-schema/🦠️mutation/🟦️component.ts =====
+/** 🧩 procedural2d 🎛set-schema/🦠️mutation facade stub. */
+export {};
+
+
+===== 🧬️mutations/🎛set-schema/🦠️mutation/🦀️component.rs =====
+//! 🎛 Procedural2d mutation — `SetSchema` apply delegate.
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
+
+pub fn apply(projection: &mut Procedural2dSnapshot, mutation: &Procedural2dMutation) {
+    crate::artifacts::procedural2d::mutations::apply_procedural2d_mutation(projection, mutation);
+}
+
+
+===== 🧬️schema/🔗️component.graphql =====
+# 🧬️ Procedural2d artifact schema — every field with its state class.
+
+type Procedural2dArtifact {
+  fixture: FlowFixture! @state(class: PERSISTENT)
+  generation: GenerationPlayState! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  graphCamera: CameraJson! @state(class: LOCAL_UI)
+  showMode: String! @state(class: LOCAL_UI)
+  selectedGenerationId: String @state(class: SHARED_UI)
+  generationPreviewText: String @state(class: PREVIEW)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+scalar Widget
+type FlowFixture {
+  schema: String!
+  camera: CameraJson!
+  widgets: [Widget!]!
+  synapses: [SynapseSpec!]!
+  layout: [FlowFixtureLayoutEntry!]!
+}
+type FlowFixtureLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+type FormGeneration {
+  id: String!
+  name: String!
+  valuesJson: String!
+}
+type GenerationPlayState {
+  generations: [FormGeneration!]!
+  selectedGenerationId: String
+  previewText: String
+}
+
+
+===== 🧬️schema/🔣️component.json =====
+{
+  "$id": "https://semio.tech/schema/s/procedural/procedural2d/artifact.json",
+  "title": "Procedural2dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture",
+    "generation",
+    "selectedIds",
+    "graphCamera",
+    "showMode",
+    "locale"
+  ],
+  "properties": {
+    "fixture": {
+      "$ref": "#/$defs/FlowFixture",
+      "x-semio-state": "persistent"
+    },
+    "generation": {
+      "$ref": "#/$defs/GenerationPlayState",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "graphCamera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "local-ui"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectedGenerationId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "generationPreviewText": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    },
+    "FlowFixture": {
+      "title": "FlowFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Widget"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/WidgetLayout"
+          }
+        }
+      }
+    },
+    "FormGeneration": {
+      "title": "FormGeneration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "valuesJson"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "valuesJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    },
+    "GenerationPlayState": {
+      "title": "GenerationPlayState",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generations"
+      ],
+      "properties": {
+        "generations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormGeneration"
+          }
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "previewText": {
+          "type": "string"
+        }
+      }
+    },
+    "Procedural2dStringList": {
+      "title": "Procedural2dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+===== 🧬️schema/🛰️component.proto =====
+syntax = "proto3";
+package semio.s.procedural.procedural2d.artifact;
+
+// 🧬️ Procedural2d artifact schema — every field with its state class.
+
+message Procedural2dArtifact {
+  // @state persistent
+  FlowFixture fixture = 1;
+  // @state persistent
+  GenerationPlayState generation = 2;
+  // @state shared-ui
+  repeated string selected_ids = 3;
+  // @state local-ui
+  CameraJson graph_camera = 4;
+  // @state local-ui
+  string show_mode = 5;
+  // @state shared-ui
+  optional string selected_generation_id = 6;
+  // @state preview
+  optional string generation_preview_text = 7;
+  // @state local-ui
+  string locale = 8;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+message Widget {
+  string json = 1;
+}
+message FlowFixture {
+  string schema = 1;
+  CameraJson camera = 2;
+  repeated Widget widgets = 3;
+  repeated SynapseSpec synapses = 4;
+  map<string, WidgetLayout> layout = 5;
+}
+message FormGeneration {
+  string id = 1;
+  string name = 2;
+  string values_json = 3;
+}
+message GenerationPlayState {
+  repeated FormGeneration generations = 1;
+  optional string selected_generation_id = 2;
+  optional string preview_text = 3;
+}
+
+
+===== 🧬️schema/🟦️component.ts =====
+/** 🧬️ Procedural2d artifact schema — every field with its state class. */
+
+export interface Procedural2dArtifact {
+  /** @state persistent */
+  fixture: FlowFixture;
+  /** @state persistent */
+  generation: GenerationPlayState;
+  /** @state shared-ui */
+  selectedIds: string[];
+  /** @state local-ui */
+  graphCamera: CameraJson;
+  /** @state local-ui */
+  showMode: string;
+  /** @state shared-ui */
+  selectedGenerationId?: string;
+  /** @state preview */
+  generationPreviewText?: string;
+  /** @state local-ui */
+  locale: string;
+}
+
+export type CameraJson = { x: number; y: number; zoom: number };
+export type WidgetLayout = { x: number; y: number };
+export type SynapseSpec = { id: string; from: string; to: string; fromPort: string; toPort: string };
+/** @description Polymorphic flow widget — JSON blob. */
+export type Widget = string;
+export type FlowFixture = {
+  schema: string;
+  camera: CameraJson;
+  widgets: Widget[];
+  synapses: SynapseSpec[];
+  layout: Record<string, WidgetLayout>;
+};
+export type FormGeneration = { id: string; name: string; valuesJson: string };
+export type GenerationPlayState = {
+  generations: FormGeneration[];
+  selectedGenerationId?: string;
+  previewText?: string;
+};
+
+
+===== 🧬️schema/🦀️component.rs =====
+//! 🧬️ Procedural2d artifact schema — every field of the artifact with its state class.
+
+use crate::artifacts::procedural2d::snapshot::schema::Procedural2dSnapshot;
+use flow::CameraJson;
+use flow::FlowFixture;
+use flow::playbook::GenerationPlayState;
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Procedural2dArtifact
+/// 🧬️ Procedural2dArtifact facet type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.procedural.procedural2d")]
+
+pub struct Procedural2dArtifact {
+    #[state(persistent)] pub fixture: FlowFixture,
+    #[state(persistent)] pub generation: GenerationPlayState,
+    #[state(shared_ui)] pub selected_ids: Vec<String>,
+    #[state(local_ui)] pub graph_camera: CameraJson,
+    #[state(local_ui)] pub show_mode: String,
+    #[state(shared_ui)] pub selected_generation_id: Option<String>,
+    #[state(preview)] pub generation_preview_text: Option<String>,
+    #[state(local_ui)] pub locale: String,
+}
+//#endregion 🔖️Procedural2dArtifact
+
+impl Default for Procedural2dArtifact {
+    fn default() -> Self {
+        Self {
+            fixture: FlowFixture::default(),
+            generation: GenerationPlayState::default(),
+            selected_ids: Vec::new(),
+            graph_camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            show_mode: "preview".into(),
+            selected_generation_id: None,
+            generation_preview_text: None,
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl Procedural2dArtifact {
+    /// 📸️ Persisted subset.
+    pub fn to_snapshot(&self) -> Procedural2dSnapshot {
+        Procedural2dSnapshot {
+            fixture: self.fixture.clone(),
+            generation: self.generation.clone(),
+        }
+    }
+
+    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    pub fn from_snapshot(snapshot: Procedural2dSnapshot) -> Self {
+        Self {
+            fixture: snapshot.fixture,
+            generation: snapshot.generation,
+            ..Self::default()
+        }
+    }
+
+    /// 🔄 Writes persistent fields from a snapshot into this artifact.
+    pub fn set_snapshot(&mut self, snapshot: Procedural2dSnapshot) {
+        self.fixture = snapshot.fixture;
+        self.generation = snapshot.generation;
+    }
+}
+
+//#region 🔖️Descriptor
+/// 🧬️ Descriptor for `s.procedural.procedural2d` — fifteen handcrafted schema leaves.
+pub fn procedural2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+    schema::ArtifactSchemaDescriptor {
+        id: "s.procedural.procedural2d",
+        artifact: schema::FacetLeaves {
+            rust: include_str!("🦀️component.rs"),
+            typescript: include_str!("🟦️component.ts"),
+            graphql: include_str!("🔗️component.graphql"),
+            json_schema: include_str!("🔣️component.json"),
+            proto: include_str!("🛰️component.proto"),
+        },
+        snapshot: schema::FacetLeaves {
+            rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
+            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
+        },
+        diff: schema::FacetLeaves {
+            rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
+            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
+        },
+    }
+}
+//#endregion 🔖️Descriptor
+

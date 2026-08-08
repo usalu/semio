@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
-use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
+use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{invert_generation_operation, GenerationMutation};
 use protocol::Mutation;
@@ -39,26 +39,83 @@ fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.synapses.iter().position(|synapse| synapse.id == id)
 }
 
-impl Mutation<Procedural3dDocument> for Procedural3dMutation {
+impl Mutation<Procedural3dSnapshot> for Procedural3dMutation {
     type Diff = Procedural3dDiff;
 
-    fn diff(&self, _projection: &Procedural3dDocument) -> Procedural3dDiff {
-        let mut diff = Procedural3dDiff::default();
+    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+        use crate::artifacts::procedural3d::diff::{
+            diff_fixture_from_helpers, diff_generation_from_ops, LayoutDiff, SynapsesDiff, WidgetsDiff,
+        };
         match self {
-            Procedural3dMutation::SetWidget { index, widget } => diff.widgets.set.push((*index, widget.clone())),
-            Procedural3dMutation::RemoveWidget { id } => diff.widgets.removed.push(id.clone()),
-            Procedural3dMutation::SetSynapse { index, synapse } => diff.synapses.set.push((*index, synapse.clone())),
-            Procedural3dMutation::RemoveSynapse { id } => diff.synapses.removed.push(id.clone()),
-            Procedural3dMutation::SetLayout { id, layout } => diff.layout.set.push((id.clone(), layout.clone())),
-            Procedural3dMutation::RemoveLayout { id } => diff.layout.removed.push(id.clone()),
-            Procedural3dMutation::SetCamera { camera } => diff.camera = Some(camera.clone()),
-            Procedural3dMutation::SetSchema { schema } => diff.schema = Some(schema.clone()),
-            Procedural3dMutation::Generation(operation) => diff.generation.push(operation.clone()),
+            Procedural3dMutation::SetWidget { index, widget } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff { removed: vec![], set: vec![(*index, widget.clone())] },
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural3dMutation::RemoveWidget { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff { removed: vec![id.clone()], set: vec![] },
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural3dMutation::SetSynapse { index, synapse } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff { removed: vec![], set: vec![(*index, synapse.clone())] },
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural3dMutation::RemoveSynapse { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff { removed: vec![id.clone()], set: vec![] },
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural3dMutation::SetLayout { id, layout } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff { removed: vec![], set: vec![(id.clone(), layout.clone())] },
+                None,
+                None,
+            ),
+            Procedural3dMutation::RemoveLayout { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff { removed: vec![id.clone()], set: vec![] },
+                None,
+                None,
+            ),
+            Procedural3dMutation::SetCamera { camera } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                Some(camera.clone()),
+                None,
+            ),
+            Procedural3dMutation::SetSchema { schema } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                Some(schema.clone()),
+            ),
+            Procedural3dMutation::Generation(operation) => diff_generation_from_ops(base, vec![operation.clone()]),
         }
-        diff
     }
 
-    fn inverse(&self, projection: &Procedural3dDocument) -> Vec<Self> {
+    fn inverse(&self, projection: &Procedural3dSnapshot) -> Vec<Self> {
         let fixture = &projection.fixture;
         match self {
             Procedural3dMutation::SetWidget { widget, .. } => match widget_index(fixture, widget_id(widget)) {
@@ -125,16 +182,16 @@ pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 }
 //#endregion 🔖️Operation
 
-pub type Procedural3dEnvelope = DocumentEnvelope<Procedural3dDocument, Procedural3dMutation>;
-pub type Procedural3dStore = DocumentStore<Procedural3dDocument, Procedural3dMutation>;
+pub type Procedural3dEnvelope = DocumentEnvelope<Procedural3dSnapshot, Procedural3dMutation>;
+pub type Procedural3dStore = DocumentStore<Procedural3dSnapshot, Procedural3dMutation>;
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedural3d::engine::empty_procedural3d_projection;
+    use crate::artifacts::procedural3d::engine::empty_procedural3d_snapshot;
 
-    fn round_trip(projection: &Procedural3dDocument, operation: &Procedural3dMutation) -> Procedural3dDocument {
+    fn round_trip(projection: &Procedural3dSnapshot, operation: &Procedural3dMutation) -> Procedural3dSnapshot {
         let forward = vcs::apply_mutation(projection, operation);
         let mut restored = forward.clone();
         for back in operation.inverse(projection) {
@@ -146,21 +203,21 @@ mod tests {
 
     #[test]
     fn store_applies_widget_add() {
-        let mut store = DocumentStore::<Procedural3dDocument, Procedural3dMutation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
+        let mut store = DocumentStore::<Procedural3dSnapshot, Procedural3dMutation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None));
         store.dispatch(store::DocumentCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
-        assert!(store.projection().expect("projection").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
+        assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
     #[test]
     fn set_widget_round_trips() {
-        let before = empty_procedural3d_projection();
+        let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::SetWidget { index: 9, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } });
         assert!(after.fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
     #[test]
     fn generation_op_round_trips() {
-        let before = empty_procedural3d_projection();
+        let before = empty_procedural3d_snapshot();
         let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural3dMutation::Generation(GenerationMutation::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
@@ -210,7 +267,7 @@ mod tests {
 
     #[test]
     fn set_widget_round_trip_replaces_existing_widget_by_id() {
-        let mut before = empty_procedural3d_projection();
+        let mut before = empty_procedural3d_snapshot();
         before.fixture.widgets.clear();
         before.fixture.widgets.push(Widget::InputNote { id: "note-9".into(), text: "old".into() });
         let after = round_trip(&before, &Procedural3dMutation::SetWidget { index: 0, widget: Widget::InputNote { id: "note-9".into(), text: "new".into() } });
@@ -220,13 +277,13 @@ mod tests {
 
     #[test]
     fn inverse_remove_widget_when_missing_returns_empty() {
-        let projection = empty_procedural3d_projection();
+        let projection = empty_procedural3d_snapshot();
         assert!(Procedural3dMutation::RemoveWidget { id: "ghost".into() }.inverse(&projection).is_empty());
     }
 
     #[test]
     fn set_synapse_round_trip_replaces_existing_synapse_by_id() {
-        let mut before = empty_procedural3d_projection();
+        let mut before = empty_procedural3d_snapshot();
         before.fixture.synapses.clear();
         before.fixture.synapses.push(SynapseSpec { id: "e1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() });
         let after = round_trip(&before, &Procedural3dMutation::SetSynapse { index: 0, synapse: SynapseSpec { id: "e1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() } });
@@ -236,20 +293,20 @@ mod tests {
 
     #[test]
     fn inverse_remove_synapse_when_missing_returns_empty() {
-        let projection = empty_procedural3d_projection();
+        let projection = empty_procedural3d_snapshot();
         assert!(Procedural3dMutation::RemoveSynapse { id: "ghost".into() }.inverse(&projection).is_empty());
     }
 
     #[test]
     fn set_layout_round_trip_inserts_when_absent() {
-        let before = empty_procedural3d_projection();
+        let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } });
         assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
     }
 
     #[test]
     fn set_layout_round_trip_replaces_when_present() {
-        let mut before = empty_procedural3d_projection();
+        let mut before = empty_procedural3d_snapshot();
         before.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
         let after = round_trip(&before, &Procedural3dMutation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 5.0, y: 6.0 } });
         assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 5.0, y: 6.0 }));
@@ -257,7 +314,7 @@ mod tests {
 
     #[test]
     fn remove_layout_backwards_present_restores_set_layout_missing_returns_empty() {
-        let mut projection = empty_procedural3d_projection();
+        let mut projection = empty_procedural3d_snapshot();
         projection.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
         assert_eq!(Procedural3dMutation::RemoveLayout { id: "extrude".into() }.inverse(&projection), vec![Procedural3dMutation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }]);
         assert!(Procedural3dMutation::RemoveLayout { id: "ghost".into() }.inverse(&projection).is_empty());
@@ -265,14 +322,14 @@ mod tests {
 
     #[test]
     fn set_camera_round_trip_updates_camera() {
-        let before = empty_procedural3d_projection();
+        let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
         assert_eq!(after.fixture.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
     }
 
     #[test]
     fn set_schema_round_trip_updates_schema() {
-        let before = empty_procedural3d_projection();
+        let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::SetSchema { schema: "flow.fixture.v2".into() });
         assert_eq!(after.fixture.schema, "flow.fixture.v2");
     }
@@ -280,10 +337,10 @@ mod tests {
 //#endregion 🧪️Tests
 
 
-pub fn apply_procedural3d_mutation(projection: &mut Procedural3dDocument, mutation: &Procedural3dMutation) {
+pub fn apply_procedural3d_mutation(projection: &mut Procedural3dSnapshot, mutation: &Procedural3dMutation) {
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_procedural3d_mutation(projection: &Procedural3dDocument, mutation: &Procedural3dMutation) -> Vec<Procedural3dMutation> {
+pub fn inverse_procedural3d_mutation(projection: &Procedural3dSnapshot, mutation: &Procedural3dMutation) -> Vec<Procedural3dMutation> {
     mutation.inverse(projection)
 }

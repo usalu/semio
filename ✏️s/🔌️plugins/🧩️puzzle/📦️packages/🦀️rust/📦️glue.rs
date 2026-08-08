@@ -17,6 +17,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as artifact_schema;
 extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — `DocumentApp::handle` and `import_media` return
 // `Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault>`/`…, MediaError>`, the exact
@@ -34,8 +35,16 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/◻2d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/◻2d/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -107,8 +116,16 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/◻2d/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "../../🗿️artifacts/◻2d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/◻2d/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/◻2d/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/◻2d/📡️spr/🦀️component.rs"]
         pub mod spr;
 
@@ -137,8 +154,16 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🧊️3d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -250,8 +275,16 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "../../🗿️artifacts/🧊️3d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🧊️3d/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🧊️3d/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs"]
         pub mod spr;
 
@@ -278,8 +311,16 @@ pub mod artifacts {
         mod component;
         pub use component::*;
 
-        #[path = "../../🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs"]
-        pub mod diff;
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🖐️5d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
         #[path = "../../🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -351,8 +392,16 @@ pub mod artifacts {
 
         #[path = "../../🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+        #[path = "../../🗿️artifacts/🖐️5d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/🖐️5d/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🖐️5d/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
         #[path = "../../🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs"]
         pub mod spr;
 

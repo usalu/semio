@@ -11,7 +11,7 @@
 //! `DocumentHelpers` placement rule; see `crate::artifacts::fem3d::engine`'s `🔖️SceneRender` region doc).
 
 use crate::apps::fem3d::config::Fem3dConfig;
-use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
 use crate::app_surface::{DisplayMode, ResultDisplay};
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, UiNode};
 
@@ -38,7 +38,7 @@ pub fn config_result_display(cfg: &Fem3dConfig) -> ResultDisplay {
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every solid's footprint/height —
 /// drives mode-shape amplitude (see `crate::app_surface::MODE_SHAPE_AMPLITUDE_RATIO`'s doc). Falls
 /// back to `1.0` for a degenerate model.
-fn fem3d_model_extent(doc: &Fem3dDocument) -> f64 {
+fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
     let mut expand = |x: f64, y: f64, z: f64| {
@@ -74,7 +74,7 @@ fn with_caption(scene: UiNode, caption: String) -> UiNode {
 }
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem3dDocument, cfg: &Fem3dConfig) -> UiNode {
+pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> UiNode {
     let display = config_result_display(cfg);
     let camera = &cfg.camera;
     match display.mode {
@@ -89,7 +89,7 @@ pub fn render(doc: &Fem3dDocument, cfg: &Fem3dConfig) -> UiNode {
 /// additionally colored by nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all`
 /// case/combination id, falling back to the first load case when `None`/unknown. Caption names the
 /// active case.
-fn render_static(doc: &Fem3dDocument, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
+fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
     use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, fem3d_solve_all};
 
     let results = match fem3d_solve_all(doc) {
@@ -119,7 +119,7 @@ fn render_static(doc: &Fem3dDocument, source_id: Option<&str>, camera: &FemCamer
 
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
-fn render_modal(doc: &Fem3dDocument, mode_index: usize, camera: &FemCamera) -> UiNode {
+fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
     use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, modal_buckling::fem3d_modal_mode_values};
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
@@ -141,7 +141,7 @@ fn render_modal(doc: &Fem3dDocument, mode_index: usize, camera: &FemCamera) -> U
 /// peak then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent. `source_id` selects the
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
-fn render_buckling(doc: &Fem3dDocument, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
+fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, modal_buckling::fem3d_buckling_mode_values};
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
@@ -231,7 +231,7 @@ mod tests {
 
     #[test]
     fn fem3d_model_extent_degenerate_model_returns_one() {
-        assert_eq!(fem3d_model_extent(&Fem3dDocument::default()), 1.0);
+        assert_eq!(fem3d_model_extent(&Fem3dSnapshot::default()), 1.0);
     }
 }
 // #endregion 🧪️Tests

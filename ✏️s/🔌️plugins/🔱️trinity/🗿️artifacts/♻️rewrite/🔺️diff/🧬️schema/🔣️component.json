@@ -1,0 +1,171 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewrite/diff.json",
+  "title": "RewriteDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "RewriteArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "beforeFixtureJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "lhsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "rhsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "parameterBindings": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/PropertyValue"
+          }
+        ]
+      },
+      "x-semio-state": "persistent"
+    },
+    "ruleLayout": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/LayoutPoint"
+          }
+        ]
+      },
+      "x-semio-state": "persistent"
+    },
+    "selectedNodeIds": {
+      "$ref": "#/$defs/RewriteStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeHoverVar": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "activeSelectVar": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "beforePaneCamera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "local-ui"
+    },
+    "reorganizeEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "hoverEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "selectEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  },
+  "$defs": {
+    "RewriteStringList": {
+      "title": "RewriteStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PropertyValue": {
+      "title": "PropertyValue",
+      "description": "JSON-equivalent property value."
+    },
+    "LayoutPoint": {
+      "title": "LayoutPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

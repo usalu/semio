@@ -1,4 +1,4 @@
-//! 📄️ Flow document: widgets, fixture, and DAG projection helpers.
+//! 📄️ Flow document: widgets, fixture, and DAG snapshot helpers.
 
 use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas as canvas;

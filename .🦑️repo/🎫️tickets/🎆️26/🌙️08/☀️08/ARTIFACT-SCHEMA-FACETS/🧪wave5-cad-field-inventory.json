@@ -1,0 +1,59 @@
+{
+  "persistent": [
+    "schema",
+    "id",
+    "objects",
+    "buildingObjects",
+    "energyObjects",
+    "structureClassicObjects",
+    "referencesByModelDefinitionId",
+    "nodes",
+    "shapeGeometry",
+    "buildingGeometry",
+    "energyGeometry",
+    "structureClassicGeometry",
+    "activeModelDefinitionId"
+  ],
+  "sharedUi": [
+    "selectedObjectIds",
+    "selectedNodeIds",
+    "activeObjectId",
+    "componentSelection",
+    "selectedReferenceModelDefinitionId",
+    "selectedReferenceId",
+    "selectedPrimitiveId",
+    "selectedPrimitiveKind",
+    "activeUtilityId",
+    "activeExampleId"
+  ],
+  "localUi": [
+    "selectionMethod",
+    "engagementInput",
+    "engagementStep",
+    "engagementPane",
+    "engagementSessionJson",
+    "lastFinalizedInteractionId",
+    "sunEnabled",
+    "sunAzimuth",
+    "sunElevation",
+    "sunIntensity",
+    "sunColor",
+    "camera",
+    "cameraBuilding",
+    "cameraEnergy",
+    "cameraStructureClassic",
+    "dislocateShape",
+    "dislocateBuilding",
+    "dislocateEnergy",
+    "dislocateStructureClassic",
+    "locale",
+    "terminology",
+    "contributionsJson"
+  ],
+  "preview": [
+    "hoveredObjectId",
+    "hoveredTargetObjectId",
+    "hoveredTargetMode",
+    "hoveredTargetId"
+  ]
+}

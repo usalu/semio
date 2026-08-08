@@ -1,7 +1,7 @@
 //! 🗣️ CAD artifact — the textual `.cad` document grammar surface: `parse_dsl`/`print_dsl` over the
 //! derive-generated `store::DocumentDsl`, plus the handcrafted `default` example the app registers.
 
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -14,13 +14,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// objects across the shape/building/structure-classic panes.
 pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.cad` DSL text into a `CadProjection`.
-pub fn parse_dsl(text: &str) -> Result<CadProjection, store::TextError> {
-    <CadProjection as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.cad` DSL text into a `CadSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<CadSnapshot, store::TextError> {
+    <CadSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `CadProjection` back to `.cad` DSL text.
-pub fn print_dsl(document: &CadProjection) -> String {
+/// 🖨️ Prints a `CadSnapshot` back to `.cad` DSL text.
+pub fn print_dsl(document: &CadSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -33,12 +33,12 @@ mod tests {
     #[test]
     fn default_example_dsl_round_trips() {
         let document = parse_dsl(CAD_DEFAULT_EXAMPLE_TEXT).expect("parse default .cad example");
-        store::test_support::assert_dsl_round_trip(&document);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn cad_scene_round_trips_through_dsl_document() {
-        store::test_support::assert_dsl_round_trip(&sample_scene());
+        store::os_store::test_support::assert_dsl_round_trip(&sample_scene());
     }
 
     #[test]
@@ -47,7 +47,7 @@ mod tests {
         scene.building_geometry = Some(sample_geometry());
         scene.energy_geometry = Some(sample_geometry());
         scene.structure_classic_geometry = Some(sample_geometry());
-        store::test_support::assert_dsl_round_trip(&scene);
+        store::os_store::test_support::assert_dsl_round_trip(&scene);
     }
 }
 //#endregion 🧪️Tests

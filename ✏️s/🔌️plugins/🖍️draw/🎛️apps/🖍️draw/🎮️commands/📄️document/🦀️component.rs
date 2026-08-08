@@ -5,26 +5,26 @@ use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::apps::draw::DRAW_PLAY_EXAMPLE_DEFAULT_ID;
 use crate::artifacts::draw::engine::{default_draw_document, semio_draw_example_document};
 use crate::artifacts::draw::op::DrawMutation;
-use crate::artifacts::draw::{DrawDocument, DRAW_DOCUMENT_SCHEMA};
+use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️SetDocument
-pub mod set_document {
+//#region 🔖️SetSnapshot
+pub mod set_snapshot {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-document")]
-    pub struct SetDocument {
+    #[dsl(keyword = "set-snapshot")]
+    pub struct SetSnapshot {
         #[dsl(block)]
-        pub document: DrawDocument,
+        pub snapshot: DrawSnapshot,
     }
 
-    pub fn handle(payload: &SetDocument, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![DrawMutation::SetDocument { document: payload.document.clone() }]))
+    pub fn handle(payload: &SetSnapshot, _doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![DrawMutation::SetSnapshot { snapshot: payload.snapshot.clone() }]))
     }
 }
-//#endregion 🔖️SetDocument
+//#endregion 🔖️SetSnapshot
 
 //#region 🔖️CommitDocument
 pub mod commit_document {
@@ -34,11 +34,11 @@ pub mod commit_document {
     #[dsl(keyword = "commit-document")]
     pub struct CommitDocument {
         #[dsl(block)]
-        pub document: DrawDocument,
+        pub snapshot: DrawSnapshot,
     }
 
-    pub fn handle(payload: &CommitDocument, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![DrawMutation::SetDocument { document: payload.document.clone() }]))
+    pub fn handle(payload: &CommitDocument, _doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![DrawMutation::SetSnapshot { snapshot: payload.snapshot.clone() }]))
     }
 }
 //#endregion 🔖️CommitDocument
@@ -53,12 +53,12 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    /// 🩹️ Parsed as JSON (falling back to a no-op when it isn't valid or doesn't carry the draw schema)
+    /// 🌡 Parsed as JSON (falling back to a no-op when it isn't valid or doesn't carry the draw schema)
     /// — mirrors every other plugin's fixture-injection command.
-    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         if payload.json.contains(DRAW_DOCUMENT_SCHEMA) {
-            if let Ok(document) = serde_json::from_str::<DrawDocument>(&payload.json) {
-                return Ok(Emit::mutations(vec![DrawMutation::SetDocument { document }]));
+            if let Ok(snapshot) = serde_json::from_str::<DrawSnapshot>(&payload.json) {
+                return Ok(Emit::mutations(vec![DrawMutation::SetSnapshot { snapshot }]));
             }
         }
         Ok(Emit::default())
@@ -76,7 +76,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, DrawDocument>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::apps::draw::commands::canvas::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() {
             Some(default_draw_document("empty", None))
         } else if payload.example_id == DRAW_PLAY_EXAMPLE_DEFAULT_ID {
@@ -85,7 +85,11 @@ pub mod set_active_example {
             None
         };
         match next {
-            Some(document) => Ok(Emit { document_mutations: vec![DrawMutation::SetDocument { document }], config_mutations: vec![DrawConfigMutation::SetSelection { ids: Vec::new() }], ..Default::default() }),
+            Some(snapshot) => Ok(Emit {
+                document_mutations: vec![DrawMutation::SetSnapshot { snapshot }],
+                config_mutations: vec![DrawConfigMutation::SetSelection { ids: Vec::new() }],
+                ..Default::default()
+            }),
             None => Ok(Emit::default()),
         }
     }

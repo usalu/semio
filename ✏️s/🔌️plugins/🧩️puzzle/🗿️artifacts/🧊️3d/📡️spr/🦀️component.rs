@@ -13,7 +13,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dProjection;
+use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
 
@@ -28,8 +28,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<Puzzle3dMutation, protocol::ProtocolErr
 }
 
 //#region 🔖️Store
-pub type Puzzle3dEnvelope = DocumentEnvelope<Puzzle3dProjection, Puzzle3dMutation>;
-pub type Puzzle3dStore = DocumentStore<Puzzle3dProjection, Puzzle3dMutation>;
+pub type Puzzle3dEnvelope = DocumentEnvelope<Puzzle3dSnapshot, Puzzle3dMutation>;
+pub type Puzzle3dStore = DocumentStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️Puzzle3dEngineCommand
@@ -72,7 +72,7 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        let projection = store.projection().expect("projection");
+        let projection = store.snapshot().expect("projection");
         assert_eq!(projection.objects.len(), 1);
         assert_eq!(projection.objects[0].id, "o1");
     }
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn engine_command_set_scene_binary_round_trips_and_agrees_with_text() {
         let command = Puzzle3dEngineCommand::SetScene { scene: sample_scene_config() };
-        store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let bytes = encode_engine_command(&command).expect("encode");
         assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
     }
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn engine_command_brush_preview_binary_round_trips_and_agrees_with_text() {
         let command = Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 2 };
-        store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let bytes = encode_engine_command(&command).expect("encode");
         assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
     }
@@ -117,7 +117,7 @@ mod tests {
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 0.5);
         let command = Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() };
-        store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let bytes = encode_engine_command(&command).expect("encode");
         assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
     }
@@ -174,7 +174,7 @@ mod wire_format_guard {
         let target_volume: puzzle_3d::Puzzle3dTargetVolume = serde_json::from_value(json!({"id":"t1","origin":[0.0,1.0,2.0],"orientation":[0.0,0.0,0.0,1.0],"scale":5.0,"hidden":false,"locked":false})).unwrap();
         let reference: puzzle_3d::Puzzle3dReference = serde_json::from_value(json!({"id":"r1","source":{"url":"/u.png","mediaKind":"image"},"origin":[0.0,0.0,0.0],"widthWorld":4.0,"locked":false,"hidden":false})).unwrap();
         let meta: puzzle_3d::Puzzle3dMeta = serde_json::from_value(json!({"kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"important":false,"specificity":"vortex"}]})).unwrap();
-        let document = Puzzle3dProjection::default();
+        let document = Puzzle3dSnapshot::default();
         vec![
             Puzzle3dMutation::SetObject { index: 0, object },
             Puzzle3dMutation::RemoveObject { id: "o1".into() },
@@ -185,7 +185,7 @@ mod wire_format_guard {
             Puzzle3dMutation::SetReference { index: 3, reference },
             Puzzle3dMutation::RemoveReference { id: "r1".into() },
             Puzzle3dMutation::SetMeta { meta },
-            Puzzle3dMutation::SetDocument { document },
+            Puzzle3dMutation::SetDocument { snapshot: document },
         ]
     }
 
@@ -214,7 +214,7 @@ mod wire_format_guard {
         "setReference index=3 reference { id=r1 origin=@0,0,0 width-world=4m locked=false hidden=false source=url=\"/u.png\" media-kind=image } | 80 | 010603062f752e706e6705696d61676502723102000403010e0d06000602010d020006000106010215030000000000000000000000000000000000000000000000000305000000000000104004010501",
         "removeReference id=r1 | 10 | 01070102723101000600",
         "setMeta meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { a b true false vortex } } | 43 | 0108030161016206766f7274657801000e0d01011401050000050001000501020001010300010004000502",
-        "setDocument document { schema=puzzle.3d domain=architecture meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { } } objects [id:TEXT label:TEXT object-kind:REF origin:CRD orientation:TUPLE scale:LIST mesh-url:TEXT vortices:LIST hidden:BOOL locked:BOOL] { } attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] { } references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] { } } | 169 | 0109020c6172636869746563747572650970757a7a6c652e336401000e0d07000601010600020e0d01011400050000050100050200010300010400050314000a000005010005020005030000040000050000060005070000080001090001041400090000050100050200050300040400040500040600040700040800040514000600000501000002000003000004000105000106140006000005010000020000030004040001050001",
+        "setDocument snapshot { schema=puzzle.3d domain=architecture meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { } } objects [id:TEXT label:TEXT object-kind:REF origin:CRD orientation:TUPLE scale:LIST mesh-url:TEXT vortices:LIST hidden:BOOL locked:BOOL] { } attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] { } references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] { } } | 169 | 0109020c6172636869746563747572650970757a7a6c652e336401000e0d07000601010600020e0d01011400050000050100050200010300010400050314000a000005010005020005030000040000050000060005070000080001090001041400090000050100050200050300040400040500040600040700040800040514000600000501000002000003000004000105000106140006000005010000020000030004040001050001",
     ];
 
     /// 🔒️ Same frozen capture for the headless engine-command codec.

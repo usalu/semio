@@ -1,5 +1,11 @@
-//! 🔺️ Procedural2d artifact — the operation diff (constitutional: diff).
+//! 🔺️ Procedural2d artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::procedural2d::schema::Procedural2dArtifact;
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use flow::playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
+use protocol::MutationDiff;
+use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -7,17 +13,10 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-use crate::artifacts::procedural2d::{widget_id, Procedural2dDocument};
-use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
-use flow::playbook::{apply_generation_mutation, GenerationMutation};
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
+pub use super::schema::*;
 
 //#region 🔖️Collections
-/// 🩹️ Sparse id-keyed collection diff — removals plus id-or-index `set`s (replace when the id already
-/// exists, else insert at the recorded index). Disjoint `set`s on different ids merge cleanly, which
-/// is what lets two backbone peers converge on concurrent edits to different widgets/synapses.
+/// 🧬️ Sparse id-keyed collection helper used when constructing a whole `fixture` replacement.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WidgetsDiff {
@@ -64,126 +63,201 @@ pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &Synaps
         }
     }
 }
-//#endregion 🔖️Collections
 
-//#region 🔖️Diff
-/// 🩹️ Sparse procedural-2d diff over the flow fixture's collections plus scalar canvas/schema fields
-/// and an ordered list of generation edits applied in sequence.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Procedural2dDiff {
-    pub widgets: WidgetsDiff,
-    pub synapses: SynapsesDiff,
-    pub layout: LayoutDiff,
-    pub camera: Option<CameraJson>,
-    pub schema: Option<String>,
-    #[serde(default)]
-    pub generation: Vec<GenerationMutation>,
+fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
+    for id in &diff.removed {
+        layout.remove(id);
+    }
+    for (id, entry) in &diff.set {
+        layout.insert(id.clone(), entry.clone());
+    }
 }
 
-impl MutationDiff<Procedural2dDocument> for Procedural2dDiff {
-    fn apply(&self, projection: &Procedural2dDocument) -> Procedural2dDocument {
-        let mut next = projection.clone();
-        apply_widgets_diff(&mut next.fixture.widgets, &self.widgets);
-        apply_synapses_diff(&mut next.fixture.synapses, &self.synapses);
-        for id in &self.layout.removed {
-            next.fixture.layout.remove(id);
+/// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
+pub fn apply_fixture_helpers(
+    fixture: &FlowFixture,
+    widgets: &WidgetsDiff,
+    synapses: &SynapsesDiff,
+    layout: &LayoutDiff,
+    camera: Option<&CameraJson>,
+    schema: Option<&str>,
+) -> FlowFixture {
+    let mut next = fixture.clone();
+    apply_widgets_diff(&mut next.widgets, widgets);
+    apply_synapses_diff(&mut next.synapses, synapses);
+    apply_layout_diff(&mut next.layout, layout);
+    if let Some(camera) = camera {
+        next.camera = camera.clone();
+    }
+    if let Some(schema) = schema {
+        next.schema = schema.to_string();
+    }
+    next
+}
+
+/// 🧩 Applies generation mutations onto a cloned play state.
+pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
+    let mut next = state.clone();
+    for operation in ops {
+        apply_generation_mutation(&mut next, operation);
+    }
+    next
+}
+//#endregion 🔖️Collections
+
+//#region 🔖️Apply
+impl Procedural2dDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &Procedural2dArtifact) -> Procedural2dArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
         }
-        for (id, layout) in &self.layout.set {
-            next.fixture.layout.insert(id.clone(), layout.clone());
+        let mut next = artifact.clone();
+        if let Some(fixture) = &self.fixture {
+            next.fixture = fixture.clone();
         }
-        if let Some(camera) = &self.camera {
-            next.fixture.camera = camera.clone();
+        if let Some(generation) = &self.generation {
+            next.generation = generation.clone();
         }
-        if let Some(schema) = &self.schema {
-            next.fixture.schema = schema.clone();
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
         }
-        for operation in &self.generation {
-            apply_generation_mutation(&mut next.generation, operation);
+        if let Some(value) = &self.graph_camera {
+            next.graph_camera = value.clone();
+        }
+        if let Some(value) = &self.show_mode {
+            next.show_mode = value.clone();
+        }
+        if let Some(value) = &self.selected_generation_id {
+            next.selected_generation_id = value.clone();
+        }
+        if let Some(value) = &self.generation_preview_text {
+            next.generation_preview_text = value.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        next
+    }
+}
+
+impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
+    fn apply(&self, snapshot: &Procedural2dSnapshot) -> Procedural2dSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(fixture) = &self.fixture {
+            next.fixture = fixture.clone();
+        }
+        if let Some(generation) = &self.generation {
+            next.generation = generation.clone();
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.widgets.removed.extend(other.widgets.removed);
-        self.widgets.set.extend(other.widgets.set);
-        self.synapses.removed.extend(other.synapses.removed);
-        self.synapses.set.extend(other.synapses.set);
-        self.layout.removed.extend(other.layout.removed);
-        self.layout.set.extend(other.layout.set);
-        if other.camera.is_some() {
-            self.camera = other.camera;
+        if other.artifact.is_some() {
+            *self = other;
+            return;
         }
-        if other.schema.is_some() {
-            self.schema = other.schema;
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
         }
-        self.generation.extend(other.generation);
+        take!(fixture);
+        take!(generation);
+        take!(selected_ids);
+        take!(graph_camera);
+        take!(show_mode);
+        take!(selected_generation_id);
+        take!(generation_preview_text);
+        take!(locale);
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔖️Apply
+
+//#region 🔖️Constructors
+/// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
+pub fn diff_fixture_from_helpers(
+    base: &Procedural2dSnapshot,
+    widgets: WidgetsDiff,
+    synapses: SynapsesDiff,
+    layout: LayoutDiff,
+    camera: Option<CameraJson>,
+    schema: Option<String>,
+) -> Procedural2dDiff {
+    let fixture = apply_fixture_helpers(
+        &base.fixture,
+        &widgets,
+        &synapses,
+        &layout,
+        camera.as_ref(),
+        schema.as_deref(),
+    );
+    Procedural2dDiff { fixture: Some(fixture), ..Procedural2dDiff::default() }
+}
+
+/// 🏗️ Generation field delta after applying ordered generation mutations.
+pub fn diff_generation_from_ops(base: &Procedural2dSnapshot, ops: Vec<GenerationMutation>) -> Procedural2dDiff {
+    let generation = apply_generation_helpers(&base.generation, &ops);
+    Procedural2dDiff { generation: Some(generation), ..Procedural2dDiff::default() }
+}
+//#endregion 🔖️Constructors
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedural2d::engine::empty_procedural2d_projection;
+    use crate::artifacts::procedural2d::engine::empty_procedural2d_snapshot;
 
     #[test]
-    fn diff_absorb_merges_vecs_and_updates_scalars_when_present() {
-        let mut diff = Procedural2dDiff { camera: Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }), ..Default::default() };
-        diff.widgets.removed.push("w1".into());
-
-        diff.absorb(Procedural2dDiff {
-            widgets: WidgetsDiff { removed: vec!["w2".into()], set: vec![(0, Widget::InputNote { id: "note".into(), text: String::new() })] },
-            synapses: SynapsesDiff { removed: vec!["s1".into()], set: vec![] },
-            layout: LayoutDiff { removed: vec![], set: vec![("l1".into(), WidgetLayout { x: 3.0, y: 4.0 })] },
-            camera: Some(CameraJson { x: 9.0, y: 9.0, zoom: 2.0 }),
-            schema: Some("flow.fixture".into()),
-            generation: vec![GenerationMutation::Remove { id: "g1".into() }],
-        });
-
-        assert_eq!(diff.widgets.removed, vec!["w1".to_string(), "w2".to_string()]);
-        assert_eq!(diff.widgets.set.len(), 1);
-        assert_eq!(diff.synapses.removed, vec!["s1".to_string()]);
-        assert_eq!(diff.layout.set.len(), 1);
-        assert_eq!(diff.camera, Some(CameraJson { x: 9.0, y: 9.0, zoom: 2.0 }));
-        assert_eq!(diff.schema, Some("flow.fixture".to_string()));
-        assert_eq!(diff.generation.len(), 1);
-    }
-
-    #[test]
-    fn diff_absorb_keeps_scalar_when_incoming_is_none() {
-        let mut diff = Procedural2dDiff { camera: Some(CameraJson { x: 1.0, y: 2.0, zoom: 1.0 }), schema: Some("flow.fixture".into()), ..Default::default() };
-        diff.absorb(Procedural2dDiff::default());
-        assert_eq!(diff.camera, Some(CameraJson { x: 1.0, y: 2.0, zoom: 1.0 }));
-        assert_eq!(diff.schema, Some("flow.fixture".to_string()));
-    }
-
-    #[test]
-    fn diff_apply_inserts_new_widget_and_replaces_existing_by_id() {
-        let projection = empty_procedural2d_projection();
-        let existing_id = widget_id(&projection.fixture.widgets[1]).to_string();
-        let diff = Procedural2dDiff {
-            widgets: WidgetsDiff { removed: vec![], set: vec![(0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }), (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() })] },
-            ..Default::default()
+    fn diff_absorb_prefers_incoming_fixture_and_scalars() {
+        let base = empty_procedural2d_snapshot();
+        let mut first = diff_fixture_from_helpers(
+            &base,
+            WidgetsDiff { removed: vec!["w1".into()], set: vec![] },
+            SynapsesDiff::default(),
+            LayoutDiff::default(),
+            Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }),
+            None,
+        );
+        let second = Procedural2dDiff {
+            show_mode: Some("wire".into()),
+            locale: Some("de-DE".into()),
+            ..Procedural2dDiff::default()
         };
-        let next = diff.apply(&projection);
-        assert_eq!(next.fixture.widgets.len(), projection.fixture.widgets.len() + 1);
-        let replaced = next.fixture.widgets.iter().find(|w| widget_id(w) == existing_id.as_str()).expect("replaced widget present");
-        assert_eq!(replaced, &Widget::InputNote { id: existing_id, text: "replaced".into() });
-        assert_eq!(widget_id(next.fixture.widgets.last().expect("inserted widget")), "brand-new");
+        first.absorb(second);
+        assert!(first.fixture.is_some());
+        assert_eq!(first.show_mode.as_deref(), Some("wire"));
+        assert_eq!(first.locale.as_deref(), Some("de-DE"));
     }
 
     #[test]
-    fn diff_apply_updates_camera_and_schema_only_when_present() {
-        let projection = empty_procedural2d_projection();
-        let untouched = Procedural2dDiff::default().apply(&projection);
-        assert_eq!(untouched.fixture.camera, projection.fixture.camera);
-        assert_eq!(untouched.fixture.schema, projection.fixture.schema);
-
-        let changed = Procedural2dDiff { camera: Some(CameraJson { x: 5.0, y: 6.0, zoom: 3.0 }), schema: Some("other.schema".into()), ..Default::default() }.apply(&projection);
-        assert_eq!(changed.fixture.camera, CameraJson { x: 5.0, y: 6.0, zoom: 3.0 });
-        assert_eq!(changed.fixture.schema, "other.schema");
+    fn diff_apply_updates_fixture_widgets() {
+        let snapshot = empty_procedural2d_snapshot();
+        let existing_id = widget_id(&snapshot.fixture.widgets[1]).to_string();
+        let diff = diff_fixture_from_helpers(
+            &snapshot,
+            WidgetsDiff {
+                removed: vec![],
+                set: vec![
+                    (0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }),
+                    (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() }),
+                ],
+            },
+            SynapsesDiff::default(),
+            LayoutDiff::default(),
+            None,
+            None,
+        );
+        let next = diff.apply(&snapshot);
+        assert_eq!(next.fixture.widgets.len(), snapshot.fixture.widgets.len() + 1);
+        let replaced = next.fixture.widgets.iter().find(|w| widget_id(w) == existing_id.as_str()).expect("replaced");
+        assert_eq!(replaced, &Widget::InputNote { id: existing_id, text: "replaced".into() });
     }
 }
 //#endregion 🧪️Tests

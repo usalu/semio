@@ -4,7 +4,7 @@
 //! `WindowKindDefinition`/`window_kind_def` object is built anywhere in the pre-migration
 //! `create_fem3d_app`, so this node exports just its id/body-key constants and `render()`.
 
-use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
 
 /// 🪟️ The manifest's Model window kind id.
 pub const FEM3D_WINDOW_MODEL: &str = "fem3d-model";
@@ -14,7 +14,7 @@ pub const FEM3D_BODY_MODEL: &str = "fem3d.play.model";
 /// 🧱️ Renders the undeformed structure: the same node/member/solid instances every results view
 /// deforms, at deformation scale `doc.analysis.deformation_scale` with no displacement offset applied
 /// (`None` displacements) and no stress coloring.
-pub fn render(doc: &Fem3dDocument, camera: &FemCamera) -> semio_framework_plugin::UiNode {
+pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiNode {
     use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts};
 
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
@@ -46,7 +46,7 @@ mod tests {
         assert!(json.contains("solid-sol1"), "expected a solid- mesh/instance id for the example fixture's solid: {json}");
         assert!(json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {json}");
         assert!(!json.contains("\\\"sphere\\\""), "sphere markers should be gone: {json}");
-        let _ = app.projection().expect("projection");
+        let _ = app.snapshot().expect("snapshot");
     }
 }
 // #endregion 🧪️Tests

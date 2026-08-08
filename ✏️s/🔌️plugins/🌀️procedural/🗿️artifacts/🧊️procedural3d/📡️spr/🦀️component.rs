@@ -186,7 +186,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Procedural3dMutation, protocol::Protoco
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedural3d::{Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
+    use crate::artifacts::procedural3d::{Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
     use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use flow::playbook::GenerationMutation;
     use store::{create_document_envelope, test_support, DocumentCommand};
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = store::DocumentStore::<Procedural3dDocument, Procedural3dMutation>::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dDocument::default(), None));
+        let mut store = store::DocumentStore::<Procedural3dSnapshot, Procedural3dMutation>::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);

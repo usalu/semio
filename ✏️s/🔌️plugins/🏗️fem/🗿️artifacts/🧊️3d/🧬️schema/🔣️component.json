@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/s/fem/fem3d/artifact.json",
+  "title": "Fem3dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "nodes",
+    "elements",
+    "materials",
+    "sections",
+    "solids",
+    "supports",
+    "loadCases",
+    "combinations",
+    "analysis",
+    "resultMode",
+    "resultModeIndex",
+    "camera",
+    "solverResultsJson",
+    "meshPreviewJson"
+  ],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemElement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemMaterial"
+      },
+      "x-semio-state": "persistent"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemSection"
+      },
+      "x-semio-state": "persistent"
+    },
+    "solids": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemSolid"
+      },
+      "x-semio-state": "persistent"
+    },
+    "supports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemSupport"
+      },
+      "x-semio-state": "persistent"
+    },
+    "loadCases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemLoadCase"
+      },
+      "x-semio-state": "persistent"
+    },
+    "combinations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FemCombination"
+      },
+      "x-semio-state": "persistent"
+    },
+    "analysis": {
+      "$ref": "#/$defs/FemAnalysisSettings",
+      "x-semio-state": "persistent"
+    },
+    "resultSourceId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "resultMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "resultModeIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/FemCamera",
+      "x-semio-state": "local-ui"
+    },
+    "solverResultsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "preview"
+    },
+    "meshPreviewJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "FemCamera": {
+      "title": "FemCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "json"
+      ],
+      "properties": {
+        "json": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    },
+    "FemAnalysisSettings": {
+      "title": "FemAnalysisSettings",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modalCount",
+        "bucklingCount",
+        "deformationScale"
+      ],
+      "properties": {
+        "modalCount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "bucklingCount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "deformationScale": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "FemNode": {
+      "title": "FemNode",
+      "type": "object"
+    },
+    "FemElement": {
+      "title": "FemElement",
+      "type": "object"
+    },
+    "FemSolid": {
+      "title": "FemSolid",
+      "type": "object"
+    },
+    "FemMaterial": {
+      "title": "FemMaterial",
+      "type": "object"
+    },
+    "FemSection": {
+      "title": "FemSection",
+      "type": "object"
+    },
+    "FemSupport": {
+      "title": "FemSupport",
+      "type": "object"
+    },
+    "FemLoadCase": {
+      "title": "FemLoadCase",
+      "type": "object"
+    },
+    "FemCombination": {
+      "title": "FemCombination",
+      "type": "object"
+    }
+  }
+}

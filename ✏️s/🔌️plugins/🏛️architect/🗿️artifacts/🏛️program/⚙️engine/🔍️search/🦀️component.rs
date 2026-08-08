@@ -1,9 +1,9 @@
 //! ⚙️ Architect program artifact engine — the `search` topic.
 
-//! 🔍️ Program search — keyword and structured filters across registers.
+//! 🔍️ ProgramSnapshot search — keyword and structured filters across registers.
 
 use crate::artifacts::program::kernel::{EntityHeader, EntityId, LifecycleStatus, Priority};
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::registers::SearchFilter;
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +47,7 @@ pub struct SearchHit {
 
 // #region 🔖️SearchProgram
 /// @emoji 🔎️ Searches all registers; uses `filter` when provided; records query in `search_history`.
-pub fn search_plugin(program: &Program, query: &SearchQuery, filter: Option<&SearchFilter>, search_history: Option<&mut Vec<SearchQuery>>) -> Vec<SearchHit> {
+pub fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Option<&SearchFilter>, search_history: Option<&mut Vec<SearchQuery>>) -> Vec<SearchHit> {
     let effective = merge_query(query, filter);
     if let Some(history) = search_history {
         history.push(effective.clone());

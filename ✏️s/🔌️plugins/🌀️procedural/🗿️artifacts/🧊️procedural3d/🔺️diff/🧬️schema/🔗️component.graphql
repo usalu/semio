@@ -1,0 +1,75 @@
+# 🧬️ Procedural3d diff schema — sparse field delta.
+
+type Procedural3dDiff {
+  artifact: Procedural3dArtifact @state(class: PERSISTENT)
+  fixture: FlowFixture @state(class: PERSISTENT)
+  generation: GenerationPlayState @state(class: PERSISTENT)
+  selectedNodeIds: Procedural3dStringList @state(class: SHARED_UI)
+  lodMode: String @state(class: LOCAL_UI)
+  showMode: String @state(class: LOCAL_UI)
+  selectionMethod: String @state(class: LOCAL_UI)
+  hoveredNodeId: String @state(class: PREVIEW)
+  graphCamera: CameraJson @state(class: LOCAL_UI)
+  previewCamera: Procedural3dPreviewCamera @state(class: LOCAL_UI)
+  sunJson: String @state(class: LOCAL_UI)
+  selectedGenerationId: String @state(class: SHARED_UI)
+  generationPreviewText: String @state(class: PREVIEW)
+  activeUtilityId: String @state(class: SHARED_UI)
+  locale: String @state(class: LOCAL_UI)
+  contributionsJson: String @state(class: LOCAL_UI)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+scalar Widget
+type FlowFixture {
+  schema: String!
+  camera: CameraJson!
+  widgets: [Widget!]!
+  synapses: [SynapseSpec!]!
+  layout: [FlowFixtureLayoutEntry!]!
+}
+type FlowFixtureLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+type FormGeneration {
+  id: String!
+  name: String!
+  valuesJson: String!
+}
+type GenerationPlayState {
+  generations: [FormGeneration!]!
+  selectedGenerationId: String
+  previewText: String
+}
+type Procedural3dPreviewCamera {
+  positionX: Float!
+  positionY: Float!
+  positionZ: Float!
+  targetX: Float!
+  targetY: Float!
+  targetZ: Float!
+  fov: Float!
+}
+type Procedural3dStringList {
+  values: [String!]!
+}
+type Procedural3dArtifact {
+  fixture: FlowFixture!
+  generation: GenerationPlayState!
+}

@@ -1,10 +1,10 @@
 //! ⚙️ Architect program artifact engine — the `report` topic.
 
-//! 📄️ Program reporting — structured reports from `ReportKind`.
+//! 📄️ ProgramSnapshot reporting — structured reports from `ReportKind`.
 
 use crate::artifacts::program::engine::analyze::run_analysis;
 use crate::artifacts::program::kernel::{EntityHeader, EntityId};
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::registers::{AnalysisKind, ReportKind, ReportRecord, ValidationStatus};
 use crate::artifacts::program::engine::status_summary::status_summary;
 use crate::artifacts::program::engine::validate::validate_plugin;
@@ -34,7 +34,7 @@ pub struct ReportSection {
 
 // #region 🔖️BuildReport
 /// @emoji 🖨️ Builds a structured report for the requested kind.
-pub fn build_report(program: &Program, kind: ReportKind) -> ProgramReport {
+pub fn build_report(program: &ProgramSnapshot, kind: ReportKind) -> ProgramReport {
     match kind {
         ReportKind::ExecutiveSummary => executive_summary(program),
         ReportKind::ProgramOverview => program_overview(program),
@@ -61,7 +61,7 @@ pub fn build_report(program: &Program, kind: ReportKind) -> ProgramReport {
 }
 
 /// @emoji 📝️ Builds a report and appends a `ReportRecord` to the program.
-pub fn build_report_and_record(program: &mut Program, kind: ReportKind) -> ProgramReport {
+pub fn build_report_and_record(program: &mut ProgramSnapshot, kind: ReportKind) -> ProgramReport {
     let report = build_report(program, kind);
     let record = ReportRecord {
         header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
@@ -88,11 +88,11 @@ pub fn build_report_and_record(program: &mut Program, kind: ReportKind) -> Progr
     report
 }
 
-fn timestamp(program: &Program) -> String {
+fn timestamp(program: &ProgramSnapshot) -> String {
     program.meta.timestamps.updated.clone()
 }
 
-fn executive_summary(program: &Program) -> ProgramReport {
+fn executive_summary(program: &ProgramSnapshot) -> ProgramReport {
     let summary = status_summary(program);
     ProgramReport {
         kind: ReportKind::ExecutiveSummary,
@@ -110,7 +110,7 @@ fn executive_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn program_overview(program: &Program) -> ProgramReport {
+fn program_overview(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ProgramOverview,
         title: format!("{} — Overview", program.meta.title),
@@ -123,7 +123,7 @@ fn program_overview(program: &Program) -> ProgramReport {
     }
 }
 
-fn stakeholder_summary(program: &Program) -> ProgramReport {
+fn stakeholder_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::StakeholderSummary,
         title: "Stakeholder Summary".into(),
@@ -137,7 +137,7 @@ fn stakeholder_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn requirements_matrix(program: &Program) -> ProgramReport {
+fn requirements_matrix(program: &ProgramSnapshot) -> ProgramReport {
     let element_names: Vec<String> = program.elements.iter().map(|e| e.header.name.clone()).collect();
     let header = format!("{}\t{}", "Requirement", element_names.join("\t"));
     let mut rows = vec![header];
@@ -154,7 +154,7 @@ fn requirements_matrix(program: &Program) -> ProgramReport {
     }
 }
 
-fn adjacency_matrix_report(program: &Program) -> ProgramReport {
+fn adjacency_matrix_report(program: &ProgramSnapshot) -> ProgramReport {
     let matrix = crate::artifacts::program::engine::adjacency::adjacency_matrix(program);
     let header: String = format!("{}\t{}", "", matrix.element_ids.iter().map(|id| program.elements.iter().find(|e| &e.header.id == id).map_or(id.0.as_str(), |e| e.header.name.as_str())).collect::<Vec<_>>().join("\t"));
     let mut rows = vec![header];
@@ -180,7 +180,7 @@ fn adjacency_matrix_report(program: &Program) -> ProgramReport {
     }
 }
 
-fn gap_report(program: &Program) -> ProgramReport {
+fn gap_report(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Gap);
     ProgramReport {
         kind: ReportKind::GapAnalysis,
@@ -191,7 +191,7 @@ fn gap_report(program: &Program) -> ProgramReport {
     }
 }
 
-fn risk_register(program: &Program) -> ProgramReport {
+fn risk_register(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::RiskRegister,
         title: "Risk Register".into(),
@@ -201,7 +201,7 @@ fn risk_register(program: &Program) -> ProgramReport {
     }
 }
 
-fn decision_log(program: &Program) -> ProgramReport {
+fn decision_log(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::DecisionLog,
         title: "Decision Log".into(),
@@ -215,7 +215,7 @@ fn decision_log(program: &Program) -> ProgramReport {
     }
 }
 
-fn validation_summary(program: &Program) -> ProgramReport {
+fn validation_summary(program: &ProgramSnapshot) -> ProgramReport {
     let diagnostics = validate_plugin(program);
     ProgramReport {
         kind: ReportKind::ValidationSummary,
@@ -226,7 +226,7 @@ fn validation_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn recommendation(program: &Program) -> ProgramReport {
+fn recommendation(program: &ProgramSnapshot) -> ProgramReport {
     let gap = run_analysis(program, AnalysisKind::Gap);
     let conflict = run_analysis(program, AnalysisKind::Conflict);
     ProgramReport {
@@ -238,7 +238,7 @@ fn recommendation(program: &Program) -> ProgramReport {
     }
 }
 
-fn user_summary(program: &Program) -> ProgramReport {
+fn user_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::UserSummary,
         title: "User Summary".into(),
@@ -248,7 +248,7 @@ fn user_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn functional_summary(program: &Program) -> ProgramReport {
+fn functional_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::FunctionalSummary,
         title: "Functional Summary".into(),
@@ -262,7 +262,7 @@ fn functional_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn capacity_summary(program: &Program) -> ProgramReport {
+fn capacity_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Capacity);
     ProgramReport {
         kind: ReportKind::CapacitySummary,
@@ -273,7 +273,7 @@ fn capacity_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn workflow_summary(program: &Program) -> ProgramReport {
+fn workflow_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Workflow);
     ProgramReport {
         kind: ReportKind::WorkflowSummary,
@@ -284,7 +284,7 @@ fn workflow_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn compliance_summary(program: &Program) -> ProgramReport {
+fn compliance_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ComplianceSummary,
         title: "Compliance Summary".into(),
@@ -297,7 +297,7 @@ fn compliance_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn cost_summary(program: &Program) -> ProgramReport {
+fn cost_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Cost);
     ProgramReport {
         kind: ReportKind::CostSummary,
@@ -308,7 +308,7 @@ fn cost_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn schedule_summary(program: &Program) -> ProgramReport {
+fn schedule_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ScheduleSummary,
         title: "Schedule Summary".into(),
@@ -322,7 +322,7 @@ fn schedule_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn change_summary(program: &Program) -> ProgramReport {
+fn change_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ChangeSummary,
         title: "Change Summary".into(),
@@ -332,7 +332,7 @@ fn change_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn open_issue_summary(program: &Program) -> ProgramReport {
+fn open_issue_summary(program: &ProgramSnapshot) -> ProgramReport {
     let open: Vec<_> = program.issues.iter().filter(|i| !matches!(i.header.status, crate::artifacts::program::kernel::LifecycleStatus::Closed | crate::artifacts::program::kernel::LifecycleStatus::Complete)).collect();
     ProgramReport {
         kind: ReportKind::OpenIssueSummary,
@@ -347,7 +347,7 @@ fn open_issue_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn priority_summary(program: &Program) -> ProgramReport {
+fn priority_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::PrioritySummary,
         title: "Priority Summary".into(),
@@ -361,7 +361,7 @@ fn priority_summary(program: &Program) -> ProgramReport {
     }
 }
 
-fn scenario_summary(program: &Program) -> ProgramReport {
+fn scenario_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Scenario);
     ProgramReport {
         kind: ReportKind::ScenarioSummary,

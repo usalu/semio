@@ -366,10 +366,108 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+---
+
+Every artifact has a text and binary representation.
+```
+<artifact>
+  text
+    component.grammar.semio
+    component.ebnf
+    component.g4
+    component.graphql
+    component.json
+    component.proto
+    …
+  binary
+    component.protocol.semio
+    component.abnf
+    component.ksy
+    component
+  snapshot
+    text
+      component.grammar.semio
+      component.ebnf
+      component.g4
+      component.graphql
+      component.json
+      component.proto
+      …
+    binary
+      component.protocol.semio
+      component.abnf
+      component.ksy
+      component.spicy
+      …
+  diff
+    text
+      component.grammar.semio
+      component.ebnf
+      component.g4
+      …
+    binary
+      component.protocol.semio
+      component.abnf
+      component.ksy
+      component.spicy
+
+  …
+```
+
+---
+
+Every artifact has a schema (all available fields of an artifact regardless if stored, derived, project or not, etc), a snapshot has a schema (all persisted data for a complete artifact without any version history), a diff has a schema (all changes that can be applied to an artifact).
+All mutations construct from their arguments a diff.
+
+```
+<artifact>
+  schema
+    component.rs
+    component.ts
+    component.graphql
+    component.json #json schema
+    component.proto
+    …
+  snapshot
+    schema
+      component.rs
+      component.ts
+      component.graphql
+      component.json #json schema
+      component.proto
+      …
+  diff
+    schema
+      component.rs
+      component.ts
+      component.graphql
+      component.json #json schema
+      component.proto
+      …
+  …
+```
+
+
+---
+
+The repo is aiming towards zero-runtime-dependency outside of system dependencies. For testing purposes it should use existing libraries to test the implementation. The repo must be able to be used as a library.
+
 ```
 <plugin>
   artifacts
     <artifact>
+      snapshot
+        grammar
+          component.grammar.semio
+          component.ebnf
+          component.g4
+          …
+        protocol
+          component.protocol.semio
+          component.abnf
+          component.ksy
+          component.spicy
+          …
       mutations
         <mutation>
           diff

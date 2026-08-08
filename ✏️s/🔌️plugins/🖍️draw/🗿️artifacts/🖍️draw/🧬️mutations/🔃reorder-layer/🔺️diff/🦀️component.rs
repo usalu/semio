@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ReorderLayer`.
 use crate::artifacts::draw::diff::DrawDiff;
 use crate::artifacts::draw::mutations::DrawMutation;
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
@@ -18,12 +18,12 @@ impl ReorderLayerDiff {
     }
 }
 
-impl MutationDiff<DrawDocument> for ReorderLayerDiff {
-    fn apply(&self, projection: &DrawDocument) -> DrawDocument {
+impl MutationDiff<DrawSnapshot> for ReorderLayerDiff {
+    fn apply(&self, projection: &DrawSnapshot) -> DrawSnapshot {
         match &self.mutation {
             Some(mutation) => {
-                let diff = <DrawMutation as protocol::Mutation<DrawDocument>>::diff(mutation, projection);
-                <DrawDiff as MutationDiff<DrawDocument>>::apply(&diff, projection)
+                let diff = <DrawMutation as protocol::Mutation<DrawSnapshot>>::diff(mutation, projection);
+                <DrawDiff as MutationDiff<DrawSnapshot>>::apply(&diff, projection)
             }
             None => projection.clone(),
         }

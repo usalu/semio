@@ -1,0 +1,84 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/snapshot.json",
+  "title": "Puzzle3dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "domain",
+    "meta",
+    "objects",
+    "attractions",
+    "targetVolumes",
+    "references"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "domain": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle3dMeta",
+      "x-semio-state": "persistent"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dObject"
+      },
+      "x-semio-state": "persistent"
+    },
+    "attractions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dAttraction"
+      },
+      "x-semio-state": "persistent"
+    },
+    "targetVolumes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dTargetVolume"
+      },
+      "x-semio-state": "persistent"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dReference"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "Puzzle3dMeta": {
+      "title": "Puzzle3dMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dObject": {
+      "title": "Puzzle3dObject",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dAttraction": {
+      "title": "Puzzle3dAttraction",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dTargetVolume": {
+      "title": "Puzzle3dTargetVolume",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dReference": {
+      "title": "Puzzle3dReference",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

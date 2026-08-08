@@ -8,18 +8,18 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 
 /// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`store::DocumentDsl`).
 pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.draw` DSL text into a `DrawDocument`.
-pub fn parse_dsl(text: &str) -> Result<DrawDocument, store::TextError> {
-    <DrawDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.draw` DSL text into a `DrawSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<DrawSnapshot, store::TextError> {
+    <DrawSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `DrawDocument` back to `.draw` DSL text.
-pub fn print_dsl(document: &DrawDocument) -> String {
+/// 🖨️ Prints a `DrawSnapshot` back to `.draw` DSL text.
+pub fn print_dsl(document: &DrawSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -31,7 +31,7 @@ mod tests {
     use crate::artifacts::draw::{DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA};
     use store::DocumentDsl;
 
-    fn representative_draw_document() -> DrawDocument {
+    fn representative_draw_document() -> DrawSnapshot {
         let mut assets = std::collections::BTreeMap::new();
         assets.insert("src-1".to_string(), DrawImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
 
@@ -80,28 +80,28 @@ mod tests {
             DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
         let group_layer = DrawLayerNode::Group(DrawGroupBody { base: default_layer_base("Group \"nested\""), children: vec![ellipse_shape, radial_circle] });
 
-        DrawDocument {
+        DrawSnapshot {
             schema: DRAW_DOCUMENT_SCHEMA.into(),
             id: "dsl-fixture".into(),
             title: Some("DSL Fixture \"Quotes\" \\ backslash".into()),
             layers: vec![rect_shape, line_shape, polygon_shape, path_layer, text_layer, image_layer, trace_layer, boolean_layer, group_layer],
-            assets: Some(assets),
+            assets: assets,
             artboard: Some(DrawArtboard { width: 640.0, height: 480.0 }),
         }
     }
 
     #[test]
     fn dsl_round_trips_representative_document() {
-        store::test_support::assert_dsl_round_trip(&representative_draw_document());
+        store::os_store::test_support::assert_dsl_round_trip(&representative_draw_document());
     }
 
     #[test]
     fn dsl_round_trips_document_without_assets_or_artboard() {
         let mut doc = default_draw_document("no-extras", None);
-        doc.assets = None;
+        doc.assets = Default::default();
         doc.artboard = None;
         doc.title = None;
-        store::test_support::assert_dsl_round_trip(&doc);
+        store::os_store::test_support::assert_dsl_round_trip(&doc);
     }
 
     #[test]
@@ -110,12 +110,12 @@ mod tests {
         assert_eq!(doc.id, "semio");
         assert_eq!(doc.title.as_deref(), Some("Semio Emblem"));
         assert_eq!(doc.layers.len(), 1);
-        store::test_support::assert_dsl_round_trip(&doc);
+        store::os_store::test_support::assert_dsl_round_trip(&doc);
     }
 
     #[test]
     fn draw_document_parse_dsl_reports_error_for_unknown_layer_kind() {
-        let unknown_layer = DrawDocument::parse_dsl("schema=\"draw.document\" id=\"test\"\nlayers {\n  weird id=\"layer-1\"\n}\n");
+        let unknown_layer = DrawSnapshot::parse_dsl("schema=\"draw.document\" id=\"test\"\nlayers {\n  weird id=\"layer-1\"\n}\n");
         assert!(unknown_layer.is_err(), "an unrecognized layer keyword must fail to parse");
     }
 }

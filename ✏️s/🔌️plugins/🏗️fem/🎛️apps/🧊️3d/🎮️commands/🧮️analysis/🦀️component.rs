@@ -2,7 +2,7 @@
 
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dDocument;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -21,8 +21,8 @@ pub mod set_analysis_settings {
 
     /// ⚙️ Every field is optional and defaults to the document's current setting when omitted — a
     /// partial update, not a whole-record replace.
-    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let current = &doc.projection.analysis;
+    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let current = &doc.snapshot.analysis;
         let settings = crate::artifacts::fem3d::FemAnalysisSettings {
             modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
             buckling_count: payload.buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
@@ -44,7 +44,7 @@ mod tests {
     fn set_analysis_settings_partially_updates_and_keeps_the_rest() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: None }));
-        let analysis = &app.projection().expect("projection").analysis;
+        let analysis = &app.snapshot().expect("snapshot").analysis;
         assert_eq!(analysis.modal_count, 5);
         assert_eq!(analysis.buckling_count, 3);
         assert_eq!(analysis.deformation_scale, 50.0);

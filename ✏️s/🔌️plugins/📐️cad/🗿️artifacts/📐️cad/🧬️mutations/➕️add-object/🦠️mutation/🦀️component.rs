@@ -1,6 +1,6 @@
 //! ➕️ CAD mutation — `AddObject` payload + builder + apply.
 use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::{CadObject, CadPaneId, CadProjection};
+use crate::artifacts::cad::{CadObject, CadPaneId, CadSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,9 +16,9 @@ pub fn add_object(pane: CadPaneId, object: CadObject) -> CadMutation {
     CadMutation::AddObject { pane, object }
 }
 
-pub fn apply(projection: &mut CadProjection, pane: CadPaneId, object: &CadObject) {
+pub fn apply(projection: &mut CadSnapshot, pane: CadPaneId, object: &CadObject) {
     let mutation = CadMutation::AddObject { pane, object: object.clone() };
-    let diff = <CadMutation as protocol::Mutation<CadProjection>>::diff(&mutation, projection);
-    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadProjection>>::apply(&diff, projection);
+    let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, projection);
+    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, projection);
 }
 //#endregion 🔖️Mutation

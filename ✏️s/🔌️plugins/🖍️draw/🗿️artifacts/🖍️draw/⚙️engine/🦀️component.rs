@@ -2,18 +2,19 @@
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use crate::artifacts::draw::{
-    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawDocument, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine,
+    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawSnapshot, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine,
     DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Register
-/// 🗂️ Registers `DrawDocument`'s pack<->dsl codec under its real `document_schema()` string so
+/// 🗂️ Registers `DrawSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
 /// draw documents without depending on this crate's concrete `Projection`/`Mutation` types, plus
 /// the 2D export/import media handlers (SVG raster export, DWG export/import).
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::draw::DrawPlayApp>(DRAW_DOCUMENT_SCHEMA);
     semio_framework_os::register_2d_export_handlers("2d.drawing", "draw", draw_document_json_to_svg);
     semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |doc| {
@@ -31,6 +32,26 @@ pub fn register() {
     semio_framework_os::register_dwg_import_handler("2d.drawing", draw_document_json_from_dwg);
 }
 
+static DRAW_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the draw artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = DRAW_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::draw::schema::draw_artifact_schema_descriptor());
+}
+
+/// 🔎 Returns whether `s.draw.draw` is present in the process-local schema registry.
+pub fn artifact_schema_registered() -> bool {
+    DRAW_SCHEMA_REGISTRY
+        .get()
+        .map(|registry| registry.lock().expect("schema registry lock").get("s.draw.draw").is_some())
+        .unwrap_or(false)
+}
+
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
@@ -39,8 +60,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::draw::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::draw::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("draw.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -69,8 +90,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::draw::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::draw::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("draw.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -165,8 +186,8 @@ pub fn create_draw_id(prefix: &str, material: &[u8]) -> String {
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
 /// document load and to bridge into the framework's still-JSON-only `App::example`/render-override
 /// surfaces, so `SEMIO_DRAW_EXAMPLE_TEXT` stays the single source of truth for the fixture.
-pub fn semio_draw_example_document() -> DrawDocument {
-    DrawDocument::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_draw_projection())
+pub fn semio_draw_example_document() -> DrawSnapshot {
+    DrawSnapshot::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_draw_snapshot())
 }
 
 /// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example`/`VcsDocumentApp::render` override,
@@ -251,11 +272,11 @@ pub fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
     })
 }
 
-pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawDocument {
-    DrawDocument { schema: DRAW_DOCUMENT_SCHEMA.into(), id: id.into(), title: title.map(str::to_string), layers: vec![create_draw_path_layer("Layer 1", Vec::new())], assets: None, artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }) }
+pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawSnapshot {
+    DrawSnapshot { schema: DRAW_DOCUMENT_SCHEMA.into(), id: id.into(), title: title.map(str::to_string), layers: vec![create_draw_path_layer("Layer 1", Vec::new())], assets: Default::default(), artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }) }
 }
 
-pub fn empty_draw_projection() -> DrawDocument {
+pub fn empty_draw_snapshot() -> DrawSnapshot {
     default_draw_document("empty", None)
 }
 
@@ -295,7 +316,7 @@ pub fn layer_kind_label(layer: &DrawLayerNode) -> String {
     }
 }
 
-pub fn find_draw_layer<'a>(doc: &'a DrawDocument, layer_id: &str) -> Option<&'a DrawLayerNode> {
+pub fn find_draw_layer<'a>(doc: &'a DrawSnapshot, layer_id: &str) -> Option<&'a DrawLayerNode> {
     for layer in &doc.layers {
         if let Some(found) = find_draw_layer_in_node(layer, layer_id) {
             return Some(found);
@@ -509,9 +530,9 @@ fn scene_node_for_path(base: &DrawLayerBase, segments: Vec<PathSegment>) -> Draw
     }
 }
 
-pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawSceneNode> {
+pub fn flatten_draw_document_to_scene_nodes(doc: &DrawSnapshot) -> Vec<DrawSceneNode> {
     let mut out = Vec::new();
-    fn walk(doc: &DrawDocument, layers: &[DrawLayerNode], out: &mut Vec<DrawSceneNode>) {
+    fn walk(doc: &DrawSnapshot, layers: &[DrawLayerNode], out: &mut Vec<DrawSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {
@@ -554,7 +575,7 @@ pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawScene
                 }),
                 DrawLayerNode::Image(image) => {
                     let src =
-                        doc.assets.as_ref().and_then(|assets| assets.get(&image.image_key)).map(|asset| if asset.data.starts_with("data:") { asset.data.clone() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
+                        doc.assets.get(&image.image_key).map(|asset| if asset.data.starts_with("data:") { asset.data.clone() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
                     out.push(DrawSceneNode {
                         id: image.base.id.clone(),
                         transform: draw_transform_to_matrix(&image.base.transform),
@@ -583,7 +604,7 @@ pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawScene
     out
 }
 
-pub fn canvas_layer_records(doc: &DrawDocument) -> Vec<DrawCanvasLayerRecord> {
+pub fn canvas_layer_records(doc: &DrawSnapshot) -> Vec<DrawCanvasLayerRecord> {
     flatten_draw_layers(&doc.layers)
         .into_iter()
         .filter(|layer| !matches!(layer, DrawLayerNode::Group(_)))
@@ -644,7 +665,7 @@ pub fn layer_base_mut(layer: &mut DrawLayerNode) -> &mut DrawLayerBase {
     }
 }
 
-pub fn mutate_draw_layer(doc: &DrawDocument, target_id: &str, mutator: impl FnMut(&mut DrawLayerNode)) -> DrawDocument {
+pub fn mutate_draw_layer(doc: &DrawSnapshot, target_id: &str, mutator: impl FnMut(&mut DrawLayerNode)) -> DrawSnapshot {
     let mut next = doc.clone();
     let mut mutator = mutator;
     update_layer_in_tree(&mut next.layers, target_id, &mut mutator);
@@ -730,7 +751,7 @@ pub struct DrawLayerLocation {
     pub index: usize,
 }
 
-pub fn find_draw_layer_location(doc: &DrawDocument, target_id: &str) -> Option<DrawLayerLocation> {
+pub fn find_draw_layer_location(doc: &DrawSnapshot, target_id: &str) -> Option<DrawLayerLocation> {
     fn search(layers: &[DrawLayerNode], parent_id: Option<String>, target_id: &str) -> Option<DrawLayerLocation> {
         for (index, layer) in layers.iter().enumerate() {
             if layer_id(layer) == target_id {
@@ -1076,7 +1097,7 @@ fn from_kernel_segments(segments: &[semio_s_2d::PathSegment]) -> Vec<PathSegment
 }
 
 /// 🪢️ Resolves a boolean layer's children (each transformed by its own local transform) through the planar kernel.
-fn resolve_boolean_layer_segments(doc: &DrawDocument, boolean: &DrawBooleanBody) -> Vec<PathSegment> {
+fn resolve_boolean_layer_segments(doc: &DrawSnapshot, boolean: &DrawBooleanBody) -> Vec<PathSegment> {
     let child_segments: Vec<Vec<PathSegment>> = boolean
         .children
         .iter()
@@ -1114,7 +1135,7 @@ fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u32, Vec
 }
 
 /// 📐️ Premigration artboard resolution: explicit artboard wins, else layer bounds excluding group/boolean/trace kinds.
-pub fn resolve_draw_artboard(doc: &DrawDocument) -> Option<DrawArtboard> {
+pub fn resolve_draw_artboard(doc: &DrawSnapshot) -> Option<DrawArtboard> {
     if let Some(artboard) = &doc.artboard {
         if artboard.width > 0.0 && artboard.height > 0.0 {
             return Some(artboard.clone());
@@ -1138,8 +1159,8 @@ pub fn resolve_draw_artboard(doc: &DrawDocument) -> Option<DrawArtboard> {
 }
 
 /// 🔍️ Resolves a trace layer's bitmap source into simplified, artboard-scaled contour segments.
-fn resolve_trace_layer_segments(doc: &DrawDocument, trace: &DrawTraceBody) -> Vec<PathSegment> {
-    let Some(assets) = &doc.assets else { return Vec::new() };
+fn resolve_trace_layer_segments(doc: &DrawSnapshot, trace: &DrawTraceBody) -> Vec<PathSegment> {
+    let assets = &doc.assets; if assets.is_empty() { return Vec::new() };
     let Some(asset) = assets.get(&trace.source_key) else { return Vec::new() };
     let Some((width, height, luma)) = decode_draw_image_asset_luma(asset) else { return Vec::new() };
     let traced = match semio_s_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
@@ -1195,7 +1216,7 @@ fn path_segments_to_svg_d(segments: &[PathSegment]) -> String {
     out.trim().to_string()
 }
 
-fn resolve_draw_document_artboard(doc: &DrawDocument) -> (u32, u32) {
+fn resolve_draw_document_artboard(doc: &DrawSnapshot) -> (u32, u32) {
     if let Some(artboard) = &doc.artboard {
         return (artboard.width.max(1.0).round() as u32, artboard.height.max(1.0).round() as u32);
     }
@@ -1211,7 +1232,7 @@ fn resolve_draw_document_artboard(doc: &DrawDocument) -> (u32, u32) {
 }
 
 /// @emoji 💾️ Serializes a draw document to SVG markup and raster dimensions.
-pub fn draw_document_to_svg(doc: &DrawDocument) -> (String, u32, u32) {
+pub fn draw_document_to_svg(doc: &DrawSnapshot) -> (String, u32, u32) {
     let (width, height) = resolve_draw_document_artboard(doc);
     let shapes = flatten_draw_document_to_scene_nodes(doc)
         .into_iter()
@@ -1241,7 +1262,7 @@ pub fn draw_document_to_svg(doc: &DrawDocument) -> (String, u32, u32) {
 }
 
 pub fn draw_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
-    let doc: DrawDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    let doc: DrawSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
     Ok(draw_document_to_svg(&doc))
 }
 
@@ -1275,7 +1296,7 @@ fn dwg_path_segment_to_draw(segment: &semio_framework::DwgPathSegment) -> PathSe
 
 /// 📐️ Converts a draw document to DWG bytes with native fidelity: circular/elliptical arcs become bulges (not flattened cubics) and text stays a DWG TEXT entity.
 pub fn draw_document_json_to_dwg_bytes(value: &serde_json::Value) -> Result<Vec<u8>, String> {
-    let doc: DrawDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    let doc: DrawSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
     let mut path_groups: Vec<Vec<semio_framework::DwgPathSegment>> = Vec::new();
     let mut text_entities: Vec<(f64, f64, f64, String)> = Vec::new();
     for node in flatten_draw_document_to_scene_nodes(&doc) {
@@ -1362,7 +1383,7 @@ pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
 /// 🖼️ Exports the current draw document as an SVG `Media` payload for the `vector:out` port —
 /// reuses `draw_document_to_svg` (the same renderer the export-svg shell path uses), so there is
 /// exactly one SVG renderer.
-pub fn draw_vector_media(doc: &DrawDocument) -> Result<semio_framework::Media, semio_framework::MediaError> {
+pub fn draw_vector_media(doc: &DrawSnapshot) -> Result<semio_framework::Media, semio_framework::MediaError> {
     let (svg, _width, _height) = draw_document_to_svg(doc);
     Ok(semio_framework::Media {
         media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
@@ -1388,7 +1409,7 @@ mod tests {
     fn dwg_export_import_round_trips_a_path_and_text_layer() {
         let path_layer = create_draw_path_layer("Outline", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Cubic { ctrl1: [12.0, 2.0], ctrl2: [12.0, 6.0], to: [10.0, 8.0] }, PathSegment::Close]);
         let text_layer = DrawLayerNode::Text(DrawTextBody { base: default_layer_base("Label"), x: 1.0, y: 2.0, content: "semio".into(), size: 3.0 });
-        let doc = DrawDocument { layers: vec![path_layer, text_layer], ..default_draw_document("dwg-test", None) };
+        let doc = DrawSnapshot { layers: vec![path_layer, text_layer], ..default_draw_document("dwg-test", None) };
         let value = serde_json::to_value(&doc).unwrap();
 
         let bytes = draw_document_json_to_dwg_bytes(&value).expect("export dwg");
@@ -1398,7 +1419,7 @@ mod tests {
         assert!(drawing.entities.iter().any(|entity| matches!(entity.geometry, semio_framework::DwgGeometry::LwPolyline { .. } | semio_framework::DwgGeometry::Spline { .. })));
 
         let reimported = draw_document_json_from_dwg(&drawing).expect("import dwg");
-        let reimported_doc: DrawDocument = serde_json::from_value(reimported).expect("valid draw document");
+        let reimported_doc: DrawSnapshot = serde_json::from_value(reimported).expect("valid draw document");
         assert!(reimported_doc.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Text(text) if text.content == "semio")));
         assert!(reimported_doc.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(_))));
     }
@@ -1406,7 +1427,7 @@ mod tests {
     #[test]
     fn scene_nodes_include_shape_bounds() {
         let layer = create_draw_shape_layer_rect("Rect");
-        let doc = DrawDocument { layers: vec![layer], ..default_draw_document("scene", None) };
+        let doc = DrawSnapshot { layers: vec![layer], ..default_draw_document("scene", None) };
         let nodes = flatten_draw_document_to_scene_nodes(&doc);
         assert_eq!(nodes.len(), 1);
         assert!(!nodes[0].segments.is_empty());
@@ -1490,7 +1511,7 @@ mod tests {
         doc.layers.clear();
         let mut assets = std::collections::BTreeMap::new();
         assets.insert("source".to_string(), DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(&bytes), width: None, height: None });
-        doc.assets = Some(assets);
+        doc.assets = assets;
         doc.artboard = Some(DrawArtboard { width: 16.0, height: 16.0 });
         doc.layers.push(create_draw_trace_layer("Trace", "source"));
         let nodes = flatten_draw_document_to_scene_nodes(&doc);
@@ -1870,13 +1891,13 @@ mod tests {
     fn resolve_trace_layer_segments_returns_empty_without_assets_or_source_or_valid_decode() {
         let mut doc = default_draw_document("trace-empty", None);
         doc.layers.clear();
-        doc.assets = None;
+        doc.assets = Default::default();
         let trace_no_assets = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };
         assert!(resolve_trace_layer_segments(&doc, &trace_no_assets).is_empty());
 
         let mut assets = std::collections::BTreeMap::new();
         assets.insert("present".to_string(), DrawImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None });
-        doc.assets = Some(assets);
+        doc.assets = assets;
         let trace_missing_key = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };
         assert!(resolve_trace_layer_segments(&doc, &trace_missing_key).is_empty());
 
@@ -1956,7 +1977,7 @@ mod tests {
 
         let mut doc = default_draw_document("svg-test", None);
         doc.layers = vec![rect, gradient_rect, text, image];
-        doc.assets = Some(assets);
+        doc.assets = assets;
         doc.artboard = None;
 
         let (svg, width, height) = draw_document_to_svg(&doc);
@@ -1989,7 +2010,7 @@ mod tests {
     fn draw_document_json_from_dwg_falls_back_to_single_empty_layer_when_no_entities() {
         let drawing = semio_framework::DwgDrawing::default();
         let value = draw_document_json_from_dwg(&drawing).expect("import empty dwg");
-        let doc: DrawDocument = serde_json::from_value(value).expect("valid document");
+        let doc: DrawSnapshot = serde_json::from_value(value).expect("valid document");
         assert_eq!(doc.layers.len(), 1);
         assert!(matches!(&doc.layers[0], DrawLayerNode::Path(body) if body.segments.is_empty()));
         assert_eq!(doc.artboard, Some(DrawArtboard { width: 1.0, height: 1.0 }));
@@ -1998,38 +2019,48 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent artifact engine — owns the projection; every transition is a mutation.
+/// ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct DrawEngine {
-    projection: crate::artifacts::draw::DrawDocument,
+    artifact: crate::artifacts::draw::schema::DrawArtifact,
+    snapshot: DrawSnapshot,
 }
 
 impl DrawEngine {
-    pub fn new(projection: crate::artifacts::draw::DrawDocument) -> Self {
-        Self { projection }
+    /// 🏗️ Seeds the engine from a persisted snapshot.
+    pub fn new(snapshot: DrawSnapshot) -> Self {
+        let artifact = crate::artifacts::draw::schema::DrawArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> crate::artifacts::draw::DrawDocument {
-        self.projection
+    /// 📸️ Consumes the engine and returns its persisted snapshot.
+    pub fn into_snapshot(self) -> DrawSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for DrawEngine {
-    type Projection = crate::artifacts::draw::DrawDocument;
+    type Artifact = crate::artifacts::draw::schema::DrawArtifact;
+    type Snapshot = DrawSnapshot;
     type Mutation = crate::artifacts::draw::mutations::DrawMutation;
     type Diff = crate::artifacts::draw::diff::DrawDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        self.projection = <Self::Diff as protocol::MutationDiff<Self::Projection>>::apply(&diff, &self.projection);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

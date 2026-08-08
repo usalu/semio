@@ -1,0 +1,108 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle3d.diff;
+
+// 🧬️ Puzzle3d diff schema — sparse field delta.
+
+message Puzzle3dDiff {
+  // @state persistent
+  optional Puzzle3dArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string domain = 3;
+  // @state persistent
+  optional Puzzle3dMeta meta = 4;
+  // @state persistent
+  optional Puzzle3dObjectsDelta objects = 5;
+  // @state persistent
+  optional Puzzle3dAttractionsDelta attractions = 6;
+  // @state persistent
+  optional Puzzle3dTargetVolumesDelta target_volumes = 7;
+  // @state persistent
+  optional Puzzle3dReferencesDelta references = 8;
+  // @state shared-ui
+  optional Puzzle3dStringList selected_object_ids = 9;
+  // @state shared-ui
+  optional Puzzle3dStringList selected_vortex_ids = 10;
+  // @state shared-ui
+  optional Puzzle3dStringList selected_attraction_ids = 11;
+  // @state shared-ui
+  optional Puzzle3dStringList selected_target_volume_ids = 12;
+  // @state shared-ui
+  optional Puzzle3dStringList selected_reference_ids = 13;
+  // @state shared-ui
+  optional string active_utility_id = 14;
+  // @state local-ui
+  optional double camera_position_x = 15;
+  // @state local-ui
+  optional double camera_position_y = 16;
+  // @state local-ui
+  optional double camera_position_z = 17;
+  // @state local-ui
+  optional double camera_target_x = 18;
+  // @state local-ui
+  optional double camera_target_y = 19;
+  // @state local-ui
+  optional double camera_target_z = 20;
+  // @state local-ui
+  optional double camera_zoom = 21;
+  // @state local-ui
+  optional string selection_method = 22;
+  // @state local-ui
+  optional string selection_mode_default = 23;
+  // @state local-ui
+  optional string engagement_input = 24;
+  // @state local-ui
+  optional bool grid_visible = 25;
+  // @state local-ui
+  optional bool grid_snap_enabled = 26;
+  // @state local-ui
+  optional double grid_spacing = 27;
+  // @state local-ui
+  optional double overlap_budget = 28;
+  // @state local-ui
+  optional uint32 fill_count = 29;
+  // @state local-ui
+  optional uint32 brush_candidate_index = 30;
+  // @state local-ui
+  optional bool lod_automatic = 31;
+  // @state local-ui
+  optional bool lod_depth_variable = 32;
+  // @state local-ui
+  optional double lod_manual = 33;
+  // @state local-ui
+  optional double proximity_radius = 34;
+  // @state local-ui
+  optional string locale = 35;
+  // @state local-ui
+  optional string runtime_extras_json = 36;
+  // @state preview
+  optional string hovered_object_id = 37;
+  // @state preview
+  optional string hovered_vortex_full_id = 38;
+  // @state preview
+  optional string hovered_kind_id = 39;
+  // @state preview
+  optional int64 preview_seq = 40;
+}
+
+message Puzzle3dArtifact { string schema = 1; }
+message Puzzle3dStringList { repeated string values = 1; }
+message Puzzle3dObjectsDelta { repeated Puzzle3dObject added = 1; repeated string removed = 2; repeated Puzzle3dObjectPatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle3dObjectPatchEntry { string id = 1; Puzzle3dObjectPatch patch = 2; }
+message Puzzle3dObjectPatch { optional Puzzle3dObject replacement = 1; }
+message Puzzle3dObject { string id = 1; }
+message Puzzle3dAttractionsDelta { repeated Puzzle3dAttraction added = 1; repeated string removed = 2; repeated Puzzle3dAttractionPatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle3dAttractionPatchEntry { string id = 1; Puzzle3dAttractionPatch patch = 2; }
+message Puzzle3dAttractionPatch { optional Puzzle3dAttraction replacement = 1; }
+message Puzzle3dAttraction { string id = 1; }
+message Puzzle3dTargetVolumesDelta { repeated Puzzle3dTargetVolume added = 1; repeated string removed = 2; repeated Puzzle3dTargetVolumePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle3dTargetVolumePatchEntry { string id = 1; Puzzle3dTargetVolumePatch patch = 2; }
+message Puzzle3dTargetVolumePatch { optional Puzzle3dTargetVolume replacement = 1; }
+message Puzzle3dTargetVolume { string id = 1; }
+message Puzzle3dReferencesDelta { repeated Puzzle3dReference added = 1; repeated string removed = 2; repeated Puzzle3dReferencePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle3dReferencePatchEntry { string id = 1; Puzzle3dReferencePatch patch = 2; }
+message Puzzle3dReferencePatch { optional Puzzle3dReference replacement = 1; }
+message Puzzle3dReference { string id = 1; }
+message Puzzle3dMeta { bool _placeholder = 1; }
+

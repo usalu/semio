@@ -9,20 +9,20 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::puzzle3d::Puzzle3dProjection;
+use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle3d` DSL.
 pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio");
 /// 📄️ The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle3d` DSL.
 pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio");
 
-/// 📖️ Parses `.puzzle3d` DSL text into a `Puzzle3dProjection`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle3dProjection, store::TextError> {
-    <Puzzle3dProjection as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.puzzle3d` DSL text into a `Puzzle3dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Puzzle3dSnapshot, store::TextError> {
+    <Puzzle3dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Puzzle3dProjection` back to `.puzzle3d` DSL text.
-pub fn print_dsl(document: &Puzzle3dProjection) -> String {
+/// 🖨️ Prints a `Puzzle3dSnapshot` back to `.puzzle3d` DSL text.
+pub fn print_dsl(document: &Puzzle3dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -39,8 +39,8 @@ mod tests {
     fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE3D_NAKAGIN_EXAMPLE_TEXT] {
             let projection = parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            store::test_support::assert_dsl_round_trip(&projection);
-            store::test_support::assert_dsl_pack_equivalence(&projection);
+            semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+            semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
         }
     }
 
@@ -49,10 +49,10 @@ mod tests {
     /// `print_dsl`/`parse_dsl` exactly.
     #[test]
     fn puzzle3d_projection_dsl_round_trips() {
-        let empty = Puzzle3dProjection::default();
-        store::test_support::assert_dsl_round_trip(&empty);
-        store::test_support::assert_dsl_pack_equivalence(&empty);
-        let mut projection = Puzzle3dProjection::default();
+        let empty = Puzzle3dSnapshot::default();
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+        let mut projection = Puzzle3dSnapshot::default();
         projection.objects.push(Puzzle3dObject {
             id: "seed-left-001".into(),
             label: Some("Seed Left".into()),
@@ -79,8 +79,8 @@ mod tests {
             hidden: false,
         });
         projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }] };
-        store::test_support::assert_dsl_round_trip(&projection);
-        store::test_support::assert_dsl_pack_equivalence(&projection);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -96,11 +96,11 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dProjection::default(), None));
+        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None));
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
         store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle3dMutation::SetObject { index: 0, object }], description: None }).expect("apply");
         let edit: &Edit<Puzzle3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<Puzzle3dProjection, Puzzle3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

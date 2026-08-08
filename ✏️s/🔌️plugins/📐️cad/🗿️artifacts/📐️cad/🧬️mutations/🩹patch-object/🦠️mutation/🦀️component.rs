@@ -1,6 +1,6 @@
 //! 🩹 CAD mutation — `PatchObject` payload + builder + apply.
 use crate::artifacts::cad::mutations::{CadMutation, CadObjectPatch};
-use crate::artifacts::cad::{CadPaneId, CadProjection};
+use crate::artifacts::cad::{CadPaneId, CadSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -17,9 +17,9 @@ pub fn patch_object(pane: CadPaneId, object_id: String, patch: CadObjectPatch) -
     CadMutation::PatchObject { pane, object_id, patch }
 }
 
-pub fn apply(projection: &mut CadProjection, pane: CadPaneId, object_id: &str, patch: &CadObjectPatch) {
+pub fn apply(projection: &mut CadSnapshot, pane: CadPaneId, object_id: &str, patch: &CadObjectPatch) {
     let mutation = CadMutation::PatchObject { pane, object_id: object_id.into(), patch: patch.clone() };
-    let diff = <CadMutation as protocol::Mutation<CadProjection>>::diff(&mutation, projection);
-    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadProjection>>::apply(&diff, projection);
+    let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, projection);
+    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, projection);
 }
 //#endregion 🔖️Mutation

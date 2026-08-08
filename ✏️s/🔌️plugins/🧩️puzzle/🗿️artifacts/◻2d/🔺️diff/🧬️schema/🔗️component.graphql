@@ -1,0 +1,46 @@
+# 🧬️ Puzzle2d diff schema — sparse field delta.
+
+type Puzzle2dDiff {
+  artifact: Puzzle2dArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  camera: Puzzle2dCamera @state(class: PERSISTENT)
+  nodes: Puzzle2dNodesDelta @state(class: PERSISTENT)
+  edges: Puzzle2dEdgesDelta @state(class: PERSISTENT)
+  meta: Puzzle2dMeta @state(class: PERSISTENT)
+  selectedIds: Puzzle2dStringList @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  selectionMethod: String @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean @state(class: LOCAL_UI)
+  gridFactor: Float @state(class: LOCAL_UI)
+  suggestionOffset: Float @state(class: LOCAL_UI)
+  fillCount: Int @state(class: LOCAL_UI)
+  brushCandidateIndex: Int @state(class: LOCAL_UI)
+  brushCandidateSourceHandleId: String @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  terminology: String @state(class: LOCAL_UI)
+  lodModeByPaneJson: String @state(class: LOCAL_UI)
+  engagementInputByPaneJson: String @state(class: LOCAL_UI)
+  brushCandidatesJson: String @state(class: LOCAL_UI)
+  nodeKindWeightsJson: String @state(class: LOCAL_UI)
+  handleKindWeightsJson: String @state(class: LOCAL_UI)
+  activeUtilityByWindowIdJson: String @state(class: LOCAL_UI)
+  hoveredNodeId: String @state(class: PREVIEW)
+  previewSeq: Int @state(class: PREVIEW)
+}
+
+type Puzzle2dStringList { values: [String!]! }
+type Puzzle2dNodesDelta { added: [Puzzle2dNode!]! removed: [String!]! patched: [Puzzle2dNodePatchEntry!]! reordered: [String!] }
+type Puzzle2dNodePatchEntry { id: String! patch: Puzzle2dNodePatch! }
+type Puzzle2dNodePatch { replacement: Puzzle2dNode }
+type Puzzle2dNode { id: String! }
+type Puzzle2dEdgesDelta { added: [Puzzle2dEdge!]! removed: [String!]! patched: [Puzzle2dEdgePatchEntry!]! reordered: [String!] }
+type Puzzle2dEdgePatchEntry { id: String! patch: Puzzle2dEdgePatch! }
+type Puzzle2dEdgePatch { replacement: Puzzle2dEdge }
+type Puzzle2dEdge { id: String! }
+type Puzzle2dArtifact { schema: String! }
+type Puzzle2dCamera { _placeholder: Boolean }
+type Puzzle2dMeta { _placeholder: Boolean }
+

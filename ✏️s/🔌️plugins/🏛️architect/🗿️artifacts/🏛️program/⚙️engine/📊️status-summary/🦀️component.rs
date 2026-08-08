@@ -3,7 +3,7 @@
 //! 📊️ Status summary — aggregate lifecycle counts across registers.
 
 use crate::artifacts::program::kernel::{EntityHeader, LifecycleStatus};
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::registers::ValidationStatus;
 use serde::{Deserialize, Serialize};
 
@@ -50,7 +50,7 @@ fn bump_validation(tallies: &mut Vec<(ValidationStatus, usize)>, status: Validat
 }
 
 /// @emoji 🧮️ Aggregates lifecycle status counts from every program register collection.
-pub fn status_summary(program: &Program) -> StatusSummary {
+pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
     let mut tallies: Vec<(LifecycleStatus, usize)> = Vec::new();
     let mut registers = Vec::new();
     let mut total = 0usize;

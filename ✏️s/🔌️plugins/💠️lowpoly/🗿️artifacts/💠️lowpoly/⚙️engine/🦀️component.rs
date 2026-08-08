@@ -3,7 +3,7 @@
 //! typed media I/O surface and shared projection lookups. Pixel/paint compute lives in the sibling
 //! `🎨️paint/🦀️component.rs`; media export/import compute lives in `🧵️media/🦀️component.rs`.
 
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolyProjection, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolySnapshot, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
 use semio_s_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use serde_json::Value;
 
@@ -70,6 +70,27 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
+}
+
+static LOWPOLY_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the lowpoly artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = LOWPOLY_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor());
+}
+
+/// 🔎 Returns whether `s.lowpoly.lowpoly` is present in the process-local schema registry.
+pub fn artifact_schema_registered() -> bool {
+    LOWPOLY_SCHEMA_REGISTRY
+        .get()
+        .map(|registry| registry.lock().expect("schema registry lock").get("s.lowpoly.lowpoly").is_some())
+        .unwrap_or(false)
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -80,8 +101,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("lowpoly.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -110,8 +131,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("lowpoly.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -131,61 +152,73 @@ pub fn register_pilot_languages() {
 /// 🎞️ Default document projection used by tests and the play app. Built programmatically from a
 /// unit box until the handcrafted mesh DSL codec replaces derive-based `parse_dsl` (the reuse
 /// `.lowpoly` example is already structured half-edge text without `mesh-json`).
-pub fn default_projection() -> LowpolyProjection {
+pub fn default_snapshot() -> LowpolySnapshot {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim");
     let _ = mesh.unwrap_uv();
     let mesh_json = mesh.to_json().expect("mesh json");
-    crate::artifacts::lowpoly::projection_from_mesh_json(&mesh_json, "obj-1", "Unit Box")
+    crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Unit Box")
 }
 //#endregion 🔖️DefaultProjection
 
 //#region 🔖️ProjectionHelpers
 /// 🔧️ Shared by the compute session and `op`'s `apply_lowpoly_mutation`/`inverse_lowpoly_mutation` — a
 /// mutable lookup of an object by id within a projection.
-pub fn object_mut<'a>(projection: &'a mut LowpolyProjection, object_id: &str) -> Option<&'a mut LowpolyObject> {
+pub fn object_mut<'a>(projection: &'a mut LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
     projection.objects.iter_mut().find(|object| object.id == object_id)
 }
 
 /// 🔧️ Shared by the compute session and `op`'s `inverse_lowpoly_mutation` (`PaintStroke` inverse reads
 /// the currently-stored bytes at each run's offset).
-pub fn layer_pixels_at<'a>(projection: &'a LowpolyProjection, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
+pub fn layer_pixels_at<'a>(projection: &'a LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
     projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
 //#endregion 🔖️ProjectionHelpers
 
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent lowpoly artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent lowpoly artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct LowpolyEngine {
-    projection: LowpolyProjection,
+    artifact: crate::artifacts::lowpoly::schema::LowpolyArtifact,
+    snapshot: LowpolySnapshot,
 }
 
 impl LowpolyEngine {
-    pub fn new(projection: LowpolyProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: LowpolySnapshot) -> Self {
+        let artifact = crate::artifacts::lowpoly::schema::LowpolyArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 
-    pub fn into_projection(self) -> LowpolyProjection {
-        self.projection
+    pub fn into_snapshot(self) -> LowpolySnapshot {
+        self.snapshot
+    }
+
+    fn sync_snapshot_from_artifact(&mut self) {
+        self.snapshot = self.artifact.to_snapshot();
     }
 }
 
 impl protocol::ArtifactEngine for LowpolyEngine {
-    type Projection = LowpolyProjection;
+    type Artifact = crate::artifacts::lowpoly::schema::LowpolyArtifact;
+    type Snapshot = LowpolySnapshot;
     type Mutation = crate::artifacts::lowpoly::mutations::LowpolyMutation;
     type Diff = crate::artifacts::lowpoly::diff::LowpolyDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::lowpoly::mutations::apply_lowpoly_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::lowpoly::mutations::apply_lowpoly_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
@@ -195,7 +228,7 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 /// (active object + selection). The program runs a mesh/paint edit against it, then reads the mutated
 /// `mesh_json`/pixels back out to construct the typed operation it emits. Never the source of truth.
 pub struct LowpolyDocument {
-    projection: LowpolyProjection,
+    snapshot: LowpolySnapshot,
     active_object_id: String,
     selection: LowpolySelection,
     meshes: Vec<HalfedgeMesh>,
@@ -207,24 +240,30 @@ fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
 }
 
 impl LowpolyDocument {
-    pub fn new(projection: LowpolyProjection) -> Result<Self, LowpolyCoreError> {
-        let active_object_id = projection.objects.first().map(|object| object.id.clone()).unwrap_or_default();
-        Self::with_context(projection, active_object_id, LowpolySelection::default())
+    pub fn new(snapshot: LowpolySnapshot) -> Result<Self, LowpolyCoreError> {
+        let active_object_id = snapshot.objects.first().map(|object| object.id.clone()).unwrap_or_default();
+        Self::with_context(snapshot, active_object_id, LowpolySelection::default())
     }
 
-    pub fn with_context(projection: LowpolyProjection, active_object_id: String, selection: LowpolySelection) -> Result<Self, LowpolyCoreError> {
-        let mut doc = Self { projection, active_object_id, selection, meshes: Vec::new(), next_object_serial: 100 };
+    pub fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection) -> Result<Self, LowpolyCoreError> {
+        let next_object_serial = snapshot
+            .objects
+            .iter()
+            .filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok())
+            .max()
+            .unwrap_or(100);
+        let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), next_object_serial };
         doc.reload_meshes()?;
         doc.ensure_all_paint_buffers();
         Ok(doc)
     }
 
-    pub fn projection(&self) -> &LowpolyProjection {
-        &self.projection
+    pub fn snapshot(&self) -> &LowpolySnapshot {
+        &self.snapshot
     }
 
-    pub fn projection_mut(&mut self) -> &mut LowpolyProjection {
-        &mut self.projection
+    pub fn snapshot_mut(&mut self) -> &mut LowpolySnapshot {
+        &mut self.snapshot
     }
 
     pub fn active_object_id(&self) -> &str {
@@ -236,7 +275,7 @@ impl LowpolyDocument {
     }
 
     pub fn ensure_all_paint_buffers(&mut self) {
-        for object in &mut self.projection.objects {
+        for object in &mut self.snapshot.objects {
             if object.paint_layers.is_empty() {
                 object.paint_layers.push(LowpolyPaintLayer::new("Base"));
             }
@@ -249,32 +288,32 @@ impl LowpolyDocument {
     }
 
     pub fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], LowpolyCoreError> {
-        layer_pixels_at(&self.projection, object_id, layer_index).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
+        layer_pixels_at(&self.snapshot, object_id, layer_index).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
     pub fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, LowpolyCoreError> {
         self.ensure_paint_layer(object_id, layer_index)?;
-        object_mut(&mut self.projection, object_id).and_then(|object| object.paint_layers.get_mut(layer_index)).map(|layer| &mut layer.pixels).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
+        object_mut(&mut self.snapshot, object_id).and_then(|object| object.paint_layers.get_mut(layer_index)).map(|layer| &mut layer.pixels).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
     pub fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
         self.meshes.clear();
-        for object in &self.projection.objects {
+        for object in &self.snapshot.objects {
             let mesh = HalfedgeMesh::from_json(&object.mesh_json)?;
             self.meshes.push(mesh);
         }
         Ok(())
     }
 
-    pub fn sync_meshes_to_projection(&mut self) -> Result<(), LowpolyCoreError> {
-        for (object, mesh) in self.projection.objects.iter_mut().zip(self.meshes.iter()) {
+    pub fn sync_meshes_to_snapshot(&mut self) -> Result<(), LowpolyCoreError> {
+        for (object, mesh) in self.snapshot.objects.iter_mut().zip(self.meshes.iter()) {
             object.mesh_json = mesh.to_json()?;
         }
         Ok(())
     }
 
     pub fn active_index(&self) -> Option<usize> {
-        self.projection.objects.iter().position(|o| o.id == self.active_object_id)
+        self.snapshot.objects.iter().position(|o| o.id == self.active_object_id)
     }
 
     pub fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, LowpolyCoreError> {
@@ -292,7 +331,7 @@ impl LowpolyDocument {
     }
 
     pub fn object_index(&self, object_id: &str) -> Result<usize, LowpolyCoreError> {
-        self.projection.objects.iter().position(|o| o.id == object_id).ok_or(LowpolyCoreError::ObjectNotFound)
+        self.snapshot.objects.iter().position(|o| o.id == object_id).ok_or(LowpolyCoreError::ObjectNotFound)
     }
 
     pub fn selected_face_ids(&self) -> Vec<FaceId> {
@@ -400,7 +439,7 @@ impl LowpolyDocument {
         self.next_object_serial += 1;
         let id = format!("obj-{}", self.next_object_serial);
         let mesh_json = mesh.to_json()?;
-        self.projection.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh_json, paint_layers: vec![LowpolyPaintLayer::new("Base")] });
+        self.snapshot.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh_json, paint_layers: vec![LowpolyPaintLayer::new("Base")] });
         self.meshes.push(mesh);
         self.active_object_id = id.clone();
         Ok(id)
@@ -408,10 +447,10 @@ impl LowpolyDocument {
 
     pub fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
-        if self.projection.objects[idx].paint_layers.is_empty() {
-            self.projection.objects[idx].paint_layers.push(LowpolyPaintLayer::new("Base"));
+        if self.snapshot.objects[idx].paint_layers.is_empty() {
+            self.snapshot.objects[idx].paint_layers.push(LowpolyPaintLayer::new("Base"));
         }
-        if layer_index >= self.projection.objects[idx].paint_layers.len() {
+        if layer_index >= self.snapshot.objects[idx].paint_layers.len() {
             return Err(LowpolyCoreError::LayerIndexOutOfRange);
         }
         Ok(())
@@ -436,7 +475,7 @@ impl LowpolyDocument {
     pub fn tessellate_all_json(&self) -> Result<String, LowpolyCoreError> {
         let active = self.active_object_id.clone();
         let mut items = Vec::new();
-        for (idx, object) in self.projection.objects.iter().enumerate() {
+        for (idx, object) in self.snapshot.objects.iter().enumerate() {
             let mesh = self.meshes.get(idx).ok_or(LowpolyCoreError::MeshMissing)?;
             items.push(serde_json::json!({
                 "id": object.id,
@@ -453,7 +492,7 @@ impl LowpolyDocument {
 
     pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
-        Ok(super::paint::composite_layer_pixels(&self.projection.objects[idx].paint_layers))
+        Ok(super::paint::composite_layer_pixels(&self.snapshot.objects[idx].paint_layers))
     }
 
     /// @emoji 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
@@ -483,8 +522,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_projection_has_unit_box_object() {
-        let projection = default_projection();
+    fn default_snapshot_has_unit_box_object() {
+        let projection = default_snapshot();
         assert_eq!(projection.schema, crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
         assert_eq!(projection.objects.len(), 1);
         assert_eq!(projection.objects[0].id, "obj-1");
@@ -494,7 +533,7 @@ mod tests {
 
     #[test]
     fn default_unit_box_mesh_parses_and_has_faces() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_json).expect("default mesh");
         assert!(mesh.face_count() >= 6, "unit box should expose six faces");
         assert!(mesh.vertex_count() >= 8, "unit box should expose eight vertices");
@@ -502,14 +541,14 @@ mod tests {
 
     #[test]
     fn document_loads_meshes() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
         assert_eq!(doc.meshes.len(), 1);
         assert!(doc.meshes[0].face_count() > 0);
     }
 
     #[test]
     fn active_mesh_tessellates() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
         assert!(!transfer.positions.is_empty());
         assert!(!transfer.indices.is_empty());
@@ -517,15 +556,15 @@ mod tests {
 
     #[test]
     fn add_primitive_box() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let id = doc.add_primitive("box").unwrap();
-        assert!(doc.projection.objects.iter().any(|o| o.id == id));
+        assert!(doc.snapshot.objects.iter().any(|o| o.id == id));
         assert_eq!(doc.meshes.len(), 2);
     }
 
     #[test]
     fn tessellate_all_returns_every_object() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let _ = doc.add_primitive("box").unwrap();
         let json = doc.tessellate_all_json().unwrap();
         let items: Vec<Value> = serde_json::from_str(&json).unwrap();
@@ -534,23 +573,23 @@ mod tests {
 
     #[test]
     fn projection_json_embeds_paint_pixels_as_base64() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
-        let json = serde_json::to_string(&doc.projection).unwrap();
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
+        let json = serde_json::to_string(&doc.snapshot).unwrap();
         assert!(json.contains("\"pixels\""));
         // base64 white, never a raw integer array.
         assert!(!json.contains("255,255,255"));
     }
 
     #[test]
-    fn default_projection_mesh_has_unwrapped_uvs() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
+    fn default_snapshot_mesh_has_unwrapped_uvs() {
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
         assert!(transfer.uvs.iter().any(|uv| *uv > 0.0));
     }
 
     #[test]
     fn paint_stroke_writes_pixels() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let object_id = doc.active_object_id.clone();
         doc.paint_stroke(&object_id, 0, 0.5, 0.5, 4.0, [255, 0, 0, 255], 0.5, 1.0, false).unwrap();
         let composite = doc.composite_layers(&object_id).unwrap();
@@ -561,79 +600,42 @@ mod tests {
 
     #[test]
     fn projection_round_trips_paint_pixels_through_base64_json() {
-        let mut projection = default_projection();
+        let mut projection = default_snapshot();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         let json = serde_json::to_string(&projection).unwrap();
-        let restored: LowpolyProjection = serde_json::from_str(&json).unwrap();
+        let restored: LowpolySnapshot = serde_json::from_str(&json).unwrap();
         assert_eq!(restored, projection);
     }
 
-    //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent lowpoly artifact engine — owns the projection; every transition is a mutation.
-pub struct LowpolyEngine {
-    projection: LowpolyProjection,
-}
-
-impl LowpolyEngine {
-    pub fn new(projection: LowpolyProjection) -> Self {
-        Self { projection }
-    }
-
-    pub fn into_projection(self) -> LowpolyProjection {
-        self.projection
-    }
-}
-
-impl protocol::ArtifactEngine for LowpolyEngine {
-    type Projection = LowpolyProjection;
-    type Mutation = crate::artifacts::lowpoly::mutations::LowpolyMutation;
-    type Diff = crate::artifacts::lowpoly::diff::LowpolyDiff;
-
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
-    }
-
-    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::lowpoly::mutations::apply_lowpoly_mutation(&mut self.projection, mutation);
-        Ok(diff)
-    }
-
-    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
-    }
-}
-//#endregion 🔖️ArtifactEngine
-
-//#region 🔖️ComputeSessionCoverage
+    //#region 🔖️ComputeSessionCoverage
     #[test]
     fn add_primitive_supports_every_known_kind() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         for kind in ["plane", "cylinder", "cone", "ico_sphere"] {
             let id = doc.add_primitive(kind).unwrap();
             assert_eq!(doc.active_object_id(), id);
-            assert!(doc.projection().objects.iter().any(|o| o.id == id));
+            assert!(doc.snapshot().objects.iter().any(|o| o.id == id));
         }
-        assert_eq!(doc.projection().objects.len(), 5);
+        assert_eq!(doc.snapshot().objects.len(), 5);
     }
 
     #[test]
     fn add_primitive_unknown_kind_errors() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let result = doc.add_primitive("teapot");
         assert!(matches!(result, Err(LowpolyCoreError::UnknownPrimitive(kind)) if kind == "teapot"));
     }
 
     #[test]
     fn object_index_errors_for_unknown_id() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
         assert!(matches!(doc.object_index("missing"), Err(LowpolyCoreError::ObjectNotFound)));
     }
 
     #[test]
     fn ensure_paint_layer_errors_for_unknown_object_and_out_of_range_index() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let object_id = doc.active_object_id().to_string();
         assert!(matches!(doc.ensure_paint_layer("missing", 0), Err(LowpolyCoreError::ObjectNotFound)));
         assert!(matches!(doc.ensure_paint_layer(&object_id, 99), Err(LowpolyCoreError::LayerIndexOutOfRange)));
@@ -641,33 +643,33 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn layer_pixels_errors_for_out_of_range_index() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let object_id = doc.active_object_id().to_string();
         assert!(matches!(doc.layer_pixels(&object_id, 5), Err(LowpolyCoreError::LayerIndexOutOfRange)));
     }
 
     #[test]
     fn active_mesh_errors_when_active_object_id_is_unknown() {
-        let doc = LowpolyDocument::with_context(default_projection(), "does-not-exist".into(), LowpolySelection::default()).unwrap();
+        let doc = LowpolyDocument::with_context(default_snapshot(), "does-not-exist".into(), LowpolySelection::default()).unwrap();
         assert!(matches!(doc.active_mesh(), Err(LowpolyCoreError::NoActiveObject)));
     }
 
     #[test]
     fn mesh_at_returns_none_past_object_count() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
         assert!(doc.mesh_at(0).is_some());
         assert!(doc.mesh_at(99).is_none());
     }
 
     #[test]
-    fn sync_meshes_to_projection_writes_back_mesh_json() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+    fn sync_meshes_to_snapshot_writes_back_mesh_json() {
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.add_primitive("box").unwrap();
         doc.active_mesh_mut().unwrap().translate(Vec3::new(1.0, 0.0, 0.0)).unwrap();
         let idx = doc.active_index().unwrap();
-        let before = doc.projection().objects[idx].mesh_json.clone();
-        doc.sync_meshes_to_projection().unwrap();
-        assert_ne!(doc.projection().objects[idx].mesh_json, before);
+        let before = doc.snapshot().objects[idx].mesh_json.clone();
+        doc.sync_meshes_to_snapshot().unwrap();
+        assert_ne!(doc.snapshot().objects[idx].mesh_json, before);
     }
 
     #[test]
@@ -679,7 +681,7 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn apply_selection_normalizes_mode_and_stores_ids() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.apply_selection("object", vec![3, 4]);
         assert_eq!(doc.selection().mode, "mesh");
         assert_eq!(doc.selection().ids, vec![3, 4]);
@@ -687,7 +689,7 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn selected_ids_are_empty_when_selection_mode_mismatches() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.apply_selection("face", vec![1, 2]);
         assert!(doc.selected_vertex_ids().is_empty());
         assert!(doc.selected_edge_ids().is_empty());
@@ -696,7 +698,7 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn selection_vertex_ids_face_mode_dedupes_shared_vertices() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.add_primitive("box").unwrap();
         doc.apply_selection("face", vec![0, 1]);
         let verts = doc.selection_vertex_ids().unwrap();
@@ -714,7 +716,7 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn selection_vertex_ids_edge_mode_returns_endpoints() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.add_primitive("box").unwrap();
         doc.apply_selection("edge", vec![0]);
         let verts = doc.selection_vertex_ids().unwrap();
@@ -725,13 +727,13 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn selection_vertex_ids_mesh_mode_is_empty() {
-        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        let doc = LowpolyDocument::new(default_snapshot()).unwrap();
         assert!(doc.selection_vertex_ids().unwrap().is_empty());
     }
 
     #[test]
     fn selection_transform_pivot_mesh_mode_averages_all_vertices() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.add_primitive("box").unwrap();
         let mesh = doc.active_mesh().unwrap();
         let count = mesh.vertex_count();
@@ -748,7 +750,7 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn selection_transform_pivot_vertex_mode_averages_selected_vertices() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.add_primitive("box").unwrap();
         doc.apply_selection("vertex", vec![0, 1]);
         let mesh = doc.active_mesh().unwrap();
@@ -761,7 +763,7 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn selection_transform_pivot_empty_vertex_selection_is_origin() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         doc.apply_selection("vertex", vec![]);
         let pivot = doc.selection_transform_pivot().unwrap();
         assert_eq!((pivot.x(), pivot.y(), pivot.z()), (0.0, 0.0, 0.0));
@@ -769,19 +771,19 @@ impl protocol::ArtifactEngine for LowpolyEngine {
 
     #[test]
     fn ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size() {
-        let mut projection = default_projection();
+        let mut projection = default_snapshot();
         projection.objects[0].paint_layers.clear();
         let mut doc = LowpolyDocument::new(projection).unwrap();
-        assert_eq!(doc.projection().objects[0].paint_layers.len(), 1);
-        assert_eq!(doc.projection().objects[0].paint_layers[0].name, "Base");
-        doc.projection_mut().objects[0].paint_layers[0].pixels = vec![1, 2, 3];
+        assert_eq!(doc.snapshot().objects[0].paint_layers.len(), 1);
+        assert_eq!(doc.snapshot().objects[0].paint_layers[0].name, "Base");
+        doc.snapshot_mut().objects[0].paint_layers[0].pixels = vec![1, 2, 3];
         doc.ensure_all_paint_buffers();
-        assert_eq!(doc.projection().objects[0].paint_layers[0].pixels.len(), LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4);
+        assert_eq!(doc.snapshot().objects[0].paint_layers[0].pixels.len(), LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4);
     }
 
     #[test]
     fn fill_bucket_and_sample_pixel_reflect_new_color() {
-        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let mut doc = LowpolyDocument::new(default_snapshot()).unwrap();
         let object_id = doc.active_object_id().to_string();
         doc.fill_bucket(&object_id, 0, 0.5, 0.5, [10, 20, 30, 255]).unwrap();
         assert_eq!(doc.sample_pixel(&object_id, 0.5, 0.5).unwrap(), [10, 20, 30, 255]);
@@ -792,16 +794,16 @@ impl protocol::ArtifactEngine for LowpolyEngine {
         use crate::artifacts::lowpoly::mutations::LowpolyMutation;
         use crate::artifacts::lowpoly::LowpolyObjectPatch;
         use protocol::ArtifactEngine;
-        let mut engine = LowpolyEngine::new(default_projection());
-        let object_id = engine.projection().objects[0].id.clone();
+        let mut engine = LowpolyEngine::new(default_snapshot());
+        let object_id = engine.snapshot().objects[0].id.clone();
         let mutation = LowpolyMutation::ObjectsPatch { id: object_id, patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } };
         let inverse = ArtifactEngine::inverse(&engine, &mutation);
         ArtifactEngine::apply(&mut engine, &mutation).expect("apply");
-        assert_eq!(engine.projection().objects[0].name, "Renamed");
+        assert_eq!(engine.snapshot().objects[0].name, "Renamed");
         for step in &inverse {
             ArtifactEngine::apply(&mut engine, step).expect("inverse apply");
         }
-        assert_eq!(engine.projection().objects[0].name, "Unit Box");
+        assert_eq!(engine.snapshot().objects[0].name, "Unit Box");
     }
 
     //#endregion 🔖️ComputeSessionCoverage

@@ -1,0 +1,44 @@
+# 🧬️ Rewrite artifact schema — every field with its state class.
+
+type RewriteArtifact {
+  beforeFixtureJson: String! @state(class: PERSISTENT)
+  lhsJson: String! @state(class: PERSISTENT)
+  rhsJson: String! @state(class: PERSISTENT)
+  parameterBindings: [PropertyValueEntry!]! @state(class: PERSISTENT)
+  ruleLayout: [LayoutPointEntry!]! @state(class: PERSISTENT)
+  selectedNodeIds: [String!]! @state(class: SHARED_UI)
+  activeHoverVar: String! @state(class: SHARED_UI)
+  activeSelectVar: String! @state(class: SHARED_UI)
+  lodModeByWindow: [StringEntry!]! @state(class: SHARED_UI)
+  beforePaneCamera: Camera! @state(class: LOCAL_UI)
+  reorganizeEpoch: Int! @state(class: LOCAL_UI)
+  hoverEpoch: Int! @state(class: LOCAL_UI)
+  selectEpoch: Int! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type PropertyValueEntry {
+  key: String!
+  value: String!
+}
+
+type LayoutPointEntry {
+  key: String!
+  value: LayoutPoint!
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type LayoutPoint {
+  x: Float!
+  y: Float!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package semio.s.fem.fem3d.snapshot;
+
+// 🧬️ Fem3d snapshot schema
+message Fem3dSnapshot {
+  // @state persistent
+  repeated FemNode nodes = 1;
+  // @state persistent
+  repeated FemElement elements = 2;
+  // @state persistent
+  repeated FemMaterial materials = 3;
+  // @state persistent
+  repeated FemSection sections = 4;
+  // @state persistent
+  repeated FemSolid solids = 5;
+  // @state persistent
+  repeated FemSupport supports = 6;
+  // @state persistent
+  repeated FemLoadCase load_cases = 7;
+  // @state persistent
+  repeated FemCombination combinations = 8;
+  // @state persistent
+  FemAnalysisSettings analysis = 9;
+}
+

@@ -155,11 +155,11 @@ pub struct FlowDiff {
 }
 
 impl MutationDiff<FlowFixture> for FlowDiff {
-    fn apply(&self, projection: &FlowFixture) -> FlowFixture {
+    fn apply(&self, snapshot: &FlowFixture) -> FlowFixture {
         if let Some(fixture) = &self.fixture {
             return fixture.clone();
         }
-        let mut next = projection.clone();
+        let mut next = snapshot.clone();
         if let Some(diff) = &self.widgets {
             apply_flow_collection_diff(&mut next.widgets, diff);
         }
@@ -197,21 +197,21 @@ impl MutationDiff<FlowFixture> for FlowDiff {
 impl Mutation<FlowFixture> for FlowMutation {
     type Diff = FlowDiff;
 
-    fn diff(&self, projection: &FlowFixture) -> FlowDiff {
+    fn diff(&self, snapshot: &FlowFixture) -> FlowDiff {
         match self {
-            FlowMutation::Widgets(operation) => FlowDiff { widgets: Some(collection_diff_from_mutation(&projection.widgets, operation)), ..Default::default() },
-            FlowMutation::Synapses(operation) => FlowDiff { synapses: Some(collection_diff_from_mutation(&projection.synapses, operation)), ..Default::default() },
+            FlowMutation::Widgets(operation) => FlowDiff { widgets: Some(collection_diff_from_mutation(&snapshot.widgets, operation)), ..Default::default() },
+            FlowMutation::Synapses(operation) => FlowDiff { synapses: Some(collection_diff_from_mutation(&snapshot.synapses, operation)), ..Default::default() },
             FlowMutation::SetLayout { entries } => FlowDiff { layout: Some(entries.clone()), ..Default::default() },
             FlowMutation::SetFixture { fixture } => FlowDiff { fixture: Some(fixture.clone()), ..Default::default() },
         }
     }
 
-    fn inverse(&self, projection: &FlowFixture) -> Vec<Self> {
+    fn inverse(&self, snapshot: &FlowFixture) -> Vec<Self> {
         match self {
-            FlowMutation::Widgets(operation) => vec![FlowMutation::Widgets(inverse_collection_mutation(&projection.widgets, operation))],
-            FlowMutation::Synapses(operation) => vec![FlowMutation::Synapses(inverse_collection_mutation(&projection.synapses, operation))],
-            FlowMutation::SetLayout { entries } => vec![FlowMutation::SetLayout { entries: entries.iter().map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: projection.layout.get(&entry.id).cloned() }).collect() }],
-            FlowMutation::SetFixture { .. } => vec![FlowMutation::SetFixture { fixture: projection.clone() }],
+            FlowMutation::Widgets(operation) => vec![FlowMutation::Widgets(inverse_collection_mutation(&snapshot.widgets, operation))],
+            FlowMutation::Synapses(operation) => vec![FlowMutation::Synapses(inverse_collection_mutation(&snapshot.synapses, operation))],
+            FlowMutation::SetLayout { entries } => vec![FlowMutation::SetLayout { entries: entries.iter().map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: snapshot.layout.get(&entry.id).cloned() }).collect() }],
+            FlowMutation::SetFixture { .. } => vec![FlowMutation::SetFixture { fixture: snapshot.clone() }],
         }
     }
 }
@@ -550,7 +550,7 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
 /// Vec<Widget>` (which embeds foreign `Dictionary`/`Tree` types) can't stay as-is under a direct
 /// `#[derive(crate::os_dsl::DslDocument)]`. `FlowDocument` (the derived read-view built by
 /// `FlowFixture::to_document()`) deliberately does NOT get this treatment — it's a computed
-/// projection for rendering, never itself round-tripped through DSL text.
+/// snapshot for rendering, never itself round-tripped through DSL text.
 #[derive(Clone, Debug, PartialEq, crate::os_dsl::DslDocument)]
 #[dsl(extension = "flow")]
 #[dsl(layout = "lines")]
@@ -828,7 +828,7 @@ impl crate::os_spr::OpBinary for FlowMutation {
 pub type FlowEnvelope = DocumentEnvelope<FlowFixture, FlowMutation>;
 pub type FlowStore = DocumentStore<FlowFixture, FlowMutation>;
 
-pub fn empty_flow_projection() -> FlowFixture {
+pub fn empty_flow_snapshot() -> FlowFixture {
     FlowFixture::default()
 }
 
@@ -852,7 +852,7 @@ mod flow_vcs_wasm {
                     let envelope: FlowEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     FlowStore::new(envelope)
                 }
-                None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None)),
+                None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -867,9 +867,9 @@ mod flow_vcs_wasm {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = snapshotJson)]
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }
 }
@@ -1151,14 +1151,14 @@ mod flow_vcs_tests {
 
     #[test]
     fn coalesced_layout_drag_produces_one_edit() {
-        let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None));
+        let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None));
         for y in [10.0, 20.0, 30.0] {
             store
                 .dispatch(DocumentCommand::AmendLast { mutations: vec![FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
                 .expect("drag tick");
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
-        assert_eq!(store.projection().expect("projection").layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
+        assert_eq!(store.snapshot().expect("projection").layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
     }
 
     /// 📜️ Exercises every `Widget` variant (including `Cluster`'s nested `Tree`/`flow` payload,

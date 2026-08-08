@@ -1,25 +1,14 @@
-//! 📏️ Procedural2d artifact — the document entity the ◻2d app edits (constitutional: general).
+//! 📏️ Procedural2d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
-use flow::{FlowFixture, Widget};
-use flow::playbook::GenerationPlayState;
+use flow::Widget;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use serde::{Deserialize, Serialize};
 
 pub const PROCEDURAL_2D_SCHEMA: &str = "procedural.2d";
 
-//#region 🔖️Document
-/// 🧾️ Persistent procedural-2d document — the flow fixture plus the generation vocabulary state.
-/// Ephemeral view state (selection, show mode, preview evaluations) lives in the app's config
-/// (`crate::apps::procedural2d::config::Procedural2dConfig`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Procedural2dDocument {
-    pub fixture: FlowFixture,
-    #[serde(default)]
-    pub generation: GenerationPlayState,
-}
+pub use crate::artifacts::procedural2d::snapshot::schema::Procedural2dSnapshot;
 
-/// 🪪️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
+//#region 🔖️Helpers
+/// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
 pub fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
@@ -33,7 +22,7 @@ pub fn widget_id(widget: &Widget) -> &str {
         | Widget::Cluster { id, .. } => id,
     }
 }
-//#endregion 🔖️Document
+//#endregion 🔖️Helpers
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by

@@ -6,7 +6,7 @@ use crate::artifacts::fem2d::FemCamera;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-type Fem2dDocument = crate::artifacts::fem2d::Fem2dDocument;
+type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️SetCamera
 pub mod set_camera {
@@ -20,7 +20,7 @@ pub mod set_camera {
         pub zoom: f64,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Fem2dConfigMutation::SetCamera { camera: FemCamera { x: payload.x, y: payload.y, zoom: payload.zoom } }]))
     }
 }
@@ -36,10 +36,10 @@ mod tests {
     #[test]
     fn set_camera_action_writes_config_not_document_mutations() {
         let mut app = fem2d_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }));
         assert!(result.mutations.is_empty(), "setCamera must not emit a document VCS operation");
-        assert_eq!(app.projection().expect("projection"), before, "the document must be unchanged by a config-only command");
+        assert_eq!(app.snapshot().expect("snapshot"), before, "the document must be unchanged by a config-only command");
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,69 @@
+syntax = "proto3";
+package semio.s.procedural.procedural2d.diff;
+
+// 🧬️ Procedural2d diff schema — sparse field delta.
+
+message Procedural2dDiff {
+  // @state persistent
+  optional Procedural2dArtifact artifact = 1;
+  // @state persistent
+  optional FlowFixture fixture = 2;
+  // @state persistent
+  optional GenerationPlayState generation = 3;
+  // @state shared-ui
+  optional Procedural2dStringList selected_ids = 4;
+  // @state local-ui
+  optional CameraJson graph_camera = 5;
+  // @state local-ui
+  optional string show_mode = 6;
+  // @state shared-ui
+  optional string selected_generation_id = 7;
+  // @state preview
+  optional string generation_preview_text = 8;
+  // @state local-ui
+  optional string locale = 9;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+message Widget {
+  string json = 1;
+}
+message FlowFixture {
+  string schema = 1;
+  CameraJson camera = 2;
+  repeated Widget widgets = 3;
+  repeated SynapseSpec synapses = 4;
+  map<string, WidgetLayout> layout = 5;
+}
+message FormGeneration {
+  string id = 1;
+  string name = 2;
+  string values_json = 3;
+}
+message GenerationPlayState {
+  repeated FormGeneration generations = 1;
+  optional string selected_generation_id = 2;
+  optional string preview_text = 3;
+}
+message Procedural2dStringList {
+  repeated string values = 1;
+}
+message Procedural2dArtifact {
+  FlowFixture fixture = 1;
+  GenerationPlayState generation = 2;
+}

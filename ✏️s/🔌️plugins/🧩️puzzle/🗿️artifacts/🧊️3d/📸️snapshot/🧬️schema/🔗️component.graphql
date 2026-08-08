@@ -1,0 +1,12 @@
+# 🧬️ Puzzle3d snapshot schema — persistent fields only.
+
+type Puzzle3dSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  domain: String! @state(class: PERSISTENT)
+  meta: Puzzle3dMeta! @state(class: PERSISTENT)
+  objects: [Puzzle3dObject!]! @state(class: PERSISTENT)
+  attractions: [Puzzle3dAttraction!]! @state(class: PERSISTENT)
+  targetVolumes: [Puzzle3dTargetVolume!]! @state(class: PERSISTENT)
+  references: [Puzzle3dReference!]! @state(class: PERSISTENT)
+}
+

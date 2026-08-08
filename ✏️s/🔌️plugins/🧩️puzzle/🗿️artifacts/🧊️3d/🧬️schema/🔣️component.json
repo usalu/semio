@@ -1,0 +1,273 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json",
+  "title": "Puzzle3dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "domain",
+    "meta",
+    "objects",
+    "attractions",
+    "targetVolumes",
+    "references",
+    "selectedObjectIds",
+    "selectedVortexIds",
+    "selectedAttractionIds",
+    "selectedTargetVolumeIds",
+    "selectedReferenceIds",
+    "activeUtilityId",
+    "cameraPositionX",
+    "cameraPositionY",
+    "cameraPositionZ",
+    "cameraTargetX",
+    "cameraTargetY",
+    "cameraTargetZ",
+    "cameraZoom",
+    "selectionMethod",
+    "selectionModeDefault",
+    "engagementInput",
+    "gridVisible",
+    "gridSnapEnabled",
+    "gridSpacing",
+    "overlapBudget",
+    "fillCount",
+    "brushCandidateIndex",
+    "lodAutomatic",
+    "lodDepthVariable",
+    "lodManual",
+    "proximityRadius",
+    "locale",
+    "runtimeExtrasJson",
+    "previewSeq"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "domain": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle3dMeta",
+      "x-semio-state": "persistent"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dObject"
+      },
+      "x-semio-state": "persistent"
+    },
+    "attractions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dAttraction"
+      },
+      "x-semio-state": "persistent"
+    },
+    "targetVolumes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dTargetVolume"
+      },
+      "x-semio-state": "persistent"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle3dReference"
+      },
+      "x-semio-state": "persistent"
+    },
+    "selectedObjectIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedVortexIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedAttractionIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedTargetVolumeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "selectedReferenceIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraPositionX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPositionY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPositionZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionModeDefault": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridVisible": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridSpacing": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "overlapBudget": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "lodAutomatic": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "lodDepthVariable": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "lodManual": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "proximityRadius": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "runtimeExtrasJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredObjectId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "hoveredVortexFullId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "hoveredKindId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    },
+    "previewSeq": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Puzzle3dMeta": {
+      "title": "Puzzle3dMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dObject": {
+      "title": "Puzzle3dObject",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dAttraction": {
+      "title": "Puzzle3dAttraction",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dTargetVolume": {
+      "title": "Puzzle3dTargetVolume",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle3dReference": {
+      "title": "Puzzle3dReference",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

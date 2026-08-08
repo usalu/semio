@@ -4,7 +4,7 @@ pub mod apply {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::template::apply_template;
     use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::{EntityId, Program};
+    use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -14,8 +14,8 @@ pub mod apply {
         pub template_id: String,
     }
 
-    pub fn handle(payload: &ApplyTemplate, doc: &DocumentView<'_, Program>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let program = doc.projection;
+    pub fn handle(payload: &ApplyTemplate, doc: &DocumentView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        let program = doc.snapshot;
         let template_id = EntityId(payload.template_id.clone());
         let Some(template) = program.templates.iter().find(|row| row.header.id == template_id).cloned() else {
             return Ok(Emit::default());

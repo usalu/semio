@@ -1,0 +1,63 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/snapshot.json",
+  "title": "Puzzle2dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "camera",
+    "nodes",
+    "edges",
+    "meta"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "camera": {
+      "$ref": "#/$defs/Puzzle2dCamera",
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle2dEdge"
+      },
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle2dMeta",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "Puzzle2dCamera": {
+      "title": "Puzzle2dCamera",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dNode": {
+      "title": "Puzzle2dNode",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dEdge": {
+      "title": "Puzzle2dEdge",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle2dMeta": {
+      "title": "Puzzle2dMeta",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

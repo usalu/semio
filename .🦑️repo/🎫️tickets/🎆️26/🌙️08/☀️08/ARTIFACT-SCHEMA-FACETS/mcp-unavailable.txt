@@ -1,0 +1,13 @@
+The `repo` MCP server was not loaded in this session: no `ticket_open` / `ticket_close` /
+`ticket_reopen` tools and no `repo://goals` resource were reachable from the client.
+
+Fallback taken (same as waves 5 and 6 of 26/08/07/OPERATIONS-TO-MUTATIONS-AND-ARTIFACT-ENGINES,
+see that ticket's mcp-unavailable-wave5.txt / mcp-unavailable-wave6.txt): `🎫️ticket.json` was
+written by hand with the field set that ticket carries (id, title, status, goal, due, client,
+llm, description) and the goal was picked from the on-disk goal tree at `.🦑️repo/🎯️goals/`.
+
+Goal chosen: AI-OPTIMIZED-REPO — the same goal the mutations refactor used. Nothing in the goal
+tree is a closer fit; the artifact schema facets are a repo-wide mechanism, not a plugin feature.
+
+On close, `status` must become "closed" and `summary` + `closed` must be added by hand unless the
+MCP server is available again.

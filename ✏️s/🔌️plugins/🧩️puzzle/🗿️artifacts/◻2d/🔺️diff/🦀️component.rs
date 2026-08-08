@@ -1,8 +1,11 @@
-//! 🔺️ Puzzle 2d artifact — the sparse diff over the typed projection: id-keyed node/edge
-//! collection deltas plus the scalar meta, and the whole-document replacement that wins over them.
-//! The `serde_json::Value` and `Puzzle2dPlayProjection` bridge impls of the same diff live in
-//! `🔧️op` beside the newtypes they patch.
+//! 🔺️ Puzzle 2d artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::puzzle2d::diff::schema::{
+    Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta, Puzzle2dStringList,
+};
+use crate::artifacts::puzzle2d::schema::Puzzle2dArtifact;
+use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
+use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -10,106 +13,267 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+pub use super::schema::*;
 
-use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dProjection};
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
-
-//#region 🔖️Collections
-/// 🪪️ Stable-id accessor shared by every id-keyed document collection entry.
-pub(crate) trait Puzzle2dHasId {
-    fn id(&self) -> &str;
-}
-
-impl Puzzle2dHasId for Puzzle2dNode {
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-impl Puzzle2dHasId for Puzzle2dEdge {
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-
-/// 🩹️ Sparse id-keyed collection diff — removals plus id-or-index `set`s (replace when the id
-/// already exists, else insert at the recorded index).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle2dNodesDiff {
-    pub removed: Vec<String>,
-    pub set: Vec<(usize, Puzzle2dNode)>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle2dEdgesDiff {
-    pub removed: Vec<String>,
-    pub set: Vec<(usize, Puzzle2dEdge)>,
-}
-
-fn apply_puzzle2d_collection_diff<T: Puzzle2dHasId + Clone>(items: &mut Vec<T>, removed: &[String], set: &[(usize, T)]) {
-    for id in removed {
-        items.retain(|item| item.id() != id);
-    }
-    for (index, item) in set {
-        if let Some(pos) = items.iter().position(|entry| entry.id() == item.id()) {
-            items[pos] = item.clone();
-        } else {
-            items.insert((*index).min(items.len()), item.clone());
+//#region 🔖️Apply
+impl Puzzle2dDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &Puzzle2dArtifact) -> Puzzle2dArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
         }
-    }
-}
-
-pub(crate) fn puzzle2d_index_of<T: Puzzle2dHasId>(items: &[T], id: &str) -> Option<usize> {
-    items.iter().position(|item| item.id() == id)
-}
-//#endregion 🔖️Collections
-
-//#region 🔖️Diff
-/// 🩹️ Sparse puzzle-2d diff over both id-keyed collections plus the scalar meta. The camera is
-/// deliberately absent: it is session-only `Puzzle2dConfig` state in the play app (see `setCamera`'s
-/// `ActionKind::View`), never a document field, so there is no `SetCamera` operation left to diff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle2dDiff {
-    /// 🌍️ Whole-document replacement (example load, engine fill, layout); wins over every field below.
-    pub document: Option<Puzzle2dProjection>,
-    pub nodes: Puzzle2dNodesDiff,
-    pub edges: Puzzle2dEdgesDiff,
-    pub meta: Option<Puzzle2dMeta>,
-}
-
-pub(crate) fn puzzle2d_diff_absorb(diff: &mut Puzzle2dDiff, other: Puzzle2dDiff) {
-    if other.document.is_some() {
-        *diff = Puzzle2dDiff { document: other.document, ..Default::default() };
-        return;
-    }
-    diff.nodes.removed.extend(other.nodes.removed);
-    diff.nodes.set.extend(other.nodes.set);
-    diff.edges.removed.extend(other.edges.removed);
-    diff.edges.set.extend(other.edges.set);
-    if other.meta.is_some() {
-        diff.meta = other.meta;
-    }
-}
-
-impl MutationDiff<Puzzle2dProjection> for Puzzle2dDiff {
-    fn apply(&self, projection: &Puzzle2dProjection) -> Puzzle2dProjection {
-        if let Some(document) = &self.document {
-            return document.clone();
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
         }
-        let mut next = projection.clone();
-        apply_puzzle2d_collection_diff(&mut next.nodes, &self.nodes.removed, &self.nodes.set);
-        apply_puzzle2d_collection_diff(&mut next.edges, &self.edges.removed, &self.edges.set);
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        if let Some(delta) = &self.nodes {
+            next.nodes = apply_nodes_delta(&next.nodes, delta);
+        }
+        if let Some(delta) = &self.edges {
+            next.edges = apply_edges_delta(&next.edges, delta);
+        }
         if let Some(meta) = &self.meta {
             next.meta = meta.clone();
         }
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
+        }
+        if let Some(value) = &self.active_utility_id {
+            next.active_utility_id = value.clone();
+        }
+        if let Some(value) = self.camera_x { next.camera_x = value; }
+        if let Some(value) = self.camera_y { next.camera_y = value; }
+        if let Some(value) = self.camera_zoom { next.camera_zoom = value; }
+        if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
+        if let Some(value) = self.grid_snap_enabled { next.grid_snap_enabled = value; }
+        if let Some(value) = self.grid_factor { next.grid_factor = value; }
+        if let Some(value) = self.suggestion_offset { next.suggestion_offset = value; }
+        if let Some(value) = self.fill_count { next.fill_count = value; }
+        if let Some(value) = self.brush_candidate_index { next.brush_candidate_index = value; }
+        if let Some(value) = &self.brush_candidate_source_handle_id { next.brush_candidate_source_handle_id = value.clone(); }
+        if let Some(value) = &self.locale { next.locale = value.clone(); }
+        if let Some(value) = &self.terminology { next.terminology = value.clone(); }
+        if let Some(value) = &self.lod_mode_by_pane_json { next.lod_mode_by_pane_json = value.clone(); }
+        if let Some(value) = &self.engagement_input_by_pane_json { next.engagement_input_by_pane_json = value.clone(); }
+        if let Some(value) = &self.brush_candidates_json { next.brush_candidates_json = value.clone(); }
+        if let Some(value) = &self.node_kind_weights_json { next.node_kind_weights_json = value.clone(); }
+        if let Some(value) = &self.handle_kind_weights_json { next.handle_kind_weights_json = value.clone(); }
+        if let Some(value) = &self.active_utility_by_window_id_json { next.active_utility_by_window_id_json = value.clone(); }
+        if let Some(value) = &self.hovered_node_id { next.hovered_node_id = value.clone(); }
+        if let Some(value) = self.preview_seq { next.preview_seq = value; }
+        next
+    }
+}
+
+fn apply_identified_delta<T: Clone>(
+    items: &[T],
+    removed: &[String],
+    added: &[T],
+    patched: &[(String, Option<T>)],
+    reordered: &Option<Vec<String>>,
+    id_of: impl Fn(&T) -> &str,
+) -> Vec<T> {
+    let mut next = items.to_vec();
+    for id in removed {
+        next.retain(|item| id_of(item) != id);
+    }
+    for item in added {
+        if let Some(pos) = next.iter().position(|entry| id_of(entry) == id_of(item)) {
+            next[pos] = item.clone();
+        } else {
+            next.push(item.clone());
+        }
+    }
+    for (id, replacement) in patched {
+        if let (Some(pos), Some(value)) = (next.iter().position(|entry| id_of(entry) == id), replacement) {
+            next[pos] = value.clone();
+        }
+    }
+    if let Some(order) = reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> =
+            next.into_iter().map(|item| (id_of(&item).to_string(), item)).collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(item) = by_id.remove(id) {
+                ordered.push(item);
+            }
+        }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
+}
+
+/// 🧩 Applies an identified-collection delta to nodes.
+pub fn apply_nodes_delta(nodes: &[Puzzle2dNode], delta: &Puzzle2dNodesDelta) -> Vec<Puzzle2dNode> {
+    let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
+    apply_identified_delta(nodes, &delta.removed, &delta.added, &patched, &delta.reordered, |n| &n.id)
+}
+
+/// 🧩 Applies an identified-collection delta to edges.
+pub fn apply_edges_delta(edges: &[Puzzle2dEdge], delta: &Puzzle2dEdgesDelta) -> Vec<Puzzle2dEdge> {
+    let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
+    apply_identified_delta(edges, &delta.removed, &delta.added, &patched, &delta.reordered, |e| &e.id)
+}
+
+impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
+    fn apply(&self, snapshot: &Puzzle2dSnapshot) -> Puzzle2dSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema { next.schema = schema.clone(); }
+        if let Some(camera) = &self.camera { next.camera = camera.clone(); }
+        if let Some(delta) = &self.nodes { next.nodes = apply_nodes_delta(&next.nodes, delta); }
+        if let Some(delta) = &self.edges { next.edges = apply_edges_delta(&next.edges, delta); }
+        if let Some(meta) = &self.meta { next.meta = meta.clone(); }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        puzzle2d_diff_absorb(self, other);
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(camera);
+        take!(meta);
+        take!(selected_ids);
+        take!(active_utility_id);
+        take!(camera_x);
+        take!(camera_y);
+        take!(camera_zoom);
+        take!(selection_method);
+        take!(grid_snap_enabled);
+        take!(grid_factor);
+        take!(suggestion_offset);
+        take!(fill_count);
+        take!(brush_candidate_index);
+        take!(brush_candidate_source_handle_id);
+        take!(locale);
+        take!(terminology);
+        take!(lod_mode_by_pane_json);
+        take!(engagement_input_by_pane_json);
+        take!(brush_candidates_json);
+        take!(node_kind_weights_json);
+        take!(handle_kind_weights_json);
+        take!(active_utility_by_window_id_json);
+        take!(hovered_node_id);
+        take!(preview_seq);
+        if let Some(delta) = other.nodes {
+            match &mut self.nodes {
+                Some(existing) => {
+                    existing.removed.extend(delta.removed);
+                    existing.added.extend(delta.added);
+                    existing.patched.extend(delta.patched);
+                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                }
+                None => self.nodes = Some(delta),
+            }
+        }
+        if let Some(delta) = other.edges {
+            match &mut self.edges {
+                Some(existing) => {
+                    existing.removed.extend(delta.removed);
+                    existing.added.extend(delta.added);
+                    existing.patched.extend(delta.patched);
+                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                }
+                None => self.edges = Some(delta),
+            }
+        }
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔖️Apply
+
+//#region 🔖️DiffHelpers
+/// 📍 Builds a nodes-set delta for `SetNode`, preserving insert index via `reordered` when the id is new.
+pub fn diff_set_node(index: usize, node: Puzzle2dNode, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    let mut delta = Puzzle2dNodesDelta {
+        added: vec![node.clone()],
+        ..Default::default()
+    };
+    if puzzle2d_index_of(&base.nodes, &node.id).is_none() {
+        let mut order: Vec<String> = base.nodes.iter().map(|entry| entry.id.clone()).collect();
+        let at = index.min(order.len());
+        order.insert(at, node.id.clone());
+        delta.reordered = Some(order);
+    }
+    Puzzle2dDiff {
+        nodes: Some(delta),
+        ..Default::default()
+    }
+}
+
+/// ➖ Builds a nodes-remove delta.
+pub fn diff_remove_node(id: String) -> Puzzle2dDiff {
+    Puzzle2dDiff {
+        nodes: Some(Puzzle2dNodesDelta { removed: vec![id], ..Default::default() }),
+        ..Default::default()
+    }
+}
+
+/// 🔗 Builds an edges-set delta for `SetEdge`, preserving insert index via `reordered` when the id is new.
+pub fn diff_set_edge(index: usize, edge: Puzzle2dEdge, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    let mut delta = Puzzle2dEdgesDelta {
+        added: vec![edge.clone()],
+        ..Default::default()
+    };
+    if puzzle2d_index_of(&base.edges, &edge.id).is_none() {
+        let mut order: Vec<String> = base.edges.iter().map(|entry| entry.id.clone()).collect();
+        let at = index.min(order.len());
+        order.insert(at, edge.id.clone());
+        delta.reordered = Some(order);
+    }
+    Puzzle2dDiff {
+        edges: Some(delta),
+        ..Default::default()
+    }
+}
+
+/// ✂️ Builds an edges-remove delta.
+pub fn diff_remove_edge(id: String) -> Puzzle2dDiff {
+    Puzzle2dDiff {
+        edges: Some(Puzzle2dEdgesDelta { removed: vec![id], ..Default::default() }),
+        ..Default::default()
+    }
+}
+
+/// 🏷 Builds a meta delta.
+pub fn diff_set_meta(meta: crate::artifacts::puzzle2d::Puzzle2dMeta) -> Puzzle2dDiff {
+    Puzzle2dDiff { meta: Some(meta), ..Default::default() }
+}
+
+/// 🌍️ Builds a whole-artifact replacement delta from a snapshot.
+pub fn diff_set_snapshot(snapshot: Puzzle2dSnapshot) -> Puzzle2dDiff {
+    Puzzle2dDiff {
+        artifact: Some(Box::new(Puzzle2dArtifact::from_snapshot(snapshot))),
+        ..Default::default()
+    }
+}
+
+pub(crate) fn puzzle2d_index_of<T>(items: &[T], id: &str) -> Option<usize>
+where
+    T: HasId,
+{
+    items.iter().position(|item| item.id() == id)
+}
+
+pub(crate) trait HasId {
+    fn id(&self) -> &str;
+}
+
+impl HasId for crate::artifacts::puzzle2d::Puzzle2dNode { fn id(&self) -> &str { &self.id } }
+impl HasId for crate::artifacts::puzzle2d::Puzzle2dEdge { fn id(&self) -> &str { &self.id } }
+
+//#endregion 🔖️DiffHelpers

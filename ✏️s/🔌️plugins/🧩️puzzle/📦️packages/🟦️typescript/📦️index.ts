@@ -1,17 +1,17 @@
 /** puzzle facet WASM facades */
 export * as 3d_diff from "../../🗿️artifacts/🧊️3d/🔺️diff/🟦️component.ts";
 export * as 3d_dsl from "../../🗿️artifacts/🧊️3d/🗣️dsl/🟦️component.ts";
-export * as 3d_pack from "../../🗿️artifacts/🧊️3d/🎒️pack/🟦️component.ts";
+export * as 3d_pack from "../../🗿️artifacts/🧊️3d/📸️snapshot/🎒️pack/🟦️component.ts";
 export * as 3d_op from "../../🗿️artifacts/🧊️3d/🔧️op/🟦️component.ts";
 export * as 3d_spr from "../../🗿️artifacts/🧊️3d/📡️spr/🟦️component.ts";
 export * as 5d_diff from "../../🗿️artifacts/🖐️5d/🔺️diff/🟦️component.ts";
 export * as 5d_dsl from "../../🗿️artifacts/🖐️5d/🗣️dsl/🟦️component.ts";
-export * as 5d_pack from "../../🗿️artifacts/🖐️5d/🎒️pack/🟦️component.ts";
+export * as 5d_pack from "../../🗿️artifacts/🖐️5d/📸️snapshot/🎒️pack/🟦️component.ts";
 export * as 5d_op from "../../🗿️artifacts/🖐️5d/🔧️op/🟦️component.ts";
 export * as 5d_spr from "../../🗿️artifacts/🖐️5d/📡️spr/🟦️component.ts";
 export * as 2d_diff from "../../🗿️artifacts/◻2d/🔺️diff/🟦️component.ts";
 export * as 2d_dsl from "../../🗿️artifacts/◻2d/🗣️dsl/🟦️component.ts";
-export * as 2d_pack from "../../🗿️artifacts/◻2d/🎒️pack/🟦️component.ts";
+export * as 2d_pack from "../../🗿️artifacts/◻2d/📸️snapshot/🎒️pack/🟦️component.ts";
 export * as 2d_op from "../../🗿️artifacts/◻2d/🔧️op/🟦️component.ts";
 export * as 2d_spr from "../../🗿️artifacts/◻2d/📡️spr/🟦️component.ts";
 
@@ -26,3 +26,12 @@ export * as examples_app_2d_demo_session from "../../🎛️apps/◻2d/📚️ex
 export * as examples_app_3d_demo_session from "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🟦️component.ts";
 export * as examples_app_5d_demo_session from "../../🎛️apps/🖐️5d/📚️examples/🎬️demo-session/🟦️component.ts";
 
+export * as 2d_schema from "../../🗿️artifacts/◻2d/🧬️schema/🟦️component.ts";
+export * as 2d_snapshot_schema from "../../🗿️artifacts/◻2d/📸️snapshot/🧬️schema/🟦️component.ts";
+export * as 2d_diff_schema from "../../🗿️artifacts/◻2d/🔺️diff/🧬️schema/🟦️component.ts";
+export * as 3d_schema from "../../🗿️artifacts/🧊️3d/🧬️schema/🟦️component.ts";
+export * as 3d_snapshot_schema from "../../🗿️artifacts/🧊️3d/📸️snapshot/🧬️schema/🟦️component.ts";
+export * as 3d_diff_schema from "../../🗿️artifacts/🧊️3d/🔺️diff/🧬️schema/🟦️component.ts";
+export * as 5d_schema from "../../🗿️artifacts/🖐️5d/🧬️schema/🟦️component.ts";
+export * as 5d_snapshot_schema from "../../🗿️artifacts/🖐️5d/📸️snapshot/🧬️schema/🟦️component.ts";
+export * as 5d_diff_schema from "../../🗿️artifacts/🖐️5d/🔺️diff/🧬️schema/🟦️component.ts";

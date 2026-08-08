@@ -1,0 +1,83 @@
+syntax = "proto3";
+package semio.s.procedural.procedural3d.artifact;
+
+// 🧬️ Procedural3d artifact schema — every field with its state class.
+
+message Procedural3dArtifact {
+  // @state persistent
+  FlowFixture fixture = 1;
+  // @state persistent
+  GenerationPlayState generation = 2;
+  // @state shared-ui
+  repeated string selected_node_ids = 3;
+  // @state local-ui
+  string lod_mode = 4;
+  // @state local-ui
+  string show_mode = 5;
+  // @state local-ui
+  string selection_method = 6;
+  // @state preview
+  optional string hovered_node_id = 7;
+  // @state local-ui
+  CameraJson graph_camera = 8;
+  // @state local-ui
+  Procedural3dPreviewCamera preview_camera = 9;
+  // @state local-ui
+  string sun_json = 10;
+  // @state shared-ui
+  optional string selected_generation_id = 11;
+  // @state preview
+  optional string generation_preview_text = 12;
+  // @state shared-ui
+  string active_utility_id = 13;
+  // @state local-ui
+  string locale = 14;
+  // @state local-ui
+  string contributions_json = 15;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+message Widget {
+  string json = 1;
+}
+message FlowFixture {
+  string schema = 1;
+  CameraJson camera = 2;
+  repeated Widget widgets = 3;
+  repeated SynapseSpec synapses = 4;
+  map<string, WidgetLayout> layout = 5;
+}
+message FormGeneration {
+  string id = 1;
+  string name = 2;
+  string values_json = 3;
+}
+message GenerationPlayState {
+  repeated FormGeneration generations = 1;
+  optional string selected_generation_id = 2;
+  optional string preview_text = 3;
+}
+message Procedural3dPreviewCamera {
+  double position_x = 1;
+  double position_y = 2;
+  double position_z = 3;
+  double target_x = 4;
+  double target_y = 5;
+  double target_z = 6;
+  double fov = 7;
+}

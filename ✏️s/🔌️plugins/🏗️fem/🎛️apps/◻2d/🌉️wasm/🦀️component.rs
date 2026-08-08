@@ -9,20 +9,20 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct Fem2dDocumentVcs {
+    pub struct Fem2dSnapshotVcs {
         store: RefCell<Fem2dStore>,
     }
 
     #[wasm_bindgen]
-    impl Fem2dDocumentVcs {
+    impl Fem2dSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<Fem2dDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<Fem2dSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: Fem2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Fem2dStore::new(envelope)
                 }
-                None => Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_projection(), None)),
+                None => Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -38,8 +38,8 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
@@ -64,8 +64,8 @@ mod tests {
     /// own beyond that shared coverage.
     #[test]
     fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
-        let store = crate::artifacts::fem2d::op::Fem2dStore::new(store::create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_projection(), None));
-        assert!(store.projection().expect("projection").nodes.is_empty());
+        let store = crate::artifacts::fem2d::mutations::Fem2dStore::new(store::create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_snapshot(), None));
+        assert!(store.snapshot().expect("snapshot").nodes.is_empty());
     }
 }
 // #endregion 🧪️Tests

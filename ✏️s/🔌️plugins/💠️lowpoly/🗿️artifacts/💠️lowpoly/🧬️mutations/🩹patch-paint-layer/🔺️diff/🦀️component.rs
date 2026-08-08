@@ -1,36 +1,23 @@
 //! 🔺️ Diff fragment yielded by `PatchPaintLayer`.
 use crate::artifacts::lowpoly::diff::LowpolyDiff;
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolyProjection;
-use protocol::MutationDiff;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `PatchPaintLayer` mutation.
+/// @emoji 🔺️ Diff produced by one `PatchPaintLayer` mutation — a sparse [`LowpolyDiff`].
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PatchPaintLayerDiff {
-    pub mutation: Option<LowpolyMutation>,
+    pub diff: LowpolyDiff,
 }
 
 impl PatchPaintLayerDiff {
-    pub fn from_mutation(mutation: LowpolyMutation) -> Self {
-        Self { mutation: Some(mutation) }
+    pub fn from_diff(diff: LowpolyDiff) -> Self {
+        Self { diff }
     }
 
     pub fn into_lowpoly_diff(self) -> LowpolyDiff {
-        LowpolyDiff { mutations: self.mutation.into_iter().collect() }
+        self.diff
     }
 }
 
-impl MutationDiff<LowpolyProjection> for PatchPaintLayerDiff {
-    fn apply(&self, projection: &LowpolyProjection) -> LowpolyProjection {
-        self.clone().into_lowpoly_diff().apply(projection)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.mutation.is_some() {
-            *self = other;
-        }
-    }
-}
 //#endregion 🔖️Diff

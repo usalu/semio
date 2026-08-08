@@ -1,10 +1,10 @@
 //! ⚙️ Architect program artifact engine — the `validate` topic.
 
-//! ✅️ Program validation — schema, references, and adjacency integrity.
+//! ✅️ ProgramSnapshot validation — schema, references, and adjacency integrity.
 
 use crate::artifacts::program::engine::adjacency::detect_adjacency_conflicts;
 use crate::artifacts::program::kernel::{DiagnosticSeverity, EntityId, ProgramDiagnostic};
-use crate::artifacts::program::{Program, ARCHITECT_PROGRAM_SCHEMA};
+use crate::artifacts::program::{ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use crate::artifacts::program::registers::ValidationStatus;
 use std::collections::{HashMap, HashSet};
 
@@ -14,7 +14,7 @@ struct EntityIndex {
     duplicates: Vec<(EntityId, String, String)>,
 }
 
-fn build_entity_index(program: &Program) -> EntityIndex {
+fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
     let mut locations: HashMap<EntityId, (String, String)> = HashMap::new();
     let mut duplicates = Vec::new();
     let mut register = |name: &str, id: &EntityId, label: &str| {
@@ -221,7 +221,7 @@ fn check_ref(diagnostics: &mut Vec<ProgramDiagnostic>, index: &EntityIndex, targ
 
 // #region 🔖️Validate
 /// @emoji 🩺️ Validates a plugin document and returns all diagnostics (non-fatal).
-pub fn validate_plugin(program: &Program) -> Vec<ProgramDiagnostic> {
+pub fn validate_plugin(program: &ProgramSnapshot) -> Vec<ProgramDiagnostic> {
     let mut diagnostics = Vec::new();
     if program.schema != ARCHITECT_PROGRAM_SCHEMA {
         diagnostics.push(ProgramDiagnostic {

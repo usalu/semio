@@ -89,7 +89,7 @@
                 "label": "Pick wire",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -145,7 +145,7 @@
                 "label": "Apply distance",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

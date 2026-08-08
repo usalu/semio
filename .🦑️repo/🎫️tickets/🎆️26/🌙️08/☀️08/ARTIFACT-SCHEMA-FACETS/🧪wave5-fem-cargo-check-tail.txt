@@ -1,0 +1,5 @@
+781 +     type Snapshot = Fem3dSnapshot;
+    |
+
+warning: `semio-s-plugin-fem` (lib) generated 65 warnings (run `cargo fix --lib -p semio-s-plugin-fem` to apply 47 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.40s

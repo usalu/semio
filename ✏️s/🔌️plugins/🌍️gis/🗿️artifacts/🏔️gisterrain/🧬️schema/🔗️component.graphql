@@ -1,0 +1,9 @@
+# 🧬️ GIS terrain artifact schema — every field with its state class.
+
+type GisTerrainArtifact {
+  exaggeration: Float! @state(class: PERSISTENT)
+  importedFeaturesJson: String! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  cameraJson: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+}

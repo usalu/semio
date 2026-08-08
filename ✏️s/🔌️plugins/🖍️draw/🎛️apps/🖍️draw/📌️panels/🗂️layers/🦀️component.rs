@@ -4,7 +4,7 @@ use crate::apps::draw::config::DrawConfig;
 use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::apps::draw::draw_play_action;
 use crate::artifacts::draw::engine::{draw_play_boolean_child_row_id, draw_play_layers_tree_row_id, find_draw_layer, layer_base};
-use crate::artifacts::draw::{DrawDocument, DrawLayerNode};
+use crate::artifacts::draw::{DrawSnapshot, DrawLayerNode};
 use semio_framework_plugin::{tree_item, tree_item_with_action, tree_item_with_action_draggable, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -30,7 +30,7 @@ fn layer_icon(layer: &DrawLayerNode) -> &str {
     }
 }
 
-fn layer_tree_item(doc: &DrawDocument, layer: &DrawLayerNode) -> UiTreeItemNode {
+fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> UiTreeItemNode {
     let row_id = draw_play_layers_tree_row_id(layer);
     let base = layer_base(layer);
     let nested_items = match layer {
@@ -53,7 +53,7 @@ fn layer_tree_item(doc: &DrawDocument, layer: &DrawLayerNode) -> UiTreeItemNode 
     }
 }
 
-fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> UiTreeItemNode {
+fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> UiTreeItemNode {
     let row_id = draw_play_boolean_child_row_id(boolean_id, child_id);
     match find_draw_layer(doc, child_id) {
         Some(child) => UiTreeItemNode { draggable: Some(false), ..tree_item_with_action(row_id, Label::data(layer_base(child).name.clone()), Some(crate::artifacts::draw::engine::layer_kind_label(child)), draw_play_action("setSelection", Some(json!({ "ids": [child_id] })))) },
@@ -65,7 +65,7 @@ fn tree_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args
     UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
 }
 
-pub fn render(document: &DrawDocument, interaction: &DrawConfig, labels: &DrawPlayLabels) -> UiNode {
+pub fn render(document: &DrawSnapshot, interaction: &DrawConfig, labels: &DrawPlayLabels) -> UiNode {
     let action_items = vec![
         tree_button("draw-play-layers.add.path", labels.add_path, "pen-tool", "addLayer", json!({ "kind": "path" })),
         tree_button("draw-play-layers.add.rect", labels.add_rectangle, "square", "addLayer", json!({ "kind": "shape:rect" })),

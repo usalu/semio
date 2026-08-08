@@ -13,6 +13,7 @@ members = [
     "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust",

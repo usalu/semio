@@ -1,6 +1,6 @@
 //! Draw mutation — `SetLayerBlendMode` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_layer_blend_mode(layer_id: String, blend_mode: String) -> DrawMutatio
     DrawMutation::SetLayerBlendMode { layer_id, blend_mode }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, blend_mode: &str) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, blend_mode: &str) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetLayerBlendMode { layer_id: layer_id.into(), blend_mode: blend_mode.into() });
 }
 //#endregion 🔖️Mutation

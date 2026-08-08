@@ -23,10 +23,10 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintStrokeEnd", "pa
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::artifacts::lowpoly::engine::default_projection();
+    let projection = crate::artifacts::lowpoly::engine::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
-    let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
+    let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
     WindowKindDefinition {
         id: LOWPOLY_PLAY_WINDOW_UV.into(),
         label: semio_framework_plugin::LocalizedLabel::native("UV", "UV"),
@@ -54,7 +54,7 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 //#region 🔖️Scene
 fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_cache: &HashMap<String, String>) -> String {
     use crate::apps::lowpoly::view::resolve_active_object_id;
-    let object_id = resolve_active_object_id(view.projection, view.config);
+    let object_id = resolve_active_object_id(view.snapshot, view.config);
     let mut layers = Vec::new();
     if let Some(texture) = texture_cache.get(&object_id) {
         let size = LOWPOLY_PAINT_TEXTURE_SIZE as f64;

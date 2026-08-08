@@ -13,6 +13,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<CadMutation, CadConfigMutation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing
@@ -33,9 +34,6 @@ pub mod artifacts {
         #[path = "../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs"]
         mod interaction_spec;
         pub use interaction_spec::*;
-
-        #[path = "../../🗿️artifacts/📐️cad/🔺️diff/🦀️component.rs"]
-        pub mod diff;
         #[path = "../../🗿️artifacts/📐️cad/🔧️op/🦀️component.rs"]
         pub mod op;
         #[path = "."]
@@ -175,23 +173,45 @@ pub mod artifacts {
             }
 
             #[path = "."]
-            pub mod set_scene {
-                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎬️set-scene/🦠️mutation/🦀️component.rs"]
+            pub mod set_snapshot {
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs"]
                 pub mod mutation;
-                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎬️set-scene/🔺️diff/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs"]
                 pub mod diff;
-                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🎬️set-scene/↩️inverse/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📐️cad/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs"]
                 pub mod inverse;
             }
 
         }
 
+        #[path = "../../🗿️artifacts/📐️cad/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/📐️cad/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/📐️cad/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+
         #[path = "../../🗿️artifacts/📐️cad/🗣️dsl/🦀️component.rs"]
         pub mod dsl;
-        #[path = "../../🗿️artifacts/📐️cad/🎒️pack/🦀️component.rs"]
-        pub mod pack;
+
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../🗿️artifacts/📐️cad/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/📐️cad/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+
         #[path = "../../🗿️artifacts/📐️cad/📡️spr/🦀️component.rs"]
         pub mod spr;
+
 
         #[path = "."]
         pub mod engine {

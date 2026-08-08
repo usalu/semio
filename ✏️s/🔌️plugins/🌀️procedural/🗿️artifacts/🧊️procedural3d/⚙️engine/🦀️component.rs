@@ -5,7 +5,7 @@ use crate::artifacts::procedural3d::dsl::{
     PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT, PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT, PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT, PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT, PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT,
     PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT,
 };
-use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
+use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
 use flow::{flow_host_with_session, FlowEvalSession, FlowFixture, FlowHost, Widget};
@@ -94,12 +94,12 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
 //#region 🔖️DocumentHelpers
 /// 📄️ The `procedural3d-play` "default" document — parsed from the bundled "hexagonal mushroom
 /// column" example fixture.
-pub fn default_projection() -> Procedural3dDocument {
-    Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).unwrap_or_default()
+pub fn default_snapshot() -> Procedural3dSnapshot {
+    Procedural3dSnapshot::parse_dsl(PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).unwrap_or_default()
 }
 
-pub fn empty_procedural3d_projection() -> Procedural3dDocument {
-    Procedural3dDocument::default()
+pub fn empty_procedural3d_snapshot() -> Procedural3dSnapshot {
+    Procedural3dSnapshot::default()
 }
 
 /// 🧾️ Whether `example_id` names a bundled procedural-3d example fixture.
@@ -119,7 +119,7 @@ pub fn is_procedural3d_example_id(example_id: &str) -> bool {
 }
 
 /// 🧾️ Builds the projection for a named bundled example; unknown ids return `None`.
-pub fn example_projection(example_id: &str) -> Option<Procedural3dDocument> {
+pub fn example_snapshot(example_id: &str) -> Option<Procedural3dSnapshot> {
     let dsl = match example_id {
         PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT),
         PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT),
@@ -131,12 +131,12 @@ pub fn example_projection(example_id: &str) -> Option<Procedural3dDocument> {
         PROCEDURAL_EXAMPLE_BOX_SHELL => Some(PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT),
         _ => None,
     };
-    dsl.and_then(|text| Procedural3dDocument::parse_dsl(text).ok())
+    dsl.and_then(|text| Procedural3dSnapshot::parse_dsl(text).ok())
 }
 
 /// 🧾️ Serializes an example's bare projection for registration via `App::example`.
 pub fn example_document_json(example_id: &str) -> String {
-    serde_json::to_string(&example_projection(example_id).unwrap_or_default()).unwrap_or_default()
+    serde_json::to_string(&example_snapshot(example_id).unwrap_or_default()).unwrap_or_default()
 }
 
 pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
@@ -521,7 +521,7 @@ pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semi
     merged
 }
 
-pub fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_framework_plugin::MeshData {
+pub fn export_mesh_from_document(projection: &Procedural3dSnapshot) -> semio_framework_plugin::MeshData {
     let config = Procedural3dConfig::default();
     let mut host = host_from_fixture(&projection.fixture);
     let eval_json = host.evaluate().unwrap_or_default();
@@ -531,12 +531,12 @@ pub fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_fra
 }
 
 pub fn procedural3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
-    let projection: Procedural3dDocument = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+    let projection: Procedural3dSnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_document(&projection))
 }
 
 pub fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
-    serde_json::to_value(default_projection()).map_err(|err| err.to_string())
+    serde_json::to_value(default_snapshot()).map_err(|err| err.to_string())
 }
 
 //#region 🔖️GumballTransforms
@@ -621,7 +621,20 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
 
 /// 🔌️ Registers this artifact's plugin-level exports — mesh export/import bridges, DWG mesh bridge,
 /// pack<->dsl document codec. Called once from the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
+static PROCEDURAL3D_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the procedural3d artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = PROCEDURAL3D_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::procedural3d::schema::procedural3d_artifact_schema_descriptor());
+}
+
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
     semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
@@ -631,7 +644,7 @@ pub fn register() {
     semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
     semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
     semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
-    // 📦️ Registers `Procedural3dDocument`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
+    // 📦️ Registers `Procedural3dSnapshot`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
     // can print/parse `.procedural3d` packs without depending on this crate's concrete types.
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::procedural3d::Procedural3dPlayApp>(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA);
 }
@@ -694,7 +707,7 @@ mod tests {
     #[test]
     fn preview_payload_has_meshes_and_instances() {
         let _serial = test_serial();
-        let projection = default_projection();
+        let projection = default_snapshot();
         let config = Procedural3dConfig::default();
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         assert_ne!(meshes_json, "[]", "meshes_json was empty");
@@ -740,11 +753,11 @@ mod tests {
     }
 
     #[test]
-    fn document_from_mesh_returns_valid_default_projection() {
+    fn document_from_mesh_returns_valid_default_snapshot() {
         let _serial = test_serial();
         let mesh = semio_framework_plugin::MeshData::default();
         let document = procedural3d_document_from_mesh(&mesh).expect("dwg mesh import document");
-        let projection: Procedural3dDocument = serde_json::from_value(document).expect("parseable projection");
+        let projection: Procedural3dSnapshot = serde_json::from_value(document).expect("parseable projection");
         assert_eq!(projection.fixture.schema, "flow.fixture");
     }
 
@@ -752,30 +765,30 @@ mod tests {
     fn procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
         let _serial = test_serial();
         use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
-        let document_json = serde_json::to_value(default_projection()).expect("projection json");
+        let document_json = serde_json::to_value(default_snapshot()).expect("projection json");
         let mesh = procedural3d_mesh_from_document(&document_json).expect("mesh from document");
         assert!(!mesh.positions.is_empty());
 
         let obj_bytes = ObjExporter.export(&mesh).expect("obj export");
         let obj_mesh = ObjImporter.import(&obj_bytes).expect("obj import");
         let obj_document = procedural3d_document_from_mesh(&obj_mesh).expect("obj document from mesh");
-        let _: Procedural3dDocument = serde_json::from_value(obj_document).expect("parseable obj projection");
+        let _: Procedural3dSnapshot = serde_json::from_value(obj_document).expect("parseable obj projection");
 
         let glb_bytes = GlbExporter.export(&mesh).expect("glb export");
         let glb_mesh = GlbImporter.import(&glb_bytes).expect("glb import");
         let glb_document = procedural3d_document_from_mesh(&glb_mesh).expect("glb document from mesh");
-        let _: Procedural3dDocument = serde_json::from_value(glb_document).expect("parseable glb projection");
+        let _: Procedural3dSnapshot = serde_json::from_value(glb_document).expect("parseable glb projection");
 
         let stl_bytes = StlExporter.export(&mesh).expect("stl export");
         let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
         let stl_document = procedural3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
-        let _: Procedural3dDocument = serde_json::from_value(stl_document).expect("parseable stl projection");
+        let _: Procedural3dSnapshot = serde_json::from_value(stl_document).expect("parseable stl projection");
     }
 
     #[test]
     fn rectangle_wire_preview_emits_edge_only_mesh() {
         let _serial = test_serial();
-        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+        let projection = Procedural3dSnapshot::parse_dsl(PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
         let config = Procedural3dConfig::default();
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -801,7 +814,7 @@ mod tests {
             ("box-shell-preview", PROCEDURAL_EXAMPLE_BOX_SHELL),
         ];
         for (label, example_id) in cases {
-            let projection = example_projection(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
+            let projection = example_snapshot(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
             let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
             assert_ne!(meshes_json, "[]", "{label}: meshes empty; eval may have failed");
             assert_ne!(instances_json, "[]", "{label}: instances empty");
@@ -820,7 +833,7 @@ mod tests {
     #[test]
     fn wireframe_show_mode_strips_shaded_triangles() {
         let _serial = test_serial();
-        let projection = default_projection();
+        let projection = default_snapshot();
         let config = Procedural3dConfig { show_mode: "wireframe".into(), ..Default::default() };
         let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -855,8 +868,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::procedural3d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::procedural3d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::procedural3d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural3d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural.procedural3d.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -885,8 +898,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::procedural3d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural3d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural3d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -904,32 +917,40 @@ pub fn register_pilot_languages() {
 
 //#region 🔖️ArtifactEngine
 pub struct Procedural3dEngine {
-    projection: crate::artifacts::procedural3d::Procedural3dDocument,
+    artifact: crate::artifacts::procedural3d::schema::Procedural3dArtifact,
+    snapshot: crate::artifacts::procedural3d::Procedural3dSnapshot,
 }
 
 impl Procedural3dEngine {
-    pub fn new(projection: crate::artifacts::procedural3d::Procedural3dDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::procedural3d::Procedural3dSnapshot) -> Self {
+        let artifact = crate::artifacts::procedural3d::schema::Procedural3dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
 impl protocol::ArtifactEngine for Procedural3dEngine {
-    type Projection = crate::artifacts::procedural3d::Procedural3dDocument;
+    type Artifact = crate::artifacts::procedural3d::schema::Procedural3dArtifact;
+    type Snapshot = crate::artifacts::procedural3d::Procedural3dSnapshot;
     type Mutation = crate::artifacts::procedural3d::mutations::Procedural3dMutation;
     type Diff = crate::artifacts::procedural3d::diff::Procedural3dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::procedural3d::mutations::apply_procedural3d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::procedural3d::mutations::apply_procedural3d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

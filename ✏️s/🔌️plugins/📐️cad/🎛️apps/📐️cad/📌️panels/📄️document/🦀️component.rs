@@ -4,7 +4,7 @@
 use crate::apps::cad::terminology::{typology_label, CadLabels};
 use crate::apps::cad::{cad_action, cad_pane_suffix, cad_tree_item, CadPlayRuntime, CadPlayView};
 use crate::artifacts::cad::engine::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
-use crate::artifacts::cad::{cad_find_object_pane, CadObject, CadPaneId, CadReference, CadProjection};
+use crate::artifacts::cad::{cad_find_object_pane, CadObject, CadPaneId, CadReference, CadSnapshot};
 use semio_framework_plugin::{
     Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -126,11 +126,11 @@ pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, 
 }
 
 /// 🗂️ The `document.references_by_model_definition_id` lookup repeated once per pane in `build_document_tree`.
-pub fn references_for<'a>(document: &'a CadProjection, model_definition_id: &str) -> &'a [CadReference] {
+pub fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) -> &'a [CadReference] {
     document.references_by_model_definition_id.get(model_definition_id).map_or(&[][..], |rows| rows.as_slice())
 }
 
-pub fn document_tree_selected_ids(document: &CadProjection, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+pub fn document_tree_selected_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
     if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
         return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
     }
@@ -147,7 +147,7 @@ pub fn document_tree_selected_ids(document: &CadProjection, runtime: &CadPlayRun
     }
 }
 
-pub fn document_tree_highlighted_ids(document: &CadProjection, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
     let hovered = runtime.hovered_object_id.as_deref()?;
     if let Some(reference_id) = hovered.strip_prefix("reference:") {
         for pane in CadPaneId::all() {
@@ -167,7 +167,7 @@ pub fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: 
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
-pub fn document_references_section(document: &CadProjection, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
+pub fn document_references_section(document: &CadSnapshot, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
     (format!("cad-play-document.references.{model_definition_id}"), Some(labels.references.into()), false, references_for(document, model_definition_id).iter().map(|reference| reference_tree_item(model_definition_id, reference, labels)).collect())
 }
 
@@ -230,7 +230,7 @@ mod tests {
         scene.objects[0].label = "U2".into();
         scene.objects[0].typology = "building.building.beam".into();
         let history = empty_history();
-        let doc = DocumentView { projection: &scene, history: &history };
+        let doc = DocumentView { snapshot: &scene, history: &history };
         let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &CadConfig::default());
         let UiNode::Tree(tree) = node else {
             panic!("document body should render a tree");
@@ -271,7 +271,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = DocumentView { projection: &scene, history: &history };
+        let doc = DocumentView { snapshot: &scene, history: &history };
         let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
         let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();

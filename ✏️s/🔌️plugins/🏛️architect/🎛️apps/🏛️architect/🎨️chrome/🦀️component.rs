@@ -7,7 +7,7 @@
 use crate::apps::architect::architect_action;
 use crate::apps::architect::ARCHITECT_APP_ID;
 use crate::artifacts::program::registers::AdjacencyKind;
-use crate::artifacts::program::{EntityId, Program};
+use crate::artifacts::program::{EntityId, ProgramSnapshot};
 use semio_framework_plugin::{
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_tree_stamp_presence, ActionDescriptor, Label, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiStackNode,
     UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
@@ -43,7 +43,7 @@ pub fn stack_row(id: impl Into<String>, children: Vec<UiNode>) -> UiNode {
 //#endregion 🔖️Tree
 
 //#region 🔖️Labels
-pub fn element_label(program: &Program, id: &EntityId) -> String {
+pub fn element_label(program: &ProgramSnapshot, id: &EntityId) -> String {
     program.elements.iter().find(|element| &element.header.id == id).map_or_else(|| id.to_string(), |element| element.header.name.clone())
 }
 

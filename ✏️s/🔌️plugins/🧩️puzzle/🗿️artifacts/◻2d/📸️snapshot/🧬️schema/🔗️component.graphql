@@ -1,0 +1,10 @@
+# 🧬️ Puzzle2d snapshot schema — persistent fields only.
+
+type Puzzle2dSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  camera: Puzzle2dCamera! @state(class: PERSISTENT)
+  nodes: [Puzzle2dNode!]! @state(class: PERSISTENT)
+  edges: [Puzzle2dEdge!]! @state(class: PERSISTENT)
+  meta: Puzzle2dMeta! @state(class: PERSISTENT)
+}
+

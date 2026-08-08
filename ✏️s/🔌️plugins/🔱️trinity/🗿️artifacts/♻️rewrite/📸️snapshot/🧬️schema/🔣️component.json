@@ -1,0 +1,60 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewrite/snapshot.json",
+  "title": "RewriteSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beforeFixtureJson",
+    "lhsJson",
+    "rhsJson",
+    "parameterBindings",
+    "ruleLayout"
+  ],
+  "properties": {
+    "beforeFixtureJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "lhsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "rhsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "parameterBindings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/PropertyValue"
+      },
+      "x-semio-state": "persistent"
+    },
+    "ruleLayout": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/LayoutPoint"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "PropertyValue": {
+      "title": "PropertyValue",
+      "description": "JSON-equivalent property value (null, bool, number, string, array, or object)."
+    },
+    "LayoutPoint": {
+      "title": "LayoutPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

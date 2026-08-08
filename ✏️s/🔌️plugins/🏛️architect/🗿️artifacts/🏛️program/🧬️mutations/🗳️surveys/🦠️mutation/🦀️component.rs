@@ -1,4 +1,5 @@
-//! 🗳️ Program mutation — `Surveys` leaf.
+//! 🗳️ ProgramSnapshot mutation — `Surveys` leaf.
 //#region 🔖️Mutation
 // Apply/inverse for `Surveys` is dispatched from the root `ProgramMutation` component.
 //#endregion 🔖️Mutation
+use crate::artifacts::program::ProgramSnapshot;

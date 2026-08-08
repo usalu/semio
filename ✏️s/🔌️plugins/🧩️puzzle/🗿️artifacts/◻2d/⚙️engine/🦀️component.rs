@@ -12,7 +12,7 @@
 //! that consumer's file; two or more consumers put it here. Helpers taking an app-only view-state
 //! type (`Puzzle2dConfig`, `Puzzle2dScene`) never come here — artifacts must not depend on apps.
 
-use crate::artifacts::puzzle2d::Puzzle2dProjection;
+use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 pub use canvas::{CubicBez, Point, Vec2};
 pub use graph::canvas;
@@ -38,8 +38,8 @@ impl GraphExtension for Puzzle2dExtension {}
 //#endregion 🔖️Puzzle2dExtension
 
 //#region 🔖️DocumentHelpers
-pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
-    Puzzle2dProjection::default()
+pub fn empty_puzzle2d_projection() -> Puzzle2dSnapshot {
+    Puzzle2dSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -63,8 +63,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::puzzle2d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::puzzle2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle2d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("puzzle.puzzle2d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -93,8 +93,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle2d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("2d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -224,33 +224,46 @@ mod tests {
 
 
 //#region 🔖️ArtifactEngine
+/// ⚙️ UI-independent puzzle2d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Puzzle2dEngine {
-    projection: crate::artifacts::puzzle2d::Puzzle2dProjection,
+    artifact: crate::artifacts::puzzle2d::schema::Puzzle2dArtifact,
+    snapshot: crate::artifacts::puzzle2d::Puzzle2dSnapshot,
 }
 
 impl Puzzle2dEngine {
-    pub fn new(projection: crate::artifacts::puzzle2d::Puzzle2dProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::puzzle2d::Puzzle2dSnapshot) -> Self {
+        let artifact = crate::artifacts::puzzle2d::schema::Puzzle2dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+
+    pub fn into_snapshot(self) -> crate::artifacts::puzzle2d::Puzzle2dSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Puzzle2dEngine {
-    type Projection = crate::artifacts::puzzle2d::Puzzle2dProjection;
+    type Artifact = crate::artifacts::puzzle2d::schema::Puzzle2dArtifact;
+    type Snapshot = crate::artifacts::puzzle2d::Puzzle2dSnapshot;
     type Mutation = crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
     type Diff = crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::puzzle2d::mutations::apply_puzzle2d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::puzzle2d::mutations::apply_puzzle2d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

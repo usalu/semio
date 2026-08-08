@@ -5,7 +5,7 @@ use crate::apps::draw::config::DrawConfig;
 use crate::apps::draw::draw_play_action;
 use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::artifacts::draw::engine::{find_draw_layer, flatten_draw_layers, layer_base, rgba_to_hex};
-use crate::artifacts::draw::{DrawDocument, DrawLayerNode, FillStyle, DRAW_BLEND_MODES, DRAW_DOCUMENT_SCHEMA};
+use crate::artifacts::draw::{DrawSnapshot, DrawLayerNode, FillStyle, DRAW_BLEND_MODES, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, Label,
     PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -98,7 +98,7 @@ fn uniform_layers<'a>(layers: &[&'a DrawLayerNode]) -> Option<Vec<&'a DrawLayerN
     }
 }
 
-fn inspector_kind_group(doc: &DrawDocument, layers: &[&DrawLayerNode], labels: &DrawPlayLabels) -> Option<UiInspectorFieldGroup> {
+fn inspector_kind_group(doc: &DrawSnapshot, layers: &[&DrawLayerNode], labels: &DrawPlayLabels) -> Option<UiInspectorFieldGroup> {
     let uniform = uniform_layers(layers)?;
     let layer = uniform[0];
     let layer_ids: Vec<String> = uniform.iter().map(|entry| crate::artifacts::draw::engine::layer_id(entry).to_string()).collect();
@@ -423,7 +423,7 @@ fn inspector_orientation_group(layers: &[&DrawLayerNode], labels: &DrawPlayLabel
     }
 }
 
-pub fn render(document: &DrawDocument, interaction: &DrawConfig, labels: &DrawPlayLabels, active_utility: &str) -> UiNode {
+pub fn render(document: &DrawSnapshot, interaction: &DrawConfig, labels: &DrawPlayLabels, active_utility: &str) -> UiNode {
     let selected_layers: Vec<&DrawLayerNode> = interaction.selected_ids.iter().filter_map(|id| find_draw_layer(document, id)).collect();
     if selected_layers.is_empty() {
         return ui_stack_vertical(vec![

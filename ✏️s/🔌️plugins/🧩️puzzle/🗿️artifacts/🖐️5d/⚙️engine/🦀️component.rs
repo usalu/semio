@@ -5,14 +5,14 @@
 //! document helpers.
 //!
 //! 📚️ Sibling topic files: `🦀️transfer.rs` (the copy/paste closure rules and the translate/replace-kind
-//! helpers), `🦀️compose.rs` (the semio-compose Design → `Puzzle5dProjection` importer).
+//! helpers), `🦀️compose.rs` (the semio-compose Design → `Puzzle5dSnapshot` importer).
 //!
 //! 🧭️ Placement rule for helpers reaching across nodes: a helper with exactly ONE consumer lives in
 //! that consumer's file; two or more consumers put it here. Helpers taking an app-only view-state
 //! type (`Puzzle5dConfig`, `Puzzle5dScene`) never come here — artifacts must not depend on apps.
 
 use crate::artifacts::puzzle3d::Puzzle3dError;
-use crate::artifacts::puzzle5d::{Puzzle5dError, Puzzle5dProjection};
+use crate::artifacts::puzzle5d::{Puzzle5dError, Puzzle5dSnapshot};
 use std::collections::HashSet;
 
 //#region 🔖️Reexports
@@ -148,8 +148,8 @@ pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> b
 //#endregion 🔖️KindCompatibility
 
 //#region 🔖️DocumentHelpers
-pub fn empty_puzzle5d_projection() -> Puzzle5dProjection {
-    Puzzle5dProjection::default()
+pub fn empty_puzzle5d_projection() -> Puzzle5dSnapshot {
+    Puzzle5dSnapshot::default()
 }
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
@@ -167,7 +167,7 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️WasmBridge
-/// 🔤️ Parses `.puzzle5d` DSL text (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) into the same
+/// 🔤️ Parses `.puzzle5d` DSL text (`Puzzle5dSnapshot`'s `dsl::DslDocument` grammar) into the same
 /// camelCase JSON shape callers previously got from a hand-authored `*.5d.json` fixture — lets
 /// non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the
 /// DSL grammar.
@@ -175,7 +175,7 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 #[wasm_bindgen::prelude::wasm_bindgen(js_name = puzzle5dParseDslJson)]
 pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, wasm_bindgen::JsValue> {
     use store::DocumentDsl;
-    let projection = Puzzle5dProjection::parse_dsl(dsl_text).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))?;
+    let projection = Puzzle5dSnapshot::parse_dsl(dsl_text).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))
 }
 //#endregion 🔖️WasmBridge
@@ -204,8 +204,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::puzzle5d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::puzzle5d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle5d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle5d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("puzzle.puzzle5d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -234,8 +234,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle5d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle5d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("5d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -252,33 +252,46 @@ pub fn register_pilot_languages() {
 
 
 //#region 🔖️ArtifactEngine
+/// ⚙️ UI-independent puzzle5d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Puzzle5dEngine {
-    projection: crate::artifacts::puzzle5d::Puzzle5dPlayProjection,
+    artifact: crate::artifacts::puzzle5d::schema::Puzzle5dArtifact,
+    snapshot: crate::artifacts::puzzle5d::Puzzle5dSnapshot,
 }
 
 impl Puzzle5dEngine {
-    pub fn new(projection: crate::artifacts::puzzle5d::Puzzle5dPlayProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::puzzle5d::Puzzle5dSnapshot) -> Self {
+        let artifact = crate::artifacts::puzzle5d::schema::Puzzle5dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+
+    pub fn into_snapshot(self) -> crate::artifacts::puzzle5d::Puzzle5dSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Puzzle5dEngine {
-    type Projection = crate::artifacts::puzzle5d::Puzzle5dPlayProjection;
+    type Artifact = crate::artifacts::puzzle5d::schema::Puzzle5dArtifact;
+    type Snapshot = crate::artifacts::puzzle5d::Puzzle5dSnapshot;
     type Mutation = crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
     type Diff = crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::puzzle5d::mutations::apply_puzzle5d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::puzzle5d::mutations::apply_puzzle5d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

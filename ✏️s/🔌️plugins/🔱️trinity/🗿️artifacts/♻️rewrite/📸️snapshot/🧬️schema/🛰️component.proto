@@ -1,0 +1,22 @@
+syntax = "proto3";
+package semio.s.trinity.rewrite.snapshot;
+
+// 🧬️ Rewrite snapshot schema — persistent fields only.
+
+message RewriteSnapshot {
+  // @state persistent
+  string before_fixture_json = 1;
+  // @state persistent
+  string lhs_json = 2;
+  // @state persistent
+  string rhs_json = 3;
+  // @state persistent
+  map<string, string> parameter_bindings = 4;
+  // @state persistent
+  map<string, LayoutPoint> rule_layout = 5;
+}
+
+message LayoutPoint {
+  double x = 1;
+  double y = 2;
+}

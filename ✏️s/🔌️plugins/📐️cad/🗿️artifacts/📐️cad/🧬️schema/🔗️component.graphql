@@ -1,0 +1,62 @@
+# 🧬️ CadArtifact schema.
+
+type CadArtifact {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  objects: [CadObject!]! @state(class: PERSISTENT)
+  buildingObjects: [CadObject!]! @state(class: PERSISTENT)
+  energyObjects: [CadObject!]! @state(class: PERSISTENT)
+  structureClassicObjects: [CadObject!]! @state(class: PERSISTENT)
+  referencesByModelDefinitionId: [CadReferenceListEntry!]! @state(class: PERSISTENT)
+  nodes: [CadNode!]! @state(class: PERSISTENT)
+  shapeGeometry: CadGeometry @state(class: PERSISTENT)
+  buildingGeometry: CadGeometry @state(class: PERSISTENT)
+  energyGeometry: CadGeometry @state(class: PERSISTENT)
+  structureClassicGeometry: CadGeometry @state(class: PERSISTENT)
+  activeModelDefinitionId: String! @state(class: PERSISTENT)
+  selectedObjectIds: [String!]! @state(class: SHARED_UI)
+  selectedNodeIds: [String!]! @state(class: SHARED_UI)
+  activeObjectId: String @state(class: SHARED_UI)
+  componentSelection: CadComponentSelection! @state(class: SHARED_UI)
+  selectedReferenceModelDefinitionId: String @state(class: SHARED_UI)
+  selectedReferenceId: String @state(class: SHARED_UI)
+  selectedPrimitiveId: String @state(class: SHARED_UI)
+  selectedPrimitiveKind: String @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  activeExampleId: String @state(class: SHARED_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  engagementStep: String! @state(class: LOCAL_UI)
+  engagementPane: String @state(class: LOCAL_UI)
+  engagementSessionJson: String @state(class: LOCAL_UI)
+  lastFinalizedInteractionId: String @state(class: LOCAL_UI)
+  sunEnabled: Boolean! @state(class: LOCAL_UI)
+  sunAzimuth: Float! @state(class: LOCAL_UI)
+  sunElevation: Float! @state(class: LOCAL_UI)
+  sunIntensity: Float! @state(class: LOCAL_UI)
+  sunColor: String! @state(class: LOCAL_UI)
+  camera: CadCamera! @state(class: LOCAL_UI)
+  cameraBuilding: CadCamera! @state(class: LOCAL_UI)
+  cameraEnergy: CadCamera! @state(class: LOCAL_UI)
+  cameraStructureClassic: CadCamera! @state(class: LOCAL_UI)
+  dislocateShape: CadDislocateOptions! @state(class: LOCAL_UI)
+  dislocateBuilding: CadDislocateOptions! @state(class: LOCAL_UI)
+  dislocateEnergy: CadDislocateOptions! @state(class: LOCAL_UI)
+  dislocateStructureClassic: CadDislocateOptions! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  terminology: String! @state(class: LOCAL_UI)
+  contributionsJson: String! @state(class: LOCAL_UI)
+  hoveredObjectId: String @state(class: PREVIEW)
+  hoveredTargetObjectId: String @state(class: PREVIEW)
+  hoveredTargetMode: String @state(class: PREVIEW)
+  hoveredTargetId: Int @state(class: PREVIEW)
+}
+
+type CadObject { id: String! }
+type CadNode { id: String! }
+type CadReferenceList { values: [String!]! }
+type CadReferenceListEntry { key: String! value: CadReferenceList! }
+type CadGeometry { anchorsJson: String }
+type CadCamera { zoom: Float }
+type CadComponentSelection { mode: String! }
+type CadDislocateOptions { moveEnabled: Boolean! rotateEnabled: Boolean! }

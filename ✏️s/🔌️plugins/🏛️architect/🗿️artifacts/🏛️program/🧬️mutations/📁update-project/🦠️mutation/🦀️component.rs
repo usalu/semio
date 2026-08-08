@@ -1,3 +1,4 @@
-//! 📁 Program mutation — `UpdateProject` leaf.
+//! 📁 ProgramSnapshot mutation — `UpdateProject` leaf.
 //#region 🔖️Mutation
 //#endregion 🔖️Mutation
+use crate::artifacts::program::ProgramSnapshot;

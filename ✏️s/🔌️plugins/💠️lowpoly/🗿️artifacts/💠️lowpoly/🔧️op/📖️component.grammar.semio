@@ -4,7 +4,7 @@ extension lowpoly
 use family-scene
 start mutation
 
-mutation = objects-add | objects-remove | objects-move | objects-patch | add-paint-layer | remove-paint-layer | patch-paint-layer | paint-stroke | set-projection
+mutation = objects-add | objects-remove | objects-move | objects-patch | add-paint-layer | remove-paint-layer | patch-paint-layer | paint-stroke | set-snapshot
 objects-add = "objects-add" {"index" "=" INT}? object-block
 objects-remove = "objects-remove" "id" "=" IDENT
 objects-move = "objects-move" "id" "=" IDENT "to-index" "=" INT
@@ -13,7 +13,7 @@ add-paint-layer = "add-paint-layer" "object-id" "=" IDENT {"index" "=" INT}? pai
 remove-paint-layer = "remove-paint-layer" "object-id" "=" IDENT "index" "=" INT
 patch-paint-layer = "patch-paint-layer" "object-id" "=" IDENT "index" "=" INT paint-layer-patch-block
 paint-stroke = "paint-stroke" "object-id" "=" IDENT "layer-index" "=" INT runs-table
-set-projection = "set-projection" projection-block
+set-snapshot = "set-snapshot" snapshot-block
 
 object-block = "object" "{" object-field* "}"
 object-field = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh | object-transform | paint-layers
@@ -36,7 +36,7 @@ paint-layer-patch-block = "patch" "{" paint-layer-patch-field* "}"
 paint-layer-patch-field = {"name" "=" TEXT} | {"visible" "=" BOOL} | {"opacity" "=" FLOAT} | {"blend-mode" "=" IDENT}
 runs-table = "runs" "{" run* "}"
 run = "run" "offset" "=" INT "bytes" "=" TEXT
-projection-block = "projection" "{" schema-line? objects-field? scene-compose? "}"
+snapshot-block = "snapshot" "{" schema-line? objects-field? scene-compose? "}"
 schema-line = "schema" "=" IDENT
 objects-field = "objects" "=" "[" object* "]" | "objects" "=" object*
 object = "{" object-field* "}"

@@ -2,7 +2,7 @@
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
-use crate::artifacts::procedural3d::Procedural3dDocument;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{flow_host_with_session, FlowEvalSession};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
@@ -15,8 +15,8 @@ pub mod flow_eval_tick {
     #[dsl(keyword = "flow-eval-tick")]
     pub struct FlowEvalTick {}
 
-    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         let mut host = flow_host_with_session(fixture, session);
         let more = session.tick(&mut host);
         let mut effects = if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
@@ -39,7 +39,7 @@ pub mod flow_eval_tick {
                 session,
                 &eval_json,
                 fixture,
-                cfg.projection,
+                cfg.snapshot,
             ));
         }
         Ok(Emit { effects, ..Default::default() })
@@ -58,7 +58,7 @@ pub mod flow_eval_resolve {
         pub output_json: String,
     }
 
-    pub fn handle(payload: &FlowEvalResolve, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &FlowEvalResolve, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let _ = session.seed_node_cache(payload.node_hash, &payload.output_json);
         Ok(Emit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() })
     }
@@ -76,7 +76,7 @@ pub mod flow_tessellate_resolve {
         pub output_json: String,
     }
 
-    pub fn handle(payload: &FlowTessellateResolve, _doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &FlowTessellateResolve, _doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         let _ = session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
         Ok(Emit::default())
     }

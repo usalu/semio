@@ -1,0 +1,117 @@
+# 🧬️ Fem3d diff schema — sparse field delta.
+
+type Fem3dDiff {
+  artifact: Fem3dArtifact @state(class: PERSISTENT)
+  nodes: Fem3dNodesDelta @state(class: PERSISTENT)
+  elements: Fem3dElementsDelta @state(class: PERSISTENT)
+  materials: Fem3dMaterialsDelta @state(class: PERSISTENT)
+  sections: Fem3dSectionsDelta @state(class: PERSISTENT)
+  solids: Fem3dSolidsDelta @state(class: PERSISTENT)
+  supports: Fem3dSupportsDelta @state(class: PERSISTENT)
+  loadCases: Fem3dLoadCasesDelta @state(class: PERSISTENT)
+  combinations: Fem3dCombinationsDelta @state(class: PERSISTENT)
+  analysis: FemAnalysisSettings @state(class: PERSISTENT)
+  resultSourceId: String @state(class: SHARED_UI)
+  resultMode: String @state(class: SHARED_UI)
+  resultModeIndex: Int @state(class: SHARED_UI)
+  camera: FemCamera @state(class: LOCAL_UI)
+  solverResultsJson: String @state(class: PREVIEW)
+  meshPreviewJson: String @state(class: PREVIEW)
+}
+
+type Fem3dNodesDelta {
+  added: [FemNode!]!
+  removed: [String!]!
+  patched: [Fem3dNodesPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dNodesPatchEntry {
+  id: String!
+  item: FemNode!
+}
+
+type Fem3dElementsDelta {
+  added: [FemElement!]!
+  removed: [String!]!
+  patched: [Fem3dElementsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dElementsPatchEntry {
+  id: String!
+  item: FemElement!
+}
+
+type Fem3dMaterialsDelta {
+  added: [FemMaterial!]!
+  removed: [String!]!
+  patched: [Fem3dMaterialsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dMaterialsPatchEntry {
+  id: String!
+  item: FemMaterial!
+}
+
+type Fem3dSectionsDelta {
+  added: [FemSection!]!
+  removed: [String!]!
+  patched: [Fem3dSectionsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dSectionsPatchEntry {
+  id: String!
+  item: FemSection!
+}
+
+type Fem3dSolidsDelta {
+  added: [FemSolid!]!
+  removed: [String!]!
+  patched: [Fem3dSolidsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dSolidsPatchEntry {
+  id: String!
+  item: FemSolid!
+}
+
+type Fem3dSupportsDelta {
+  added: [FemSupport!]!
+  removed: [String!]!
+  patched: [Fem3dSupportsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dSupportsPatchEntry {
+  id: String!
+  item: FemSupport!
+}
+
+type Fem3dLoadCasesDelta {
+  added: [FemLoadCase!]!
+  removed: [String!]!
+  patched: [Fem3dLoadCasesPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dLoadCasesPatchEntry {
+  id: String!
+  item: FemLoadCase!
+}
+
+type Fem3dCombinationsDelta {
+  added: [FemCombination!]!
+  removed: [String!]!
+  patched: [Fem3dCombinationsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem3dCombinationsPatchEntry {
+  id: String!
+  item: FemCombination!
+}
+

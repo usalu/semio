@@ -1,0 +1,56 @@
+fem artifact-schema breaches: 0
+fem total policy breaches: 129
+byKind {
+  "app-plugin/app-coupling": 1,
+  "taxonomy/dead-example-leaf": 5,
+  "taxonomy/emoji-prefix": 36,
+  "pack-migration/completeness": 2,
+  "protocol-migration/command-envelope-completeness": 4,
+  "dsl-migration/diff-completeness": 2,
+  "mutation-migration/impl-presence": 36,
+  "mutation-migration/emoji-uniqueness": 28,
+  "handcrafted-grammar/spec-distinctness": 2,
+  "handcrafted-grammar/declared-use": 8,
+  "handcrafted-grammar/empty-example": 3,
+  "os-state-authority/item-scope-global": 2
+}
+* app-plugin/app-coupling ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust depends directly on another plugin's crate (fem -> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📚️examples/🎬️demo/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/dead-example-leaf "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🧪️tests/🦀️test.rs" is not reachable via #[path] from any 📦️glue.rs
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-section" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-load-case" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/📍set-node" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-analysis-settings" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-node" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-support" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-combination" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-combination" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-element" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-element" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-solid" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-material" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-solid" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-material" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-support" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/🎛set-load-case" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧬️mutations/➖remove-section" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-section" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-region" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/➖remove-load-case" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/📍set-node" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-analysis-settings" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/➖remove-node" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/➖remove-support" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-combination" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/➖remove-combination" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-element" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/➖remove-element" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/➖remove-material" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-material" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-support" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+* taxonomy/emoji-prefix "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧬️mutations/🎛set-load-case" is missing U+FE0F variation selector on its emoji prefix

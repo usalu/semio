@@ -1,0 +1,462 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/s/fem/fem2d/diff.json",
+  "title": "Fem2dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Fem2dArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "nodes": {
+      "$ref": "#/$defs/Fem2dNodesDelta",
+      "x-semio-state": "persistent"
+    },
+    "elements": {
+      "$ref": "#/$defs/Fem2dElementsDelta",
+      "x-semio-state": "persistent"
+    },
+    "regions": {
+      "$ref": "#/$defs/Fem2dRegionsDelta",
+      "x-semio-state": "persistent"
+    },
+    "materials": {
+      "$ref": "#/$defs/Fem2dMaterialsDelta",
+      "x-semio-state": "persistent"
+    },
+    "sections": {
+      "$ref": "#/$defs/Fem2dSectionsDelta",
+      "x-semio-state": "persistent"
+    },
+    "supports": {
+      "$ref": "#/$defs/Fem2dSupportsDelta",
+      "x-semio-state": "persistent"
+    },
+    "loadCases": {
+      "$ref": "#/$defs/Fem2dLoadCasesDelta",
+      "x-semio-state": "persistent"
+    },
+    "combinations": {
+      "$ref": "#/$defs/Fem2dCombinationsDelta",
+      "x-semio-state": "persistent"
+    },
+    "analysis": {
+      "$ref": "#/$defs/FemAnalysisSettings",
+      "x-semio-state": "persistent"
+    },
+    "resultSourceId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "shared-ui"
+    },
+    "resultMode": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "resultModeIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "shared-ui"
+    },
+    "camera": {
+      "$ref": "#/$defs/FemCamera",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "solverResultsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "preview"
+    },
+    "meshPreviewJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "FemCamera": {
+      "title": "FemCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "FemAnalysisSettings": {
+      "title": "FemAnalysisSettings",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modalCount",
+        "bucklingCount",
+        "deformationScale"
+      ],
+      "properties": {
+        "modalCount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "bucklingCount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "deformationScale": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "FemNode": {
+      "title": "FemNode",
+      "type": "object"
+    },
+    "FemElement": {
+      "title": "FemElement",
+      "type": "object"
+    },
+    "FemRegion": {
+      "title": "FemRegion",
+      "type": "object"
+    },
+    "FemMaterial": {
+      "title": "FemMaterial",
+      "type": "object"
+    },
+    "FemSection": {
+      "title": "FemSection",
+      "type": "object"
+    },
+    "FemSupport": {
+      "title": "FemSupport",
+      "type": "object"
+    },
+    "FemLoadCase": {
+      "title": "FemLoadCase",
+      "type": "object"
+    },
+    "FemCombination": {
+      "title": "FemCombination",
+      "type": "object"
+    },
+    "Fem2dNodesDelta": {
+      "title": "Fem2dNodesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dElementsDelta": {
+      "title": "Fem2dElementsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dRegionsDelta": {
+      "title": "Fem2dRegionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dMaterialsDelta": {
+      "title": "Fem2dMaterialsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dSectionsDelta": {
+      "title": "Fem2dSectionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dSupportsDelta": {
+      "title": "Fem2dSupportsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dLoadCasesDelta": {
+      "title": "Fem2dLoadCasesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dCombinationsDelta": {
+      "title": "Fem2dCombinationsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

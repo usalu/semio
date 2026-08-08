@@ -1,0 +1,527 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/diff.json",
+  "title": "Puzzle3dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Puzzle3dArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "domain": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle3dMeta",
+      "x-semio-state": "persistent"
+    },
+    "objects": {
+      "$ref": "#/$defs/Puzzle3dObjectsDelta",
+      "x-semio-state": "persistent"
+    },
+    "attractions": {
+      "$ref": "#/$defs/Puzzle3dAttractionsDelta",
+      "x-semio-state": "persistent"
+    },
+    "targetVolumes": {
+      "$ref": "#/$defs/Puzzle3dTargetVolumesDelta",
+      "x-semio-state": "persistent"
+    },
+    "references": {
+      "$ref": "#/$defs/Puzzle3dReferencesDelta",
+      "x-semio-state": "persistent"
+    },
+    "selectedObjectIds": {
+      "$ref": "#/$defs/Puzzle3dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedVortexIds": {
+      "$ref": "#/$defs/Puzzle3dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedAttractionIds": {
+      "$ref": "#/$defs/Puzzle3dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedTargetVolumeIds": {
+      "$ref": "#/$defs/Puzzle3dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedReferenceIds": {
+      "$ref": "#/$defs/Puzzle3dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "cameraPositionX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPositionY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraPositionZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraTargetZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "selectionModeDefault": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridVisible": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridSpacing": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "overlapBudget": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "lodAutomatic": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "lodDepthVariable": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "lodManual": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "proximityRadius": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "runtimeExtrasJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredObjectId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "hoveredVortexFullId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "hoveredKindId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "previewSeq": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Puzzle3dStringList": {
+      "title": "Puzzle3dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle3dObjectsDelta": {
+      "title": "Puzzle3dObjectsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dObject"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dObjectPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle3dObjectPatchEntry": {
+      "title": "Puzzle3dObjectPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle3dObjectPatch"
+        }
+      }
+    },
+    "Puzzle3dObjectPatch": {
+      "title": "Puzzle3dObjectPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle3dObject"
+        }
+      }
+    },
+    "Puzzle3dObject": {
+      "title": "Puzzle3dObject",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dAttractionsDelta": {
+      "title": "Puzzle3dAttractionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dAttraction"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dAttractionPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle3dAttractionPatchEntry": {
+      "title": "Puzzle3dAttractionPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle3dAttractionPatch"
+        }
+      }
+    },
+    "Puzzle3dAttractionPatch": {
+      "title": "Puzzle3dAttractionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle3dAttraction"
+        }
+      }
+    },
+    "Puzzle3dAttraction": {
+      "title": "Puzzle3dAttraction",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dTargetVolumesDelta": {
+      "title": "Puzzle3dTargetVolumesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dTargetVolume"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dTargetVolumePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle3dTargetVolumePatchEntry": {
+      "title": "Puzzle3dTargetVolumePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle3dTargetVolumePatch"
+        }
+      }
+    },
+    "Puzzle3dTargetVolumePatch": {
+      "title": "Puzzle3dTargetVolumePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle3dTargetVolume"
+        }
+      }
+    },
+    "Puzzle3dTargetVolume": {
+      "title": "Puzzle3dTargetVolume",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dReferencesDelta": {
+      "title": "Puzzle3dReferencesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dReference"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dReferencePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle3dReferencePatchEntry": {
+      "title": "Puzzle3dReferencePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle3dReferencePatch"
+        }
+      }
+    },
+    "Puzzle3dReferencePatch": {
+      "title": "Puzzle3dReferencePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle3dReference"
+        }
+      }
+    },
+    "Puzzle3dReference": {
+      "title": "Puzzle3dReference",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dMeta": {
+      "title": "Puzzle3dMeta",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

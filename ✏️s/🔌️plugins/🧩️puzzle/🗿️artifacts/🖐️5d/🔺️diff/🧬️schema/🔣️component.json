@@ -1,0 +1,387 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle5d/diff.json",
+  "title": "Puzzle5dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "Puzzle5dArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "domain": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "label": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle5dMeta",
+      "x-semio-state": "persistent"
+    },
+    "kindCatalogs": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/Puzzle5dKindCatalogs"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "kindCompatibility": {
+      "$ref": "#/$defs/Puzzle5dKindCompatibilityList",
+      "x-semio-state": "persistent"
+    },
+    "parts": {
+      "$ref": "#/$defs/Puzzle5dPartsDelta",
+      "x-semio-state": "persistent"
+    },
+    "fasteners": {
+      "$ref": "#/$defs/Puzzle5dFastenersDelta",
+      "x-semio-state": "persistent"
+    },
+    "selectedPartIds": {
+      "$ref": "#/$defs/Puzzle5dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedGripIds": {
+      "$ref": "#/$defs/Puzzle5dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "selectedFastenerIds": {
+      "$ref": "#/$defs/Puzzle5dStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "camera2dX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera2dY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera2dZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dPositionX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dPositionY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dPositionZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dTargetX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dTargetY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dTargetZ": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "camera3dZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "gridSnapEnabled": {
+      "type": "boolean",
+      "x-semio-state": "local-ui"
+    },
+    "gridFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "suggestionOffset": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "overlapBudget": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "brushCandidateIndex": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "local-ui"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "runtimeExtrasJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredPartId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    },
+    "previewSeq": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "Puzzle5dStringList": {
+      "title": "Puzzle5dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle5dPartsDelta": {
+      "title": "Puzzle5dPartsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dPart"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dPartPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle5dPartPatchEntry": {
+      "title": "Puzzle5dPartPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle5dPartPatch"
+        }
+      }
+    },
+    "Puzzle5dPartPatch": {
+      "title": "Puzzle5dPartPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle5dPart"
+        }
+      }
+    },
+    "Puzzle5dPart": {
+      "title": "Puzzle5dPart",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dFastenersDelta": {
+      "title": "Puzzle5dFastenersDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dFastener"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dFastenerPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle5dFastenerPatchEntry": {
+      "title": "Puzzle5dFastenerPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle5dFastenerPatch"
+        }
+      }
+    },
+    "Puzzle5dFastenerPatch": {
+      "title": "Puzzle5dFastenerPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "#/$defs/Puzzle5dFastener"
+        }
+      }
+    },
+    "Puzzle5dFastener": {
+      "title": "Puzzle5dFastener",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dKindCompatibility": {
+      "title": "Puzzle5dKindCompatibility",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dMeta": {
+      "title": "Puzzle5dMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dKindCatalogs": {
+      "title": "Puzzle5dKindCatalogs",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dKindCompatibilityList": {
+      "title": "Puzzle5dKindCompatibilityList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dKindCompatibility"
+          }
+        }
+      }
+    }
+  }
+}

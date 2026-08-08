@@ -3,7 +3,7 @@
 
 use crate::artifacts::fem2d::engine::meshing::build_nodes_and_elements;
 use crate::artifacts::fem2d::engine::Fem2dError;
-use crate::artifacts::fem2d::Fem2dDocument;
+use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::model::Support;
 use std::collections::HashMap;
 
@@ -26,7 +26,7 @@ pub struct RegionMesh {
 /// 🗺️ Triangulates every `FemRegion` in `doc` (same `crate::mesh::triangulate` call as
 /// `build_nodes_and_elements`, so triangle indices/ids line up deterministically with solved results)
 /// and returns just the geometry — cheap enough to call on every render.
-pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dError> {
+pub fn fem2d_mesh_preview(doc: &Fem2dSnapshot) -> Result<Vec<RegionMesh>, Fem2dError> {
     let mut out = Vec::with_capacity(doc.regions.len());
     for region in &doc.regions {
         let domain = crate::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
@@ -50,7 +50,7 @@ pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dE
 /// may name either a `FemLoadCase` or a `FemCombination`), keyed by node id — the document-layer bridge
 /// to `crate::analyses::nodal_averaged_scalar`, feeding the results window's banded contour
 /// rendering.
-pub fn fem2d_nodal_von_mises(doc: &Fem2dDocument, case_id: &str) -> Result<HashMap<String, f64>, Fem2dError> {
+pub fn fem2d_nodal_von_mises(doc: &Fem2dSnapshot, case_id: &str) -> Result<HashMap<String, f64>, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
@@ -67,8 +67,8 @@ mod tests {
 
     /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
     /// document nodes.
-    fn rectangle_region_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn rectangle_region_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
             elements: vec![],
             regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],

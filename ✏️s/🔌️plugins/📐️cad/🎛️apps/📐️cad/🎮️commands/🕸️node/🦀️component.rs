@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{runtime_of, snapshot_of};
@@ -21,15 +21,15 @@ pub mod add_node {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let mut runtime = runtime_of(cfg);
         let id = next_cad_id("node");
         let label = format!("Node {}", document.nodes.len() + 1);
         let node = CadNode { id: id.clone(), label, kind: payload.kind.clone() };
         runtime.selected_node_ids = vec![id];
         let mut emit = Emit::mutations(vec![CadMutation::AddNode { node }]);
-        emit.config_mutations = vec![snapshot_of(&runtime, cfg.projection)];
+        emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
         Ok(emit)
     }
 }
@@ -46,7 +46,7 @@ pub mod rename_node {
         pub value: String,
     }
 
-    pub fn handle(payload: &RenameNode, _doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &RenameNode, _doc: &DocumentView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         if payload.node_id.is_empty() || payload.value.is_empty() {
             return Ok(Emit::default());
         }

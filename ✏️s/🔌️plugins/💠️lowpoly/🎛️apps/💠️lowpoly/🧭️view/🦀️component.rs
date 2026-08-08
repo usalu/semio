@@ -5,7 +5,7 @@
 
 use crate::apps::lowpoly::config::LowpolyConfig;
 use crate::artifacts::lowpoly::engine::LowpolyDocument;
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyProjection, LowpolySelection, LowpolySelectionTargets};
+use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot, LowpolySelection, LowpolySelectionTargets};
 use serde_json::Value;
 
 //#region 🔖️View
@@ -13,23 +13,23 @@ use serde_json::Value;
 /// render/panel/utility/scene builders.
 #[derive(Clone, Copy)]
 pub struct LowpolyView<'a> {
-    pub projection: &'a LowpolyProjection,
+    pub snapshot: &'a LowpolySnapshot,
     pub config: &'a LowpolyConfig,
 }
 //#endregion 🔖️View
 
 //#region 🔖️ActiveObject
-pub fn resolve_active_object_id(projection: &LowpolyProjection, config: &LowpolyConfig) -> String {
-    if projection.objects.iter().any(|object| object.id == config.active_object_id) {
+pub fn resolve_active_object_id(snapshot: &LowpolySnapshot, config: &LowpolyConfig) -> String {
+    if snapshot.objects.iter().any(|object| object.id == config.active_object_id) {
         config.active_object_id.clone()
     } else {
-        projection.objects.first().map(|object| object.id.clone()).unwrap_or_default()
+        snapshot.objects.first().map(|object| object.id.clone()).unwrap_or_default()
     }
 }
 
 pub fn active_object<'a>(view: LowpolyView<'a>) -> Option<&'a LowpolyObject> {
-    let id = resolve_active_object_id(view.projection, view.config);
-    view.projection.objects.iter().find(|object| object.id == id)
+    let id = resolve_active_object_id(view.snapshot, view.config);
+    view.snapshot.objects.iter().find(|object| object.id == id)
 }
 //#endregion 🔖️ActiveObject
 
@@ -44,9 +44,9 @@ pub fn selection_targets_from_config(config: &LowpolyConfig) -> LowpolySelection
     LowpolySelectionTargets { mesh: config.selection_targets_mesh, vertex: config.selection_targets_vertex, edge: config.selection_targets_edge, face: config.selection_targets_face }
 }
 
-pub fn build_doc(projection: &LowpolyProjection, config: &LowpolyConfig) -> Option<LowpolyDocument> {
-    let active = resolve_active_object_id(projection, config);
-    LowpolyDocument::with_context(projection.clone(), active, selection_from_config(config)).ok()
+pub fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig) -> Option<LowpolyDocument> {
+    let active = resolve_active_object_id(snapshot, config);
+    LowpolyDocument::with_context(snapshot.clone(), active, selection_from_config(config)).ok()
 }
 
 pub fn merge_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u32> {
@@ -90,8 +90,8 @@ pub fn selection_key(object_id: &str, object_index: usize, mode: &str, id: u32) 
     format!("lowpoly:{object_id}:{object_index}:{mode}:{id}")
 }
 
-pub fn object_index_for(projection: &LowpolyProjection, object_id: &str) -> usize {
-    projection.objects.iter().position(|object| object.id == object_id).unwrap_or(0)
+pub fn object_index_for(snapshot: &LowpolySnapshot, object_id: &str) -> usize {
+    snapshot.objects.iter().position(|object| object.id == object_id).unwrap_or(0)
 }
 
 pub fn enable_selection_target_kind(targets: &mut LowpolySelectionTargets, mode: &str) {
@@ -105,28 +105,28 @@ pub fn enable_selection_target_kind(targets: &mut LowpolySelectionTargets, mode:
 
 /// 🎯️ The pure, typed-command counterpart of the pre-B1 `sync_selection_keys` — computes the
 /// document-target selection keys for `mode`/`ids` without mutating anything.
-pub fn selection_keys_for(projection: &LowpolyProjection, config: &LowpolyConfig, mode: &str, ids: &[u32]) -> Vec<String> {
-    let active = resolve_active_object_id(projection, config);
-    let object_index = object_index_for(projection, &active);
+pub fn selection_keys_for(snapshot: &LowpolySnapshot, config: &LowpolyConfig, mode: &str, ids: &[u32]) -> Vec<String> {
+    let active = resolve_active_object_id(snapshot, config);
+    let object_index = object_index_for(snapshot, &active);
     ids.iter().map(|id| selection_key(&active, object_index, mode, *id)).collect()
 }
 
 /// 🎯️ The pure, typed-command counterpart of the pre-B1 `apply_component_selection` — computes the new
 /// selection mode/ids/keys/targets after selecting `incoming` at `mode` granularity, for the caller to
 /// translate into `LowpolyConfigMutation`s (never mutates `config` directly).
-pub fn apply_component_selection(config: &LowpolyConfig, projection: &LowpolyProjection, mode: &str, incoming: &[u32], merge: &str) -> (String, Vec<u32>, Vec<String>, LowpolySelectionTargets) {
+pub fn apply_component_selection(config: &LowpolyConfig, snapshot: &LowpolySnapshot, mode: &str, incoming: &[u32], merge: &str) -> (String, Vec<u32>, Vec<String>, LowpolySelectionTargets) {
     let normalized = LowpolyDocument::normalize_selection_mode(mode);
     let mut targets = selection_targets_from_config(config);
     enable_selection_target_kind(&mut targets, &normalized);
     let ids = merge_selection_ids(&config.selection_ids, incoming, merge);
-    let keys = selection_keys_for(projection, config, &normalized, &ids);
+    let keys = selection_keys_for(snapshot, config, &normalized, &ids);
     (normalized, ids, keys, targets)
 }
 
 pub fn selected_document_ids(view: LowpolyView<'_>) -> Vec<String> {
     let config = view.config;
-    let active = resolve_active_object_id(view.projection, config);
-    let object_index = object_index_for(view.projection, &active);
+    let active = resolve_active_object_id(view.snapshot, config);
+    let object_index = object_index_for(view.snapshot, &active);
     config.selection_ids.iter().map(|id| document_target_row_id(&active, object_index, &config.selection_mode, *id)).collect()
 }
 
@@ -134,7 +134,7 @@ pub fn highlighted_document_ids(view: LowpolyView<'_>) -> Vec<String> {
     let config = view.config;
     match (&config.hovered_target_object_id, &config.hovered_target_mode, config.hovered_target_id) {
         (Some(object_id), Some(mode), Some(id)) => {
-            vec![document_target_row_id(object_id, object_index_for(view.projection, object_id), mode, id)]
+            vec![document_target_row_id(object_id, object_index_for(view.snapshot, object_id), mode, id)]
         }
         _ => Vec::new(),
     }

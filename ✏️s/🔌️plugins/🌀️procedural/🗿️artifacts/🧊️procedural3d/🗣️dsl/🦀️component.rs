@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::procedural3d::Procedural3dDocument;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{FormGeneration, GenerationPlayState};
@@ -250,7 +250,7 @@ pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(id = "procedural.procedural3d", layout = "lines")]
-struct Procedural3dDocumentDsl {
+struct Procedural3dSnapshotDsl {
     schema: String,
     #[dsl(block)]
     camera: CameraJsonDsl,
@@ -267,7 +267,7 @@ struct Procedural3dDocumentDsl {
 }
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Procedural3dDocumentDsl {
+impl store::DocumentDsl for Procedural3dSnapshotDsl {
     const EXTENSION: &'static str = "procedural3d";
     fn envelope_id() -> &'static str { "procedural.procedural3d" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -293,7 +293,7 @@ impl store::DocumentDsl for Procedural3dDocumentDsl {
     }
 }
 
-impl store::DocumentPack for Procedural3dDocumentDsl {
+impl store::DocumentPack for Procedural3dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -323,10 +323,10 @@ impl store::DocumentPack for Procedural3dDocumentDsl {
 
 
 
-fn procedural3d_document_to_dsl(document: &Procedural3dDocument) -> Procedural3dDocumentDsl {
+fn procedural3d_document_to_dsl(document: &Procedural3dSnapshot) -> Procedural3dSnapshotDsl {
     let fixture = &document.fixture;
     let generation = &document.generation;
-    Procedural3dDocumentDsl {
+    Procedural3dSnapshotDsl {
         schema: fixture.schema.clone(),
         camera: camera_to_dsl(&fixture.camera),
         widgets: fixture.widgets.iter().map(widget_to_dsl).collect(),
@@ -338,48 +338,48 @@ fn procedural3d_document_to_dsl(document: &Procedural3dDocument) -> Procedural3d
     }
 }
 
-fn procedural3d_document_from_dsl(parsed: Procedural3dDocumentDsl) -> Result<Procedural3dDocument, store::TextError> {
+fn procedural3d_document_from_dsl(parsed: Procedural3dSnapshotDsl) -> Result<Procedural3dSnapshot, store::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
-    Ok(Procedural3dDocument {
+    Ok(Procedural3dSnapshot {
         fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
         generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
     })
 }
 
-impl store::DocumentDsl for Procedural3dDocument {
+impl store::DocumentDsl for Procedural3dSnapshot {
     const EXTENSION: &'static str = "procedural3d";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <Procedural3dDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let parsed = <Procedural3dSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
         procedural3d_document_from_dsl(parsed)
     }
 
     fn print_dsl(&self) -> String {
-        <Procedural3dDocumentDsl as store::DocumentDsl>::print_dsl(&procedural3d_document_to_dsl(self))
+        <Procedural3dSnapshotDsl as store::DocumentDsl>::print_dsl(&procedural3d_document_to_dsl(self))
     }
 }
 
-impl store::DocumentPack for Procedural3dDocument {
+impl store::DocumentPack for Procedural3dSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <Procedural3dDocumentDsl as store::DocumentPack>::encode_pack_with(&procedural3d_document_to_dsl(self), options)
+        <Procedural3dSnapshotDsl as store::DocumentPack>::encode_pack_with(&procedural3d_document_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <Procedural3dDocumentDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <Procedural3dSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
         procedural3d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 }
 //#endregion 🔖️DslMirror
 
-/// 📖️ Parses `.procedural3d` DSL text into a `Procedural3dDocument`.
-pub fn parse_dsl(text: &str) -> Result<Procedural3dDocument, store::TextError> {
-    <Procedural3dDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.procedural3d` DSL text into a `Procedural3dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Procedural3dSnapshot, store::TextError> {
+    <Procedural3dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Procedural3dDocument` back to `.procedural3d` DSL text.
-pub fn print_dsl(document: &Procedural3dDocument) -> String {
+/// 🖨️ Prints a `Procedural3dSnapshot` back to `.procedural3d` DSL text.
+pub fn print_dsl(document: &Procedural3dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -392,8 +392,8 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_empty_projection() {
-        test_support::assert_dsl_round_trip(&Procedural3dDocument::default());
-        test_support::assert_dsl_pack_equivalence(&Procedural3dDocument::default());
+        test_support::assert_dsl_round_trip(&Procedural3dSnapshot::default());
+        test_support::assert_dsl_pack_equivalence(&Procedural3dSnapshot::default());
     }
 
     #[test]
@@ -408,7 +408,7 @@ mod tests {
             PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT,
             PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT,
         ] {
-            let projection = Procedural3dDocument::parse_dsl(text).expect("parse bundled example");
+            let projection = Procedural3dSnapshot::parse_dsl(text).expect("parse bundled example");
             test_support::assert_dsl_round_trip(&projection);
             test_support::assert_dsl_pack_equivalence(&projection);
         }
@@ -420,10 +420,10 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<Procedural3dDocument, Procedural3dMutation> = DocumentStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dDocument::default(), None));
+        let mut store: DocumentStore<Procedural3dSnapshot, Procedural3dMutation> = DocumentStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural3dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         let edit: &Edit<Procedural3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        test_support::assert_command_envelope_round_trip::<Procedural3dDocument, Procedural3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        test_support::assert_command_envelope_round_trip::<Procedural3dSnapshot, Procedural3dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 }
 //#endregion 🧪️Tests

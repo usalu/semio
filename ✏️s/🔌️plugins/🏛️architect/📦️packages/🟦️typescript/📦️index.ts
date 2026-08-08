@@ -1,8 +1,10 @@
 /** architect facet WASM facades */
+export * as program_schema from "../../🗿️artifacts/🏛️program/🧬️schema/🟦️component.ts";
+export * as program_snapshot_schema from "../../🗿️artifacts/🏛️program/📸️snapshot/🧬️schema/🟦️component.ts";
 export * as program_diff from "../../🗿️artifacts/🏛️program/🔺️diff/🟦️component.ts";
+export * as program_diff_schema from "../../🗿️artifacts/🏛️program/🔺️diff/🧬️schema/🟦️component.ts";
 export * as program_dsl from "../../🗿️artifacts/🏛️program/🗣️dsl/🟦️component.ts";
-export * as program_pack from "../../🗿️artifacts/🏛️program/🎒️pack/🟦️component.ts";
+export * as program_pack from "../../🗿️artifacts/🏛️program/📸️snapshot/🎒️pack/🟦️component.ts";
 export * as program_op from "../../🗿️artifacts/🏛️program/🔧️op/🟦️component.ts";
 export * as program_mutations from "../../🗿️artifacts/🏛️program/🧬️mutations/🟦️component.ts";
-
 export * as program_spr from "../../🗿️artifacts/🏛️program/📡️spr/🟦️component.ts";

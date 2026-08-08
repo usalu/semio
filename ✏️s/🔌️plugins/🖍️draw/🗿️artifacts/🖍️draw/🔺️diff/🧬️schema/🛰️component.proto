@@ -1,0 +1,104 @@
+syntax = "proto3";
+package semio.s.draw.draw.diff;
+
+// 🧬️ Draw diff schema — sparse field delta.
+
+message DrawDiff {
+  // @state persistent
+  optional DrawArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string id = 3;
+  // @state persistent
+  optional string title = 4;
+  // @state persistent
+  optional DrawLayersDelta layers = 5;
+  // @state persistent
+  optional DrawAssetsDelta assets = 6;
+  // @state persistent
+  optional DrawArtboard artboard = 7;
+  // @state shared-ui
+  optional DrawStringList selected_ids = 8;
+  // @state shared-ui
+  optional string active_utility_id = 9;
+  // @state local-ui
+  optional string engagement_input = 10;
+  // @state local-ui
+  optional double camera_x = 11;
+  // @state local-ui
+  optional double camera_y = 12;
+  // @state local-ui
+  optional double camera_zoom = 13;
+  // @state local-ui
+  optional string locale = 14;
+  // @state preview
+  optional string hovered_id = 15;
+}
+
+message DrawArtifact {
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated DrawLayerNode layers = 4;
+  map<string, DrawImageAsset> assets = 5;
+  optional DrawArtboard artboard = 6;
+  repeated string selected_ids = 7;
+  string active_utility_id = 8;
+  string engagement_input = 9;
+  double camera_x = 10;
+  double camera_y = 11;
+  double camera_zoom = 12;
+  string locale = 13;
+  optional string hovered_id = 14;
+}
+
+message DrawAssetsDelta {
+  map<string, DrawImageAsset> entries = 1;
+}
+
+message DrawStringList {
+  repeated string values = 1;
+}
+
+message DrawLayersDelta {
+  repeated DrawLayerNode added = 1;
+  repeated string removed = 2;
+  repeated DrawLayerPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message DrawLayerPatchEntry {
+  string id = 1;
+  DrawLayerPatch patch = 2;
+}
+
+message DrawLayerPatch {
+  optional bool visible = 1;
+  optional bool locked = 2;
+  optional string name = 3;
+  optional double opacity = 4;
+  optional string blend_mode = 5;
+  optional string transform_json = 6;
+  optional string fill_json = 7;
+  optional string stroke_json = 8;
+  optional string boolean_operation = 9;
+  optional string trace_params_json = 10;
+  optional string layer_json = 11;
+}
+
+message DrawLayerNode {
+  string kind = 1;
+}
+
+message DrawImageAsset {
+  string mime = 1;
+  string data = 2;
+  optional uint32 width = 3;
+  optional uint32 height = 4;
+}
+
+message DrawArtboard {
+  double width = 1;
+  double height = 2;
+}

@@ -3,7 +3,7 @@
 
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dDocument;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub mod set_result_display {
         pub mode_index: u32,
     }
 
-    pub fn handle(payload: &SetResultDisplay, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetResultDisplay, _doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Fem3dConfigMutation::SetResultDisplay { source_id: payload.source_id.clone(), mode: payload.mode.clone(), mode_index: payload.mode_index }]))
     }
 }

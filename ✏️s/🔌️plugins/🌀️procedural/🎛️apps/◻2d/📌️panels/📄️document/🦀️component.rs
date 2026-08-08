@@ -3,7 +3,7 @@
 use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::apps::procedural2d::terminology::Procedural2dLabels;
 use crate::apps::procedural2d::procedural2d_action;
-use crate::artifacts::procedural2d::{widget_id, Procedural2dDocument};
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -18,7 +18,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural2dDocument, config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
+pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = document
         .fixture
         .widgets

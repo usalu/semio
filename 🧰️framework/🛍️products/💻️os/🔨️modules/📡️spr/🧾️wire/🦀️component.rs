@@ -78,7 +78,7 @@ pub const REC_ALTERNATIVE: u8 = 0x07;
 pub const REC_ACTIVE: u8 = 0x08;
 /// @emoji 🏔️ A frontier summary snapshot.
 pub const REC_FRONTIER: u8 = 0x09;
-/// @emoji 📸️ A materialized projection body (opaque to this crate family).
+/// @emoji 📸️ A materialized snapshot body (opaque to this crate family).
 pub const REC_PROJECTION: u8 = 0x0A;
 /// @emoji 🔎️ An advisory, rebuildable offset index.
 pub const REC_INDEX: u8 = 0x0B;

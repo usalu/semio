@@ -2,7 +2,7 @@
 
 use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::artifacts::procedural2d::dsl::PROCEDURAL2D_EXAMPLE_TEXT;
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
 use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowFixture, FlowHost};
@@ -217,12 +217,12 @@ pub fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &Flo
 
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.procedural2d` example
 /// fixture, falling back to the empty document if the fixture ever fails to parse.
-pub fn default_projection() -> Procedural2dDocument {
-    Procedural2dDocument::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).unwrap_or_default()
+pub fn default_snapshot() -> Procedural2dSnapshot {
+    Procedural2dSnapshot::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).unwrap_or_default()
 }
 
-pub fn empty_procedural2d_projection() -> Procedural2dDocument {
-    Procedural2dDocument::default()
+pub fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
+    Procedural2dSnapshot::default()
 }
 
 pub fn procedural2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
@@ -230,16 +230,29 @@ pub fn procedural2d_document_json_to_svg(value: &Value) -> Result<(String, u32, 
 }
 
 pub fn procedural2d_document_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
-    serde_json::to_value(default_projection()).map_err(|err| err.to_string())
+    serde_json::to_value(default_snapshot()).map_err(|err| err.to_string())
 }
 
 /// 🔌️ Registers this artifact's plugin-level exports — pack<->dsl document codec, mesh/svg export
 /// bridges. Called once from the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
+static PROCEDURAL2D_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the procedural2d artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = PROCEDURAL2D_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor());
+}
+
 pub fn register() {
+    register_artifact_schema();
     register_pilot_languages();
     semio_framework_os::register_2d_export_handlers("2d.procedural", "procedural2d", procedural2d_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.procedural", procedural2d_document_from_dwg);
-    // 📦️ Registers `Procedural2dDocument`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
+    // 📦️ Registers `Procedural2dSnapshot`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
     // can print/parse `.procedural2d` packs without depending on this crate's concrete types.
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::procedural2d::Procedural2dPlayApp>(crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA);
 }
@@ -251,15 +264,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_projection_parses_the_bundled_example() {
-        assert!(!default_projection().fixture.widgets.is_empty());
+    fn default_snapshot_parses_the_bundled_example() {
+        assert!(!default_snapshot().fixture.widgets.is_empty());
     }
 
     #[test]
-    fn document_from_dwg_returns_valid_default_projection() {
+    fn document_from_dwg_returns_valid_default_snapshot() {
         let drawing = semio_framework::DwgDrawing::default();
         let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
-        let projection: Procedural2dDocument = serde_json::from_value(document).expect("parseable projection");
+        let projection: Procedural2dSnapshot = serde_json::from_value(document).expect("parseable projection");
         assert_eq!(projection.fixture.schema, "flow.fixture");
     }
 
@@ -284,8 +297,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural.procedural2d.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -314,8 +327,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural2d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("procedural2d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -333,32 +346,40 @@ pub fn register_pilot_languages() {
 
 //#region 🔖️ArtifactEngine
 pub struct Procedural2dEngine {
-    projection: crate::artifacts::procedural2d::Procedural2dDocument,
+    artifact: crate::artifacts::procedural2d::schema::Procedural2dArtifact,
+    snapshot: crate::artifacts::procedural2d::Procedural2dSnapshot,
 }
 
 impl Procedural2dEngine {
-    pub fn new(projection: crate::artifacts::procedural2d::Procedural2dDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::procedural2d::Procedural2dSnapshot) -> Self {
+        let artifact = crate::artifacts::procedural2d::schema::Procedural2dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
 }
 
 impl protocol::ArtifactEngine for Procedural2dEngine {
-    type Projection = crate::artifacts::procedural2d::Procedural2dDocument;
+    type Artifact = crate::artifacts::procedural2d::schema::Procedural2dArtifact;
+    type Snapshot = crate::artifacts::procedural2d::Procedural2dSnapshot;
     type Mutation = crate::artifacts::procedural2d::mutations::Procedural2dMutation;
     type Diff = crate::artifacts::procedural2d::diff::Procedural2dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::procedural2d::mutations::apply_procedural2d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::procedural2d::mutations::apply_procedural2d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

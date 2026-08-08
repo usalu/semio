@@ -1,8 +1,8 @@
 //! 🌉️ Puzzle 5d engine — the semio-compose Design importer: maps one already-exported
 //! `*.design.semio_compose_rs.json` document's hashed `pieces`/`connections` collections onto a
-//! `Puzzle5dProjection`'s `parts`/`fasteners`, including the plane-frame → quaternion conversion.
+//! `Puzzle5dSnapshot`'s `parts`/`fasteners`, including the plane-frame → quaternion conversion.
 
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dProjection};
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dSnapshot};
 use serde_json::Value;
 
 //#region 🔖️Frames
@@ -86,7 +86,7 @@ fn compose_connection_to_fastener(connection: &Value) -> Option<Puzzle5dFastener
 }
 
 /// 🌉️ Imports a semio_compose_rs Design document (the `*.design.semio_compose_rs.json` shape: top-level `pieces`/
-/// `connections` hashed collections) into a `Puzzle5dProjection`'s `parts`/`fasteners` — pieces map to
+/// `connections` hashed collections) into a `Puzzle5dSnapshot`'s `parts`/`fasteners` — pieces map to
 /// parts (2D position from `pose.center`, 3D pose from `pose.plane`, kind from `piece.type.id` as a
 /// free-form string key), connections map to fasteners (`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt`
 /// copy verbatim onto the fields `Puzzle5dFastener` gained to unify with `Puzzle3dAttraction`).
@@ -95,8 +95,8 @@ fn compose_connection_to_fastener(connection: &Value) -> Option<Puzzle5dFastener
 /// content-addressed `type/*.type.semio_compose_rs.json` files in a real kit) is out of scope here; parts
 /// import with an empty `grips` list and `kind_catalogs`/`kind_compatibility` untouched, left for the
 /// caller to merge in separately (e.g. via a block 3d document's `puzzle3d_catalog_fragment`).
-pub fn import_compose_design_json(design_json: &Value) -> Puzzle5dProjection {
-    let mut projection = Puzzle5dProjection::default();
+pub fn import_compose_design_json(design_json: &Value) -> Puzzle5dSnapshot {
+    let mut projection = Puzzle5dSnapshot::default();
     if let Some(label) = design_json.get("name").and_then(Value::as_str) {
         projection.label = Some(label.to_string());
     }

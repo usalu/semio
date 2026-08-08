@@ -134,7 +134,7 @@ pub mod app {
         /// (`.window_kind()`/`.window_kind_with_engagement()`) always leave these `None`/empty, matching
         /// `build_definition`'s prior hardcoded defaults for those paths.
         pub params_schema: Option<String>,
-        pub document_projection_schema: Option<String>,
+        pub document_snapshot_schema: Option<String>,
         pub input_event_schema: Option<String>,
         pub output_schema: Option<String>,
         pub capabilities: Vec<CapabilityRequirement>,
@@ -208,7 +208,7 @@ pub mod app {
             actions: def.actions,
             utilities: def.utilities,
             params_schema: def.params_schema,
-            document_projection_schema: def.document_projection_schema,
+            document_snapshot_schema: def.document_projection_schema,
             input_event_schema: def.input_event_schema,
             output_schema: def.output_schema,
             capabilities: def.capabilities,
@@ -504,7 +504,7 @@ pub mod app {
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 params_schema: None,
-                document_projection_schema: None,
+                document_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),
@@ -524,7 +524,7 @@ pub mod app {
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 params_schema: None,
-                document_projection_schema: None,
+                document_snapshot_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),
@@ -977,7 +977,7 @@ pub mod app {
                             actions: window.actions,
                             utilities: window.utilities,
                             params_schema: window.params_schema,
-                            document_projection_schema: window.document_projection_schema,
+                            document_projection_schema: window.document_snapshot_schema,
                             input_event_schema: window.input_event_schema,
                             output_schema: window.output_schema,
                             capabilities: window.capabilities,
@@ -1125,13 +1125,14 @@ pub mod app {
 
     #[cfg(test)]
     mod panel_kit_tests {
+            use ui_wgpu::wgpu::Label;
         use super::*;
 
         #[test]
         fn tree_item_builds_a_bare_item() {
-            let item = tree_item("ns.kind.a", "A");
+            let item = tree_item("ns.kind.a", Label::data("A"));
             assert_eq!(item.id, "ns.kind.a");
-            assert_eq!(item.label, "A");
+            assert_eq!(item.label.as_str(), "A");
             assert!(item.description.is_none());
             assert!(item.action.is_none());
         }
@@ -1139,7 +1140,7 @@ pub mod app {
         #[test]
         fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
             let action = ActionDescriptor { controller_id: "app".into(), action: "addWidget".into(), args: None };
-            let item = tree_item_with_action_draggable("ns.kind.a", "A", None, action, &serde_json::json!({ "application/x-widget": "{\"kind\":\"a\"}" }));
+            let item = tree_item_with_action_draggable("ns.kind.a", Label::data("A"), None, action, &serde_json::json!({ "application/x-widget": "{\"kind\":\"a\"}" }));
             assert_eq!(item.draggable, Some(true));
             assert_eq!(item.drag_data.unwrap().get("application/x-widget").map(String::as_str), Some("{\"kind\":\"a\"}"));
         }
@@ -1157,14 +1158,14 @@ pub mod app {
             let item_id = builder.item_id("widget", "w1");
             assert_eq!(item_id, "ns-play-document.widget.w1");
             let node = builder
-                .section("ns-play-document.widgets", Some("Widgets".into()), true, vec![tree_item(item_id, "W1")])
-                .section_or_placeholder("ns-play-document.synapses", Some("Synapses".into()), false, vec![], "(none)")
+                .section("ns-play-document.widgets", Some(Label::data("Widgets")), true, vec![tree_item(item_id, Label::data("W1"))])
+                .section_or_placeholder("ns-play-document.synapses", Some(Label::data("Synapses")), false, vec![], Label::data("(none)"))
                 .selected(vec!["ns-play-document.widget.w1".into()])
                 .build();
             let UiNode::Tree(tree) = node else { panic!("expected a Tree node") };
             assert_eq!(tree.sections.len(), 2);
             assert_eq!(tree.sections[0].items.len(), 1);
-            assert_eq!(tree.sections[1].items[0].label, "(none)");
+            assert_eq!(tree.sections[1].items[0].label.as_str(), "(none)");
             assert!(tree.sections[0].items[0].presence.selected, "the .selected(...) id must be stamped as selected presence on its matching item");
         }
     }
@@ -1267,6 +1268,7 @@ pub mod app {
 
     #[cfg(test)]
     mod form_kit_tests {
+            use ui_wgpu::wgpu::Label;
         use super::*;
 
         #[test]
@@ -1276,7 +1278,7 @@ pub mod app {
             let node = FormPanelBuilder::new("ns-play-form")
                 .field(
                     "name",
-                    "Name",
+                    Label::data("Name"),
                     Some("Full name".into()),
                     UiControlNode::Input(UiInputNode {
                         id: "ns-play-form.field.name".into(),
@@ -1293,7 +1295,7 @@ pub mod app {
                         menu: None,
                     }),
                 )
-                .submit("Submit", submit_action)
+                .submit(Label::data("Submit"), submit_action)
                 .build();
             let UiNode::Section(section) = node else { panic!("expected a Section node") };
             assert_eq!(section.id, "ns-play-form");
@@ -1302,7 +1304,7 @@ pub mod app {
             assert_eq!(field.id, "ns-play-form.field.name");
             assert_eq!(field.description.as_deref(), Some("Full name"));
             let UiNode::Button(button) = &section.children[1] else { panic!("expected a Button node") };
-            assert_eq!(button.label, "Submit");
+            assert_eq!(button.label.as_str(), "Submit");
         }
 
         #[test]
@@ -1317,19 +1319,19 @@ pub mod app {
             assert_eq!(section.children.len(), 2);
             let UiNode::Field(email_field) = &section.children[0] else { panic!("expected a Field node") };
             assert_eq!(email_field.id, "ns-play-form.field.email");
-            assert_eq!(email_field.label, "Email");
+            assert_eq!(email_field.label.as_str(), "Email");
             let UiNode::Field(phone_field) = &section.children[1] else { panic!("expected a Field node") };
-            assert_eq!(phone_field.label, "phone");
+            assert_eq!(phone_field.label.as_str(), "phone");
         }
 
         #[test]
         fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
             let action = ActionDescriptor { controller_id: "app".into(), action: "edit".into(), args: None };
             let node = entity_detail(
-                "Widget",
-                Some("A widget"),
-                vec![UiKeyValueEntry { label: "Kind".into(), value: "gizmo".into() }],
-                vec![UiButtonNode { id: None, icon_id: "edit".into(), label: "Edit".into(), action, style: None, presence: UiPresence::default(), menu: None }],
+                Label::data("Widget"),
+                Some(Label::data("A widget")),
+                vec![UiKeyValueEntry { label: Label::data("Kind"), value: "gizmo".into() }],
+                vec![UiButtonNode { id: None, icon_id: "edit".into(), label: Label::data("Edit"), action, style: None, presence: UiPresence::default(), menu: None }],
             );
             let UiNode::Stack(stack) = node else { panic!("expected a Stack node") };
             assert_eq!(stack.children.len(), 4);
@@ -1501,7 +1503,7 @@ pub mod app {
         //! 🧪️ Generic test-harness helpers for `DocumentApp` implementors. Factors out the ~24x duplicated
         //! `meta()`/`new_app()`/`new_app_with_registry()`/`paired_apps()` boilerplate plus the repeated
         //! undo-redo / two-instance-convergence / ingest-idempotency test *bodies* (parameterized by closures
-        //! for the app-specific action names/projection shape, so only the control flow is shared). Not
+        //! for the app-specific action names/snapshot shape, so only the control flow is shared). Not
         //! `#[cfg(test)]` — apps' own `#[cfg(test)]` modules call these as a regular dependency; see
         //! `terminology_tests`/`panel_kit_tests` above for the sibling pattern of testing SDK primitives
         //! themselves inline.
@@ -1592,18 +1594,32 @@ pub mod app {
         /// Full `🧬️mutations/<mutation>/{🦠️mutation,🔺️diff,↩️inverse}` triad walking is policy/registry-side
         /// for now (`validateTaxonomyTree`); this twin only hard-requires the facet leaves themselves.
         fn assert_taxonomy_components(plugin_root: &std::path::Path, app_root: &std::path::Path) {
-            const ARTIFACT_COMPONENTS: [&str; 7] = [
-                "🧬️mutations",
-                "🔺️diff",
-                "🗣️dsl",
-                "🎒️pack",
-                "🔧️op",
-                "📡️spr",
-                "⚙️engine",
-            ];
-            const EXAMPLE_KINDS: [&str; 4] = ["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
-            const EXAMPLES: &str = "📚️examples";
-            const LEAF: &str = "🦀️component.rs";
+            let taxonomy = load_taxonomy_json();
+            let artifact_components = string_array(&taxonomy, "artifactComponentDirs");
+            let snapshot_child_dirs = string_array(&taxonomy, "snapshotChildDirs");
+            let diff_child_dirs = string_array(&taxonomy, "diffChildDirs");
+            let schema_leaf_filenames = schema_format_leaf_filenames(&taxonomy);
+            let forbidden_example_plurals = string_array(&taxonomy, "forbiddenExamplePluralDirs");
+            let example_asset_kind_prefixes = object_string_values(&taxonomy, "exampleAssetKindPrefixes");
+            let examples = taxonomy
+                .get("artifactChildDirs")
+                .and_then(|v| v.as_array())
+                .and_then(|dirs| dirs.iter().find_map(|d| d.as_str().filter(|s| s.contains("examples"))))
+                .unwrap_or("📚️examples");
+            let example_assets = taxonomy.get("exampleAssetsDirName").and_then(|v| v.as_str()).unwrap_or("🖼️assets");
+            let example_tests = taxonomy.get("exampleTestsDirName").and_then(|v| v.as_str()).unwrap_or("🧪️tests");
+            let leaf = taxonomy
+                .get("taxonomyLeafFilenames")
+                .and_then(|v| v.as_object())
+                .and_then(|m| m.values().find_map(|v| v.as_str().filter(|s| s.ends_with("component.rs"))))
+                .unwrap_or("🦀️component.rs");
+            let snapshot_dir = "📸️snapshot";
+            let diff_dir = "🔺️diff";
+            let schema_dir = "🧬️schema";
+            assert!(
+                !example_asset_kind_prefixes.is_empty(),
+                "taxonomy gate: exampleAssetKindPrefixes must be non-empty in 🔣️taxonomy.json"
+            );
             let subdirectories = |dir: &std::path::Path| -> Vec<std::path::PathBuf> {
                 std::fs::read_dir(dir)
                     .unwrap_or_else(|error| panic!("taxonomy gate: cannot read {}: {error}", dir.display()))
@@ -1613,32 +1629,100 @@ pub mod app {
                     .collect()
             };
 
-            let artifacts_root = plugin_root.join("🗿️artifacts");
+            let artifacts_dir_name = taxonomy.get("artifactsDirName").and_then(|v| v.as_str()).unwrap_or("🗿️artifacts");
+            let artifacts_root = plugin_root.join(artifacts_dir_name);
             let artifacts = subdirectories(&artifacts_root);
             assert!(!artifacts.is_empty(), "taxonomy gate: {} declares no artifacts", artifacts_root.display());
             for artifact in &artifacts {
-                let missing: Vec<&str> = ARTIFACT_COMPONENTS.into_iter().filter(|component| !artifact.join(component).join(LEAF).is_file()).collect();
+                let missing: Vec<&str> = artifact_components
+                    .iter()
+                    .map(String::as_str)
+                    .filter(|component| {
+                        if *component == snapshot_dir {
+                            !artifact.join(component).is_dir()
+                        } else {
+                            !artifact.join(component).join(leaf).is_file()
+                        }
+                    })
+                    .collect();
                 assert!(missing.is_empty(), "taxonomy gate: artifact {} is missing component(s): {}", artifact.display(), missing.join(", "));
-                let examples_root = artifact.join(EXAMPLES);
-                assert!(examples_root.is_dir(), "taxonomy gate: artifact {} is missing {EXAMPLES}", artifact.display());
-                let example_sets = subdirectories(&examples_root);
-                assert!(!example_sets.is_empty(), "taxonomy gate: artifact {} {EXAMPLES} has no example set", artifact.display());
-                for example_set in &example_sets {
-                    for kind in EXAMPLE_KINDS {
-                        assert!(example_set.join(kind).is_dir(), "taxonomy gate: artifact {} example {} missing {kind}", artifact.display(), example_set.file_name().unwrap_or_default().to_string_lossy());
+
+                let snapshot_root = artifact.join(snapshot_dir);
+                for child in &snapshot_child_dirs {
+                    let child_dir = snapshot_root.join(child);
+                    if child == schema_dir {
+                        assert!(child_dir.is_dir(), "taxonomy gate: artifact {} is missing {snapshot_dir}/{child}", artifact.display());
+                    } else {
+                        assert!(
+                            child_dir.join(leaf).is_file(),
+                            "taxonomy gate: artifact {} is missing {snapshot_dir}/{child}/{leaf}",
+                            artifact.display()
+                        );
                     }
+                }
+                let diff_root = artifact.join(diff_dir);
+                for child in &diff_child_dirs {
+                    assert!(
+                        diff_root.join(child).is_dir(),
+                        "taxonomy gate: artifact {} is missing {diff_dir}/{child}",
+                        artifact.display()
+                    );
+                }
+                for facet_rel in [schema_dir.to_string(), format!("{snapshot_dir}/{schema_dir}"), format!("{diff_dir}/{schema_dir}")] {
+                    let facet_dir = facet_rel.split('/').fold(artifact.clone(), |acc, part| acc.join(part));
+                    let missing_leaves: Vec<&str> = schema_leaf_filenames
+                        .iter()
+                        .map(String::as_str)
+                        .filter(|name| !facet_dir.join(name).is_file())
+                        .collect();
+                    assert!(
+                        missing_leaves.is_empty(),
+                        "taxonomy gate: artifact {} is missing {} leaf(ves): {}",
+                        artifact.display(),
+                        facet_rel,
+                        missing_leaves.join(", ")
+                    );
+                }
+
+                let examples_root = artifact.join(examples);
+                assert!(examples_root.is_dir(), "taxonomy gate: artifact {} is missing {examples}", artifact.display());
+                let example_sets = subdirectories(&examples_root);
+                assert!(!example_sets.is_empty(), "taxonomy gate: artifact {} {examples} has no example set", artifact.display());
+                for example_set in &example_sets {
+                    for plural in &forbidden_example_plurals {
+                        assert!(
+                            !example_set.join(plural).is_dir(),
+                            "taxonomy gate: artifact {} example {} still has plural {plural}",
+                            artifact.display(),
+                            example_set.file_name().unwrap_or_default().to_string_lossy()
+                        );
+                    }
+                    assert!(
+                        example_set.join(example_assets).is_dir(),
+                        "taxonomy gate: artifact {} example {} missing {example_assets}",
+                        artifact.display(),
+                        example_set.file_name().unwrap_or_default().to_string_lossy()
+                    );
+                    assert!(
+                        example_set.join(example_tests).is_dir(),
+                        "taxonomy gate: artifact {} example {} missing {example_tests}",
+                        artifact.display(),
+                        example_set.file_name().unwrap_or_default().to_string_lossy()
+                    );
                 }
             }
 
-            assert!(!plugin_root.join(EXAMPLES).is_dir(), "taxonomy gate: plugin-root {EXAMPLES} is forbidden at {}", plugin_root.display());
+            assert!(!plugin_root.join(examples).is_dir(), "taxonomy gate: plugin-root {examples} is forbidden at {}", plugin_root.display());
 
-            let plugin_contract = plugin_root.join("🔌️plugin");
+            let plugin_dir_name = taxonomy.get("pluginDirName").and_then(|v| v.as_str()).unwrap_or("🔌️plugin");
+            let plugin_child_dirs = string_array(&taxonomy, "pluginChildDirs");
+            let plugin_contract = plugin_root.join(plugin_dir_name);
             if plugin_contract.is_dir() {
-                assert!(plugin_contract.join(LEAF).is_file(), "taxonomy gate: 🔌️plugin missing {LEAF} at {}", plugin_contract.display());
-                for child in ["🛂️manifest", "🎟️capabilities", "🔧️setup", "🎛️apps"] {
+                assert!(plugin_contract.join(leaf).is_file(), "taxonomy gate: {plugin_dir_name} missing {leaf} at {}", plugin_contract.display());
+                for child in &plugin_child_dirs {
                     assert!(
-                        plugin_contract.join(child).join(LEAF).is_file(),
-                        "taxonomy gate: 🔌️plugin missing {child}/{LEAF} at {}",
+                        plugin_contract.join(child).join(leaf).is_file(),
+                        "taxonomy gate: {plugin_dir_name} missing {child}/{leaf} at {}",
                         plugin_contract.display()
                     );
                 }
@@ -1647,14 +1731,72 @@ pub mod app {
             let apps = subdirectories(app_root);
             assert!(!apps.is_empty(), "taxonomy gate: {} declares no apps", app_root.display());
             for app in &apps {
-                assert!(app.join(LEAF).is_file(), "taxonomy gate: app {} is missing its {LEAF}", app.display());
+                assert!(app.join(leaf).is_file(), "taxonomy gate: app {} is missing its {leaf}", app.display());
                 assert!(
-                    app.join("⚙️engine").join(EXAMPLES).is_dir(),
-                    "taxonomy gate: app {} is missing ⚙️engine/{EXAMPLES}",
+                    app.join("⚙️engine").join(examples).is_dir(),
+                    "taxonomy gate: app {} is missing ⚙️engine/{examples}",
                     app.display()
                 );
             }
         }
+
+        //#region TaxonomyJson
+        /// 🔣️ Walks from `CARGO_MANIFEST_DIR` up to the repo root (marker: `nx.json`) and parses `🔣️taxonomy.json`.
+        fn load_taxonomy_json() -> serde_json::Value {
+            let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let mut dir = manifest_dir.as_path();
+            let repo_root = loop {
+                if dir.join("nx.json").is_file() {
+                    break dir.to_path_buf();
+                }
+                dir = dir.parent().unwrap_or_else(|| panic!("taxonomy gate: walked above filesystem without finding nx.json from {}", manifest_dir.display()));
+            };
+            let taxonomy_path = repo_root
+                .join("🧰️framework")
+                .join("🛍️products")
+                .join("🦑️repo")
+                .join("🔨️modules")
+                .join("📚️library")
+                .join("🔣️taxonomy.json");
+            let raw = std::fs::read_to_string(&taxonomy_path).unwrap_or_else(|error| panic!("taxonomy gate: cannot read {}: {error}", taxonomy_path.display()));
+            serde_json::from_str(&raw).unwrap_or_else(|error| panic!("taxonomy gate: cannot parse {}: {error}", taxonomy_path.display()))
+        }
+
+        fn string_array(taxonomy: &serde_json::Value, key: &str) -> Vec<String> {
+            taxonomy
+                .get(key)
+                .and_then(|v| v.as_array())
+                .unwrap_or_else(|| panic!("taxonomy gate: 🔣️taxonomy.json missing non-empty array `{key}`"))
+                .iter()
+                .map(|v| v.as_str().unwrap_or_else(|| panic!("taxonomy gate: `{key}` entry is not a string")).to_string())
+                .collect()
+        }
+
+        fn object_string_values(taxonomy: &serde_json::Value, key: &str) -> Vec<String> {
+            taxonomy
+                .get(key)
+                .and_then(|v| v.as_object())
+                .unwrap_or_else(|| panic!("taxonomy gate: 🔣️taxonomy.json missing object `{key}`"))
+                .values()
+                .map(|v| v.as_str().unwrap_or_else(|| panic!("taxonomy gate: `{key}` value is not a string")).to_string())
+                .collect()
+        }
+
+        fn schema_format_leaf_filenames(taxonomy: &serde_json::Value) -> Vec<String> {
+            taxonomy
+                .get("schemaFormats")
+                .and_then(|v| v.as_object())
+                .unwrap_or_else(|| panic!("taxonomy gate: 🔣️taxonomy.json missing object `schemaFormats`"))
+                .values()
+                .map(|v| {
+                    v.get("leafFilename")
+                        .and_then(|n| n.as_str())
+                        .unwrap_or_else(|| panic!("taxonomy gate: schemaFormats entry missing leafFilename"))
+                        .to_string()
+                })
+                .collect()
+        }
+        //#endregion TaxonomyJson
 
         /// 🧬️ A registry-less wrapper (`VcsDocumentApp::new`) — contract enforcement (required args, kind
         /// discipline) is skipped, matching most apps' plain unit tests.
@@ -1690,11 +1832,11 @@ pub mod app {
             P: PartialEq + std::fmt::Debug,
         {
             app.dispatch_typed(command, &meta("local")).expect("apply command");
-            assert_eq!(probe(app), after, "command did not produce the expected projection");
+            assert_eq!(probe(app), after, "command did not produce the expected snapshot");
             app.handle_action("undo", None, &meta("local")).expect("undo");
-            assert_eq!(probe(app), before, "undo did not revert to the expected projection");
+            assert_eq!(probe(app), before, "undo did not revert to the expected snapshot");
             app.handle_action("redo", None, &meta("local")).expect("redo");
-            assert_eq!(probe(app), after, "redo did not reapply the expected projection");
+            assert_eq!(probe(app), after, "redo did not reapply the expected snapshot");
         }
 
         /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`.
@@ -1747,14 +1889,14 @@ pub mod app {
             instance_b.dispatch_typed(command_b, &meta("actor-b")).expect("b applies its edit");
             instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
             instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
-            assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same projection");
+            assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
         }
 
         /// 🧪️ The `Mutation::reconcile` counterpart to `assert_two_instances_converge`: `command_delete`/
         /// `command_wire` race on two `paired_apps` instances (typically one deletes a graph node, the other
         /// concurrently wires an edge to it), a `commitCheckpoint` pumps each side's inbound operations, then both
-        /// sides' post-reconcile `probe` results (`(projection, conflicts)`) must agree, `has_dangling_ref`
-        /// must be false for the converged projection, and at least one `SpaceConflict` must have been
+        /// sides' post-reconcile `probe` results (`(snapshot, conflicts)`) must agree, `has_dangling_ref`
+        /// must be false for the converged snapshot, and at least one `SpaceConflict` must have been
         /// reported (dropping a dangling reference silently, with no conflict, would hide real data loss).
         pub fn assert_graph_merge_preserves_referential_integrity<A, P>(channel: &str, command_delete: A::Command, command_wire: A::Command, probe: impl Fn(&VcsDocumentApp<A>) -> (P, Vec<SpaceConflict>), has_dangling_ref: impl Fn(&P) -> bool)
         where
@@ -1766,10 +1908,10 @@ pub mod app {
             instance_b.dispatch_typed(command_wire, &meta("actor-b")).expect("b wires the edge");
             instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
             instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
-            let (projection_a, conflicts_a) = probe(&instance_a);
-            let (projection_b, conflicts_b) = probe(&instance_b);
-            assert_eq!(projection_a, projection_b, "both instances must converge on the same reconciled projection");
-            assert!(!has_dangling_ref(&projection_a), "converged projection must not retain a dangling reference");
+            let (snapshot_a, conflicts_a) = probe(&instance_a);
+            let (snapshot_b, conflicts_b) = probe(&instance_b);
+            assert_eq!(snapshot_a, snapshot_b, "both instances must converge on the same reconciled snapshot");
+            assert!(!has_dangling_ref(&snapshot_a), "converged snapshot must not retain a dangling reference");
             assert!(!conflicts_a.is_empty(), "dropping the dangling reference must surface a SpaceConflict");
             assert_eq!(conflicts_a, conflicts_b, "both instances must report the same reconciliation conflicts");
         }
@@ -1813,11 +1955,39 @@ pub mod app {
             use crate::{ui_text, UiNode};
             use protocol::{Mutation, MutationDiff};
             use serde::{Deserialize, Serialize};
+            use semio_framework::Fault;
+            use ui_wgpu::wgpu::Label;
 
             #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
             #[dsl(extension = "testkit-dummy")]
-            struct DummyProjection {
+            struct DummySnapshot {
                 count: i32,
+            }
+
+            /// ✉️ P6 handcrafted DocumentDsl/DocumentPack for SDK test double (artifact coincides with snapshot only in tests).
+            impl store::DocumentDsl for DummySnapshot {
+                const EXTENSION: &'static str = "testkit-dummy";
+                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                    if text.trim().is_empty() {
+                        return Ok(Self::default());
+                    }
+                    serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+                }
+                fn print_dsl(&self) -> String {
+                    serde_json::to_string(self).unwrap_or_default()
+                }
+            }
+
+            impl store::DocumentPack for DummySnapshot {
+                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                    serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+                }
+                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                    if bytes.is_empty() {
+                        return Ok(Self::default());
+                    }
+                    serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+                }
             }
 
             #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1825,9 +1995,9 @@ pub mod app {
                 count: Option<i32>,
             }
 
-            impl MutationDiff<DummyProjection> for DummyDiff {
-                fn apply(&self, projection: &DummyProjection) -> DummyProjection {
-                    DummyProjection { count: self.count.unwrap_or(projection.count) }
+            impl MutationDiff<DummySnapshot> for DummyDiff {
+                fn apply(&self, snapshot: &DummySnapshot) -> DummySnapshot {
+                    DummySnapshot { count: self.count.unwrap_or(snapshot.count) }
                 }
 
                 fn absorb(&mut self, other: Self) {
@@ -1844,17 +2014,56 @@ pub mod app {
                 SetCount { value: i32 },
             }
 
-            impl Mutation<DummyProjection> for DummyMutation {
+            impl Mutation<DummySnapshot> for DummyMutation {
                 type Diff = DummyDiff;
 
-                fn diff(&self, _projection: &DummyProjection) -> DummyDiff {
+                fn diff(&self, _snapshot: &DummySnapshot) -> DummyDiff {
                     match self {
                         DummyMutation::SetCount { value } => DummyDiff { count: Some(*value) },
                     }
                 }
 
-                fn inverse(&self, projection: &DummyProjection) -> Vec<Self> {
-                    vec![DummyMutation::SetCount { value: projection.count }]
+                fn inverse(&self, snapshot: &DummySnapshot) -> Vec<Self> {
+                    vec![DummyMutation::SetCount { value: snapshot.count }]
+                }
+            }
+
+            impl ::protocol::OpText for DummyMutation {
+                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    for (keyword, spec_fn) in &variants {
+                        let probe = format!("{keyword} ");
+                        if line == keyword.as_str() || line.starts_with(&probe) {
+                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                            let record = ::dsl::parse(
+                                body,
+                                &spec_fn(),
+                                &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                            )?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                        }
+                    }
+                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+                }
+                fn print_op(&self) -> String {
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                    if body.is_empty() {
+                        keyword
+                    } else {
+                        format!("{keyword} {body}")
+                    }
+                }
+            }
+
+            impl ::protocol::OpBinary for DummyMutation {
+                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::encode_op(self)
+                }
+                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::decode_op(bytes)
                 }
             }
 
@@ -1864,13 +2073,52 @@ pub mod app {
                 Increment,
             }
 
+            impl ::protocol::OpText for DummyCommand {
+                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    for (keyword, spec_fn) in &variants {
+                        let probe = format!("{keyword} ");
+                        if line == keyword.as_str() || line.starts_with(&probe) {
+                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                            let record = ::dsl::parse(
+                                body,
+                                &spec_fn(),
+                                &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                            )?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                        }
+                    }
+                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+                }
+                fn print_op(&self) -> String {
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                    if body.is_empty() {
+                        keyword
+                    } else {
+                        format!("{keyword} {body}")
+                    }
+                }
+            }
+
+            impl ::protocol::OpBinary for DummyCommand {
+                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::encode_op(self)
+                }
+                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::decode_op(bytes)
+                }
+            }
+
             #[derive(Default)]
             struct DummyApp;
 
             impl DocumentApp for DummyApp {
                 const APP_ID: &'static str = "testkit-dummy";
                 const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
-                type Projection = DummyProjection;
+                type Snapshot = DummySnapshot;
                 type Mutation = DummyMutation;
                 type Config = NoConfig;
                 type ConfigMutation = NoConfigMutation;
@@ -1878,18 +2126,18 @@ pub mod app {
                 type DraftMutation = NoDraftMutation;
                 type Command = DummyCommand;
 
-                fn initial_projection() -> DummyProjection {
-                    DummyProjection::default()
+                fn initial_snapshot() -> DummySnapshot {
+                    DummySnapshot::default()
                 }
 
-                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {
+                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {
                     match command {
-                        DummyCommand::Increment => Ok(Emit { document_mutations: vec![DummyMutation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+                        DummyCommand::Increment => Ok(Emit { document_mutations: vec![DummyMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
                     }
                 }
 
-                fn render(_body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
-                    ui_text(format!("count={}", doc.projection.count))
+                fn render(_body_key: &str, doc: &DocumentView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                    ui_text(Label::data(format!("count={}", doc.snapshot.count)))
                 }
             }
 
@@ -1904,23 +2152,23 @@ pub mod app {
             fn new_app_constructs_a_registry_less_wrapper() {
                 let mut app = new_app::<DummyApp>();
                 app.dispatch_typed(DummyCommand::Increment, &meta("local")).expect("increment");
-                assert_eq!(app.projection().unwrap().count, 1);
+                assert_eq!(app.snapshot().unwrap().count, 1);
             }
 
             #[test]
             fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
                 let mut app = new_app::<DummyApp>();
-                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.projection().unwrap().count, 0, 1);
+                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1);
             }
 
             #[test]
             fn assert_two_instances_converge_on_disjoint_edits() {
-                assert_two_instances_converge::<DummyApp, i32>("mem://testkit-converge", DummyCommand::Increment, DummyCommand::Increment, |app| app.projection().unwrap().count);
+                assert_two_instances_converge::<DummyApp, i32>("mem://testkit-converge", DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count);
             }
 
             #[test]
             fn assert_ingest_idempotent_does_not_double_apply() {
-                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.projection().unwrap().count);
+                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.snapshot().unwrap().count);
             }
         }
     }
@@ -1928,6 +2176,7 @@ pub mod app {
 
     #[cfg(test)]
     mod app_builder_tests {
+            use ui_wgpu::wgpu::LocalizedLabel;
         use super::*;
         use ui_wgpu::wgpu::create_default_layout;
 
@@ -1957,7 +2206,7 @@ pub mod app {
                 .build_definition();
             assert_eq!(definition.window_kinds.len(), 1);
             assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
-            assert_eq!(definition.modes.first().icon_id.as_str(), "square-pen");
+            assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
             // 🕰️ 1 declared + the auto-injected framework History tab.
             assert_eq!(definition.panel_tabs.len(), 2);
         }
@@ -2070,7 +2319,7 @@ pub mod app {
 
         #[test]
         fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
-            let definition = minimal_app("manual-history-app").panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, "Custom History", PanelGroup::Settings, "custom.history").build_definition();
+            let definition = minimal_app("manual-history-app").panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").build_definition();
             assert_eq!(definition.panel_tabs.iter().filter(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
             let tab = definition.panel_tabs.iter().find(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
             assert_eq!(tab.body_key.as_deref(), Some("custom.history"));
@@ -2197,7 +2446,8 @@ pub mod app {
         #[test]
         fn declaring_introduction_injects_start_introduction_action() {
             use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
-            let definition = minimal_app("intro-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("welcome", "Welcome", "Hi there")] }).build_definition();
+            use ui_wgpu::wgpu::LocalizedLabel;
+            let definition = minimal_app("intro-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] }).build_definition();
             let start_introduction = definition.actions.iter().find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
             assert_eq!(start_introduction.kind, ActionKind::View);
             assert!(!start_introduction.in_palette, "the shell-owned Introduce App command owns palette discovery");
@@ -2213,15 +2463,16 @@ pub mod app {
         #[test]
         fn build_definition_rejects_introduction_with_no_steps() {
             use semio_framework::IntroductionDefinition;
-            let result = std::panic::catch_unwind(|| minimal_app("empty-intro-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![] }).build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("empty-intro-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![] }).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
         fn build_definition_rejects_duplicate_introduction_step_ids() {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
+            use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
-                minimal_app("dupe-step-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a"), IntroductionStepDefinition::new("step", "B", "b")] }).build_definition()
+                minimal_app("dupe-step-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")), IntroductionStepDefinition::new("step", LocalizedLabel::data("B"), LocalizedLabel::data("b"))] }).build_definition()
             });
             assert!(result.is_err());
         }
@@ -2229,8 +2480,9 @@ pub mod app {
         #[test]
         fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionStepDefinition};
+            use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
-                minimal_app("bad-window-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(window_element_id("missing"))] }).build_definition()
+                minimal_app("bad-window-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing"))] }).build_definition()
             });
             assert!(result.is_err());
         }
@@ -2238,13 +2490,14 @@ pub mod app {
         #[test]
         fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
             use semio_framework::{panel_tab_element_id, panel_tab_first_draggable_element_id, IntroductionDefinition, IntroductionStepDefinition};
+            use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
-                minimal_app("bad-panel-tab-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(panel_tab_element_id("missing"))] }).build_definition()
+                minimal_app("bad-panel-tab-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing"))] }).build_definition()
             });
             assert!(result.is_err());
             let result_first_draggable = std::panic::catch_unwind(|| {
                 minimal_app("bad-panel-tab-first-draggable-app")
-                    .introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(panel_tab_first_draggable_element_id("missing"))] })
+                    .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_first_draggable_element_id("missing"))] })
                     .build_definition()
             });
             assert!(result_first_draggable.is_err());
@@ -2253,12 +2506,13 @@ pub mod app {
         #[test]
         fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
+            use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
-                minimal_app("bad-element-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce("not-camel-case")] }).build_definition()
+                minimal_app("bad-element-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("not-camel-case")] }).build_definition()
             });
             assert!(result.is_err());
             let result_show = std::panic::catch_unwind(|| {
-                minimal_app("bad-element-show-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").show(vec!["not-camel-case".into()])] }).build_definition()
+                minimal_app("bad-element-show-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).show(vec!["not-camel-case".into()])] }).build_definition()
             });
             assert!(result_show.is_err());
         }
@@ -2266,7 +2520,8 @@ pub mod app {
         #[test]
         fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
-            let definition = minimal_app("good-escape-hatch-app").introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce("ui.custom.thing")] }).build_definition();
+            use ui_wgpu::wgpu::LocalizedLabel;
+            let definition = minimal_app("good-escape-hatch-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("ui.custom.thing")] }).build_definition();
             let introduction = definition.introduction.expect("introduction present");
             assert_eq!(introduction.steps.len(), 1);
         }
@@ -2274,9 +2529,10 @@ pub mod app {
         #[test]
         fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
             use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+            use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-interaction-utility-app")
-                    .introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").interact(vec![IntroductionInteraction::utility("missing", "Activate")])] })
+                    .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::utility("missing", "Activate")])] })
                     .build_definition()
             });
             assert!(result.is_err());
@@ -2285,9 +2541,10 @@ pub mod app {
         #[test]
         fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
             use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+            use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-interaction-window-app")
-                    .introduction(IntroductionDefinition { title: "Welcome".into(), steps: vec![IntroductionStepDefinition::new("step", "A", "a").interact(vec![IntroductionInteraction::orbit("missing", "Orbit")])] })
+                    .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::orbit("missing", "Orbit")])] })
                     .build_definition()
             });
             assert!(result.is_err());
@@ -2296,19 +2553,20 @@ pub mod app {
         #[test]
         fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+            use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("good-intro-app")
                 .mutation("addLayer", LocalizedLabel::data("Add Layer"))
                 .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
                 .window_kind_utilities("main", vec!["brush".into()])
                 .window_kind_actions("main", vec!["addLayer".into()])
                 .introduction(IntroductionDefinition {
-                    title: "Welcome".into(),
+                    title: LocalizedLabel::data("Welcome"),
                     steps: vec![
-                        IntroductionStepDefinition::new("welcome", "Welcome", "Hi"),
-                        IntroductionStepDefinition::new("main-window", "Main Window", "…").introduce(window_element_id("main")),
-                        IntroductionStepDefinition::new("brush-utility", "Brush", "…").introduce("brush").interact(vec![IntroductionInteraction::utility("brush", "Activate Brush")]),
-                        IntroductionStepDefinition::new("add-layer", "Add Layer", "…").interact(vec![IntroductionInteraction::action("addLayer", "Add a Layer")]),
-                        IntroductionStepDefinition::new("navigate-main", "Navigate", "…").interact(vec![IntroductionInteraction::pan("main", "Pan"), IntroductionInteraction::zoom("main", "Zoom")]),
+                        IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi")),
+                        IntroductionStepDefinition::new("main-window", LocalizedLabel::data("Main Window"), LocalizedLabel::data("…")).introduce(window_element_id("main")),
+                        IntroductionStepDefinition::new("brush-utility", LocalizedLabel::data("Brush"), LocalizedLabel::data("…")).introduce("brush").interact(vec![IntroductionInteraction::utility("brush", "Activate Brush")]),
+                        IntroductionStepDefinition::new("add-layer", LocalizedLabel::data("Add Layer"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::action("addLayer", "Add a Layer")]),
+                        IntroductionStepDefinition::new("navigate-main", LocalizedLabel::data("Navigate"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::pan("main", "Pan"), IntroductionInteraction::zoom("main", "Zoom")]),
                     ],
                 })
                 .build_definition();
@@ -2320,7 +2578,7 @@ pub mod app {
             use semio_framework::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
             TutorialDefinition {
                 id: id.into(),
-                title: "Tutorial".into(),
+                title: LocalizedLabel::data("Tutorial"),
                 description: None,
                 duration_ms: 10_000,
                 chapters: vec![],
@@ -2352,7 +2610,7 @@ pub mod app {
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("out-of-range-tour");
                 tutorial.duration_ms = 100;
-                tutorial.chapters.push(semio_framework::TutorialChapter { id: "late".into(), at: 999_999, title: "Late".into(), body: None });
+                tutorial.chapters.push(semio_framework::TutorialChapter { id: "late".into(), at: 999_999, title: LocalizedLabel::data("Late"), body: None });
                 minimal_app("bad-structural-tutorial-app").tutorial(tutorial).build_definition()
             });
             assert!(result.is_err());
@@ -2412,10 +2670,10 @@ pub mod app {
         #[test]
         fn declaring_dialog_appends_to_definition() {
             use semio_framework::{ActionRef, DialogDefinition};
-            let definition = minimal_app("dialog-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))).build_definition();
+            let definition = minimal_app("dialog-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).build_definition();
             assert_eq!(definition.dialogs.len(), 1);
             assert_eq!(definition.dialogs[0].id, "addLayer");
-            assert_eq!(definition.dialogs[0].submit_label, "OK");
+            assert_eq!(definition.dialogs[0].submit_label, LocalizedLabel::data("OK"));
         }
 
         #[test]
@@ -2424,8 +2682,8 @@ pub mod app {
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-app")
                     .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                    .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")))
-                    .dialog(DialogDefinition::new("addLayer", "Add Layer Again", ActionRef::new("addLayer")))
+                    .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")))
+                    .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer Again"), ActionRef::new("addLayer")))
                     .build_definition()
             });
             assert!(result.is_err());
@@ -2434,7 +2692,7 @@ pub mod app {
         #[test]
         fn build_definition_rejects_dialog_submit_action_referencing_undeclared_action() {
             use semio_framework::{ActionRef, DialogDefinition};
-            let result = std::panic::catch_unwind(|| minimal_app("bad-dialog-submit-app").dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("missing"))).build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("bad-dialog-submit-app").dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("missing"))).build_definition());
             assert!(result.is_err());
         }
 
@@ -2442,7 +2700,7 @@ pub mod app {
         fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
             use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
-                minimal_app("bad-dialog-cancel-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).build_definition()
+                minimal_app("bad-dialog-cancel-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).build_definition()
             });
             assert!(result.is_err());
         }
@@ -2450,7 +2708,7 @@ pub mod app {
         #[test]
         fn dialog_submit_action_may_reference_an_injected_history_action() {
             use semio_framework::{ActionRef, DialogDefinition};
-            let definition = minimal_app("dialog-injected-action-app").dialog(DialogDefinition::new("confirmUndo", "Undo?", ActionRef::new("undo"))).build_definition();
+            let definition = minimal_app("dialog-injected-action-app").dialog(DialogDefinition::new("confirmUndo", LocalizedLabel::data("Undo?"), ActionRef::new("undo"))).build_definition();
             assert_eq!(definition.dialogs[0].submit_action, ActionRef::new("undo"));
         }
 
@@ -2460,7 +2718,7 @@ pub mod app {
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-arg-app")
                     .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                    .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")), ActionArgDef::text("name", LocalizedLabel::data("Name Again"))]))
+                    .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")), ActionArgDef::text("name", LocalizedLabel::data("Name Again"))]))
                     .build_definition()
             });
             assert!(result.is_err());
@@ -2472,7 +2730,7 @@ pub mod app {
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-dialog-select-app")
                     .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                    .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).args(vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("kind", LocalizedLabel::data("Kind")) }]))
+                    .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).args(vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("kind", LocalizedLabel::data("Kind")) }]))
                     .build_definition()
             });
             assert!(result.is_err());
@@ -2482,8 +2740,8 @@ pub mod app {
         fn build_definition_accepts_app_and_mode_scope_commands() {
             use semio_framework::{CommandDefinition, CommandRef, CommandScope};
             let definition = minimal_app("command-app")
-                .app_command("app.export", "Export", "document")
-                .command(CommandDefinition::new_catalog("mode.focus", "Focus", CommandScope::Mode, "view"))
+                .app_command("app.export", LocalizedLabel::data("Export"), "document")
+                .command(CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), CommandScope::Mode, "view"))
                 .mode_commands("edit", vec![CommandRef::new("mode.focus")])
                 .build_definition();
             assert_eq!(definition.commands.len(), 2);
@@ -2492,14 +2750,14 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_duplicate_command_ids() {
-            let result = std::panic::catch_unwind(|| minimal_app("dupe-command-app").app_command("app.export", "Export", "document").app_command("app.export", "Export Again", "document").build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("dupe-command-app").app_command("app.export", LocalizedLabel::data("Export"), "document").app_command("app.export", LocalizedLabel::data("Export Again"), "document").build_definition());
             assert!(result.is_err());
         }
 
         #[test]
         fn build_definition_rejects_os_or_plugin_scope_command() {
             use semio_framework::{CommandDefinition, CommandScope};
-            let result = std::panic::catch_unwind(|| minimal_app("os-scope-command-app").command(CommandDefinition::new_catalog("os.theme", "Theme", CommandScope::Os, "appearance")).build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("os-scope-command-app").command(CommandDefinition::new_catalog("os.theme", LocalizedLabel::data("Theme"), CommandScope::Os, "appearance")).build_definition());
             assert!(result.is_err(), "AppBuilder must reject Os/Plugin-scope commands — those are declared by the shell/Plugin, not an app");
         }
 
@@ -2509,14 +2767,14 @@ pub mod app {
             let undeclared = std::panic::catch_unwind(|| minimal_app("undeclared-mode-command-app").mode_commands("edit", vec![CommandRef::new("nope")]).build_definition());
             assert!(undeclared.is_err());
 
-            let wrong_scope = std::panic::catch_unwind(|| minimal_app("wrong-scope-mode-command-app").app_command("app.export", "Export", "document").mode_commands("edit", vec![CommandRef::new("app.export")]).build_definition());
+            let wrong_scope = std::panic::catch_unwind(|| minimal_app("wrong-scope-mode-command-app").app_command("app.export", LocalizedLabel::data("Export"), "document").mode_commands("edit", vec![CommandRef::new("app.export")]).build_definition());
             assert!(wrong_scope.is_err(), "an App-scope command must not be referenceable from a mode's commands list");
         }
 
         #[test]
         fn build_definition_rejects_mode_scope_command_referenced_by_no_mode() {
             use semio_framework::{CommandDefinition, CommandScope};
-            let result = std::panic::catch_unwind(|| minimal_app("orphan-mode-command-app").command(CommandDefinition::new_catalog("mode.focus", "Focus", CommandScope::Mode, "view")).build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("orphan-mode-command-app").command(CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), CommandScope::Mode, "view")).build_definition());
             assert!(result.is_err());
         }
     }
@@ -2670,23 +2928,23 @@ pub mod app {
 
     //#region 🔖️DocumentContract
     /// @emoji 🧾️ Read-only view of an app's document handed to `DocumentApp::handle_action`/`render`:
-    /// the materialized projection plus the history metadata (checkpoints/alternatives/undo state)
+    /// the materialized snapshot plus the history metadata (checkpoints/alternatives/undo state)
     /// derived from the owning {@link VcsDocumentApp}'s persistent {@link DocumentStore}.
     pub struct DocumentView<'a, P> {
-        pub projection: &'a P,
+        pub snapshot: &'a P,
         pub history: &'a HistoryView,
     }
 
-    /// @emoji 🧮️ Read-only view of an app's config projection — same role as {@link DocumentView} for the
+    /// @emoji 🧮️ Read-only view of an app's config snapshot — same role as {@link DocumentView} for the
     /// config {@link ConfigStore} owned by {@link VcsDocumentApp}.
     pub struct ConfigView<'a, C> {
-        pub projection: &'a C,
+        pub snapshot: &'a C,
     }
 
-    /// @emoji 📝️ Read-only view of an app's volatile draft projection — same role as {@link ConfigView}
+    /// @emoji 📝️ Read-only view of an app's volatile draft snapshot — same role as {@link ConfigView}
     /// for the draft {@link store::DraftStore} (ephemeral; never checkpoints).
     pub struct DraftView<'a, D> {
-        pub projection: &'a D,
+        pub snapshot: &'a D,
     }
 
     //#region 🔖️NoConfig
@@ -2750,8 +3008,9 @@ pub mod app {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
                 if line == keyword.as_str() || line.starts_with(&probe) {
+                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                     let record = ::dsl::parse(
-                        line,
+                        body,
                         &spec_fn(),
                         &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                     )?;
@@ -2764,7 +3023,12 @@ pub mod app {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+            if body.is_empty() {
+                keyword
+            } else {
+                format!("{keyword} {body}")
+            }
         }
     }
 
@@ -3163,18 +3427,18 @@ pub mod app {
     /// - `command_id(&self) -> &'static str`, returning each row's `$id` — mirrors the per-command labeling
     ///   `DocumentApp::command_id` needs (today hand-rolled as a parallel `match` per app, e.g.
     ///   `TestApp::command_id` above).
-    /// - `dispatch(&self, doc: &DocumentView<'_, $Projection>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Mutation, $ConfigMutation>, Fault>`,
-    ///   matching each variant to `$module::handle(payload, doc, cfg)` — `$Projection`/`$Mutation`/`$Config`/
+    /// - `dispatch(&self, doc: &DocumentView<'_, $Snapshot>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Mutation, $ConfigMutation>, Fault>`,
+    ///   matching each variant to `$module::handle(payload, doc, cfg)` — `$Snapshot`/`$Mutation`/`$Config`/
     ///   `$ConfigMutation` are the four types declared after `for` in the invocation (see below).
     ///
     /// # 🔖️DispatchDesignChoice
     /// The macro invocation names the app's four `DocumentApp` associated types up front —
-    /// `enum $Name for $Projection, $Mutation, $Config, $ConfigMutation { .. }` — so `dispatch` can be a
+    /// `enum $Name for $Snapshot, $Mutation, $Config, $ConfigMutation { .. }` — so `dispatch` can be a
     /// perfectly ordinary, CONCRETE (non-generic) inherent method. This was chosen over the alternative
     /// tried first: a `dispatch<P, O, C, CO>` generic over all four, inferring them from the call site. That
     /// alternative does not type-check, and the `app_commands_tests` module below hit exactly this in
     /// practice — every real `🎮️commands/<command>/🦀️component.rs::handle` fn will be written against ONE
-    /// app's concrete `Projection`/`Mutation`/`Config`/`ConfigMutation` (the same way
+    /// app's concrete `Snapshot`/`Mutation`/`Config`/`ConfigMutation` (the same way
     /// `flow_protocol`/`dag_protocol`/... payload handlers are today), never generically; a generic
     /// `dispatch<P,O,C,CO>` body calling a concrete-typed `$module::handle` fails to unify (`P` is not
     /// literally `FlowFixture`, even though there is only ever one real instantiation). Naming the four
@@ -3203,7 +3467,7 @@ pub mod app {
     /// The two are independent; combine them or use `ctx = ()` when only the keys differ.
     #[macro_export]
     macro_rules! app_commands {
-    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
@@ -3223,7 +3487,7 @@ pub mod app {
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg, ctx)` — see
             /// `🔖️KeyedAndContextualForms` for why `ctx` exists.
-            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg, ctx),)*
                 }
@@ -3236,8 +3500,9 @@ pub mod app {
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
                     if line == keyword.as_str() || line.starts_with(&probe) {
+                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                         let record = ::dsl::parse(
-                            line,
+                            body,
                             &spec_fn(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                         )?;
@@ -3250,7 +3515,12 @@ pub mod app {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                if body.is_empty() {
+                    keyword
+                } else {
+                    format!("{keyword} {body}")
+                }
             }
         }
 
@@ -3264,7 +3534,7 @@ pub mod app {
         }
     };
 
-    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
@@ -3283,7 +3553,7 @@ pub mod app {
             }
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)`.
-            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
@@ -3296,8 +3566,9 @@ pub mod app {
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
                     if line == keyword.as_str() || line.starts_with(&probe) {
+                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                         let record = ::dsl::parse(
-                            line,
+                            body,
                             &spec_fn(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                         )?;
@@ -3310,7 +3581,12 @@ pub mod app {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                if body.is_empty() {
+                    keyword
+                } else {
+                    format!("{keyword} {body}")
+                }
             }
         }
 
@@ -3324,7 +3600,7 @@ pub mod app {
         }
     };
 
-    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
@@ -3344,7 +3620,7 @@ pub mod app {
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)` — see `🔖️DispatchDesignChoice`
             /// above for why this is concrete (not generic) in the app's own associated types.
-            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
@@ -3357,8 +3633,9 @@ pub mod app {
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
                     if line == keyword.as_str() || line.starts_with(&probe) {
+                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                         let record = ::dsl::parse(
-                            line,
+                            body,
                             &spec_fn(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                         )?;
@@ -3371,7 +3648,12 @@ pub mod app {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline)
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                if body.is_empty() {
+                    keyword
+                } else {
+                    format!("{keyword} {body}")
+                }
             }
         }
 
@@ -3436,10 +3718,10 @@ pub mod app {
 
         #[test]
         fn dispatch_forwards_to_the_payload_modules_own_handle() {
-            let projection = 0u32;
+            let snapshot = 0u32;
             let config = ();
-            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
-            let cfg = ConfigView { projection: &config };
+            let doc = DocumentView { snapshot: &snapshot, history: &HistoryView::empty() };
+            let cfg = ConfigView { snapshot: &config };
 
             let emit: Emit<String, NoConfigMutation> = TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).dispatch(&doc, &cfg).expect("dispatch add-widget");
             assert_eq!(emit.document_mutations, vec!["add:inputSlider:1.5".to_string()]);
@@ -3450,8 +3732,8 @@ pub mod app {
 
         #[test]
         fn wire_round_trips_through_dsl_ops_op_text_and_op_binary() {
-            store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), x: 2.0 }));
-            store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }));
+            store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), x: 2.0 }));
+            store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }));
         }
 
         mod keyed {
@@ -3489,7 +3771,7 @@ pub mod app {
             let command = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "inputSlider".into() });
             assert_eq!(command.command_id(), "addWidget");
             assert!(protocol::OpText::print_op(&command).starts_with("add-widget "), "wire keyword must be the kebab `as` literal, got {:?}", protocol::OpText::print_op(&command));
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
 
         /// 🧪️ A fieldless payload struct must print/encode exactly like the unit variant it replaces —
@@ -3499,15 +3781,15 @@ pub mod app {
             let command = TestKeyedCommand::DeleteSelection(keyed_unit::DeleteSelection {});
             assert_eq!(protocol::OpText::print_op(&command), "delete-selection");
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode"), vec![1u8, 1, 0, 0]);
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
 
         #[test]
         fn ctx_is_threaded_through_dispatch_into_every_handler() {
-            let projection = 0u32;
+            let snapshot = 0u32;
             let config = ();
-            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
-            let cfg = ConfigView { projection: &config };
+            let doc = DocumentView { snapshot: &snapshot, history: &HistoryView::empty() };
+            let cfg = ConfigView { snapshot: &config };
             let mut ctx = 41u32;
             let emit: Emit<String, NoConfigMutation> = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "neuron".into() }).dispatch(&doc, &cfg, &mut ctx).expect("dispatch");
             assert_eq!(emit.document_mutations, vec!["add:neuron:42".to_string()]);
@@ -3516,8 +3798,8 @@ pub mod app {
     }
     //#endregion 🔖️AppCommands
 
-    /// @emoji 🧩️ Typed, per-app author surface. An app declares its `Projection` and `Mutation` (a
-    /// `store::Mutation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
+    /// @emoji 🧩️ Typed, per-app author surface. An app declares its `Snapshot` and `Mutation` (a
+    /// `store::Mutation<Snapshot>`), mutates nothing directly, and returns an {@link ActionEmit} whose
     /// operations flow through a persistent `DocumentStore` owned by {@link VcsDocumentApp}. Ephemeral
     /// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
     ///
@@ -3544,11 +3826,11 @@ pub mod app {
         const APP_ID: &'static str;
         /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
-        type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
-        type Mutation: ::protocol::Mutation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
+        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
         type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + DocumentPack;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        /// @emoji 📝️ Volatile draft projection — use {@link NoDraft} when the app has no draft lane.
+        /// @emoji 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
         type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
         /// @emoji 📝️ Draft-lane operations applied to {@link store::DraftStore}.
         type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
@@ -3565,7 +3847,7 @@ pub mod app {
         fn config_schema() -> &'static str {
             "config.empty"
         }
-        fn initial_projection() -> Self::Projection;
+        fn initial_snapshot() -> Self::Snapshot;
         fn initial_config() -> Self::Config {
             Self::Config::default()
         }
@@ -3578,7 +3860,7 @@ pub mod app {
         /// is threaded through exchange).
         fn handle(
             command: &Self::Command,
-            doc: &DocumentView<'_, Self::Projection>,
+            doc: &DocumentView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
             draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
@@ -3626,34 +3908,34 @@ pub mod app {
         /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
         /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
         /// interception only calls this when a media type is declared).
-        fn copy_fragment( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
+        fn copy_fragment( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
             Err(ClipboardError::EmptySelection)
         }
-        fn cut_operations( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Mutation> {
+        fn cut_operations( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Mutation> {
             Vec::new()
         }
-        fn paste_operations( _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
+        fn paste_operations( _doc: &DocumentView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+        fn pending_effects( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
             Vec::new()
         }
-        fn render(body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        fn render(body_key: &str, doc: &DocumentView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
         /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
         /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
         /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
-        fn window_engagements( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        fn window_engagements( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
         /// 🪟️ See `window_engagements` — same per-window-instance keying.
-        fn window_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn window_measures( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🛠️ Keyed by TOOL id (`AppDefinition.tools[].id`), not window instance — a tool's live options
         /// (e.g. puzzle3d fill's count slider) rendered in the mode-level tool panel rather than a
         /// window's utility-options rail. Reuses `WindowMeasure` as the shared control vocabulary; the
         /// `Group.active_utility_id` tag is simply unused for tool measures.
-        fn tool_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn tool_measures( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
@@ -3665,15 +3947,15 @@ pub mod app {
         /// `AppActionRegistry` (the same one `VcsDocumentApp` enforces the actions contract with) —
         /// pass it to `Menu::of(registry)` to resolve labels/icons from declared `ActionDefinition`s
         /// instead of hand-building rows.
-        fn context_menu( _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        fn context_menu( _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         /// 🌱️ One-time hook for seeding the store's history (checkpoints/alternatives) beyond the bare
-        /// `initial_projection` — called once from `VcsDocumentApp::new`, right after the store is
+        /// `initial_snapshot` — called once from `VcsDocumentApp::new`, right after the store is
         /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
         /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every program driven purely
         /// by user actions leaves it untouched.
-        fn seed( _store: &mut DocumentStore<Self::Projection, Self::Mutation>) {}
+        fn seed( _store: &mut DocumentStore<Self::Snapshot, Self::Mutation>) {}
 
         /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
         /// the implicit document ports" (`media_ports` below still returns those two). Override to return
@@ -3688,33 +3970,33 @@ pub mod app {
         fn media_ports() -> Vec<MediaPortSpec> {
             Self::io().map(|io| io.all_ports()).unwrap_or_default()
         }
-        /// 🎞️ Pure projection of the current document onto one declared output port — must not mutate
+        /// 🎞️ Pure export of the current document onto one declared output port — must not mutate
         /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
         /// workflow edge). Default: the whole document pack, base64-wrapped, for `"document:out"`;
         /// `MediaError::NotImplemented` for any other port (apps declaring extra output ports override
         /// this to handle them, falling through to `DocumentApp::export_media`'s default via `_ =>` for
         /// `"document:out"` if desired).
-        fn export_media(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<Media, MediaError> {
+        fn export_media(port: &str, doc: &DocumentView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
-            let bytes = doc.projection.encode_pack();
+            let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
-        /// 🎞️ Builds the operation that replaces the whole document with `projection` — the seam the
+        /// 🎞️ Builds the operation that replaces the whole document with `snapshot` — the seam the
         /// default `import_media("document:in")` below needs to turn a decoded document pack into a real,
         /// undoable operation. `None` (the default) means "not implemented" (there is no generic "replace
-        /// whole projection" operation); an app whose `Mutation` enum has such a variant (e.g.
+        /// whole snapshot" operation); an app whose `Mutation` enum has such a variant (e.g.
         /// `SetFixture`/`SetDocument`) overrides this one-liner to unlock the default `import_media`.
-        fn whole_document_operation( _projection: Self::Projection) -> Option<Self::Mutation> {
+        fn whole_document_operation( _snapshot: Self::Snapshot) -> Option<Self::Mutation> {
             None
         }
         /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
         /// state directly, so a headless import is exactly as undoable/syncable as a UI edit. Default:
         /// decodes a `"document:in"` structured (base64 pack) payload via `whole_document_operation`;
         /// `MediaError::NotImplemented` for any other port or when `whole_document_operation` is `None`.
-        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
+        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
             }
@@ -3722,8 +4004,8 @@ pub mod app {
                 return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
             };
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            let projection = <Self::Projection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            match Self::whole_document_operation(projection) {
+            let snapshot = <Self::Snapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            match Self::whole_document_operation(snapshot) {
                 Some(operation) => Ok(Emit::mutations(vec![operation])),
                 None => Err(MediaError::NotImplemented),
             }
@@ -3731,7 +4013,7 @@ pub mod app {
         /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
         /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
         /// materializing the full export (e.g. from a cached head edit id).
-        fn media_fingerprint(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<MediaFingerprint, MediaError> {
+        fn media_fingerprint(port: &str, doc: &DocumentView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
             Self::export_media(port, doc).map(|media| MediaFingerprint::of(&media))
         }
     }
@@ -3831,7 +4113,7 @@ pub mod app {
         /// no envelope metadata of its own.
         fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), Fault>;
         /// @emoji 📜️ Text-DSL counterpart to {@link Self::document_pack}: the whole document as
-        /// {@link store::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log
+        /// {@link store::DocumentTextFiles} (the `dsl` initial-snapshot text plus the full `ops` op-log
         /// text) via `store::print_document_text` — returned as the established two-file struct rather than
         /// a single concatenated string, since that struct (not an ad hoc delimiter format) is already the
         /// canonical text representation everywhere else in this codebase (`FolderTextStorage`,
@@ -3840,7 +4122,7 @@ pub mod app {
         /// @emoji 📜️ Text-DSL counterpart to {@link Self::load_document_pack}.
         fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), Fault>;
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::document_text}: the whole document as
-        /// {@link store::DocumentPackFiles} (pack-encoded initial projection plus the same `ops` op-log
+        /// {@link store::DocumentPackFiles} (pack-encoded initial snapshot plus the same `ops` op-log
         /// text — the op grammar is format-invariant) via `store::print_document_pack`.
         fn document_pack(&self) -> Result<store::DocumentPackFiles, Fault>;
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::load_document_text}.
@@ -3850,7 +4132,7 @@ pub mod app {
         /// @emoji 🕰️ `view_state` is kept here ONLY for wrapper-owned framework chrome (the injected
         /// history panel body's locale — see `VcsDocumentApp::render`); it is never forwarded into
         /// `DocumentApp::render`, which dropped `ViewModel` entirely in B1.
-        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;
+        fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;
         fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
@@ -3871,7 +4153,7 @@ pub mod app {
             Vec::new()
         }
         /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless workflow
-        /// runner calls without knowing the app's concrete `Projection`/`Mutation` types.
+        /// runner calls without knowing the app's concrete `Snapshot`/`Mutation` types.
         fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
             Err(MediaError::NotImplemented)
         }
@@ -4178,17 +4460,17 @@ pub mod app {
     }
 
     /// @emoji 🧬️ Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
-    /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Mutation>` — the single source of
+    /// {@link PluginApp}. Owns a persistent `DocumentStore<Snapshot, Mutation>` — the single source of
     /// truth for the app's document across every call — intercepts the six injected history actions into
     /// `DocumentCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
-    /// `InvocationResult` whose inverses come from the just-recorded `Edit.inverse`. A projection+history
+    /// `InvocationResult` whose inverses come from the just-recorded `Edit.inverse`. A snapshot+history
     /// cache keyed on `(store generation, log generation, history filter)` keeps renders O(1). Holds an
     /// {@link AppActionRegistry} to enforce the actions contract before/after delegating to the app.
     /// Host `DocumentSession` already mirrors opaque document/config/draft packs; typed stores here
     /// remain guest-owned until `AppCommand::PureCommand` returns `AppFrame::Emit` for host apply.
     pub struct VcsDocumentApp<A: DocumentApp> {
         app: A,
-        store: DocumentStore<A::Projection, A::Mutation>,
+        store: DocumentStore<A::Snapshot, A::Mutation>,
         config_store: ConfigStore<A::Config, A::ConfigMutation>,
         /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `DocumentCommand::PruneDrafts`.
         /// Moves to host `DocumentSession` when CHANNEL_VERSION 5 exchange lands.
@@ -4196,8 +4478,8 @@ pub mod app {
         /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
         last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,
         /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
-        /// changing invalidates the cached projection/`HistoryView` pair.
-        cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Projection, A::Config, HistoryView)>,
+        /// changing invalidates the cached snapshot/`HistoryView` pair.
+        cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Snapshot, A::Config, HistoryView)>,
         registry: AppActionRegistry,
         /// @emoji 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
         /// truncated: undo/redo/revert push entries, they never remove any.
@@ -4224,7 +4506,7 @@ pub mod app {
         /// @emoji 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
         /// enforces default materialization, required-arg validation, and kind discipline.
         pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
-            let envelope = create_document_envelope::<A::Projection, A::Mutation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_projection(), None);
+            let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_snapshot(), None);
             let config_id = format!("{}-config", A::APP_ID);
             let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema(), &config_id, A::initial_config(), None);
             let draft_id = format!("{}-draft", A::APP_ID);
@@ -4237,14 +4519,14 @@ pub mod app {
         }
 
         #[cfg(test)]
-        pub(crate) fn test_projection(&self) -> A::Projection {
-            self.store.projection().expect("materialize projection")
+        pub(crate) fn test_snapshot(&self) -> A::Snapshot {
+            self.store.snapshot().expect("materialize snapshot")
         }
 
-        /// @emoji 🧪️ The config-store twin of `test_projection`.
+        /// @emoji 🧪️ The config-store twin of `test_snapshot`.
         #[cfg(test)]
         pub(crate) fn test_config(&self) -> A::Config {
-            self.config_store.projection().expect("materialize config projection")
+            self.config_store.snapshot().expect("materialize config snapshot")
         }
 
         /// @emoji 🧪️ Direct access to the wrapped app — used to assert on app-private test fixtures (e.g.
@@ -4262,17 +4544,17 @@ pub mod app {
             self.build_history_view()
         }
 
-        /// @emoji 📸️ Materializes and returns the current projection — the typed counterpart to
+        /// @emoji 📸️ Materializes and returns the current snapshot — the typed counterpart to
         /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
         /// need direct structural access to document state instead of a rendered node.
-        pub fn projection(&self) -> Result<A::Projection, Fault> {
-            self.store.projection().map_err(|error| error.into_fault())
+        pub fn snapshot(&self) -> Result<A::Snapshot, Fault> {
+            self.store.snapshot().map_err(|error| error.into_fault())
         }
 
         /// @emoji 🤝️ Fresh replay plus whatever `Mutation::reconcile` reports for the result — the typed
-        /// counterpart to `store::DocumentStore::projection_with_conflicts`.
-        pub fn projection_with_conflicts(&self) -> Result<(A::Projection, Vec<SpaceConflict>), Fault> {
-            self.store.projection_with_conflicts().map_err(|error| error.into_fault())
+        /// counterpart to `store::DocumentStore::snapshot_with_conflicts`.
+        pub fn snapshot_with_conflicts(&self) -> Result<(A::Snapshot, Vec<SpaceConflict>), Fault> {
+            self.store.snapshot_with_conflicts().map_err(|error| error.into_fault())
         }
 
         /// @emoji 🔗️ The store's current backbone descriptor, `None` when unattached (the default).
@@ -4428,7 +4710,7 @@ pub mod app {
             }
         }
 
-        /// @emoji 🗂️ Refreshes the projection cache if the store advanced, the command log grew/folded, or
+        /// @emoji 🗂️ Refreshes the snapshot cache if the store advanced, the command log grew/folded, or
         /// the history filter changed since the last materialization. The key is recomputed a SECOND time
         /// after `backfill_command_log` — backfill itself may `push_log_entry` (bumping `log_generation`),
         /// so keying only on the pre-backfill snapshot would store a stale key and thrash on every call.
@@ -4439,20 +4721,20 @@ pub mod app {
             }
             self.backfill_command_log();
             let key = (self.store.generation(), self.config_store.generation(), self.log_generation, self.history_filter);
-            let (projection, config) = match self.cache.take() {
-                Some((cached_key, projection, config, _)) if cached_key.0 == key.0 && cached_key.1 == key.1 => (projection, config),
-                Some((cached_key, projection, _, _)) if cached_key.0 == key.0 => {
-                    let config = self.config_store.projection().map_err(|error| error.into_fault())?;
-                    (projection, config)
+            let (snapshot, config) = match self.cache.take() {
+                Some((cached_key, snapshot, config, _)) if cached_key.0 == key.0 && cached_key.1 == key.1 => (snapshot, config),
+                Some((cached_key, snapshot, _, _)) if cached_key.0 == key.0 => {
+                    let config = self.config_store.snapshot().map_err(|error| error.into_fault())?;
+                    (snapshot, config)
                 }
                 _ => {
-                    let projection = self.store.projection().map_err(|error| error.into_fault())?;
-                    let config = self.config_store.projection().map_err(|error| error.into_fault())?;
-                    (projection, config)
+                    let snapshot = self.store.snapshot().map_err(|error| error.into_fault())?;
+                    let config = self.config_store.snapshot().map_err(|error| error.into_fault())?;
+                    (snapshot, config)
                 }
             };
             let history = self.build_history_view();
-            self.cache = Some((key, projection, config, history));
+            self.cache = Some((key, snapshot, config, history));
             Ok(())
         }
 
@@ -4764,9 +5046,9 @@ pub mod app {
                 self.refresh_cache()?;
                 let emit = {
                     let VcsDocumentApp { app, cache, .. } = self;
-                    let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-                    let doc = DocumentView { projection, history };
-                    let cfg = ConfigView { projection: config };
+                    let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+                    let doc = DocumentView { snapshot, history };
+                    let cfg = ConfigView { snapshot: config };
                     match action {
                         "copy" => match A::copy_fragment(&doc, &cfg) {
                             Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Default::default() },
@@ -4845,13 +5127,13 @@ pub mod app {
         /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
         fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.refresh_cache()?;
-            let draft_projection = self.draft_store.projection().map_err(|error| error.into_fault())?;
+            let draft_snapshot = self.draft_store.snapshot().map_err(|error| error.into_fault())?;
                 let (verb, emit) = {
                 let VcsDocumentApp { app, cache, .. } = self;
-                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = DocumentView { projection, history };
-                let cfg = ConfigView { projection: config };
-                let draft = DraftView { projection: &draft_projection };
+                let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = DocumentView { snapshot, history };
+                let cfg = ConfigView { snapshot: config };
+                let draft = DraftView { snapshot: &draft_snapshot };
                 let engines = EngineHandles::empty();
                 let verb = A::command_id(&command).to_string();
                 let emit = A::handle(&command, &doc, &cfg, &draft, &engines)?;
@@ -4884,9 +5166,9 @@ pub mod app {
             self.refresh_cache()?;
             let emit = {
                 let VcsDocumentApp { app, cache, .. } = self;
-                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = DocumentView { projection, history };
-                let _cfg = ConfigView { projection: config };
+                let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = DocumentView { snapshot, history };
+                let _cfg = ConfigView { snapshot: config };
                 A::import_media(port, media, &doc).map_err(|error| plugin_sdk_fault(error.to_string()))?
             };
             self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
@@ -5045,7 +5327,7 @@ pub mod app {
         }
 
         fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), Fault> {
-            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;
+            let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;
             let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             self.store.reset(parsed.envelope, applied, Vec::new()).map_err(|error| error.into_fault())?;
             self.cache = None;
@@ -5057,7 +5339,7 @@ pub mod app {
         }
 
         fn load_document_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), Fault> {
-            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
+            let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
             // 🎯️ W4: honor a persisted cursor (undo/redo position) when present — falling back to
             // "every edit applied" for a pack predating this field, matching `DocumentStore::new`'s
             // own cursor-aware seeding.
@@ -5081,10 +5363,10 @@ pub mod app {
             self.cache = None;
         }
 
-        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {
+        fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {
             self.refresh_cache()?;
             if body_key == FRAMEWORK_HISTORY_BODY_KEY {
-                // 🕰️ Framework-owned, projection-independent — served before any app body-key match.
+                // 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
                 let (_, _, _, history) = self.cache.as_ref().expect("cache refreshed above");
                 return Ok(ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De));
             }
@@ -5097,18 +5379,18 @@ pub mod app {
             } else {
                 body_key.to_string()
             };
-            if let Some(json) = projection_override_json {
-                let projection: A::Projection = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            if let Some(json) = snapshot_override_json {
+                let snapshot: A::Snapshot = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 let history = self.build_history_view();
-                let doc = DocumentView { projection: &projection, history: &history };
-                let config = self.config_store.projection().unwrap_or_else(|_| A::Config::default());
-                let cfg = ConfigView { projection: &config };
+                let doc = DocumentView { snapshot: &snapshot, history: &history };
+                let config = self.config_store.snapshot().unwrap_or_else(|_| A::Config::default());
+                let cfg = ConfigView { snapshot: &config };
                 return Ok(A::render(&effective_body_key, &doc, &cfg));
             }
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let cfg = ConfigView { snapshot: config };
             Ok(A::render(&effective_body_key, &doc, &cfg))
         }
 
@@ -5116,9 +5398,9 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
-            let (_, projection, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let cfg = ConfigView { snapshot: config };
             A::window_engagements(&doc, &cfg)
         }
 
@@ -5126,9 +5408,9 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
-            let (_, projection, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let cfg = ConfigView { snapshot: config };
             A::window_measures(&doc, &cfg)
         }
 
@@ -5137,9 +5419,9 @@ pub mod app {
                 return HashMap::new();
             }
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let cfg = ConfigView { snapshot: config };
             A::tool_measures(&doc, &cfg)
         }
 
@@ -5148,9 +5430,9 @@ pub mod app {
                 return Vec::new();
             }
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let cfg = ConfigView { snapshot: config };
             A::pending_effects(&doc, &cfg)
         }
 
@@ -5162,9 +5444,9 @@ pub mod app {
                 return Vec::new();
             }
             let VcsDocumentApp { app, cache, registry, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let cfg = ConfigView { snapshot: config };
             let items = A::context_menu(request, &doc, &cfg, registry);
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
         }
@@ -5172,9 +5454,9 @@ pub mod app {
         fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
             self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let _cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let _cfg = ConfigView { snapshot: config };
             A::export_media(port, &doc)
         }
 
@@ -5187,9 +5469,9 @@ pub mod app {
         fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
             self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            let _cfg = ConfigView { projection: config };
+            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { snapshot, history };
+            let _cfg = ConfigView { snapshot: config };
             A::media_fingerprint(port, &doc)
         }
     }
@@ -5563,13 +5845,13 @@ pub mod plugin_runtime {
         })
     }
 
-    /// @emoji 🗂️ Registers `A::Projection`'s pack↔dsl codec under `schema` in the process-wide
+    /// @emoji 🗂️ Registers `A::Snapshot`'s pack↔dsl codec under `schema` in the process-wide
     /// `store::DocumentCodec` registry — the one-liner every app's own native registration fn
     /// (`register_<app>_exports()`-style) calls once per document kind so `framework/sync`'s
     /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
-    /// depending on its concrete `Projection`/`Mutation` types.
+    /// depending on its concrete `Snapshot`/`Mutation` types.
     pub fn register_document_codec_for_app<A: DocumentApp>(schema: impl Into<String>) {
-        store::register_document_codec(store::DocumentCodec::of::<A::Projection, A::Mutation>(schema));
+        store::register_document_codec(store::DocumentCodec::of::<A::Snapshot, A::Mutation>(schema));
     }
 
     /// @emoji 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
@@ -5618,7 +5900,7 @@ pub mod plugin_runtime {
         plugin_render_with_document(instance_id, body_key, None, view_state_json)
     }
 
-    pub fn plugin_render_with_document(instance_id: u32, body_key: &str, projection_override_json: Option<&str>, view_state_json: &str) -> Result<UiNode, Fault> {
+    pub fn plugin_render_with_document(instance_id: u32, body_key: &str, snapshot_override_json: Option<&str>, view_state_json: &str) -> Result<UiNode, Fault> {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct WindowRenderInput {
@@ -5628,19 +5910,19 @@ pub mod plugin_runtime {
             #[serde(default)]
             document_json: Option<String>,
         }
-        let (resolved_body_key, view_state, override_projection) = if body_key.is_empty() {
+        let (resolved_body_key, view_state, override_snapshot) = if body_key.is_empty() {
             let input: WindowRenderInput = serde_json::from_str(view_state_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
             (input.body_key, input.view_state, input.document_json)
         } else if let Ok(input) = serde_json::from_str::<WindowRenderInput>(view_state_json) {
             let key = if input.body_key.is_empty() { body_key.to_string() } else { input.body_key };
-            (key, input.view_state, input.document_json.or_else(|| projection_override_json.map(str::to_string)))
+            (key, input.view_state, input.document_json.or_else(|| snapshot_override_json.map(str::to_string)))
         } else {
             let view_state: ViewModel = serde_json::from_str(view_state_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
-            (body_key.to_string(), view_state, projection_override_json.map(str::to_string))
+            (body_key.to_string(), view_state, snapshot_override_json.map(str::to_string))
         };
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
-            instance.app.render(&resolved_body_key, override_projection.as_deref(), &view_state)
+            instance.app.render(&resolved_body_key, override_snapshot.as_deref(), &view_state)
         })
     }
 
@@ -6435,10 +6717,12 @@ pub mod plugin_runtime {
         //! idempotency. `TestCommand` is `TestApp`'s typed `Self::Command`; framework-reserved verbs
         //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
         //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
+        use ui_wgpu::wgpu::{Label, LocalizedLabel};
 
         use super::ContextMenuWireRequest;
         use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, PluginApp, VcsDocumentApp};
         use store::EngineHandles;
+        use semio_framework::Fault;
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
         use protocol::{Mutation, MutationDiff};
         use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
@@ -6451,9 +6735,35 @@ pub mod plugin_runtime {
 
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
         #[dsl(extension = "testkit-macro")]
-        struct TestProjection {
+        struct TestSnapshot {
             count: i32,
             label: String,
+        }
+
+        /// ✉️ P6 handcrafted DocumentDsl/DocumentPack for SDK test double (artifact coincides with snapshot only in tests).
+        impl store::DocumentDsl for TestSnapshot {
+            const EXTENSION: &'static str = "testkit-macro";
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                if text.trim().is_empty() {
+                    return Ok(Self::default());
+                }
+                serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+            }
+            fn print_dsl(&self) -> String {
+                serde_json::to_string(self).unwrap_or_default()
+            }
+        }
+
+        impl store::DocumentPack for TestSnapshot {
+            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+            }
+            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                if bytes.is_empty() {
+                    return Ok(Self::default());
+                }
+                serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+            }
         }
 
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -6462,9 +6772,9 @@ pub mod plugin_runtime {
             label: Option<String>,
         }
 
-        impl MutationDiff<TestProjection> for TestDiff {
-            fn apply(&self, projection: &TestProjection) -> TestProjection {
-                TestProjection { count: self.count.unwrap_or(projection.count), label: self.label.clone().unwrap_or_else(|| projection.label.clone()) }
+        impl MutationDiff<TestSnapshot> for TestDiff {
+            fn apply(&self, snapshot: &TestSnapshot) -> TestSnapshot {
+                TestSnapshot { count: self.count.unwrap_or(snapshot.count), label: self.label.clone().unwrap_or_else(|| snapshot.label.clone()) }
             }
 
             fn absorb(&mut self, other: Self) {
@@ -6486,21 +6796,61 @@ pub mod plugin_runtime {
             SetLabel { value: String },
         }
 
-        impl Mutation<TestProjection> for TestMutation {
+        impl Mutation<TestSnapshot> for TestMutation {
             type Diff = TestDiff;
 
-            fn diff(&self, _projection: &TestProjection) -> TestDiff {
+            fn diff(&self, _snapshot: &TestSnapshot) -> TestDiff {
                 match self {
                     TestMutation::SetCount { value } => TestDiff { count: Some(*value), label: None },
                     TestMutation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
                 }
             }
 
-            fn inverse(&self, projection: &TestProjection) -> Vec<Self> {
+            fn inverse(&self, snapshot: &TestSnapshot) -> Vec<Self> {
                 match self {
-                    TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: projection.count }],
-                    TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: projection.label.clone() }],
+                    TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: snapshot.count }],
+                    TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: snapshot.label.clone() }],
                 }
+            }
+        }
+
+
+        impl ::protocol::OpText for TestMutation {
+            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                for (keyword, spec_fn) in &variants {
+                    let probe = format!("{keyword} ");
+                    if line == keyword.as_str() || line.starts_with(&probe) {
+                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                        let record = ::dsl::parse(
+                            body,
+                            &spec_fn(),
+                            &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                    }
+                }
+                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+            }
+            fn print_op(&self) -> String {
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                if body.is_empty() {
+                    keyword
+                } else {
+                    format!("{keyword} {body}")
+                }
+            }
+        }
+
+        impl ::protocol::OpBinary for TestMutation {
+            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::encode_op(self)
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::decode_op(bytes)
             }
         }
 
@@ -6511,6 +6861,32 @@ pub mod plugin_runtime {
         #[dsl(extension = "testkit-macro-cfg")]
         struct TestConfig {
             selected: Option<String>,
+        }
+
+        /// ✉️ P6 handcrafted DocumentDsl/DocumentPack for SDK test double (artifact coincides with snapshot only in tests).
+        impl store::DocumentDsl for TestConfig {
+            const EXTENSION: &'static str = "testkit-macro-cfg";
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                if text.trim().is_empty() {
+                    return Ok(Self::default());
+                }
+                serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+            }
+            fn print_dsl(&self) -> String {
+                serde_json::to_string(self).unwrap_or_default()
+            }
+        }
+
+        impl store::DocumentPack for TestConfig {
+            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+            }
+            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                if bytes.is_empty() {
+                    return Ok(Self::default());
+                }
+                serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+            }
         }
 
         impl store::ConfigRecord for TestConfig {}
@@ -6549,6 +6925,45 @@ pub mod plugin_runtime {
             }
         }
 
+        impl ::protocol::OpText for TestConfigMutation {
+            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                for (keyword, spec_fn) in &variants {
+                    let probe = format!("{keyword} ");
+                    if line == keyword.as_str() || line.starts_with(&probe) {
+                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                        let record = ::dsl::parse(
+                            body,
+                            &spec_fn(),
+                            &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                    }
+                }
+                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+            }
+            fn print_op(&self) -> String {
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                if body.is_empty() {
+                    keyword
+                } else {
+                    format!("{keyword} {body}")
+                }
+            }
+        }
+
+        impl ::protocol::OpBinary for TestConfigMutation {
+            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::encode_op(self)
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::decode_op(bytes)
+            }
+        }
+
         /// 🧪️ B1: `TestApp`'s typed command enum — the sole dispatch surface for its own behavior.
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
         enum TestCommand {
@@ -6580,6 +6995,45 @@ pub mod plugin_runtime {
             SetActiveUtility { utility_id: String },
         }
 
+        impl ::protocol::OpText for TestCommand {
+            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                for (keyword, spec_fn) in &variants {
+                    let probe = format!("{keyword} ");
+                    if line == keyword.as_str() || line.starts_with(&probe) {
+                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                        let record = ::dsl::parse(
+                            body,
+                            &spec_fn(),
+                            &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                    }
+                }
+                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+            }
+            fn print_op(&self) -> String {
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                let variants = <Self as ::dsl::DslVariants>::variants();
+                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                if body.is_empty() {
+                    keyword
+                } else {
+                    format!("{keyword} {body}")
+                }
+            }
+        }
+
+        impl ::protocol::OpBinary for TestCommand {
+            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::encode_op(self)
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                ::dsl::variants_binary::decode_op(bytes)
+            }
+        }
+
         /// 🧪️ App under test. `received_actions` records every command id THIS app's own `handle` was
         /// actually called with — used to prove framework-owned interceptions (e.g. `noteShellCommand`)
         /// never reach it.
@@ -6591,7 +7045,7 @@ pub mod plugin_runtime {
         impl DocumentApp for TestApp {
             const APP_ID: &'static str = "synthetic-play";
             const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
-            type Projection = TestProjection;
+            type Snapshot = TestSnapshot;
             type Mutation = TestMutation;
             type Config = TestConfig;
             type ConfigMutation = TestConfigMutation;
@@ -6599,11 +7053,11 @@ pub mod plugin_runtime {
             type DraftMutation = NoDraftMutation;
             type Command = TestCommand;
 
-            fn initial_projection() -> TestProjection {
-                TestProjection::default()
+            fn initial_snapshot() -> TestSnapshot {
+                TestSnapshot::default()
             }
 
-            fn command_id(&self, command: &TestCommand) -> &str {
+            fn command_id(command: &TestCommand) -> &'static str {
                 match command {
                     TestCommand::Increment => "increment",
                     TestCommand::SetLabel { .. } => "setLabel",
@@ -6621,10 +7075,10 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
-                self.received_actions.borrow_mut().push(self.command_id(command).to_string());
+            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
+                let _ = Self::command_id(command);
                 match command {
-                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_mutations: vec![TestMutation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_mutations: vec![TestMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
                     TestCommand::SetLabel { value } => Ok(Emit { document_mutations: vec![TestMutation::SetLabel { value: value.clone() }], coalesce_key: Some("label".into()), ..Default::default() }),
                     TestCommand::SetLabelViaCommand { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel { value: value.clone() }])),
                     TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel { value: value.clone() }], "label")),
@@ -6642,38 +7096,38 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn render(_body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
-                ui_text(format!("count={}", doc.projection.count))
+            fn render(_body_key: &str, doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
+                ui_text(Label::data(format!("count={}", doc.snapshot.count)))
             }
 
-            fn clipboard_media_type(&self) -> Option<MediaType> {
+            fn clipboard_media_type() -> Option<MediaType> {
                 Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
             }
 
-            fn copy_fragment(doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
-                if doc.projection.label.is_empty() {
+            fn copy_fragment(doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
+                if doc.snapshot.label.is_empty() {
                     return Err(ClipboardError::EmptySelection);
                 }
                 Ok(ClipboardFragment {
-                    schema: self.document_schema().to_string(),
-                    media_type: self.clipboard_media_type().expect("declared above"),
-                    dsl_text: doc.projection.label.clone(),
+                    schema: Self::DOCUMENT_SCHEMA.to_string(),
+                    media_type: Self::clipboard_media_type().expect("declared above"),
+                    dsl_text: doc.snapshot.label.clone(),
                     pack_bytes: None,
-                    source_app: self.app_id().to_string(),
-                    label: doc.projection.label.clone(),
+                    source_app: Self::APP_ID.to_string(),
+                    label: doc.snapshot.label.clone(),
                 })
             }
 
-            fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestMutation> {
-                if doc.projection.label.is_empty() {
+            fn cut_operations(doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestMutation> {
+                if doc.snapshot.label.is_empty() {
                     Vec::new()
                 } else {
                     vec![TestMutation::SetLabel { value: String::new() }]
                 }
             }
 
-            fn paste_operations(&self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {
-                if !self.clipboard_accepts().contains(&fragment.media_type) {
+            fn paste_operations(_doc: &DocumentView<'_, TestSnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {
+                if !Self::clipboard_accepts().contains(&fragment.media_type) {
                     return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
                 }
                 let value = match placement.anchor {
@@ -6689,11 +7143,11 @@ pub mod plugin_runtime {
             /// `contract_registry`-backed tests, which never set that label, are untouched) — a flat >9-row
             /// menu fixture for `context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu` below,
             /// proving `VcsDocumentApp::context_menu` runs every emitter through `organize_context_menu`.
-            fn context_menu(_request: &ContextMenuRequest, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            fn context_menu(_request: &ContextMenuRequest, doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
                 Menu::of(registry)
                     .action("setLabelRequired")
-                    .when(!doc.projection.label.is_empty() && doc.projection.label != "flat-menu-test", |m| m.command("incrementViaCommand"))
-                    .when(doc.projection.label == "flat-menu-test", |m| (1..=10).fold(m, |m, index| m.action(format!("flatLeaf{index}"))))
+                    .when(!doc.snapshot.label.is_empty() && doc.snapshot.label != "flat-menu-test", |m| m.command("incrementViaCommand"))
+                    .when(doc.snapshot.label == "flat-menu-test", |m| (1..=10).fold(m, |m, index| m.action(format!("flatLeaf{index}"))))
                     .build()
             }
         }
@@ -6733,8 +7187,8 @@ pub mod plugin_runtime {
                 .mutation("noopMutation", LocalizedLabel::data("Noop Mutation"))
                 .view_action("badView", LocalizedLabel::data("Bad View"))
                 .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
-                .app_command("incrementViaCommand", "Increment", "counter")
-                .app_command("setLabelViaCommand", "Set Label", "counter"),
+                .app_command("incrementViaCommand", LocalizedLabel::data("Increment"), "counter")
+                .app_command("setLabelViaCommand", LocalizedLabel::data("Set Label"), "counter"),
             );
             AppActionRegistry::from_definition(&app.definition)
         }
@@ -6758,7 +7212,7 @@ pub mod plugin_runtime {
         fn plugin_builder_builds_bundle_from_fluent_spec() {
             let bundle = __semio_plugin_bundle();
             assert_eq!(bundle.manifest.plugin_id, "synthetic");
-            assert_eq!(bundle.manifest.label, "Synthetic");
+            assert_eq!(bundle.manifest.label.as_str(), "Synthetic");
             assert_eq!(bundle.manifest.version, "0.0.1");
             assert!(bundle.manifest.apps.iter().any(|app| app.id == "synthetic-play"));
         }
@@ -6779,7 +7233,7 @@ pub mod plugin_runtime {
             assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).unwrap());
             assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).unwrap()]));
             assert_eq!(result.inverse_group.mutations.len(), 1);
-            assert_eq!(app.test_projection().count, 1);
+            assert_eq!(app.test_snapshot().count, 1);
         }
 
         #[test]
@@ -6789,7 +7243,7 @@ pub mod plugin_runtime {
             assert!(result.mutations.is_empty());
             assert!(result.requested_effects.is_empty());
             // A view command never advances the document.
-            assert_eq!(app.test_projection(), TestProjection::default());
+            assert_eq!(app.test_snapshot(), TestSnapshot::default());
         }
 
         #[test]
@@ -6874,12 +7328,12 @@ pub mod plugin_runtime {
             let mut app = VcsDocumentApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).expect("setLabel");
             let result = app.handle_action("cut", None, &meta()).expect("cut");
-            assert_eq!(app.test_projection().label, "");
+            assert_eq!(app.test_snapshot().label, "");
             assert_eq!(result.requested_effects.len(), 1);
             assert!(matches!(&result.requested_effects[0], HostEffect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
             // One undo restores the cut label — cut is a single coalesced edit, not two.
             app.handle_action("undo", None, &meta()).expect("undo");
-            assert_eq!(app.test_projection().label, "hello");
+            assert_eq!(app.test_snapshot().label, "hello");
         }
 
         #[test]
@@ -6889,7 +7343,7 @@ pub mod plugin_runtime {
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: "synthetic-play".into(), label: "pasted".into() };
             let args = json!({ "fragment": fragment, "anchor": "original" });
             app.handle_action("paste", Some(&args), &meta()).expect("paste");
-            assert_eq!(app.test_projection().label, "pasted");
+            assert_eq!(app.test_snapshot().label, "pasted");
         }
 
         #[test]
@@ -6899,7 +7353,7 @@ pub mod plugin_runtime {
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: "synthetic-play".into(), label: "pasted".into() };
             let args = json!({ "fragment": fragment, "anchor": "centroid" });
             app.handle_action("paste", Some(&args), &meta()).expect("paste");
-            assert_eq!(app.test_projection().label, format!("pasted-{:?}", PasteAnchor::Centroid));
+            assert_eq!(app.test_snapshot().label, format!("pasted-{:?}", PasteAnchor::Centroid));
         }
 
         #[test]
@@ -6907,7 +7361,7 @@ pub mod plugin_runtime {
             let mut app = VcsDocumentApp::new(TestApp::default());
             let result = app.handle_action("paste", None, &meta()).expect("paste");
             assert!(result.mutations.is_empty());
-            assert_eq!(app.test_projection().label, "");
+            assert_eq!(app.test_snapshot().label, "");
         }
 
         #[test]
@@ -6925,10 +7379,10 @@ pub mod plugin_runtime {
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).expect("setLabel");
             }
-            assert_eq!(app.test_projection().label, "abc");
+            assert_eq!(app.test_snapshot().label, "abc");
             // One undo reverts the whole coalesced gesture back to the empty label.
             app.handle_action("undo", None, &meta()).expect("undo");
-            assert_eq!(app.test_projection().label, "");
+            assert_eq!(app.test_snapshot().label, "");
         }
 
         #[test]
@@ -6936,15 +7390,15 @@ pub mod plugin_runtime {
             let mut app = VcsDocumentApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc1");
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc2");
-            assert_eq!(app.test_projection().count, 2);
+            assert_eq!(app.test_snapshot().count, 2);
 
             let undo = app.handle_action("undo", None, &meta()).expect("undo");
             assert!(undo.mutations.is_empty());
             assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
-            assert_eq!(app.test_projection().count, 1);
+            assert_eq!(app.test_snapshot().count, 1);
 
             app.handle_action("redo", None, &meta()).expect("redo");
-            assert_eq!(app.test_projection().count, 2);
+            assert_eq!(app.test_snapshot().count, 2);
 
             let checkpoint = app.handle_action("commitCheckpoint", None, &meta()).expect("checkpoint");
             assert!(checkpoint.mutations.is_empty());
@@ -6960,7 +7414,7 @@ pub mod plugin_runtime {
             assert_eq!(history.commands.len(), 1);
             let entry = &history.commands[0];
             assert_eq!(entry.action_id, "increment");
-            assert_eq!(entry.label, "increment");
+            assert_eq!(entry.label.as_str(), "increment");
             assert_eq!(entry.kind, ActionKind::Mutation);
             assert!(entry.edit_id.is_some());
             assert!(!entry.op_lines.is_empty(), "operation entry must carry printed op-text");
@@ -6994,18 +7448,18 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn revert_to_command_restores_the_projection_and_appends_one_entry() {
+        fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {
             let mut app = VcsDocumentApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc1");
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc2");
-            assert_eq!(app.test_projection().count, 2);
+            assert_eq!(app.test_snapshot().count, 2);
             // 🧾️ `commands` is newest-first — take the MINIMUM seq among "increment" entries to target inc1, not inc2.
             let first_increment_seq = app.test_history().commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
             let before_len = app.test_history().commands.len();
 
             let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": first_increment_seq })), &meta()).expect("revertToCommand");
             assert!(result.events.iter().any(|event| event.kind == "history-changed"));
-            assert_eq!(app.test_projection().count, 1, "revert leaves the target edit applied, undoing only what came after it");
+            assert_eq!(app.test_snapshot().count, 1, "revert leaves the target edit applied, undoing only what came after it");
             let history = app.test_history();
             assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
             // 🧾️ `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
@@ -7086,10 +7540,10 @@ pub mod plugin_runtime {
             };
             let UiNode::Tree(all_tree) = ui_history_panel(&history, "ctrl", false) else { panic!("expected a Tree root like Document/Catalogue") };
             assert_eq!(all_tree.sections.len(), 2, "Actions + Commands sections");
-            assert_eq!(all_tree.sections[0].label.as_deref(), Some("Actions"));
+            assert_eq!(all_tree.sections[0].label.as_ref().map(|l| l.as_str()), Some("Actions"));
             assert_eq!(all_tree.sections[0].items.len(), 5, "undo/redo/commit/alternative/filter");
             assert!(all_tree.sections[0].items.iter().all(|item| item.control.is_some()), "Actions rows use label+control like Settings/Theme");
-            assert_eq!(all_tree.sections[1].label.as_deref(), Some("Commands"));
+            assert_eq!(all_tree.sections[1].label.as_ref().map(|l| l.as_str()), Some("Commands"));
             assert_eq!(all_tree.sections[1].items.len(), 2);
             assert!(all_tree.sections[1].items[0].actions.is_some(), "the revertible entry must offer inverse");
             assert!(all_tree.sections[1].items[1].actions.is_none(), "the non-revertible entry must not offer inverse");
@@ -7248,7 +7702,7 @@ pub mod plugin_runtime {
 
             let mut restored = VcsDocumentApp::new(TestApp::default());
             restored.load_document_pack(&files).expect("load document pack");
-            assert_eq!(restored.test_projection(), TestProjection { count: 1, label: "hi".into() });
+            assert_eq!(restored.test_snapshot(), TestSnapshot { count: 1, label: "hi".into() });
         }
 
         #[test]
@@ -7261,7 +7715,7 @@ pub mod plugin_runtime {
             let mut envelopes = Vec::new();
             for message in far.receive().expect("receive") {
                 if let BackboneMessage::Mutations { envelopes: operations } = message {
-                    envelopes.extend(operations);
+                    envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
                 }
             }
             assert!(!envelopes.is_empty(), "expected the applied operation to flow onto the channel");
@@ -7270,7 +7724,7 @@ pub mod plugin_runtime {
             let mut receiver = VcsDocumentApp::new(TestApp::default());
             receiver.ingest_operations(&operations).expect("ingest once");
             receiver.ingest_operations(&operations).expect("ingest twice");
-            assert_eq!(receiver.test_projection().count, 1, "feeding the same operation twice must not double-apply");
+            assert_eq!(receiver.test_snapshot().count, 1, "feeding the same operation twice must not double-apply");
         }
 
         #[test]
@@ -7286,14 +7740,14 @@ pub mod plugin_runtime {
             app.detach_backbone();
             assert!(app.backbone_ref().is_none());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment while detached");
-            assert_eq!(app.test_projection().count, 2, "detached edits still land on the in-memory graph");
+            assert_eq!(app.test_snapshot().count, 2, "detached edits still land on the in-memory graph");
             assert!(far.receive().expect("receive while detached").is_empty(), "detached edits never reach the peer");
 
             let (near_again, mut far_again) = MemoryBackbone::pair("mem://reattach-2", "mem://reattach-2");
             app.attach_backbone(Box::new(near_again)).expect("re-attach");
             assert!(app.backbone_ref().is_some());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment after re-attach");
-            assert_eq!(app.test_projection().count, 3);
+            assert_eq!(app.test_snapshot().count, 3);
             assert!(!far_again.receive().expect("receive after re-attach").is_empty(), "re-attaching resumes outbound convergence on the new backbone");
         }
 
@@ -7406,8 +7860,8 @@ pub mod plugin_runtime {
         fn view_action_emitting_ops_is_rejected() {
             let mut app = contract_app_under_test();
             let error = app.dispatch_typed(TestCommand::BadView, &meta()).expect_err("a View command emitting operations must be rejected");
-            assert!(error.contains("must not emit operations"), "unexpected error: {error}");
-            assert_eq!(app.test_projection(), TestProjection::default());
+            assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
+            assert_eq!(app.test_snapshot(), TestSnapshot::default());
         }
 
         #[test]
@@ -7425,18 +7879,18 @@ pub mod plugin_runtime {
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::AmendLabel { value: value.into() }, &meta()).expect("amendLabel");
             }
-            assert_eq!(app.test_projection().label, "abc");
+            assert_eq!(app.test_snapshot().label, "abc");
             // One undo reverts the whole coalesced amend gesture.
             app.handle_action("undo", None, &meta()).expect("undo amend");
-            assert_eq!(app.test_projection().label, "");
+            assert_eq!(app.test_snapshot().label, "");
 
             for value in ["x", "xy"] {
                 app.dispatch_typed(TestCommand::CommitLabel { value: value.into() }, &meta()).expect("commitLabel");
             }
-            assert_eq!(app.test_projection().label, "xy");
+            assert_eq!(app.test_snapshot().label, "xy");
             // Each commit is its own edit: one undo only reverts the last commit.
             app.handle_action("undo", None, &meta()).expect("undo commit");
-            assert_eq!(app.test_projection().label, "x");
+            assert_eq!(app.test_snapshot().label, "x");
         }
 
         #[test]
@@ -7458,10 +7912,10 @@ pub mod plugin_runtime {
             );
             assert_eq!(result.inverse_group.mutations.len(), 1);
             assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
-            assert_eq!(app.test_projection().label, "abc");
+            assert_eq!(app.test_snapshot().label, "abc");
             // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
             app.handle_action("undo", None, &meta()).expect("undo amend");
-            assert_eq!(app.test_projection().label, "");
+            assert_eq!(app.test_snapshot().label, "");
         }
 
         #[test]
@@ -7471,7 +7925,7 @@ pub mod plugin_runtime {
             assert_eq!(result.mutations.len(), 1);
             assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).unwrap());
             assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).unwrap()]));
-            assert_eq!(app.test_projection().count, 1);
+            assert_eq!(app.test_snapshot().count, 1);
         }
 
         #[test]
@@ -7480,7 +7934,7 @@ pub mod plugin_runtime {
             // framework-reserved commands, so it always errors, pointing callers at the typed channel.
             let mut app = contract_app_under_test();
             let error = app.handle_command("nope", None, &meta()).expect_err("the string command channel always rejects now");
-            assert!(error.contains("typed command channel"), "unexpected error: {error}");
+            assert!(error.message.contains("typed command channel"), "unexpected error: {}", error.message);
         }
 
         #[test]
@@ -7488,9 +7942,9 @@ pub mod plugin_runtime {
             let mut app = contract_app_under_test();
             app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("inc");
             app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("inc");
-            assert_eq!(app.test_projection().count, 2);
+            assert_eq!(app.test_snapshot().count, 2);
             app.handle_action("undo", None, &meta()).expect("undo");
-            assert_eq!(app.test_projection().count, 1);
+            assert_eq!(app.test_snapshot().count, 1);
         }
 
         #[test]

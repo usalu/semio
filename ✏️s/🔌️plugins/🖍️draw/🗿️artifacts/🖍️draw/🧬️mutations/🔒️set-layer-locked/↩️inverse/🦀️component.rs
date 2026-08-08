@@ -1,10 +1,10 @@
 //! ↩️ Inverse for `SetLayerLocked`.
 use crate::artifacts::draw::mutations::DrawMutation;
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 
 //#region 🔖️Inverse
 /// Draw inverses snapshot the pre-state document (exact restore).
-pub fn inverse(base: &DrawDocument) -> Vec<DrawMutation> {
-    vec![DrawMutation::SetDocument { document: base.clone() }]
+pub fn inverse(base: &DrawSnapshot) -> Vec<DrawMutation> {
+    vec![DrawMutation::SetSnapshot { snapshot: base.clone() }]
 }
 //#endregion 🔖️Inverse

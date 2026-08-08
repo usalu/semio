@@ -1779,7 +1779,7 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 //#region 🔖️FolderStorage
 /// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
 /// are keyed by document id: `document(id, schema, pack, spr, updated_at)` — `pack` (initial
-/// projection) + `spr` (real inverse/binary op payloads/cursor, see `crate::os_store::print_document_spr`)
+/// snapshot) + `spr` (real inverse/binary op payloads/cursor, see `crate::os_store::print_document_spr`)
 /// are the AUTHORITATIVE pair, both `NOT NULL`; there is no JSON column (a greenfield rule — every
 /// row is written pack+spr together, never one without the other). No `Backbone` impl: the actor
 /// layer drives this from its own thread; this crate only owns the sqlite schema.
@@ -1855,7 +1855,7 @@ impl FolderSqliteStorage {
 }
 
 /// @emoji 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
-/// projection), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::print_document_text`/
+/// snapshot), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::print_document_text`/
 /// `crate::os_store::parse_document_text`). No `Backbone` impl: like `FolderSqliteStorage` above, this actor
 /// layer drives it from its own thread; this crate only owns the file format. Additive alongside the
 /// sqlite storage today — a technology adopts it by implementing `DocumentDsl`/`OpText` and having
@@ -1948,7 +1948,7 @@ impl FolderTextStorage {
 
     /// @emoji ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
     /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
-    /// initial projection) — the pack-aware sibling of `write`.
+    /// initial snapshot) — the pack-aware sibling of `write`.
     pub fn write_pack(&self, document_id: &str, envelope_id: &str, files: &DocumentPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.pack_path(document_id, envelope_id), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -2032,7 +2032,7 @@ mod tests {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslDocument)]
     #[dsl(extension = "demo")]
-    struct DemoProjection {
+    struct DemoSnapshot {
         n: i32,
     }
 
@@ -2041,9 +2041,9 @@ mod tests {
         n: Option<i32>,
     }
 
-    impl MutationDiff<DemoProjection> for DemoDiff {
-        fn apply(&self, projection: &DemoProjection) -> DemoProjection {
-            DemoProjection { n: self.n.unwrap_or(projection.n) }
+    impl MutationDiff<DemoSnapshot> for DemoDiff {
+        fn apply(&self, snapshot: &DemoSnapshot) -> DemoSnapshot {
+            DemoSnapshot { n: self.n.unwrap_or(snapshot.n) }
         }
 
         fn absorb(&mut self, other: Self) {
@@ -2060,17 +2060,17 @@ mod tests {
         SetN { n: i32 },
     }
 
-    impl Mutation<DemoProjection> for DemoMutation {
+    impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
 
-        fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
+        fn diff(&self, _snapshot: &DemoSnapshot) -> DemoDiff {
             match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
             }
         }
 
-        fn inverse(&self, projection: &DemoProjection) -> Vec<Self> {
-            vec![DemoMutation::SetN { n: projection.n }]
+        fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
+            vec![DemoMutation::SetN { n: snapshot.n }]
         }
     }
 
@@ -2081,7 +2081,7 @@ mod tests {
     fn ensure_demo_codec_registered() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            register_document_codec(DocumentCodec::of::<DemoProjection, DemoMutation>("demo/v1"));
+            register_document_codec(DocumentCodec::of::<DemoSnapshot, DemoMutation>("demo/v1"));
         });
     }
 
@@ -2100,24 +2100,24 @@ mod tests {
         };
         let document_id = crate::os_spr::DocumentId("demo".to_string());
         let schema = crate::os_spr::SchemaId("demo/v1".to_string());
-        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoProjection, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
+        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
         envelopes.pop().expect("exactly one op envelope for a single-op edit")
     }
 
     //#region 🧪️SyncSession
     #[test]
     fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: crate::os_store::DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: crate::os_store::DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         session.receive(sample_operation_envelope("edit-1", 5)).expect("receive");
-        assert_eq!(session.store.projection().expect("projection").n, 5);
+        assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
         assert_eq!(session.store.envelope().vcs.edits.len(), 1);
     }
 
     #[test]
     fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: crate::os_store::DocumentEnvelope<DemoProjection, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: crate::os_store::DocumentEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         let first = sample_operation_envelope("edit-1", 5);
@@ -2127,7 +2127,7 @@ mod tests {
         assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
         session.receive(first).expect("receive first");
         assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
-        assert_eq!(session.store.projection().expect("projection").n, 9);
+        assert_eq!(session.store.snapshot().expect("snapshot").n, 9);
     }
     //#endregion 🧪️SyncSession
 
@@ -2316,8 +2316,8 @@ mod tests {
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-        fn demo_envelope(document_id: &str) -> crate::os_store::DocumentEnvelope<DemoProjection, DemoMutation> {
-            create_document_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
+        fn demo_envelope(document_id: &str) -> crate::os_store::DocumentEnvelope<DemoSnapshot, DemoMutation> {
+            create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None)
         }
 
         async fn wait_until(label: &str, mut predicate: impl FnMut() -> bool) {
@@ -2413,10 +2413,10 @@ mod tests {
                 other => panic!("expected RemoteMutations, got {other:?}"),
             }
 
-            // The store ingests the pushed operation on tick(); the timeline grows and projection updates.
+            // The store ingests the pushed operation on tick(); the timeline grows and snapshot updates.
             store.tick().expect("tick");
             assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
-            assert_eq!(store.projection().expect("projection").n, 42);
+            assert_eq!(store.snapshot().expect("snapshot").n, 42);
             host.close("doc-a");
         }
 
@@ -2576,7 +2576,7 @@ mod tests {
                 other => panic!("expected RemoteMutations on B, got {other:?}"),
             }
             store_b.tick().expect("tick b");
-            assert_eq!(store_b.projection().expect("projection b").n, 7, "B converged on A's operation");
+            assert_eq!(store_b.snapshot().expect("snapshot b").n, 7, "B converged on A's operation");
 
             host_a.close("shared");
             host_b.close("shared");
@@ -2622,7 +2622,7 @@ mod tests {
             }
             store_b.tick().expect("tick b");
             assert_eq!(store_b.envelope().vcs.edits.len(), 2, "B caught up on the full backlog");
-            assert_eq!(store_b.projection().expect("projection b").n, 4);
+            assert_eq!(store_b.snapshot().expect("snapshot b").n, 4);
 
             host_a.close("catchup");
             host_b.close("catchup");
@@ -2663,7 +2663,7 @@ mod tests {
                 assert_eq!(envelopes.len(), 1, "the operation applied before detach was not lost");
             }
             store_b.tick().expect("tick b");
-            assert_eq!(store_b.projection().expect("projection b").n, 5);
+            assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
             host_b.close("drain");
         }
 
@@ -2748,7 +2748,7 @@ mod tests {
             let channels =
                 host.open(DocumentActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe(&fixture.document_id);
-            let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
+            let mut store = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || storage.read(&fixture.document_id).expect("read").is_some()).await;
@@ -2849,30 +2849,30 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
 
-        let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoMutation>("demo/v1", "doc-a", DemoProjection { n: 0 }, None));
+        let mut store = DocumentStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
-        let post_e1 = store.projection().expect("post-e1");
+        let post_e1 = store.snapshot().expect("post-e1");
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
         store.dispatch(DocumentCommand::Undo).expect("undo e2");
-        assert_eq!(store.projection().expect("live"), post_e1, "precondition: live store is back at post-e1");
+        assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
 
         let files = print_document_pack(store.envelope()).expect("print document pack");
         storage.write("doc-a", "demo/v1", &files.pack, &files.spr).expect("write");
 
         let (pack, spr) = storage.read("doc-a").expect("read").expect("some");
-        let parsed: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
-        assert_eq!(parsed.projection, post_e1, "loaded projection must equal post-e1 through the folder storage layer");
+        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
+        assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
         let mut reloaded = DocumentStore::new(parsed.envelope);
-        assert_eq!(reloaded.projection().expect("reloaded"), post_e1);
+        assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
 
         reloaded.dispatch(DocumentCommand::Redo).expect("redo e2 after folder reload");
-        assert_eq!(reloaded.projection().expect("post-redo"), DemoProjection { n: 2 });
+        assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
     }
 
     /// @emoji 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
     /// synced once an edit is dispatched, see `DocumentStore::sync_cursor`) so both edits are then
     /// added purely via the raw `append_ops` hot path with no cursor line ever written; a cursor
-    /// pinned to an earlier edit count would otherwise cap the reconstructed projection at that
+    /// pinned to an earlier edit count would otherwise cap the reconstructed snapshot at that
     /// edit (see `document_text_round_trips_a_cursor_after_undo_then_apply_interleaving` in
     /// `store`'s own test suite for that law, exercised correctly there).
     #[test]
@@ -2881,11 +2881,11 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
 
-        let seed = DocumentStore::<DemoProjection, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let seed = DocumentStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
         let files = print_document_text(seed.envelope()).expect("print document text");
         storage.write("demo", "demo", &files).expect("write");
 
-        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
@@ -2895,8 +2895,8 @@ mod tests {
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 
         let reloaded = storage.read("demo", "demo").expect("read").expect("some");
-        let parsed: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
-        assert_eq!(parsed.projection.n, 2, "write + append reconstructs every edit in order");
+        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
+        assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
 
         assert_eq!(storage.document_ids("demo").expect("document ids"), vec!["demo".to_string()]);
     }
@@ -2916,12 +2916,12 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
 
-        let seed = DocumentStore::<DemoProjection, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let seed = DocumentStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
         let files = print_document_pack(seed.envelope()).expect("print document pack");
-        let dsl_mirror = seed.envelope().vcs.initial_projection.print_dsl();
+        let dsl_mirror = seed.envelope().vcs.initial_snapshot.print_dsl();
         storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
 
-        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
@@ -2932,27 +2932,27 @@ mod tests {
 
         // Text mirror is current (both edits landed via append_ops).
         let reloaded_text = storage.read("demo", "demo").expect("read text").expect("some text");
-        let parsed_text: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
-        assert_eq!(parsed_text.projection.n, 2, "the .ops text mirror reflects every appended edit");
+        let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
+        assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
 
         // pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
         // the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
         let reloaded_pack = storage.read_pack("demo", "demo").expect("read pack").expect("some pack");
-        let parsed_pack: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
-        assert_eq!(parsed_pack.projection.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
+        let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
+        assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
 
         // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
         // current with the live store.
         let files2 = print_document_pack(store.envelope()).expect("print document pack 2");
-        let dsl_mirror2 = store.envelope().vcs.initial_projection.print_dsl();
+        let dsl_mirror2 = store.envelope().vcs.initial_snapshot.print_dsl();
         storage.write_pack("demo", "demo", &files2, &dsl_mirror2).expect("write pack 2");
         let reloaded_pack2 = storage.read_pack("demo", "demo").expect("read pack 2").expect("some pack 2");
-        let parsed_pack2: ParsedDocumentText<DemoProjection, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
-        assert_eq!(parsed_pack2.projection.n, 2, "a fresh write_pack brings pack+spr current with the live store");
+        let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+        assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
 
-        // The always-written DSL mirror must also be on disk and agree with the initial-projection.
+        // The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
         let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").with_extension("")).expect("dsl mirror on disk");
-        assert_eq!(DemoProjection::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial projection, not later edits");
+        assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
     }
 
     #[test]

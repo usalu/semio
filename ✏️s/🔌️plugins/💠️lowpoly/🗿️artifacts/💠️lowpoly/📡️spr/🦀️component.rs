@@ -24,7 +24,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::engine::default_projection;
+    use crate::artifacts::lowpoly::engine::default_snapshot;
 
     #[test]
     fn handcrafted_spr_protocol_enumerates_operation_tags() {
@@ -37,7 +37,7 @@ mod tests {
             "record RemovePaintLayer tag 6",
             "record PatchPaintLayer tag 7",
             "record PaintStroke tag 8",
-            "record SetProjection tag 9",
+            "record SetSnapshot tag 9",
         ] {
             assert!(COMPONENT_PROTOCOL_SEMIO.contains(tag), "missing {tag}");
         }
@@ -57,9 +57,9 @@ mod tests {
 
     #[test]
     fn document_text_round_trip_after_applying_an_operation() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
-        let envelope = store::create_document_envelope::<crate::artifacts::lowpoly::LowpolyProjection, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
+        let envelope = store::create_document_envelope::<crate::artifacts::lowpoly::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
         let mut doc_store = store::DocumentStore::new(envelope);
         let operation = LowpolyMutation::PatchPaintLayer { object_id, index: 0, patch: LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None } };
         doc_store.dispatch(store::DocumentCommand::Apply { mutations: vec![operation], description: None }).expect("apply");

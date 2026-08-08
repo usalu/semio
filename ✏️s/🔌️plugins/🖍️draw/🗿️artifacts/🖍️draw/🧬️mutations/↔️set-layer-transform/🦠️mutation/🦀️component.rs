@@ -1,6 +1,6 @@
 //! Draw mutation — `SetLayerTransform` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_layer_transform(layer_id: String, transform: crate::artifacts::draw::
     DrawMutation::SetLayerTransform { layer_id, transform }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetLayerTransform { layer_id: layer_id.into(), transform: transform.clone() });
 }
 //#endregion 🔖️Mutation

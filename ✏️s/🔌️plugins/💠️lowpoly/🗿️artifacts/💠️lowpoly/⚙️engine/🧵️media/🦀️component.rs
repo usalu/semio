@@ -2,7 +2,7 @@
 //! Split out of `🦀️component.rs` (the topic sibling file the plan's godfile-split convention allows for
 //! a large engine).
 
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::MeshData;
 use serde_json::Value;
 
@@ -34,8 +34,8 @@ pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) 
 //#region 🔖️MediaExportImport
 /// 🔺️ Tessellates a lowpoly document's active object into a `MeshData` for media export.
 pub fn lowpoly_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let projection: LowpolyProjection = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-    let loaded = super::LowpolyDocument::new(projection).map_err(|e| e.to_string())?;
+    let snapshot: LowpolySnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+    let loaded = super::LowpolyDocument::new(snapshot).map_err(|e| e.to_string())?;
     Ok(loaded.active_mesh().ok().and_then(|mesh| super::LowpolyDocument::tessellate_transfer_json(mesh).ok()).map(|transfer| mesh_data_from_transfer(&transfer, None)).unwrap_or_default())
 }
 
@@ -43,8 +43,8 @@ pub fn lowpoly_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
 pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let halfedge = semio_s_3d::mesh::HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
-    let projection = crate::artifacts::lowpoly::projection_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
-    serde_json::to_value(projection).map_err(|err| err.to_string())
+    let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
+    serde_json::to_value(snapshot).map_err(|err| err.to_string())
 }
 
 /// 🧊️ Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet.

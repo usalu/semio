@@ -1,0 +1,838 @@
+===== ROOT =====
+//! 📏️ Procedural2d artifact — snapshot re-exports, widget id helper, and artifact kind.
+
+use flow::Widget;
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+pub const PROCEDURAL_2D_SCHEMA: &str = "procedural.2d";
+
+pub use crate::artifacts::procedural2d::snapshot::schema::Procedural2dSnapshot;
+
+//#region 🔖️Helpers
+/// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
+pub fn widget_id(widget: &Widget) -> &str {
+    match widget {
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::Variable { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. }
+        | Widget::OutputExport { id, .. }
+        | Widget::Cluster { id, .. } => id,
+    }
+}
+//#endregion 🔖️Helpers
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::apps::procedural2d::create_procedural2d_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "2d.procedural".into(),
+        name: "2D Procedural".into(),
+        source_format: "procedural.2d".into(),
+        component_kind: "procedural2d".into(),
+        dimension: "2d".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
+        schema: "procedural.2d".into(),
+        export_formats: vec![],
+        import_formats: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn artifact_kind_schema_matches_the_document_schema() {
+        assert_eq!(artifact_kind().schema, PROCEDURAL_2D_SCHEMA);
+    }
+
+    #[test]
+    fn widget_id_covers_every_widget_kind() {
+        let widgets = vec![
+            Widget::Neuron { id: "w-neuron".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
+            Widget::InputSlider { id: "w-slider".into(), value: 1.0, min: 0.0, max: 2.0, step: 0.5 },
+            Widget::InputNote { id: "w-note".into(), text: String::new() },
+            Widget::InputImage { id: "w-image".into(), src: String::new() },
+            Widget::Variable { id: "w-variable".into(), name: "value".into(), schema: "dictionary".into() },
+            Widget::OutputPreview { id: "w-preview".into(), preview: Default::default(), expanded: Default::default() },
+            Widget::OutputAction { id: "w-action".into(), action: String::new() },
+            Widget::OutputExport { id: "w-export".into(), format: "svg".into() },
+            Widget::Cluster { id: "w-cluster".into(), name: String::new(), tree: Default::default(), flow: Default::default() },
+        ];
+        for widget in &widgets {
+            assert!(!widget_id(widget).is_empty());
+        }
+    }
+}
+//#endregion 🧪️Tests
+
+
+===== ENGINE =====
+rocedural2dSnapshot = serde_json::from_value(document).expect("parseable projection");
+        assert_eq!(projection.fixture.schema, "flow.fixture");
+    }
+
+    #[test]
+    fn procedural2d_io_declares_the_params_and_drawing_ports() {
+        let io = procedural2d_io();
+        assert_eq!(io.document_schema, "procedural.2d");
+        let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");
+        assert!(!params.required);
+        let drawing = io.ports.iter().find(|port| port.id == "drawing:out").expect("drawing:out declared");
+        assert_eq!(drawing.kind_id.as_deref(), Some("2d.drawing"));
+    }
+}
+//#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "procedural.procedural2d.document",
+        extension: Some("procedural2d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("procedural.procedural2d.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "procedural.procedural2d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("procedural.procedural2d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "procedural.procedural2d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("procedural.procedural2d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "procedural2d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("procedural2d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "procedural2d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("procedural2d.spr"),
+    });
+}
+
+
+//#region 🔖️ArtifactEngine
+pub struct Procedural2dEngine {
+    artifact: crate::artifacts::procedural2d::schema::Procedural2dArtifact,
+    snapshot: crate::artifacts::procedural2d::Procedural2dSnapshot,
+}
+
+impl Procedural2dEngine {
+    pub fn new(snapshot: crate::artifacts::procedural2d::Procedural2dSnapshot) -> Self {
+        let artifact = crate::artifacts::procedural2d::schema::Procedural2dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+}
+
+impl protocol::ArtifactEngine for Procedural2dEngine {
+    type Artifact = crate::artifacts::procedural2d::schema::Procedural2dArtifact;
+    type Snapshot = crate::artifacts::procedural2d::Procedural2dSnapshot;
+    type Mutation = crate::artifacts::procedural2d::mutations::Procedural2dMutation;
+    type Diff = crate::artifacts::procedural2d::diff::Procedural2dDiff;
+
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
+    }
+
+    fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::procedural2d::mutations::apply_procedural2d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
+        Ok(diff)
+    }
+
+    fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
+    }
+}
+//#endregion 🔖️ArtifactEngine
+
+
+===== DIFF =====
+//! 🔺️ Procedural2d artifact — sparse field-delta diff codec and apply/absorb.
+
+use crate::artifacts::procedural2d::schema::Procedural2dArtifact;
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use flow::playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
+use protocol::MutationDiff;
+use serde::{Deserialize, Serialize};
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+pub use super::schema::*;
+
+//#region 🔖️Collections
+/// 🧬️ Sparse id-keyed collection helper used when constructing a whole `fixture` replacement.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WidgetsDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Widget)>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SynapsesDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, SynapseSpec)>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LayoutDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(String, WidgetLayout)>,
+}
+
+pub(crate) fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
+    for id in &diff.removed {
+        widgets.retain(|widget| widget_id(widget) != id);
+    }
+    for (index, widget) in &diff.set {
+        if let Some(pos) = widgets.iter().position(|entry| widget_id(entry) == widget_id(widget)) {
+            widgets[pos] = widget.clone();
+        } else {
+            widgets.insert((*index).min(widgets.len()), widget.clone());
+        }
+    }
+}
+
+pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &SynapsesDiff) {
+    for id in &diff.removed {
+        synapses.retain(|synapse| synapse.id != *id);
+    }
+    for (index, synapse) in &diff.set {
+        if let Some(pos) = synapses.iter().position(|entry| entry.id == synapse.id) {
+            synapses[pos] = synapse.clone();
+        } else {
+            synapses.insert((*index).min(synapses.len()), synapse.clone());
+        }
+    }
+}
+
+fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
+    for id in &diff.removed {
+        layout.remove(id);
+    }
+    for (id, entry) in &diff.set {
+        layout.insert(id.clone(), entry.clone());
+    }
+}
+
+/// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
+pub fn apply_fixture_helpers(
+    fixture: &FlowFixture,
+    widgets: &WidgetsDiff,
+    synapses: &SynapsesDiff,
+    layout: &LayoutDiff,
+    camera: Option<&CameraJson>,
+    schema: Option<&str>,
+) -> FlowFixture {
+    let mut next = fixture.clone();
+    apply_widgets_diff(&mut next.widgets, widgets);
+    apply_synapses_diff(&mut next.synapses, synapses);
+    apply_layout_diff(&mut next.layout, layout);
+    if let Some(camera) = camera {
+        next.camera = camera.clone();
+    }
+    if let Some(schema) = schema {
+        next.schema = schema.to_string();
+    }
+    next
+}
+
+/// 🧩 Applies generation mutations onto a cloned play state.
+pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
+    let mut next = state.clone();
+    for operation in ops {
+        apply_generation_mutation(&mut next, operation);
+    }
+    next
+}
+//#endregion 🔖️Collections
+
+//#region 🔖️Apply
+impl Procedural2dDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &Procedural2dArtifact) -> Procedural2dArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(fixture) = &self.fixture {
+            next.fixture = fixture.clone();
+        }
+        if let Some(generation) = &self.generation {
+            next.generation = generation.clone();
+        }
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
+        }
+        if let Some(value) = &self.graph_camera {
+            next.graph_camera = value.clone();
+        }
+        if let Some(value) = &self.show_mode {
+            next.show_mode = value.clone();
+        }
+        if let Some(value) = &self.selected_generation_id {
+            next.selected_generation_id = value.clone();
+        }
+        if let Some(value) = &self.generation_preview_text {
+            next.generation_preview_text = value.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        next
+    }
+}
+
+impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
+    fn apply(&self, snapshot: &Procedural2dSnapshot) -> Procedural2dSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(fixture) = &self.fixture {
+            next.fixture = fixture.clone();
+        }
+        if let Some(generation) = &self.generation {
+            next.generation = generation.clone();
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(fixture);
+        take!(generation);
+        take!(selected_ids);
+        take!(graph_camera);
+        take!(show_mode);
+        take!(selected_generation_id);
+        take!(generation_preview_text);
+        take!(locale);
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Constructors
+/// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
+pub fn diff_fixture_from_helpers(
+    base: &Procedural2dSnapshot,
+    widgets: WidgetsDiff,
+    synapses: SynapsesDiff,
+    layout: LayoutDiff,
+    camera: Option<CameraJson>,
+    schema: Option<String>,
+) -> Procedural2dDiff {
+    let fixture = apply_fixture_helpers(
+        &base.fixture,
+        &widgets,
+        &synapses,
+        &layout,
+        camera.as_ref(),
+        schema.as_deref(),
+    );
+    Procedural2dDiff { fixture: Some(fixture), ..Procedural2dDiff::default() }
+}
+
+/// 🏗️ Generation field delta after applying ordered generation mutations.
+pub fn diff_generation_from_ops(base: &Procedural2dSnapshot, ops: Vec<GenerationMutation>) -> Procedural2dDiff {
+    let generation = apply_generation_helpers(&base.generation, &ops);
+    Procedural2dDiff { generation: Some(generation), ..Procedural2dDiff::default() }
+}
+//#endregion 🔖️Constructors
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::procedural2d::engine::empty_procedural2d_snapshot;
+
+    #[test]
+    fn diff_absorb_prefers_incoming_fixture_and_scalars() {
+        let base = empty_procedural2d_snapshot();
+        let mut first = diff_fixture_from_helpers(
+            &base,
+            WidgetsDiff { removed: vec!["w1".into()], set: vec![] },
+            SynapsesDiff::default(),
+            LayoutDiff::default(),
+            Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }),
+            None,
+        );
+        let second = Procedural2dDiff {
+            show_mode: Some("wire".into()),
+            locale: Some("de-DE".into()),
+            ..Procedural2dDiff::default()
+        };
+        first.absorb(second);
+        assert!(first.fixture.is_some());
+        assert_eq!(first.show_mode.as_deref(), Some("wire"));
+        assert_eq!(first.locale.as_deref(), Some("de-DE"));
+    }
+
+    #[test]
+    fn diff_apply_updates_fixture_widgets() {
+        let snapshot = empty_procedural2d_snapshot();
+        let existing_id = widget_id(&snapshot.fixture.widgets[1]).to_string();
+        let diff = diff_fixture_from_helpers(
+            &snapshot,
+            WidgetsDiff {
+                removed: vec![],
+                set: vec![
+                    (0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }),
+                    (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() }),
+                ],
+            },
+            SynapsesDiff::default(),
+            LayoutDiff::default(),
+            None,
+            None,
+        );
+        let next = diff.apply(&snapshot);
+        assert_eq!(next.fixture.widgets.len(), snapshot.fixture.widgets.len() + 1);
+        let replaced = next.fixture.widgets.iter().find(|w| widget_id(w) == existing_id.as_str()).expect("replaced");
+        assert_eq!(replaced, &Widget::InputNote { id: existing_id, text: "replaced".into() });
+    }
+}
+//#endregion 🧪️Tests
+
+
+===== MUTATIONS =====
+//! ⚡️ Procedural2d artifact — operation enum + laws (constitutional: op).
+
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
+use crate::artifacts::procedural2d::diff::Procedural2dDiff;
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use flow::playbook::{invert_generation_operation, GenerationMutation};
+use protocol::Mutation;
+use serde::{Deserialize, Serialize};
+use store::{DocumentEnvelope, DocumentStore};
+
+//#region 🔖️Operation
+/// 🧮️ Procedural-2d operation: id-keyed widget/synapse/layout collection edits, the scalar canvas
+/// camera and fixture schema, and a single `GenerationMutation` generation edit with its true inverse.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+pub enum Procedural2dMutation {
+    SetWidget { index: usize, widget: Widget },
+    RemoveWidget { id: String },
+    SetSynapse { index: usize, synapse: SynapseSpec },
+    RemoveSynapse { id: String },
+    SetLayout { id: String, layout: WidgetLayout },
+    RemoveLayout { id: String },
+    SetCamera { camera: CameraJson },
+    SetSchema { schema: String },
+    Generation(GenerationMutation),
+}
+
+fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+    fixture.widgets.iter().position(|widget| widget_id(widget) == id)
+}
+
+fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+    fixture.synapses.iter().position(|synapse| synapse.id == id)
+}
+
+impl Mutation<Procedural2dSnapshot> for Procedural2dMutation {
+    type Diff = Procedural2dDiff;
+
+    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+        use crate::artifacts::procedural2d::diff::{
+            diff_fixture_from_helpers, diff_generation_from_ops, LayoutDiff, SynapsesDiff, WidgetsDiff,
+        };
+        match self {
+            Procedural2dMutation::SetWidget { index, widget } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff { removed: vec![], set: vec![(*index, widget.clone())] },
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::RemoveWidget { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff { removed: vec![id.clone()], set: vec![] },
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::SetSynapse { index, synapse } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff { removed: vec![], set: vec![(*index, synapse.clone())] },
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::RemoveSynapse { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff { removed: vec![id.clone()], set: vec![] },
+                LayoutDiff::default(),
+                None,
+                None,
+            ),
+            Procedural2dMutation::SetLayout { id, layout } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff { removed: vec![], set: vec![(id.clone(), layout.clone())] },
+                None,
+                None,
+            ),
+            Procedural2dMutation::RemoveLayout { id } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff { removed: vec![id.clone()], set: vec![] },
+                None,
+                None,
+            ),
+            Procedural2dMutation::SetCamera { camera } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                Some(camera.clone()),
+                None,
+            ),
+            Procedural2dMutation::SetSchema { schema } => diff_fixture_from_helpers(
+                base,
+                WidgetsDiff::default(),
+                SynapsesDiff::default(),
+                LayoutDiff::default(),
+                None,
+                Some(schema.clone()),
+            ),
+            Procedural2dMutation::Generation(operation) => diff_generation_from_ops(base, vec![operation.clone()]),
+        }
+    }
+
+    fn inverse(&self, projection: &Procedural2dSnapshot) -> Vec<Self> {
+        let fixture = &projection.fixture;
+        match self {
+            Procedural2dMutation::SetWidget { widget, .. } => match widget_index(fixture, widget_id(widget)) {
+                Some(index) => vec![Procedural2dMutation::SetWidget { index, widget: fixture.widgets[index].clone() }],
+                None => vec![Procedural2dMutation::RemoveWidget { id: widget_id(widget).to_string() }],
+            },
+            Procedural2dMutation::RemoveWidget { id } => widget_index(fixture, id).map(|index| vec![Procedural2dMutation::SetWidget { index, widget: fixture.widgets[index].clone() }]).unwrap_or_default(),
+            Procedural2dMutation::SetSynapse { synapse, .. } => match synapse_index(fixture, &synapse.id) {
+                Some(index) => vec![Procedural2dMutation::SetSynapse { index, synapse: fixture.synapses[index].clone() }],
+                None => vec![Procedural2dMutation::RemoveSynapse { id: synapse.id.clone() }],
+            },
+            Procedural2dMutation::RemoveSynapse { id } => synapse_index(fixture, id).map(|index| vec![Procedural2dMutation::SetSynapse { index, synapse: fixture.synapses[index].clone() }]).unwrap_or_default(),
+            Procedural2dMutation::SetLayout { id, .. } => match fixture.layout.get(id) {
+                Some(layout) => vec![Procedural2dMutation::SetLayout { id: id.clone(), layout: layout.clone() }],
+                None => vec![Procedural2dMutation::RemoveLayout { id: id.clone() }],
+            },
+            Procedural2dMutation::RemoveLayout { id } => fixture.layout.get(id).map(|layout| vec![Procedural2dMutation::SetLayout { id: id.clone(), layout: layout.clone() }]).unwrap_or_default(),
+            Procedural2dMutation::SetCamera { .. } => vec![Procedural2dMutation::SetCamera { camera: fixture.camera.clone() }],
+            Procedural2dMutation::SetSchema { .. } => vec![Procedural2dMutation::SetSchema { schema: fixture.schema.clone() }],
+            Procedural2dMutation::Generation(operation) => invert_generation_operation(&projection.generation, operation).into_iter().map(Procedural2dMutation::Generation).collect(),
+        }
+    }
+}
+
+/// 🔀️ Diffs two fixtures into a minimal, invertible, mergeable operation set: removed/added/patched
+/// widgets and synapses (keyed by id), layout entries, and the fixture schema. The canvas camera is
+/// ephemeral view state (app config), never a document operation.
+pub fn procedural2d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural2dMutation> {
+    let mut operations = Vec::new();
+    for widget in &before.widgets {
+        if !after.widgets.iter().any(|entry| widget_id(entry) == widget_id(widget)) {
+            operations.push(Procedural2dMutation::RemoveWidget { id: widget_id(widget).to_string() });
+        }
+    }
+    for (index, widget) in after.widgets.iter().enumerate() {
+        let prior = before.widgets.iter().find(|entry| widget_id(entry) == widget_id(widget));
+        if prior != Some(widget) {
+            operations.push(Procedural2dMutation::SetWidget { index, widget: widget.clone() });
+        }
+    }
+    for synapse in &before.synapses {
+        if !after.synapses.iter().any(|entry| entry.id == synapse.id) {
+            operations.push(Procedural2dMutation::RemoveSynapse { id: synapse.id.clone() });
+        }
+    }
+    for (index, synapse) in after.synapses.iter().enumerate() {
+        let prior = before.synapses.iter().find(|entry| entry.id == synapse.id);
+        if prior != Some(synapse) {
+            operations.push(Procedural2dMutation::SetSynapse { index, synapse: synapse.clone() });
+        }
+    }
+    for id in before.layout.keys() {
+        if !after.layout.contains_key(id) {
+            operations.push(Procedural2dMutation::RemoveLayout { id: id.clone() });
+        }
+    }
+    for (id, layout) in &after.layout {
+        if before.layout.get(id) != Some(layout) {
+            operations.push(Procedural2dMutation::SetLayout { id: id.clone(), layout: layout.clone() });
+        }
+    }
+    if before.schema != after.schema {
+        operations.push(Procedural2dMutation::SetSchema { schema: after.schema.clone() });
+    }
+    operations
+}
+//#endregion 🔖️Operation
+
+pub type Procedural2dEnvelope = DocumentEnvelope<Procedural2dSnapshot, Procedural2dMutation>;
+pub type Procedural2dStore = DocumentStore<Procedural2dSnapshot, Procedural2dMutation>;
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::procedural2d::diff::{SynapsesDiff, WidgetsDiff};
+    use crate::artifacts::procedural2d::engine::empty_procedural2d_snapshot;
+    use vcs::apply_mutation;
+
+    fn round_trip(projection: &Procedural2dSnapshot, operation: &Procedural2dMutation) -> Procedural2dSnapshot {
+        let forward = apply_mutation(projection, operation);
+        let mut restored = forward.clone();
+        for back in operation.inverse(projection) {
+            restored = apply_mutation(&restored, &back);
+        }
+        assert_eq!(&restored, projection, "backwards() must restore the pre-operation document");
+        forward
+    }
+
+    #[test]
+    fn fixture_ops_ignore_camera() {
+        let before = FlowFixture::default();
+        let mut after = before.clone();
+        after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
+        let operations = procedural2d_fixture_operations(&before, &after);
+        assert!(operations.iter().all(|operation| !matches!(operation, Procedural2dMutation::SetCamera { .. })));
+    }
+
+    #[test]
+    fn remove_and_readd_widget_round_trips() {
+        let base = empty_procedural2d_snapshot();
+        let removed_id = widget_id(&base.fixture.widgets[0]).to_string();
+        let after = round_trip(&base, &Procedural2dMutation::RemoveWidget { id: removed_id.clone() });
+        assert!(!after.fixture.widgets.iter().any(|w| widget_id(w) == removed_id));
+    }
+
+    #[test]
+    fn fixture_ops_capture_widget_add() {
+        let before = FlowFixture::default();
+        let mut after = before.clone();
+        after.widgets.push(Widget::InputNote { id: "note-1".into(), text: String::new() });
+        let operations = procedural2d_fixture_operations(&before, &after);
+        assert!(operations.iter().any(|operation| matches!(operation, Procedural2dMutation::SetWidget { widget, .. } if widget_id(widget) == "note-1")));
+    }
+
+    #[test]
+    fn generation_op_round_trips() {
+        let before = empty_procedural2d_snapshot();
+        let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let after = round_trip(&before, &Procedural2dMutation::Generation(GenerationMutation::Add { generation }));
+        assert_eq!(after.generation.generations.len(), 1);
+    }
+
+    //#region 🔖️OperationBackwardsTests
+    #[test]
+    fn set_widget_backwards_restores_replaced_widget() {
+        let base = empty_procedural2d_snapshot();
+        let id = widget_id(&base.fixture.widgets[1]).to_string();
+        round_trip(&base, &Procedural2dMutation::SetWidget { index: 1, widget: Widget::InputNote { id, text: "replaced"
+
+===== GLUE =====
+pub mod artifacts {
+    #[path = "."]
+    pub mod procedural2d {
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+        }
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs"]
+        pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_widget {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-widget/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-widget/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-widget/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_widget {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-widget/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-widget/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-widget/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_synapse {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-synapse/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-synapse/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-synapse/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_synapse {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-synapse/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-synapse/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-synapse/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layout {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-layout/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-layout/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-layout/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod remove_layout {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-layout/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-layout/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/➖remove-layout/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_camera {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-camera/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-camera/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-camera/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_schema {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-schema/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-schema/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🧬️mutations/🎛set-schema/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+        }
+
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️compo
+
+===== TS =====
+/** procedural facet WASM facades */
+export * as procedural2d_schema from "../../🗿️artifacts/🌀️procedural2d/🧬️schema/🟦️component.ts";
+export * as procedural2d_snapshot_schema from "../../🗿️artifacts/🌀️procedural2d/📸️snapshot/🧬️schema/🟦️component.ts";
+export * as procedural2d_diff from "../../🗿️artifacts/🌀️procedural2d/🔺️diff/🟦️component.ts";
+export * as procedural2d_diff_schema from "../../🗿️artifacts/🌀️procedural2d/🔺️diff/🧬️schema/🟦️component.ts";
+export * as procedural2d_dsl from "../../🗿️artifacts/🌀️procedural2d/🗣️dsl/🟦️component.ts";
+export * as procedural2d_pack from "../../🗿️artifacts/🌀️procedural2d/📸️snapshot/🎒️pack/🟦️component.ts";
+export * as procedural2d_op from "../../🗿️artifacts/🌀️procedural2d/🔧️op/🟦️component.ts";
+export * as procedural2d_spr from "../../🗿️artifacts/🌀️procedural2d/📡️spr/🟦️component.ts";
+export * as procedural3d_schema from "../../🗿️artifacts/🧊️procedural3d/🧬️schema/🟦️component.ts";
+export * as procedural3d_snapshot_schema from "../../🗿️artifacts/🧊️procedural3d/📸️snapshot/🧬️schema/🟦️component.ts";
+export * as procedural3d_diff from "../../🗿️artifacts/🧊️procedural3d/🔺️diff/🟦️component.ts";
+export * as procedural3d_diff_schema from "../../🗿️artifacts/🧊️procedural3d/🔺️diff/🧬️schema/🟦️component.ts";
+export * as procedural3d_dsl from "../../🗿️artifacts/🧊️procedural3d/🗣️dsl/🟦️component.ts";
+export * as procedural3d_pack from "../../🗿️artifacts/🧊️procedural3d/📸️snapshot/🎒️pack/🟦️component.ts";
+export * as procedural3d_op from "../../🗿️artifacts/🧊️procedural3d/🔧️op/🟦️component.ts";
+export * as procedural3d_spr from "../../🗿️artifacts/🧊️procedural3d/📡️spr/🟦️component.ts";
+

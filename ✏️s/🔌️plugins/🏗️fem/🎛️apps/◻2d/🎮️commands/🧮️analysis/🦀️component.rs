@@ -6,7 +6,7 @@ use crate::artifacts::fem2d::FemAnalysisSettings;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-type Fem2dDocument = crate::artifacts::fem2d::Fem2dDocument;
+type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️SetAnalysisSettings
 pub mod set_analysis_settings {
@@ -20,8 +20,8 @@ pub mod set_analysis_settings {
         pub deformation_scale: Option<f64>,
     }
 
-    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
-        let current = &doc.projection.analysis;
+    pub fn handle(payload: &SetAnalysisSettings, doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+        let current = &doc.snapshot.analysis;
         let settings = FemAnalysisSettings {
             modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
             buckling_count: payload.buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
@@ -47,7 +47,7 @@ mod tests {
             Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(4), buckling_count: Some(6), deformation_scale: Some(50.0) }),
         );
         dispatch(&mut app, Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: None, buckling_count: None, deformation_scale: Some(300.0) }));
-        let settings = app.projection().expect("projection").analysis.clone();
+        let settings = app.snapshot().expect("snapshot").analysis.clone();
         assert_eq!(settings.modal_count, 4);
         assert_eq!(settings.buckling_count, 6);
         assert_eq!(settings.deformation_scale, 300.0);

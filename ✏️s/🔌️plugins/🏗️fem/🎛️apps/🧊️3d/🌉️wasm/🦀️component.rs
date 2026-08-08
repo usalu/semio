@@ -9,20 +9,20 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct Fem3dDocumentVcs {
+    pub struct Fem3dSnapshotVcs {
         store: RefCell<Fem3dStore>,
     }
 
     #[wasm_bindgen]
-    impl Fem3dDocumentVcs {
+    impl Fem3dSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<Fem3dDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<Fem3dSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: Fem3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Fem3dStore::new(envelope)
                 }
-                None => Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", crate::artifacts::fem3d::engine::empty_fem3d_projection(), None)),
+                None => Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", crate::artifacts::fem3d::engine::empty_fem3d_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -38,8 +38,8 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]

@@ -1,0 +1,911 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/s/architect/program/snapshot.json",
+  "title": "ProgramSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "meta",
+    "project",
+    "stakeholders",
+    "users",
+    "activities",
+    "functions",
+    "elements",
+    "quantities",
+    "relationships",
+    "adjacencies",
+    "processes",
+    "flows",
+    "accessRules",
+    "operations",
+    "equipment",
+    "resources",
+    "storage",
+    "environmental",
+    "humanFactors",
+    "accessibility",
+    "privacy",
+    "safety",
+    "security",
+    "regulatory",
+    "siteContext",
+    "organizational",
+    "services",
+    "infrastructure",
+    "information",
+    "communication",
+    "wayfinding",
+    "schedules",
+    "flexibility",
+    "growth",
+    "sustainability",
+    "resilience",
+    "costs",
+    "delivery",
+    "risks",
+    "conflicts",
+    "requirements",
+    "priorities",
+    "scenarios",
+    "options",
+    "decisions",
+    "validations",
+    "performance",
+    "quality",
+    "documents",
+    "assumptions",
+    "constraints",
+    "complianceRecords",
+    "approvals",
+    "meetings",
+    "changes",
+    "collaboration",
+    "analyses",
+    "reports",
+    "searchFilters",
+    "statusRecords",
+    "workshops",
+    "surveys",
+    "issues",
+    "auditEvents",
+    "templates",
+    "knowledge",
+    "benchmarks",
+    "traces",
+    "governance"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/ProgramMeta",
+      "x-semio-state": "persistent"
+    },
+    "project": {
+      "$ref": "#/$defs/ProjectDefinition",
+      "x-semio-state": "persistent"
+    },
+    "stakeholders": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Stakeholder"
+      },
+      "x-semio-state": "persistent"
+    },
+    "users": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/UserProfile"
+      },
+      "x-semio-state": "persistent"
+    },
+    "activities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Activity"
+      },
+      "x-semio-state": "persistent"
+    },
+    "functions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Function"
+      },
+      "x-semio-state": "persistent"
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ProgramElement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "quantities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/QuantityRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Relationship"
+      },
+      "x-semio-state": "persistent"
+    },
+    "adjacencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Adjacency"
+      },
+      "x-semio-state": "persistent"
+    },
+    "processes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Process"
+      },
+      "x-semio-state": "persistent"
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FlowRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "accessRules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AccessRule"
+      },
+      "x-semio-state": "persistent"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OperationalRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Equipment"
+      },
+      "x-semio-state": "persistent"
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Resource"
+      },
+      "x-semio-state": "persistent"
+    },
+    "storage": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/StorageRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "environmental": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EnvironmentalRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "humanFactors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/HumanFactorRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "accessibility": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AccessibilityRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "privacy": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PrivacyRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "safety": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SafetyRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "security": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SecurityRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "regulatory": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RegulatoryRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "siteContext": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SiteContext"
+      },
+      "x-semio-state": "persistent"
+    },
+    "organizational": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OrganizationalRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ServiceRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "infrastructure": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/InfrastructureRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "information": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/InformationRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "communication": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CommunicationRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "wayfinding": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/WayfindingRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "schedules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ScheduleRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "flexibility": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FlexibilityRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "growth": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GrowthPlan"
+      },
+      "x-semio-state": "persistent"
+    },
+    "sustainability": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SustainabilityRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "resilience": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ResilienceRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "costs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CostRequirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "delivery": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DeliveryConstraint"
+      },
+      "x-semio-state": "persistent"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Risk"
+      },
+      "x-semio-state": "persistent"
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Conflict"
+      },
+      "x-semio-state": "persistent"
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Requirement"
+      },
+      "x-semio-state": "persistent"
+    },
+    "priorities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PriorityRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Scenario"
+      },
+      "x-semio-state": "persistent"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OptionEvaluation"
+      },
+      "x-semio-state": "persistent"
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Decision"
+      },
+      "x-semio-state": "persistent"
+    },
+    "validations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ValidationRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "performance": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PerformanceCriterion"
+      },
+      "x-semio-state": "persistent"
+    },
+    "quality": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/QualityRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DocumentRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Assumption"
+      },
+      "x-semio-state": "persistent"
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ConstraintRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "complianceRecords": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ComplianceRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ApprovalRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "meetings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/MeetingRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ChangeRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "collaboration": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CollaborationRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "analyses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AnalysisRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "reports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ReportRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "searchFilters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SearchFilter"
+      },
+      "x-semio-state": "persistent"
+    },
+    "statusRecords": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/StatusRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "workshops": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Workshop"
+      },
+      "x-semio-state": "persistent"
+    },
+    "surveys": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Survey"
+      },
+      "x-semio-state": "persistent"
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Issue"
+      },
+      "x-semio-state": "persistent"
+    },
+    "auditEvents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AuditEvent"
+      },
+      "x-semio-state": "persistent"
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TemplateRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "knowledge": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/KnowledgeRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "benchmarks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BenchmarkRecord"
+      },
+      "x-semio-state": "persistent"
+    },
+    "traces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TraceLink"
+      },
+      "x-semio-state": "persistent"
+    },
+    "governance": {
+      "$ref": "#/$defs/Governance",
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "AccessRule": {
+      "title": "AccessRule",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AccessibilityRequirement": {
+      "title": "AccessibilityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Activity": {
+      "title": "Activity",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Adjacency": {
+      "title": "Adjacency",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AdjacencyKind": {
+      "title": "AdjacencyKind",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AnalysisRecord": {
+      "title": "AnalysisRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ApprovalRecord": {
+      "title": "ApprovalRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Assumption": {
+      "title": "Assumption",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "AuditEvent": {
+      "title": "AuditEvent",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "BenchmarkRecord": {
+      "title": "BenchmarkRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ChangeRecord": {
+      "title": "ChangeRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "CollaborationRecord": {
+      "title": "CollaborationRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "CommunicationRequirement": {
+      "title": "CommunicationRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ComplianceRecord": {
+      "title": "ComplianceRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Conflict": {
+      "title": "Conflict",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ConstraintRecord": {
+      "title": "ConstraintRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "CostRequirement": {
+      "title": "CostRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Decision": {
+      "title": "Decision",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "DeliveryConstraint": {
+      "title": "DeliveryConstraint",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "DocumentRecord": {
+      "title": "DocumentRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "EnvironmentalRequirement": {
+      "title": "EnvironmentalRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Equipment": {
+      "title": "Equipment",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "FlexibilityRequirement": {
+      "title": "FlexibilityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "FlowRequirement": {
+      "title": "FlowRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Function": {
+      "title": "Function",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Governance": {
+      "title": "Governance",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "GrowthPlan": {
+      "title": "GrowthPlan",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "HumanFactorRequirement": {
+      "title": "HumanFactorRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "InformationRequirement": {
+      "title": "InformationRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "InfrastructureRequirement": {
+      "title": "InfrastructureRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Issue": {
+      "title": "Issue",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "KnowledgeRecord": {
+      "title": "KnowledgeRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "MeetingRecord": {
+      "title": "MeetingRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "OperationalRequirement": {
+      "title": "OperationalRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "OptionEvaluation": {
+      "title": "OptionEvaluation",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "OrganizationalRequirement": {
+      "title": "OrganizationalRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "PerformanceCriterion": {
+      "title": "PerformanceCriterion",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "PriorityRecord": {
+      "title": "PriorityRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "PrivacyRequirement": {
+      "title": "PrivacyRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Process": {
+      "title": "Process",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramElement": {
+      "title": "ProgramElement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramMeta": {
+      "title": "ProgramMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProjectDefinition": {
+      "title": "ProjectDefinition",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "QualityRecord": {
+      "title": "QualityRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "QuantityRequirement": {
+      "title": "QuantityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "RegulatoryRequirement": {
+      "title": "RegulatoryRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Relationship": {
+      "title": "Relationship",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ReportRecord": {
+      "title": "ReportRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Requirement": {
+      "title": "Requirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ResilienceRequirement": {
+      "title": "ResilienceRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Resource": {
+      "title": "Resource",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Risk": {
+      "title": "Risk",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SafetyRequirement": {
+      "title": "SafetyRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Scenario": {
+      "title": "Scenario",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ScheduleRequirement": {
+      "title": "ScheduleRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SearchFilter": {
+      "title": "SearchFilter",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SecurityRequirement": {
+      "title": "SecurityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ServiceRequirement": {
+      "title": "ServiceRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SiteContext": {
+      "title": "SiteContext",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Stakeholder": {
+      "title": "Stakeholder",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "StatusRecord": {
+      "title": "StatusRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "StorageRequirement": {
+      "title": "StorageRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Survey": {
+      "title": "Survey",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "SustainabilityRequirement": {
+      "title": "SustainabilityRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "TemplateRecord": {
+      "title": "TemplateRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "TraceLink": {
+      "title": "TraceLink",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ValidationRecord": {
+      "title": "ValidationRecord",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "WayfindingRequirement": {
+      "title": "WayfindingRequirement",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Workshop": {
+      "title": "Workshop",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

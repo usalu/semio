@@ -1,0 +1,46 @@
+syntax = "proto3";
+package semio.s.trinity.rewrite.artifact;
+
+// 🧬️ Rewrite artifact schema — every field with its state class.
+
+message RewriteArtifact {
+  // @state persistent
+  string before_fixture_json = 1;
+  // @state persistent
+  string lhs_json = 2;
+  // @state persistent
+  string rhs_json = 3;
+  // @state persistent
+  map<string, string> parameter_bindings = 4;
+  // @state persistent
+  map<string, LayoutPoint> rule_layout = 5;
+  // @state shared-ui
+  repeated string selected_node_ids = 6;
+  // @state shared-ui
+  string active_hover_var = 7;
+  // @state shared-ui
+  string active_select_var = 8;
+  // @state shared-ui
+  map<string, string> lod_mode_by_window = 9;
+  // @state local-ui
+  Camera before_pane_camera = 10;
+  // @state local-ui
+  int64 reorganize_epoch = 11;
+  // @state local-ui
+  int64 hover_epoch = 12;
+  // @state local-ui
+  int64 select_epoch = 13;
+  // @state local-ui
+  string locale = 14;
+}
+
+message LayoutPoint {
+  double x = 1;
+  double y = 2;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

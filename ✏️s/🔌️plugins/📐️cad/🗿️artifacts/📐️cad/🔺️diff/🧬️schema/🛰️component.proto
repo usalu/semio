@@ -1,0 +1,120 @@
+syntax = "proto3";
+package semio.s.cad.cad.diff;
+
+// 🧬️ CadDiff schema.
+
+message CadDiff {
+  // @state persistent
+  optional CadArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string id = 3;
+  // @state persistent
+  optional CadObjectsDelta objects = 4;
+  // @state persistent
+  optional CadObjectsDelta building_objects = 5;
+  // @state persistent
+  optional CadObjectsDelta energy_objects = 6;
+  // @state persistent
+  optional CadObjectsDelta structure_classic_objects = 7;
+  // @state persistent
+  map<string, CadReferenceList> references_by_model_definition_id = 8;
+  // @state persistent
+  optional CadNodesDelta nodes = 9;
+  // @state persistent
+  optional CadGeometry shape_geometry = 10;
+  // @state persistent
+  optional CadGeometry building_geometry = 11;
+  // @state persistent
+  optional CadGeometry energy_geometry = 12;
+  // @state persistent
+  optional CadGeometry structure_classic_geometry = 13;
+  // @state persistent
+  optional string active_model_definition_id = 14;
+  // @state shared-ui
+  optional CadStringList selected_object_ids = 15;
+  // @state shared-ui
+  optional CadStringList selected_node_ids = 16;
+  // @state shared-ui
+  optional string active_object_id = 17;
+  // @state shared-ui
+  optional CadComponentSelection component_selection = 18;
+  // @state shared-ui
+  optional string selected_reference_model_definition_id = 19;
+  // @state shared-ui
+  optional string selected_reference_id = 20;
+  // @state shared-ui
+  optional string selected_primitive_id = 21;
+  // @state shared-ui
+  optional string selected_primitive_kind = 22;
+  // @state shared-ui
+  optional string active_utility_id = 23;
+  // @state shared-ui
+  optional string active_example_id = 24;
+  // @state local-ui
+  optional string selection_method = 25;
+  // @state local-ui
+  optional string engagement_input = 26;
+  // @state local-ui
+  optional string engagement_step = 27;
+  // @state local-ui
+  optional string engagement_pane = 28;
+  // @state local-ui
+  optional string engagement_session_json = 29;
+  // @state local-ui
+  optional string last_finalized_interaction_id = 30;
+  // @state local-ui
+  optional bool sun_enabled = 31;
+  // @state local-ui
+  optional double sun_azimuth = 32;
+  // @state local-ui
+  optional double sun_elevation = 33;
+  // @state local-ui
+  optional double sun_intensity = 34;
+  // @state local-ui
+  optional string sun_color = 35;
+  // @state local-ui
+  optional CadCamera camera = 36;
+  // @state local-ui
+  optional CadCamera camera_building = 37;
+  // @state local-ui
+  optional CadCamera camera_energy = 38;
+  // @state local-ui
+  optional CadCamera camera_structure_classic = 39;
+  // @state local-ui
+  optional CadDislocateOptions dislocate_shape = 40;
+  // @state local-ui
+  optional CadDislocateOptions dislocate_building = 41;
+  // @state local-ui
+  optional CadDislocateOptions dislocate_energy = 42;
+  // @state local-ui
+  optional CadDislocateOptions dislocate_structure_classic = 43;
+  // @state local-ui
+  optional string locale = 44;
+  // @state local-ui
+  optional string terminology = 45;
+  // @state local-ui
+  optional string contributions_json = 46;
+  // @state preview
+  optional string hovered_object_id = 47;
+  // @state preview
+  optional string hovered_target_object_id = 48;
+  // @state preview
+  optional string hovered_target_mode = 49;
+  // @state preview
+  optional uint32 hovered_target_id = 50;
+}
+
+message CadObject { string id = 1; }
+message CadNode { string id = 1; }
+message CadReferenceList { repeated string values = 1; }
+message CadGeometry { string anchors_json = 1; }
+message CadCamera { double zoom = 1; }
+message CadComponentSelection { string mode = 1; }
+message CadDislocateOptions { bool move_enabled = 1; bool rotate_enabled = 2; }
+
+message CadStringList { repeated string values = 1; }
+message CadObjectsDelta { repeated CadObject added = 1; repeated string removed = 2; repeated CadObject patched = 3; repeated string reordered = 4; }
+message CadNodesDelta { repeated CadNode added = 1; repeated string removed = 2; repeated CadNode patched = 3; repeated string reordered = 4; }
+message CadArtifact { string schema = 1; }

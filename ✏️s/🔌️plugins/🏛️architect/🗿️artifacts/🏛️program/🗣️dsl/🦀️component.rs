@@ -1,6 +1,6 @@
 //! 🗣️ Architect program artifact — the textual document surface (constitutional: dsl).
 //!
-//! `Program`'s `store::DocumentDsl` impl is `#[derive(dsl::DslRecord)]`-generated on the document
+//! `ProgramSnapshot`'s `store::DocumentDsl` impl is `#[derive(dsl::DslRecord)]`-generated on the document
 //! type itself (see `🦀️component.rs`); this node owns the named entry points every consumer calls and
 //! the bundled `.architect` example the derive is validated against.
 
@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// @emoji 📦️ The "Sample Clinic" default example, embedded at compile time as handcrafted
 /// `.architect` DSL text — a static transcription of `sample_plugin()`, kept in sync with it by
@@ -23,12 +23,12 @@ use crate::artifacts::program::Program;
 pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 🗣️ Parses an Architect program from its textual DSL representation.
-pub fn parse(text: &str) -> Result<Program, store::TextError> {
-    <Program as store::DocumentDsl>::parse_dsl(text)
+pub fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {
+    <ProgramSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an Architect program in its canonical textual DSL representation.
-pub fn print(document: &Program) -> String {
+pub fn print(document: &ProgramSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 

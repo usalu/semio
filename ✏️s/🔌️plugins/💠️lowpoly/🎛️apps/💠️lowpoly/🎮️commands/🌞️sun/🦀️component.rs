@@ -4,7 +4,7 @@
 use crate::apps::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::{apply_world3d_sun_action, ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -26,8 +26,8 @@ pub mod toggle_sun {
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
-    pub fn handle(_payload: &ToggleSun, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![apply_sun_command(cfg.projection, "toggleSun", None)]))
+    pub fn handle(_payload: &ToggleSun, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "toggleSun", None)]))
     }
 }
 //#endregion 🔖️ToggleSun
@@ -42,8 +42,8 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![apply_sun_command(cfg.projection, "setSunAzimuth", Some(payload.value))]))
+    pub fn handle(payload: &SetSunAzimuth, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunAzimuth", Some(payload.value))]))
     }
 }
 //#endregion 🔖️SetSunAzimuth
@@ -58,8 +58,8 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![apply_sun_command(cfg.projection, "setSunElevation", Some(payload.value))]))
+    pub fn handle(payload: &SetSunElevation, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunElevation", Some(payload.value))]))
     }
 }
 //#endregion 🔖️SetSunElevation
@@ -74,8 +74,8 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![apply_sun_command(cfg.projection, "setSunIntensity", Some(payload.value))]))
+    pub fn handle(payload: &SetSunIntensity, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunIntensity", Some(payload.value))]))
     }
 }
 //#endregion 🔖️SetSunIntensity

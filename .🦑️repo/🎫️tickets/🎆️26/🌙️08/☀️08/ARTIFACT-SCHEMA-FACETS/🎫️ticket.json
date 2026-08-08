@@ -1,0 +1,10 @@
+{
+  "id": "26/08/08/ARTIFACT-SCHEMA-FACETS",
+  "title": "Artifact Schema Facets",
+  "status": "open",
+  "goal": "AI-OPTIMIZED-REPO",
+  "due": "2026-08-08",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "description": "Give every artifact three handcrafted schema facets — 🧬️schema (every field of the artifact whatever its state class), 📸️snapshot/🧬️schema (only persisted data, no version history), 🔺️diff/🧬️schema (every change applicable to the artifact) — each expressed in five formats (🦀️component.rs, 🟦️component.ts, 🔗️component.graphql, 🔣️component.json JSON Schema, 🛰️component.proto). Move 🎒️pack under 📸️snapshot. Rename the document-state noun Projection to Snapshot. Extend taxonomy, discovery, registry, the Rust taxonomy twin and root policy scanners to require and cross-check the facets; nothing is generated, so cross-format parity is enforced by policy scanners plus a runtime table-driven test in the framework 🧬️schema module."
+}

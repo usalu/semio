@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `PaintStroke`.
 use crate::artifacts::lowpoly::mutations::{LowpolyMutation, PixelRun};
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(base: &LowpolyProjection, object_id: &str, layer_index: usize, runs: &[PixelRun]) -> Vec<LowpolyMutation> {
+pub fn inverse(base: &LowpolySnapshot, object_id: &str, layer_index: usize, runs: &[PixelRun]) -> Vec<LowpolyMutation> {
     let pixels = crate::artifacts::lowpoly::engine::layer_pixels_at(base, object_id, layer_index);
     let inverse_runs = runs
         .iter()

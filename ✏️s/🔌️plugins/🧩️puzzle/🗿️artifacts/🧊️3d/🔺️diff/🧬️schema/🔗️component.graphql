@@ -1,0 +1,65 @@
+# 🧬️ Puzzle3d diff schema — sparse field delta.
+
+type Puzzle3dDiff {
+  artifact: Puzzle3dArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  domain: String @state(class: PERSISTENT)
+  meta: Puzzle3dMeta @state(class: PERSISTENT)
+  objects: Puzzle3dObjectsDelta @state(class: PERSISTENT)
+  attractions: Puzzle3dAttractionsDelta @state(class: PERSISTENT)
+  targetVolumes: Puzzle3dTargetVolumesDelta @state(class: PERSISTENT)
+  references: Puzzle3dReferencesDelta @state(class: PERSISTENT)
+  selectedObjectIds: Puzzle3dStringList @state(class: SHARED_UI)
+  selectedVortexIds: Puzzle3dStringList @state(class: SHARED_UI)
+  selectedAttractionIds: Puzzle3dStringList @state(class: SHARED_UI)
+  selectedTargetVolumeIds: Puzzle3dStringList @state(class: SHARED_UI)
+  selectedReferenceIds: Puzzle3dStringList @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  cameraPositionX: Float @state(class: LOCAL_UI)
+  cameraPositionY: Float @state(class: LOCAL_UI)
+  cameraPositionZ: Float @state(class: LOCAL_UI)
+  cameraTargetX: Float @state(class: LOCAL_UI)
+  cameraTargetY: Float @state(class: LOCAL_UI)
+  cameraTargetZ: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  selectionMethod: String @state(class: LOCAL_UI)
+  selectionModeDefault: String @state(class: LOCAL_UI)
+  engagementInput: String @state(class: LOCAL_UI)
+  gridVisible: Boolean @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean @state(class: LOCAL_UI)
+  gridSpacing: Float @state(class: LOCAL_UI)
+  overlapBudget: Float @state(class: LOCAL_UI)
+  fillCount: Int @state(class: LOCAL_UI)
+  brushCandidateIndex: Int @state(class: LOCAL_UI)
+  lodAutomatic: Boolean @state(class: LOCAL_UI)
+  lodDepthVariable: Boolean @state(class: LOCAL_UI)
+  lodManual: Float @state(class: LOCAL_UI)
+  proximityRadius: Float @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  runtimeExtrasJson: String @state(class: LOCAL_UI)
+  hoveredObjectId: String @state(class: PREVIEW)
+  hoveredVortexFullId: String @state(class: PREVIEW)
+  hoveredKindId: String @state(class: PREVIEW)
+  previewSeq: Int @state(class: PREVIEW)
+}
+
+type Puzzle3dStringList { values: [String!]! }
+type Puzzle3dObjectsDelta { added: [Puzzle3dObject!]! removed: [String!]! patched: [Puzzle3dObjectPatchEntry!]! reordered: [String!] }
+type Puzzle3dObjectPatchEntry { id: String! patch: Puzzle3dObjectPatch! }
+type Puzzle3dObjectPatch { replacement: Puzzle3dObject }
+type Puzzle3dObject { id: String! }
+type Puzzle3dAttractionsDelta { added: [Puzzle3dAttraction!]! removed: [String!]! patched: [Puzzle3dAttractionPatchEntry!]! reordered: [String!] }
+type Puzzle3dAttractionPatchEntry { id: String! patch: Puzzle3dAttractionPatch! }
+type Puzzle3dAttractionPatch { replacement: Puzzle3dAttraction }
+type Puzzle3dAttraction { id: String! }
+type Puzzle3dTargetVolumesDelta { added: [Puzzle3dTargetVolume!]! removed: [String!]! patched: [Puzzle3dTargetVolumePatchEntry!]! reordered: [String!] }
+type Puzzle3dTargetVolumePatchEntry { id: String! patch: Puzzle3dTargetVolumePatch! }
+type Puzzle3dTargetVolumePatch { replacement: Puzzle3dTargetVolume }
+type Puzzle3dTargetVolume { id: String! }
+type Puzzle3dReferencesDelta { added: [Puzzle3dReference!]! removed: [String!]! patched: [Puzzle3dReferencePatchEntry!]! reordered: [String!] }
+type Puzzle3dReferencePatchEntry { id: String! patch: Puzzle3dReferencePatch! }
+type Puzzle3dReferencePatch { replacement: Puzzle3dReference }
+type Puzzle3dReference { id: String! }
+type Puzzle3dArtifact { schema: String! }
+type Puzzle3dMeta { _placeholder: Boolean }
+

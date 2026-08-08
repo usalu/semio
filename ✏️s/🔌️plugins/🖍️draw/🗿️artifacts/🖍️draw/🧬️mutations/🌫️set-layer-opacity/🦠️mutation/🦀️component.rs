@@ -1,6 +1,6 @@
 //! Draw mutation — `SetLayerOpacity` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_layer_opacity(layer_id: String, opacity: f64) -> DrawMutation {
     DrawMutation::SetLayerOpacity { layer_id, opacity }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, opacity: f64) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, opacity: f64) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetLayerOpacity { layer_id: layer_id.into(), opacity });
 }
 //#endregion 🔖️Mutation

@@ -1,0 +1,26 @@
+# 🧬️ CadSnapshot schema.
+
+type CadSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  objects: [CadObject!]! @state(class: PERSISTENT)
+  buildingObjects: [CadObject!]! @state(class: PERSISTENT)
+  energyObjects: [CadObject!]! @state(class: PERSISTENT)
+  structureClassicObjects: [CadObject!]! @state(class: PERSISTENT)
+  referencesByModelDefinitionId: [CadReferenceListEntry!]! @state(class: PERSISTENT)
+  nodes: [CadNode!]! @state(class: PERSISTENT)
+  shapeGeometry: CadGeometry @state(class: PERSISTENT)
+  buildingGeometry: CadGeometry @state(class: PERSISTENT)
+  energyGeometry: CadGeometry @state(class: PERSISTENT)
+  structureClassicGeometry: CadGeometry @state(class: PERSISTENT)
+  activeModelDefinitionId: String! @state(class: PERSISTENT)
+}
+
+type CadObject { id: String! }
+type CadNode { id: String! }
+type CadReferenceList { values: [String!]! }
+type CadReferenceListEntry { key: String! value: CadReferenceList! }
+type CadGeometry { anchorsJson: String }
+type CadCamera { zoom: Float }
+type CadComponentSelection { mode: String! }
+type CadDislocateOptions { moveEnabled: Boolean! rotateEnabled: Boolean! }

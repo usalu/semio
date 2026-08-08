@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{apply_transformation_mutations, ids_or_selection, runtime_of};
@@ -22,7 +22,7 @@ pub mod translate_selection {
         pub dz: f64,
     }
 
-    pub fn handle(payload: &TranslateSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &TranslateSelection, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let runtime = runtime_of(cfg);
         let ids = ids_or_selection(&payload.object_ids, runtime.selected_object_ids.as_slice());
         if ids.is_empty() {
@@ -47,7 +47,7 @@ pub mod rotate_selection {
         pub angle: f64,
     }
 
-    pub fn handle(payload: &RotateSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &RotateSelection, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let runtime = runtime_of(cfg);
         let ids = ids_or_selection(&payload.object_ids, runtime.selected_object_ids.as_slice());
         if ids.is_empty() {
@@ -71,7 +71,7 @@ pub mod scale_selection {
         pub sz: f64,
     }
 
-    pub fn handle(payload: &ScaleSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &ScaleSelection, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let runtime = runtime_of(cfg);
         let ids = ids_or_selection(&payload.object_ids, runtime.selected_object_ids.as_slice());
         if ids.is_empty() {
@@ -92,8 +92,8 @@ pub mod apply_transformation {
         pub qid: String,
     }
 
-    pub fn handle(payload: &ApplyTransformation, doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        Ok(Emit::mutations(apply_transformation_mutations(doc.projection, &payload.qid)))
+    pub fn handle(payload: &ApplyTransformation, doc: &DocumentView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        Ok(Emit::mutations(apply_transformation_mutations(doc.snapshot, &payload.qid)))
     }
 }
 //#endregion 🔖️ApplyTransformation

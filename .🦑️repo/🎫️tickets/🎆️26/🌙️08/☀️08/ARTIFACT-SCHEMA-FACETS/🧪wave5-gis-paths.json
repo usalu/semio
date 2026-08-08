@@ -1,0 +1,15 @@
+{
+  "gis": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis",
+  "terrain": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+  "gismap": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+  "schema_dir": "🧬️schema",
+  "snap_dir": "📸️snapshot",
+  "diff_dir": "🔺️diff",
+  "files": {
+    ".json": "🔣️component.json",
+    ".proto": "🛰️component.proto",
+    ".graphql": "🔗️component.graphql",
+    ".ts": "🟦️component.ts",
+    ".rs": "🦀️component.rs"
+  }
+}

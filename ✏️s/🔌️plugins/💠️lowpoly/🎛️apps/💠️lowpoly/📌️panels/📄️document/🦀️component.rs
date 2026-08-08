@@ -28,11 +28,11 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> UiNode {
-    let active_id = resolve_active_object_id(view.projection, view.config);
+    let active_id = resolve_active_object_id(view.snapshot, view.config);
     let selected_ids = selected_document_ids(view);
     let highlighted_ids = highlighted_document_ids(view);
     let items: Vec<UiTreeItemNode> = view
-        .projection
+        .snapshot
         .objects
         .iter()
         .enumerate()

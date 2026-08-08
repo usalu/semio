@@ -1,10 +1,10 @@
-//! ✂️ Puzzle 5d engine — the typed copy/paste/translate transfer rules over a `Puzzle5dProjection`:
+//! ✂️ Puzzle 5d engine — the typed copy/paste/translate transfer rules over a `Puzzle5dSnapshot`:
 //! the closure selection a copy fragment expands to, its centroid, the fresh-id materialization a
 //! paste performs, the direct position write a translate is, and the replace-kind candidate walk.
 //! Mirrors semio-compose's `copyDesign`/`pasteDesign`/`dragPieces`/`findReplaceableTypesForSelection`.
 
 use crate::artifacts::puzzle5d::engine::next_id;
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dProjection};
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️GripRefs
@@ -29,7 +29,7 @@ fn rewrite_grip_ref(grip_ref: &str, id_map: &HashMap<String, String>) -> String 
 /// selected fastener's endpoint parts, then expands the fastener set to include every fastener whose
 /// BOTH endpoints are now in the part set — mirrors semio_compose_rs's `copyDesign` closure rule
 /// (`semio_compose_rs/dev/algorithm/js/index.ts:483`).
-pub fn copy_selection(projection: &Puzzle5dProjection, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+pub fn copy_selection(projection: &Puzzle5dSnapshot, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut part_set: HashSet<String> = part_ids.iter().cloned().collect();
     for fastener in &projection.fasteners {
         if fastener_ids.contains(&fastener.id) {
@@ -72,7 +72,7 @@ pub fn centroid_2d(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
 /// semio_compose_rs's `pasteDesign` (`semio_compose_rs/dev/algorithm/js/index.ts:515`). Returns the ready-to-insert
 /// parts/fasteners; the caller turns each into one `SetPart`/`SetFastener` operation appended past the
 /// document's current `parts`/`fasteners` length.
-pub fn paste_selection(projection: &Puzzle5dProjection, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta_2d: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+pub fn paste_selection(projection: &Puzzle5dSnapshot, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta_2d: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut id_map: HashMap<String, String> = HashMap::new();
     let mut existing_ids: HashSet<String> = projection.parts.iter().map(|part| part.id.clone()).collect();
     let mut fresh_parts = Vec::with_capacity(fragment_parts.len());
@@ -107,7 +107,7 @@ pub fn paste_selection(projection: &Puzzle5dProjection, fragment_parts: &[Puzzle
 /// explicit, so a translate is a direct position write). Mirrors
 /// `semio_compose_rs/dev/algorithm/js/index.ts:424,451`. Returns `(index, updated part)` pairs ready for
 /// `SetPart` operations.
-pub fn translate_parts(projection: &Puzzle5dProjection, part_ids: &[String], delta_2d: (f64, f64), delta_3d: [f64; 3]) -> Vec<(usize, Puzzle5dPart)> {
+pub fn translate_parts(projection: &Puzzle5dSnapshot, part_ids: &[String], delta_2d: (f64, f64), delta_3d: [f64; 3]) -> Vec<(usize, Puzzle5dPart)> {
     projection
         .parts
         .iter()
@@ -129,7 +129,7 @@ pub fn translate_parts(projection: &Puzzle5dProjection, part_ids: &[String], del
 /// `part_id`'s own grip kinds (excluding `part_id`'s current kind) — candidates a "replace kind"
 /// picker offers. Mirrors semio_compose_rs's `findReplaceableTypesForSelection` (`semio_compose_rs/dev/algorithm/js/
 /// index.ts:84`), computed for real against `kind_catalogs`/`kind_compatibility` instead of a fixture stub.
-pub fn find_replaceable_kinds(projection: &Puzzle5dProjection, part_id: &str) -> Vec<String> {
+pub fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> Vec<String> {
     let Some(part) = projection.parts.iter().find(|part| part.id == part_id) else {
         return Vec::new();
     };
@@ -173,8 +173,8 @@ mod tests {
         }
     }
 
-    fn three_part_projection() -> Puzzle5dProjection {
-        let mut projection = Puzzle5dProjection::default();
+    fn three_part_projection() -> Puzzle5dSnapshot {
+        let mut projection = Puzzle5dSnapshot::default();
         projection.parts.push(part_at("p1", 0.0, 0.0));
         projection.parts.push(part_at("p2", 10.0, 0.0));
         projection.parts.push(part_at("p3", 20.0, 0.0));

@@ -5,7 +5,7 @@
 //! /`crate::artifacts::fem2d::engine::mesh_preview`.
 
 use crate::artifacts::fem2d::engine::Fem2dError;
-use crate::artifacts::fem2d::{Fem2dDocument, FemElement};
+use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement};
 use crate::model::{Bar2, BeamEb2, Dof, Element, NodalLoad, Node};
 use std::collections::HashMap;
 
@@ -40,7 +40,7 @@ fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
 /// (within `1e-9`, both x and y) with an existing document node reuses that node's id, so supports and
 /// loads placed on that node reach the mesh; otherwise a node is synthesized once per unique mesh
 /// point as `{region_id}_m{point_index}`.
-pub(crate) fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGeometry, Fem2dError> {
+pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGeometry, Fem2dError> {
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.clone(), pos: [n.x, n.y, 0.0] }).collect();
 
@@ -113,7 +113,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGe
 /// path (which has no native self-weight concept) — `fem2d_solve_all` never calls this helper, since it
 /// gets self-weight natively through `crate::analyses`' own `element.mass()`-based pipeline for
 /// EVERY massed element (`Bar2`/`BeamEb2` and now `Tri3Cst` regions too), so the two paths never overlap.
-pub(crate) fn self_weight_nodal_loads(doc: &Fem2dDocument, regions: &[MeshedRegion]) -> Vec<NodalLoad> {
+pub(crate) fn self_weight_nodal_loads(doc: &Fem2dSnapshot, regions: &[MeshedRegion]) -> Vec<NodalLoad> {
     let mut totals: HashMap<String, f64> = HashMap::new();
 
     for element in &doc.elements {

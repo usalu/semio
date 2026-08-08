@@ -3,7 +3,7 @@
 
 use crate::apps::draw::draw_play_action;
 use crate::apps::draw::terminology::DrawPlayLabels;
-use crate::artifacts::draw::{DrawDocument, DRAW_BOOLEAN_OPERATIONS};
+use crate::artifacts::draw::{DrawSnapshot, DRAW_BOOLEAN_OPERATIONS};
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use std::collections::HashMap;
 
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(_document: &DrawDocument, interaction: &crate::apps::draw::config::DrawConfig, labels: &DrawPlayLabels) -> UiNode {
+pub fn render(_document: &DrawSnapshot, interaction: &crate::apps::draw::config::DrawConfig, labels: &DrawPlayLabels) -> UiNode {
     let catalogue_kinds = [
         ("path", labels.kind_path, "pen-tool"),
         ("shape:rect", labels.kind_rectangle, "square"),

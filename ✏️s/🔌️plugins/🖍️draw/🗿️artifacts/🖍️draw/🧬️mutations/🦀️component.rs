@@ -1,8 +1,16 @@
 //! 🧬️ Draw artifact — document mutation dispatch enum + apply helpers.
 
-use crate::artifacts::draw::diff::{DrawDiff, DrawLayerBasePatch, DrawLayerTreeAdd, DrawLayerTreePatch};
-use crate::artifacts::draw::engine::{clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer, remove_layer_from_tree};
-use crate::artifacts::draw::{DrawDocument, DrawLayerNode, FillStyle, StrokeStyle};
+use crate::artifacts::draw::diff::{
+    diff_add_layer, diff_from_snapshot, diff_remove_layer, diff_set_boolean_operation, diff_set_fill,
+    diff_set_layer_blend_mode, diff_set_layer_locked, diff_set_layer_name, diff_set_layer_opacity,
+    diff_set_layer_transform, diff_set_layer_visible, diff_set_snapshot, diff_set_stroke,
+    diff_set_trace_params, DrawDiff,
+};
+use crate::artifacts::draw::engine::{
+    clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba,
+    insert_layer, layer_base, layer_base_mut, mutate_draw_layer, remove_layer_from_tree,
+};
+use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
@@ -76,14 +84,14 @@ pub enum DrawMutation {
         parent_id: Option<String>,
         index: usize,
     },
-    SetDocument {
+    SetSnapshot {
         #[dsl(block)]
-        document: DrawDocument,
+        snapshot: DrawSnapshot,
     },
 }
-pub fn apply_draw_edit_mutation(doc: &DrawDocument, edit: &DrawMutation) -> DrawDocument {
+pub fn apply_draw_edit_mutation(doc: &DrawSnapshot, edit: &DrawMutation) -> DrawSnapshot {
     match edit {
-        DrawMutation::SetDocument { document } => document.clone(),
+        DrawMutation::SetSnapshot { snapshot } => snapshot.clone(),
         DrawMutation::SetLayerVisible { layer_id, visible } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).visible = *visible;
         }),
@@ -153,7 +161,7 @@ pub fn apply_draw_edit_mutation(doc: &DrawDocument, edit: &DrawMutation) -> Draw
     }
 }
 
-pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
+pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
     let layer = find_draw_layer(doc, layer_id)?;
     let operation = match field {
         "name" => DrawMutation::SetLayerName { layer_id: layer_id.into(), name: value.as_str().unwrap_or("").into() },
@@ -205,7 +213,7 @@ pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, 
     Some(operation)
 }
 
-pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> DrawDocument {
+pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> DrawSnapshot {
     match draw_op_for_layer_field(doc, layer_id, field, value) {
         Some(operation) => apply_draw_edit_mutation(doc, &operation),
         None => doc.clone(),
@@ -213,33 +221,40 @@ pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value:
 }
 
 
-/// @emoji ↩️ Computes the inverse mutations from pre-state (document snapshot).
-pub fn inverse_draw_mutation(projection: &DrawDocument, _mutation: &DrawMutation) -> Vec<DrawMutation> {
-    vec![DrawMutation::SetDocument { document: projection.clone() }]
+/// ↩️ Computes the inverse mutations from pre-state (document snapshot).
+pub fn inverse_draw_mutation(snapshot: &DrawSnapshot, _mutation: &DrawMutation) -> Vec<DrawMutation> {
+    vec![DrawMutation::SetSnapshot { snapshot: snapshot.clone() }]
 }
 
 //#region 🔖️MutationImpl
-impl Mutation<DrawDocument> for DrawMutation {
+impl Mutation<DrawSnapshot> for DrawMutation {
     type Diff = DrawDiff;
 
-    fn diff(&self, _projection: &DrawDocument) -> DrawDiff {
+    fn diff(&self, snapshot: &DrawSnapshot) -> DrawDiff {
         match self {
-            DrawMutation::SetDocument { document } => DrawDiff { document: Some(document.clone()), ..Default::default() },
-            DrawMutation::SetLayerVisible { layer_id, visible } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { visible: Some(*visible), ..Default::default() } }], ..Default::default() },
-            DrawMutation::SetLayerLocked { layer_id, locked } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { locked: Some(*locked), ..Default::default() } }], ..Default::default() },
-            DrawMutation::SetLayerName { layer_id, name } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() },
-            DrawMutation::SetLayerOpacity { layer_id, opacity } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { opacity: Some(*opacity), ..Default::default() } }], ..Default::default() },
-            DrawMutation::SetLayerBlendMode { layer_id, blend_mode } => {
-                DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { blend_mode: Some(blend_mode.clone()), ..Default::default() } }], ..Default::default() }
+            DrawMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+            DrawMutation::SetLayerVisible { layer_id, visible } => diff_set_layer_visible(layer_id, *visible),
+            DrawMutation::SetLayerLocked { layer_id, locked } => diff_set_layer_locked(layer_id, *locked),
+            DrawMutation::SetLayerName { layer_id, name } => diff_set_layer_name(layer_id, name),
+            DrawMutation::SetLayerOpacity { layer_id, opacity } => diff_set_layer_opacity(layer_id, *opacity),
+            DrawMutation::SetLayerBlendMode { layer_id, blend_mode } => diff_set_layer_blend_mode(layer_id, blend_mode),
+            DrawMutation::SetLayerTransform { layer_id, transform } => diff_set_layer_transform(layer_id, transform),
+            DrawMutation::SetFill { layer_id, fill } => diff_set_fill(layer_id, fill),
+            DrawMutation::SetStroke { layer_id, stroke } => diff_set_stroke(layer_id, stroke),
+            DrawMutation::SetBooleanOperation { layer_id, boolean_operation } => {
+                diff_set_boolean_operation(layer_id, boolean_operation)
             }
-            DrawMutation::AddLayer { parent_id, index, layer } => DrawDiff { layers_added: vec![DrawLayerTreeAdd { parent_id: parent_id.clone(), index: *index, layer: layer.as_ref().clone() }], ..Default::default() },
-            DrawMutation::RemoveLayer { layer_id } => DrawDiff { layers_removed: vec![layer_id.clone()], ..Default::default() },
-            _ => DrawDiff { document: Some(apply_draw_edit_mutation(_projection, self)), ..Default::default() },
+            DrawMutation::SetTraceParams { layer_id, params } => diff_set_trace_params(layer_id, params),
+            DrawMutation::AddLayer { parent_id, index: _, layer } if parent_id.is_none() => {
+                diff_add_layer(layer.as_ref().clone())
+            }
+            DrawMutation::RemoveLayer { layer_id } => diff_remove_layer(layer_id),
+            _ => diff_from_snapshot(apply_draw_edit_mutation(snapshot, self)),
         }
     }
 
-    fn inverse(&self, projection: &DrawDocument) -> Vec<Self> {
-        inverse_draw_mutation(projection, self)
+    fn inverse(&self, snapshot: &DrawSnapshot) -> Vec<Self> {
+        inverse_draw_mutation(snapshot, self)
     }
 }
 //#endregion 🔖️MutationImpl
@@ -258,4 +273,4 @@ pub use super::add_layer::mutation::{add_layer, AddLayer};
 pub use super::duplicate_layer::mutation::{duplicate_layer, DuplicateLayer};
 pub use super::remove_layer::mutation::{remove_layer, RemoveLayer};
 pub use super::reorder_layer::mutation::{reorder_layer, ReorderLayer};
-pub use super::set_document::mutation::{set_document, SetDocument};
+pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};

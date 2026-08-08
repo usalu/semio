@@ -3,7 +3,7 @@
 use crate::apps::architect::catalog::register_entities;
 use crate::apps::architect::chrome::{empty_component_scene, entity_id_from_json, entity_name_from_json};
 use crate::apps::architect::config::{active_register, ArchitectConfig};
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{ui_text, BlockListScene, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -52,7 +52,7 @@ struct RegisterBlockItem {
     kind: String,
 }
 
-pub fn render(program: &Program, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let register = active_register(cfg);
     let entities = register_entities(program, register);
     if entities.is_empty() {

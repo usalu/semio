@@ -3,7 +3,7 @@
 
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub mod set_camera {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Fem3dConfigMutation::SetCamera { camera: FemCamera { json: payload.json.clone() } }]))
     }
 }

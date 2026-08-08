@@ -1,6 +1,6 @@
 //! 🎯 CAD mutation — `SetActiveModelDefinition` payload + builder + apply.
 use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -15,9 +15,9 @@ pub fn set_active_model_definition(model_definition_id: String) -> CadMutation {
     CadMutation::SetActiveModelDefinition { model_definition_id }
 }
 
-pub fn apply(projection: &mut CadProjection, model_definition_id: &str) {
+pub fn apply(projection: &mut CadSnapshot, model_definition_id: &str) {
     let mutation = CadMutation::SetActiveModelDefinition { model_definition_id: model_definition_id.into() };
-    let diff = <CadMutation as protocol::Mutation<CadProjection>>::diff(&mutation, projection);
-    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadProjection>>::apply(&diff, projection);
+    let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, projection);
+    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, projection);
 }
 //#endregion 🔖️Mutation

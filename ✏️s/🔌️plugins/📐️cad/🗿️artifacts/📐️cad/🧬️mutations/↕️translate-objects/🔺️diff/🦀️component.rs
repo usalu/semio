@@ -1,38 +1,21 @@
-//! 🔺️ Diff fragment yielded by `TranslateObjects`.
+//! 🔺️ Diff fragment yielded by mutation.
 use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadProjection;
-use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `TranslateObjects` mutation.
+/// @emoji 🔺️ Diff produced by one mutation — a sparse [`CadDiff`].
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct TranslateObjectsDiff {
-    pub mutation: Option<CadMutation>,
+    pub diff: CadDiff,
 }
 
 impl TranslateObjectsDiff {
-    pub fn from_mutation(mutation: CadMutation) -> Self {
-        Self { mutation: Some(mutation) }
-    }
-}
-
-impl MutationDiff<CadProjection> for TranslateObjectsDiff {
-    fn apply(&self, projection: &CadProjection) -> CadProjection {
-        match &self.mutation {
-            Some(mutation) => {
-                let diff = <CadMutation as protocol::Mutation<CadProjection>>::diff(mutation, projection);
-                <CadDiff as MutationDiff<CadProjection>>::apply(&diff, projection)
-            }
-            None => projection.clone(),
-        }
+    pub fn from_diff(diff: CadDiff) -> Self {
+        Self { diff }
     }
 
-    fn absorb(&mut self, other: Self) {
-        if other.mutation.is_some() {
-            *self = other;
-        }
+    pub fn into_cad_diff(self) -> CadDiff {
+        self.diff
     }
 }
 //#endregion 🔖️Diff

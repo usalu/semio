@@ -6,7 +6,7 @@ use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{is_paint_utility, utility_params_value};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -22,8 +22,8 @@ pub mod set_utility_param {
         pub value_json: String,
     }
 
-    pub fn handle(payload: &SetUtilityParam, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let mut params = utility_params_value(cfg.projection);
+    pub fn handle(payload: &SetUtilityParam, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        let mut params = utility_params_value(cfg.snapshot);
         let value: Value = serde_json::from_str(&payload.value_json).unwrap_or(Value::Null);
         if let Some(map) = params.as_object_mut() {
             map.insert(payload.key.clone(), value);
@@ -47,7 +47,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.reset_gestures();
         let mut config_mutations = vec![
             LowpolyConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() },
@@ -75,9 +75,9 @@ mod tests {
         let mut a = app();
         let result = dispatch(&mut a, LowpolyCommand::SetActiveUtility(super::set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));
         assert!(result.mutations.is_empty(), "utility switch must emit no operations");
-        let before = a.projection().expect("projection");
+        let before = a.snapshot().expect("projection");
         a.handle_action("undo", None, &testkit::meta("a")).unwrap();
-        assert_eq!(a.projection().expect("projection"), before, "utility switch left nothing to undo");
+        assert_eq!(a.snapshot().expect("projection"), before, "utility switch left nothing to undo");
     }
 }
 //#endregion 🧪️Tests

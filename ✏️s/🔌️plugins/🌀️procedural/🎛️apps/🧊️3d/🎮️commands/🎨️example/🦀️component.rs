@@ -2,9 +2,9 @@
 //! generations and resets ephemeral view state).
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::engine::{default_projection, example_projection, is_procedural3d_example_id};
+use crate::artifacts::procedural3d::engine::{default_snapshot, example_snapshot, is_procedural3d_example_id};
 use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dMutation};
-use crate::artifacts::procedural3d::Procedural3dDocument;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{CameraJson, FlowEvalSession};
 use flow::playbook::GenerationMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -41,19 +41,19 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
         session.set_eval_json(String::new());
-        let fixture = &doc.projection.fixture;
+        let fixture = &doc.snapshot.fixture;
         let target = if payload.example_id.is_empty() {
-            default_projection()
+            default_snapshot()
         } else if is_procedural3d_example_id(&payload.example_id) {
-            example_projection(&payload.example_id).unwrap_or_default()
+            example_snapshot(&payload.example_id).unwrap_or_default()
         } else {
             return Ok(Emit::default());
         };
-        let mut operations: Vec<Procedural3dMutation> = doc.projection.generation.generations.iter().map(|generation| Procedural3dMutation::Generation(GenerationMutation::Remove { id: generation.id.clone() })).collect();
+        let mut operations: Vec<Procedural3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| Procedural3dMutation::Generation(GenerationMutation::Remove { id: generation.id.clone() })).collect();
         operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
-        Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::Snapshot { config: config_after_example_load(cfg.projection, &target.fixture.camera) }], ..Default::default() })
+        Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::Snapshot { config: config_after_example_load(cfg.snapshot, &target.fixture.camera) }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -73,7 +73,7 @@ mod tests {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app_with_registry();
         app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).expect("set example");
-        let projection = app.projection().expect("projection");
+        let projection = app.snapshot().expect("snapshot");
         assert!(projection.fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
     }
 
@@ -81,9 +81,9 @@ mod tests {
     fn unknown_example_id_is_a_no_op() {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "not-a-real-example".into() }));
-        assert_eq!(app.projection().expect("projection"), before);
+        assert_eq!(app.snapshot().expect("snapshot"), before);
     }
 }
 //#endregion 🧪️Tests

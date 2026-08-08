@@ -31,8 +31,8 @@ mod tests {
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
     use store::{create_document_envelope, DocumentCommand};
 
-    fn simply_supported_beam_doc() -> crate::artifacts::fem2d::Fem2dDocument {
-        crate::artifacts::fem2d::Fem2dDocument {
+    fn simply_supported_beam_doc() -> crate::artifacts::fem2d::Fem2dSnapshot {
+        crate::artifacts::fem2d::Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
             elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
             regions: vec![],
@@ -48,7 +48,7 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = Fem2dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -67,10 +67,10 @@ mod tests {
 
     #[test]
     fn fem2d_document_text_round_trips_through_the_store() {
-        let mut store = crate::artifacts::fem2d::op::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_projection(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem2dMutation::SetDocument { document: simply_supported_beam_doc() }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        let mut store = crate::artifacts::fem2d::mutations::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_snapshot(), None));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem2dMutation::SetSnapshot { snapshot: simply_supported_beam_doc() }], description: None }).expect("apply");
+        semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store);
+        semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 // #endregion 🧪️Tests

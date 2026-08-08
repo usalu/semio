@@ -9,7 +9,7 @@
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::artifacts::draw::engine::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
 use crate::artifacts::draw::op::DrawMutation;
-use crate::artifacts::draw::{DrawCamera, DrawDocument, DrawLayerNode, PathSegment};
+use crate::artifacts::draw::{DrawCamera, DrawSnapshot, DrawLayerNode, PathSegment};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 
 //#region 🔖️GestureContext
@@ -28,7 +28,7 @@ pub struct GestureContext {
 }
 
 /// 🎇️ Document-touching side effects the gesture machine requests but never executes — `fsm`'s
-/// guards/actions only ever see `(&Context, Option<&Event>)`, never the `DrawDocument` tree, so every
+/// guards/actions only ever see `(&Context, Option<&Event>)`, never the `DrawSnapshot` tree, so every
 /// hit-test/commit that needs the document is deferred to `DrawSession::step_gesture` as an effect.
 #[derive(Clone, Debug)]
 pub enum GestureEffect {
@@ -120,7 +120,7 @@ fn draw_pick_generality(layer: &DrawLayerNode) -> i32 {
     }
 }
 
-fn ancestor_group_ids(doc: &DrawDocument, target_id: &str) -> Vec<String> {
+fn ancestor_group_ids(doc: &DrawSnapshot, target_id: &str) -> Vec<String> {
     fn walk(layers: &[DrawLayerNode], target_id: &str, ancestors: &mut Vec<String>) -> bool {
         for layer in layers {
             if layer_id(layer) == target_id {
@@ -152,7 +152,7 @@ fn segment_control_points(segment: &PathSegment) -> Vec<[f64; 2]> {
 }
 
 /// 🎯️ All pick targets under a world point (groups win by default, control points win over everything when enabled).
-pub(crate) fn resolve_pick_targets_at(doc: &DrawDocument, world: [f64; 2], tolerance_world: f64, include_control_points: bool) -> Vec<DrawPickTarget> {
+pub(crate) fn resolve_pick_targets_at(doc: &DrawSnapshot, world: [f64; 2], tolerance_world: f64, include_control_points: bool) -> Vec<DrawPickTarget> {
     let mut hits = Vec::new();
     for layer in flatten_draw_layers(&doc.layers).into_iter().rev() {
         let base = layer_base(layer);
@@ -194,7 +194,7 @@ pub(crate) fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
     targets.iter().max_by_key(|target| target.generality).map(|target| target.layer_id.clone())
 }
 
-fn apply_point_pick(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
+fn apply_point_pick(interaction: &mut DrawConfig, doc: &DrawSnapshot, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
     let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
     let targets = resolve_pick_targets_at(doc, world, tolerance, include_control_points);
     let picked = best_pick_layer_id(&targets);
@@ -207,7 +207,7 @@ fn apply_point_pick(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f6
 }
 
 /// ⬚️ Marquee/lasso layer hits — reduces the lasso gesture to its bounding box, matching the premigration behaviour.
-pub(crate) fn marquee_layer_hits(doc: &DrawDocument, start: [f64; 2], end: [f64; 2], crossing: bool) -> Vec<String> {
+pub(crate) fn marquee_layer_hits(doc: &DrawSnapshot, start: [f64; 2], end: [f64; 2], crossing: bool) -> Vec<String> {
     let rect_x = start[0].min(end[0]);
     let rect_y = start[1].min(end[1]);
     let rect_w = (end[0] - start[0]).abs();
@@ -271,7 +271,7 @@ pub(crate) fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor:
 
 /// 🔷️ Emits the operations that commit a shape drag (add the shape layer + return to direct-select) and
 /// records the new layer as the current selection; empty when the drag is too small to commit.
-fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawMutation> {
+fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawMutation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -304,7 +304,7 @@ fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawDocument, utility: 
 
 /// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer and records it
 /// as the current selection; empty when the draft has too few points to form a shape.
-fn commit_draft(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawMutation> {
+fn commit_draft(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: &str, points: &[[f64; 2]]) -> Vec<DrawMutation> {
     if points.len() < 2 {
         return Vec::new();
     }
@@ -332,7 +332,7 @@ fn commit_draft(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str,
 
 /// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset) and records it as
 /// the current selection; empty when no bitmap source is available.
-fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawMutation> {
+fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawSnapshot, world: [f64; 2]) -> Vec<DrawMutation> {
     let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
     let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, false));
     let source_key = hit_layer_id
@@ -341,7 +341,7 @@ fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64
             DrawLayerNode::Image(image) => Some(image.image_key),
             _ => None,
         })
-        .or_else(|| doc.assets.as_ref().and_then(|assets| assets.keys().next().cloned()));
+        .or_else(|| doc.assets.keys().next().cloned());
     let Some(source_key) = source_key else { return Vec::new() };
     let layer = create_draw_trace_layer("Trace", &source_key);
     let select_id = layer_id(&layer).to_string();
@@ -577,7 +577,7 @@ impl DrawSession {
     /// working copy (mutated in place for selection changes the gesture makes); the returned `Emit`
     /// carries only DOCUMENT operations (shape/draft/trace commits) — the caller diffs `config`
     /// before/after via `finish_gesture_emit` to fold in any selection change.
-    pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument, config: &mut DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
+    pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawSnapshot, config: &mut DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
@@ -631,7 +631,7 @@ impl DrawSession {
 /// 👻️ CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": a pure, JSON-serializable
 /// snapshot of the gesture machine's live, uncommitted scratch geometry. `None` while `draw_gesture`
 /// is `idle` (no live gesture to preview); this function only ever reads `GestureContext`, never
-/// `DrawDocument`/`DrawMutation` — a preview can never become persistent state.
+/// `DrawSnapshot`/`DrawMutation` — a preview can never become persistent state.
 fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Option<serde_json::Value> {
     if is_idle {
         return None;
@@ -664,13 +664,13 @@ pub mod canvas_pointer_down {
         pub meta: bool,
     }
 
-    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        let document = doc.projection;
-        let mut config = cfg.projection.clone();
+    pub fn handle(payload: &CanvasPointerDown, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let mut config = cfg.snapshot.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
         let active_utility = config.active_utility_id.clone();
         let emit = session.step_gesture(draw_gesture::Event::PointerDown { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, &mut config);
-        Ok(finish_gesture_emit(emit, cfg.projection, &config))
+        Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
     }
 }
 //#endregion 🔖️CanvasPointerDown
@@ -689,9 +689,9 @@ pub mod canvas_pointer_move {
         pub height: f64,
     }
 
-    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        let document = doc.projection;
-        let mut config = cfg.projection.clone();
+    pub fn handle(payload: &CanvasPointerMove, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let mut config = cfg.snapshot.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
         let world = [world_x, world_y];
         if session.gesture.matches("idle") {
@@ -705,7 +705,7 @@ pub mod canvas_pointer_move {
         }
         let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / config.camera.zoom.max(1e-6);
         let emit = session.step_gesture(draw_gesture::Event::PointerMove { world, marquee_threshold_world }, document, &mut config);
-        Ok(finish_gesture_emit(emit, cfg.projection, &config))
+        Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
     }
 }
 //#endregion 🔖️CanvasPointerMove
@@ -727,13 +727,13 @@ pub mod canvas_pointer_up {
         pub meta: bool,
     }
 
-    pub fn handle(payload: &CanvasPointerUp, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        let document = doc.projection;
-        let mut config = cfg.projection.clone();
+    pub fn handle(payload: &CanvasPointerUp, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let mut config = cfg.snapshot.clone();
         let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
         let active_utility = config.active_utility_id.clone();
         let emit = session.step_gesture(draw_gesture::Event::PointerUp { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, &mut config);
-        Ok(finish_gesture_emit(emit, cfg.projection, &config))
+        Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
     }
 }
 //#endregion 🔖️CanvasPointerUp
@@ -747,11 +747,11 @@ pub mod canvas_double_click {
     #[dsl(keyword = "canvas-double-click")]
     pub struct CanvasDoubleClick {}
 
-    pub fn handle(_payload: &CanvasDoubleClick, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        let document = doc.projection;
-        let mut config = cfg.projection.clone();
+    pub fn handle(_payload: &CanvasDoubleClick, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let mut config = cfg.snapshot.clone();
         let emit = session.step_gesture(draw_gesture::Event::CommitDraft, document, &mut config);
-        Ok(finish_gesture_emit(emit, cfg.projection, &config))
+        Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
     }
 }
 //#endregion 🔖️CanvasDoubleClick
@@ -765,11 +765,11 @@ pub mod canvas_commit_draft {
     #[dsl(keyword = "canvas-commit-draft")]
     pub struct CanvasCommitDraft {}
 
-    pub fn handle(_payload: &CanvasCommitDraft, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        let document = doc.projection;
-        let mut config = cfg.projection.clone();
+    pub fn handle(_payload: &CanvasCommitDraft, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let mut config = cfg.snapshot.clone();
         let emit = session.step_gesture(draw_gesture::Event::CommitDraft, document, &mut config);
-        Ok(finish_gesture_emit(emit, cfg.projection, &config))
+        Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
     }
 }
 //#endregion 🔖️CanvasCommitDraft
@@ -783,11 +783,11 @@ pub mod canvas_escape {
     #[dsl(keyword = "canvas-escape")]
     pub struct CanvasEscape {}
 
-    pub fn handle(_payload: &CanvasEscape, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
-        let document = doc.projection;
-        let mut config = cfg.projection.clone();
+    pub fn handle(_payload: &CanvasEscape, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+        let document = doc.snapshot;
+        let mut config = cfg.snapshot.clone();
         let emit = session.step_gesture(draw_gesture::Event::Escape, document, &mut config);
-        Ok(finish_gesture_emit(emit, cfg.projection, &config))
+        Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
     }
 }
 //#endregion 🔖️CanvasEscape

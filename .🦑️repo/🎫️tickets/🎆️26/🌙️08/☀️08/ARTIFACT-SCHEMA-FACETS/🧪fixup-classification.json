@@ -1,0 +1,1452 @@
+{
+  "renamed_line_count": 222,
+  "kept_line_count": 66,
+  "world_projection_region": [
+    7768,
+    8084
+  ],
+  "kept": [
+    {
+      "line": 299,
+      "text": "    /// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7768,
+      "text": "    //#region \ud83d\udcd0\ufe0f WorldProjection",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7769,
+      "text": "    /** \ud83d\udcd0\ufe0f Plugin-owned projection state for a `world-3d` scene camera \u2014 the full classical taxonomy",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7772,
+      "text": "     * https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7775,
+      "text": "    pub struct WorldProjectionConfig {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7793,
+      "text": "    impl Default for WorldProjectionConfig {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7815,
+      "text": "    /** \ud83d\udcd0\ufe0f Serializes mode \u2297 orientation \u2014 the `WorldProjectionSpec` shape the JS world layer parses. */",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7816,
+      "text": "    pub fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7851,
+      "text": "    /** \ud83d\udcd0\ufe0f `camera_json` with `position`/`target`/`up`/`zoom` plus the active-kind `projection` spec object \u2014 replaces the plain `world3d_camera_json` for worlds that carry the full taxonomy. */",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7852,
+      "text": "    pub fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: Option<[f64; 3]>, zoom: f64, p: &WorldProjectionConfig) -> String {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7857,
+      "text": "            \"projection\": world3d_projection_spec_json(p),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7867,
+      "text": "    /** \ud83d\udcd0\ufe0f Canonical camera pose (`position`, `up`) for a projection config, orbiting `target` at `distance` \u2014 mirrors",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7868,
+      "text": "     * `computeWorldProjectionPose` in `infinite/world/r3f/index.tsx`; used to snap the viewport on kind/view changes. */",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7869,
+      "text": "    pub fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7881,
+      "text": "                let spec = world3d_projection_spec_json(p);",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7916,
+      "text": "    /** \ud83d\udcd0\ufe0f Shared \"Projection\" window-measures tree: Parallel > Orthographic/Axonometric/Oblique, Perspective > 1/2/3-Point/Curvilinear \u2014",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7918,
+      "text": "    pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7924,
+      "text": "            on_change: action(\"setProjection\", Some(json!({ \"field\": field }))),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7938,
+      "text": "            on_change: action(\"setProjectionParam\", Some(json!({ \"param\": param }))),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7943,
+      "text": "            format!(\"{id_prefix}-projection-orthographic\"),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7947,
+      "text": "                format!(\"{id_prefix}-projection-orthographic-view\"),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7956,
+      "text": "                format!(\"{id_prefix}-projection-axonometric-variant\"),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7961,
+      "text": "            select(format!(\"{id_prefix}-projection-axonometric-quadrant\"), if p.kind == \"axonometric\" { p.axonometric_quadrant.clone() } else { String::new() }, vec![(\"ne\", \"NE\"), (\"nw\", \"NW\"), (\"se\", \"SE\"), (\"sw\", \"SW\")], \"axonometricQuadrant\"),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7964,
+      "text": "            axo_children.push(slider(format!(\"{id_prefix}-projection-axonometric-angle-a\"), \"Angle\", p.axonometric_angle_a, 5.0, if p.axonometric_variant == \"dimetric\" { 60.0 } else { 75.0 }, 0.5, \"axonometricAngleA\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7967,
+      "text": "            axo_children.push(slider(format!(\"{id_prefix}-projection-axonometric-angle-b\"), \"Angle B\", p.axonometric_angle_b, 5.0, 75.0, 0.5, \"axonometricAngleB\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7969,
+      "text": "        let axonometric = measure_group_with_open(format!(\"{id_prefix}-projection-axonometric\"), \"Axonometric\", Some(false), axo_children);",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7972,
+      "text": "            format!(\"{id_prefix}-projection-oblique-variant\"),",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7978,
+      "text": "            oblique_children.push(slider(format!(\"{id_prefix}-projection-oblique-angle\"), \"Angle\", p.oblique_angle, 5.0, 90.0, 1.0, \"obliqueAngle\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7980,
+      "text": "                oblique_children.push(slider(format!(\"{id_prefix}-projection-oblique-depth\"), \"Depth Scale\", p.oblique_depth, 0.05, 1.0, 0.05, \"obliqueDepth\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7983,
+      "text": "        let oblique = measure_group_with_open(format!(\"{id_prefix}-projection-oblique\"), \"Oblique\", Some(false), oblique_children);",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7985,
+      "text": "        let parallel = measure_group_with_open(format!(\"{id_prefix}-projection-parallel\"), \"Parallel\", Some(true), vec![orthographic, axonometric, oblique]);",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7995,
+      "text": "            vec![select(format!(\"{id_prefix}-projection-perspective-kind\"), perspective_kind_value.into(), vec![(\"onePoint\", \"1-Point\"), (\"twoPoint\", \"2-Point\"), (\"threePoint\", \"3-Point\"), (\"curvilinear\", \"Curvilinear\")], \"perspectiveKind\")];",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7998,
+      "text": "                perspective_children.push(select(format!(\"{id_prefix}-projection-one-point-axis\"), p.one_point_axis.clone(), vec![(\"y\", \"Front (Y)\"), (\"x\", \"Side (X)\"), (\"z\", \"Down (Z)\")], \"onePointAxis\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 7999,
+      "text": "                perspective_children.push(slider(format!(\"{id_prefix}-projection-fov\"), \"Field of View\", p.fov, 15.0, 120.0, 1.0, \"fov\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8002,
+      "text": "                perspective_children.push(slider(format!(\"{id_prefix}-projection-fov\"), \"Field of View\", p.fov, 15.0, 120.0, 1.0, \"fov\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8003,
+      "text": "                perspective_children.push(slider(format!(\"{id_prefix}-projection-two-point-shift\"), \"Vertical Shift\", p.two_point_shift, -1.0, 1.0, 0.01, \"twoPointShift\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8006,
+      "text": "                perspective_children.push(slider(format!(\"{id_prefix}-projection-fov\"), \"Field of View\", p.fov, 15.0, 120.0, 1.0, \"fov\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8009,
+      "text": "                perspective_children.push(slider(format!(\"{id_prefix}-projection-curvilinear-fov\"), \"Field of View\", p.curvilinear_fov, 60.0, 160.0, 1.0, \"curvilinearFov\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8010,
+      "text": "                perspective_children.push(slider(format!(\"{id_prefix}-projection-curvilinear-strength\"), \"Strength\", p.curvilinear_strength, 0.0, 1.0, 0.01, \"curvilinearStrength\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8011,
+      "text": "                perspective_children.push(select(format!(\"{id_prefix}-projection-curvilinear-mapping\"), p.curvilinear_mapping.clone(), vec![(\"fisheye\", \"Fisheye\"), (\"panini\", \"Panini\")], \"curvilinearMapping\"));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8015,
+      "text": "        let perspective = measure_group_with_open(format!(\"{id_prefix}-projection-perspective\"), \"Perspective\", Some(true), perspective_children);",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8017,
+      "text": "        measure_group_with_open(format!(\"{id_prefix}-projection\"), \"Projection\", Some(false), vec![parallel, perspective])",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8020,
+      "text": "    /** \ud83d\udcd0\ufe0f Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8021,
+      "text": "    pub fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8027,
+      "text": "            \"setProjection\" => {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8058,
+      "text": "            \"setProjectionParam\" => {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8077,
+      "text": "    /** \ud83d\udcd0\ufe0f Whether a `setProjection`/`setProjectionParam` action requires a pose recompute (kind/view/variant changes) vs. a pure in-place parameter tweak that keeps the current pose (oblique shear / two-point shift / fov / curvilinear re-shade live). */",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8078,
+      "text": "    pub fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8079,
+      "text": "        if action_id != \"setProjection\" {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8084,
+      "text": "    //#endregion \ud83d\udcd0\ufe0f WorldProjection",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8387,
+      "text": "            let mut p = WorldProjectionConfig { kind: \"axonometric\".into(), axonometric_variant: \"isometric\".into(), ..WorldProjectionConfig::default() };",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8389,
+      "text": "            let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0);",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8397,
+      "text": "        fn projection_spec_json_projects_only_active_kind_fields() {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8398,
+      "text": "            let p = WorldProjectionConfig { kind: \"oblique\".into(), oblique_variant: \"cabinet\".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8399,
+      "text": "            let spec = world3d_projection_spec_json(&p);",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8408,
+      "text": "            let mut p = WorldProjectionConfig::default();",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8410,
+      "text": "            assert!(apply_world3d_projection_action(&mut p, \"setProjection\", Some(&json!({ \"field\": \"obliqueVariant\", \"value\": \"military\" }))));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8414,
+      "text": "            assert!(apply_world3d_projection_action(&mut p, \"setProjectionParam\", Some(&json!({ \"param\": \"obliqueAngle\", \"value\": 30.0 }))));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8416,
+      "text": "            assert!(!world3d_projection_action_moves_pose(\"setProjectionParam\", Some(&json!({ \"param\": \"obliqueAngle\" }))));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8417,
+      "text": "            assert!(world3d_projection_action_moves_pose(\"setProjection\", Some(&json!({ \"field\": \"obliqueVariant\" }))));",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8421,
+      "text": "        fn projection_measures_tree_matches_the_requested_taxonomy() {",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8422,
+      "text": "            let p = WorldProjectionConfig::default();",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8423,
+      "text": "            let tree = world3d_projection_measures(\"t\", &p, |action, args| ActionDescriptor { controller_id: \"t\".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8615,
+      "text": "    apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera,",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8616,
+      "text": "    world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures,",
+      "reason": "camera/world3d or protected media phrase"
+    },
+    {
+      "line": 8617,
+      "text": "    world3d_projection_pose, world3d_projection_spec_json, world3d_scene, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, SelectionSet, WorldProjectionConfig, WorldSunConfig,",
+      "reason": "camera/world3d or protected media phrase"
+    }
+  ],
+  "renamed": [
+    {
+      "line": 137,
+      "before": "        pub document_projection_schema: Option<String>,",
+      "after": "        pub document_snapshot_schema: Option<String>,"
+    },
+    {
+      "line": 211,
+      "before": "            document_projection_schema: def.document_projection_schema,",
+      "after": "            document_snapshot_schema: def.document_projection_schema,"
+    },
+    {
+      "line": 507,
+      "before": "                document_projection_schema: None,",
+      "after": "                document_snapshot_schema: None,"
+    },
+    {
+      "line": 527,
+      "before": "                document_projection_schema: None,",
+      "after": "                document_snapshot_schema: None,"
+    },
+    {
+      "line": 980,
+      "before": "                            document_projection_schema: window.document_projection_schema,",
+      "after": "                            document_projection_schema: window.document_snapshot_schema,"
+    },
+    {
+      "line": 1504,
+      "before": "        //! for the app-specific action names/projection shape, so only the control flow is shared). Not",
+      "after": "        //! for the app-specific action names/snapshot shape, so only the control flow is shared). Not"
+    },
+    {
+      "line": 1833,
+      "before": "            assert_eq!(probe(app), after, \"command did not produce the expected projection\");",
+      "after": "            assert_eq!(probe(app), after, \"command did not produce the expected snapshot\");"
+    },
+    {
+      "line": 1835,
+      "before": "            assert_eq!(probe(app), before, \"undo did not revert to the expected projection\");",
+      "after": "            assert_eq!(probe(app), before, \"undo did not revert to the expected snapshot\");"
+    },
+    {
+      "line": 1837,
+      "before": "            assert_eq!(probe(app), after, \"redo did not reapply the expected projection\");",
+      "after": "            assert_eq!(probe(app), after, \"redo did not reapply the expected snapshot\");"
+    },
+    {
+      "line": 1890,
+      "before": "            assert_eq!(probe(&instance_a), probe(&instance_b), \"both instances must converge on the same projection\");",
+      "after": "            assert_eq!(probe(&instance_a), probe(&instance_b), \"both instances must converge on the same snapshot\");"
+    },
+    {
+      "line": 1896,
+      "before": "        /// sides' post-reconcile `probe` results (`(projection, conflicts)`) must agree, `has_dangling_ref`",
+      "after": "        /// sides' post-reconcile `probe` results (`(snapshot, conflicts)`) must agree, `has_dangling_ref`"
+    },
+    {
+      "line": 1897,
+      "before": "        /// must be false for the converged projection, and at least one `SpaceConflict` must have been",
+      "after": "        /// must be false for the converged snapshot, and at least one `SpaceConflict` must have been"
+    },
+    {
+      "line": 1909,
+      "before": "            let (projection_a, conflicts_a) = probe(&instance_a);",
+      "after": "            let (snapshot_a, conflicts_a) = probe(&instance_a);"
+    },
+    {
+      "line": 1910,
+      "before": "            let (projection_b, conflicts_b) = probe(&instance_b);",
+      "after": "            let (snapshot_b, conflicts_b) = probe(&instance_b);"
+    },
+    {
+      "line": 1911,
+      "before": "            assert_eq!(projection_a, projection_b, \"both instances must converge on the same reconciled projection\");",
+      "after": "            assert_eq!(snapshot_a, snapshot_b, \"both instances must converge on the same reconciled snapshot\");"
+    },
+    {
+      "line": 1912,
+      "before": "            assert!(!has_dangling_ref(&projection_a), \"converged projection must not retain a dangling reference\");",
+      "after": "            assert!(!has_dangling_ref(&snapshot_a), \"converged snapshot must not retain a dangling reference\");"
+    },
+    {
+      "line": 1959,
+      "before": "            struct DummyProjection {",
+      "after": "            struct DummySnapshot {"
+    },
+    {
+      "line": 1968,
+      "before": "            impl MutationDiff<DummyProjection> for DummyDiff {",
+      "after": "            impl MutationDiff<DummySnapshot> for DummyDiff {"
+    },
+    {
+      "line": 1969,
+      "before": "                fn apply(&self, projection: &DummyProjection) -> DummyProjection {",
+      "after": "                fn apply(&self, snapshot: &DummySnapshot) -> DummySnapshot {"
+    },
+    {
+      "line": 1970,
+      "before": "                    DummyProjection { count: self.count.unwrap_or(projection.count) }",
+      "after": "                    DummySnapshot { count: self.count.unwrap_or(snapshot.count) }"
+    },
+    {
+      "line": 1987,
+      "before": "            impl Mutation<DummyProjection> for DummyMutation {",
+      "after": "            impl Mutation<DummySnapshot> for DummyMutation {"
+    },
+    {
+      "line": 1990,
+      "before": "                fn diff(&self, _projection: &DummyProjection) -> DummyDiff {",
+      "after": "                fn diff(&self, _snapshot: &DummySnapshot) -> DummyDiff {"
+    },
+    {
+      "line": 1996,
+      "before": "                fn inverse(&self, projection: &DummyProjection) -> Vec<Self> {",
+      "after": "                fn inverse(&self, snapshot: &DummySnapshot) -> Vec<Self> {"
+    },
+    {
+      "line": 1997,
+      "before": "                    vec![DummyMutation::SetCount { value: projection.count }]",
+      "after": "                    vec![DummyMutation::SetCount { value: snapshot.count }]"
+    },
+    {
+      "line": 2013,
+      "before": "                type Projection = DummyProjection;",
+      "after": "                type Snapshot = DummySnapshot;"
+    },
+    {
+      "line": 2021,
+      "before": "                fn initial_projection() -> DummyProjection {",
+      "after": "                fn initial_snapshot() -> DummySnapshot {"
+    },
+    {
+      "line": 2022,
+      "before": "                    DummyProjection::default()",
+      "after": "                    DummySnapshot::default()"
+    },
+    {
+      "line": 2025,
+      "before": "                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {",
+      "after": "                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {"
+    },
+    {
+      "line": 2027,
+      "before": "                        DummyCommand::Increment => Ok(Emit { document_mutations: vec![DummyMutation::SetCount { value: doc.projection.count + 1 }], description: Some(\"increment\".into()), ..Default::default() }),",
+      "after": "                        DummyCommand::Increment => Ok(Emit { document_mutations: vec![DummyMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some(\"increment\".into()), ..Default::default() }),"
+    },
+    {
+      "line": 2031,
+      "before": "                fn render(_body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {",
+      "after": "                fn render(_body_key: &str, doc: &DocumentView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {"
+    },
+    {
+      "line": 2032,
+      "before": "                    ui_text(format!(\"count={}\", doc.projection.count))",
+      "after": "                    ui_text(format!(\"count={}\", doc.snapshot.count))"
+    },
+    {
+      "line": 2047,
+      "before": "                assert_eq!(app.projection().unwrap().count, 1);",
+      "after": "                assert_eq!(app.snapshot().unwrap().count, 1);"
+    },
+    {
+      "line": 2053,
+      "before": "                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.projection().unwrap().count, 0, 1);",
+      "after": "                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1);"
+    },
+    {
+      "line": 2058,
+      "before": "                assert_two_instances_converge::<DummyApp, i32>(\"mem://testkit-converge\", DummyCommand::Increment, DummyCommand::Increment, |app| app.projection().unwrap().count);",
+      "after": "                assert_two_instances_converge::<DummyApp, i32>(\"mem://testkit-converge\", DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count);"
+    },
+    {
+      "line": 2063,
+      "before": "                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.projection().unwrap().count);",
+      "after": "                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.snapshot().unwrap().count);"
+    },
+    {
+      "line": 2813,
+      "before": "    /// the materialized projection plus the history metadata (checkpoints/alternatives/undo state)",
+      "after": "    /// the materialized snapshot plus the history metadata (checkpoints/alternatives/undo state)"
+    },
+    {
+      "line": 2816,
+      "before": "        pub projection: &'a P,",
+      "after": "        pub snapshot: &'a P,"
+    },
+    {
+      "line": 2820,
+      "before": "    /// @emoji \ud83e\uddee\ufe0f Read-only view of an app's config projection \u2014 same role as {@link DocumentView} for the",
+      "after": "    /// @emoji \ud83e\uddee\ufe0f Read-only view of an app's config snapshot \u2014 same role as {@link DocumentView} for the"
+    },
+    {
+      "line": 2823,
+      "before": "        pub projection: &'a C,",
+      "after": "        pub snapshot: &'a C,"
+    },
+    {
+      "line": 2826,
+      "before": "    /// @emoji \ud83d\udcdd\ufe0f Read-only view of an app's volatile draft projection \u2014 same role as {@link ConfigView}",
+      "after": "    /// @emoji \ud83d\udcdd\ufe0f Read-only view of an app's volatile draft snapshot \u2014 same role as {@link ConfigView}"
+    },
+    {
+      "line": 2829,
+      "before": "        pub projection: &'a D,",
+      "after": "        pub snapshot: &'a D,"
+    },
+    {
+      "line": 3306,
+      "before": "    /// - `dispatch(&self, doc: &DocumentView<'_, $Projection>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Mutation, $ConfigMutation>, Fault>`,",
+      "after": "    /// - `dispatch(&self, doc: &DocumentView<'_, $Snapshot>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Mutation, $ConfigMutation>, Fault>`,"
+    },
+    {
+      "line": 3307,
+      "before": "    ///   matching each variant to `$module::handle(payload, doc, cfg)` \u2014 `$Projection`/`$Mutation`/`$Config`/",
+      "after": "    ///   matching each variant to `$module::handle(payload, doc, cfg)` \u2014 `$Snapshot`/`$Mutation`/`$Config`/"
+    },
+    {
+      "line": 3312,
+      "before": "    /// `enum $Name for $Projection, $Mutation, $Config, $ConfigMutation { .. }` \u2014 so `dispatch` can be a",
+      "after": "    /// `enum $Name for $Snapshot, $Mutation, $Config, $ConfigMutation { .. }` \u2014 so `dispatch` can be a"
+    },
+    {
+      "line": 3317,
+      "before": "    /// app's concrete `Projection`/`Mutation`/`Config`/`ConfigMutation` (the same way",
+      "after": "    /// app's concrete `Snapshot`/`Mutation`/`Config`/`ConfigMutation` (the same way"
+    },
+    {
+      "line": 3346,
+      "before": "    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {",
+      "after": "    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {"
+    },
+    {
+      "line": 3366,
+      "before": "            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {",
+      "after": "            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {"
+    },
+    {
+      "line": 3407,
+      "before": "    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {",
+      "after": "    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {"
+    },
+    {
+      "line": 3426,
+      "before": "            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {",
+      "after": "            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {"
+    },
+    {
+      "line": 3467,
+      "before": "    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {",
+      "after": "    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {"
+    },
+    {
+      "line": 3487,
+      "before": "            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {",
+      "after": "            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {"
+    },
+    {
+      "line": 3579,
+      "before": "            let projection = 0u32;",
+      "after": "            let snapshot = 0u32;"
+    },
+    {
+      "line": 3581,
+      "before": "            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };",
+      "after": "            let doc = DocumentView { snapshot: &snapshot, history: &HistoryView::empty() };"
+    },
+    {
+      "line": 3582,
+      "before": "            let cfg = ConfigView { projection: &config };",
+      "after": "            let cfg = ConfigView { snapshot: &config };"
+    },
+    {
+      "line": 3647,
+      "before": "            let projection = 0u32;",
+      "after": "            let snapshot = 0u32;"
+    },
+    {
+      "line": 3649,
+      "before": "            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };",
+      "after": "            let doc = DocumentView { snapshot: &snapshot, history: &HistoryView::empty() };"
+    },
+    {
+      "line": 3650,
+      "before": "            let cfg = ConfigView { projection: &config };",
+      "after": "            let cfg = ConfigView { snapshot: &config };"
+    },
+    {
+      "line": 3659,
+      "before": "    /// @emoji \ud83e\udde9\ufe0f Typed, per-app author surface. An app declares its `Projection` and `Mutation` (a",
+      "after": "    /// @emoji \ud83e\udde9\ufe0f Typed, per-app author surface. An app declares its `Snapshot` and `Mutation` (a"
+    },
+    {
+      "line": 3660,
+      "before": "    /// `store::Mutation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose",
+      "after": "    /// `store::Mutation<Snapshot>`), mutates nothing directly, and returns an {@link ActionEmit} whose"
+    },
+    {
+      "line": 3687,
+      "before": "        type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;",
+      "after": "        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;"
+    },
+    {
+      "line": 3688,
+      "before": "        type Mutation: ::protocol::Mutation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;",
+      "after": "        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;"
+    },
+    {
+      "line": 3691,
+      "before": "        /// @emoji \ud83d\udcdd\ufe0f Volatile draft projection \u2014 use {@link NoDraft} when the app has no draft lane.",
+      "after": "        /// @emoji \ud83d\udcdd\ufe0f Volatile draft snapshot \u2014 use {@link NoDraft} when the app has no draft lane."
+    },
+    {
+      "line": 3708,
+      "before": "        fn initial_projection() -> Self::Projection;",
+      "after": "        fn initial_snapshot() -> Self::Snapshot;"
+    },
+    {
+      "line": 3721,
+      "before": "            doc: &DocumentView<'_, Self::Projection>,",
+      "after": "            doc: &DocumentView<'_, Self::Snapshot>,"
+    },
+    {
+      "line": 3769,
+      "before": "        fn copy_fragment( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {",
+      "after": "        fn copy_fragment( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {"
+    },
+    {
+      "line": 3772,
+      "before": "        fn cut_operations( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Mutation> {",
+      "after": "        fn cut_operations( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Mutation> {"
+    },
+    {
+      "line": 3775,
+      "before": "        fn paste_operations( _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {",
+      "after": "        fn paste_operations( _doc: &DocumentView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {"
+    },
+    {
+      "line": 3778,
+      "before": "        fn pending_effects( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {",
+      "after": "        fn pending_effects( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {"
+    },
+    {
+      "line": 3781,
+      "before": "        fn render(body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;",
+      "after": "        fn render(body_key: &str, doc: &DocumentView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;"
+    },
+    {
+      "line": 3785,
+      "before": "        fn window_engagements( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {",
+      "after": "        fn window_engagements( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {"
+    },
+    {
+      "line": 3789,
+      "before": "        fn window_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {",
+      "after": "        fn window_measures( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {"
+    },
+    {
+      "line": 3796,
+      "before": "        fn tool_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {",
+      "after": "        fn tool_measures( _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {"
+    },
+    {
+      "line": 3808,
+      "before": "        fn context_menu( _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {",
+      "after": "        fn context_menu( _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {"
+    },
+    {
+      "line": 3812,
+      "before": "        /// `initial_projection` \u2014 called once from `VcsDocumentApp::new`, right after the store is",
+      "after": "        /// `initial_snapshot` \u2014 called once from `VcsDocumentApp::new`, right after the store is"
+    },
+    {
+      "line": 3816,
+      "before": "        fn seed( _store: &mut DocumentStore<Self::Projection, Self::Mutation>) {}",
+      "after": "        fn seed( _store: &mut DocumentStore<Self::Snapshot, Self::Mutation>) {}"
+    },
+    {
+      "line": 3831,
+      "before": "        /// \ud83c\udf9e\ufe0f Pure projection of the current document onto one declared output port \u2014 must not mutate",
+      "after": "        /// \ud83c\udf9e\ufe0f Pure snapshot of the current document onto one declared output port \u2014 must not mutate"
+    },
+    {
+      "line": 3837,
+      "before": "        fn export_media(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<Media, MediaError> {",
+      "after": "        fn export_media(port: &str, doc: &DocumentView<'_, Self::Snapshot>) -> Result<Media, MediaError> {"
+    },
+    {
+      "line": 3842,
+      "before": "            let bytes = doc.projection.encode_pack();",
+      "after": "            let bytes = doc.snapshot.encode_pack();"
+    },
+    {
+      "line": 3845,
+      "before": "        /// \ud83c\udf9e\ufe0f Builds the operation that replaces the whole document with `projection` \u2014 the seam the",
+      "after": "        /// \ud83c\udf9e\ufe0f Builds the operation that replaces the whole document with `snapshot` \u2014 the seam the"
+    },
+    {
+      "line": 3848,
+      "before": "        /// whole projection\" operation); an app whose `Mutation` enum has such a variant (e.g.",
+      "after": "        /// whole snapshot\" operation); an app whose `Mutation` enum has such a variant (e.g."
+    },
+    {
+      "line": 3850,
+      "before": "        fn whole_document_operation( _projection: Self::Projection) -> Option<Self::Mutation> {",
+      "after": "        fn whole_document_operation( _snapshot: Self::Snapshot) -> Option<Self::Mutation> {"
+    },
+    {
+      "line": 3857,
+      "before": "        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {",
+      "after": "        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {"
+    },
+    {
+      "line": 3865,
+      "before": "            let projection = <Self::Projection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;",
+      "after": "            let snapshot = <Self::Snapshot as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;"
+    },
+    {
+      "line": 3866,
+      "before": "            match Self::whole_document_operation(projection) {",
+      "after": "            match Self::whole_document_operation(snapshot) {"
+    },
+    {
+      "line": 3874,
+      "before": "        fn media_fingerprint(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<MediaFingerprint, MediaError> {",
+      "after": "        fn media_fingerprint(port: &str, doc: &DocumentView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {"
+    },
+    {
+      "line": 3974,
+      "before": "        /// {@link store::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log",
+      "after": "        /// {@link store::DocumentTextFiles} (the `dsl` initial-snapshot text plus the full `ops` op-log"
+    },
+    {
+      "line": 3983,
+      "before": "        /// {@link store::DocumentPackFiles} (pack-encoded initial projection plus the same `ops` op-log",
+      "after": "        /// {@link store::DocumentPackFiles} (pack-encoded initial snapshot plus the same `ops` op-log"
+    },
+    {
+      "line": 3993,
+      "before": "        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;",
+      "after": "        fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;"
+    },
+    {
+      "line": 4014,
+      "before": "        /// runner calls without knowing the app's concrete `Projection`/`Mutation` types.",
+      "after": "        /// runner calls without knowing the app's concrete `Snapshot`/`Mutation` types."
+    },
+    {
+      "line": 4321,
+      "before": "    /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Mutation>` \u2014 the single source of",
+      "after": "    /// {@link PluginApp}. Owns a persistent `DocumentStore<Snapshot, Mutation>` \u2014 the single source of"
+    },
+    {
+      "line": 4324,
+      "before": "    /// `InvocationResult` whose inverses come from the just-recorded `Edit.inverse`. A projection+history",
+      "after": "    /// `InvocationResult` whose inverses come from the just-recorded `Edit.inverse`. A snapshot+history"
+    },
+    {
+      "line": 4331,
+      "before": "        store: DocumentStore<A::Projection, A::Mutation>,",
+      "after": "        store: DocumentStore<A::Snapshot, A::Mutation>,"
+    },
+    {
+      "line": 4339,
+      "before": "        /// changing invalidates the cached projection/`HistoryView` pair.",
+      "after": "        /// changing invalidates the cached snapshot/`HistoryView` pair."
+    },
+    {
+      "line": 4340,
+      "before": "        cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Projection, A::Config, HistoryView)>,",
+      "after": "        cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Snapshot, A::Config, HistoryView)>,"
+    },
+    {
+      "line": 4367,
+      "before": "            let envelope = create_document_envelope::<A::Projection, A::Mutation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_projection(), None);",
+      "after": "            let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_snapshot(), None);"
+    },
+    {
+      "line": 4380,
+      "before": "        pub(crate) fn test_projection(&self) -> A::Projection {",
+      "after": "        pub(crate) fn test_snapshot(&self) -> A::Snapshot {"
+    },
+    {
+      "line": 4381,
+      "before": "            self.store.projection().expect(\"materialize projection\")",
+      "after": "            self.store.snapshot().expect(\"materialize snapshot\")"
+    },
+    {
+      "line": 4384,
+      "before": "        /// @emoji \ud83e\uddea\ufe0f The config-store twin of `test_projection`.",
+      "after": "        /// @emoji \ud83e\uddea\ufe0f The config-store twin of `test_snapshot`."
+    },
+    {
+      "line": 4387,
+      "before": "            self.config_store.projection().expect(\"materialize config projection\")",
+      "after": "            self.config_store.snapshot().expect(\"materialize config snapshot\")"
+    },
+    {
+      "line": 4405,
+      "before": "        /// @emoji \ud83d\udcf8\ufe0f Materializes and returns the current projection \u2014 the typed counterpart to",
+      "after": "        /// @emoji \ud83d\udcf8\ufe0f Materializes and returns the current snapshot \u2014 the typed counterpart to"
+    },
+    {
+      "line": 4408,
+      "before": "        pub fn projection(&self) -> Result<A::Projection, Fault> {",
+      "after": "        pub fn snapshot(&self) -> Result<A::Snapshot, Fault> {"
+    },
+    {
+      "line": 4409,
+      "before": "            self.store.projection().map_err(|error| error.into_fault())",
+      "after": "            self.store.snapshot().map_err(|error| error.into_fault())"
+    },
+    {
+      "line": 4413,
+      "before": "        /// counterpart to `store::DocumentStore::projection_with_conflicts`.",
+      "after": "        /// counterpart to `store::DocumentStore::snapshot_with_conflicts`."
+    },
+    {
+      "line": 4414,
+      "before": "        pub fn projection_with_conflicts(&self) -> Result<(A::Projection, Vec<SpaceConflict>), Fault> {",
+      "after": "        pub fn snapshot_with_conflicts(&self) -> Result<(A::Snapshot, Vec<SpaceConflict>), Fault> {"
+    },
+    {
+      "line": 4415,
+      "before": "            self.store.projection_with_conflicts().map_err(|error| error.into_fault())",
+      "after": "            self.store.snapshot_with_conflicts().map_err(|error| error.into_fault())"
+    },
+    {
+      "line": 4571,
+      "before": "        /// @emoji \ud83d\uddc2\ufe0f Refreshes the projection cache if the store advanced, the command log grew/folded, or",
+      "after": "        /// @emoji \ud83d\uddc2\ufe0f Refreshes the snapshot cache if the store advanced, the command log grew/folded, or"
+    },
+    {
+      "line": 4582,
+      "before": "            let (projection, config) = match self.cache.take() {",
+      "after": "            let (snapshot, config) = match self.cache.take() {"
+    },
+    {
+      "line": 4583,
+      "before": "                Some((cached_key, projection, config, _)) if cached_key.0 == key.0 && cached_key.1 == key.1 => (projection, config),",
+      "after": "                Some((cached_key, snapshot, config, _)) if cached_key.0 == key.0 && cached_key.1 == key.1 => (snapshot, config),"
+    },
+    {
+      "line": 4584,
+      "before": "                Some((cached_key, projection, _, _)) if cached_key.0 == key.0 => {",
+      "after": "                Some((cached_key, snapshot, _, _)) if cached_key.0 == key.0 => {"
+    },
+    {
+      "line": 4585,
+      "before": "                    let config = self.config_store.projection().map_err(|error| error.into_fault())?;",
+      "after": "                    let config = self.config_store.snapshot().map_err(|error| error.into_fault())?;"
+    },
+    {
+      "line": 4586,
+      "before": "                    (projection, config)",
+      "after": "                    (snapshot, config)"
+    },
+    {
+      "line": 4589,
+      "before": "                    let projection = self.store.projection().map_err(|error| error.into_fault())?;",
+      "after": "                    let snapshot = self.store.snapshot().map_err(|error| error.into_fault())?;"
+    },
+    {
+      "line": 4590,
+      "before": "                    let config = self.config_store.projection().map_err(|error| error.into_fault())?;",
+      "after": "                    let config = self.config_store.snapshot().map_err(|error| error.into_fault())?;"
+    },
+    {
+      "line": 4591,
+      "before": "                    (projection, config)",
+      "after": "                    (snapshot, config)"
+    },
+    {
+      "line": 4595,
+      "before": "            self.cache = Some((key, projection, config, history));",
+      "after": "            self.cache = Some((key, snapshot, config, history));"
+    },
+    {
+      "line": 4907,
+      "before": "                    let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "                    let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 4908,
+      "before": "                    let doc = DocumentView { projection, history };",
+      "after": "                    let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 4909,
+      "before": "                    let cfg = ConfigView { projection: config };",
+      "after": "                    let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 4988,
+      "before": "            let draft_projection = self.draft_store.projection().map_err(|error| error.into_fault())?;",
+      "after": "            let draft_snapshot = self.draft_store.snapshot().map_err(|error| error.into_fault())?;"
+    },
+    {
+      "line": 4991,
+      "before": "                let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "                let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 4992,
+      "before": "                let doc = DocumentView { projection, history };",
+      "after": "                let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 4993,
+      "before": "                let cfg = ConfigView { projection: config };",
+      "after": "                let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 4994,
+      "before": "                let draft = DraftView { projection: &draft_projection };",
+      "after": "                let draft = DraftView { snapshot: &draft_snapshot };"
+    },
+    {
+      "line": 5027,
+      "before": "                let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "                let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5028,
+      "before": "                let doc = DocumentView { projection, history };",
+      "after": "                let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5029,
+      "before": "                let _cfg = ConfigView { projection: config };",
+      "after": "                let _cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5188,
+      "before": "            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;",
+      "after": "            let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;"
+    },
+    {
+      "line": 5200,
+      "before": "            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;",
+      "after": "            let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;"
+    },
+    {
+      "line": 5224,
+      "before": "        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {",
+      "after": "        fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {"
+    },
+    {
+      "line": 5227,
+      "before": "                // \ud83d\udd70\ufe0f Framework-owned, projection-independent \u2014 served before any app body-key match.",
+      "after": "                // \ud83d\udd70\ufe0f Framework-owned, snapshot-independent \u2014 served before any app body-key match."
+    },
+    {
+      "line": 5240,
+      "before": "            if let Some(json) = projection_override_json {",
+      "after": "            if let Some(json) = snapshot_override_json {"
+    },
+    {
+      "line": 5241,
+      "before": "                let projection: A::Projection = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;",
+      "after": "                let snapshot: A::Snapshot = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;"
+    },
+    {
+      "line": 5243,
+      "before": "                let doc = DocumentView { projection: &projection, history: &history };",
+      "after": "                let doc = DocumentView { snapshot: &snapshot, history: &history };"
+    },
+    {
+      "line": 5244,
+      "before": "                let config = self.config_store.projection().unwrap_or_else(|_| A::Config::default());",
+      "after": "                let config = self.config_store.snapshot().unwrap_or_else(|_| A::Config::default());"
+    },
+    {
+      "line": 5245,
+      "before": "                let cfg = ConfigView { projection: &config };",
+      "after": "                let cfg = ConfigView { snapshot: &config };"
+    },
+    {
+      "line": 5249,
+      "before": "            let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5250,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5251,
+      "before": "            let cfg = ConfigView { projection: config };",
+      "after": "            let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5259,
+      "before": "            let (_, projection, config, history) = self.cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = self.cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5260,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5261,
+      "before": "            let cfg = ConfigView { projection: config };",
+      "after": "            let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5269,
+      "before": "            let (_, projection, config, history) = self.cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = self.cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5270,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5271,
+      "before": "            let cfg = ConfigView { projection: config };",
+      "after": "            let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5280,
+      "before": "            let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5281,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5282,
+      "before": "            let cfg = ConfigView { projection: config };",
+      "after": "            let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5291,
+      "before": "            let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5292,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5293,
+      "before": "            let cfg = ConfigView { projection: config };",
+      "after": "            let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5305,
+      "before": "            let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5306,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5307,
+      "before": "            let cfg = ConfigView { projection: config };",
+      "after": "            let cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5315,
+      "before": "            let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5316,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5317,
+      "before": "            let _cfg = ConfigView { projection: config };",
+      "after": "            let _cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5330,
+      "before": "            let (_, projection, config, history) = cache.as_ref().expect(\"cache refreshed above\");",
+      "after": "            let (_, snapshot, config, history) = cache.as_ref().expect(\"cache refreshed above\");"
+    },
+    {
+      "line": 5331,
+      "before": "            let doc = DocumentView { projection, history };",
+      "after": "            let doc = DocumentView { snapshot, history };"
+    },
+    {
+      "line": 5332,
+      "before": "            let _cfg = ConfigView { projection: config };",
+      "after": "            let _cfg = ConfigView { snapshot: config };"
+    },
+    {
+      "line": 5706,
+      "before": "    /// @emoji \ud83d\uddc2\ufe0f Registers `A::Projection`'s pack\u2194dsl codec under `schema` in the process-wide",
+      "after": "    /// @emoji \ud83d\uddc2\ufe0f Registers `A::Snapshot`'s pack\u2194dsl codec under `schema` in the process-wide"
+    },
+    {
+      "line": 5710,
+      "before": "    /// depending on its concrete `Projection`/`Mutation` types.",
+      "after": "    /// depending on its concrete `Snapshot`/`Mutation` types."
+    },
+    {
+      "line": 5712,
+      "before": "        store::register_document_codec(store::DocumentCodec::of::<A::Projection, A::Mutation>(schema));",
+      "after": "        store::register_document_codec(store::DocumentCodec::of::<A::Snapshot, A::Mutation>(schema));"
+    },
+    {
+      "line": 5761,
+      "before": "    pub fn plugin_render_with_document(instance_id: u32, body_key: &str, projection_override_json: Option<&str>, view_state_json: &str) -> Result<UiNode, Fault> {",
+      "after": "    pub fn plugin_render_with_document(instance_id: u32, body_key: &str, snapshot_override_json: Option<&str>, view_state_json: &str) -> Result<UiNode, Fault> {"
+    },
+    {
+      "line": 5771,
+      "before": "        let (resolved_body_key, view_state, override_projection) = if body_key.is_empty() {",
+      "after": "        let (resolved_body_key, view_state, override_snapshot) = if body_key.is_empty() {"
+    },
+    {
+      "line": 5776,
+      "before": "            (key, input.view_state, input.document_json.or_else(|| projection_override_json.map(str::to_string)))",
+      "after": "            (key, input.view_state, input.document_json.or_else(|| snapshot_override_json.map(str::to_string)))"
+    },
+    {
+      "line": 5779,
+      "before": "            (body_key.to_string(), view_state, projection_override_json.map(str::to_string))",
+      "after": "            (body_key.to_string(), view_state, snapshot_override_json.map(str::to_string))"
+    },
+    {
+      "line": 5783,
+      "before": "            instance.app.render(&resolved_body_key, override_projection.as_deref(), &view_state)",
+      "after": "            instance.app.render(&resolved_body_key, override_snapshot.as_deref(), &view_state)"
+    },
+    {
+      "line": 6594,
+      "before": "        struct TestProjection {",
+      "after": "        struct TestSnapshot {"
+    },
+    {
+      "line": 6605,
+      "before": "        impl MutationDiff<TestProjection> for TestDiff {",
+      "after": "        impl MutationDiff<TestSnapshot> for TestDiff {"
+    },
+    {
+      "line": 6606,
+      "before": "            fn apply(&self, projection: &TestProjection) -> TestProjection {",
+      "after": "            fn apply(&self, snapshot: &TestSnapshot) -> TestSnapshot {"
+    },
+    {
+      "line": 6607,
+      "before": "                TestProjection { count: self.count.unwrap_or(projection.count), label: self.label.clone().unwrap_or_else(|| projection.label.clone()) }",
+      "after": "                TestSnapshot { count: self.count.unwrap_or(snapshot.count), label: self.label.clone().unwrap_or_else(|| snapshot.label.clone()) }"
+    },
+    {
+      "line": 6629,
+      "before": "        impl Mutation<TestProjection> for TestMutation {",
+      "after": "        impl Mutation<TestSnapshot> for TestMutation {"
+    },
+    {
+      "line": 6632,
+      "before": "            fn diff(&self, _projection: &TestProjection) -> TestDiff {",
+      "after": "            fn diff(&self, _snapshot: &TestSnapshot) -> TestDiff {"
+    },
+    {
+      "line": 6639,
+      "before": "            fn inverse(&self, projection: &TestProjection) -> Vec<Self> {",
+      "after": "            fn inverse(&self, snapshot: &TestSnapshot) -> Vec<Self> {"
+    },
+    {
+      "line": 6641,
+      "before": "                    TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: projection.count }],",
+      "after": "                    TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: snapshot.count }],"
+    },
+    {
+      "line": 6642,
+      "before": "                    TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: projection.label.clone() }],",
+      "after": "                    TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: snapshot.label.clone() }],"
+    },
+    {
+      "line": 6734,
+      "before": "            type Projection = TestProjection;",
+      "after": "            type Snapshot = TestSnapshot;"
+    },
+    {
+      "line": 6742,
+      "before": "            fn initial_projection() -> TestProjection {",
+      "after": "            fn initial_snapshot() -> TestSnapshot {"
+    },
+    {
+      "line": 6743,
+      "before": "                TestProjection::default()",
+      "after": "                TestSnapshot::default()"
+    },
+    {
+      "line": 6764,
+      "before": "            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {",
+      "after": "            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {"
+    },
+    {
+      "line": 6767,
+      "before": "                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_mutations: vec![TestMutation::SetCount { value: doc.projection.count + 1 }], description: Some(\"increment\".into()), ..Default::default() }),",
+      "after": "                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_mutations: vec![TestMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some(\"increment\".into()), ..Default::default() }),"
+    },
+    {
+      "line": 6785,
+      "before": "            fn render(_body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {",
+      "after": "            fn render(_body_key: &str, doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {"
+    },
+    {
+      "line": 6786,
+      "before": "                ui_text(format!(\"count={}\", doc.projection.count))",
+      "after": "                ui_text(format!(\"count={}\", doc.snapshot.count))"
+    },
+    {
+      "line": 6793,
+      "before": "            fn copy_fragment(doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {",
+      "after": "            fn copy_fragment(doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {"
+    },
+    {
+      "line": 6794,
+      "before": "                if doc.projection.label.is_empty() {",
+      "after": "                if doc.snapshot.label.is_empty() {"
+    },
+    {
+      "line": 6800,
+      "before": "                    dsl_text: doc.projection.label.clone(),",
+      "after": "                    dsl_text: doc.snapshot.label.clone(),"
+    },
+    {
+      "line": 6803,
+      "before": "                    label: doc.projection.label.clone(),",
+      "after": "                    label: doc.snapshot.label.clone(),"
+    },
+    {
+      "line": 6807,
+      "before": "            fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestMutation> {",
+      "after": "            fn cut_operations(&self, doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestMutation> {"
+    },
+    {
+      "line": 6808,
+      "before": "                if doc.projection.label.is_empty() {",
+      "after": "                if doc.snapshot.label.is_empty() {"
+    },
+    {
+      "line": 6815,
+      "before": "            fn paste_operations(&self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {",
+      "after": "            fn paste_operations(&self, _doc: &DocumentView<'_, TestSnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {"
+    },
+    {
+      "line": 6832,
+      "before": "            fn context_menu(_request: &ContextMenuRequest, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {",
+      "after": "            fn context_menu(_request: &ContextMenuRequest, doc: &DocumentView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {"
+    },
+    {
+      "line": 6835,
+      "before": "                    .when(!doc.projection.label.is_empty() && doc.projection.label != \"flat-menu-test\", |m| m.command(\"incrementViaCommand\"))",
+      "after": "                    .when(!doc.snapshot.label.is_empty() && doc.snapshot.label != \"flat-menu-test\", |m| m.command(\"incrementViaCommand\"))"
+    },
+    {
+      "line": 6836,
+      "before": "                    .when(doc.projection.label == \"flat-menu-test\", |m| (1..=10).fold(m, |m, index| m.action(format!(\"flatLeaf{index}\"))))",
+      "after": "                    .when(doc.snapshot.label == \"flat-menu-test\", |m| (1..=10).fold(m, |m, index| m.action(format!(\"flatLeaf{index}\"))))"
+    },
+    {
+      "line": 6922,
+      "before": "            assert_eq!(app.test_projection().count, 1);",
+      "after": "            assert_eq!(app.test_snapshot().count, 1);"
+    },
+    {
+      "line": 6932,
+      "before": "            assert_eq!(app.test_projection(), TestProjection::default());",
+      "after": "            assert_eq!(app.test_snapshot(), TestSnapshot::default());"
+    },
+    {
+      "line": 7017,
+      "before": "            assert_eq!(app.test_projection().label, \"\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"\");"
+    },
+    {
+      "line": 7022,
+      "before": "            assert_eq!(app.test_projection().label, \"hello\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"hello\");"
+    },
+    {
+      "line": 7032,
+      "before": "            assert_eq!(app.test_projection().label, \"pasted\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"pasted\");"
+    },
+    {
+      "line": 7042,
+      "before": "            assert_eq!(app.test_projection().label, format!(\"pasted-{:?}\", PasteAnchor::Centroid));",
+      "after": "            assert_eq!(app.test_snapshot().label, format!(\"pasted-{:?}\", PasteAnchor::Centroid));"
+    },
+    {
+      "line": 7050,
+      "before": "            assert_eq!(app.test_projection().label, \"\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"\");"
+    },
+    {
+      "line": 7068,
+      "before": "            assert_eq!(app.test_projection().label, \"abc\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"abc\");"
+    },
+    {
+      "line": 7071,
+      "before": "            assert_eq!(app.test_projection().label, \"\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"\");"
+    },
+    {
+      "line": 7079,
+      "before": "            assert_eq!(app.test_projection().count, 2);",
+      "after": "            assert_eq!(app.test_snapshot().count, 2);"
+    },
+    {
+      "line": 7084,
+      "before": "            assert_eq!(app.test_projection().count, 1);",
+      "after": "            assert_eq!(app.test_snapshot().count, 1);"
+    },
+    {
+      "line": 7087,
+      "before": "            assert_eq!(app.test_projection().count, 2);",
+      "after": "            assert_eq!(app.test_snapshot().count, 2);"
+    },
+    {
+      "line": 7137,
+      "before": "        fn revert_to_command_restores_the_projection_and_appends_one_entry() {",
+      "after": "        fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {"
+    },
+    {
+      "line": 7141,
+      "before": "            assert_eq!(app.test_projection().count, 2);",
+      "after": "            assert_eq!(app.test_snapshot().count, 2);"
+    },
+    {
+      "line": 7148,
+      "before": "            assert_eq!(app.test_projection().count, 1, \"revert leaves the target edit applied, undoing only what came after it\");",
+      "after": "            assert_eq!(app.test_snapshot().count, 1, \"revert leaves the target edit applied, undoing only what came after it\");"
+    },
+    {
+      "line": 7391,
+      "before": "            assert_eq!(restored.test_projection(), TestProjection { count: 1, label: \"hi\".into() });",
+      "after": "            assert_eq!(restored.test_snapshot(), TestSnapshot { count: 1, label: \"hi\".into() });"
+    },
+    {
+      "line": 7413,
+      "before": "            assert_eq!(receiver.test_projection().count, 1, \"feeding the same operation twice must not double-apply\");",
+      "after": "            assert_eq!(receiver.test_snapshot().count, 1, \"feeding the same operation twice must not double-apply\");"
+    },
+    {
+      "line": 7429,
+      "before": "            assert_eq!(app.test_projection().count, 2, \"detached edits still land on the in-memory graph\");",
+      "after": "            assert_eq!(app.test_snapshot().count, 2, \"detached edits still land on the in-memory graph\");"
+    },
+    {
+      "line": 7436,
+      "before": "            assert_eq!(app.test_projection().count, 3);",
+      "after": "            assert_eq!(app.test_snapshot().count, 3);"
+    },
+    {
+      "line": 7550,
+      "before": "            assert_eq!(app.test_projection(), TestProjection::default());",
+      "after": "            assert_eq!(app.test_snapshot(), TestSnapshot::default());"
+    },
+    {
+      "line": 7568,
+      "before": "            assert_eq!(app.test_projection().label, \"abc\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"abc\");"
+    },
+    {
+      "line": 7571,
+      "before": "            assert_eq!(app.test_projection().label, \"\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"\");"
+    },
+    {
+      "line": 7576,
+      "before": "            assert_eq!(app.test_projection().label, \"xy\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"xy\");"
+    },
+    {
+      "line": 7579,
+      "before": "            assert_eq!(app.test_projection().label, \"x\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"x\");"
+    },
+    {
+      "line": 7601,
+      "before": "            assert_eq!(app.test_projection().label, \"abc\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"abc\");"
+    },
+    {
+      "line": 7604,
+      "before": "            assert_eq!(app.test_projection().label, \"\");",
+      "after": "            assert_eq!(app.test_snapshot().label, \"\");"
+    },
+    {
+      "line": 7614,
+      "before": "            assert_eq!(app.test_projection().count, 1);",
+      "after": "            assert_eq!(app.test_snapshot().count, 1);"
+    },
+    {
+      "line": 7631,
+      "before": "            assert_eq!(app.test_projection().count, 2);",
+      "after": "            assert_eq!(app.test_snapshot().count, 2);"
+    },
+    {
+      "line": 7633,
+      "before": "            assert_eq!(app.test_projection().count, 1);",
+      "after": "            assert_eq!(app.test_snapshot().count, 1);"
+    }
+  ]
+}

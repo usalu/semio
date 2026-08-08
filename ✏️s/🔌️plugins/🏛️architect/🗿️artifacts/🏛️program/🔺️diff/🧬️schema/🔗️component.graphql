@@ -1,0 +1,879 @@
+# 🧬️ Program diff schema — sparse field delta.
+
+type ProgramDiff {
+  artifact: ProgramArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  meta: ProgramMeta @state(class: PERSISTENT)
+  project: ProjectDefinition @state(class: PERSISTENT)
+  stakeholders: ProgramStakeholdersDelta @state(class: PERSISTENT)
+  users: ProgramUsersDelta @state(class: PERSISTENT)
+  activities: ProgramActivitiesDelta @state(class: PERSISTENT)
+  functions: ProgramFunctionsDelta @state(class: PERSISTENT)
+  elements: ProgramElementsDelta @state(class: PERSISTENT)
+  quantities: ProgramQuantitiesDelta @state(class: PERSISTENT)
+  relationships: ProgramRelationshipsDelta @state(class: PERSISTENT)
+  adjacencies: ProgramAdjacenciesDelta @state(class: PERSISTENT)
+  processes: ProgramProcessesDelta @state(class: PERSISTENT)
+  flows: ProgramFlowsDelta @state(class: PERSISTENT)
+  accessRules: ProgramAccessRulesDelta @state(class: PERSISTENT)
+  operations: ProgramOperationsDelta @state(class: PERSISTENT)
+  equipment: ProgramEquipmentDelta @state(class: PERSISTENT)
+  resources: ProgramResourcesDelta @state(class: PERSISTENT)
+  storage: ProgramStorageDelta @state(class: PERSISTENT)
+  environmental: ProgramEnvironmentalDelta @state(class: PERSISTENT)
+  humanFactors: ProgramHumanFactorsDelta @state(class: PERSISTENT)
+  accessibility: ProgramAccessibilityDelta @state(class: PERSISTENT)
+  privacy: ProgramPrivacyDelta @state(class: PERSISTENT)
+  safety: ProgramSafetyDelta @state(class: PERSISTENT)
+  security: ProgramSecurityDelta @state(class: PERSISTENT)
+  regulatory: ProgramRegulatoryDelta @state(class: PERSISTENT)
+  siteContext: ProgramSiteContextDelta @state(class: PERSISTENT)
+  organizational: ProgramOrganizationalDelta @state(class: PERSISTENT)
+  services: ProgramServicesDelta @state(class: PERSISTENT)
+  infrastructure: ProgramInfrastructureDelta @state(class: PERSISTENT)
+  information: ProgramInformationDelta @state(class: PERSISTENT)
+  communication: ProgramCommunicationDelta @state(class: PERSISTENT)
+  wayfinding: ProgramWayfindingDelta @state(class: PERSISTENT)
+  schedules: ProgramSchedulesDelta @state(class: PERSISTENT)
+  flexibility: ProgramFlexibilityDelta @state(class: PERSISTENT)
+  growth: ProgramGrowthDelta @state(class: PERSISTENT)
+  sustainability: ProgramSustainabilityDelta @state(class: PERSISTENT)
+  resilience: ProgramResilienceDelta @state(class: PERSISTENT)
+  costs: ProgramCostsDelta @state(class: PERSISTENT)
+  delivery: ProgramDeliveryDelta @state(class: PERSISTENT)
+  risks: ProgramRisksDelta @state(class: PERSISTENT)
+  conflicts: ProgramConflictsDelta @state(class: PERSISTENT)
+  requirements: ProgramRequirementsDelta @state(class: PERSISTENT)
+  priorities: ProgramPrioritiesDelta @state(class: PERSISTENT)
+  scenarios: ProgramScenariosDelta @state(class: PERSISTENT)
+  options: ProgramOptionsDelta @state(class: PERSISTENT)
+  decisions: ProgramDecisionsDelta @state(class: PERSISTENT)
+  validations: ProgramValidationsDelta @state(class: PERSISTENT)
+  performance: ProgramPerformanceDelta @state(class: PERSISTENT)
+  quality: ProgramQualityDelta @state(class: PERSISTENT)
+  documents: ProgramDocumentsDelta @state(class: PERSISTENT)
+  assumptions: ProgramAssumptionsDelta @state(class: PERSISTENT)
+  constraints: ProgramConstraintsDelta @state(class: PERSISTENT)
+  complianceRecords: ProgramComplianceRecordsDelta @state(class: PERSISTENT)
+  approvals: ProgramApprovalsDelta @state(class: PERSISTENT)
+  meetings: ProgramMeetingsDelta @state(class: PERSISTENT)
+  changes: ProgramChangesDelta @state(class: PERSISTENT)
+  collaboration: ProgramCollaborationDelta @state(class: PERSISTENT)
+  analyses: ProgramAnalysesDelta @state(class: PERSISTENT)
+  reports: ProgramReportsDelta @state(class: PERSISTENT)
+  searchFilters: ProgramSearchFiltersDelta @state(class: PERSISTENT)
+  statusRecords: ProgramStatusRecordsDelta @state(class: PERSISTENT)
+  workshops: ProgramWorkshopsDelta @state(class: PERSISTENT)
+  surveys: ProgramSurveysDelta @state(class: PERSISTENT)
+  issues: ProgramIssuesDelta @state(class: PERSISTENT)
+  auditEvents: ProgramAuditEventsDelta @state(class: PERSISTENT)
+  templates: ProgramTemplatesDelta @state(class: PERSISTENT)
+  knowledge: ProgramKnowledgeDelta @state(class: PERSISTENT)
+  benchmarks: ProgramBenchmarksDelta @state(class: PERSISTENT)
+  traces: ProgramTracesDelta @state(class: PERSISTENT)
+  governance: Governance @state(class: PERSISTENT)
+  selectedIds: String @state(class: SHARED_UI)
+  activeRegister: String @state(class: SHARED_UI)
+  adjacencyKindFilter: AdjacencyKind @state(class: SHARED_UI)
+  activeReportJson: String @state(class: SHARED_UI)
+  searchQuery: String @state(class: LOCAL_UI)
+  searchHistoryJson: String @state(class: LOCAL_UI)
+  lastResultJson: String @state(class: LOCAL_UI)
+  lastAnalysisJson: String @state(class: LOCAL_UI)
+  graphCameraX: Float @state(class: LOCAL_UI)
+  graphCameraY: Float @state(class: LOCAL_UI)
+  graphCameraZoom: Float @state(class: LOCAL_UI)
+}
+
+type ProgramStakeholdersDelta {
+  added: [Stakeholder!]!
+  removed: [String!]!
+  patched: [ProgramStakeholdersPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramStakeholdersPatchEntry {
+  id: String!
+  item: Stakeholder!
+}
+
+type ProgramUsersDelta {
+  added: [UserProfile!]!
+  removed: [String!]!
+  patched: [ProgramUsersPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramUsersPatchEntry {
+  id: String!
+  item: UserProfile!
+}
+
+type ProgramActivitiesDelta {
+  added: [Activity!]!
+  removed: [String!]!
+  patched: [ProgramActivitiesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramActivitiesPatchEntry {
+  id: String!
+  item: Activity!
+}
+
+type ProgramFunctionsDelta {
+  added: [Function!]!
+  removed: [String!]!
+  patched: [ProgramFunctionsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramFunctionsPatchEntry {
+  id: String!
+  item: Function!
+}
+
+type ProgramElementsDelta {
+  added: [ProgramElement!]!
+  removed: [String!]!
+  patched: [ProgramElementsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramElementsPatchEntry {
+  id: String!
+  item: ProgramElement!
+}
+
+type ProgramQuantitiesDelta {
+  added: [QuantityRequirement!]!
+  removed: [String!]!
+  patched: [ProgramQuantitiesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramQuantitiesPatchEntry {
+  id: String!
+  item: QuantityRequirement!
+}
+
+type ProgramRelationshipsDelta {
+  added: [Relationship!]!
+  removed: [String!]!
+  patched: [ProgramRelationshipsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramRelationshipsPatchEntry {
+  id: String!
+  item: Relationship!
+}
+
+type ProgramAdjacenciesDelta {
+  added: [Adjacency!]!
+  removed: [String!]!
+  patched: [ProgramAdjacenciesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramAdjacenciesPatchEntry {
+  id: String!
+  item: Adjacency!
+}
+
+type ProgramProcessesDelta {
+  added: [Process!]!
+  removed: [String!]!
+  patched: [ProgramProcessesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramProcessesPatchEntry {
+  id: String!
+  item: Process!
+}
+
+type ProgramFlowsDelta {
+  added: [FlowRequirement!]!
+  removed: [String!]!
+  patched: [ProgramFlowsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramFlowsPatchEntry {
+  id: String!
+  item: FlowRequirement!
+}
+
+type ProgramAccessRulesDelta {
+  added: [AccessRule!]!
+  removed: [String!]!
+  patched: [ProgramAccessRulesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramAccessRulesPatchEntry {
+  id: String!
+  item: AccessRule!
+}
+
+type ProgramOperationsDelta {
+  added: [OperationalRequirement!]!
+  removed: [String!]!
+  patched: [ProgramOperationsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramOperationsPatchEntry {
+  id: String!
+  item: OperationalRequirement!
+}
+
+type ProgramEquipmentDelta {
+  added: [Equipment!]!
+  removed: [String!]!
+  patched: [ProgramEquipmentPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramEquipmentPatchEntry {
+  id: String!
+  item: Equipment!
+}
+
+type ProgramResourcesDelta {
+  added: [Resource!]!
+  removed: [String!]!
+  patched: [ProgramResourcesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramResourcesPatchEntry {
+  id: String!
+  item: Resource!
+}
+
+type ProgramStorageDelta {
+  added: [StorageRequirement!]!
+  removed: [String!]!
+  patched: [ProgramStoragePatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramStoragePatchEntry {
+  id: String!
+  item: StorageRequirement!
+}
+
+type ProgramEnvironmentalDelta {
+  added: [EnvironmentalRequirement!]!
+  removed: [String!]!
+  patched: [ProgramEnvironmentalPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramEnvironmentalPatchEntry {
+  id: String!
+  item: EnvironmentalRequirement!
+}
+
+type ProgramHumanFactorsDelta {
+  added: [HumanFactorRequirement!]!
+  removed: [String!]!
+  patched: [ProgramHumanFactorsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramHumanFactorsPatchEntry {
+  id: String!
+  item: HumanFactorRequirement!
+}
+
+type ProgramAccessibilityDelta {
+  added: [AccessibilityRequirement!]!
+  removed: [String!]!
+  patched: [ProgramAccessibilityPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramAccessibilityPatchEntry {
+  id: String!
+  item: AccessibilityRequirement!
+}
+
+type ProgramPrivacyDelta {
+  added: [PrivacyRequirement!]!
+  removed: [String!]!
+  patched: [ProgramPrivacyPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramPrivacyPatchEntry {
+  id: String!
+  item: PrivacyRequirement!
+}
+
+type ProgramSafetyDelta {
+  added: [SafetyRequirement!]!
+  removed: [String!]!
+  patched: [ProgramSafetyPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramSafetyPatchEntry {
+  id: String!
+  item: SafetyRequirement!
+}
+
+type ProgramSecurityDelta {
+  added: [SecurityRequirement!]!
+  removed: [String!]!
+  patched: [ProgramSecurityPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramSecurityPatchEntry {
+  id: String!
+  item: SecurityRequirement!
+}
+
+type ProgramRegulatoryDelta {
+  added: [RegulatoryRequirement!]!
+  removed: [String!]!
+  patched: [ProgramRegulatoryPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramRegulatoryPatchEntry {
+  id: String!
+  item: RegulatoryRequirement!
+}
+
+type ProgramSiteContextDelta {
+  added: [SiteContext!]!
+  removed: [String!]!
+  patched: [ProgramSiteContextPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramSiteContextPatchEntry {
+  id: String!
+  item: SiteContext!
+}
+
+type ProgramOrganizationalDelta {
+  added: [OrganizationalRequirement!]!
+  removed: [String!]!
+  patched: [ProgramOrganizationalPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramOrganizationalPatchEntry {
+  id: String!
+  item: OrganizationalRequirement!
+}
+
+type ProgramServicesDelta {
+  added: [ServiceRequirement!]!
+  removed: [String!]!
+  patched: [ProgramServicesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramServicesPatchEntry {
+  id: String!
+  item: ServiceRequirement!
+}
+
+type ProgramInfrastructureDelta {
+  added: [InfrastructureRequirement!]!
+  removed: [String!]!
+  patched: [ProgramInfrastructurePatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramInfrastructurePatchEntry {
+  id: String!
+  item: InfrastructureRequirement!
+}
+
+type ProgramInformationDelta {
+  added: [InformationRequirement!]!
+  removed: [String!]!
+  patched: [ProgramInformationPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramInformationPatchEntry {
+  id: String!
+  item: InformationRequirement!
+}
+
+type ProgramCommunicationDelta {
+  added: [CommunicationRequirement!]!
+  removed: [String!]!
+  patched: [ProgramCommunicationPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramCommunicationPatchEntry {
+  id: String!
+  item: CommunicationRequirement!
+}
+
+type ProgramWayfindingDelta {
+  added: [WayfindingRequirement!]!
+  removed: [String!]!
+  patched: [ProgramWayfindingPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramWayfindingPatchEntry {
+  id: String!
+  item: WayfindingRequirement!
+}
+
+type ProgramSchedulesDelta {
+  added: [ScheduleRequirement!]!
+  removed: [String!]!
+  patched: [ProgramSchedulesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramSchedulesPatchEntry {
+  id: String!
+  item: ScheduleRequirement!
+}
+
+type ProgramFlexibilityDelta {
+  added: [FlexibilityRequirement!]!
+  removed: [String!]!
+  patched: [ProgramFlexibilityPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramFlexibilityPatchEntry {
+  id: String!
+  item: FlexibilityRequirement!
+}
+
+type ProgramGrowthDelta {
+  added: [GrowthPlan!]!
+  removed: [String!]!
+  patched: [ProgramGrowthPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramGrowthPatchEntry {
+  id: String!
+  item: GrowthPlan!
+}
+
+type ProgramSustainabilityDelta {
+  added: [SustainabilityRequirement!]!
+  removed: [String!]!
+  patched: [ProgramSustainabilityPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramSustainabilityPatchEntry {
+  id: String!
+  item: SustainabilityRequirement!
+}
+
+type ProgramResilienceDelta {
+  added: [ResilienceRequirement!]!
+  removed: [String!]!
+  patched: [ProgramResiliencePatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramResiliencePatchEntry {
+  id: String!
+  item: ResilienceRequirement!
+}
+
+type ProgramCostsDelta {
+  added: [CostRequirement!]!
+  removed: [String!]!
+  patched: [ProgramCostsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramCostsPatchEntry {
+  id: String!
+  item: CostRequirement!
+}
+
+type ProgramDeliveryDelta {
+  added: [DeliveryConstraint!]!
+  removed: [String!]!
+  patched: [ProgramDeliveryPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramDeliveryPatchEntry {
+  id: String!
+  item: DeliveryConstraint!
+}
+
+type ProgramRisksDelta {
+  added: [Risk!]!
+  removed: [String!]!
+  patched: [ProgramRisksPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramRisksPatchEntry {
+  id: String!
+  item: Risk!
+}
+
+type ProgramConflictsDelta {
+  added: [Conflict!]!
+  removed: [String!]!
+  patched: [ProgramConflictsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramConflictsPatchEntry {
+  id: String!
+  item: Conflict!
+}
+
+type ProgramRequirementsDelta {
+  added: [Requirement!]!
+  removed: [String!]!
+  patched: [ProgramRequirementsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramRequirementsPatchEntry {
+  id: String!
+  item: Requirement!
+}
+
+type ProgramPrioritiesDelta {
+  added: [PriorityRecord!]!
+  removed: [String!]!
+  patched: [ProgramPrioritiesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramPrioritiesPatchEntry {
+  id: String!
+  item: PriorityRecord!
+}
+
+type ProgramScenariosDelta {
+  added: [Scenario!]!
+  removed: [String!]!
+  patched: [ProgramScenariosPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramScenariosPatchEntry {
+  id: String!
+  item: Scenario!
+}
+
+type ProgramOptionsDelta {
+  added: [OptionEvaluation!]!
+  removed: [String!]!
+  patched: [ProgramOptionsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramOptionsPatchEntry {
+  id: String!
+  item: OptionEvaluation!
+}
+
+type ProgramDecisionsDelta {
+  added: [Decision!]!
+  removed: [String!]!
+  patched: [ProgramDecisionsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramDecisionsPatchEntry {
+  id: String!
+  item: Decision!
+}
+
+type ProgramValidationsDelta {
+  added: [ValidationRecord!]!
+  removed: [String!]!
+  patched: [ProgramValidationsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramValidationsPatchEntry {
+  id: String!
+  item: ValidationRecord!
+}
+
+type ProgramPerformanceDelta {
+  added: [PerformanceCriterion!]!
+  removed: [String!]!
+  patched: [ProgramPerformancePatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramPerformancePatchEntry {
+  id: String!
+  item: PerformanceCriterion!
+}
+
+type ProgramQualityDelta {
+  added: [QualityRecord!]!
+  removed: [String!]!
+  patched: [ProgramQualityPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramQualityPatchEntry {
+  id: String!
+  item: QualityRecord!
+}
+
+type ProgramDocumentsDelta {
+  added: [DocumentRecord!]!
+  removed: [String!]!
+  patched: [ProgramDocumentsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramDocumentsPatchEntry {
+  id: String!
+  item: DocumentRecord!
+}
+
+type ProgramAssumptionsDelta {
+  added: [Assumption!]!
+  removed: [String!]!
+  patched: [ProgramAssumptionsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramAssumptionsPatchEntry {
+  id: String!
+  item: Assumption!
+}
+
+type ProgramConstraintsDelta {
+  added: [ConstraintRecord!]!
+  removed: [String!]!
+  patched: [ProgramConstraintsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramConstraintsPatchEntry {
+  id: String!
+  item: ConstraintRecord!
+}
+
+type ProgramComplianceRecordsDelta {
+  added: [ComplianceRecord!]!
+  removed: [String!]!
+  patched: [ProgramComplianceRecordsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramComplianceRecordsPatchEntry {
+  id: String!
+  item: ComplianceRecord!
+}
+
+type ProgramApprovalsDelta {
+  added: [ApprovalRecord!]!
+  removed: [String!]!
+  patched: [ProgramApprovalsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramApprovalsPatchEntry {
+  id: String!
+  item: ApprovalRecord!
+}
+
+type ProgramMeetingsDelta {
+  added: [MeetingRecord!]!
+  removed: [String!]!
+  patched: [ProgramMeetingsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramMeetingsPatchEntry {
+  id: String!
+  item: MeetingRecord!
+}
+
+type ProgramChangesDelta {
+  added: [ChangeRecord!]!
+  removed: [String!]!
+  patched: [ProgramChangesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramChangesPatchEntry {
+  id: String!
+  item: ChangeRecord!
+}
+
+type ProgramCollaborationDelta {
+  added: [CollaborationRecord!]!
+  removed: [String!]!
+  patched: [ProgramCollaborationPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramCollaborationPatchEntry {
+  id: String!
+  item: CollaborationRecord!
+}
+
+type ProgramAnalysesDelta {
+  added: [AnalysisRecord!]!
+  removed: [String!]!
+  patched: [ProgramAnalysesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramAnalysesPatchEntry {
+  id: String!
+  item: AnalysisRecord!
+}
+
+type ProgramReportsDelta {
+  added: [ReportRecord!]!
+  removed: [String!]!
+  patched: [ProgramReportsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramReportsPatchEntry {
+  id: String!
+  item: ReportRecord!
+}
+
+type ProgramSearchFiltersDelta {
+  added: [SearchFilter!]!
+  removed: [String!]!
+  patched: [ProgramSearchFiltersPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramSearchFiltersPatchEntry {
+  id: String!
+  item: SearchFilter!
+}
+
+type ProgramStatusRecordsDelta {
+  added: [StatusRecord!]!
+  removed: [String!]!
+  patched: [ProgramStatusRecordsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramStatusRecordsPatchEntry {
+  id: String!
+  item: StatusRecord!
+}
+
+type ProgramWorkshopsDelta {
+  added: [Workshop!]!
+  removed: [String!]!
+  patched: [ProgramWorkshopsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramWorkshopsPatchEntry {
+  id: String!
+  item: Workshop!
+}
+
+type ProgramSurveysDelta {
+  added: [Survey!]!
+  removed: [String!]!
+  patched: [ProgramSurveysPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramSurveysPatchEntry {
+  id: String!
+  item: Survey!
+}
+
+type ProgramIssuesDelta {
+  added: [Issue!]!
+  removed: [String!]!
+  patched: [ProgramIssuesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramIssuesPatchEntry {
+  id: String!
+  item: Issue!
+}
+
+type ProgramAuditEventsDelta {
+  added: [AuditEvent!]!
+  removed: [String!]!
+  patched: [ProgramAuditEventsPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramAuditEventsPatchEntry {
+  id: String!
+  item: AuditEvent!
+}
+
+type ProgramTemplatesDelta {
+  added: [TemplateRecord!]!
+  removed: [String!]!
+  patched: [ProgramTemplatesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramTemplatesPatchEntry {
+  id: String!
+  item: TemplateRecord!
+}
+
+type ProgramKnowledgeDelta {
+  added: [KnowledgeRecord!]!
+  removed: [String!]!
+  patched: [ProgramKnowledgePatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramKnowledgePatchEntry {
+  id: String!
+  item: KnowledgeRecord!
+}
+
+type ProgramBenchmarksDelta {
+  added: [BenchmarkRecord!]!
+  removed: [String!]!
+  patched: [ProgramBenchmarksPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramBenchmarksPatchEntry {
+  id: String!
+  item: BenchmarkRecord!
+}
+
+type ProgramTracesDelta {
+  added: [TraceLink!]!
+  removed: [String!]!
+  patched: [ProgramTracesPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramTracesPatchEntry {
+  id: String!
+  item: TraceLink!
+}
+

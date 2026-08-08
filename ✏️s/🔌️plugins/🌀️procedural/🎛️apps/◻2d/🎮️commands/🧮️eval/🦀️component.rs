@@ -3,7 +3,7 @@
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::engine::host_from_fixture_with_session;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -18,7 +18,7 @@ pub mod set_eval_outputs {
         pub outputs_json: String,
     }
 
-    pub fn handle(payload: &SetEvalOutputs, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetEvalOutputs, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         session.set_eval_json(payload.outputs_json.clone());
         Ok(Emit::default())
     }
@@ -33,8 +33,8 @@ pub mod flow_eval_tick {
     #[dsl(keyword = "flow-eval-tick")]
     pub struct FlowEvalTick {}
 
-    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(_payload: &FlowEvalTick, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         let mut host = host_from_fixture_with_session(fixture, session);
         let more = session.tick(&mut host);
         let mut effects = if more { vec![semio_framework::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
@@ -67,9 +67,9 @@ mod tests {
     #[test]
     fn set_eval_outputs_does_not_mutate_the_document() {
         let mut app = app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: "{}".into() }));
-        assert_eq!(app.projection().expect("projection"), before);
+        assert_eq!(app.snapshot().expect("snapshot"), before);
     }
 }
 //#endregion 🧪️Tests

@@ -44,7 +44,7 @@
                 "label": "Surface",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -60,7 +60,7 @@
                     }
                   },
                   {
-                    "operation": "interaction.call",
+                    "mutation": "interaction.call",
                     "interaction": "surface.construct",
                     "outputs": [
                       {
@@ -228,7 +228,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -260,7 +260,7 @@
                 "target": "two_points_second",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -297,7 +297,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -329,7 +329,7 @@
                 "target": "two_points_height",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -351,7 +351,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -382,7 +382,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -468,7 +468,7 @@
                 "label": "Height",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -510,7 +510,7 @@
                 "target": "curve_height",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -557,7 +557,7 @@
                 "label": "Height",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

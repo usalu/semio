@@ -39,7 +39,7 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -69,7 +69,7 @@
                     }
                   },
                   {
-                    "operation": "kernel.query",
+                    "mutation": "kernel.query",
                     "query": "face.resolveIds",
                     "assignTo": {
                       "root": "context",

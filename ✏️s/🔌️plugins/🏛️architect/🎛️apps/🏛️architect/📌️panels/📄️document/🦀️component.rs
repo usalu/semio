@@ -5,7 +5,7 @@ use crate::apps::architect::catalog::register_len;
 use crate::apps::architect::chrome::{tree_item, tree_item_with_action, tree_node, tree_section};
 use crate::apps::architect::config::{active_register, ArchitectConfig};
 use crate::artifacts::program::engine::status_summary::status_summary;
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 use serde_json::json;
 
@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(program: &Program, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let summary = status_summary(program);
     let element_items: Vec<UiTreeItemNode> = program
         .elements
@@ -50,7 +50,7 @@ pub fn render(program: &Program, cfg: &ArchitectConfig) -> UiNode {
         vec![
             tree_section(
                 "architect-document.meta",
-                Some("Program".into()),
+                Some("ProgramSnapshot".into()),
                 vec![
                     tree_item("architect-document.meta.title", format!("Title: {}", program.meta.title)),
                     tree_item("architect-document.meta.project", format!("Project: {} ({})", program.project.client_name, program.project.code)),

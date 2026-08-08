@@ -1,5 +1,5 @@
 //! ➕️ Lowpoly mutation — `ObjectsAdd` payload + builder + apply.
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyProjection};
+use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot};
 use crate::artifacts::lowpoly::mutations::LowpolyMutation;
 use serde::{Deserialize, Serialize};
 use protocol::{apply_collection_mutation, CollectionMutation};
@@ -18,7 +18,7 @@ pub fn objects_add(index: usize, item: LowpolyObject) -> LowpolyMutation {
     LowpolyMutation::ObjectsAdd { index, item }
 }
 
-pub fn apply(projection: &mut LowpolyProjection, index: usize, item: &LowpolyObject) {
+pub fn apply(projection: &mut LowpolySnapshot, index: usize, item: &LowpolyObject) {
     apply_collection_mutation(&mut projection.objects, &CollectionMutation::Add { index, item: item.clone() });
 }
 //#endregion 🔖️Mutation

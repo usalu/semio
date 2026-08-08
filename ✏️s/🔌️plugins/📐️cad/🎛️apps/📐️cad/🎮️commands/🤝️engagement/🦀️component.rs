@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
@@ -22,12 +22,12 @@ pub mod engagement_submit {
         pub pane: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
-        let ops = engagement_submit_mutations(doc.projection, &mut runtime, pane_id);
+        let ops = engagement_submit_mutations(doc.snapshot, &mut runtime, pane_id);
         let mut emit = Emit::mutations(ops);
-        emit.config_mutations = vec![snapshot_of(&runtime, cfg.projection)];
+        emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
         Ok(emit)
     }
 }
@@ -44,11 +44,11 @@ pub mod engagement_input {
         pub pane: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementInput, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.engagement_input = payload.value.clone();
         runtime.engagement_pane = payload.pane.clone();
-        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.projection)]))
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -64,7 +64,7 @@ pub mod engagement_possible_select {
         pub possible_id: String,
     }
 
-    pub fn handle(payload: &EngagementPossibleSelect, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementPossibleSelect, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         let step = runtime.engagement_session.as_mut().and_then(|session| apply_event(session, &payload.possible_id, None).then(|| session.state.clone()));
@@ -73,7 +73,7 @@ pub mod engagement_possible_select {
         } else if !start_interaction_session(&mut runtime, pane_id, &payload.possible_id) {
             runtime.engagement_input = payload.possible_id.clone();
         }
-        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.projection)]))
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
     }
 }
 //#endregion 🔖️EngagementPossibleSelect
@@ -88,17 +88,17 @@ pub mod engagement_repeat_last {
         pub pane: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementRepeatLast, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementRepeatLast, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         if runtime.engagement_session.is_none() {
             if let Some(interaction_id) = runtime.last_finalized_interaction_id.clone() {
                 start_interaction_session(&mut runtime, pane_id, &interaction_id);
-                return Ok(Emit::config(vec![snapshot_of(&runtime, cfg.projection)]));
+                return Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]));
             }
         }
         runtime.engagement_step = "Idle".into();
-        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.projection)]))
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
     }
 }
 //#endregion 🔖️EngagementRepeatLast
@@ -111,12 +111,12 @@ pub mod engagement_abort {
     #[dsl(keyword = "engagement-abort")]
     pub struct EngagementAbort {}
 
-    pub fn handle(_payload: &EngagementAbort, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(_payload: &EngagementAbort, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.engagement_input.clear();
         runtime.engagement_session = None;
         runtime.engagement_step = "Idle".into();
-        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.projection)]))
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
     }
 }
 //#endregion 🔖️EngagementAbort
@@ -135,8 +135,8 @@ pub mod world_pointer_down {
         pub z: Option<f64>,
     }
 
-    pub fn handle(payload: &WorldPointerDown, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let document = doc.projection;
+    pub fn handle(payload: &WorldPointerDown, doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let document = doc.snapshot;
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.surface_id.as_deref().and_then(|surface_id| surface_id.rsplit('/').next()).map(cad_pane_id_from_suffix)).unwrap_or(CadPaneId::Shape);
         // 📍️ `apply_event`'s payload for a pointer event is the raw position value itself
@@ -148,7 +148,7 @@ pub mod world_pointer_down {
             runtime.engagement_step = step;
             let ops = try_commit_session_mutations(document, &mut runtime, pane_id, &snapshot);
             let mut emit = Emit::mutations(ops);
-            emit.config_mutations = vec![snapshot_of(&runtime, cfg.projection)];
+            emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
             return Ok(emit);
         }
         Ok(Emit::default())
@@ -168,7 +168,7 @@ pub mod world_pointer_move {
         pub z: Option<f64>,
     }
 
-    pub fn handle(payload: &WorldPointerMove, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldPointerMove, _doc: &DocumentView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // Live rubber-band preview during an active engagement session: applies `pointer.move`
         // (updating the session's cursor/preview context) without ever committing an object or
         // touching VCS history — coalesced (`amend_config`) so a whole drag is one undo step.
@@ -179,7 +179,7 @@ pub mod world_pointer_move {
             let mut seq = ctx.preview_seq.borrow_mut();
             *seq = seq.wrapping_add(1);
             drop(seq);
-            Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.projection)], "engagement.pointer-move"))
+            Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], "engagement.pointer-move"))
         } else {
             Ok(Emit::default())
         }

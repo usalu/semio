@@ -1,0 +1,84 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle5d/snapshot.json",
+  "title": "Puzzle5dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "domain",
+    "meta",
+    "kindCompatibility",
+    "parts",
+    "fasteners"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "domain": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "label": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "meta": {
+      "$ref": "#/$defs/Puzzle5dMeta",
+      "x-semio-state": "persistent"
+    },
+    "kindCatalogs": {
+      "$ref": "#/$defs/Puzzle5dKindCatalogs",
+      "x-semio-state": "persistent"
+    },
+    "kindCompatibility": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle5dKindCompatibility"
+      },
+      "x-semio-state": "persistent"
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle5dPart"
+      },
+      "x-semio-state": "persistent"
+    },
+    "fasteners": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle5dFastener"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "Puzzle5dMeta": {
+      "title": "Puzzle5dMeta",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dKindCatalogs": {
+      "title": "Puzzle5dKindCatalogs",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dKindCompatibility": {
+      "title": "Puzzle5dKindCompatibility",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dPart": {
+      "title": "Puzzle5dPart",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Puzzle5dFastener": {
+      "title": "Puzzle5dFastener",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

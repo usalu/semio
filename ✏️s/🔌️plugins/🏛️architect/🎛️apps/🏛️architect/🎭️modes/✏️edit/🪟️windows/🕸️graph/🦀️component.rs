@@ -4,7 +4,7 @@
 use crate::apps::architect::chrome::empty_component_scene;
 use crate::apps::architect::config::ArchitectConfig;
 use crate::artifacts::program::engine::adjacency::undirected_edges;
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +47,7 @@ pub struct GraphCamera {
 //#endregion 🔖️Camera
 
 //#region 🔖️Render
-pub fn graph_media_json(program: &Program, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let count = program.elements.len().max(1);
     let radius = 220.0;
     let center_x = 320.0;
@@ -86,7 +86,7 @@ pub fn graph_media_json(program: &Program, _camera: &GraphCamera) -> (Vec<NodeGr
     (nodes, edges)
 }
 
-pub fn render(program: &Program, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let camera = GraphCamera { x: cfg.graph_camera_x, y: cfg.graph_camera_y, zoom: cfg.graph_camera_zoom };
     let (nodes, edges) = graph_media_json(program, &camera);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };

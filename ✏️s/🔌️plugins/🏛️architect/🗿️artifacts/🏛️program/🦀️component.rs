@@ -1,229 +1,24 @@
 //! 🏛️ Architect program artifact — the root program document: all 65 feature-area registers plus
 //! meta, project, and governance (constitutional: general).
 //!
-//! The row types every register collection holds live in the sibling `🦀️registers.rs`, the shared
-//! entity primitives in `🦀️kernel.rs`; both are re-exported flatly from here so `crate::artifacts::program::*`
-//! is the single import surface for the document model (the shape the pre-migration `🦴️spine` crate
-//! presented, preserved so no consumer needs to know which topic file a type sits in).
+//! Domain row types live under `🧬️schema/🗄️registers`; shared entity primitives under
+//! `🧬️schema/🧱️kernel`. The persisted snapshot type is `ProgramSnapshot`.
 
 pub use crate::artifacts::program::kernel::*;
 pub use crate::artifacts::program::registers::*;
+pub use crate::artifacts::program::snapshot::schema::ProgramSnapshot;
 
-use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use store::DocumentDsl;
 
 /// @emoji 📜️ Persisted architect program document schema identifier.
 pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
-// #region 🔖️Program
-/// @emoji 🗂️ Full architectural program document with every typed register collection.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[dsl(extension = "architect", layout = "lines")]
-#[serde(rename_all = "camelCase")]
-pub struct Program {
-    pub schema: String,
-    pub meta: ProgramMeta,
-    pub project: ProjectDefinition,
-    #[dsl(table)]
-    pub stakeholders: Vec<Stakeholder>,
-    #[dsl(table)]
-    pub users: Vec<UserProfile>,
-    #[dsl(table)]
-    pub activities: Vec<Activity>,
-    #[dsl(table)]
-    pub functions: Vec<Function>,
-    #[dsl(table)]
-    pub elements: Vec<ProgramElement>,
-    #[dsl(table)]
-    pub quantities: Vec<QuantityRequirement>,
-    #[dsl(table)]
-    pub relationships: Vec<Relationship>,
-    #[dsl(table)]
-    pub adjacencies: Vec<Adjacency>,
-    #[dsl(table)]
-    pub processes: Vec<Process>,
-    #[dsl(table)]
-    pub flows: Vec<FlowRequirement>,
-    #[dsl(table)]
-    pub access_rules: Vec<AccessRule>,
-    #[dsl(table)]
-    pub operations: Vec<OperationalRequirement>,
-    #[dsl(table)]
-    pub equipment: Vec<Equipment>,
-    #[dsl(table)]
-    pub resources: Vec<Resource>,
-    #[dsl(table)]
-    pub storage: Vec<StorageRequirement>,
-    #[dsl(table)]
-    pub environmental: Vec<EnvironmentalRequirement>,
-    #[dsl(table)]
-    pub human_factors: Vec<HumanFactorRequirement>,
-    #[dsl(table)]
-    pub accessibility: Vec<AccessibilityRequirement>,
-    #[dsl(table)]
-    pub privacy: Vec<PrivacyRequirement>,
-    #[dsl(table)]
-    pub safety: Vec<SafetyRequirement>,
-    #[dsl(table)]
-    pub security: Vec<SecurityRequirement>,
-    #[dsl(table)]
-    pub regulatory: Vec<RegulatoryRequirement>,
-    #[dsl(table)]
-    pub site_context: Vec<SiteContext>,
-    #[dsl(table)]
-    pub organizational: Vec<OrganizationalRequirement>,
-    #[dsl(table)]
-    pub services: Vec<ServiceRequirement>,
-    #[dsl(table)]
-    pub infrastructure: Vec<InfrastructureRequirement>,
-    #[dsl(table)]
-    pub information: Vec<InformationRequirement>,
-    #[dsl(table)]
-    pub communication: Vec<CommunicationRequirement>,
-    #[dsl(table)]
-    pub wayfinding: Vec<WayfindingRequirement>,
-    #[dsl(table)]
-    pub schedules: Vec<ScheduleRequirement>,
-    #[dsl(table)]
-    pub flexibility: Vec<FlexibilityRequirement>,
-    #[dsl(table)]
-    pub growth: Vec<GrowthPlan>,
-    #[dsl(table)]
-    pub sustainability: Vec<SustainabilityRequirement>,
-    #[dsl(table)]
-    pub resilience: Vec<ResilienceRequirement>,
-    #[dsl(table)]
-    pub costs: Vec<CostRequirement>,
-    #[dsl(table)]
-    pub delivery: Vec<DeliveryConstraint>,
-    #[dsl(table)]
-    pub risks: Vec<Risk>,
-    #[dsl(table)]
-    pub conflicts: Vec<Conflict>,
-    #[dsl(table)]
-    pub requirements: Vec<Requirement>,
-    #[dsl(table)]
-    pub priorities: Vec<PriorityRecord>,
-    #[dsl(table)]
-    pub scenarios: Vec<Scenario>,
-    #[dsl(table)]
-    pub options: Vec<OptionEvaluation>,
-    #[dsl(table)]
-    pub decisions: Vec<Decision>,
-    #[dsl(table)]
-    pub validations: Vec<ValidationRecord>,
-    #[dsl(table)]
-    pub performance: Vec<PerformanceCriterion>,
-    #[dsl(table)]
-    pub quality: Vec<QualityRecord>,
-    #[dsl(table)]
-    pub documents: Vec<DocumentRecord>,
-    #[dsl(table)]
-    pub assumptions: Vec<Assumption>,
-    #[dsl(table)]
-    pub constraints: Vec<ConstraintRecord>,
-    #[dsl(table)]
-    pub compliance_records: Vec<ComplianceRecord>,
-    #[dsl(table)]
-    pub approvals: Vec<ApprovalRecord>,
-    #[dsl(table)]
-    pub meetings: Vec<MeetingRecord>,
-    #[dsl(table)]
-    pub changes: Vec<ChangeRecord>,
-    #[dsl(table)]
-    pub collaboration: Vec<CollaborationRecord>,
-    #[dsl(table)]
-    pub analyses: Vec<AnalysisRecord>,
-    #[dsl(table)]
-    pub reports: Vec<ReportRecord>,
-    #[dsl(table)]
-    pub search_filters: Vec<SearchFilter>,
-    #[dsl(table)]
-    pub status_records: Vec<StatusRecord>,
-    #[dsl(table)]
-    pub workshops: Vec<Workshop>,
-    #[dsl(table)]
-    pub surveys: Vec<Survey>,
-    #[dsl(table)]
-    pub issues: Vec<Issue>,
-    #[dsl(table)]
-    pub audit_events: Vec<AuditEvent>,
-    #[dsl(table)]
-    pub templates: Vec<TemplateRecord>,
-    #[dsl(table)]
-    pub knowledge: Vec<KnowledgeRecord>,
-    #[dsl(table)]
-    pub benchmarks: Vec<BenchmarkRecord>,
-    pub governance: Governance,
-    #[dsl(table)]
-    pub traces: Vec<TraceLink>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Program {
-    const EXTENSION: &'static str = "architect";
-    fn envelope_id() -> &'static str { "architect" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::DocumentPack for Program {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-// #endregion
-
-// #region 🔖️Factories
-/// @emoji 📭️ Empty program with schema, meta, project, and governance initialized.
-pub fn empty_plugin() -> Program {
+pub fn empty_plugin() -> ProgramSnapshot {
     let project_id = EntityId::new_serial("project", "project");
     let governance_id = EntityId::new_serial("governance", "governance");
-    Program {
+    ProgramSnapshot {
         schema: ARCHITECT_PROGRAM_SCHEMA.into(),
         meta: ProgramMeta {
             schema: ARCHITECT_PROGRAM_SCHEMA.into(),
@@ -370,7 +165,7 @@ pub fn empty_plugin() -> Program {
 }
 
 /// @emoji 🧪️ Sample program for tests with elements, stakeholders, and one adjacency.
-pub fn sample_plugin() -> Program {
+pub fn sample_plugin() -> ProgramSnapshot {
     let mut program = empty_plugin();
     program.meta.title = "Sample Clinic".into();
     program.meta.industry_sector = "healthcare".into();
@@ -509,7 +304,7 @@ mod tests {
     fn sample_plugin_round_trips_json() {
         let program = sample_plugin();
         let json = serde_json::to_string(&program).expect("serialize");
-        let decoded: Program = serde_json::from_str(&json).expect("deserialize");
+        let decoded: ProgramSnapshot = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(decoded.elements.len(), 2);
         assert_eq!(decoded.adjacencies.len(), 1);
     }
@@ -517,20 +312,20 @@ mod tests {
     // #region 🔖️DslDocument
     #[test]
     fn empty_plugin_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&empty_plugin());
-        store::test_support::assert_dsl_pack_equivalence(&empty_plugin());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty_plugin());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty_plugin());
     }
 
     #[test]
     fn sample_plugin_dsl_round_trips() {
-        store::test_support::assert_dsl_round_trip(&sample_plugin());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&sample_plugin());
     }
 
     #[test]
     // 🪲️ Blocked on a confirmed upstream `pack` crate bug, NOT an architect defect: table
     // rows (`#[dsl(table)] Vec<Stakeholder>` etc.) decode via `pack::value`'s self-describing
     fn sample_plugin_dsl_pack_equivalence() {
-        store::test_support::assert_dsl_pack_equivalence(&sample_plugin());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&sample_plugin());
     }
 
     #[test]
@@ -548,7 +343,7 @@ mod tests {
     /// fresh call mints depend on test execution order and never match the fixture's baked-in ids.
     #[test]
     fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
-        let parsed = Program::parse_dsl(crate::artifacts::program::dsl::ARCHITECT_EXAMPLE_TEXT).expect("parse bundled .architect example");
+        let parsed = ProgramSnapshot::parse_dsl(crate::artifacts::program::dsl::ARCHITECT_EXAMPLE_TEXT).expect("parse bundled .architect example");
         let expected = sample_plugin();
         assert_eq!(parsed.meta.title, expected.meta.title);
         assert_eq!(parsed.meta.industry_sector, expected.meta.industry_sector);
@@ -561,8 +356,8 @@ mod tests {
         assert_eq!(parsed.elements[1].code, expected.elements[1].code);
         assert_eq!(parsed.adjacencies.len(), expected.adjacencies.len());
         assert_eq!(parsed.adjacencies[0].kind, expected.adjacencies[0].kind);
-        store::test_support::assert_dsl_round_trip(&parsed);
-        store::test_support::assert_dsl_pack_equivalence(&parsed);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&parsed);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&parsed);
     }
     // #endregion 🔖️DslDocument
 }

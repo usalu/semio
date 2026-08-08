@@ -1,0 +1,15 @@
+test formulation::tests::gauss_tri_panics_on_unsupported_order - should panic ... ok
+test formulation::tests::gauss_1d_panics_on_unsupported_order - should panic ... ok
+test sparse::tests::pcg_reports_not_converged_when_max_iter_is_zero ... ok
+test sparse::tests::rcm_reduces_bandwidth_on_scattered_path_graph ... ok
+test sparse::tests::pcg_matches_ldlt_and_dense_lu ... ok
+test sparse::tests::subspace_iteration_matches_dense_jacobi_on_small_nondiagonal_case ... ok
+test sparse::tests::subspace_iteration_matches_diagonal_analytic_case ... ok
+test artifacts::fem3d::snapshot::pack::tests::fem3d_pack_agrees_with_dsl_for_bundled_default_example ... ok
+test artifacts::fem3d::snapshot::pack::tests::fem3d_pack_agrees_with_dsl_for_fixture_documents ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_window_renders_buckling_mode_shape_3d ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_scene_captions_name_mode_and_factor_3d ... ok
+test artifacts::fem3d::engine::component::tests::example_fixture_parses ... ok
+
+test result: ok. 332 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+

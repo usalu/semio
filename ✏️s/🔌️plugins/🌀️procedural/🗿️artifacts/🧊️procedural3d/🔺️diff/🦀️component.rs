@@ -1,5 +1,11 @@
-//! 🔺️ Procedural3d artifact — the operation diff (constitutional: diff).
+//! 🔺️ Procedural3d artifact — sparse field-delta diff codec and apply/absorb.
 
+use crate::artifacts::procedural3d::schema::{Procedural3dArtifact, Procedural3dPreviewCamera};
+use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use flow::playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
+use protocol::MutationDiff;
+use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -7,12 +13,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
-use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
-use flow::playbook::{apply_generation_mutation, GenerationMutation};
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
+pub use super::schema::*;
 
 //#region 🔖️Collections
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -61,61 +62,178 @@ pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &Synaps
         }
     }
 }
-//#endregion 🔖️Collections
 
-//#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Procedural3dDiff {
-    pub widgets: WidgetsDiff,
-    pub synapses: SynapsesDiff,
-    pub layout: LayoutDiff,
-    pub camera: Option<CameraJson>,
-    pub schema: Option<String>,
-    #[serde(default)]
-    pub generation: Vec<GenerationMutation>,
+fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
+    for id in &diff.removed {
+        layout.remove(id);
+    }
+    for (id, entry) in &diff.set {
+        layout.insert(id.clone(), entry.clone());
+    }
 }
 
-impl MutationDiff<Procedural3dDocument> for Procedural3dDiff {
-    fn apply(&self, projection: &Procedural3dDocument) -> Procedural3dDocument {
-        let mut next = projection.clone();
-        apply_widgets_diff(&mut next.fixture.widgets, &self.widgets);
-        apply_synapses_diff(&mut next.fixture.synapses, &self.synapses);
-        for id in &self.layout.removed {
-            next.fixture.layout.remove(id);
+/// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
+pub fn apply_fixture_helpers(
+    fixture: &FlowFixture,
+    widgets: &WidgetsDiff,
+    synapses: &SynapsesDiff,
+    layout: &LayoutDiff,
+    camera: Option<&CameraJson>,
+    schema: Option<&str>,
+) -> FlowFixture {
+    let mut next = fixture.clone();
+    apply_widgets_diff(&mut next.widgets, widgets);
+    apply_synapses_diff(&mut next.synapses, synapses);
+    apply_layout_diff(&mut next.layout, layout);
+    if let Some(camera) = camera {
+        next.camera = camera.clone();
+    }
+    if let Some(schema) = schema {
+        next.schema = schema.to_string();
+    }
+    next
+}
+
+/// 🧩 Applies generation mutations onto a cloned play state.
+pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
+    let mut next = state.clone();
+    for operation in ops {
+        apply_generation_mutation(&mut next, operation);
+    }
+    next
+}
+//#endregion 🔖️Collections
+
+//#region 🔖️Apply
+impl Procedural3dDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &Procedural3dArtifact) -> Procedural3dArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
         }
-        for (id, layout) in &self.layout.set {
-            next.fixture.layout.insert(id.clone(), layout.clone());
+        let mut next = artifact.clone();
+        if let Some(fixture) = &self.fixture {
+            next.fixture = fixture.clone();
         }
-        if let Some(camera) = &self.camera {
-            next.fixture.camera = camera.clone();
+        if let Some(generation) = &self.generation {
+            next.generation = generation.clone();
         }
-        if let Some(schema) = &self.schema {
-            next.fixture.schema = schema.clone();
+        if let Some(list) = &self.selected_node_ids {
+            next.selected_node_ids = list.values.clone();
         }
-        for operation in &self.generation {
-            apply_generation_mutation(&mut next.generation, operation);
+        if let Some(value) = &self.lod_mode {
+            next.lod_mode = value.clone();
+        }
+        if let Some(value) = &self.show_mode {
+            next.show_mode = value.clone();
+        }
+        if let Some(value) = &self.selection_method {
+            next.selection_method = value.clone();
+        }
+        if let Some(value) = &self.hovered_node_id {
+            next.hovered_node_id = value.clone();
+        }
+        if let Some(value) = &self.graph_camera {
+            next.graph_camera = value.clone();
+        }
+        if let Some(value) = &self.preview_camera {
+            next.preview_camera = value.clone();
+        }
+        if let Some(value) = &self.sun_json {
+            next.sun_json = value.clone();
+        }
+        if let Some(value) = &self.selected_generation_id {
+            next.selected_generation_id = value.clone();
+        }
+        if let Some(value) = &self.generation_preview_text {
+            next.generation_preview_text = value.clone();
+        }
+        if let Some(value) = &self.active_utility_id {
+            next.active_utility_id = value.clone();
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        next
+    }
+}
+
+impl MutationDiff<Procedural3dSnapshot> for Procedural3dDiff {
+    fn apply(&self, snapshot: &Procedural3dSnapshot) -> Procedural3dSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(fixture) = &self.fixture {
+            next.fixture = fixture.clone();
+        }
+        if let Some(generation) = &self.generation {
+            next.generation = generation.clone();
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.widgets.removed.extend(other.widgets.removed);
-        self.widgets.set.extend(other.widgets.set);
-        self.synapses.removed.extend(other.synapses.removed);
-        self.synapses.set.extend(other.synapses.set);
-        self.layout.removed.extend(other.layout.removed);
-        self.layout.set.extend(other.layout.set);
-        if other.camera.is_some() {
-            self.camera = other.camera;
+        if other.artifact.is_some() {
+            *self = other;
+            return;
         }
-        if other.schema.is_some() {
-            self.schema = other.schema;
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
         }
-        self.generation.extend(other.generation);
+        take!(fixture);
+        take!(generation);
+        take!(selected_node_ids);
+        take!(lod_mode);
+        take!(show_mode);
+        take!(selection_method);
+        take!(hovered_node_id);
+        take!(graph_camera);
+        take!(preview_camera);
+        take!(sun_json);
+        take!(selected_generation_id);
+        take!(generation_preview_text);
+        take!(active_utility_id);
+        take!(locale);
+        take!(contributions_json);
     }
 }
-//#endregion 🔖️Diff
+//#endregion 🔖️Apply
+
+//#region 🔖️Constructors
+/// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
+pub fn diff_fixture_from_helpers(
+    base: &Procedural3dSnapshot,
+    widgets: WidgetsDiff,
+    synapses: SynapsesDiff,
+    layout: LayoutDiff,
+    camera: Option<CameraJson>,
+    schema: Option<String>,
+) -> Procedural3dDiff {
+    let fixture = apply_fixture_helpers(
+        &base.fixture,
+        &widgets,
+        &synapses,
+        &layout,
+        camera.as_ref(),
+        schema.as_deref(),
+    );
+    Procedural3dDiff { fixture: Some(fixture), ..Procedural3dDiff::default() }
+}
+
+/// 🏗️ Generation field delta after applying ordered generation mutations.
+pub fn diff_generation_from_ops(base: &Procedural3dSnapshot, ops: Vec<GenerationMutation>) -> Procedural3dDiff {
+    let generation = apply_generation_helpers(&base.generation, &ops);
+    Procedural3dDiff { generation: Some(generation), ..Procedural3dDiff::default() }
+}
+//#endregion 🔖️Constructors
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -123,35 +241,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn diff_absorb_merges_collections_and_prefers_incoming_scalars() {
-        let mut first = Procedural3dDiff::default();
-        first.widgets.removed.push("w-a".into());
-        first.widgets.set.push((0, Widget::InputNote { id: "w-b".into(), text: String::new() }));
-        first.synapses.removed.push("s-a".into());
-        first.layout.removed.push("l-a".into());
-        first.camera = Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 });
-        first.schema = Some("schema-1".into());
-        first.generation.push(GenerationMutation::Rename { id: "generation-1".into(), name: "First".into() });
-
-        let mut second = Procedural3dDiff::default();
-        second.widgets.removed.push("w-c".into());
-        second.synapses.set.push((0, SynapseSpec { id: "s-b".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }));
-        second.layout.set.push(("l-b".into(), WidgetLayout { x: 2.0, y: 2.0 }));
-        second.camera = Some(CameraJson { x: 9.0, y: 9.0, zoom: 9.0 });
-        second.schema = None;
-        second.generation.push(GenerationMutation::Rename { id: "generation-1".into(), name: "Second".into() });
-
-        first.absorb(second);
-
-        assert_eq!(first.widgets.removed, vec!["w-a".to_string(), "w-c".to_string()]);
-        assert_eq!(first.widgets.set.len(), 1);
-        assert_eq!(first.synapses.removed, vec!["s-a".to_string()]);
-        assert_eq!(first.synapses.set.len(), 1);
-        assert_eq!(first.layout.removed, vec!["l-a".to_string()]);
-        assert_eq!(first.layout.set.len(), 1);
-        assert_eq!(first.camera, Some(CameraJson { x: 9.0, y: 9.0, zoom: 9.0 }));
-        assert_eq!(first.schema, Some("schema-1".to_string()));
-        assert_eq!(first.generation.len(), 2);
+    fn diff_absorb_prefers_incoming_scalars() {
+        let mut first = Procedural3dDiff {
+            show_mode: Some("shaded".into()),
+            ..Procedural3dDiff::default()
+        };
+        first.absorb(Procedural3dDiff {
+            locale: Some("de-DE".into()),
+            preview_camera: Some(Procedural3dPreviewCamera::default()),
+            ..Procedural3dDiff::default()
+        });
+        assert_eq!(first.show_mode.as_deref(), Some("shaded"));
+        assert_eq!(first.locale.as_deref(), Some("de-DE"));
+        assert!(first.preview_camera.is_some());
     }
 }
 //#endregion 🧪️Tests

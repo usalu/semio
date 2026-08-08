@@ -1,6 +1,6 @@
 //! ↕️ CAD mutation — `TranslateObjects` payload + builder + apply.
 use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -18,9 +18,9 @@ pub fn translate_objects(object_ids: Vec<String>, dx: f64, dy: f64, dz: f64) -> 
     CadMutation::TranslateObjects { object_ids, dx, dy, dz }
 }
 
-pub fn apply(projection: &mut CadProjection, object_ids: &[String], dx: f64, dy: f64, dz: f64) {
+pub fn apply(projection: &mut CadSnapshot, object_ids: &[String], dx: f64, dy: f64, dz: f64) {
     let mutation = CadMutation::TranslateObjects { object_ids: object_ids.to_vec(), dx, dy, dz };
-    let diff = <CadMutation as protocol::Mutation<CadProjection>>::diff(&mutation, projection);
-    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadProjection>>::apply(&diff, projection);
+    let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, projection);
+    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, projection);
 }
 //#endregion 🔖️Mutation

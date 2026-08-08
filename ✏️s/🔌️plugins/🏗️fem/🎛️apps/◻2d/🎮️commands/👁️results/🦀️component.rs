@@ -6,7 +6,7 @@ use crate::artifacts::fem2d::op::Fem2dMutation;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-type Fem2dDocument = crate::artifacts::fem2d::Fem2dDocument;
+type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️SetResultDisplay
 pub mod set_result_display {
@@ -20,7 +20,7 @@ pub mod set_result_display {
         pub mode_index: u32,
     }
 
-    pub fn handle(payload: &SetResultDisplay, _doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetResultDisplay, _doc: &DocumentView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Fem2dConfigMutation::SetResultDisplay { source_id: payload.source_id.clone(), mode: payload.mode.clone(), mode_index: payload.mode_index }]))
     }
 }
@@ -36,10 +36,10 @@ mod tests {
     #[test]
     fn set_result_display_is_config_only() {
         let mut app = fem2d_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }));
         assert!(result.mutations.is_empty(), "setResultDisplay must not emit document operations (it's config-only)");
-        assert_eq!(app.projection().expect("projection"), before);
+        assert_eq!(app.snapshot().expect("snapshot"), before);
     }
 }
 //#endregion 🧪️Tests

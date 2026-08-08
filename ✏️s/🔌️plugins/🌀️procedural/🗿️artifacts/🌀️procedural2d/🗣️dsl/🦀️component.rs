@@ -6,7 +6,7 @@
 //! the impl target type to live in the crate that also owns the trait or the type, and neither is
 //! true here. The `*Dsl` types below are LOCAL structural twins the real types convert to/from right
 //! at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary (same pattern as `fem_2d`'s `FemDof`
-//! and `imperative_core`'s `ValueDsl`/`StepNodeDsl`/`PathDsl`) — `Procedural2dDocument`/
+//! and `imperative_core`'s `ValueDsl`/`StepNodeDsl`/`PathDsl`) — `Procedural2dSnapshot`/
 //! `Procedural2dMutation` themselves keep their ORIGINAL foreign field types unchanged.
 
 
@@ -17,14 +17,14 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
 /// 📦️ The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.procedural2d`
-/// DSL text — shared by the manifest's `.example(...)` registration, the `default_projection` fallback,
+/// DSL text — shared by the manifest's `.example(...)` registration, the `default_snapshot` fallback,
 /// and every test fixture.
 pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
@@ -263,11 +263,11 @@ pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration
     FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().filter_map(|(key, value)| dsl::from_dsl_value(value).ok().map(|json| (key, json))).collect() }
 }
 
-/// 🧾️ Local twin of `Procedural2dDocument`, flattening `FlowFixture`/`GenerationPlayState`'s fields
+/// 🧾️ Local twin of `Procedural2dSnapshot`, flattening `FlowFixture`/`GenerationPlayState`'s fields
 /// into one top-level `#[derive(dsl::DslRecord)]` grammar.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(id = "procedural.procedural2d", layout = "lines")]
-struct Procedural2dDocumentDsl {
+struct Procedural2dSnapshotDsl {
     schema: String,
     #[dsl(block)]
     camera: CameraJsonDsl,
@@ -284,7 +284,7 @@ struct Procedural2dDocumentDsl {
 }
 //#region 🔖️HandcraftedDocumentCodecs
 /// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Procedural2dDocumentDsl {
+impl store::DocumentDsl for Procedural2dSnapshotDsl {
     const EXTENSION: &'static str = "procedural2d";
     fn envelope_id() -> &'static str { "procedural.procedural2d" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -310,7 +310,7 @@ impl store::DocumentDsl for Procedural2dDocumentDsl {
     }
 }
 
-impl store::DocumentPack for Procedural2dDocumentDsl {
+impl store::DocumentPack for Procedural2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -340,10 +340,10 @@ impl store::DocumentPack for Procedural2dDocumentDsl {
 
 
 
-fn procedural2d_document_to_dsl(document: &Procedural2dDocument) -> Procedural2dDocumentDsl {
+fn procedural2d_document_to_dsl(document: &Procedural2dSnapshot) -> Procedural2dSnapshotDsl {
     let fixture = &document.fixture;
     let generation = &document.generation;
-    Procedural2dDocumentDsl {
+    Procedural2dSnapshotDsl {
         schema: fixture.schema.clone(),
         camera: camera_to_dsl(&fixture.camera),
         widgets: fixture.widgets.iter().map(widget_to_dsl).collect(),
@@ -355,51 +355,51 @@ fn procedural2d_document_to_dsl(document: &Procedural2dDocument) -> Procedural2d
     }
 }
 
-fn procedural2d_document_from_dsl(parsed: Procedural2dDocumentDsl) -> Result<Procedural2dDocument, store::TextError> {
+fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Result<Procedural2dSnapshot, store::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
-    Ok(Procedural2dDocument {
+    Ok(Procedural2dSnapshot {
         fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
         generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
     })
 }
 
-/// 📜️ `.procedural2d` textual document — derive-engine grammar via `Procedural2dDocumentDsl`.
-impl store::DocumentDsl for Procedural2dDocument {
+/// 📜️ `.procedural2d` textual document — derive-engine grammar via `Procedural2dSnapshotDsl`.
+impl store::DocumentDsl for Procedural2dSnapshot {
     const EXTENSION: &'static str = "procedural2d";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <Procedural2dDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
+        let parsed = <Procedural2dSnapshotDsl as store::DocumentDsl>::parse_dsl(text)?;
         procedural2d_document_from_dsl(parsed)
     }
 
     fn print_dsl(&self) -> String {
-        <Procedural2dDocumentDsl as store::DocumentDsl>::print_dsl(&procedural2d_document_to_dsl(self))
+        <Procedural2dSnapshotDsl as store::DocumentDsl>::print_dsl(&procedural2d_document_to_dsl(self))
     }
 }
 
-/// 📦️ `.procedural2d` binary pack — same `Procedural2dDocumentDsl` mirror as `DocumentDsl` above;
-/// `dsl::DslDocument`'s derive already gives `Procedural2dDocumentDsl` its own `DocumentPack` impl.
-impl store::DocumentPack for Procedural2dDocument {
+/// 📦️ `.procedural2d` binary pack — same `Procedural2dSnapshotDsl` mirror as `DocumentDsl` above;
+/// `dsl::DslDocument`'s derive already gives `Procedural2dSnapshotDsl` its own `DocumentPack` impl.
+impl store::DocumentPack for Procedural2dSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <Procedural2dDocumentDsl as store::DocumentPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
+        <Procedural2dSnapshotDsl as store::DocumentPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <Procedural2dDocumentDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        let parsed = <Procedural2dSnapshotDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
         procedural2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 }
 //#endregion 🔖️DslMirror
 
-/// 📖️ Parses `.procedural2d` DSL text into a `Procedural2dDocument`.
-pub fn parse_dsl(text: &str) -> Result<Procedural2dDocument, store::TextError> {
-    <Procedural2dDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.procedural2d` DSL text into a `Procedural2dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Procedural2dSnapshot, store::TextError> {
+    <Procedural2dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Procedural2dDocument` back to `.procedural2d` DSL text.
-pub fn print_dsl(document: &Procedural2dDocument) -> String {
+/// 🖨️ Prints a `Procedural2dSnapshot` back to `.procedural2d` DSL text.
+pub fn print_dsl(document: &Procedural2dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -413,20 +413,20 @@ mod tests {
     //#region 🔖️DslTests
     #[test]
     fn dsl_round_trip_empty_projection() {
-        test_support::assert_dsl_round_trip(&Procedural2dDocument::default());
-        test_support::assert_dsl_pack_equivalence(&Procedural2dDocument::default());
+        test_support::assert_dsl_round_trip(&Procedural2dSnapshot::default());
+        test_support::assert_dsl_pack_equivalence(&Procedural2dSnapshot::default());
     }
 
     #[test]
     fn dsl_round_trip_example_fixture() {
-        let projection = Procedural2dDocument::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).expect("parse 🌀️default.procedural2d fixture");
+        let projection = Procedural2dSnapshot::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).expect("parse 🌀️default.procedural2d fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
     fn dsl_round_trip_with_generation_state() {
-        let mut projection = Procedural2dDocument::default();
+        let mut projection = Procedural2dSnapshot::default();
         let mut values = serde_json::Map::new();
         // 🌱️ A fractional literal, not a whole number: `dsl::from_dsl_value` normalizes a whole-number
         // `DslValue::Number` (the engine's single-`f64` number shape) to an integer-backed
@@ -443,7 +443,7 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_covers_every_widget_kind() {
-        let mut projection = Procedural2dDocument::default();
+        let mut projection = Procedural2dSnapshot::default();
         projection.fixture.widgets = vec![
             Widget::InputSlider { id: "slider".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
             Widget::InputImage { id: "image".into(), src: "data:image/png;base64,abc".into() },
@@ -467,65 +467,65 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<Procedural2dDocument, Procedural2dMutation> = DocumentStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dDocument::default(), None));
+        let mut store: DocumentStore<Procedural2dSnapshot, Procedural2dMutation> = DocumentStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![Procedural2dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         let edit: &Edit<Procedural2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        test_support::assert_command_envelope_round_trip::<Procedural2dDocument, Procedural2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        test_support::assert_command_envelope_round_trip::<Procedural2dSnapshot, Procedural2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 
     //#region 🔖️DslErrorTests
     #[test]
     fn dsl_parse_rejects_malformed_text() {
-        let error = Procedural2dDocument::parse_dsl("schema=\"flow.fixture").unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl("schema=\"flow.fixture").unwrap_err();
         assert!(error.message.contains("unterminated string literal"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_missing_required_field() {
         let text = "camera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
-        let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("found Absent"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_missing_camera_block() {
-        let error = Procedural2dDocument::parse_dsl("schema=\"flow.fixture\"\n").unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl("schema=\"flow.fixture\"\n").unwrap_err();
         assert!(error.message.contains("expected Record, found Absent"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_unquoted_value_for_string_field() {
         let text = "schema=123\ncamera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
-        let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected Text"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_non_numeric_value_for_number_field() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { input-slider id=\"s\" value=abc min=0 max=1 step=1 }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
-        let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected a float"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_invalid_bool_value() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuron-kind=math.add preview=maybe input-ports= [ ] output-ports= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
-        let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected 'true' or 'false'"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_malformed_value_literal() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { cluster id=\"n\" name=\"n\" tree=bogusvalue flow= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
-        let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected a value literal"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_unknown_widget_kind() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { bogus id=\"n\" }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
-        let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
+        let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected RBrace"), "unexpected error: {}", error.message);
     }
     //#endregion 🔖️DslErrorTests

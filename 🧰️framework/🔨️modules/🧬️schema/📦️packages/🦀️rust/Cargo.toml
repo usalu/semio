@@ -22,3 +22,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 
+semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-schema-derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-schema-derive" }
+

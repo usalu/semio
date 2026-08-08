@@ -62,7 +62,7 @@ fn kind_name(kind: u8) -> &'static str {
         REC_ALTERNATIVE => "alternative",
         REC_ACTIVE => "active",
         REC_FRONTIER => "frontier",
-        REC_PROJECTION => "projection",
+        REC_PROJECTION => "snapshot",
         REC_INDEX => "index",
         REC_COMMIT => "commit",
         REC_SIGNATURE => "signature",
@@ -209,7 +209,7 @@ fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
 
 //#region 🔖️Inspect
 /// 🔍️ `protocol inspect <file>` — header, commit chain (all generations), record counts by kind,
-/// and dictionary/projection/index record tallies. Never panics on corrupt input: a malformed
+/// and dictionary/snapshot/index record tallies. Never panics on corrupt input: a malformed
 /// frame simply stops the walk early and the summary prints whatever was scanned so far.
 fn cmd_inspect(rest: &[String]) -> i32 {
     let (positional, _flags) = parse_args(rest);
@@ -270,7 +270,7 @@ fn cmd_inspect(rest: &[String]) -> i32 {
     println!("  actor_dict_deltas: {}", counts.get(&REC_ACTOR_DICT).copied().unwrap_or(0));
     println!("  str_dict_deltas: {}", counts.get(&REC_STR_DICT).copied().unwrap_or(0));
 
-    println!("== projections ==");
+    println!("== snapshots ==");
     println!("  records: {}", counts.get(&REC_PROJECTION).copied().unwrap_or(0));
 
     println!("== indexes ==");
@@ -913,7 +913,7 @@ mod tests {
             (REC_ALTERNATIVE, "alternative"),
             (REC_ACTIVE, "active"),
             (REC_FRONTIER, "frontier"),
-            (REC_PROJECTION, "projection"),
+            (REC_PROJECTION, "snapshot"),
             (REC_INDEX, "index"),
             (REC_COMMIT, "commit"),
             (REC_SIGNATURE, "signature"),

@@ -1,6 +1,6 @@
 //! 📜️ Lowpoly artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -13,13 +13,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// recognizer / handcrafted codec will.
 pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.lowpoly` DSL text into a `LowpolyProjection`.
-pub fn parse_dsl(text: &str) -> Result<LowpolyProjection, store::TextError> {
-    <LowpolyProjection as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.lowpoly` DSL text into a `LowpolySnapshot`.
+pub fn parse_dsl(text: &str) -> Result<LowpolySnapshot, store::TextError> {
+    <LowpolySnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `LowpolyProjection` back to `.lowpoly` DSL text.
-pub fn print_dsl(document: &LowpolyProjection) -> String {
+/// 🖨️ Prints a `LowpolySnapshot` back to `.lowpoly` DSL text.
+pub fn print_dsl(document: &LowpolySnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -29,14 +29,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn dsl_round_trips_the_default_projection() {
-        let projection = crate::artifacts::lowpoly::engine::default_projection();
+    fn dsl_round_trips_the_default_snapshot() {
+        let projection = crate::artifacts::lowpoly::engine::default_snapshot();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[test]
     fn dsl_round_trips_a_projection_with_a_painted_layer() {
-        let mut projection = crate::artifacts::lowpoly::engine::default_projection();
+        let mut projection = crate::artifacts::lowpoly::engine::default_snapshot();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);

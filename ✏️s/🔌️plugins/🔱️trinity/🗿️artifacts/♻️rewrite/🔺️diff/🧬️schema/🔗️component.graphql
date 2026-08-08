@@ -1,0 +1,55 @@
+# 🧬️ Rewrite diff schema — sparse field delta.
+
+type RewriteDiff {
+  artifact: RewriteArtifact @state(class: PERSISTENT)
+  beforeFixtureJson: String @state(class: PERSISTENT)
+  lhsJson: String @state(class: PERSISTENT)
+  rhsJson: String @state(class: PERSISTENT)
+  parameterBindings: [PropertyValueOptEntry!] @state(class: PERSISTENT)
+  ruleLayout: [LayoutPointOptEntry!] @state(class: PERSISTENT)
+  selectedNodeIds: RewriteStringList @state(class: SHARED_UI)
+  activeHoverVar: String @state(class: SHARED_UI)
+  activeSelectVar: String @state(class: SHARED_UI)
+  lodModeByWindow: [StringOptEntry!] @state(class: SHARED_UI)
+  beforePaneCamera: Camera @state(class: LOCAL_UI)
+  reorganizeEpoch: Int @state(class: LOCAL_UI)
+  hoverEpoch: Int @state(class: LOCAL_UI)
+  selectEpoch: Int @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+}
+
+type RewriteStringList {
+  values: [String!]!
+}
+
+type PropertyValueOptEntry {
+  key: String!
+  value: String
+}
+
+type LayoutPointOptEntry {
+  key: String!
+  value: LayoutPoint
+}
+
+type StringOptEntry {
+  key: String!
+  value: String
+}
+
+type RewriteArtifact {
+  beforeFixtureJson: String!
+  lhsJson: String!
+  rhsJson: String!
+}
+
+type LayoutPoint {
+  x: Float!
+  y: Float!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

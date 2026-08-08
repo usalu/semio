@@ -3,7 +3,7 @@
 use crate::apps::draw::commands::canvas::{draft_preview_segments, draw_gesture, shape_preview_segments};
 use crate::apps::draw::config::DrawConfig;
 use crate::artifacts::draw::engine::{draw_layer_descendant_leaf_ids, find_draw_layer, flatten_draw_document_to_scene_nodes, resolve_draw_artboard, DrawSceneNode};
-use crate::artifacts::draw::{DrawArtboard, DrawDocument, PathSegment};
+use crate::artifacts::draw::{DrawArtboard, DrawSnapshot, PathSegment};
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, UiNode};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -46,7 +46,7 @@ fn format_artboard_dimension(value: f64) -> String {
 }
 
 /// 🖼️ Artboard paper + `W × H` dimension label — drawn under document content.
-fn artboard_scene_records(document: &DrawDocument) -> Vec<Value> {
+fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
     let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);
@@ -70,7 +70,7 @@ fn artboard_scene_records(document: &DrawDocument) -> Vec<Value> {
     ]
 }
 
-pub fn render(document: &DrawDocument, interaction: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
+pub fn render(document: &DrawSnapshot, interaction: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);

@@ -15,7 +15,7 @@ pub mod host {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
-    use store::{create_document_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, SpaceConflict};
+    use store::{create_document_envelope, document_backbone_ref, materialize_document_snapshot, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, SpaceConflict};
     use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
     use vcs::{DocumentVcs, VcsError};
 
@@ -318,9 +318,9 @@ pub mod host {
     //#region 🔖️BackboneDocument
     /// 🧬️ Generic backbone-document envelope — mirrors the dissolved `OsDocument`'s exact shape
     /// (schema/id/name/vcs/applied_edit_ids/backbone), parametrized over any `<P, Op>` pair
-    /// `store::create_document_envelope`/`materialize_document_projection`/`print_document_pack`/
+    /// `store::create_document_envelope`/`materialize_document_snapshot`/`print_document_pack`/
     /// `parse_document_pack` already support generically — nothing OS-specific left to hardcode. See
-    /// `## The inversion` in the plan: `OsProjection`/`OsMutation`/`OsDocument` dissolve into the three
+    /// `## The inversion` in the plan: `OsSnapshot`/`OsMutation`/`OsDocument` dissolve into the three
     /// type aliases below instead of one bespoke studio-only document type.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -335,27 +335,27 @@ pub mod host {
         pub backbone: Option<DocumentBackboneRef>,
     }
 
-    /// 🏠️ A space's manifest document — the space-catalog half of the dissolved `OsProjection`.
-    pub type OsSpaceDocument = BackboneDocument<space::SpaceProjection, space::SpaceMutation>;
+    /// 🏠️ A space's manifest document — the space-catalog half of the dissolved `OsSnapshot`.
+    pub type OsSpaceDocument = BackboneDocument<space::SpaceSnapshot, space::SpaceMutation>;
     /// 🗂️ One collection's folder/entry tree document.
-    pub type OsCollectionDocument = BackboneDocument<space::CollectionProjection, space::CollectionMutation>;
-    /// 🕸️ One `s.workflow` artifact document — the workflow-graph half of the dissolved `OsProjection`
+    pub type OsCollectionDocument = BackboneDocument<space::CollectionSnapshot, space::CollectionMutation>;
+    /// 🕸️ One `s.workflow` artifact document — the workflow-graph half of the dissolved `OsSnapshot`
     /// (see the kernel `workflow` crate's `WorkflowDocument`).
     pub type OsWorkflowArtifactDocument = BackboneDocument<workflow::WorkflowDocument, workflow::WorkflowMutation>;
 
     /// 🌉️ Live `DocumentStore` handle for a space-manifest session — no bespoke wrapper needed (unlike
     /// `OsWorkflowStore` below, whose only extra logic is workflow-specific node/parameter id-minting);
-    /// every generic `DocumentStore` method (`projection`/`dispatch`/`attach_backbone`/...) already
+    /// every generic `DocumentStore` method (`snapshot`/`dispatch`/`attach_backbone`/...) already
     /// applies directly. `OsWorkflowStore::add_workflow_node` dispatches into one of these to install
     /// the spawned app's plugin into the owning space's `programs` list.
-    pub type OsSpaceStore = DocumentStore<space::SpaceProjection, space::SpaceMutation>;
+    pub type OsSpaceStore = DocumentStore<space::SpaceSnapshot, space::SpaceMutation>;
 
-    /// @emoji 🌱️ Mints a fresh backbone document wrapping `initial_projection` with empty edit history.
-    pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_projection: P) -> BackboneDocument<P, Op>
+    /// @emoji 🌱️ Mints a fresh backbone document wrapping `initial_snapshot` with empty edit history.
+    pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_snapshot: P) -> BackboneDocument<P, Op>
     where
         P: Clone,
     {
-        BackboneDocument { schema: schema.into(), id: id.into(), name: name.into(), vcs: create_document_envelope::<P, Op>(schema, id, initial_projection, None).vcs, applied_edit_ids: Vec::new(), backbone: None }
+        BackboneDocument { schema: schema.into(), id: id.into(), name: name.into(), vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs, applied_edit_ids: Vec::new(), backbone: None }
     }
 
     /// @emoji 🌉️ Builds the bare `DocumentEnvelope` a `BackboneDocument` wraps (dropping the app-level
@@ -368,13 +368,13 @@ pub mod host {
         DocumentEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None }
     }
 
-    pub fn materialize_backbone_projection<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+    pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
         P: Clone,
         Op: Clone + Mutation<P>,
     {
         let envelope = backbone_envelope_of(document);
-        materialize_document_projection(&envelope, applied_edit_ids)
+        materialize_document_snapshot(&envelope, applied_edit_ids)
     }
 
     /// @emoji 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
@@ -432,7 +432,7 @@ pub mod host {
 
     //#region 🔖️GraphReconcile
     /// @emoji 🧵️ Post-materialization workflow integrity pass, invoked explicitly by
-    /// `OsWorkflowStore::projection_with_conflicts` (NOT through `Mutation::reconcile` — the kernel
+    /// `OsWorkflowStore::snapshot_with_conflicts` (NOT through `Mutation::reconcile` — the kernel
     /// `workflow::WorkflowMutation` inherits that trait hook's no-op default, since the two rules that
     /// used to run alongside these purely-structural ones need the os-core plugin/artifact registry the
     /// kernel crate doesn't have; see `workflow::WorkflowMutation`'s own doc). Runs, in order: (1) drop
@@ -513,7 +513,7 @@ pub mod host {
         // 🛡️ A binding's target `ConfigSpec` field (a concurrent app swap/downgrade removed or
         // re-shaped the field) or the bound parameter's own type (a concurrent `PatchParameter`
         // re-typed it) can go stale exactly like an edge's contract can — same defense-in-depth spirit
-        // as `TypeMismatchDrop`, ported from os-core's dissolved `OsProjection`-based reconcile.
+        // as `TypeMismatchDrop`, ported from os-core's dissolved `OsSnapshot`-based reconcile.
         let parameters = document.parameters.clone();
         let nodes = document.graph.nodes.clone();
         document.parameter_bindings.retain(|binding| {
@@ -631,15 +631,15 @@ pub mod host {
             self.inner.generation()
         }
 
-        pub fn projection(&self) -> Result<workflow::WorkflowDocument, VcsError> {
-            self.inner.projection()
+        pub fn snapshot(&self) -> Result<workflow::WorkflowDocument, VcsError> {
+            self.inner.snapshot()
         }
 
         /// @emoji 🤝️ Fresh replay plus `reconcile_workflow_document`'s whole 4(+1)-rule pipeline —
         /// invoked explicitly here rather than through `Mutation::reconcile` (a no-op default at the
         /// kernel-crate layer, since two of those rules need the os-core plugin/artifact registry).
-        pub fn projection_with_conflicts(&self) -> Result<(workflow::WorkflowDocument, Vec<SpaceConflict>), VcsError> {
-            let document = self.inner.projection()?;
+        pub fn snapshot_with_conflicts(&self) -> Result<(workflow::WorkflowDocument, Vec<SpaceConflict>), VcsError> {
+            let document = self.inner.snapshot()?;
             Ok(reconcile_workflow_document(document))
         }
 
@@ -668,7 +668,7 @@ pub mod host {
         /// @emoji 🆔️ Mints a fresh `WorkflowNode` (id, ports, document/config refs — everything) via
         /// `workflow::workflow_node_for_app`, at dispatch time, so replay never re-derives it. Also
         /// dispatches `space::SpaceMutation::InstallProgram` against `space_store` — the owning space's
-        /// `programs` list moved off the dissolved `OsProjection` onto `space::SpaceProjection` (see
+        /// `programs` list moved off the dissolved `OsSnapshot` onto `space::SpaceSnapshot` (see
         /// `## The inversion` in the plan), so spawning a node into the workflow graph and installing its
         /// plugin into the space are now two operations against two separate documents.
         pub fn add_workflow_node(&mut self, plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64, space_store: &mut OsSpaceStore) -> Result<String, VcsError> {
@@ -692,7 +692,7 @@ pub mod host {
         }
 
         pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &workflow::WorkflowParameterPatch) -> Result<(), VcsError> {
-            let document = self.projection()?;
+            let document = self.snapshot()?;
             let current = document.parameters.iter().find(|parameter| workflow::workflow_parameter_id(parameter) == target_parameter_id).cloned().ok_or_else(|| VcsError::Deserialize(format!("unknown parameter {target_parameter_id}")))?;
             let next = workflow::patch_workflow_parameter(&current, patch);
             self.dispatch_apply(vec![workflow::WorkflowMutation::PatchParameter { parameter_id: target_parameter_id.into(), parameter: next }])
@@ -830,9 +830,9 @@ pub mod host {
 
     fn os_space_catalog_entry_from_document(backbone_uri: &str, document: &OsSpaceDocument) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = os_space_id_from_backbone_uri(backbone_uri).unwrap_or_else(|| document.id.clone());
-        let projection = materialize_backbone_projection(document, &[])?;
+        let snapshot = materialize_backbone_snapshot(document, &[])?;
         let updated_at = document.vcs.changes.last().map(|change| change.saved_at.clone()).unwrap_or_else(|| "0".into());
-        Ok(OsSpaceCatalogEntry { id: space_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), kind: projection.kind, visibility: projection.visibility, collection_count: projection.collections.len(), updated_at })
+        Ok(OsSpaceCatalogEntry { id: space_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), kind: snapshot.kind, visibility: snapshot.visibility, collection_count: snapshot.collections.len(), updated_at })
     }
 
     /// @emoji 📚️ Lists persisted space manifests from the dev backbone namespace.
@@ -861,11 +861,11 @@ pub mod host {
     pub fn create_os_space(name: &str, kind: space::SpaceKind, visibility: space::SpaceVisibility, owner: space::SpaceUser, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = create_os_id("space");
         let collection_id = create_os_id("collection");
-        let mut space_projection = space::empty_space_projection(name.trim(), kind, visibility);
-        space_projection.users.push(owner);
-        space_projection.collections.push(space::CollectionRef { id: collection_id.clone(), name: "main".into(), document_id: collection_id.clone() });
-        let space_document: OsSpaceDocument = create_backbone_document(space::S_SPACE_SCHEMA, &space_id, name.trim(), space_projection);
-        let collection_document: OsCollectionDocument = create_backbone_document(space::S_COLLECTION_SCHEMA, &collection_id, "main", space::empty_collection_projection("main"));
+        let mut space_snapshot = space::empty_space_snapshot(name.trim(), kind, visibility);
+        space_snapshot.users.push(owner);
+        space_snapshot.collections.push(space::CollectionRef { id: collection_id.clone(), name: "main".into(), document_id: collection_id.clone() });
+        let space_document: OsSpaceDocument = create_backbone_document(space::S_SPACE_SCHEMA, &space_id, name.trim(), space_snapshot);
+        let collection_document: OsCollectionDocument = create_backbone_document(space::S_COLLECTION_SCHEMA, &collection_id, "main", space::empty_collection_snapshot("main"));
 
         let space_uri = space::space_backbone_uri(&space_id);
         let collection_uri = space::collection_backbone_uri(&space_id, &collection_id);
@@ -880,8 +880,8 @@ pub mod host {
     pub fn delete_os_space(space_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
         let uri = space::space_backbone_uri(space_id);
         if let Ok(document) = load_os_space_document(space_id, port.clone()) {
-            if let Ok(projection) = materialize_backbone_projection(&document, &[]) {
-                for collection in &projection.collections {
+            if let Ok(snapshot) = materialize_backbone_snapshot(&document, &[]) {
+                for collection in &snapshot.collections {
                     let collection_uri = space::collection_backbone_uri(space_id, &collection.id);
                     untrack_os_space_backbone_uri(&port, &collection_uri);
                     port.write(&collection_uri, &[])?;
@@ -907,14 +907,14 @@ pub mod host {
     /// backbone. Does not create a collection — a manifest imported this way is expected to already
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
     pub fn import_os_space_from_dsl(dsl: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let projection = <space::SpaceProjection as store::DocumentDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
-        let vcs = create_document_envelope::<space::SpaceProjection, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", projection, None).vcs;
+        let snapshot = <space::SpaceSnapshot as store::DocumentDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+        let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs;
         admit_os_space_document(BackboneDocument { schema: space::S_SPACE_SCHEMA.into(), id: String::new(), name: String::new(), vcs, applied_edit_ids: Vec::new(), backbone: None }, port)
     }
 
     /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let parsed: store::ParsedDocumentText<space::SpaceProjection, space::SpaceMutation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let applied_edit_ids = parsed.envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
         let document = BackboneDocument { schema: parsed.envelope.schema, id: parsed.envelope.id, name: String::new(), vcs: parsed.envelope.vcs, applied_edit_ids, backbone: parsed.envelope.backbone };
         admit_os_space_document(document, port)
@@ -1319,7 +1319,7 @@ pub mod host {
         }
 
         fn test_space_store() -> OsSpaceStore {
-            let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_projection("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None);
+            let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None);
             DocumentStore::new(envelope)
         }
 
@@ -1333,10 +1333,10 @@ pub mod host {
             let mut space_store = test_space_store();
             let mut store = test_workflow_store();
             store.add_workflow_node("draw", "draw", None, 40.0, 40.0, &mut space_store).expect("spawn");
-            assert_eq!(store.projection().expect("projection").graph.nodes.len(), 1);
-            assert!(space_store.projection().expect("projection").programs.contains(&"draw".to_string()), "spawning a node must install its plugin into the owning space");
+            assert_eq!(store.snapshot().expect("projection").graph.nodes.len(), 1);
+            assert!(space_store.snapshot().expect("projection").programs.contains(&"draw".to_string()), "spawning a node must install its plugin into the owning space");
             store.dispatch_text("undo").expect("undo");
-            assert_eq!(store.projection().expect("projection").graph.nodes.len(), 0);
+            assert_eq!(store.snapshot().expect("projection").graph.nodes.len(), 0);
         }
 
         #[test]
@@ -1344,7 +1344,7 @@ pub mod host {
             let mut store = test_workflow_store();
             let parameter_id = store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Zoom").expect("add");
             store.patch_parameter(&parameter_id, &serde_json::json!({ "value": 12.0, "max": 10.0 })).expect("patch");
-            match &store.projection().expect("projection").parameters[0] {
+            match &store.snapshot().expect("projection").parameters[0] {
                 workflow::WorkflowParameter::Numeric { value, .. } => assert_eq!(*value, 10.0),
                 _ => panic!("expected numeric"),
             }
@@ -1383,7 +1383,7 @@ pub mod host {
             store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
             store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-            let document = store_a.projection().expect("projection");
+            let document = store_a.snapshot().expect("projection");
             let node_a = document.graph.nodes.iter().find(|node| node.id == node_a_id).expect("node a");
             let node_b = document.graph.nodes.iter().find(|node| node.id == node_b_id).expect("node b");
             let source_node_id = node_a.id.clone();
@@ -1402,8 +1402,8 @@ pub mod host {
             store_a.tick().expect("pump a");
             store_b.tick().expect("pump b");
 
-            let (converged_a, conflicts_a) = store_a.projection_with_conflicts().expect("projection with conflicts a");
-            let (converged_b, conflicts_b) = store_b.projection_with_conflicts().expect("projection with conflicts b");
+            let (converged_a, conflicts_a) = store_a.snapshot_with_conflicts().expect("snapshot with conflicts a");
+            let (converged_b, conflicts_b) = store_b.snapshot_with_conflicts().expect("snapshot with conflicts b");
             assert_eq!(converged_a, converged_b, "both peers must converge on the same reconciled document");
             assert!(converged_a.graph.nodes.iter().all(|node| node.id != node_b_id), "node b must stay removed");
             assert!(converged_a.graph.edges.iter().all(|edge| edge.target_node_id != target_node_id), "the edge wired to the deleted node must be dropped, not dangling");
@@ -1650,7 +1650,7 @@ pub mod backbone {
         /// @emoji 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
         /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
         /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::parse_document_pack`/
-        /// `print_document_pack::<OsProjection, OsMutation>` (this crate is fully typed, no
+        /// `print_document_pack::<OsSnapshot, OsMutation>` (this crate is fully typed, no
         /// `store::DocumentCodec` indirection needed).
         #[cfg(not(target_arch = "wasm32"))]
         File { uri: String, storage: FolderTextStorage, document_id: String, extension: String },
@@ -1699,8 +1699,8 @@ pub mod backbone {
                         } else {
                             match storage.read(document_id, extension)? {
                                 Some(text_files) => {
-                                    let projection = <space::SpaceProjection as store::DocumentDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
-                                    let envelope = store::create_document_envelope::<space::SpaceProjection, space::SpaceMutation>(space::S_SPACE_SCHEMA, document_id, projection, None);
+                                    let snapshot = <space::SpaceSnapshot as store::DocumentDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+                                    let envelope = store::create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, document_id, snapshot, None);
                                     let pack_files = store::print_document_pack(&envelope)?;
                                     (pack_files.pack, pack_files.spr)
                                 }
@@ -1728,8 +1728,8 @@ pub mod backbone {
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                        let parsed: store::ParsedDocumentText<space::SpaceProjection, space::SpaceMutation> = store::parse_document_pack(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                        let dsl_mirror = store::DocumentDsl::print_dsl(&parsed.envelope.vcs.initial_projection);
+                        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                        let dsl_mirror = store::DocumentDsl::print_dsl(&parsed.envelope.vcs.initial_snapshot);
                         let pack_files = store::DocumentPackFiles { pack, spr, ops: String::new() };
                         return storage.write_pack(document_id, extension, &pack_files, &dsl_mirror);
                     }
@@ -1983,8 +1983,8 @@ pub mod instance {
         /// `validate_parameter_config_binding` (type-checks this against the field's
         /// `ConfigFieldShape`) and `build_configure_config` (overlays the bound parameter's value onto
         /// that config field for an `AppCommand::Configure` payload). Historically a JSON pointer into
-        /// the node's live document (`apply_parameter_values_to_projection`'s still-live overlay,
-        /// used only by the media-export path today) — that document-projection sense is now
+        /// the node's live document (`apply_parameter_values_to_snapshot`'s still-live overlay,
+        /// used only by the media-export path today) — that document-snapshot sense is now
         /// superseded by the config-field sense for anything driving a running app instance.
         pub field_path: String,
     }
@@ -2156,7 +2156,7 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Deep-sets a JSON-pointer path on a plain object projection.
+    /// @emoji 🎛️ Deep-sets a JSON-pointer path on a plain object snapshot.
     pub fn set_json_pointer_value(root: &mut Value, pointer: &str, value: Value) {
         let segments = json_pointer_segments(pointer);
         if segments.is_empty() {
@@ -2180,18 +2180,18 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Applies bound space parameter values onto an app projection via JSON pointers. 🩹️
-    /// Pre-`ConfigSpec` document-projection overlay, kept for its one remaining live caller
+    /// @emoji 🎛️ Applies bound space parameter values onto an app snapshot via JSON pointers. 🩹️
+    /// Pre-`ConfigSpec` document-snapshot overlay, kept for its one remaining live caller
     /// (`app_instance_document_patches_for_binding`, the media-export path's synthetic-document seed)
     /// — `field_path` here is still read as a JSON pointer into that bare document, distinct from the
     /// `ConfigFieldSpec.key` sense `validate_parameter_config_binding`/`build_configure_config` give it
     /// for driving a running app instance's config (see `OsParameterFieldBinding::field_path`'s doc).
-    pub fn apply_parameter_values_to_projection(projection: Value, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], node_id: &str) -> Value {
+    pub fn apply_parameter_values_to_snapshot(snapshot: Value, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], node_id: &str) -> Value {
         let node_bindings: Vec<_> = bindings.iter().filter(|binding| binding.node_id == node_id).collect();
         if node_bindings.is_empty() {
-            return projection;
+            return snapshot;
         }
-        let mut clone = projection;
+        let mut clone = snapshot;
         for binding in node_bindings {
             let Some(parameter) = parameters.iter().find(|entry| entry.id() == binding.parameter_id) else {
                 continue;
@@ -2313,7 +2313,7 @@ pub mod instance {
     /// @emoji 🧩️ Builds the dynamic config value for an `AppCommand::Configure` payload: starts from the
     /// app's own `ConfigSpec` defaults, then overlays every parameter bound to one of `config_spec`'s
     /// fields with that parameter's current value — the config-driving counterpart to
-    /// `apply_parameter_values_to_projection`'s document-JSON-pointer overlay (see
+    /// `apply_parameter_values_to_snapshot`'s document-JSON-pointer overlay (see
     /// `OsParameterFieldBinding::field_path`'s doc for how the two diverge). Callers (the
     /// renderer/headless-runner drivers dispatching `AppCommand::Configure`, both out of this crate's
     /// scope) `store::pack_rt::encode_wire_value` the result themselves — this function only builds the
@@ -2353,15 +2353,15 @@ pub mod instance {
         config
     }
 
-    /// @emoji 🧩️ Overlays bound parameter values onto an app instance's current document projection.
+    /// @emoji 🧩️ Overlays bound parameter values onto an app instance's current document snapshot.
     /// Content itself lives in the app's own `framework/sync`-hosted document (referenced by
     /// {@link OsDocumentRef}, read host-side and passed in as `current_document_json`) — this function
     /// no longer resolves embedded/upstream source documents; that concept was deleted with
     /// `OsSourceDocument`. Cross-instance ("upstream") dataflow through workflow edges is deferred
     /// (see `host_runtime` doc-comment) to a follow-up that reads the upstream app's live document.
     pub fn materialize_os_app_instance_document_json(current_document_json: &str, node_id: &str, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter]) -> String {
-        let projection: Value = serde_json::from_str(current_document_json).unwrap_or_else(|_| json!({}));
-        let with_params = apply_parameter_values_to_projection(projection, bindings, parameters, node_id);
+        let snapshot: Value = serde_json::from_str(current_document_json).unwrap_or_else(|_| json!({}));
+        let with_params = apply_parameter_values_to_snapshot(snapshot, bindings, parameters, node_id);
         serde_json::to_string(&with_params).unwrap_or_else(|_| "{}".into())
     }
 
@@ -2370,7 +2370,7 @@ pub mod instance {
     /// host dispatches each as a snapshot replace into that app's own document store (e.g. via the program
     /// WIT boundary's `load-app-document`, or `framework/sync`'s document actor once the app is wired onto
     /// `DocumentHost`). This covers the "common/simple case" per the JSON-pointer overlay convention
-    /// {@link apply_parameter_values_to_projection} already established — a true typed operation into the bound
+    /// {@link apply_parameter_values_to_snapshot} already established — a true typed operation into the bound
     /// app's own `Mutation` vocabulary requires that app's real (non-opaque) Mutation type and is left to each app's
     /// own `DocumentApp` migration (WS-F); until then this snapshot-replace path is the host's only lever.
     pub fn app_instance_document_patches_for_binding(
@@ -2410,9 +2410,9 @@ pub mod instance {
 
         #[test]
         fn applies_json_pointer_parameter_overrides() {
-            let projection = serde_json::json!({ "brushSize": 8 });
-            let overridden = apply_parameter_values_to_projection(
-                projection,
+            let snapshot = serde_json::json!({ "brushSize": 8 });
+            let overridden = apply_parameter_values_to_snapshot(
+                snapshot,
                 &[OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "/brushSize".into() }],
                 &[OsParameter::Numeric { id: "p1".into(), name: "Brush".into(), value: 42.0, min: None, max: None, step: None }],
                 "i1",
@@ -2919,7 +2919,7 @@ pub mod media_export_simple {
 #[cfg(feature = "os-host-full")]
 pub mod workflow {
     // #region workflow
-    //! 🎬️ Workflow, VFS projection types, and media export registry.
+    //! 🎬️ Workflow, VFS snapshot types, and media export registry.
 
     // 🧬️ Kernel re-exports — the persisted graph model itself (`Workflow`/`WorkflowNode`/`WorkflowEdge`/
     // `WorkflowMediaPort`/`WorkflowPosition`/`MediaContract`/`WorkflowDelivery`/`WorkflowFixture`/
@@ -2931,7 +2931,7 @@ pub mod workflow {
     // wraps it with the contract-renegotiation check that still needs the artifact registry, which only
     // exists at this layer.
     // 🧬️ `WorkflowDocument`/`WorkflowMutation`/`WorkflowParameter*`/`WorkflowInput*`/`WorkflowOutputBinding`
-    // absorb os-core's dissolved `OsProjection`/`OsMutation`/`instance::OsParameter*` (see `## The
+    // absorb os-core's dissolved `OsSnapshot`/`OsMutation`/`instance::OsParameter*` (see `## The
     // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
     // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
     // single source of truth for the workflow document vocabulary.
@@ -3272,7 +3272,7 @@ pub use crate::workflow_kernel::{
     /// from a separate `OsAppInstance` join). `parameters`/port-id helpers are the kernel `workflow`
     /// crate's own (`workflow::WorkflowParameter`/`workflow::media_port_spec_id`/
     /// `workflow::workflow_parameter_id_from_port_id`) — `WorkflowDocument.parameters` absorbed the
-    /// dissolved `OsProjection.parameters` in W3, see `## The inversion`.
+    /// dissolved `OsSnapshot.parameters` in W3, see `## The inversion`.
     pub fn build_os_workflow_operator_infos(graph: &Workflow, parameters: &[WorkflowParameter]) -> Vec<OsWorkflowOperatorInfo> {
         let parameter_by_id: HashMap<_, _> = parameters.iter().map(|row| (workflow_parameter_id(row).to_string(), row)).collect();
         graph
@@ -4192,7 +4192,7 @@ pub mod registry {
     }
 
     /// @emoji 🎨️ One palette entry the browser shell can spawn a workflow node from — a thin,
-    /// wire-friendly projection of `OsAppRegistration` (drops `ConfigSpec`/`ModeDefinition`s the
+    /// wire-friendly snapshot of `OsAppRegistration` (drops `ConfigSpec`/`ModeDefinition`s the
     /// palette doesn't need). `ports` is `app.io.all_ports()` so the palette UI can preview a node's
     /// wiring before it's spawned.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -4333,13 +4333,13 @@ pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 #[cfg(feature = "os-host-full")]
 pub use host::{
     create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack, import_os_space_from_dsl,
-    import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsCollectionDocument, OsSpaceCatalogEntry,
+    import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsCollectionDocument, OsSpaceCatalogEntry,
     OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost, ProgramHotSwapEvent, ProgramSupervisorState, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use instance::{
-    apply_parameter_values_to_projection, create_default_os_parameter, create_os_document_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
+    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_document_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsDocumentRef, OsInstanceState,
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };

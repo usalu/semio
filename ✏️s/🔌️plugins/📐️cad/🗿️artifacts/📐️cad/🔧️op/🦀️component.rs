@@ -58,8 +58,8 @@ mod tests {
     #[test]
     fn cad_mutation_print_op_round_trips_every_variant_as_one_line() {
         for op in every_mutation() {
-            store::test_support::assert_op_line_round_trip(&op);
-            store::test_support::assert_op_text_binary_equivalence(&op);
+            store::os_store::test_support::assert_op_line_round_trip(&op);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&op);
         }
     }
 

@@ -1,0 +1,20 @@
+447 +     Codec(#[from] EvalError),
+    |
+
+warning: type `FlowExtensionRegistryState` is more private than the item `FLOW_EXTENSION_STATE`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:65:1
+   |
+65 | pub(crate) static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegis...
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ static `FLOW_EXTENSION_STATE` is reachable at visibility `pub(crate)`
+   |
+note: but type `FlowExtensionRegistryState` is only usable at visibility `pub(self)`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:59:1
+   |
+59 | struct FlowExtensionRegistryState {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: `#[warn(private_interfaces)]` on by default
+
+warning: `semio-framework-os-flow` (lib) generated 129 warnings (run `cargo fix --lib -p semio-framework-os-flow` to apply 126 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 15.06s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

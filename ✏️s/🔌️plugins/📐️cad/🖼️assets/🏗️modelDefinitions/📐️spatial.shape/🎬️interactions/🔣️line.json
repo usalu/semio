@@ -37,7 +37,7 @@
                 "label": "Start",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -53,7 +53,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -69,7 +69,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -100,7 +100,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -132,7 +132,7 @@
                 "target": "end_of_line",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -181,7 +181,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -215,7 +215,7 @@
                 "label": "Undo pick",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.undoPick",
                     "params": {
                       "field": {
@@ -239,7 +239,7 @@
                 "target": "committed",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {

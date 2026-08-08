@@ -5,7 +5,7 @@ pub mod node_graph_edit {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::registers::AdjacencyKind;
-    use crate::artifacts::program::{EntityId, Program};
+    use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use protocol::CollectionMutation;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, Program>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let program = doc.projection;
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        let program = doc.snapshot;
         let edit_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let mut emitted = Vec::new();
         for operation in edit_operations {
@@ -58,7 +58,7 @@ pub mod node_graph_viewport {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::apps::architect::modes::edit::windows::graph::GraphCamera;
     use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::Program;
+    use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -68,11 +68,11 @@ pub mod node_graph_viewport {
         pub viewport_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(camera) = serde_json::from_str::<GraphCamera>(&payload.viewport_json) else {
             return Ok(Emit::default());
         };
-        let mut next = cfg.projection.clone();
+        let mut next = cfg.snapshot.clone();
         next.graph_camera_x = camera.x;
         next.graph_camera_y = camera.y;
         next.graph_camera_zoom = camera.zoom;

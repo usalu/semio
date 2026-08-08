@@ -155,16 +155,16 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     register_builtin_converters();
     let bundle = SpaceBundle::open(&args.bundle);
     let (space_pack, space_spr) = bundle.read_space_document()?;
-    // 🧬️ `OsProjection`/`OsMutation` are dissolved (os-core dissolve, `## The inversion`) — the
+    // 🧬️ `OsSnapshot`/`OsMutation` are dissolved (os-core dissolve, `## The inversion`) — the
     // studio bundle's root `space.space.pack`/`.spr` files (renamed from `space.os.pack`/`.spr` by
     // W4's canonical on-disk layout rewrite, see `SpaceBundle`'s own doc comment) carry a
     // `workflow::WorkflowDocument`/`WorkflowMutation` pair (the `s.workflow` artifact document)
     // instead — only the typed decode target moved, wiring the root slot to a real
-    // `space::SpaceProjection` manifest is later-wave work.
+    // `space::SpaceSnapshot` manifest is later-wave work.
     let parsed: store::ParsedDocumentText<semio_framework_os::WorkflowDocument, semio_framework_os::WorkflowMutation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
-    let projection = parsed.projection;
+    let snapshot = parsed.snapshot;
 
-    let mut graph = projection.graph.clone();
+    let mut graph = snapshot.graph.clone();
     if let Some(node_id) = &args.only_node {
         graph.nodes.retain(|node| &node.id == node_id);
         graph.edges.retain(|edge| &edge.source_node_id == node_id || &edge.target_node_id == node_id);
@@ -190,12 +190,12 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             BTreeMap::new()
         } else {
             let parsed: store::ParsedDocumentText<workflow::RunDocument, workflow::RunMutation> = store::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
-            parsed.projection.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
+            parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };
 
     if args.dry {
-        let report = plan(&graph, &documents, &configs, &parameter_values, &projection.parameter_bindings, &prior_node_records)?;
+        let report = plan(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records)?;
         println!("recompute: {:?}", report.recomputed);
         println!("clean:     {:?}", report.clean);
         return Ok(());
@@ -222,7 +222,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     })
     .map_err(|error| error.to_string())?;
 
-    match runner.run(&graph, &documents, &configs, &parameter_values, &projection.parameter_bindings, &prior_node_records, &mut cache, &mut sink) {
+    match runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink) {
         Ok(report) => {
             println!("recomputed: {:?}", report.recomputed);
             println!("clean:      {:?}", report.clean);

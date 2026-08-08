@@ -1,0 +1,20 @@
+773 +     type Snapshot = CadSnapshot;
+    |
+
+warning: unused doc comment
+   --> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/././../../🎛️apps/📐️cad/🦀️component.rs:908:1
+    |
+908 | / /// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `DocumentApp` — every former
+909 | | /// `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
+910 | | /// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
+911 | | /// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
+912 | | /// rubber-band tick counter, not app state.
+    | |_-------------------------------------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-cad` (lib) generated 13 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 12 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 2.40s

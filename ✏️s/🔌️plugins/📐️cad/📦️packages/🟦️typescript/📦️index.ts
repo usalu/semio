@@ -1,7 +1,10 @@
 /** cad facet WASM facades */
+export * as cad_schema from "../../🗿️artifacts/📐️cad/🧬️schema/🟦️component.ts";
+export * as cad_snapshot_schema from "../../🗿️artifacts/📐️cad/📸️snapshot/🧬️schema/🟦️component.ts";
 export * as cad_diff from "../../🗿️artifacts/📐️cad/🔺️diff/🟦️component.ts";
+export * as cad_diff_schema from "../../🗿️artifacts/📐️cad/🔺️diff/🧬️schema/🟦️component.ts";
 export * as cad_dsl from "../../🗿️artifacts/📐️cad/🗣️dsl/🟦️component.ts";
-export * as cad_pack from "../../🗿️artifacts/📐️cad/🎒️pack/🟦️component.ts";
+export * as cad_pack from "../../🗿️artifacts/📐️cad/📸️snapshot/🎒️pack/🟦️component.ts";
 export * as cad_op from "../../🗿️artifacts/📐️cad/🔧️op/🟦️component.ts";
 export * as cad_mutations from "../../🗿️artifacts/📐️cad/🧬️mutations/🟦️component.ts";
 export * as cad_spr from "../../🗿️artifacts/📐️cad/📡️spr/🟦️component.ts";

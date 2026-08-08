@@ -1,6 +1,6 @@
 //! Draw mutation — `SetTraceParams` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_trace_params(layer_id: String, params: crate::artifacts::draw::DrawTr
     DrawMutation::SetTraceParams { layer_id, params }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetTraceParams { layer_id: layer_id.into(), params: params.clone() });
 }
 //#endregion 🔖️Mutation

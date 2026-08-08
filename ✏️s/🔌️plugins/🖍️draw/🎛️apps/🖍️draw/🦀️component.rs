@@ -15,7 +15,7 @@ use crate::apps::draw::modes::edit::windows::canvas as canvas_window;
 use crate::apps::draw::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
 use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::artifacts::draw::op::DrawMutation;
-use crate::artifacts::draw::{DrawDocument, DRAW_DOCUMENT_SCHEMA};
+use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
@@ -59,8 +59,8 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `DrawPlayApp::Command` — the SOLE dispatch surface for draw's own behavior, covering every
     /// action `create_draw_app` declares. Field shapes mirror each action's real `args` object.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum DrawCommand for DrawDocument, DrawMutation, DrawConfig, DrawConfigMutation, ctx = DrawSession {
-        "setDocument" as "set-document" => set_document::SetDocument,
+    pub enum DrawCommand for DrawSnapshot, DrawMutation, DrawConfig, DrawConfigMutation, ctx = DrawSession {
+        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "commitDocument" as "commit-document" => commit_document::CommitDocument,
         "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
@@ -95,7 +95,7 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use document::{commit_document, set_active_example, set_document, set_fixture_json};
+use document::{commit_document, set_active_example, set_snapshot, set_fixture_json};
 use layer::{add_layer, combine_boolean, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_selected_opacity, toggle_layer_visible};
 use view::{clear_selection, engagement_input, engagement_submit, select_all, set_active_utility, set_camera, set_camera_zoom, set_hover, set_locale, set_selection};
 use canvas::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
@@ -110,7 +110,7 @@ use canvas::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_poi
 pub struct DrawPlayApp;
 
 impl DocumentApp for DrawPlayApp {
-    type Projection = DrawDocument;
+    type Snapshot = DrawSnapshot;
     type Mutation = DrawMutation;
     type Config = DrawConfig;
     type ConfigMutation = DrawConfigMutation;
@@ -122,7 +122,7 @@ impl DocumentApp for DrawPlayApp {
     const APP_ID: &'static str = DRAW_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> DrawDocument {
+    fn initial_snapshot() -> DrawSnapshot {
         crate::artifacts::draw::engine::default_draw_document("empty", None)
     }
 
@@ -131,22 +131,22 @@ impl DocumentApp for DrawPlayApp {
     }
 
     /// 🎞️ `vector:out` (see `crate::artifacts::draw::engine::draw_vector_media`) plus the inherited
-    /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding
+    /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, DrawDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, DrawSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "vector:out" => crate::artifacts::draw::engine::draw_vector_media(doc.projection),
+            "vector:out" => crate::artifacts::draw::engine::draw_vector_media(doc.snapshot),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
-                let bytes = doc.projection.encode_pack();
+                let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(projection: DrawDocument) -> Option<DrawMutation> {
-        Some(DrawMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: DrawSnapshot) -> Option<DrawMutation> {
+        Some(DrawMutation::SetSnapshot { snapshot })
     }
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
@@ -154,14 +154,19 @@ impl DocumentApp for DrawPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &DrawCommand, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
-        let mut session = DrawSession::default();
-        command.dispatch(doc, cfg, &mut session)
+    fn handle(command: &DrawCommand, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
+        thread_local! {
+            static DRAW_SESSION: std::cell::RefCell<DrawSession> = std::cell::RefCell::new(DrawSession::default());
+        }
+        DRAW_SESSION.with(|session| {
+            let mut session = session.borrow_mut();
+            command.dispatch(doc, cfg, &mut session)
+        })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
         let active_utility = config.active_utility_id.as_str();
         let session = DrawSession::default();
@@ -211,7 +216,7 @@ pub fn create_draw_app() -> App {
             .mutation("combineBoolean", LocalizedLabel::native("Combine Boolean", "Boolean kombinieren"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands.
-            .action_with(draw_internal_action("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
+            .action_with(draw_internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
             .action_with(draw_internal_action("commitDocument", LocalizedLabel::native("Commit Document", "Dokument übernehmen"), ActionKind::Mutation))
             .action_with(draw_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation))
             .action_with(draw_internal_action("setSelectedOpacity", LocalizedLabel::native("Set Selected Opacity", "Deckkraft der Auswahl festlegen"), ActionKind::Mutation))
@@ -279,8 +284,8 @@ pub extern "C" fn semio_plugin_bundle_installer_link_shim() {}
 
 //#region 🔖️WasmBridge
 /// 🌉️ Generic `DocumentStore` aliases used only by the WASM bridge below.
-pub type DrawEnvelope = store::DocumentEnvelope<DrawDocument, DrawMutation>;
-pub type DrawStore = store::DocumentStore<DrawDocument, DrawMutation>;
+pub type DrawEnvelope = store::DocumentEnvelope<DrawSnapshot, DrawMutation>;
+pub type DrawStore = store::DocumentStore<DrawSnapshot, DrawMutation>;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
@@ -290,20 +295,20 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct DrawDocumentVcs {
+    pub struct DrawSnapshotVcs {
         store: RefCell<DrawStore>,
     }
 
     #[wasm_bindgen]
-    impl DrawDocumentVcs {
+    impl DrawSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<DrawDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<DrawSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: DrawEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     DrawStore::new(envelope)
                 }
-                None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::engine::empty_draw_projection(), None)),
+                None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::engine::empty_draw_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -319,8 +324,8 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
@@ -374,11 +379,11 @@ mod tests {
     use testkit::{draw_app, draw_app_with_registry, set_utility, DrawApp};
 
     fn first_layer_id(app: &DrawApp) -> String {
-        layer_id(&app.projection().expect("materialize projection").layers[0]).to_string()
+        layer_id(&app.snapshot().expect("materialize projection").layers[0]).to_string()
     }
 
     fn last_layer_id(app: &DrawApp) -> String {
-        let projection = app.projection().expect("materialize projection");
+        let projection = app.snapshot().expect("materialize projection");
         layer_id(projection.layers.last().expect("layer")).to_string()
     }
 
@@ -432,10 +437,10 @@ mod tests {
     #[test]
     fn add_layer_action_emits_op_and_appends_path() {
         let mut app = draw_app();
-        let before = app.projection().unwrap().layers.len();
+        let before = app.snapshot().unwrap().layers.len();
         let result = app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add layer");
         assert_eq!(result.mutations.len(), 1);
-        let projection = app.projection().unwrap();
+        let projection = app.snapshot().unwrap();
         assert_eq!(projection.layers.len(), before + 1);
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
     }
@@ -446,7 +451,7 @@ mod tests {
         let id = first_layer_id(&app);
         let result = app.dispatch_typed(DrawCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &fw_testkit::meta("local")).expect("patch");
         assert_eq!(result.mutations.len(), 1);
-        let projection = app.projection().unwrap();
+        let projection = app.snapshot().unwrap();
         assert!((crate::artifacts::draw::engine::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
     }
 
@@ -456,7 +461,7 @@ mod tests {
         let id = first_layer_id(&app);
         let result = app.dispatch_typed(DrawCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &fw_testkit::meta("local")).expect("patch");
         assert_eq!(result.mutations.len(), 1);
-        assert_eq!(crate::artifacts::draw::engine::layer_base(&app.projection().unwrap().layers[0]).name, "Renamed");
+        assert_eq!(crate::artifacts::draw::engine::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
     }
 
     #[test]
@@ -476,10 +481,10 @@ mod tests {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 10.0, y: 10.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
-        let before = app.projection().unwrap();
+        let before = app.snapshot().unwrap();
         let result = app.dispatch_typed(DrawCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }), &fw_testkit::meta("local")).expect("switch utility");
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
-        assert_eq!(app.projection().unwrap(), before, "utility switching does not mutate the document");
+        assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
         let up = app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
         assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
     }
@@ -492,7 +497,7 @@ mod tests {
         let second_id = last_layer_id(&app);
         let result = app.dispatch_typed(DrawCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }), &fw_testkit::meta("local")).expect("combine");
         assert_eq!(result.mutations.len(), 1);
-        assert!(app.projection().unwrap().layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
+        assert!(app.snapshot().unwrap().layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
     }
 
     #[test]
@@ -513,7 +518,7 @@ mod tests {
             .dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local"))
             .expect("up");
         assert_eq!(result.mutations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
-        let projection = app.projection().unwrap();
+        let projection = app.snapshot().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
         assert!(
             matches!(
@@ -532,7 +537,7 @@ mod tests {
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 500.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("p2");
         let result = app.dispatch_typed(DrawCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &fw_testkit::meta("local")).expect("commit");
         assert_eq!(result.mutations.len(), 1, "the draft commits as exactly one AddLayer edit");
-        let projection = app.projection().unwrap();
+        let projection = app.snapshot().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(path) if !path.segments.is_empty())));
         assert!(matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { utility_id, .. }] if utility_id == "selectDirect"));
     }
@@ -540,12 +545,12 @@ mod tests {
     #[test]
     fn canvas_escape_cancels_draft_without_committing() {
         let mut app = draw_app();
-        let before = app.projection().unwrap().layers.len();
+        let before = app.snapshot().unwrap().layers.len();
         set_utility(&mut app, "pen");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("p1");
         let result = app.dispatch_typed(DrawCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &fw_testkit::meta("local")).expect("escape");
         assert!(result.mutations.is_empty());
-        assert_eq!(app.projection().unwrap().layers.len(), before);
+        assert_eq!(app.snapshot().unwrap().layers.len(), before);
     }
 
     #[test]
@@ -566,7 +571,7 @@ mod tests {
         let rect_b_id = layer_id(&rect_b).to_string();
         document.layers.push(rect_a);
         document.layers.push(rect_b);
-        app.dispatch_typed(DrawCommand::SetDocument(set_document::SetDocument { document: document.clone() }), &fw_testkit::meta("local")).expect("load");
+        app.dispatch_typed(DrawCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: document.clone() }), &fw_testkit::meta("local")).expect("load");
         app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("camera");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).expect("move");
@@ -580,10 +585,10 @@ mod tests {
     #[test]
     fn set_camera_writes_runtime_and_emits_no_operations() {
         let mut app = draw_app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("projection");
         let result = app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).expect("camera");
         assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
-        assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
+        assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
         let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(json.contains(r#""zoom":2.0"#), "composite scene camera reflects runtime state: {json}");
         assert!(json.contains(r#""cameraX":5.0"#), "composite scene camera reflects runtime state: {json}");
@@ -603,8 +608,8 @@ mod tests {
     #[test]
     fn add_layer_undo_round_trip_through_wrapper() {
         let mut app = draw_app();
-        let before = app.projection().unwrap().layers.len();
-        fw_testkit::assert_undo_redo_round_trip(&mut app, DrawCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.projection().unwrap().layers.len(), before, before + 1);
+        let before = app.snapshot().unwrap().layers.len();
+        fw_testkit::assert_undo_redo_round_trip(&mut app, DrawCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1);
     }
 
     #[test]
@@ -660,15 +665,15 @@ mod tests {
     fn draw_io_declares_vector_out_and_export_media_covers_both_ports() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
-        let projection = app.projection().expect("projection");
-        let doc = DocumentView { projection: &projection, history: &semio_framework_plugin::HistoryView::empty() };
+        let projection = app.snapshot().expect("projection");
+        let doc = DocumentView { snapshot: &projection, history: &semio_framework_plugin::HistoryView::empty() };
         let app_impl = DrawPlayApp::default();
-        let vector = app_impl.export_media("vector:out", &doc).expect("vector:out");
+        let vector = DrawPlayApp::export_media("vector:out", &doc).expect("vector:out");
         let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
         assert_eq!(schema, "2d.drawing");
         assert!(json.starts_with("<svg"));
-        assert!(app_impl.export_media("document:out", &doc).is_ok());
-        assert!(matches!(app_impl.export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
+        assert!(DrawPlayApp::export_media("document:out", &doc).is_ok());
+        assert!(matches!(DrawPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
     }
 
     //#region 🔖️GesturePreview
@@ -723,8 +728,8 @@ mod tests {
     /// assertion. Permanent wire guard: appending a variant is safe, reordering breaks the format.
     fn every_command() -> Vec<DrawCommand> {
         vec![
-            DrawCommand::SetDocument(set_document::SetDocument { document: default_draw_document("cmd-doc", None) }),
-            DrawCommand::CommitDocument(commit_document::CommitDocument { document: default_draw_document("cmd-doc-2", None) }),
+            DrawCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: default_draw_document("cmd-doc", None) }),
+            DrawCommand::CommitDocument(commit_document::CommitDocument { snapshot: default_draw_document("cmd-doc-2", None) }),
             DrawCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
             DrawCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "semio".into() }),
             DrawCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.5 }),
@@ -759,18 +764,18 @@ mod tests {
     #[test]
     fn draw_command_op_text_round_trips_every_variant() {
         for command in every_command() {
-            store::test_support::assert_op_line_round_trip(&command);
+            store::os_store::test_support::assert_op_line_round_trip(&command);
         }
         // The two `None`-field variants missing from `every_command` (kept distinct from their
         // `Some` counterpart above, matching the pre-migration wire-baseline capture).
-        store::test_support::assert_op_line_round_trip(&DrawCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
-        store::test_support::assert_op_line_round_trip(&DrawCommand::SetHover(set_hover::SetHover { id: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&DrawCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&DrawCommand::SetHover(set_hover::SetHover { id: None }));
     }
 
     #[test]
     fn draw_command_op_binary_round_trips_every_variant() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -799,7 +804,7 @@ mod tests {
     fn every_command_row_prints_starting_with_its_wire_keyword() {
         use protocol::OpText;
         let expected_keywords = [
-            "set-document",
+            "set-snapshot",
             "commit-document",
             "fixture-json",
             "active-example",

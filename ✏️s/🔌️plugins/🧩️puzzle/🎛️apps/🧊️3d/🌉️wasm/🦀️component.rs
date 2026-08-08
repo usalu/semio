@@ -9,7 +9,7 @@
 
 use crate::artifacts::puzzle3d::engine::empty_puzzle3d_projection;
 use crate::artifacts::puzzle3d::spr::{Puzzle3dEnvelope, Puzzle3dStore};
-use crate::artifacts::puzzle3d::{Puzzle3dProjection, PUZZLE_3D_SCHEMA};
+use crate::artifacts::puzzle3d::{Puzzle3dSnapshot, PUZZLE_3D_SCHEMA};
 use std::cell::RefCell;
 use store::create_document_envelope;
 use wasm_bindgen::prelude::*;
@@ -45,7 +45,7 @@ impl Puzzle3dDocumentVcs {
 
     #[wasm_bindgen(js_name = projectionJson)]
     pub fn projection_json(&self) -> Result<String, JsValue> {
-        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = envelopeJson)]
@@ -59,12 +59,12 @@ impl Puzzle3dDocumentVcs {
     }
 }
 
-/// 🔤️ Parses `.puzzle3d` DSL text (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) into the same
+/// 🔤️ Parses `.puzzle3d` DSL text (`Puzzle3dSnapshot`'s `dsl::DslDocument` grammar) into the same
 /// camelCase JSON shape callers previously got from a hand-authored `*.3d.json` fixture — lets
 /// non-Rust consumers load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
 pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::DocumentDsl;
-    let projection = Puzzle3dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    let projection = Puzzle3dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
 }

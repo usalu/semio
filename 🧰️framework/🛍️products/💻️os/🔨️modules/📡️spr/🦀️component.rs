@@ -16,7 +16,7 @@ pub use crate::os_spr::history::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
-pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseProjection, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, ProjectionBodyKind, ProjectionRecord};
+pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
 
 pub use crate::os_spr::causal::{
     decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, DocumentDiff,

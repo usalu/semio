@@ -129,7 +129,7 @@ pub fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>
     let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
     let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
     ctx.app.precompute.borrow_mut().register_mesh(url, &positions, &indices);
-    if let Ok(mut registry) = ctx.app.mesh_registry.lock() {
+    if let Ok(mut registry) = crate::apps::puzzle3d::PUZZLE3D_MESH_REGISTRY.lock() {
         registry.insert(url.to_string(), (positions, indices));
     }
 }

@@ -1,6 +1,6 @@
 //! Draw mutation — `SetBooleanOperation` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_boolean_operation(layer_id: String, boolean_operation: String) -> Dra
     DrawMutation::SetBooleanOperation { layer_id, boolean_operation }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, boolean_operation: &str) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, boolean_operation: &str) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetBooleanOperation { layer_id: layer_id.into(), boolean_operation: boolean_operation.into() });
 }
 //#endregion 🔖️Mutation

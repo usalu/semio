@@ -1,22 +1,21 @@
-//! 🔺️ Diff fragment for `UpdateMeta`.
-use crate::artifacts::program::mutations::ProgramMutation;
-use crate::artifacts::program::Program;
-use protocol::MutationDiff;
+//! 🔺️ Diff fragment yielded by `UpdateMeta`.
+use crate::artifacts::program::diff::ProgramDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
+/// @emoji 🔺️ Diff produced by one `UpdateMeta` mutation — a sparse [`ProgramDiff`].
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct UpdateMetaDiff { pub mutation: Option<ProgramMutation> }
-impl UpdateMetaDiff {
-    pub fn from_mutation(mutation: ProgramMutation) -> Self { Self { mutation: Some(mutation) } }
+pub struct UpdateMetaDiff {
+    pub diff: ProgramDiff,
 }
-impl MutationDiff<Program> for UpdateMetaDiff {
-    fn apply(&self, projection: &Program) -> Program {
-        match &self.mutation {
-            Some(m) => { let mut next = projection.clone(); crate::artifacts::program::mutations::apply_program_mutation(&mut next, m); next }
-            None => projection.clone(),
-        }
+
+impl UpdateMetaDiff {
+    pub fn from_diff(diff: ProgramDiff) -> Self {
+        Self { diff }
     }
-    fn absorb(&mut self, other: Self) { if other.mutation.is_some() { *self = other; } }
+
+    pub fn into_program_diff(self) -> ProgramDiff {
+        self.diff
+    }
 }
 //#endregion 🔖️Diff

@@ -1,6 +1,6 @@
 //! 📜️ FEM 3D artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::fem3d::Fem3dDocument;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -14,13 +14,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// test fixture.
 pub const FEM3D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 📖️ Parses `.fem3d` DSL text into a `Fem3dDocument`.
-pub fn parse_dsl(text: &str) -> Result<Fem3dDocument, store::TextError> {
-    <Fem3dDocument as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.fem3d` DSL text into a `Fem3dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Fem3dSnapshot, store::TextError> {
+    <Fem3dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Fem3dDocument` back to `.fem3d` DSL text.
-pub fn print_dsl(document: &Fem3dDocument) -> String {
+/// 🖨️ Prints a `Fem3dSnapshot` back to `.fem3d` DSL text.
+pub fn print_dsl(document: &Fem3dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -32,8 +32,8 @@ mod tests {
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures
-    fn cantilever_fixture() -> Fem3dDocument {
-        Fem3dDocument {
+    fn cantilever_fixture() -> Fem3dSnapshot {
+        Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
             materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }],
@@ -46,8 +46,8 @@ mod tests {
         }
     }
 
-    fn truss_fixture() -> Fem3dDocument {
-        Fem3dDocument {
+    fn truss_fixture() -> Fem3dSnapshot {
+        Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
             elements: vec![
                 FemElement::Bar { id: "b1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
@@ -68,8 +68,8 @@ mod tests {
         }
     }
 
-    fn solid_slab_doc() -> Fem3dDocument {
-        Fem3dDocument {
+    fn solid_slab_doc() -> Fem3dSnapshot {
+        Fem3dSnapshot {
             nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
             materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
@@ -91,18 +91,18 @@ mod tests {
     #[test]
     fn fem3d_dsl_round_trips_bundled_default_example() {
         let document = parse_dsl(FEM3D_EXAMPLE_TEXT).expect("parse default example");
-        store::test_support::assert_dsl_round_trip(&document);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn fem3d_dsl_round_trips_fixture_documents() {
-        store::test_support::assert_dsl_round_trip(&Fem3dDocument::default());
-        store::test_support::assert_dsl_round_trip(&cantilever_fixture());
-        store::test_support::assert_dsl_round_trip(&truss_fixture());
-        store::test_support::assert_dsl_round_trip(&solid_slab_doc());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&Fem3dSnapshot::default());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&cantilever_fixture());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&truss_fixture());
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&solid_slab_doc());
         let mut with_combination = cantilever_fixture();
         with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) });
-        store::test_support::assert_dsl_round_trip(&with_combination);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_combination);
     }
 }
 // #endregion 🧪️Tests

@@ -1,3 +1,4 @@
-//! 🏛️ Program mutation — `UpdateGovernance` leaf.
+//! 🏛️ ProgramSnapshot mutation — `UpdateGovernance` leaf.
 //#region 🔖️Mutation
 //#endregion 🔖️Mutation
+use crate::artifacts::program::ProgramSnapshot;

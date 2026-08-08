@@ -2,7 +2,7 @@
 
 use crate::apps::procedural2d::terminology::Procedural2dLabels;
 use crate::apps::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::playbook::{render_generation_form_body, selected_generation, GenerationPlayState};
 use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural2dDocument, generation: &GenerationPlayState, labels: &Procedural2dLabels) -> UiNode {
+pub fn render(document: &Procedural2dSnapshot, generation: &GenerationPlayState, labels: &Procedural2dLabels) -> UiNode {
     let spec = flow_fixture_to_form_spec(&document.fixture);
     let Some(current) = selected_generation(generation) else {
         return ui_text(labels.generate_hint);

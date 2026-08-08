@@ -1,0 +1,51 @@
+# 🧬️ Procedural2d artifact schema — every field with its state class.
+
+type Procedural2dArtifact {
+  fixture: FlowFixture! @state(class: PERSISTENT)
+  generation: GenerationPlayState! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  graphCamera: CameraJson! @state(class: LOCAL_UI)
+  showMode: String! @state(class: LOCAL_UI)
+  selectedGenerationId: String @state(class: SHARED_UI)
+  generationPreviewText: String @state(class: PREVIEW)
+  locale: String! @state(class: LOCAL_UI)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+scalar Widget
+type FlowFixture {
+  schema: String!
+  camera: CameraJson!
+  widgets: [Widget!]!
+  synapses: [SynapseSpec!]!
+  layout: [FlowFixtureLayoutEntry!]!
+}
+type FlowFixtureLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+type FormGeneration {
+  id: String!
+  name: String!
+  valuesJson: String!
+}
+type GenerationPlayState {
+  generations: [FormGeneration!]!
+  selectedGenerationId: String
+  previewText: String
+}

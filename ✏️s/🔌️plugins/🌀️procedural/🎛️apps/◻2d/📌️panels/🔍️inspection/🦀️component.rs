@@ -2,7 +2,7 @@
 
 use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::apps::procedural2d::terminology::Procedural2dLabels;
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -25,7 +25,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural2dDocument, config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
+pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
     if config.selected_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "procedural2d-play-inspector.empty".into(),

@@ -3,7 +3,7 @@
 //! 🧭️ Traceability — trace chains and audit trail queries.
 
 use crate::artifacts::program::kernel::{EntityId, TraceKind, TraceLink};
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::registers::AuditEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -37,7 +37,7 @@ pub struct ImpactTrace {
 
 // #region 🔖️TraceQueries
 /// @emoji 🔗️ Builds a forward trace chain from `root_id` following kind-appropriate links.
-pub fn trace_chain(program: &mut Program, root_id: &EntityId) -> TraceChain {
+pub fn trace_chain(program: &mut ProgramSnapshot, root_id: &EntityId) -> TraceChain {
     embed_requirement_traces(program);
     let adjacency = trace_adjacency(&program.traces);
     let mut visited = HashSet::new();
@@ -62,13 +62,13 @@ pub fn trace_chain(program: &mut Program, root_id: &EntityId) -> TraceChain {
 }
 
 /// @emoji 🔍️ Finds trace links touching `entity_id` (from or to).
-pub fn trace_links_for(program: &mut Program, entity_id: &EntityId) -> Vec<TraceLink> {
+pub fn trace_links_for(program: &mut ProgramSnapshot, entity_id: &EntityId) -> Vec<TraceLink> {
     embed_requirement_traces(program);
     program.traces.iter().filter(|link| &link.from_id == entity_id || &link.to_id == entity_id).cloned().collect()
 }
 
 /// @emoji ↩️ Reverse impact trace — entities that depend on or satisfy `target_id`.
-pub fn trace_impact(program: &mut Program, target_id: &EntityId) -> ImpactTrace {
+pub fn trace_impact(program: &mut ProgramSnapshot, target_id: &EntityId) -> ImpactTrace {
     embed_requirement_traces(program);
     let mut upstream = HashSet::new();
     let mut links = Vec::new();
@@ -91,19 +91,19 @@ pub fn trace_impact(program: &mut Program, target_id: &EntityId) -> ImpactTrace 
 }
 
 /// @emoji 📋️ Returns audit events for an optional subject, newest first.
-pub fn audit_trail(program: &Program, subject_id: Option<&EntityId>) -> AuditTrail {
+pub fn audit_trail(program: &ProgramSnapshot, subject_id: Option<&EntityId>) -> AuditTrail {
     let mut events: Vec<AuditEvent> = program.audit_events.iter().filter(|event| subject_id.is_none_or(|id| &event.subject_id == id)).cloned().collect();
     events.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     AuditTrail { subject_id: subject_id.cloned(), events }
 }
 
 /// @emoji ➕️ Appends a trace link to the plugin trace register.
-pub fn add_trace_link(program: &mut Program, from_id: EntityId, to_id: EntityId, kind: TraceKind) {
+pub fn add_trace_link(program: &mut ProgramSnapshot, from_id: EntityId, to_id: EntityId, kind: TraceKind) {
     program.traces.push(TraceLink::new(from_id, to_id, kind));
 }
 
 /// @emoji 🔁️ Resolves superseded requirements to their terminal replacement.
-pub fn resolve_supersedes(program: &Program, requirement_id: &EntityId) -> EntityId {
+pub fn resolve_supersedes(program: &ProgramSnapshot, requirement_id: &EntityId) -> EntityId {
     let mut current = requirement_id.clone();
     let mut visited = HashSet::new();
     loop {
@@ -119,7 +119,7 @@ pub fn resolve_supersedes(program: &Program, requirement_id: &EntityId) -> Entit
 }
 
 /// @emoji 🧷️ Copies requirement-embedded trace links into the plugin trace register.
-fn embed_requirement_traces(program: &mut Program) {
+fn embed_requirement_traces(program: &mut ProgramSnapshot) {
     for requirement in &program.requirements {
         for link in &requirement.trace_links {
             if program.traces.iter().any(|t| t.id == link.id) {

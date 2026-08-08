@@ -1,6 +1,6 @@
 //! Draw mutation — `ReorderLayer` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -17,7 +17,7 @@ pub fn reorder_layer(layer_id: String, parent_id: Option<String>, index: usize) 
     DrawMutation::ReorderLayer { layer_id, parent_id, index }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, parent_id: &Option<String>, index: usize) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, parent_id: &Option<String>, index: usize) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::ReorderLayer { layer_id: layer_id.into(), parent_id: parent_id.clone(), index });
 }
 //#endregion 🔖️Mutation

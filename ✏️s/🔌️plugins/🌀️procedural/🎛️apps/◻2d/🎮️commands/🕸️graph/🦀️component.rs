@@ -4,7 +4,7 @@
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::engine::host_operations;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::{CameraJson, FlowEvalSession, FlowFixture};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -20,10 +20,10 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-        let selected = cfg.projection.selected_ids.clone();
+        let selected = cfg.snapshot.selected_ids.clone();
         let mut cleared = false;
         let operations = host_operations(fixture, |host| {
             for operation in &sub_operations {
@@ -71,8 +71,8 @@ pub mod move_media_node {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(payload: &MoveMediaNode, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         Ok(Emit::mutations(host_operations(fixture, |host| {
             let _ = host.move_widget(&payload.node_id, payload.x, payload.y);
         })))
@@ -93,8 +93,8 @@ pub mod connect_media_ports {
         pub target_port_id: String,
     }
 
-    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         Ok(Emit::mutations(host_operations(fixture, |host| {
             let _ = host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id);
         })))
@@ -110,8 +110,8 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(_payload: &Reorganize, doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         Ok(Emit::mutations(host_operations(fixture, |host| {
             let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
         })))
@@ -129,7 +129,7 @@ pub mod node_graph_viewport {
         pub viewport_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphViewport, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         match serde_json::from_str::<CameraJson>(&payload.viewport_json) {
             Ok(camera) => Ok(Emit::config(vec![Procedural2dConfigMutation::SetCamera { camera }])),
             Err(_) => Ok(Emit::default()),
@@ -148,7 +148,7 @@ pub mod node_graph_select {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphSelect, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -162,7 +162,7 @@ pub mod node_graph_hover {
     #[dsl(keyword = "node-graph-hover")]
     pub struct NodeGraphHover {}
 
-    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -178,9 +178,9 @@ mod tests {
     #[test]
     fn reorganize_emits_operations() {
         let mut app = app();
-        let before = app.projection().expect("projection").fixture;
+        let before = app.snapshot().expect("snapshot").fixture;
         dispatch(&mut app, Procedural2dCommand::Reorganize(reorganize::Reorganize {}));
-        let after = app.projection().expect("projection").fixture;
+        let after = app.snapshot().expect("snapshot").fixture;
         assert_ne!(before.layout, after.layout);
     }
 

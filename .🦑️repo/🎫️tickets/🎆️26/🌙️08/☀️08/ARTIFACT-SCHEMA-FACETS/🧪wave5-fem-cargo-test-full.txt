@@ -1,0 +1,1533 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1
+  |
+8 | extern crate self as store;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+8 - extern crate self as store;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1
+  |
+9 | extern crate self as protocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate self as protocol;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1
+   |
+10 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+10 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unused imports: `Limits` and `TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33
+  |
+5 | use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
+  |                                 ^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self::span::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11
+   |
+41 |   pub use self::span::*;
+   |           ^^^^^^^^^^^^^
+
+warning: unused import: `self::diagnostic::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11
+   |
+42 |   pub use self::diagnostic::*;
+   |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::token::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11
+   |
+43 |   pub use self::token::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::lexer::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11
+   |
+44 |   pub use self::lexer::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::trust::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11
+   |
+45 |   pub use self::trust::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5
+   |
+18 |     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |     ^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^             ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+19 |     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27
+  |
+4 | use crate::os_pack::ids::{ByteRange, ChunkId, CodecId, ContentHash};
+  |                           ^^^^^^^^^  ^^^^^^^           ^^^^^^^^^^^
+
+warning: unused imports: `SignatureVerifier` and `Signer`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76
+   |
+11 | pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+   |                                                                            ^^^^^^^^^^^^^^^^^  ^^^^^^
+
+warning: unused imports: `ActorId`, `ConflictRule`, `DocumentId`, `DocumentVersion`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:30:31
+   |
+30 | ...::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+   |       ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31
+   |
+32 | ...::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
+   |       ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `self::ids::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11
+    |
+191 |   pub use self::ids::*;
+    |           ^^^^^^^^^^^^
+
+warning: unused import: `self::dictionary::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11
+    |
+192 |   pub use self::dictionary::*;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::crypto::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11
+    |
+193 |   pub use self::crypto::*;
+    |           ^^^^^^^^^^^^^^^
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+244 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:243:9
+    |
+243 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+255 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ids` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `ids` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:245:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+246 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `OPTIONAL_CANONICAL` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `REQUIRED_ENCRYPTED` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:246:9
+    |
+245 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+246 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:260:9
+    |
+244 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+260 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:261:25
+    |
+261 | pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+    |                         ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:333:21
+    |
+333 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2283:19
+     |
+2177 | / impl<P, Mutation> DocumentStore<P, Mutation>
+2178 | | where
+2179 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+2180 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2283 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 45 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 22 suggestions)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+7 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3881:61
+     |
+3881 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3881 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3881 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5594:41
+     |
+5594 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5594 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+5594 +         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5594:96
+     |
+5594 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5594 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+5594 +         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(HashMap::new());
+     |
+
+warning: unnecessary `unsafe` block
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5715:17
+     |
+5715 |                 unsafe {
+     |                 ^^^^^^ unnecessary `unsafe` block
+     |
+     = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5432:34
+     |
+5432 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5132:38
+     |
+5132 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5446:34
+     |
+5446 |             let VcsDocumentApp { app, cache, registry, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5048:42
+     |
+5048 |                     let VcsDocumentApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5390:34
+     |
+5390 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5421:34
+     |
+5421 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5456:34
+     |
+5456 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5168:38
+     |
+5168 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5471:34
+     |
+5471 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1847:17
+     |
+1847 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: `semio-framework-plugin` (lib) generated 16 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 15 suggestions)
+   Compiling semio-s-plugin-fem v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+warning: unused extern crate
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs:17:1
+   |
+17 | extern crate semio_framework_os_kernel as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+   = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+   = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+   |
+17 - extern crate semio_framework_os_kernel as pack;
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs:49:5
+   |
+49 |     crate::artifacts::fem2d::engine::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+49 -     crate::artifacts::fem2d::engine::register();
+49 +     artifacts::fem2d::engine::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs:50:5
+   |
+50 |     crate::artifacts::fem3d::engine::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+50 -     crate::artifacts::fem3d::engine::register();
+50 +     artifacts::fem3d::engine::register();
+   |
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/📍set-node/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-node/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-element/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-element/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-material/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-material/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-section/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-section/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-support/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-support/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-load-case/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-load-case/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-region/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-region/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-combination/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/➖remove-combination/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/🎛set-analysis-settings/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:45
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                             ^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dNodesDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:45
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                             ^^^^^^^^^^^^^^^
+   = note: `#[warn(hidden_glob_reexports)]` on by default
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:62
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                                              ^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dElementsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:62
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                                              ^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:82
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                                                                  ^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dRegionsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:82
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                                                                  ^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:101
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dMaterialsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:101
+   |
+ 3 | use crate::artifacts::fem2d::diff::schema::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectio...
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:122
+   |
+ 3 | ...ElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinat...
+   |                                                           ^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dSectionsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:122
+   |
+ 3 | ...ElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinat...
+   |                                                           ^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:142
+   |
+ 3 | ...RegionsDelta, Fem2dMaterialsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dSupportsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:142
+   |
+ 3 | ...RegionsDelta, Fem2dMaterialsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:162
+   |
+ 3 | ...aterialsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dLoadCasesDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:162
+   |
+ 3 | ...aterialsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:183
+   |
+ 3 | ...tionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem2dCombinationsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:183
+   |
+ 3 | ...tionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:207
+   |
+ 3 | ...SupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                                ^^^^^^^^^
+   |
+note: the name `Fem2dDiff` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:3:207
+   |
+ 3 | ...SupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
+   |                                                                ^^^^^^^^^
+
+warning: unused import: `FemCamera`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:5:52
+  |
+5 | use crate::artifacts::fem2d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSecti...
+  |                                                    ^^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/⚙️engine/🦀️component.rs:573:15
+    |
+573 |     snapshot: crate::artifacts::fem2d::Fem2dSnapshot,
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+573 -     snapshot: crate::artifacts::fem2d::Fem2dSnapshot,
+573 +     snapshot: Fem2dSnapshot,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/⚙️engine/🦀️component.rs:577:26
+    |
+577 |     pub fn new(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+577 -     pub fn new(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
+577 +     pub fn new(snapshot: Fem2dSnapshot) -> Self {
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/⚙️engine/🦀️component.rs:587:21
+    |
+587 |     type Snapshot = crate::artifacts::fem2d::Fem2dSnapshot;
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+587 -     type Snapshot = crate::artifacts::fem2d::Fem2dSnapshot;
+587 +     type Snapshot = Fem2dSnapshot;
+    |
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/📍set-node/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-node/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-element/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-element/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-material/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-material/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-section/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-section/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-solid/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-solid/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-support/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-support/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-load-case/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-load-case/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-combination/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/➖remove-combination/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/🎛set-analysis-settings/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::MutationDiff`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs:4:5
+  |
+4 | use protocol::MutationDiff;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:45
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                             ^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dNodesDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:45
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                             ^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:62
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                                              ^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dElementsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:62
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                                              ^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:82
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                                                                  ^^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dMaterialsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:82
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                                                                  ^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:103
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                                                                                       ^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dSectionsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:103
+   |
+ 3 | use crate::artifacts::fem3d::diff::schema::{Fem3dNodesDelta, Fem3dElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolid...
+   |                                                                                                       ^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:123
+   |
+ 3 | ...ElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinati...
+   |                                                            ^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dSolidsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:123
+   |
+ 3 | ...ElementsDelta, Fem3dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinati...
+   |                                                            ^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:141
+   |
+ 3 | ...dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dSupportsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:141
+   |
+ 3 | ...dMaterialsDelta, Fem3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:161
+   |
+ 3 | ...3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dLoadCasesDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:161
+   |
+ 3 | ...3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                           ^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:182
+   |
+ 3 | ...olidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: the name `Fem3dCombinationsDelta` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:182
+   |
+ 3 | ...olidsDelta, Fem3dSupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: private item shadows public glob re-export
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:206
+   |
+ 3 | ...SupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                                ^^^^^^^^^
+   |
+note: the name `Fem3dDiff` in the type namespace is supposed to be publicly re-exported here
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:14:9
+   |
+14 | pub use super::schema::*;
+   |         ^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+  --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:3:206
+   |
+ 3 | ...SupportsDelta, Fem3dLoadCasesDelta, Fem3dCombinationsDelta, Fem3dDiff};
+   |                                                                ^^^^^^^^^
+
+warning: unused import: `FemCamera`
+ --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:5:52
+  |
+5 | use crate::artifacts::fem3d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSecti...
+  |                                                    ^^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/⚙️engine/🦀️component.rs:767:15
+    |
+767 |     snapshot: crate::artifacts::fem3d::Fem3dSnapshot,
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+767 -     snapshot: crate::artifacts::fem3d::Fem3dSnapshot,
+767 +     snapshot: Fem3dSnapshot,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/⚙️engine/🦀️component.rs:771:26
+    |
+771 |     pub fn new(snapshot: crate::artifacts::fem3d::Fem3dSnapshot) -> Self {
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+771 -     pub fn new(snapshot: crate::artifacts::fem3d::Fem3dSnapshot) -> Self {
+771 +     pub fn new(snapshot: Fem3dSnapshot) -> Self {
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/⚙️engine/🦀️component.rs:781:21
+    |
+781 |     type Snapshot = crate::artifacts::fem3d::Fem3dSnapshot;
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+781 -     type Snapshot = crate::artifacts::fem3d::Fem3dSnapshot;
+781 +     type Snapshot = Fem3dSnapshot;
+    |
+
+warning: unused import: `DocumentApp`
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:347:34
+    |
+347 |     use semio_framework_plugin::{DocumentApp, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    |                                  ^^^^^^^^^^^
+
+warning: unused import: `DocumentApp`
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/◻2d/🦀️component.rs:361:34
+    |
+361 |     use semio_framework_plugin::{DocumentApp, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    |                                  ^^^^^^^^^^^
+
+warning: `semio-s-plugin-fem` (lib test) generated 67 warnings (run `cargo fix --lib -p semio-s-plugin-fem --tests` to apply 47 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 2.97s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_fem-7ce96b7065dafd4f)
+
+running 332 tests
+test analyses::tests::empty_model_is_rejected ... ok
+test analyses::tests::element_scalar_average_covers_every_variant_and_scalar_combination ... ok
+test analyses::tests::dangling_load_case_node_ref_is_rejected ... ok
+test analyses::tests::duplicate_node_id_is_rejected ... ok
+test analyses::tests::dangling_support_node_ref_is_rejected ... ok
+test analyses::tests::dangling_element_node_ref_is_rejected ... ok
+test analyses::tests::zero_like_and_add_scaled_element_result_handle_every_non_beam_variant ... ok
+test app_surface::tests::hex_to_rgb01_parses_pure_colors ... ok
+test analyses::tests::nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress ... ok
+test analyses::tests::nodal_averaged_scalar_shared_node_is_between_neighboring_element_values ... ok
+test app_surface::tests::next_id_retries_past_collisions ... ok
+test app_surface::tests::von_mises_color_maps_extremes_midpoint_and_clamps ... ok
+test app_surface::tests::parse_result_display_missing_args_defaults_to_static_with_no_source ... ok
+test analyses::tests::solve_multi_case_supports_bar2_truss ... ok
+test analyses::tests::solve_multi_case_matches_single_case_dense_solve ... ok
+test analyses::tests::self_weight_matches_total_mass_times_gravity ... ok
+test app_surface::tests::parse_result_display_unknown_mode_falls_back_to_static ... ok
+test analyses::tests::solve_multi_case_applies_member_udl_equivalent_loads ... ok
+test analyses::tests::combination_equals_manual_superposition ... ok
+test apps::fem2d::commands::example::tests::set_active_example_is_declared_as_operation_2d ... ok
+test apps::fem2d::commands::camera::tests::set_camera_action_writes_config_not_document_mutations ... ok
+test apps::fem2d::commands::analysis::tests::set_analysis_settings_partial_args_keep_current_2d ... ok
+test apps::fem2d::commands::loads::tests::add_member_udl_action_emits_op_2d ... ok
+test apps::fem2d::commands::loads::tests::add_area_load_targets_named_case_2d ... ok
+test apps::fem2d::commands::loads::tests::add_load_case_and_combination_emit_ops_2d ... ok
+test apps::fem2d::commands::locale::tests::set_locale_action_writes_config_not_document_mutations ... ok
+test apps::fem2d::commands::loads::tests::set_self_weight_toggles_case_2d ... ok
+test apps::fem2d::commands::loads::tests::add_nodal_load_action_targets_named_case_2d ... ok
+test apps::fem2d::commands::model::tests::add_bar_and_add_beam_actions_emit_ops_2d ... ok
+test apps::fem2d::commands::model::tests::add_node_action_emits_op_2d ... ok
+test apps::fem2d::commands::model::tests::add_support_action_emits_op_with_fixed_dofs_2d ... ok
+test apps::fem2d::commands::model::tests::add_region_action_emits_set_region_2d ... ok
+test apps::fem2d::commands::model::tests::add_material_action_emits_op_2d ... ok
+test apps::fem2d::commands::model::tests::add_section_action_emits_op_2d ... ok
+test analyses::tests::buckling_euler_column_matches_analytical_load ... ok
+test apps::fem2d::commands::selection::tests::remove_selection_with_no_matching_ids_is_a_no_op ... ok
+test apps::fem2d::commands::results::tests::set_result_display_is_config_only ... ok
+test apps::fem2d::component::tests::app_io_forwards_the_engine_declared_ports ... ok
+test apps::fem2d::component::tests::an_unknown_body_key_renders_a_diagnostic_instead_of_panicking ... ok
+test apps::fem2d::commands::selection::tests::remove_selection_covers_regions_and_combinations_2d ... ok
+test apps::fem2d::component::tests::config_spec_declares_no_fields ... ok
+test apps::fem2d::commands::selection::tests::remove_selection_covers_nodes_elements_materials_sections_supports_load_cases_2d ... ok
+test analyses::tests::modal_cantilever_matches_analytical_frequencies ... ok
+test apps::fem2d::component::tests::every_command_keeps_its_pre_migration_bytes ... ok
+test apps::fem2d::component::tests::export_media_results_out_errors_when_no_load_cases_are_defined ... ok
+test apps::fem2d::component::tests::export_media_unknown_port_is_not_implemented ... ok
+test apps::fem2d::component::tests::command_ids_are_unique_and_match_the_declared_manifest_actions ... ok
+test apps::fem2d::component::tests::import_media_geometry_in_builds_a_new_region_from_the_first_material ... ok
+test apps::fem2d::component::tests::import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists ... ok
+test apps::fem2d::component::tests::manifest_declares_config_io_and_computation_artifact_kind ... ok
+test apps::fem2d::component::tests::manifest_labels_resolve_german_locale_2d ... ok
+test apps::fem2d::config::tests::config_operation_backwards_always_restores_the_pre_operation_snapshot ... ok
+test apps::fem2d::config::tests::fem2d_config_default_is_static_display_with_default_camera_and_locale ... ok
+test apps::fem2d::component::tests::undo_restores_document_after_add_node ... ok
+test apps::fem2d::config::tests::fem2d_config_operation_diff_is_a_whole_record_replace ... ok
+test apps::fem2d::config::tests::set_locale_config_operation_round_trips ... ok
+test apps::fem2d::config::tests::set_result_display_config_operation_round_trips ... ok
+test apps::fem2d::modes::edit::windows::model::tests::fem2d_model_extent_degenerate_model_returns_one ... ok
+test apps::fem2d::modes::edit::windows::model::tests::renders_fem2d_model_scene ... ok
+test apps::fem2d::modes::edit::windows::results::tests::clip_by_value_empty_polygon_returns_empty ... ok
+test apps::fem2d::modes::edit::windows::results::tests::clip_by_value_keeps_only_the_requested_half_plane ... ok
+test apps::fem2d::modes::edit::windows::results::tests::interpolate_at_value_falls_back_to_midpoint_when_values_equal ... ok
+test apps::fem2d::component::tests::the_manifest_stitches_every_taxonomy_node ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_buckling_with_no_load_case_shows_placeholder_2d ... ok
+test apps::fem2d::commands::example::tests::set_active_example_loads_default_fixture_2d ... ok
+test apps::fem2d::config::tests::fem2d_config_operation_text_round_trips_every_variant ... ok
+test apps::fem2d::component::tests::two_instances_converge_on_disjoint_edits ... ok
+test apps::fem2d::component::tests::every_command_round_trips_through_text_and_binary ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_surfaces_solver_error_without_panicking_2d ... ok
+test apps::fem2d::wasm::tests::fem2d_store_type_alias_constructs_from_an_empty_envelope ... ok
+test apps::fem3d::commands::analysis::tests::set_analysis_settings_partially_updates_and_keeps_the_rest ... ok
+test apps::fem2d::commands::example::tests::set_active_example_unknown_id_yields_empty_document_2d ... ok
+test apps::fem3d::commands::example::tests::set_active_example_is_declared_as_operation_3d ... ok
+test apps::fem3d::commands::camera::tests::set_camera_action_writes_config_not_document_mutations ... ok
+test apps::fem2d::component::tests::export_media_document_out_round_trips_via_import_media_document_in ... ok
+test apps::fem3d::commands::loads::tests::add_combination_invalid_terms_json_is_a_no_op ... ok
+test apps::fem3d::commands::loads::tests::add_combination_parses_terms_json ... ok
+test apps::fem2d::modes::edit::windows::model::tests::mesh_preview_renders_region_edges ... ok
+test apps::fem3d::commands::loads::tests::add_member_udl_action_emits_op_3d ... ok
+test apps::fem3d::commands::loads::tests::add_nodal_load_targets_named_case ... ok
+test apps::fem3d::commands::loads::tests::resolve_load_case_synthesizes_case_when_none_exist ... ok
+test apps::fem3d::commands::loads::tests::set_self_weight_toggles_existing_case ... ok
+test apps::fem3d::commands::loads::tests::set_self_weight_unknown_case_is_a_no_op ... ok
+test apps::fem3d::commands::model::tests::add_frame_action_emits_op_3d ... ok
+test apps::fem3d::commands::model::tests::add_material_action_emits_op_3d ... ok
+test apps::fem3d::commands::model::tests::add_node_action_emits_op_3d ... ok
+test apps::fem3d::commands::model::tests::add_section_action_emits_op_3d ... ok
+test apps::fem3d::commands::model::tests::add_solid_action_emits_set_solid_3d ... ok
+test apps::fem3d::commands::results::tests::set_result_display_writes_config_not_document_mutations ... ok
+test apps::fem2d::component::tests::export_media_results_out_returns_json_with_every_case_and_combination ... ok
+test apps::fem3d::commands::selection::tests::remove_selection_with_unknown_ids_is_a_no_op ... ok
+test apps::fem3d::component::tests::an_unknown_body_key_renders_a_diagnostic_instead_of_panicking ... ok
+test apps::fem3d::component::tests::command_ids_are_unique_and_match_the_declared_manifest_actions ... ok
+test apps::fem3d::commands::selection::tests::remove_selection_covers_solids_3d ... ok
+test apps::fem3d::commands::example::tests::set_active_example_loads_default_fixture_3d ... ok
+test apps::fem3d::component::tests::every_command_keeps_its_pre_migration_bytes ... ok
+test apps::fem3d::component::tests::export_media_results_out_errors_without_load_cases_3d ... ok
+test apps::fem3d::component::tests::fem3d_io_matches_declared_artifact_identity_3d ... ok
+test apps::fem3d::component::tests::import_media_geometry_in_adds_a_new_solid_3d ... ok
+test apps::fem3d::component::tests::manifest_labels_resolve_german_3d ... ok
+test apps::fem3d::component::tests::every_printed_op_line_starts_with_the_rows_wire_keyword ... ok
+test apps::fem3d::component::tests::undo_restores_document_after_add_node ... ok
+test apps::fem2d::modes::edit::windows::results::tests::renders_fem2d_results_scene ... ok
+test apps::fem3d::component::tests::the_manifest_stitches_every_taxonomy_node ... ok
+test apps::fem3d::commands::example::tests::set_active_example_unknown_id_resets_to_empty_document ... ok
+test apps::fem3d::config::tests::config_operation_backwards_always_restores_the_pre_operation_snapshot ... ok
+test apps::fem3d::config::tests::fem3d_config_default_is_static_display_with_default_camera ... ok
+test apps::fem3d::component::tests::every_command_round_trips_through_text_and_binary ... ok
+test apps::fem3d::config::tests::fem3d_config_operation_diff_is_a_whole_record_replace ... ok
+test apps::fem3d::config::tests::set_result_display_config_operation_round_trips ... ok
+test apps::fem3d::config::tests::fem3d_config_operation_text_round_trips_every_variant ... ok
+test apps::fem3d::modes::edit::windows::results::tests::fem3d_model_extent_degenerate_model_returns_one ... ok
+test apps::fem3d::modes::edit::windows::model::tests::renders_fem3d_model_scene ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_contour_for_region ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_modal_mode_shape_2d ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_reaction_labels_2d ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_buckling_mode_shape_2d ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_window_surfaces_solver_error_without_panicking_3d ... ok
+test artifacts::fem2d::dsl::semio_grammar_conformance::component_grammar_semio_is_grammar_dialect ... ok
+test artifacts::fem2d::engine::component::tests::area_load_on_region_produces_reactions ... ok
+test artifacts::fem2d::engine::component::tests::build_model_meshes_region_and_solves ... ok
+test artifacts::fem2d::engine::component::tests::build_model_reports_dangling_material ... ok
+test artifacts::fem2d::engine::component::tests::build_model_reports_dangling_node ... ok
+test artifacts::fem2d::engine::component::tests::build_model_reports_dangling_section ... ok
+test artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_bundled_default_example ... ok
+test artifacts::fem2d::engine::component::tests::fem2d_io_declares_geometry_in_and_results_out_ports ... ok
+test artifacts::fem2d::engine::component::tests::fem2d_solve_all_returns_case_and_combination_results ... ok
+test apps::fem3d::modes::edit::windows::model::tests::model_scene_renders_solid_mesh_and_oriented_member_instances_3d ... ok
+test artifacts::fem2d::engine::component::tests::region_self_weight_via_solve_all_matches_total_mass_times_gravity ... ok
+test artifacts::fem2d::engine::component::tests::self_weight_case_produces_nonzero_reactions ... ok
+test artifacts::fem2d::engine::component::tests::simply_supported_beam_matches_analytical_udl_solution ... ok
+test artifacts::fem2d::engine::component::tests::truss_is_in_equilibrium_with_finite_bar_forces ... ok
+test artifacts::fem2d::engine::component::tests::two_span_beam_matches_analytical_midspan_deflection_and_moment ... ok
+test artifacts::fem2d::engine::component::tests::region_with_hole_meshes_and_solves ... ok
+test artifacts::fem2d::engine::component::tests::example_fixture_parses_and_solves ... ok
+test artifacts::fem2d::engine::component::tests::unknown_load_case_returns_descriptive_error ... ok
+test artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_fixture_documents ... ok
+test artifacts::fem2d::engine::mesh_preview::tests::fem2d_mesh_preview_returns_region_triangles ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_buckling_mode_values_returns_node_displacements ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_buckling_returns_requested_mode_count ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_buckling_unknown_case_errors ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_modal_mode_values_returns_node_displacements ... ok
+test artifacts::fem2d::mutations::component::semio_grammar_conformance::component_grammar_semio_is_grammar_dialect ... ok
+test artifacts::fem2d::mutations::component::tests::analysis_settings_op_round_trips ... ok
+test artifacts::fem2d::mutations::component::tests::combination_op_round_trips ... ok
+test artifacts::fem2d::mutations::component::tests::document_op_round_trips ... ok
+test artifacts::fem2d::mutations::component::tests::element_op_round_trips ... ok
+test artifacts::fem2d::engine::mesh_preview::tests::fem2d_nodal_von_mises_returns_one_value_per_mesh_node ... ok
+test apps::fem3d::component::tests::export_media_results_out_returns_solved_json_for_every_case_3d ... ok
+test artifacts::fem2d::mutations::component::tests::load_case_op_round_trips ... ok
+test artifacts::fem2d::mutations::component::tests::fem2d_op_text_round_trips_every_variant ... ok
+test artifacts::fem2d::mutations::component::tests::node_op_round_trips ... ok
+test artifacts::fem2d::mutations::component::tests::region_op_round_trips ... ok
+test artifacts::fem2d::mutations::component::tests::material_op_round_trips ... ok
+test artifacts::fem2d::mutations::component::tests::section_op_round_trips ... ok
+test artifacts::fem2d::snapshot::pack::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... ok
+test artifacts::fem2d::mutations::component::tests::support_op_round_trips ... ok
+test artifacts::fem2d::snapshot::pack::semio_protocol_conformance::verify_protocol_bytes_against_encoded_pack ... ok
+test artifacts::fem2d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... FAILED
+test artifacts::fem2d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr ... FAILED
+test artifacts::fem2d::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::fem2d::spr::tests::operation_bytes_match_the_pre_migration_baseline ... ok
+test artifacts::fem3d::component::tests::computation_artifact_kind_matches_computation_fem3d ... ok
+test artifacts::fem3d::component::tests::fem_analysis_settings_default_matches_pre_migration_values ... ok
+test artifacts::fem3d::component::tests::fem_camera_default_is_empty_json_object ... ok
+test artifacts::fem3d::component::tests::fem_dof_round_trips_through_core_dof ... ok
+test artifacts::fem3d::dsl::semio_grammar_conformance::component_grammar_semio_is_grammar_dialect ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_modal_returns_requested_mode_count ... ok
+test artifacts::fem2d::snapshot::pack::tests::fem2d_pack_agrees_with_dsl_for_bundled_default_example ... ok
+test artifacts::fem2d::snapshot::pack::tests::fem2d_pack_agrees_with_dsl_for_fixture_documents ... ok
+test artifacts::fem2d::spr::tests::fem2d_document_text_round_trips_through_the_store ... ok
+test artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_fixture_documents ... ok
+test artifacts::fem3d::engine::component::tests::build_model_rejects_dangling_material ... ok
+test artifacts::fem3d::engine::component::tests::build_model_rejects_dangling_node ... ok
+test artifacts::fem3d::engine::component::tests::build_model_rejects_dangling_section ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_camera_json_falls_back_to_world3d_default_for_empty_object ... ok
+test artifacts::fem3d::engine::component::tests::cantilever_tip_load_matches_analytical_solution ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_io_declares_geometry_in_and_results_out_ports ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_solve_unknown_case_id_errors ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_solve_all_returns_case_and_combination_results ... ok
+test artifacts::fem3d::engine::component::tests::member_udl_load_matches_total_wl ... ok
+test artifacts::fem3d::engine::component::tests::quat_z_to_handles_antiparallel_direction ... ok
+test artifacts::fem3d::engine::component::tests::quat_z_to_identity_for_parallel_direction ... ok
+test artifacts::fem3d::engine::component::tests::self_weight_case_produces_nonzero_reactions ... ok
+test artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_bundled_default_example ... ok
+test artifacts::fem3d::engine::component::tests::solid_area_load_matches_pressure_times_footprint_area ... ok
+test artifacts::fem3d::engine::component::tests::truss_3d_solve_is_finite_and_balanced ... ok
+test artifacts::fem3d::engine::component::tests::solid_self_weight_matches_total_mass_times_gravity ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances ... ok
+test artifacts::fem3d::engine::mesh_preview::tests::fem3d_mesh_preview_returns_solid_tets_and_boundary ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_buckling_mode_values_returns_node_displacements ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_buckling_unknown_case_errors ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_buckling_returns_requested_mode_count ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_modal_returns_requested_mode_count ... ok
+test artifacts::fem3d::mutations::component::tests::analysis_settings_set_round_trips ... ok
+test artifacts::fem3d::mutations::component::semio_grammar_conformance::component_grammar_semio_is_grammar_dialect ... ok
+test artifacts::fem3d::mutations::component::tests::combination_set_and_remove_round_trip ... ok
+test artifacts::fem3d::mutations::component::tests::document_diff_absorb_wins_over_granular_changes ... ok
+test artifacts::fem3d::mutations::component::tests::document_op_round_trips ... ok
+test artifacts::fem3d::mutations::component::tests::element_set_and_remove_round_trip ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_modal_mode_values_returns_node_displacements ... ok
+test artifacts::fem3d::mutations::component::tests::load_case_set_and_remove_round_trip ... ok
+test artifacts::fem3d::mutations::component::tests::material_set_and_remove_round_trip ... ok
+test artifacts::fem3d::mutations::component::tests::node_set_and_remove_round_trip ... ok
+test artifacts::fem3d::mutations::component::tests::section_set_and_remove_round_trip ... ok
+test artifacts::fem3d::mutations::component::tests::solid_op_round_trips ... ok
+test artifacts::fem3d::mutations::component::tests::support_set_and_remove_round_trip ... ok
+test artifacts::fem3d::engine::mesh_preview::tests::fem3d_nodal_von_mises_returns_finite_values_for_solid ... ok
+test artifacts::fem3d::snapshot::pack::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... ok
+test artifacts::fem3d::snapshot::pack::semio_protocol_conformance::verify_protocol_bytes_against_encoded_pack ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_window_renders_modal_mode_shape_3d ... ok
+test artifacts::fem3d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... FAILED
+test artifacts::fem3d::mutations::component::tests::fem3d_op_text_round_trips_every_variant ... ok
+test artifacts::fem3d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr ... FAILED
+test artifacts::fem3d::spr::tests::operation_bytes_match_the_pre_migration_baseline ... ok
+test artifacts::fem3d::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test elements2d::continuum_tests::quad4_cooks_membrane_tip_deflection_is_positive_and_finite ... ok
+test elements2d::continuum_tests::quad4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_scene_includes_solid_vertex_colors_3d ... ok
+test elements2d::continuum_tests::quad4_mass_total_equals_rho_t_area ... ok
+test elements2d::continuum_tests::quad4_patch_test_reproduces_linear_field ... ok
+test elements2d::continuum_tests::continuum_elements_solve_correctly_via_dyn_dispatch ... ok
+test elements2d::continuum_tests::quad4_rigid_translation_gives_zero_force ... ok
+test elements2d::continuum_tests::quad8_mass_total_equals_rho_t_area ... ok
+test elements2d::continuum_tests::quad8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test elements2d::continuum_tests::quad8_patch_test_reproduces_linear_field ... ok
+test elements2d::continuum_tests::tri3_cst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test elements2d::continuum_tests::tri3_cst_mass_total_equals_rho_t_area ... ok
+test elements2d::continuum_tests::tri3_cst_patch_test_reproduces_linear_field ... ok
+test elements2d::continuum_tests::tri3_cst_rigid_translation_gives_zero_force ... ok
+test elements2d::continuum_tests::quad8_rigid_translation_gives_zero_force ... ok
+test elements2d::continuum_tests::tri6_lst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test elements2d::continuum_tests::tri6_lst_patch_test_reproduces_linear_field ... ok
+test elements2d::continuum_tests::tri6_lst_mass_total_equals_rho_t_area ... ok
+test elements2d::continuum_tests::tri6_lst_rigid_translation_gives_zero_force ... ok
+test elements2d::plate_tests::plate_dkt_mass_lumps_rho_t_area_over_3_onto_each_tz_only ... ok
+test elements2d::plate_tests::plate_dkt_patch_test_reproduces_constant_curvature ... ok
+test elements2d::plate_tests::plate_dkt_rigid_translation_gives_zero_force ... ok
+test elements2d::tests::bar2_axial_matches_hand_calc ... ok
+test elements2d::tests::bar2_equivalent_nodal_loads_matches_wl_over_2 ... ok
+test elements2d::tests::bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test elements2d::tests::bar2_mass_matches_hand_calc ... ok
+test elements2d::tests::bar2_mass_total_equals_rho_a_l ... ok
+test elements2d::tests::beam_eb2_cantilever_matches_hand_calc ... ok
+test elements2d::tests::beam_eb2_geometric_stiffness_is_symmetric_and_scales_with_axial_force ... ok
+test elements2d::plate_tests::plate_dkt_simply_supported_square_center_deflection_right_order_of_magnitude ... ok
+test elements2d::tests::beam_eb2_geometric_stiffness_rigid_translation_gives_zero_force ... ok
+test elements2d::tests::beam_eb2_mass_axial_block_sums_to_total_mass ... ok
+test elements2d::tests::beam_eb2_rigid_translation_gives_zero_force ... ok
+test elements3d::shell_tests::shell_facet3_cantilever_deflects_toward_tip_load ... ok
+test elements3d::shell_tests::shell_facet3_mass_total_equals_rho_t_area ... ok
+test elements3d::shell_tests::shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_plane_stiffness ... ok
+test elements3d::shell_tests::shell_facet3_patch_test_reproduces_linear_membrane_and_constant_curvature ... ok
+test elements3d::shell_tests::shell_facet3_rigid_translation_gives_zero_force ... ok
+test artifacts::fem3d::spr::tests::fem3d_document_text_round_trips_through_the_store ... ok
+test elements3d::solid_tests::hex8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test apps::fem3d::modes::edit::windows::results::tests::renders_fem3d_results_scene ... ok
+test elements3d::solid_tests::hex8_mass_total_equals_rho_v ... ok
+test elements3d::solid_tests::tet4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test elements3d::solid_tests::hex8_patch_test_recovers_exact_constant_stress ... ok
+test elements3d::solid_tests::tet4_mass_total_equals_rho_v ... ok
+test elements3d::solid_tests::tet4_patch_test_recovers_exact_constant_stress ... ok
+test elements3d::solid_tests::tet4_rigid_translation_gives_zero_force ... ok
+test elements3d::tests::bar3_equivalent_nodal_loads_matches_wl_over_2 ... ok
+test elements3d::solid_tests::hex8_rigid_translation_gives_zero_force ... ok
+test elements3d::tests::bar3_axial_matches_hand_calc_on_skew_member ... ok
+test elements3d::solid_tests::tet4_self_weight_matches_total_mass_times_gravity ... ok
+test elements3d::tests::bar3_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test elements3d::tests::bar3_mass_matches_hand_calc ... ok
+test elements3d::tests::bar3_mass_total_equals_rho_a_l ... ok
+test elements3d::tests::frame3_geometric_stiffness_is_symmetric ... ok
+test elements3d::tests::frame3_geometric_stiffness_rigid_translation_gives_zero_force ... ok
+test elements3d::tests::frame3_mass_axial_and_torsion_blocks_sum_to_total ... ok
+test elements3d::tests::frame3_rigid_translation_gives_zero_force ... ok
+test formulation::tests::gauss_1d_weights_sum_to_two ... ok
+test elements3d::tests::frame3_udl_cantilever_matches_hand_calc ... ok
+test formulation::tests::gauss_1d_panics_on_unsupported_order - should panic ... ok
+test formulation::tests::gauss_quad_weights_sum_to_four ... ok
+test formulation::tests::gauss_tri_panics_on_unsupported_order - should panic ... ok
+test formulation::tests::gauss_tri_weights_sum_to_half ... ok
+test formulation::tests::jacobian_of_axis_aligned_rectangle_is_diagonal ... ok
+test formulation::tests::shape_quad4_partition_of_unity_and_node_values ... ok
+test formulation::tests::shape_quad8_partition_of_unity_and_node_values ... ok
+test formulation::tests::shape_tri3_partition_of_unity_and_node_values ... ok
+test artifacts::fem3d::snapshot::pack::tests::fem3d_pack_agrees_with_dsl_for_fixture_documents ... ok
+test formulation::tests::shape_tri6_partition_of_unity_and_node_values ... ok
+test mesh::tests::extrude_quad_mesh_volume_matches_area_times_height ... ok
+test mesh::tests::boundary_faces_area_matches_extruded_box_surface ... ok
+test mesh::tests::point_in_polygon_returns_false_for_degenerate_polygon ... ok
+test mesh::tests::quad_grid_has_expected_topology ... ok
+test mesh::tests::extrude_tri_mesh_volume_matches_area_times_height ... ok
+test artifacts::fem3d::snapshot::pack::tests::fem3d_pack_agrees_with_dsl_for_bundled_default_example ... ok
+test mesh::tests::split_to_tets_passes_through_existing_tet4_cells ... ok
+test mesh::tests::split_to_tets_preserves_volume ... ok
+test mesh::tests::tri_mesh_quality_detects_inverted_winding_and_handles_empty_mesh ... ok
+test mesh::tests::to_quadratic_welds_shared_edges ... ok
+test mesh::tests::triangulate_honors_constrained_boundary_edges ... ok
+test mesh::tests::split_to_tets_shared_faces_are_parity_consistent ... ok
+test mesh::tests::triangulate_rejects_degenerate_outer_boundary ... ok
+test mesh::tests::triangulate_rejects_degenerate_hole ... ok
+test mesh::tests::triangulate_square_area_matches_input ... ok
+test mesh::tests::volume_mesh_quality_detects_inverted_cell ... ok
+test mesh::tests::triangulate_respects_hole_area ... ok
+test model::tests::dangling_node_ref_is_rejected ... ok
+test model::tests::duplicate_node_id_is_rejected ... ok
+test model::tests::empty_model_is_rejected ... ok
+test model::tests::equilibrium_checks_are_near_zero ... ok
+test model::tests::model_debug_fmt_prints_element_ids_not_trait_objects ... ok
+test model::tests::member_udl_on_element_without_udl_support_is_a_no_op ... ok
+test model::tests::load_on_inactive_dof_is_silently_skipped ... ok
+test model::tests::solves_single_spring_against_hand_calc ... ok
+test model::tests::unconstrained_model_is_singular ... ok
+test mesh::tests::refined_mesh_respects_min_angle ... ok
+test sparse::tests::csc_sym_get_and_to_csr_full_match_dense ... ok
+test sparse::tests::dense_symmetric_eigen_jacobi_handles_zero_size_matrix ... ok
+test sparse::tests::dense_symmetric_eigen_jacobi_matches_known_eigenvalues ... ok
+test sparse::tests::ldlt_reports_zero_pivot_on_singular_matrix ... ok
+test sparse::tests::ldlt_matches_dense_lu_on_random_spd ... ok
+test sparse::tests::ldlt_matches_dense_lu_on_1d_laplacian ... ok
+test sparse::tests::negative_pivot_count_counts_negative_diagonal_entries ... ok
+test sparse::tests::pcg_breaks_on_zero_curvature_direction ... ok
+test sparse::tests::ldlt_solve_many_matches_solve_per_column ... ok
+test sparse::tests::pcg_matches_ldlt_and_dense_lu ... ok
+test sparse::tests::pcg_converges_immediately_when_initial_guess_is_already_exact ... ok
+test sparse::tests::pcg_reports_not_converged_when_max_iter_is_zero ... ok
+test sparse::tests::rcm_reduces_bandwidth_on_scattered_path_graph ... ok
+test elements3d::solid_tests::hex8_meshed_cantilever_deflection_is_right_order_of_magnitude ... ok
+test sparse::tests::subspace_iteration_matches_dense_jacobi_on_small_nondiagonal_case ... ok
+test sparse::tests::subspace_iteration_matches_diagonal_analytic_case ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_window_renders_buckling_mode_shape_3d ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_scene_captions_name_mode_and_factor_3d ... ok
+test artifacts::fem3d::engine::component::tests::example_fixture_parses ... ok
+
+failures:
+
+---- artifacts::fem2d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect stdout ----
+
+thread 'artifacts::fem2d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect' (139931637) panicked at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/📡️spr/🦀️component.rs:84:64:
+parse protocol.semio: TextError { message: "expected a protocol type, found Int", span: TextSpan { line: 7, column: 28, length: 1 }, expected: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- artifacts::fem2d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr stdout ----
+
+thread 'artifacts::fem2d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr' (139931638) panicked at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/📡️spr/🦀️component.rs:96:64:
+parse protocol: TextError { message: "expected a protocol type, found Int", span: TextSpan { line: 7, column: 28, length: 1 }, expected: None }
+
+---- artifacts::fem3d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect stdout ----
+
+thread 'artifacts::fem3d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect' (139931690) panicked at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs:83:64:
+parse protocol.semio: TextError { message: "expected a protocol type, found Int", span: TextSpan { line: 7, column: 28, length: 1 }, expected: None }
+
+---- artifacts::fem3d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr stdout ----
+
+thread 'artifacts::fem3d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr' (139931691) panicked at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs:94:64:
+parse protocol: TextError { message: "expected a protocol type, found Int", span: TextSpan { line: 7, column: 28, length: 1 }, expected: None }
+
+
+failures:
+    artifacts::fem2d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect
+    artifacts::fem2d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr
+    artifacts::fem3d::spr::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect
+    artifacts::fem3d::spr::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr
+
+test result: FAILED. 328 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+error: test failed, to rerun pass `-p semio-s-plugin-fem --lib`

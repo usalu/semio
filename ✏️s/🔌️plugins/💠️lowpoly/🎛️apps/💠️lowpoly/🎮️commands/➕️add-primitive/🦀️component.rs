@@ -6,7 +6,7 @@ use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{build_doc, primitive_kind};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,15 +17,15 @@ pub struct AddPrimitive {
     pub kind: Option<String>,
 }
 
-pub fn handle(payload: &AddPrimitive, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-    let projection = doc.projection;
+pub fn handle(payload: &AddPrimitive, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    let projection = doc.snapshot;
     let kind = primitive_kind(payload.kind.as_deref().unwrap_or("box")).to_string();
-    let Some(mut build) = build_doc(projection, cfg.projection) else { return Ok(Emit::default()) };
+    let Some(mut build) = build_doc(projection, cfg.snapshot) else { return Ok(Emit::default()) };
     let Ok(new_id) = build.add_primitive(&kind) else { return Ok(Emit::default()) };
-    if build.sync_meshes_to_projection().is_err() {
+    if build.sync_meshes_to_snapshot().is_err() {
         return Ok(Emit::default());
     }
-    let Some(new_object) = build.projection().objects.iter().find(|object| object.id == new_id).cloned() else {
+    let Some(new_object) = build.snapshot().objects.iter().find(|object| object.id == new_id).cloned() else {
         return Ok(Emit::default());
     };
     let index = projection.objects.len();
@@ -53,7 +53,7 @@ mod tests {
     fn add_primitive_emits_objects_add_operation() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::AddPrimitive(AddPrimitive { kind: Some("box".into()) }));
-        let projection = a.projection().expect("projection");
+        let projection = a.snapshot().expect("projection");
         assert_eq!(projection.objects.len(), 2);
         assert!(projection.objects.iter().any(|object| object.name == "box"));
     }
@@ -64,7 +64,7 @@ mod tests {
         for kind in ["plane", "cylinder", "cone", "ico_sphere"] {
             dispatch(&mut a, LowpolyCommand::AddPrimitive(AddPrimitive { kind: Some(kind.into()) }));
         }
-        assert_eq!(a.projection().expect("projection").objects.len(), 5);
+        assert_eq!(a.snapshot().expect("projection").objects.len(), 5);
     }
 }
 //#endregion 🧪️Tests

@@ -7,7 +7,7 @@
 //!
 //! 🌉️ `DocumentApp::Projection` is the `Puzzle2dPlayProjection` newtype over a bare
 //! `serde_json::Value` fixture (see `crate::artifacts::puzzle2d::op`'s `🔖️ValueBridge`), not the typed
-//! `Puzzle2dProjection` — every helper below therefore works on `Value`, and each action emits the
+//! `Puzzle2dSnapshot` — every helper below therefore works on `Value`, and each action emits the
 //! granular typed operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into
 //! the new one.
 
@@ -23,7 +23,7 @@ use crate::artifacts::puzzle2d::dsl as puzzle2d_dsl;
 use crate::artifacts::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::artifacts::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
 use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlayProjection};
-use crate::artifacts::puzzle2d::Puzzle2dProjection;
+use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
@@ -54,14 +54,14 @@ const BOARD_DEFAULT_HEIGHT: u32 = 768;
 
 
 /// 🌉️ This app's own fixture (and `DocumentApp::Projection`) stays a bare `serde_json::Value`, so the
-/// DSL-text example fixtures are parsed once into the typed `Puzzle2dProjection` and re-serialized to
+/// DSL-text example fixtures are parsed once into the typed `Puzzle2dSnapshot` and re-serialized to
 /// the JSON string this module's `serde_json::from_str`/`.example(...)` call sites expect. The typed
 /// bridge still carries a mandatory `camera` block — strip it before handing the JSON back, since the
 /// play app's own document must never carry a `"camera"` key (see `setCamera`'s `ActionKind::View`):
 /// leaving it in would permanently trip `puzzle2d_document_delta_operations`'s known-keys guard on
 /// every subsequent action.
 fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
-    let projection = <Puzzle2dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
+    let projection = <Puzzle2dSnapshot as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     let mut value = serde_json::to_value(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"));
     if let Some(object) = value.as_object_mut() {
         object.remove("camera");
@@ -69,8 +69,8 @@ fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
     serde_json::to_string(&value).unwrap_or_else(|error| panic!("re-serialize {label} example fixture: {error}"))
 }
 
-fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::concrete_forest::DSL_TEXT, "concrete-forest") }
-fn nakagin_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
+pub fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::concrete_forest::DSL_TEXT, "concrete-forest") }
+pub fn nakagin_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
 //#endregion 🔖️Constants
 
 //#region 🔖️Scene
@@ -191,11 +191,9 @@ pub fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
 }
 
 fn new_node_id(prefix: &str) -> String {
-    let serial = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
-    format!("{prefix}-{serial}")
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(1);
+    format!("{prefix}-{}", NEXT.fetch_add(1, Ordering::Relaxed))
 }
 
 pub fn puzzle_extension_id() -> &'static str {
@@ -822,14 +820,14 @@ fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegis
 /// 🧩️ Puzzle-2d play app. Owns the `BoardHost` engine; the persisted document (the bare fixture json)
 /// lives in the wrapping `VcsDocumentApp`'s operation store and the view state in `Puzzle2dConfig`.
 #[derive(Default, Clone, Copy)]
-struct Puzzle2dPlayApp;
+pub struct Puzzle2dPlayApp;
 
 impl Puzzle2dPlayApp {
     fn scene_for(fixture: serde_json::Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
         let active_utility = puzzle2d_active_utility(config, window_id);
         Puzzle2dScene {
             fixture,
-            runtime: config.runtime.clone(),
+            runtime: config.clone(),
             active_utility,
         }
     }
@@ -838,7 +836,7 @@ impl Puzzle2dPlayApp {
 impl DocumentApp for Puzzle2dPlayApp {
     const APP_ID: &'static str = PUZZLE2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
-    type Projection = Puzzle2dPlayProjection;
+    type Snapshot = Puzzle2dPlayProjection;
     type Mutation = Puzzle2dMutation;
     type Config = Puzzle2dConfig;
     type ConfigMutation = Puzzle2dConfigMutation;
@@ -846,8 +844,8 @@ impl DocumentApp for Puzzle2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Command = Puzzle2dCommand;
 
-    fn initial_projection() -> Puzzle2dPlayProjection {
-        Puzzle2dPlayProjection(serde_json::to_value(crate::artifacts::puzzle2d::empty_fixture()).unwrap_or(serde_json::Value::Null))
+    fn initial_snapshot() -> Puzzle2dPlayProjection {
+        Puzzle2dPlayProjection(serde_json::to_value(default_empty_fixture()).unwrap_or(serde_json::Value::Null))
     }
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
@@ -859,9 +857,9 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// the host's own events and turn the mutated scene into the granular operation delta plus a
     /// config snapshot. No behaviour lives in this match.
     fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
-        let config = cfg.projection;
+        let config = cfg.snapshot;
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
-        let before = doc.projection.0.clone();
+        let before = doc.snapshot.0.clone();
         let active_utility = puzzle2d_active_utility(config, window_id);
         let mut scene = Self::scene_for(before.clone(), config, window_id);
         // 🐚️ DocumentApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
@@ -980,8 +978,8 @@ impl DocumentApp for Puzzle2dPlayApp {
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
-        let config = cfg.projection;
-        let document_json = doc.projection.0.to_string();
+        let config = cfg.snapshot;
+        let document_json = doc.snapshot.0.to_string();
         // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
         // off the real targeted pane instead of an ambiguous stand-in.
         let pane = match body_key {
@@ -990,7 +988,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             selection::BODY_KEY => Some(selection::WINDOW_KIND_ID),
             _ => None,
         };
-        let envelope = Self::scene_for(doc.projection.0.clone(), config, pane);
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), config, pane);
         let labels = puzzle2d_labels(config);
         match body_key {
             overview::BODY_KEY => overview::render(&document_json, &envelope),
@@ -1004,7 +1002,7 @@ impl DocumentApp for Puzzle2dPlayApp {
     }
 
     fn window_engagements(doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
-        let config = cfg.projection;
+        let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each pane kind — see `window_instance_ids`'s
         // docstring for why puzzle2d always has exactly one instance per pane (no split tracking).
@@ -1012,21 +1010,21 @@ impl DocumentApp for Puzzle2dPlayApp {
             .iter()
             .flat_map(|pane| {
                 window_instance_ids(pane).into_iter().map(|wid| {
-                    let envelope = Self::scene_for(doc.projection.0.clone(), config, Some(&wid));
-                    (wid, edit::puzzle2d_engagement(&envelope, &host, pane, labels))
+                    let envelope = Self::scene_for(doc.snapshot.0.clone(), config, Some(&wid));
+                    (wid, edit::puzzle2d_engagement(&envelope, &crate::artifacts::puzzle2d::engine::board_host::puzzle_board_host(), pane, labels))
                 })
             })
             .collect()
     }
 
     fn window_measures(doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
+        let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         PUZZLE2D_PANES
             .iter()
             .flat_map(|pane| {
                 window_instance_ids(pane).into_iter().map(|wid| {
-                    let envelope = Self::scene_for(doc.projection.0.clone(), config, Some(&wid));
+                    let envelope = Self::scene_for(doc.snapshot.0.clone(), config, Some(&wid));
                     let measures = match *pane {
                         detail::WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
                         selection::WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
@@ -1039,8 +1037,8 @@ impl DocumentApp for Puzzle2dPlayApp {
     }
 
     fn tool_measures(doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.projection;
-        let envelope = Self::scene_for(doc.projection.0.clone(), config, None);
+        let config = cfg.snapshot;
+        let envelope = Self::scene_for(doc.snapshot.0.clone(), config, None);
         let labels = puzzle2d_labels(config);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])
     }
@@ -1051,7 +1049,7 @@ impl DocumentApp for Puzzle2dPlayApp {
         cfg: &ConfigView<'_, Puzzle2dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let config = cfg.projection;
+        let config = cfg.snapshot;
         let is_de = is_de_locale(config);
         let mut selected = config.selected_ids.clone();
         if let Some(surface) = request.surface.as_ref() {
@@ -1060,7 +1058,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                 selected = ids;
             }
         }
-        puzzle2d_context_menu_items(registry, &doc.projection.0, &selected, is_de)
+        puzzle2d_context_menu_items(registry, &doc.snapshot.0, &selected, is_de)
     }
 }
 //#endregion 🔖️PlayApp
@@ -1249,7 +1247,7 @@ pub(crate) mod testkit {
     }
 
     pub fn fixture_of(app: &Puzzle2dApp) -> Value {
-        app.projection().expect("projection").0
+        app.snapshot().expect("projection").0
     }
 
     pub fn first_node_id(app: &Puzzle2dApp) -> String {
@@ -1268,7 +1266,7 @@ mod tests {
 
     /// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
     /// `Board2dScene.cameraJson` — the only externally observable surface for the runtime camera
-    /// (the camera is never a document field, so it cannot be read back off `app.projection()`).
+    /// (the camera is never a document field, so it cannot be read back off `app.snapshot()`).
     fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
         fn find_camera_json(value: &Value) -> Option<String> {
             if let Some(json) = value.get("cameraJson").and_then(Value::as_str) {
@@ -1308,7 +1306,7 @@ mod tests {
     #[test]
     fn puzzle2d_play_projection_pack_round_trips() {
         let app = concrete_forest_app();
-        store::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     }
 
     #[test]
@@ -1337,7 +1335,7 @@ mod tests {
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`). Deliberately
     /// dispatches through a standalone typed `Puzzle2dStore` — NOT through `Puzzle2dPlayApp`/
     /// `Puzzle2dPlayProjection` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app still uses)
-    /// — since `Puzzle2dMutation`'s canonical `Mutation<Puzzle2dProjection>` impl (not its
+    /// — since `Puzzle2dMutation`'s canonical `Mutation<Puzzle2dSnapshot>` impl (not its
     /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
@@ -1346,11 +1344,11 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dProjection::default(), None));
+        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None));
         let node = Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() };
         store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
         let edit: &Edit<Puzzle2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<Puzzle2dProjection, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 
@@ -1609,7 +1607,7 @@ mod tests {
         let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).expect("switch utility");
         assert!(result.mutations.is_empty(), "a utility switch must not produce document operations");
         let can_undo = dispatch(&mut app, "undo", None, None);
-        assert!(can_undo.map_or(true, |r| r.operations.is_empty()), "a utility switch must not have created a document undo step");
+        assert!(can_undo.map_or(true, |r| r.mutations.is_empty()), "a utility switch must not have created a document undo step");
     }
 
     /// 🧭️ Kind discipline: every View-declared runtime/host action must run through the registry

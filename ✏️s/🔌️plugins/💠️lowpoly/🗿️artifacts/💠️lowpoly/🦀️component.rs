@@ -40,7 +40,7 @@ mod pixels_base64 {
 }
 //#endregion 🔖️Pixels
 
-//#region 🔖️Projection
+//#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct LowpolyTransform {
@@ -84,7 +84,7 @@ pub struct LowpolyObject {
     pub transform: LowpolyTransform,
     pub smooth_shading: bool,
     // ⚠️ Deliberately plain `Shape::Text` (bare `String`, no `#[dsl(lang = "json")]`), NOT an
-    // oversight: `LowpolyObject` is the element type of `LowpolyProjection.objects: Vec<LowpolyObject>`,
+    // oversight: `LowpolyObject` is the element type of `LowpolySnapshot.objects: Vec<LowpolyObject>`,
     // a `Shape::List(Shape::Record(..))` field printed in `JoinMode::Document`. The engine's `Writer`
     // only forces a line break after a `Shape::Embed` field's closing fence when the NEXT chunk is
     // pushed via `new_record()` (as `Shape::Block`/`Shape::Table` fields do) — plain list-item
@@ -106,82 +106,15 @@ impl Identified<String> for LowpolyObject {
     }
 }
 
-/// @emoji 🎞️ Persisted lowpoly document: a list of mesh objects each carrying geometry (`mesh_json`,
-/// deliberately plain `String` — see the field's own doc comment for the confirmed engine-gap reason
-/// it cannot be `#[dsl(lang = "json")]`), transform, shading and paint layers. Ephemeral editing
-/// context (active object, selection, utilities, camera, brush) lives in the plugin's app config,
-/// never here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(extension = "lowpoly", layout = "lines")]
-pub struct LowpolyProjection {
-    pub schema: String,
-    pub objects: Vec<LowpolyObject>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for LowpolyProjection {
-    const EXTENSION: &'static str = "lowpoly";
-    fn envelope_id() -> &'static str { "lowpoly.lowpoly" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for LowpolyProjection {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
+/// @emoji 📸️ Persisted lowpoly snapshot: schema plus mesh objects (geometry, transform, shading,
+/// paint layers). Non-persistent fields live on [`schema::LowpolyArtifact`](crate::artifacts::lowpoly::schema::LowpolyArtifact).
+pub use crate::artifacts::lowpoly::snapshot::schema::LowpolySnapshot;
 
 
 
 
-pub fn projection_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &str) -> LowpolyProjection {
-    LowpolyProjection {
-        schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
-        objects: vec![LowpolyObject { id: object_id.into(), name: object_name.into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json: mesh_json.into(), paint_layers: vec![LowpolyPaintLayer::new("Base")] }],
-    }
-}
+
+pub use crate::artifacts::lowpoly::snapshot::schema::snapshot_from_mesh_json;
 
 /// @emoji 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
 /// session so mesh operations know their target vertices/edges/faces.
@@ -216,7 +149,7 @@ impl Default for LowpolySelection {
         Self { targets: LowpolySelectionTargets::default(), keys: Vec::new(), mode: "mesh".into(), ids: Vec::new() }
     }
 }
-//#endregion 🔖️Projection
+//#endregion 🔖️Snapshot
 
 //#region 🔖️Patches
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -260,6 +193,42 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
             mesh_json: (self.mesh_json != other.mesh_json).then(|| other.mesh_json.clone()),
         };
         (patch != LowpolyObjectPatch::default()).then_some(patch)
+    }
+}
+
+/// 🖌️ Applies a paint-layers sub-delta onto one object.
+pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &crate::artifacts::lowpoly::diff::schema::LowpolyPaintLayersDelta) {
+    for index in delta.removed.iter().copied().rev() {
+        let i = index as usize;
+        if i < object.paint_layers.len() {
+            object.paint_layers.remove(i);
+        }
+    }
+    for entry in &delta.added {
+        let i = (entry.index as usize).min(object.paint_layers.len());
+        object.paint_layers.insert(i, entry.layer.clone());
+    }
+    for entry in &delta.patched {
+        let i = entry.index as usize;
+        if let Some(layer) = object.paint_layers.get_mut(i) {
+            let p = &entry.patch;
+            if let Some(value) = &p.name { layer.name = value.clone(); }
+            if let Some(value) = p.visible { layer.visible = value; }
+            if let Some(value) = p.opacity { layer.opacity = value; }
+            if let Some(value) = &p.blend_mode { layer.blend_mode = value.clone(); }
+        }
+    }
+    for stroke in &delta.strokes {
+        let i = stroke.layer_index as usize;
+        if let Some(layer) = object.paint_layers.get_mut(i) {
+            for run in &stroke.runs {
+                let start = run.offset as usize;
+                let end = (start + run.bytes.len()).min(layer.pixels.len());
+                if start < layer.pixels.len() {
+                    layer.pixels[start..end].copy_from_slice(&run.bytes[..end - start]);
+                }
+            }
+        }
     }
 }
 //#endregion 🔖️Patches
@@ -324,16 +293,16 @@ mod tests {
     }
 
     #[test]
-    fn projection_from_mesh_json_builds_single_object_with_base_layer() {
+    fn snapshot_from_mesh_json_builds_single_object_with_base_layer() {
         let mesh_json = "{}".to_string();
-        let projection = projection_from_mesh_json(&mesh_json, "obj-42", "Widget");
-        assert_eq!(projection.schema, LOWPOLY_DOCUMENT_SCHEMA);
-        assert_eq!(projection.objects.len(), 1);
-        assert_eq!(projection.objects[0].id, "obj-42");
-        assert_eq!(projection.objects[0].name, "Widget");
-        assert_eq!(projection.objects[0].mesh_json, mesh_json);
-        assert_eq!(projection.objects[0].paint_layers.len(), 1);
-        assert_eq!(projection.objects[0].paint_layers[0].name, "Base");
+        let snapshot = snapshot_from_mesh_json(&mesh_json, "obj-42", "Widget");
+        assert_eq!(snapshot.schema, LOWPOLY_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.objects.len(), 1);
+        assert_eq!(snapshot.objects[0].id, "obj-42");
+        assert_eq!(snapshot.objects[0].name, "Widget");
+        assert_eq!(snapshot.objects[0].mesh_json, mesh_json);
+        assert_eq!(snapshot.objects[0].paint_layers.len(), 1);
+        assert_eq!(snapshot.objects[0].paint_layers[0].name, "Base");
     }
 
     #[test]
@@ -346,4 +315,24 @@ mod tests {
         assert!(selection.ids.is_empty());
     }
 }
+
+    #[test]
+    fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
+        use schema::{parse_state_class_kebab, ArtifactSchemaFields};
+        let descriptor = crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor();
+        assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
+        let schema: serde_json::Value = serde_json::from_str(descriptor.snapshot.json_schema).expect("snapshot json");
+        assert_eq!(schema["title"], "LowpolySnapshot");
+        let properties = schema["properties"].as_object().expect("properties");
+        let mut json_states: Vec<(String, _)> = properties.iter().map(|(name, prop)| {
+            let raw = prop["x-semio-state"].as_str().expect("state");
+            (name.clone(), parse_state_class_kebab(raw).expect("parse"))
+        }).collect();
+        json_states.sort_by(|a, b| a.0.cmp(&b.0));
+        let mut derived: Vec<(String, _)> = crate::artifacts::lowpoly::snapshot::schema::LowpolySnapshot::field_states()
+            .iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
+        derived.sort_by(|a, b| a.0.cmp(&b.0));
+        assert_eq!(derived, json_states);
+        assert_eq!(crate::artifacts::lowpoly::schema::LowpolyArtifact::artifact_schema_id(), "s.lowpoly.lowpoly");
+    }
 //#endregion 🧪️Tests

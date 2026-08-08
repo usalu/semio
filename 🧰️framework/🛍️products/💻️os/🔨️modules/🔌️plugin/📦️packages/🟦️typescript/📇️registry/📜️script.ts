@@ -910,8 +910,14 @@ function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: Reado
  * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
 const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
 const TAXONOMY_MUTATION_CHILD_DIRS = TAXONOMY.mutationChildDirs ?? [];
+const TAXONOMY_SNAPSHOT_CHILD_DIRS = TAXONOMY.snapshotChildDirs ?? [];
+const TAXONOMY_DIFF_CHILD_DIRS = TAXONOMY.diffChildDirs ?? [];
+const TAXONOMY_SCHEMA_FORMATS = Object.values(TAXONOMY.schemaFormats ?? {});
 const MUTATIONS_FACET_DIR = "🧬️mutations";
 const ENGINE_FACET_DIR = "⚙️engine";
+const SNAPSHOT_FACET_DIR = "📸️snapshot";
+const DIFF_FACET_DIR = "🔺️diff";
+const SCHEMA_FACET_DIR = "🧬️schema";
 const TAXONOMY_ARTIFACT_SPEC_FILENAMES = TAXONOMY.artifactSpecFilenames ?? {};
 const TAXONOMY_TS_LEAF_FILENAME = TAXONOMY.ecosystems["🟦️typescript"]?.leafFilename ?? "🟦️component.ts";
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
@@ -948,6 +954,13 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   for (const artifact of listDirs(artifactsDir)) {
     for (const component of TAXONOMY_ARTIFACT_COMPONENTS) {
       const facetDir = join(artifactsDir, artifact, component);
+      // 📸️snapshot is a nested container (schema + pack); its own root has no rust/ts leaf.
+      if (component === SNAPSHOT_FACET_DIR) {
+        if (!existsSync(facetDir)) {
+          findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/`);
+        }
+        continue;
+      }
       if (!existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
         findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_LEAF_FILENAME}`);
       }
@@ -959,6 +972,51 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
         findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_TS_LEAF_FILENAME}`);
       }
     }
+    //#region NestedFacetWalk
+    // 📸️ Walk 📸️snapshot/<child> and 🔺️diff/<child>, then require all five schemaFormats leaves at every 🧬️schema facet.
+    const snapshotDir = join(artifactsDir, artifact, SNAPSHOT_FACET_DIR);
+    for (const child of TAXONOMY_SNAPSHOT_CHILD_DIRS) {
+      const childDir = join(snapshotDir, child);
+      const rel = `${SNAPSHOT_FACET_DIR}/${child}`;
+      if (child === SCHEMA_FACET_DIR) {
+        if (!existsSync(childDir)) {
+          findings.push(`${pluginId}: artifact "${artifact}" is missing ${rel}/`);
+        }
+        continue;
+      }
+      if (!existsSync(join(childDir, TAXONOMY_LEAF_FILENAME))) {
+        findings.push(`${pluginId}: artifact "${artifact}" is missing ${rel}/${TAXONOMY_LEAF_FILENAME}`);
+      }
+      if (!existsSync(join(childDir, TAXONOMY_TS_LEAF_FILENAME))) {
+        findings.push(`${pluginId}: artifact "${artifact}" is missing ${rel}/${TAXONOMY_TS_LEAF_FILENAME}`);
+      }
+      const nestedSpec = TAXONOMY_ARTIFACT_SPEC_FILENAMES[rel];
+      if (nestedSpec && !existsSync(join(childDir, nestedSpec))) {
+        findings.push(`${pluginId}: artifact "${artifact}" is missing ${rel}/${nestedSpec}`);
+      }
+    }
+    const diffDir = join(artifactsDir, artifact, DIFF_FACET_DIR);
+    for (const child of TAXONOMY_DIFF_CHILD_DIRS) {
+      const childDir = join(diffDir, child);
+      const rel = `${DIFF_FACET_DIR}/${child}`;
+      if (!existsSync(childDir)) {
+        findings.push(`${pluginId}: artifact "${artifact}" is missing ${rel}/`);
+      }
+    }
+    const schemaFacetRels = [
+      SCHEMA_FACET_DIR,
+      `${SNAPSHOT_FACET_DIR}/${SCHEMA_FACET_DIR}`,
+      `${DIFF_FACET_DIR}/${SCHEMA_FACET_DIR}`,
+    ];
+    for (const facetRel of schemaFacetRels) {
+      const facetDir = join(artifactsDir, artifact, ...facetRel.split("/"));
+      for (const format of TAXONOMY_SCHEMA_FORMATS) {
+        if (!existsSync(join(facetDir, format.leafFilename))) {
+          findings.push(`${pluginId}: artifact "${artifact}" is missing ${facetRel}/${format.leafFilename}`);
+        }
+      }
+    }
+    //#endregion NestedFacetWalk
     //#region MutationTriad
     // 🧬️ Walk 🧬️mutations/<mutation>/<kind> — each concrete mutation must carry rust+ts leaves for every mutationChildDirs kind.
     const mutationsRoot = join(artifactsDir, artifact, MUTATIONS_FACET_DIR);
@@ -1076,7 +1134,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
-  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...TAXONOMY_MUTATION_CHILD_DIRS]);
+  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...TAXONOMY_MUTATION_CHILD_DIRS, ...TAXONOMY_SNAPSHOT_CHILD_DIRS, ...TAXONOMY_DIFF_CHILD_DIRS]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;

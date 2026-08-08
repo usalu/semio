@@ -465,9 +465,14 @@ mod tests {
         assert!(mesh.positions.len() > 12);
         assert!(mesh.edge_positions.len() >= 6);
         assert_eq!(mesh.edge_positions.len() % 6, 0);
+        let mut degenerate = Vec::new();
         for triangle_index in 0..mesh.triangle_count() {
-            assert!(mesh_triangle_area(&mesh, triangle_index) > 1e-10, "triangle {triangle_index} must not be degenerate");
+            let area = mesh_triangle_area(&mesh, triangle_index);
+            if area <= 1e-10 {
+                degenerate.push((triangle_index, area));
+            }
         }
+        assert!(degenerate.is_empty(), "degenerate triangles={degenerate:?} tri_count={} positions={} edges={}", mesh.triangle_count(), mesh.positions.len(), mesh.edge_positions.len());
     }
 
     #[test]

@@ -12,8 +12,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::puzzle2d::diff::{puzzle2d_diff_absorb, puzzle2d_index_of, Puzzle2dDiff};
-use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dProjection};
+use crate::artifacts::puzzle2d::diff::{puzzle2d_index_of, Puzzle2dDiff};
+use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dSnapshot};
 use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -51,7 +51,7 @@ pub enum Puzzle2dMutation {
     #[dsl(key = "setDocument")]
     SetDocument {
         #[dsl(block)]
-        document: Puzzle2dProjection,
+        snapshot: Puzzle2dSnapshot,
     },
 }
 
@@ -59,27 +59,25 @@ pub enum Puzzle2dMutation {
 
 
 
-fn puzzle2d_mutation_diff(operation: &Puzzle2dMutation) -> Puzzle2dDiff {
-    let mut diff = Puzzle2dDiff::default();
+fn puzzle2d_mutation_diff(operation: &Puzzle2dMutation, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
     match operation {
-        Puzzle2dMutation::SetNode { index, node } => diff.nodes.set.push((*index, node.clone())),
-        Puzzle2dMutation::RemoveNode { id } => diff.nodes.removed.push(id.clone()),
-        Puzzle2dMutation::SetEdge { index, edge } => diff.edges.set.push((*index, edge.clone())),
-        Puzzle2dMutation::RemoveEdge { id } => diff.edges.removed.push(id.clone()),
-        Puzzle2dMutation::SetMeta { meta } => diff.meta = Some(meta.clone()),
-        Puzzle2dMutation::SetDocument { document } => diff.document = Some(document.clone()),
+        Puzzle2dMutation::SetNode { index, node } => crate::artifacts::puzzle2d::diff::diff_set_node(*index, node.clone(), base),
+        Puzzle2dMutation::RemoveNode { id } => crate::artifacts::puzzle2d::diff::diff_remove_node(id.clone()),
+        Puzzle2dMutation::SetEdge { index, edge } => crate::artifacts::puzzle2d::diff::diff_set_edge(*index, edge.clone(), base),
+        Puzzle2dMutation::RemoveEdge { id } => crate::artifacts::puzzle2d::diff::diff_remove_edge(id.clone()),
+        Puzzle2dMutation::SetMeta { meta } => crate::artifacts::puzzle2d::diff::diff_set_meta(meta.clone()),
+        Puzzle2dMutation::SetDocument { snapshot } => crate::artifacts::puzzle2d::diff::diff_set_snapshot(snapshot.clone()),
     }
-    diff
 }
 
-impl Mutation<Puzzle2dProjection> for Puzzle2dMutation {
+impl Mutation<Puzzle2dSnapshot> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    fn diff(&self, _projection: &Puzzle2dProjection) -> Puzzle2dDiff {
-        puzzle2d_mutation_diff(self)
+    fn diff(&self, projection: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+        puzzle2d_mutation_diff(self, projection)
     }
 
-    fn inverse(&self, projection: &Puzzle2dProjection) -> Vec<Self> {
+    fn inverse(&self, projection: &Puzzle2dSnapshot) -> Vec<Self> {
         match self {
             Puzzle2dMutation::SetNode { node, .. } => match puzzle2d_index_of(&projection.nodes, &node.id) {
                 Some(index) => vec![Puzzle2dMutation::SetNode { index, node: projection.nodes[index].clone() }],
@@ -92,7 +90,7 @@ impl Mutation<Puzzle2dProjection> for Puzzle2dMutation {
             },
             Puzzle2dMutation::RemoveEdge { id } => puzzle2d_index_of(&projection.edges, id).map(|index| vec![Puzzle2dMutation::SetEdge { index, edge: projection.edges[index].clone() }]).unwrap_or_default(),
             Puzzle2dMutation::SetMeta { .. } => vec![Puzzle2dMutation::SetMeta { meta: projection.meta.clone() }],
-            Puzzle2dMutation::SetDocument { .. } => vec![Puzzle2dMutation::SetDocument { document: projection.clone() }],
+            Puzzle2dMutation::SetDocument { .. } => vec![Puzzle2dMutation::SetDocument { snapshot: projection.clone() }],
         }
     }
 }
@@ -147,7 +145,7 @@ fn apply_puzzle2d_operation_to_value(document: &mut Value, operation: &Puzzle2dM
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
             }
         }
-        Puzzle2dMutation::SetDocument { document: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
+        Puzzle2dMutation::SetDocument { snapshot: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
     }
 }
 
@@ -161,23 +159,63 @@ fn puzzle2d_value_item_index<T: serde::de::DeserializeOwned>(document: &Value, c
     serde_json::from_value(items[index].clone()).ok().map(|item| (index, item))
 }
 
+fn puzzle2d_reorder_value_collection(document: &mut Value, collection: &str, order: &[String]) {
+    let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) else {
+        return;
+    };
+    let mut by_id: std::collections::BTreeMap<String, Value> = std::collections::BTreeMap::new();
+    for item in array.drain(..) {
+        if let Some(id) = puzzle2d_value_item_id(&item).map(str::to_string) {
+            by_id.insert(id, item);
+        }
+    }
+    let mut ordered = Vec::with_capacity(order.len());
+    for id in order {
+        if let Some(item) = by_id.remove(id) {
+            ordered.push(item);
+        }
+    }
+    ordered.extend(by_id.into_values());
+    *array = ordered;
+}
+
 impl MutationDiff<Value> for Puzzle2dDiff {
     fn apply(&self, projection: &Value) -> Value {
-        if let Some(document) = &self.document {
-            return serde_json::to_value(document).unwrap_or_else(|_| projection.clone());
+        if let Some(artifact) = &self.artifact {
+            return serde_json::to_value(artifact.to_snapshot()).unwrap_or_else(|_| projection.clone());
         }
         let mut next = projection.clone();
-        for id in &self.nodes.removed {
-            puzzle2d_remove_value_item(&mut next, "nodes", id);
+        if let Some(delta) = &self.nodes {
+            for id in &delta.removed {
+                puzzle2d_remove_value_item(&mut next, "nodes", id);
+            }
+            for node in &delta.added {
+                puzzle2d_upsert_value_item(&mut next, "nodes", usize::MAX, serde_json::to_value(node).unwrap_or(Value::Null));
+            }
+            for entry in &delta.patched {
+                if let Some(node) = &entry.patch.replacement {
+                    puzzle2d_upsert_value_item(&mut next, "nodes", usize::MAX, serde_json::to_value(node).unwrap_or(Value::Null));
+                }
+            }
+            if let Some(order) = &delta.reordered {
+                puzzle2d_reorder_value_collection(&mut next, "nodes", order);
+            }
         }
-        for (index, node) in &self.nodes.set {
-            puzzle2d_upsert_value_item(&mut next, "nodes", *index, serde_json::to_value(node).unwrap_or(Value::Null));
-        }
-        for id in &self.edges.removed {
-            puzzle2d_remove_value_item(&mut next, "edges", id);
-        }
-        for (index, edge) in &self.edges.set {
-            puzzle2d_upsert_value_item(&mut next, "edges", *index, serde_json::to_value(edge).unwrap_or(Value::Null));
+        if let Some(delta) = &self.edges {
+            for id in &delta.removed {
+                puzzle2d_remove_value_item(&mut next, "edges", id);
+            }
+            for edge in &delta.added {
+                puzzle2d_upsert_value_item(&mut next, "edges", usize::MAX, serde_json::to_value(edge).unwrap_or(Value::Null));
+            }
+            for entry in &delta.patched {
+                if let Some(edge) = &entry.patch.replacement {
+                    puzzle2d_upsert_value_item(&mut next, "edges", usize::MAX, serde_json::to_value(edge).unwrap_or(Value::Null));
+                }
+            }
+            if let Some(order) = &delta.reordered {
+                puzzle2d_reorder_value_collection(&mut next, "edges", order);
+            }
         }
         if let Some(meta) = &self.meta {
             if let Some(object) = next.as_object_mut() {
@@ -188,15 +226,16 @@ impl MutationDiff<Value> for Puzzle2dDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        puzzle2d_diff_absorb(self, other);
+        MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
     }
 }
 
 impl Mutation<Value> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    fn diff(&self, _projection: &Value) -> Puzzle2dDiff {
-        puzzle2d_mutation_diff(self)
+    fn diff(&self, projection: &Value) -> Puzzle2dDiff {
+        let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        puzzle2d_mutation_diff(self, &base)
     }
 
     fn inverse(&self, projection: &Value) -> Vec<Self> {
@@ -215,7 +254,7 @@ impl Mutation<Value> for Puzzle2dMutation {
                 let meta: Puzzle2dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 vec![Puzzle2dMutation::SetMeta { meta }]
             }
-            Puzzle2dMutation::SetDocument { .. } => vec![Puzzle2dMutation::SetDocument { document: serde_json::from_value(projection.clone()).unwrap_or_default() }],
+            Puzzle2dMutation::SetDocument { .. } => vec![Puzzle2dMutation::SetDocument { snapshot: serde_json::from_value(projection.clone()).unwrap_or_default() }],
         }
     }
 }
@@ -261,7 +300,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
     if before == after {
         return Vec::new();
     }
-    let fallback = |after: &Value| vec![Puzzle2dMutation::SetDocument { document: serde_json::from_value(after.clone()).unwrap_or_default() }];
+    let fallback = |after: &Value| vec![Puzzle2dMutation::SetDocument { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }];
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
         return fallback(after);
     };
@@ -320,7 +359,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 //#endregion 🔖️ValueBridge
 
 //#region 🔖️PlayProjection
-/// 🌱️ The `Puzzle2dPlayApp` predates the typed `Puzzle2dProjection` above and stays on this ad-hoc
+/// 🌱️ The `Puzzle2dPlayApp` predates the typed `Puzzle2dSnapshot` above and stays on this ad-hoc
 /// `serde_json::Value` fixture shape for its hundreds of Value-manipulating scene-mutation
 /// helpers (see the app's own module docs) — out of scope to retrofit onto the typed struct.
 /// This newtype exists only to satisfy `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack`
@@ -367,7 +406,7 @@ impl MutationDiff<Puzzle2dPlayProjection> for Puzzle2dDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        puzzle2d_diff_absorb(self, other);
+        MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
     }
 }
 
@@ -419,10 +458,10 @@ mod tests {
 //#endregion 🧪️Tests
 
 
-pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dProjection, mutation: &Puzzle2dMutation) {
+pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) {
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dProjection, mutation: &Puzzle2dMutation) -> Vec<Puzzle2dMutation> {
+pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> Vec<Puzzle2dMutation> {
     mutation.inverse(projection)
 }

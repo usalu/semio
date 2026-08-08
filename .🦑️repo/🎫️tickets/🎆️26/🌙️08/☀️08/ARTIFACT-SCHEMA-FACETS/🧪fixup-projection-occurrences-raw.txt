@@ -1,0 +1,288 @@
+137:        pub document_projection_schema: Option<String>,
+211:            document_projection_schema: def.document_projection_schema,
+299:    /// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
+507:                document_projection_schema: None,
+527:                document_projection_schema: None,
+980:                            document_projection_schema: window.document_projection_schema,
+1504:        //! for the app-specific action names/projection shape, so only the control flow is shared). Not
+1833:            assert_eq!(probe(app), after, "command did not produce the expected projection");
+1835:            assert_eq!(probe(app), before, "undo did not revert to the expected projection");
+1837:            assert_eq!(probe(app), after, "redo did not reapply the expected projection");
+1890:            assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same projection");
+1896:        /// sides' post-reconcile `probe` results (`(projection, conflicts)`) must agree, `has_dangling_ref`
+1897:        /// must be false for the converged projection, and at least one `SpaceConflict` must have been
+1909:            let (projection_a, conflicts_a) = probe(&instance_a);
+1910:            let (projection_b, conflicts_b) = probe(&instance_b);
+1911:            assert_eq!(projection_a, projection_b, "both instances must converge on the same reconciled projection");
+1912:            assert!(!has_dangling_ref(&projection_a), "converged projection must not retain a dangling reference");
+1959:            struct DummyProjection {
+1968:            impl MutationDiff<DummyProjection> for DummyDiff {
+1969:                fn apply(&self, projection: &DummyProjection) -> DummyProjection {
+1970:                    DummyProjection { count: self.count.unwrap_or(projection.count) }
+1987:            impl Mutation<DummyProjection> for DummyMutation {
+1990:                fn diff(&self, _projection: &DummyProjection) -> DummyDiff {
+1996:                fn inverse(&self, projection: &DummyProjection) -> Vec<Self> {
+1997:                    vec![DummyMutation::SetCount { value: projection.count }]
+2013:                type Projection = DummyProjection;
+2021:                fn initial_projection() -> DummyProjection {
+2022:                    DummyProjection::default()
+2025:                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {
+2027:                        DummyCommand::Increment => Ok(Emit { document_mutations: vec![DummyMutation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+2031:                fn render(_body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+2032:                    ui_text(format!("count={}", doc.projection.count))
+2047:                assert_eq!(app.projection().unwrap().count, 1);
+2053:                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.projection().unwrap().count, 0, 1);
+2058:                assert_two_instances_converge::<DummyApp, i32>("mem://testkit-converge", DummyCommand::Increment, DummyCommand::Increment, |app| app.projection().unwrap().count);
+2063:                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.projection().unwrap().count);
+2813:    /// the materialized projection plus the history metadata (checkpoints/alternatives/undo state)
+2816:        pub projection: &'a P,
+2820:    /// @emoji 🧮️ Read-only view of an app's config projection — same role as {@link DocumentView} for the
+2823:        pub projection: &'a C,
+2826:    /// @emoji 📝️ Read-only view of an app's volatile draft projection — same role as {@link ConfigView}
+2829:        pub projection: &'a D,
+3306:    /// - `dispatch(&self, doc: &DocumentView<'_, $Projection>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Mutation, $ConfigMutation>, Fault>`,
+3307:    ///   matching each variant to `$module::handle(payload, doc, cfg)` — `$Projection`/`$Mutation`/`$Config`/
+3312:    /// `enum $Name for $Projection, $Mutation, $Config, $ConfigMutation { .. }` — so `dispatch` can be a
+3317:    /// app's concrete `Projection`/`Mutation`/`Config`/`ConfigMutation` (the same way
+3346:    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+3366:            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+3407:    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+3426:            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+3467:    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+3487:            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+3579:            let projection = 0u32;
+3581:            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
+3582:            let cfg = ConfigView { projection: &config };
+3647:            let projection = 0u32;
+3649:            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
+3650:            let cfg = ConfigView { projection: &config };
+3659:    /// @emoji 🧩️ Typed, per-app author surface. An app declares its `Projection` and `Mutation` (a
+3660:    /// `store::Mutation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
+3687:        type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
+3688:        type Mutation: ::protocol::Mutation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+3691:        /// @emoji 📝️ Volatile draft projection — use {@link NoDraft} when the app has no draft lane.
+3708:        fn initial_projection() -> Self::Projection;
+3721:            doc: &DocumentView<'_, Self::Projection>,
+3769:        fn copy_fragment( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
+3772:        fn cut_operations( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Mutation> {
+3775:        fn paste_operations( _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
+3778:        fn pending_effects( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+3781:        fn render(body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+3785:        fn window_engagements( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+3789:        fn window_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+3796:        fn tool_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+3808:        fn context_menu( _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+3812:        /// `initial_projection` — called once from `VcsDocumentApp::new`, right after the store is
+3816:        fn seed( _store: &mut DocumentStore<Self::Projection, Self::Mutation>) {}
+3831:        /// 🎞️ Pure projection of the current document onto one declared output port — must not mutate
+3837:        fn export_media(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<Media, MediaError> {
+3842:            let bytes = doc.projection.encode_pack();
+3845:        /// 🎞️ Builds the operation that replaces the whole document with `projection` — the seam the
+3848:        /// whole projection" operation); an app whose `Mutation` enum has such a variant (e.g.
+3850:        fn whole_document_operation( _projection: Self::Projection) -> Option<Self::Mutation> {
+3857:        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
+3865:            let projection = <Self::Projection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+3866:            match Self::whole_document_operation(projection) {
+3874:        fn media_fingerprint(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<MediaFingerprint, MediaError> {
+3974:        /// {@link store::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log
+3983:        /// {@link store::DocumentPackFiles} (pack-encoded initial projection plus the same `ops` op-log
+3993:        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;
+4014:        /// runner calls without knowing the app's concrete `Projection`/`Mutation` types.
+4321:    /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Mutation>` — the single source of
+4324:    /// `InvocationResult` whose inverses come from the just-recorded `Edit.inverse`. A projection+history
+4331:        store: DocumentStore<A::Projection, A::Mutation>,
+4339:        /// changing invalidates the cached projection/`HistoryView` pair.
+4340:        cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Projection, A::Config, HistoryView)>,
+4367:            let envelope = create_document_envelope::<A::Projection, A::Mutation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_projection(), None);
+4380:        pub(crate) fn test_projection(&self) -> A::Projection {
+4381:            self.store.projection().expect("materialize projection")
+4384:        /// @emoji 🧪️ The config-store twin of `test_projection`.
+4387:            self.config_store.projection().expect("materialize config projection")
+4405:        /// @emoji 📸️ Materializes and returns the current projection — the typed counterpart to
+4408:        pub fn projection(&self) -> Result<A::Projection, Fault> {
+4409:            self.store.projection().map_err(|error| error.into_fault())
+4413:        /// counterpart to `store::DocumentStore::projection_with_conflicts`.
+4414:        pub fn projection_with_conflicts(&self) -> Result<(A::Projection, Vec<SpaceConflict>), Fault> {
+4415:            self.store.projection_with_conflicts().map_err(|error| error.into_fault())
+4571:        /// @emoji 🗂️ Refreshes the projection cache if the store advanced, the command log grew/folded, or
+4582:            let (projection, config) = match self.cache.take() {
+4583:                Some((cached_key, projection, config, _)) if cached_key.0 == key.0 && cached_key.1 == key.1 => (projection, config),
+4584:                Some((cached_key, projection, _, _)) if cached_key.0 == key.0 => {
+4585:                    let config = self.config_store.projection().map_err(|error| error.into_fault())?;
+4586:                    (projection, config)
+4589:                    let projection = self.store.projection().map_err(|error| error.into_fault())?;
+4590:                    let config = self.config_store.projection().map_err(|error| error.into_fault())?;
+4591:                    (projection, config)
+4595:            self.cache = Some((key, projection, config, history));
+4907:                    let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4908:                    let doc = DocumentView { projection, history };
+4909:                    let cfg = ConfigView { projection: config };
+4988:            let draft_projection = self.draft_store.projection().map_err(|error| error.into_fault())?;
+4991:                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4992:                let doc = DocumentView { projection, history };
+4993:                let cfg = ConfigView { projection: config };
+4994:                let draft = DraftView { projection: &draft_projection };
+5027:                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+5028:                let doc = DocumentView { projection, history };
+5029:                let _cfg = ConfigView { projection: config };
+5188:            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;
+5200:            let parsed: store::ParsedDocumentText<A::Projection, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
+5224:        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {
+5227:                // 🕰️ Framework-owned, projection-independent — served before any app body-key match.
+5240:            if let Some(json) = projection_override_json {
+5241:                let projection: A::Projection = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+5243:                let doc = DocumentView { projection: &projection, history: &history };
+5244:                let config = self.config_store.projection().unwrap_or_else(|_| A::Config::default());
+5245:                let cfg = ConfigView { projection: &config };
+5249:            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+5250:            let doc = DocumentView { projection, history };
+5251:            let cfg = ConfigView { projection: config };
+5259:            let (_, projection, config, history) = self.cache.as_ref().expect("cache refreshed above");
+5260:            let doc = DocumentView { projection, history };
+5261:            let cfg = ConfigView { projection: config };
+5269:            let (_, projection, config, history) = self.cache.as_ref().expect("cache refreshed above");
+5270:            let doc = DocumentView { projection, history };
+5271:            let cfg = ConfigView { projection: config };
+5280:            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+5281:            let doc = DocumentView { projection, history };
+5282:            let cfg = ConfigView { projection: config };
+5291:            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+5292:            let doc = DocumentView { projection, history };
+5293:            let cfg = ConfigView { projection: config };
+5305:            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+5306:            let doc = DocumentView { projection, history };
+5307:            let cfg = ConfigView { projection: config };
+5315:            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+5316:            let doc = DocumentView { projection, history };
+5317:            let _cfg = ConfigView { projection: config };
+5330:            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+5331:            let doc = DocumentView { projection, history };
+5332:            let _cfg = ConfigView { projection: config };
+5706:    /// @emoji 🗂️ Registers `A::Projection`'s pack↔dsl codec under `schema` in the process-wide
+5710:    /// depending on its concrete `Projection`/`Mutation` types.
+5712:        store::register_document_codec(store::DocumentCodec::of::<A::Projection, A::Mutation>(schema));
+5761:    pub fn plugin_render_with_document(instance_id: u32, body_key: &str, projection_override_json: Option<&str>, view_state_json: &str) -> Result<UiNode, Fault> {
+5771:        let (resolved_body_key, view_state, override_projection) = if body_key.is_empty() {
+5776:            (key, input.view_state, input.document_json.or_else(|| projection_override_json.map(str::to_string)))
+5779:            (body_key.to_string(), view_state, projection_override_json.map(str::to_string))
+5783:            instance.app.render(&resolved_body_key, override_projection.as_deref(), &view_state)
+6594:        struct TestProjection {
+6605:        impl MutationDiff<TestProjection> for TestDiff {
+6606:            fn apply(&self, projection: &TestProjection) -> TestProjection {
+6607:                TestProjection { count: self.count.unwrap_or(projection.count), label: self.label.clone().unwrap_or_else(|| projection.label.clone()) }
+6629:        impl Mutation<TestProjection> for TestMutation {
+6632:            fn diff(&self, _projection: &TestProjection) -> TestDiff {
+6639:            fn inverse(&self, projection: &TestProjection) -> Vec<Self> {
+6641:                    TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: projection.count }],
+6642:                    TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: projection.label.clone() }],
+6734:            type Projection = TestProjection;
+6742:            fn initial_projection() -> TestProjection {
+6743:                TestProjection::default()
+6764:            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
+6767:                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_mutations: vec![TestMutation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+6785:            fn render(_body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
+6786:                ui_text(format!("count={}", doc.projection.count))
+6793:            fn copy_fragment(doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
+6794:                if doc.projection.label.is_empty() {
+6800:                    dsl_text: doc.projection.label.clone(),
+6803:                    label: doc.projection.label.clone(),
+6807:            fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestMutation> {
+6808:                if doc.projection.label.is_empty() {
+6815:            fn paste_operations(&self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {
+6832:            fn context_menu(_request: &ContextMenuRequest, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+6835:                    .when(!doc.projection.label.is_empty() && doc.projection.label != "flat-menu-test", |m| m.command("incrementViaCommand"))
+6836:                    .when(doc.projection.label == "flat-menu-test", |m| (1..=10).fold(m, |m, index| m.action(format!("flatLeaf{index}"))))
+6922:            assert_eq!(app.test_projection().count, 1);
+6932:            assert_eq!(app.test_projection(), TestProjection::default());
+7017:            assert_eq!(app.test_projection().label, "");
+7022:            assert_eq!(app.test_projection().label, "hello");
+7032:            assert_eq!(app.test_projection().label, "pasted");
+7042:            assert_eq!(app.test_projection().label, format!("pasted-{:?}", PasteAnchor::Centroid));
+7050:            assert_eq!(app.test_projection().label, "");
+7068:            assert_eq!(app.test_projection().label, "abc");
+7071:            assert_eq!(app.test_projection().label, "");
+7079:            assert_eq!(app.test_projection().count, 2);
+7084:            assert_eq!(app.test_projection().count, 1);
+7087:            assert_eq!(app.test_projection().count, 2);
+7137:        fn revert_to_command_restores_the_projection_and_appends_one_entry() {
+7141:            assert_eq!(app.test_projection().count, 2);
+7148:            assert_eq!(app.test_projection().count, 1, "revert leaves the target edit applied, undoing only what came after it");
+7391:            assert_eq!(restored.test_projection(), TestProjection { count: 1, label: "hi".into() });
+7413:            assert_eq!(receiver.test_projection().count, 1, "feeding the same operation twice must not double-apply");
+7429:            assert_eq!(app.test_projection().count, 2, "detached edits still land on the in-memory graph");
+7436:            assert_eq!(app.test_projection().count, 3);
+7550:            assert_eq!(app.test_projection(), TestProjection::default());
+7568:            assert_eq!(app.test_projection().label, "abc");
+7571:            assert_eq!(app.test_projection().label, "");
+7576:            assert_eq!(app.test_projection().label, "xy");
+7579:            assert_eq!(app.test_projection().label, "x");
+7601:            assert_eq!(app.test_projection().label, "abc");
+7604:            assert_eq!(app.test_projection().label, "");
+7614:            assert_eq!(app.test_projection().count, 1);
+7631:            assert_eq!(app.test_projection().count, 2);
+7633:            assert_eq!(app.test_projection().count, 1);
+7768:    //#region 📐️ WorldProjection
+7769:    /** 📐️ Plugin-owned projection state for a `world-3d` scene camera — the full classical taxonomy
+7772:     * https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */
+7775:    pub struct WorldProjectionConfig {
+7793:    impl Default for WorldProjectionConfig {
+7815:    /** 📐️ Serializes mode ⊗ orientation — the `WorldProjectionSpec` shape the JS world layer parses. */
+7816:    pub fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {
+7851:    /** 📐️ `camera_json` with `position`/`target`/`up`/`zoom` plus the active-kind `projection` spec object — replaces the plain `world3d_camera_json` for worlds that carry the full taxonomy. */
+7852:    pub fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: Option<[f64; 3]>, zoom: f64, p: &WorldProjectionConfig) -> String {
+7857:            "projection": world3d_projection_spec_json(p),
+7867:    /** 📐️ Canonical camera pose (`position`, `up`) for a projection config, orbiting `target` at `distance` — mirrors
+7868:     * `computeWorldProjectionPose` in `infinite/world/r3f/index.tsx`; used to snap the viewport on kind/view changes. */
+7869:    pub fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {
+7881:                let spec = world3d_projection_spec_json(p);
+7916:    /** 📐️ Shared "Projection" window-measures tree: Parallel > Orthographic/Axonometric/Oblique, Perspective > 1/2/3-Point/Curvilinear —
+7918:    pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+7924:            on_change: action("setProjection", Some(json!({ "field": field }))),
+7938:            on_change: action("setProjectionParam", Some(json!({ "param": param }))),
+7943:            format!("{id_prefix}-projection-orthographic"),
+7947:                format!("{id_prefix}-projection-orthographic-view"),
+7956:                format!("{id_prefix}-projection-axonometric-variant"),
+7961:            select(format!("{id_prefix}-projection-axonometric-quadrant"), if p.kind == "axonometric" { p.axonometric_quadrant.clone() } else { String::new() }, vec![("ne", "NE"), ("nw", "NW"), ("se", "SE"), ("sw", "SW")], "axonometricQuadrant"),
+7964:            axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-a"), "Angle", p.axonometric_angle_a, 5.0, if p.axonometric_variant == "dimetric" { 60.0 } else { 75.0 }, 0.5, "axonometricAngleA"));
+7967:            axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-b"), "Angle B", p.axonometric_angle_b, 5.0, 75.0, 0.5, "axonometricAngleB"));
+7969:        let axonometric = measure_group_with_open(format!("{id_prefix}-projection-axonometric"), "Axonometric", Some(false), axo_children);
+7972:            format!("{id_prefix}-projection-oblique-variant"),
+7978:            oblique_children.push(slider(format!("{id_prefix}-projection-oblique-angle"), "Angle", p.oblique_angle, 5.0, 90.0, 1.0, "obliqueAngle"));
+7980:                oblique_children.push(slider(format!("{id_prefix}-projection-oblique-depth"), "Depth Scale", p.oblique_depth, 0.05, 1.0, 0.05, "obliqueDepth"));
+7983:        let oblique = measure_group_with_open(format!("{id_prefix}-projection-oblique"), "Oblique", Some(false), oblique_children);
+7985:        let parallel = measure_group_with_open(format!("{id_prefix}-projection-parallel"), "Parallel", Some(true), vec![orthographic, axonometric, oblique]);
+7995:            vec![select(format!("{id_prefix}-projection-perspective-kind"), perspective_kind_value.into(), vec![("onePoint", "1-Point"), ("twoPoint", "2-Point"), ("threePoint", "3-Point"), ("curvilinear", "Curvilinear")], "perspectiveKind")];
+7998:                perspective_children.push(select(format!("{id_prefix}-projection-one-point-axis"), p.one_point_axis.clone(), vec![("y", "Front (Y)"), ("x", "Side (X)"), ("z", "Down (Z)")], "onePointAxis"));
+7999:                perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+8002:                perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+8003:                perspective_children.push(slider(format!("{id_prefix}-projection-two-point-shift"), "Vertical Shift", p.two_point_shift, -1.0, 1.0, 0.01, "twoPointShift"));
+8006:                perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+8009:                perspective_children.push(slider(format!("{id_prefix}-projection-curvilinear-fov"), "Field of View", p.curvilinear_fov, 60.0, 160.0, 1.0, "curvilinearFov"));
+8010:                perspective_children.push(slider(format!("{id_prefix}-projection-curvilinear-strength"), "Strength", p.curvilinear_strength, 0.0, 1.0, 0.01, "curvilinearStrength"));
+8011:                perspective_children.push(select(format!("{id_prefix}-projection-curvilinear-mapping"), p.curvilinear_mapping.clone(), vec![("fisheye", "Fisheye"), ("panini", "Panini")], "curvilinearMapping"));
+8015:        let perspective = measure_group_with_open(format!("{id_prefix}-projection-perspective"), "Perspective", Some(true), perspective_children);
+8017:        measure_group_with_open(format!("{id_prefix}-projection"), "Projection", Some(false), vec![parallel, perspective])
+8020:    /** 📐️ Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */
+8021:    pub fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {
+8027:            "setProjection" => {
+8058:            "setProjectionParam" => {
+8077:    /** 📐️ Whether a `setProjection`/`setProjectionParam` action requires a pose recompute (kind/view/variant changes) vs. a pure in-place parameter tweak that keeps the current pose (oblique shear / two-point shift / fov / curvilinear re-shade live). */
+8078:    pub fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {
+8079:        if action_id != "setProjection" {
+8084:    //#endregion 📐️ WorldProjection
+8387:            let mut p = WorldProjectionConfig { kind: "axonometric".into(), axonometric_variant: "isometric".into(), ..WorldProjectionConfig::default() };
+8389:            let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0);
+8397:        fn projection_spec_json_projects_only_active_kind_fields() {
+8398:            let p = WorldProjectionConfig { kind: "oblique".into(), oblique_variant: "cabinet".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };
+8399:            let spec = world3d_projection_spec_json(&p);
+8408:            let mut p = WorldProjectionConfig::default();
+8410:            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))));
+8414:            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&json!({ "param": "obliqueAngle", "value": 30.0 }))));
+8416:            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&json!({ "param": "obliqueAngle" }))));
+8417:            assert!(world3d_projection_action_moves_pose("setProjection", Some(&json!({ "field": "obliqueVariant" }))));
+8421:        fn projection_measures_tree_matches_the_requested_taxonomy() {
+8422:            let p = WorldProjectionConfig::default();
+8423:            let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });
+8615:    apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera,
+8616:    world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures,
+8617:    world3d_projection_pose, world3d_projection_spec_json, world3d_scene, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, SelectionSet, WorldProjectionConfig, WorldSunConfig,

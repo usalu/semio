@@ -1,0 +1,1605 @@
+==== 🔺️diff/🧬️schema/🔗️component.graphql ====
+# 🧬️ Draw diff schema — sparse field delta.
+
+type DrawDiff {
+  artifact: DrawArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  id: String @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: DrawLayersDelta @state(class: PERSISTENT)
+  assets: DrawAssetsDelta @state(class: PERSISTENT)
+  artboard: DrawArtboard @state(class: PERSISTENT)
+  selectedIds: DrawStringList @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  engagementInput: String @state(class: LOCAL_UI)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type DrawArtifact {
+  schema: String!
+  id: String!
+  title: String
+  layers: [DrawLayerNode!]!
+  assets: [DrawImageAssetEntry!]!
+  artboard: DrawArtboard
+  selectedIds: [String!]!
+  activeUtilityId: String!
+  engagementInput: String!
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  locale: String!
+  hoveredId: String
+}
+
+type DrawAssetsDelta {
+  entries: [DrawImageAssetDiffEntry!]!
+}
+
+type DrawStringList {
+  values: [String!]!
+}
+
+type DrawLayersDelta {
+  added: [DrawLayerNode!]!
+  removed: [String!]!
+  patched: [DrawLayerPatchEntry!]!
+  reordered: [String!]
+}
+
+type DrawLayerPatchEntry {
+  id: String!
+  patch: DrawLayerPatch!
+}
+
+type DrawLayerPatch {
+  visible: Boolean
+  locked: Boolean
+  name: String
+  opacity: Float
+  blendMode: String
+  transformJson: String
+  fillJson: String
+  strokeJson: String
+  booleanOperation: String
+  traceParamsJson: String
+  layerJson: String
+}
+
+type DrawLayerNode {
+  kind: String!
+}
+
+type DrawImageAssetEntry {
+  key: String!
+  value: DrawImageAsset!
+}
+
+type DrawImageAssetDiffEntry {
+  key: String!
+  value: DrawImageAsset
+}
+
+type DrawImageAsset {
+  mime: String!
+  data: String!
+  width: Int
+  height: Int
+}
+
+type DrawArtboard {
+  width: Float!
+  height: Float!
+}
+
+
+==== 🔺️diff/🧬️schema/🔣️component.json ====
+{
+  "$id": "https://semio.tech/schema/s/draw/draw/diff.json",
+  "title": "DrawDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "DrawArtifact",
+      "type": "object",
+      "x-semio-state": "persistent"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "layers": {
+      "$ref": "#/$defs/DrawLayersDelta",
+      "x-semio-state": "persistent"
+    },
+    "assets": {
+      "$ref": "#/$defs/DrawAssetsDelta",
+      "x-semio-state": "persistent"
+    },
+    "artboard": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/DrawArtboard"
+        }
+      ],
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "$ref": "#/$defs/DrawStringList",
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "DrawLayerNode": {
+      "title": "DrawLayerNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "DrawImageAsset": {
+      "title": "DrawImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mime",
+        "data"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "DrawArtboard": {
+      "title": "DrawArtboard",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "format": "double"
+        },
+        "height": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "DrawStringList": {
+      "title": "DrawStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "DrawLayersDelta": {
+      "title": "DrawLayersDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawLayerNode"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawLayerPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "DrawLayerPatchEntry": {
+      "title": "DrawLayerPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/DrawLayerPatch"
+        }
+      }
+    },
+    "DrawLayerPatch": {
+      "title": "DrawLayerPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "opacity": {
+          "type": "number",
+          "format": "double"
+        },
+        "blendMode": {
+          "type": "string"
+        },
+        "transformJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "fillJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "strokeJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "booleanOperation": {
+          "type": "string"
+        },
+        "traceParamsJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "layerJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    },
+    "DrawAssetsDelta": {
+      "title": "DrawAssetsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/DrawImageAsset"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
+
+==== 🔺️diff/🧬️schema/🛰️component.proto ====
+syntax = "proto3";
+package semio.s.draw.draw.diff;
+
+// 🧬️ Draw diff schema — sparse field delta.
+
+message DrawDiff {
+  // @state persistent
+  optional DrawArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string id = 3;
+  // @state persistent
+  optional string title = 4;
+  // @state persistent
+  optional DrawLayersDelta layers = 5;
+  // @state persistent
+  optional DrawAssetsDelta assets = 6;
+  // @state persistent
+  optional DrawArtboard artboard = 7;
+  // @state shared-ui
+  optional DrawStringList selected_ids = 8;
+  // @state shared-ui
+  optional string active_utility_id = 9;
+  // @state local-ui
+  optional string engagement_input = 10;
+  // @state local-ui
+  optional double camera_x = 11;
+  // @state local-ui
+  optional double camera_y = 12;
+  // @state local-ui
+  optional double camera_zoom = 13;
+  // @state local-ui
+  optional string locale = 14;
+  // @state preview
+  optional string hovered_id = 15;
+}
+
+message DrawArtifact {
+  string schema = 1;
+  string id = 2;
+  optional string title = 3;
+  repeated DrawLayerNode layers = 4;
+  map<string, DrawImageAsset> assets = 5;
+  optional DrawArtboard artboard = 6;
+  repeated string selected_ids = 7;
+  string active_utility_id = 8;
+  string engagement_input = 9;
+  double camera_x = 10;
+  double camera_y = 11;
+  double camera_zoom = 12;
+  string locale = 13;
+  optional string hovered_id = 14;
+}
+
+message DrawAssetsDelta {
+  map<string, DrawImageAsset> entries = 1;
+}
+
+message DrawStringList {
+  repeated string values = 1;
+}
+
+message DrawLayersDelta {
+  repeated DrawLayerNode added = 1;
+  repeated string removed = 2;
+  repeated DrawLayerPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message DrawLayerPatchEntry {
+  string id = 1;
+  DrawLayerPatch patch = 2;
+}
+
+message DrawLayerPatch {
+  optional bool visible = 1;
+  optional bool locked = 2;
+  optional string name = 3;
+  optional double opacity = 4;
+  optional string blend_mode = 5;
+  optional string transform_json = 6;
+  optional string fill_json = 7;
+  optional string stroke_json = 8;
+  optional string boolean_operation = 9;
+  optional string trace_params_json = 10;
+  optional string layer_json = 11;
+}
+
+message DrawLayerNode {
+  string kind = 1;
+}
+
+message DrawImageAsset {
+  string mime = 1;
+  string data = 2;
+  optional uint32 width = 3;
+  optional uint32 height = 4;
+}
+
+message DrawArtboard {
+  double width = 1;
+  double height = 2;
+}
+
+
+==== 🔺️diff/🧬️schema/🟦️component.ts ====
+/** 🧬️ Draw diff schema — sparse field delta. */
+
+export interface DrawDiff {
+  /** @state persistent */
+  artifact?: DrawArtifact;
+  /** @state persistent */
+  schema?: string;
+  /** @state persistent */
+  id?: string;
+  /** @state persistent */
+  title?: string | null;
+  /** @state persistent */
+  layers?: DrawLayersDelta;
+  /** @state persistent */
+  assets?: DrawAssetsDelta;
+  /** @state persistent */
+  artboard?: DrawArtboard | null;
+  /** @state shared-ui */
+  selectedIds?: DrawStringList;
+  /** @state shared-ui */
+  activeUtilityId?: string;
+  /** @state local-ui */
+  engagementInput?: string;
+  /** @state local-ui */
+  cameraX?: number;
+  /** @state local-ui */
+  cameraY?: number;
+  /** @state local-ui */
+  cameraZoom?: number;
+  /** @state local-ui */
+  locale?: string;
+  /** @state preview */
+  hoveredId?: string | null;
+}
+
+export interface DrawArtifact {
+  schema: string;
+  id: string;
+  title?: string;
+  layers: DrawLayerNode[];
+  assets: Record<string, DrawImageAsset>;
+  artboard?: DrawArtboard;
+  selectedIds: string[];
+  activeUtilityId: string;
+  engagementInput: string;
+  cameraX: number;
+  cameraY: number;
+  cameraZoom: number;
+  locale: string;
+  hoveredId?: string;
+}
+
+export interface DrawAssetsDelta {
+  entries: Record<string, DrawImageAsset | null>;
+}
+
+export interface DrawStringList {
+  values: string[];
+}
+
+export interface DrawLayersDelta {
+  added: DrawLayerNode[];
+  removed: string[];
+  patched: DrawLayerPatchEntry[];
+  reordered?: string[];
+}
+
+export interface DrawLayerPatchEntry {
+  id: string;
+  patch: DrawLayerPatch;
+}
+
+export interface DrawLayerPatch {
+  visible?: boolean;
+  locked?: boolean;
+  name?: string;
+  opacity?: number;
+  blendMode?: string;
+  transformJson?: string;
+  fillJson?: string;
+  strokeJson?: string;
+  booleanOperation?: string;
+  traceParamsJson?: string;
+  layerJson?: string;
+}
+
+export interface DrawLayerNode {
+  kind: string;
+  [key: string]: unknown;
+}
+
+export interface DrawImageAsset {
+  mime: string;
+  data: string;
+  width?: number;
+  height?: number;
+}
+
+export interface DrawArtboard {
+  width: number;
+  height: number;
+}
+
+
+==== 🔺️diff/🧬️schema/🦀️component.rs ====
+//! 🧬️ Draw diff schema — sparse field delta over the artifact.
+
+use crate::artifacts::draw::{DrawArtboard, DrawImageAsset, DrawLayerNode};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+//#region 🔖️Diff
+/// 🔺️ Sparse field delta for the draw artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase", default)]
+#[artifact_schema(id = "s.draw.draw")]
+pub struct DrawDiff {
+    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::draw::schema::DrawArtifact>>,
+    #[state(persistent)] pub schema: Option<String>,
+    #[state(persistent)] pub id: Option<String>,
+    #[state(persistent)] pub title: Option<Option<String>>,
+    #[state(persistent)] pub layers: Option<DrawLayersDelta>,
+    #[state(persistent)] pub assets: Option<DrawAssetsDelta>,
+    #[state(persistent)] pub artboard: Option<Option<DrawArtboard>>,
+    #[state(shared_ui)] pub selected_ids: Option<DrawStringList>,
+    #[state(shared_ui)] pub active_utility_id: Option<String>,
+    #[state(local_ui)] pub engagement_input: Option<String>,
+    #[state(local_ui)] pub camera_x: Option<f64>,
+    #[state(local_ui)] pub camera_y: Option<f64>,
+    #[state(local_ui)] pub camera_zoom: Option<f64>,
+    #[state(local_ui)] pub locale: Option<String>,
+    #[state(preview)] pub hovered_id: Option<Option<String>>,
+}
+//#endregion 🔖️Diff
+
+//#region 🔖️DeltaHelpers
+/// 🗂️ Asset-map wrapper so optional map diffs stay scalar across formats.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DrawAssetsDelta {
+    pub entries: BTreeMap<String, Option<DrawImageAsset>>,
+}
+
+/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DrawStringList {
+    pub values: Vec<String>,
+}
+
+/// 🧩 Identified-collection delta for `layers`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DrawLayersDelta {
+    pub added: Vec<DrawLayerNode>,
+    pub removed: Vec<String>,
+    pub patched: Vec<DrawLayerPatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched layer entry.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawLayerPatchEntry {
+    pub id: String,
+    pub patch: DrawLayerPatch,
+}
+
+/// 🩹 Sparse layer field patch (JSON blobs for complex nested values).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DrawLayerPatch {
+    pub visible: Option<bool>,
+    pub locked: Option<bool>,
+    pub name: Option<String>,
+    pub opacity: Option<f64>,
+    pub blend_mode: Option<String>,
+    pub transform_json: Option<String>,
+    pub fill_json: Option<String>,
+    pub stroke_json: Option<String>,
+    pub boolean_operation: Option<String>,
+    pub trace_params_json: Option<String>,
+    pub layer_json: Option<String>,
+}
+//#endregion 🔖️DeltaHelpers
+
+
+==== 🧬️schema/🔗️component.graphql ====
+# 🧬️ Draw artifact schema — every field with its state class.
+
+type DrawArtifact {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: [DrawLayerNode!]! @state(class: PERSISTENT)
+  assets: [DrawImageAssetEntry!]! @state(class: PERSISTENT)
+  artboard: DrawArtboard @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  cameraX: Float! @state(class: LOCAL_UI)
+  cameraY: Float! @state(class: LOCAL_UI)
+  cameraZoom: Float! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type DrawLayerNode {
+  kind: String!
+}
+
+type DrawImageAssetEntry {
+  key: String!
+  value: DrawImageAsset!
+}
+
+type DrawImageAsset {
+  mime: String!
+  data: String!
+  width: Int
+  height: Int
+}
+
+type DrawArtboard {
+  width: Float!
+  height: Float!
+}
+
+
+==== 🧬️schema/🔣️component.json ====
+{
+  "$id": "https://semio.tech/schema/s/draw/draw/artifact.json",
+  "title": "DrawArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "layers",
+    "assets",
+    "selectedIds",
+    "activeUtilityId",
+    "engagementInput",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "locale"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "title": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DrawLayerNode"
+      },
+      "x-semio-state": "persistent"
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/DrawImageAsset"
+      },
+      "x-semio-state": "persistent"
+    },
+    "artboard": {
+      "$ref": "#/$defs/DrawArtboard",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "shared-ui"
+    },
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "cameraX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "cameraZoom": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    },
+    "hoveredId": {
+      "type": "string",
+      "x-semio-state": "preview"
+    }
+  },
+  "$defs": {
+    "DrawLayerNode": {
+      "title": "DrawLayerNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "DrawImageAsset": {
+      "title": "DrawImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mime",
+        "data"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "DrawArtboard": {
+      "title": "DrawArtboard",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "format": "double"
+        },
+        "height": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}
+
+
+==== 🧬️schema/🛰️component.proto ====
+syntax = "proto3";
+package semio.s.draw.draw.artifact;
+
+// 🧬️ Draw artifact schema — every field with its state class.
+
+message DrawArtifact {
+  // @state persistent
+  string schema = 1;
+  // @state persistent
+  string id = 2;
+  // @state persistent
+  optional string title = 3;
+  // @state persistent
+  repeated DrawLayerNode layers = 4;
+  // @state persistent
+  map<string, DrawImageAsset> assets = 5;
+  // @state persistent
+  optional DrawArtboard artboard = 6;
+  // @state shared-ui
+  repeated string selected_ids = 7;
+  // @state shared-ui
+  string active_utility_id = 8;
+  // @state local-ui
+  string engagement_input = 9;
+  // @state local-ui
+  double camera_x = 10;
+  // @state local-ui
+  double camera_y = 11;
+  // @state local-ui
+  double camera_zoom = 12;
+  // @state local-ui
+  string locale = 13;
+  // @state preview
+  optional string hovered_id = 14;
+}
+
+message DrawLayerNode {
+  string kind = 1;
+}
+
+message DrawImageAsset {
+  string mime = 1;
+  string data = 2;
+  optional uint32 width = 3;
+  optional uint32 height = 4;
+}
+
+message DrawArtboard {
+  double width = 1;
+  double height = 2;
+}
+
+
+==== 🧬️schema/🟦️component.ts ====
+/** 🧬️ Draw artifact schema — every field with its state class. */
+
+export interface DrawArtifact {
+  /** @state persistent */
+  schema: string;
+  /** @state persistent */
+  id: string;
+  /** @state persistent */
+  title?: string;
+  /** @state persistent */
+  layers: DrawLayerNode[];
+  /** @state persistent */
+  assets: Record<string, DrawImageAsset>;
+  /** @state persistent */
+  artboard?: DrawArtboard;
+  /** @state shared-ui */
+  selectedIds: string[];
+  /** @state shared-ui */
+  activeUtilityId: string;
+  /** @state local-ui */
+  engagementInput: string;
+  /** @state local-ui */
+  cameraX: number;
+  /** @state local-ui */
+  cameraY: number;
+  /** @state local-ui */
+  cameraZoom: number;
+  /** @state local-ui */
+  locale: string;
+  /** @state preview */
+  hoveredId?: string;
+}
+
+export interface DrawLayerNode {
+  kind: string;
+  [key: string]: unknown;
+}
+
+export interface DrawImageAsset {
+  mime: string;
+  data: string;
+  width?: number;
+  height?: number;
+}
+
+export interface DrawArtboard {
+  width: number;
+  height: number;
+}
+
+
+==== 🧬️schema/🦀️component.rs ====
+//! 🧬️ Draw artifact schema — every field of the artifact with its state class.
+
+use crate::artifacts::draw::{DrawArtboard, DrawImageAsset, DrawLayerNode, DRAW_DOCUMENT_SCHEMA};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+//#region 🔖️Artifact
+/// 🧬️ Full draw artifact state across persistent, shared-ui, local-ui and preview classes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[artifact_schema(id = "s.draw.draw")]
+pub struct DrawArtifact {
+    #[state(persistent)] pub schema: String,
+    #[state(persistent)] pub id: String,
+    #[state(persistent)] pub title: Option<String>,
+    #[state(persistent)] pub layers: Vec<DrawLayerNode>,
+    #[state(persistent)] pub assets: BTreeMap<String, DrawImageAsset>,
+    #[state(persistent)] pub artboard: Option<DrawArtboard>,
+    #[state(shared_ui)] pub selected_ids: Vec<String>,
+    #[state(shared_ui)] pub active_utility_id: String,
+    #[state(local_ui)] pub engagement_input: String,
+    #[state(local_ui)] pub camera_x: f64,
+    #[state(local_ui)] pub camera_y: f64,
+    #[state(local_ui)] pub camera_zoom: f64,
+    #[state(local_ui)] pub locale: String,
+    #[state(preview)] pub hovered_id: Option<String>,
+}
+//#endregion 🔖️Artifact
+
+//#region 🔖️Conversions
+impl Default for DrawArtifact {
+    fn default() -> Self {
+        Self {
+            schema: DRAW_DOCUMENT_SCHEMA.into(),
+            id: String::new(),
+            title: None,
+            layers: Vec::new(),
+            assets: BTreeMap::new(),
+            artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }),
+            selected_ids: Vec::new(),
+            active_utility_id: "selectDirect".into(),
+            engagement_input: String::new(),
+            camera_x: 512.0,
+            camera_y: 512.0,
+            camera_zoom: 0.75,
+            locale: "en-US".into(),
+            hovered_id: None,
+        }
+    }
+}
+
+impl DrawArtifact {
+    /// 📸️ Persisted subset.
+    pub fn to_snapshot(&self) -> crate::artifacts::draw::DrawSnapshot {
+        crate::artifacts::draw::DrawSnapshot {
+            schema: self.schema.clone(),
+            id: self.id.clone(),
+            title: self.title.clone(),
+            layers: self.layers.clone(),
+            assets: self.assets.clone(),
+            artboard: self.artboard.clone(),
+        }
+    }
+
+    /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
+    pub fn from_snapshot(snapshot: crate::artifacts::draw::DrawSnapshot) -> Self {
+        Self {
+            schema: snapshot.schema,
+            id: snapshot.id,
+            title: snapshot.title,
+            layers: snapshot.layers,
+            assets: snapshot.assets,
+            artboard: snapshot.artboard,
+            ..Self::default()
+        }
+    }
+
+    /// 🔄 Writes persistent fields from a snapshot into this artifact.
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::draw::DrawSnapshot) {
+        self.schema = snapshot.schema;
+        self.id = snapshot.id;
+        self.title = snapshot.title;
+        self.layers = snapshot.layers;
+        self.assets = snapshot.assets;
+        self.artboard = snapshot.artboard;
+    }
+}
+//#endregion 🔖️Conversions
+
+//#region 🔖️Descriptor
+/// 🧬️ Descriptor for `s.draw.draw` — fifteen handcrafted schema leaves.
+pub fn draw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+    schema::ArtifactSchemaDescriptor {
+        id: "s.draw.draw",
+        artifact: schema::FacetLeaves {
+            rust: include_str!("🦀️component.rs"),
+            typescript: include_str!("🟦️component.ts"),
+            graphql: include_str!("🔗️component.graphql"),
+            json_schema: include_str!("🔣️component.json"),
+            proto: include_str!("🛰️component.proto"),
+        },
+        snapshot: schema::FacetLeaves {
+            rust: include_str!("../📸️snapshot/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../📸️snapshot/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../📸️snapshot/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../📸️snapshot/🧬️schema/🔣️component.json"),
+            proto: include_str!("../📸️snapshot/🧬️schema/🛰️component.proto"),
+        },
+        diff: schema::FacetLeaves {
+            rust: include_str!("../🔺️diff/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../🔺️diff/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../🔺️diff/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../🔺️diff/🧬️schema/🔣️component.json"),
+            proto: include_str!("../🔺️diff/🧬️schema/🛰️component.proto"),
+        },
+    }
+}
+//#endregion 🔖️Descriptor
+
+
+==== MUTATION IMPL ====
+impl Mutation<DrawSnapshot> for DrawMutation {
+    type Diff = DrawDiff;
+
+    fn diff(&self, snapshot: &DrawSnapshot) -> DrawDiff {
+        match self {
+            DrawMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+            DrawMutation::SetLayerVisible { layer_id, visible } => diff_set_layer_visible(layer_id, *visible),
+            DrawMutation::SetLayerLocked { layer_id, locked } => diff_set_layer_locked(layer_id, *locked),
+            DrawMutation::SetLayerName { layer_id, name } => diff_set_layer_name(layer_id, name),
+            DrawMutation::SetLayerOpacity { layer_id, opacity } => diff_set_layer_opacity(layer_id, *opacity),
+            DrawMutation::SetLayerBlendMode { layer_id, blend_mode } => diff_set_layer_blend_mode(layer_id, blend_mode),
+            DrawMutation::SetLayerTransform { layer_id, transform } => diff_set_layer_transform(layer_id, transform),
+            DrawMutation::SetFill { layer_id, fill } => diff_set_fill(layer_id, fill),
+            DrawMutation::SetStroke { layer_id, stroke } => diff_set_stroke(layer_id, stroke),
+            DrawMutation::SetBooleanOperation { layer_id, boolean_operation } => {
+                diff_set_boolean_operation(layer_id, boolean_operation)
+            }
+            DrawMutation::SetTraceParams { layer_id, params } => diff_set_trace_params(layer_id, params),
+            DrawMutation::AddLayer { parent_id, index: _, layer } if parent_id.is_none() => {
+                diff_add_layer(layer.as_ref().clone())
+            }
+            DrawMutation::RemoveLayer { layer_id } => diff_remove_layer(layer_id),
+            _ => diff_from_snapshot(apply_draw_edit_mutation(snapshot, self)),
+        }
+    }
+
+    fn inverse(&self, snapshot: &DrawSnapshot) -> Vec<Self> {
+        inverse_draw_mutation(snapshot, self)
+    }
+}
+//#endregion 🔖️MutationImpl
+
+pub use super::set_layer_visible::mutation::{set_layer_visible, SetLayerVisible};
+pub use super::set_layer_locked::mutation::{set_layer_locked, SetLayerLocked};
+pub use super::set_layer_opacity::mutation::{set_layer_opacity, SetLayerOpacity};
+pub use super::set_layer_blend_mode::mutation::{set_layer_blend_mode, SetLayerBlendMode};
+pub use super::set_layer_name::mutation::{set_layer_name, SetLayerName};
+pub use super::set_layer_transform::mutation::{set_layer_transform, SetLayerTransform};
+pub use super::set_fill::mutation::{set_fill, SetFill};
+pub use super::set_stroke::mutation::{set_stroke, SetStroke};
+pub use super::set_boolean_operation::mutation::{set_boolean_operation, SetBooleanOperation};
+pub use super::set_trace_params::mutation::{set_trace_params, SetTraceParams};
+pub use super::add_layer::mutation::{add_layer, AddLayer};
+pub use super::duplicate_layer::mutation::{duplicate_layer, DuplicateLayer};
+pub use super::remove_layer::mutation::{remove_layer, RemoveLayer};
+pub use super::reorder_layer::mutation::{reorder_layer, ReorderLayer};
+pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};
+
+
+==== SNAPSHOT GLUE ====
+pub mod snapshot {
+            #[path = "../../🗿️artifacts/🖍️draw/📸️snapshot/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            #[path = "../../🗿️artifacts/🖍️draw/📸️snapshot/🎒️pack/🦀️component.rs"]
+            pub mod pack;
+        }
+        #[path = "../../🗿️artifacts/🖍️draw/📡️spr/🦀️component.rs"]
+        pub mod spr;
+        #[path = "../../🗿️artifacts/🖍️draw/⚙️engine/🦀️component.rs"]
+        pub mod engine;
+    }
+}
+//#endregion 🗿️Artifacts
+
+//#region 🎛️Apps
+#[path = "."]
+pub mod apps {
+    #[path = "."]
+    pub mod draw {
+        #[path = "../../🎛️apps/🖍️draw/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "../../🎛️apps/🖍️draw/🎚️config/🦀️component.rs"]
+        pub mod config;
+        #[path = "../../🎛️apps/🖍️draw/🗣️terminology/🦀️component.rs"]
+        pub mod terminology;
+
+        #[path = "."]
+        pub mod commands {
+         
+
+==== DIFF RT ====
+//! 🔺️ Draw artifact — sparse field-delta diff codec and apply/absorb.
+
+use crate::artifacts::draw::diff::schema::{
+    DrawAssetsDelta, DrawDiff, DrawLayerPatch, DrawLayerPatchEntry, DrawLayersDelta, DrawStringList,
+};
+use crate::artifacts::draw::engine::{layer_base_mut, remove_layer_from_tree, update_layer_in_tree};
+use crate::artifacts::draw::schema::DrawArtifact;
+use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
+use protocol::MutationDiff;
+
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+#[allow(unused_imports)]
+pub use super::schema::*;
+
+//#region 🔖️Apply
+impl DrawDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &DrawArtifact) -> DrawArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(delta) = &self.layers {
+            next.layers = apply_layers_delta(&next.layers, delta);
+        }
+        if let Some(assets) = &self.assets {
+            for (key, value) in &assets.entries {
+                match value {
+                    Some(asset) => {
+                        next.assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        next.assets.remove(key);
+                    }
+                }
+            }
+        }
+        if let Some(artboard) = &self.artboard {
+            next.artboard = artboard.clone();
+        }
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
+        }
+        if let Some(value) = &self.active_utility_id {
+            next.active_utility_id = value.clone();
+        }
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = self.camera_x {
+            next.camera_x = value;
+        }
+        if let Some(value) = self.camera_y {
+            next.camera_y = value;
+        }
+        if let Some(value) = self.camera_zoom {
+            next.camera_zoom = value;
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        if let Some(value) = &self.hovered_id {
+            next.hovered_id = value.clone();
+        }
+        next
+    }
+}
+
+/// 🧩 Applies an identified-collection delta to a layer tree (root + nested removes/patches).
+pub fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> Vec<DrawLayerNode> {
+    let mut next = layers.to_vec();
+    for id in &delta.removed {
+        remove_layer_from_tree(&mut next, id);
+    }
+    for item in &delta.added {
+        next.push(item.clone());
+    }
+    for entry in &delta.patched {
+        apply_layer_patch_entry(&mut next, entry);
+    }
+    if let Some(order) = &delta.reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> = next
+            .into_iter()
+            .map(|layer| (crate::artifacts::draw::engine::layer_id(&layer).to_string(), layer))
+            .collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(layer) = by_id.remove(id) {
+                ordered.push(layer);
+            }
+        }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
+}
+
+fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLayerPatchEntry) {
+    update_layer_in_tree(layers, &entry.id, &mut |layer| {
+        apply_layer_patch(layer, &entry.patch);
+    });
+}
+
+fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) {
+    if let Some(layer_json) = &patch.layer_json {
+        if let Ok(replacement) = serde_json::from_str::<DrawLayerNode>(layer_json) {
+            *layer = replacement;
+            return;
+        }
+    }
+    let base = layer_base_mut(layer);
+    if let Some(visible) = patch.visible {
+        base.visible = visible;
+    }
+    if let Some(locked) = patch.locked {
+        base.locked = locked;
+    }
+    if let Some(name) = &patch.name {
+        base.name = name.clone();
+    }
+    if let Some(opacity) = patch.opacity {
+        base.opacity = opacity;
+    }
+    if let Some(blend_mode) = &patch.blend_mode {
+        base.blend_mode = blend_mode.clone();
+    }
+    if let Some(transform_json) = &patch.transform_json {
+        if let Ok(transform) = serde_json::from_str(transform_json) {
+            base.transform = transform;
+        }
+    }
+    if let Some(fill_json) = &patch.fill_json {
+        base.attributes.fill = serde_json::from_str::<Option<FillStyle>>(fill_json).ok().flatten();
+    }
+    if let Some(stroke_json) = &patch.stroke_json {
+        base.attributes.stroke = serde_json::from_str::<Option<StrokeStyle>>(stroke_json).ok().flatten();
+    }
+    if let Some(operation) = &patch.boolean_operation {
+        if let DrawLayerNode::Boolean(boolean) = layer {
+            boolean.operation = operation.clone();
+        }
+    }
+    if let Some(params_json) = &patch.trace_params_json {
+        if let DrawLayerNode::Trace(trace) = layer {
+            if let Ok(params) = serde_json::from_str(params_json) {
+                trace.params = params;
+            }
+        }
+    }
+}
+
+impl MutationDiff<DrawSnapshot> for DrawDiff {
+    fn apply(&self, snapshot: &DrawSnapshot) -> DrawSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return replacement.to_snapshot();
+        }
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(delta) = &self.layers {
+            next.layers = apply_layers_delta(&next.layers, delta);
+        }
+        if let Some(assets) = &self.assets {
+            for (key, value) in &assets.entries {
+                match value {
+                    Some(asset) => {
+                        next.assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        next.assets.remove(key);
+                    }
+                }
+            }
+        }
+        if let Some(artboard) = &self.artboard {
+            next.artboard = artboard.clone();
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(id);
+        take!(title);
+        take!(artboard);
+        take!(selected_ids);
+        take!(active_utility_id);
+        take!(engagement_input);
+        take!(camera_x);
+        take!(camera_y);
+        take!(camera_zoom);
+        take!(locale);
+        take!(hovered_id);
+        match (&mut self.layers, other.layers) {
+            (Some(dst), Some(src)) => {
+                dst.added.extend(src.added);
+                dst.removed.extend(src.removed);
+                dst.patched.extend(src.patched);
+                if src.reordered.is_some() {
+                    dst.reordered = src.reordered;
+                }
+            }
+            (None, Some(src)) => self.layers = Some(src),
+            _ => {}
+        }
+        match (&mut self.assets, other.assets) {
+            (Some(dst), Some(src)) => {
+                dst.entries.extend(src.entries);
+            }
+            (None, Some(src)) => self.assets = Some(src),
+            _ => {}
+        }
+    }
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Builders
+/// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
+pub fn diff_set_snapshot(snapshot: &DrawSnapshot) -> DrawDiff {
+    DrawDiff {
+        artifact: Some(Box::new(DrawArtifact::from_snapshot(snapshot.clone()))),
+        ..Default::default()
+    }
+}
+
+/// 🩹 Layer visibility patch.
+pub fn diff_set_layer_visible(layer_id: &str, visible: bool) -> DrawDiff {
+    layer_base_patch(layer_id, DrawLayerPatch { visible: Some(visible), ..Default::default() })
+}
+
+/// 🔒️ Layer locked patch.
+pub fn diff_set_layer_locked(layer_id: &str, locked: bool) -> DrawDiff {
+    layer_base_patch(layer_id, DrawLayerPatch { locked: Some(locked), ..Default::default() })
+}
+
+/// 🏷️ Layer name patch.
+pub fn diff_set_layer_name(layer_id: &str, name: &str) -> DrawDiff {
+    layer_base_patch(layer_id, DrawLayerPatch { name: Some(name.to_string()), ..Default::default() })
+}
+
+/// 🌫️ Layer opacity patch.
+pub fn diff_set_layer_opacity(layer_id: &str, opacity: f64) -> DrawDiff {
+    layer_base_patch(layer_id, DrawLayerPatch { opacity: Some(opacity), ..Default::default() })
+}
+
+/// 🖌️ Layer blend-mode patch.
+pub fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawDiff {
+    layer_base_patch(layer_id, DrawLayerPatch { blend_mode: Some(blend_mode.to_string()), ..Default::default() })
+}
+
+/// ↔️ Layer transform patch.
+pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) -> DrawDiff {
+    layer_base_patch(
+        layer_id,
+        DrawLayerPatch {
+            transform_json: Some(serde_json::to_string(transform).unwrap_or_default()),
+            ..Default::default()
+        },
+    )
+}
+
+/// 🎨 Layer fill patch.
+pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
+    layer_base_patch(
+        layer_id,
+        DrawLayerPatch {
+            fill_json: Some(serde_json::to_string(fill).unwrap_or_else(|_| "null".into())),
+            ..Default::default()
+        },
+    )
+}
+
+/// ✏️ Layer stroke patch.
+pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff {
+    layer_base_patch(
+        layer_id,
+        DrawLayerPatch {
+            stroke_json: Some(serde_json::to_string(stroke).unwrap_or_else(|_| "null".into())),
+            ..Default::default()
+        },
+    )
+}
+
+/// 🔀 Boolean operation patch.
+pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> DrawDiff {
+    layer_base_patch(
+        layer_id,
+        DrawLayerPatch {
+            boolean_operation: Some(boolean_operation.to_string()),
+            ..Default::default()
+        },
+    )
+}
+
+/// 🖼️ Trace params patch.
+pub fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) -> DrawDiff {
+    layer_base_patch(
+        layer_id,
+        DrawLayerPatch {
+            trace_params_json: Some(serde_json::to_string(params).unwrap_or_default()),
+            ..Default::default()
+        },
+    )
+}
+
+/// ➕️ Root-level layer add (nested adds use whole-snapshot replacement).
+pub fn diff_add_layer(layer: DrawLayerNode) -> DrawDiff {
+    DrawDiff {
+        layers: Some(DrawLayersDelta {
+            added: vec![layer],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+/// ➖️ Layer remove.
+pub fn diff_remove_layer(layer_id: &str) -> DrawDiff {
+    DrawDiff {
+        layers: Some(DrawLayersDelta {
+            removed: vec![layer_id.to_string()],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+/// 🔃 Root reorder by id list.
+pub fn diff_reorder_layers(order: Vec<String>) -> DrawDiff {
+    DrawDiff {
+        layers: Some(DrawLayersDelta {
+            reordered: Some(order),
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+fn layer_base_patch(layer_id: &str, patch: DrawLayerPatch) -> DrawDiff {
+    DrawDiff {
+        layers: Some(DrawLayersDelta {
+            patched: vec![DrawLayerPatchEntry {
+                id: layer_id.to_string(),
+                patch,
+            }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+/// 🧬️ Whole-snapshot replacement when a sparse delta cannot express a tree edit.
+pub fn diff_from_snapshot(snapshot: DrawSnapshot) -> DrawDiff {
+    diff_set_snapshot(&snapshot)
+}
+
+/// 📋 Selected-ids UI delta helper.
+pub fn diff_selected_ids(ids: Vec<String>) -> DrawDiff {
+    DrawDiff {
+        selected_ids: Some(DrawStringList { values: ids }),
+        ..Default::default()
+    }
+}
+
+/// 🗂️ Assets delta helper.
+pub fn diff_assets(entries: DrawAssetsDelta) -> DrawDiff {
+    DrawDiff {
+        assets: Some(entries),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Builders
+

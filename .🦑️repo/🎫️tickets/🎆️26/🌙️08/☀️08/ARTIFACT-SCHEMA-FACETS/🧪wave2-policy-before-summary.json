@@ -1,0 +1,35 @@
+{
+  "total": 1769,
+  "byPriority": {
+    "medium": 455,
+    "low": 13,
+    "high": 1301
+  },
+  "byKind": {
+    "mutation-migration/impl-presence": 382,
+    "taxonomy/emoji-prefix": 280,
+    "handcrafted-grammar/declared-use": 202,
+    "dsl-migration/diff-completeness": 199,
+    "taxonomy/dead-example-leaf": 112,
+    "mutation-migration/emoji-uniqueness": 111,
+    "handcrafted-grammar/empty-example": 102,
+    "protocol-migration/command-envelope-completeness": 96,
+    "taxonomy/dirs": 55,
+    "handcrafted-grammar/spec-distinctness": 46,
+    "pack-migration/completeness": 45,
+    "os-state-authority/item-scope-global": 32,
+    "handcrafted-grammar/spec-wiring-include": 29,
+    "dsl-migration/completeness": 28,
+    "app-plugin/app-coupling": 24,
+    "mutation-migration/triad-completeness": 4,
+    "os-state-authority/id-minting": 4,
+    "budget/no-budget-null": 4,
+    "taxonomy/plugin-builder": 3,
+    "mutation-migration/artifact-engine": 3,
+    "taxonomy/semio-examples": 2,
+    "taxonomy/lib-shape": 2,
+    "os-state-authority/document-app-shape": 2,
+    "taxonomy/banned-name-stem": 1,
+    "protocol-migration/db-server-only": 1
+  }
+}

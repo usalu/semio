@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "drawcfg")]
+#[dsl(id = "draw.config")]
 #[dsl(layout = "lines")]
 pub struct DrawConfig {
     /// 👁️ Selected layer ids — was `DrawInteractionState::selected_ids`.
@@ -257,7 +258,7 @@ mod tests {
             active_utility_id: "pen".into(),
             locale: "de-DE".into(),
         };
-        store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_round_trip(&config);
     }
 
     #[test]
@@ -274,14 +275,14 @@ mod tests {
 
     #[test]
     fn draw_config_operation_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::Snapshot { config: DrawConfig::default() });
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: Some("a".into()) });
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: None });
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetEngagementInput { value: "New \"Name\"".into() });
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() });
-        store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::Snapshot { config: DrawConfig::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: Some("a".into()) });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetEngagementInput { value: "New \"Name\"".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }
 //#endregion 🧪️Tests

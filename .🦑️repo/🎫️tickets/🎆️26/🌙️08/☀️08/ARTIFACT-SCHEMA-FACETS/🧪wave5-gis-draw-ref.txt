@@ -1,0 +1,1162 @@
+==== 🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs ====
+//! 🖼️ Lowpoly mutation — `SetSnapshot` payload + builder + apply.
+use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::artifacts::lowpoly::mutations::LowpolyMutation;
+use serde::{Deserialize, Serialize};
+
+
+//#region 🔖️Mutation
+/// @emoji 🖼️ `SetSnapshot` mutation payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct SetSnapshot {
+    #[dsl(block)]
+    pub snapshot: LowpolySnapshot,
+}
+
+pub fn set_snapshot(snapshot: LowpolySnapshot) -> LowpolyMutation {
+    LowpolyMutation::SetSnapshot { snapshot }
+}
+
+pub fn apply(projection: &mut LowpolySnapshot, replacement: &LowpolySnapshot) {
+    *projection = replacement.clone();
+}
+//#endregion 🔖️Mutation
+
+
+==== 🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs ====
+//! 🔺️ Diff fragment yielded by `SetSnapshot`.
+use crate::artifacts::lowpoly::diff::LowpolyDiff;
+use crate::artifacts::lowpoly::LowpolySnapshot;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Diff
+/// @emoji 🔺️ Diff produced by one `SetSnapshot` mutation — a sparse [`LowpolyDiff`].
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct SetSnapshotDiff {
+    pub diff: LowpolyDiff,
+}
+
+impl SetSnapshotDiff {
+    pub fn from_diff(diff: LowpolyDiff) -> Self {
+        Self { diff }
+    }
+
+    pub fn into_lowpoly_diff(self) -> LowpolyDiff {
+        self.diff
+    }
+}
+
+//#endregion 🔖️Diff
+
+
+==== 🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs ====
+//! ↩️ Inverse for `SetSnapshot`.
+use crate::artifacts::lowpoly::mutations::LowpolyMutation;
+use crate::artifacts::lowpoly::LowpolySnapshot;
+
+//#region 🔖️Inverse
+pub fn inverse(base: &LowpolySnapshot, _replacement: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+    vec![LowpolyMutation::SetSnapshot { snapshot: base.clone() }]
+}
+//#endregion 🔖️Inverse
+
+
+==== MUTATIONS ====
+//! 🧬️ Lowpoly artifact — document mutation dispatch enum + shared paint helpers. Per-mutation
+//! apply/inverse/diff live under each `🧬️mutations/<emoji><name>/` leaf; this root wraps them.
+
+use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySnapshot};
+use protocol::{CollectionMutation, Mutation};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Patches
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct LowpolyPaintLayerPatch {
+    pub name: Option<String>,
+    pub visible: Option<bool>,
+    pub opacity: Option<f32>,
+    pub blend_mode: Option<String>,
+}
+
+/// @emoji 🩸 A contiguous run of RGBA bytes written into a layer buffer at `offset`; a paint stroke is a
+/// list of these, and its inverse holds the bytes that were overwritten (read from the pre-stroke state).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct PixelRun {
+    pub offset: u32,
+    #[serde(with = "run_bytes_base64")]
+    #[dsl(base64)]
+    pub bytes: Vec<u8>,
+}
+
+mod run_bytes_base64 {
+    use base64::Engine;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(bytes))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+        let encoded = String::deserialize(deserializer)?;
+        base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
+    }
+}
+
+/// @emoji 🩹 Applies a paint-layer metadata patch and returns the inverse patch.
+pub fn apply_paint_layer_patch(layer: &mut LowpolyPaintLayer, patch: &LowpolyPaintLayerPatch) -> LowpolyPaintLayerPatch {
+    let mut inverse = LowpolyPaintLayerPatch::default();
+    if let Some(value) = &patch.name {
+        inverse.name = Some(layer.name.clone());
+        layer.name = value.clone();
+    }
+    if let Some(value) = patch.visible {
+        inverse.visible = Some(layer.visible);
+        layer.visible = value;
+    }
+    if let Some(value) = patch.opacity {
+        inverse.opacity = Some(layer.opacity);
+        layer.opacity = value;
+    }
+    if let Some(value) = &patch.blend_mode {
+        inverse.blend_mode = Some(layer.blend_mode.clone());
+        layer.blend_mode = value.clone();
+    }
+    inverse
+}
+
+/// @emoji 🖌️ Writes pixel runs into a layer buffer in place.
+pub fn apply_pixel_runs(pixels: &mut [u8], runs: &[PixelRun]) {
+    for run in runs {
+        let start = run.offset as usize;
+        let end = (start + run.bytes.len()).min(pixels.len());
+        if start < pixels.len() {
+            pixels[start..end].copy_from_slice(&run.bytes[..end - start]);
+        }
+    }
+}
+//#endregion 🔖️Patches
+
+//#region 🔖️Mutations
+/// @emoji 🧬️ The typed lowpoly document mutation. Mesh/object structure is flattened into one
+/// keyword-tagged variant per `protocol::CollectionMutation` case (`ObjectsAdd`/`ObjectsRemove`/
+/// `ObjectsMove`/`ObjectsPatch`) rather than wrapping that generic type directly — `CollectionMutation`
+/// is foreign (defined in `protocol`) and generic, so it can never itself implement `dsl::DslField`/
+/// `dsl::DslVariants` from this crate (the orphan rule). Apply/inverse for each variant live in the
+/// matching `🧬️mutations/<emoji><name>/` modules.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+pub enum LowpolyMutation {
+    ObjectsAdd {
+        index: usize,
+        #[dsl(block)]
+        item: LowpolyObject,
+    },
+    ObjectsRemove {
+        id: String,
+    },
+    ObjectsMove {
+        id: String,
+        to_index: usize,
+    },
+    ObjectsPatch {
+        id: String,
+        #[dsl(block)]
+        patch: LowpolyObjectPatch,
+    },
+    AddPaintLayer {
+        object_id: String,
+        index: usize,
+        #[dsl(block)]
+        layer: LowpolyPaintLayer,
+    },
+    RemovePaintLayer {
+        object_id: String,
+        index: usize,
+    },
+    PatchPaintLayer {
+        object_id: String,
+        index: usize,
+        #[dsl(block)]
+        patch: LowpolyPaintLayerPatch,
+    },
+    PaintStroke {
+        object_id: String,
+        layer_index: usize,
+        #[dsl(table)]
+        runs: Vec<PixelRun>,
+    },
+    SetSnapshot {
+        #[dsl(block)]
+        snapshot: LowpolySnapshot,
+    },
+}
+
+/// 🔁️ Converts a generic objects `CollectionMutation` back into its flat `LowpolyMutation` variant.
+pub fn objects_mutation_from_collection(mutation: CollectionMutation<String, LowpolyObject, LowpolyObjectPatch>) -> LowpolyMutation {
+    match mutation {
+        CollectionMutation::Add { index: at, item } => LowpolyMutation::ObjectsAdd { index: at, item },
+        CollectionMutation::Remove { id } => LowpolyMutation::ObjectsRemove { id },
+        CollectionMutation::Move { id, to_index: to } => LowpolyMutation::ObjectsMove { id, to_index: to },
+        CollectionMutation::Patch { id, patch } => LowpolyMutation::ObjectsPatch { id, patch },
+    }
+}
+
+/// @emoji ▶️ Applies one mutation to the projection in place.
+pub fn apply_lowpoly_mutation(snapshot: &mut LowpolySnapshot, mutation: &LowpolyMutation) {
+    match mutation {
+        LowpolyMutation::ObjectsAdd { index, item } => super::objects_add::mutation::apply(snapshot, *index, item),
+        LowpolyMutation::ObjectsRemove { id } => super::objects_remove::mutation::apply(snapshot, id),
+        LowpolyMutation::ObjectsMove { id, to_index } => super::objects_move::mutation::apply(snapshot, id, *to_index),
+        LowpolyMutation::ObjectsPatch { id, patch } => super::objects_patch::mutation::apply(snapshot, id, patch),
+        LowpolyMutation::AddPaintLayer { object_id, index, layer } => super::add_paint_layer::mutation::apply(snapshot, object_id, *index, layer),
+        LowpolyMutation::RemovePaintLayer { object_id, index } => super::remove_paint_layer::mutation::apply(snapshot, object_id, *index),
+        LowpolyMutation::PatchPaintLayer { object_id, index, patch } => super::patch_paint_layer::mutation::apply(snapshot, object_id, *index, patch),
+        LowpolyMutation::PaintStroke { object_id, layer_index, runs } => super::paint_stroke::mutation::apply(snapshot, object_id, *layer_index, runs),
+        LowpolyMutation::SetSnapshot { snapshot: replacement } => super::set_snapshot::mutation::apply(snapshot, replacement),
+    }
+}
+
+/// @emoji ↩️ Computes the inverse mutations from pre-state.
+pub fn inverse_lowpoly_mutation(snapshot: &LowpolySnapshot, mutation: &LowpolyMutation) -> Vec<LowpolyMutation> {
+    match mutation {
+        LowpolyMutation::ObjectsAdd { index, item } => super::objects_add::inverse::inverse(snapshot, *index, item),
+        LowpolyMutation::ObjectsRemove { id } => super::objects_remove::inverse::inverse(snapshot, id),
+        LowpolyMutation::ObjectsMove { id
+
+==== DRAW GLUE ====
+pub mod artifacts {
+    #[path = "."]
+    pub mod draw {
+        #[path = "../../🗿️artifacts/🖍️draw/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "../../🗿️artifacts/🖍️draw/🧬️schema/🦀️component.rs"]
+        pub mod schema;
+
+        #[path = "."]
+        pub mod diff {
+            #[path = "../../🗿️artifacts/🖍️draw/🔺️diff/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "../../🗿️artifacts/🖍️draw/🔺️diff/🧬️schema/🦀️component.rs"]
+            pub mod schema;
+            pub use schema::*;
+        }
+        #[path = "../../🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs"]
+        pub mod op;
+        #[path = "."]
+        pub mod mutations {
+            #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "."]
+            pub mod set_layer_visible {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/👁️set-layer-visible/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/👁️set-layer-visible/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/👁️set-layer-visible/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_locked {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔒️set-layer-locked/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🔒️set-layer-locked/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_opacity {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🦀️component.rs"]
+                pub mod mutation;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🌫️set-layer-opacity/🔺️diff/🦀️component.rs"]
+                pub mod diff;
+                #[path = "../../🗿️artifacts/🖍️draw/🧬️mutations/🌫️set-layer-opacity/↩️inverse/🦀️component.rs"]
+                pub mod inverse;
+            }
+
+            #[path = "."]
+            pub mod set_layer_blend_mode {
+                #[path = "../../🗿️artifacts/🖍️draw/🧬
+
+==== DRAW TS ====
+/** draw facet WASM facades */
+export * as draw_diff from "../../🗿️artifacts/🖍️draw/🔺️diff/🟦️component.ts";
+export * as draw_diff_schema from "../../🗿️artifacts/🖍️draw/🔺️diff/🧬️schema/🟦️component.ts";
+export * as draw_dsl from "../../🗿️artifacts/🖍️draw/🗣️dsl/🟦️component.ts";
+export * as draw_pack from "../../🗿️artifacts/🖍️draw/📸️snapshot/🎒️pack/🟦️component.ts";
+export * as draw_schema from "../../🗿️artifacts/🖍️draw/🧬️schema/🟦️component.ts";
+export * as draw_snapshot_schema from "../../🗿️artifacts/🖍️draw/📸️snapshot/🧬️schema/🟦️component.ts";
+export * as draw_op from "../../🗿️artifacts/🖍️draw/🔧️op/🟦️component.ts";
+export * as draw_mutations from "../../🗿️artifacts/🖍️draw/🧬️mutations/🟦️component.ts";
+export * as draw_spr from "../../🗿️artifacts/🖍️draw/📡️spr/🟦️component.ts";
+
+
+==== DRAW ROOT ====
+//! ✏️ Draw artifact — document schema (the `2d.drawing` document type).
+
+use serde::{Deserialize, Serialize};
+pub use store::DocumentDsl;
+
+pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document";
+pub const DRAW_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
+pub const DRAW_BOOLEAN_OPERATIONS: &[&str] = &["union", "difference", "intersection", "xor"];
+pub const DRAW_SHAPE_KINDS: &[&str] = &["rect", "ellipse", "circle", "line", "polygon"];
+pub const DRAW_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"];
+
+//#region 🔖️Domain
+// No `#[dsl(keyword = ...)]` on `DrawTransform`/`DrawTraceParams`/`DrawArtboard`: every field of
+// these types is itself `#[dsl(block)]`, which already supplies the bare leading keyword from the
+// FIELD's own name — an inner keyword too would double it (`transform { transform x=0 ... }`),
+// same reasoning as `note`'s `NoteImageAsset`.
+/// 🎥️ Camera pose (pan + zoom). Ephemeral view state owned by the `draw` app runtime struct
+/// (`DrawConfig`), never a `DrawSnapshot` field — see `.🦑️repo/🎫️tickets/26/07/31/
+/// MOVE-DRAW-PLUGIN-CAMERA-TO-RUNTIME-STATE`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+impl Default for DrawCamera {
+    /// 🎯️ Matches the pre-migration `default_draw_document` camera: centered on its 1024x1024 artboard.
+    fn default() -> Self {
+        Self { x: 512.0, y: 512.0, zoom: 0.75 }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawTransform {
+    pub x: f64,
+    pub y: f64,
+    pub scale_x: f64,
+    pub scale_y: f64,
+    /// 📐️ Radians — `engine`'s compose/decompose matrix helpers call `.cos()`/`.sin()`
+    /// directly on this field with no `to_radians()` conversion.
+    #[dsl(angle = "rad")]
+    pub rotation: f64,
+}
+
+// No keyword either: reached only through `Vec<GradientStop>` (a plain, un-tagged list) —
+// `parse_record_body` self-terminates on the first unrecognized key regardless, the same reasoning
+// verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct GradientStop {
+    pub offset: f64,
+    pub color: [f64; 4],
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum FillStyle {
+    Solid {
+        color: [f64; 4],
+    },
+    LinearGradient {
+        x1: f64,
+        y1: f64,
+        x2: f64,
+        y2: f64,
+        #[dsl(table)]
+        stops: Vec<GradientStop>,
+    },
+    RadialGradient {
+        cx: f64,
+        cy: f64,
+        r: f64,
+        #[dsl(table)]
+        stops: Vec<GradientStop>,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct StrokeStyle {
+    pub color: [f64; 4],
+    pub width: f64,
+    pub cap: String,
+    pub join: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dash: Option<Vec<f64>>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawAttributes {
+    // `fill` is a sum type (`FillStyle` has several tagged variants), so it uses
+    // `#[dsl(statements, block)]` — see `dsl::DslVariants`'s doc comment on `OptionStatements`.
+    // `stroke` is a single record type, so a plain `#[dsl(block)]` scalar Option suffices.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(statements, block)]
+    pub fill: Option<FillStyle>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub stroke: Option<StrokeStyle>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawTraceParams {
+    pub threshold: f64,
+    pub simplify_epsilon: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawImageAsset {
+    pub mime: String,
+    pub data: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub width: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub height: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawLayerBase {
+    pub id: String,
+    pub name: String,
+    pub visible: bool,
+    pub locked: bool,
+    pub opacity: f64,
+    pub blend_mode: String,
+    #[dsl(block)]
+    pub transform: DrawTransform,
+    #[serde(default)]
+    #[dsl(block)]
+    pub attributes: DrawAttributes,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawRect {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawEllipse {
+    pub cx: f64,
+    pub cy: f64,
+    pub rx: f64,
+    pub ry: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawCircle {
+    pub cx: f64,
+    pub cy: f64,
+    pub r: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawLine {
+    pub x1: f64,
+    pub y1: f64,
+    pub x2: f64,
+    pub y2: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawPolygon {
+    pub points: Vec<[f64; 2]>,
+}
+
+// Each body carries its own `#[dsl(keyword = ...)]` — required by the single-field tuple
+// ("newtype") variants of `DrawLayerNode` below, which delegate their entire `RecordSpec` to the
+// inner body's own spec (see `dsl::__rt::newtype_variant_spec`) rather than wrapping it in one more
+// layer. `base: DrawLayerBase` replaces `#[serde(flatten)]` with `#[dsl(block)]` — the engine has no
+// flatten-splice primitive (yet); a bare nested `base { ... }` line is the declarative equivalent.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "shape")]
+pub struct DrawShapeBody {
+    #[serde(flatten)]
+    #[dsl(block)]
+    pub base: DrawLayerBase,
+    pub shape_kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub rect: Option<DrawRect>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub ellipse: Option<DrawEllipse>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub circle: Option<DrawCircle>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub line: Option<DrawLine>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub polygon: Option<DrawPolygon>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "path")]
+pub struct DrawPathBody {
+    #[serde(flatten)]
+    #[dsl(block)]
+    pub base: DrawLayerBase,
+    #[dsl(statements, block)]
+    pub segments: Vec<PathSegment>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "text")]
+pub struct DrawTextBody {
+    #[serde(flatten)]
+    #[dsl(block)]
+    pub base: DrawLayerBase,
+    pub x: f64,
+    pub y: f64,
+    pub content: String,
+    pub size: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "image")]
+pub struct DrawImageBody {
+    #[serde(flatten)]
+    #[dsl(block)]
+    pub base: DrawLayerBase,
+    pub image_key: String,
+    pub width: f64,
+    pub height: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "group")]
+pub struct DrawGroupBody {
+    #[serde(flatten)]
+    #[dsl(block)]
+    pub base: DrawLayerBase,
+    #[dsl(statements, block)]
+    pub children: Vec<DrawLayerNode>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "boolean")]
+pub struct DrawBooleanBody {
+    #[serde(flatten)]
+    #[dsl(block)]
+    pub base: DrawLayerBase,
+    pub operation: String,
+    pub children: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "trace")]
+pub struct DrawTraceBody {
+    #[serde(flatten)]
+    #[dsl(block)]
+    pub base: DrawLayerBase,
+    pub source_key: String,
+    #[dsl(block)]
+    pub params: DrawTraceParams,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "kind")]
+pub enum DrawLayerNode {
+    #[serde(rename = "shape")]
+    Shape(DrawShapeBody),
+    #[serde(rename = "path")]
+    Path(DrawPathBody),
+    #[serde(rename = "text")]
+    Text(DrawTextBody),
+    #[serde(rename = "image")]
+    Image(DrawImageBody),
+    #[serde(rename = "group")]
+    Group(DrawGroupBody),
+    #[serde(rename = "boolean")]
+    Boolean(DrawBooleanBody),
+    #[serde(rename = "trace")]
+    Trace(DrawTraceBody),
+}
+
+// 🖊️ Keywords/field order are a genuine SUBSET of SVG path data's absolute commands
+// (`M`/`L`/`Q`/`C`/`A`/`Z`), each field `#[dsl(positional)]` so a segment prints as compact
+// command-then-args tokens — `M 1.25,196.933 L 36.25,161.125 ... Z` — instead of `move to=1.25,196.933`.
+// Field order per variant mirrors the SVG spec's own argument order (e.g. `A rx ry rotation
+// large-arc-flag sweep-flag x,y`) so it reads as real SVG path syntax, just space- instead of
+// comma/space-mixed-delimited between commands.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PathSegment {
+    #[dsl(key = "M")]
+    Move {
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "L")]
+    Line {
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "Q")]
+    Quad {
+        #[dsl(positional)]
+        ctrl: [f64; 2],
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "C")]
+    Cubic {
+        #[dsl(positional)]
+        ctrl1: [f64; 2],
+        #[dsl(positional)]
+        ctrl2: [f64; 2],
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "A")]
+    Arc {
+        #[dsl(positional)]
+        rx: f64,
+        #[dsl(positional)]
+        ry: f64,
+        /// 📐️ Degrees — `arc_segment_to_cubics`'s `rotation_deg` parameter calls `.to_radians()`
+        /// on this value, matching SVG path data's `A rx ry x-axis-rotation ...` convention.
+        #[dsl(positional)]
+        #[dsl(angle = "deg")]
+        rotation: f64,
+        #[dsl(positional)]
+        large_arc: bool,
+        #[dsl(positional)]
+        sweep: bool,
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "Z")]
+    Close,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawArtboard {
+    pub width: f64,
+    pub height: f64,
+}
+
+/// 📸️ Persisted draw snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
+pub use crate::artifacts::draw::snapshot::schema::DrawSnapshot;
+
+pub fn default_draw_transform() -> DrawTransform {
+    DrawTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
+}
+
+pub fn default_draw_trace_params() -> DrawTraceParams {
+    DrawTraceParams { threshold: 0.5, simplify_epsilon: 1.5 }
+}
+//#endregion 🔖️Domain
+
+//#region 🔖️ArtifactKind
+/// 🏷️ The `2d.drawing` artifact kind declaration — lifted out of the old bundle manifest's
+/// `.artifact_kind(...)` call so the app's manifest stitch can reuse it verbatim.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "2d.drawing".into(),
+        name: "2D Drawing".into(),
+        source_format: "draw.document".into(),
+        component_kind: "draw".into(),
+        dimension: "2d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        schema: "draw.document".into(),
+        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+    }
+}
+//#endregion 🔖️ArtifactKind
+
+
+==== DRAW SNAP ====
+//! 🧬️ Draw snapshot schema — persistent fields only.
+
+use crate::artifacts::draw::{DrawArtboard, DrawImageAsset, DrawLayerNode, DRAW_DOCUMENT_SCHEMA};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+//#region 🔖️Snapshot
+/// 📸️ Persisted draw document snapshot (persistent fields of the artifact).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+#[serde(rename_all = "camelCase")]
+#[dsl(id = "draw.draw", layout = "lines")]
+#[artifact_schema(id = "s.draw.draw")]
+pub struct DrawSnapshot {
+    #[state(persistent)]
+    pub schema: String,
+    #[state(persistent)]
+    pub id: String,
+    #[state(persistent)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[state(persistent)]
+    #[dsl(statements, block)]
+    pub layers: Vec<DrawLayerNode>,
+    #[state(persistent)]
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub assets: BTreeMap<String, DrawImageAsset>,
+    #[state(persistent)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub artboard: Option<DrawArtboard>,
+}
+//#region 🔖️HandcraftedDocumentCodecs
+/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
+impl store::DocumentDsl for DrawSnapshot {
+    const EXTENSION: &'static str = "draw";
+    fn envelope_id() -> &'static str { "draw.draw" }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        ).expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::DocumentPack for DrawSnapshot {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::DocumentDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
+            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::DocumentDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+}
+//#endregion 🔖️HandcraftedDocumentCodecs
+
+impl Default for DrawSnapshot {
+    fn default() -> Self {
+        Self {
+            schema: DRAW_DOCUMENT_SCHEMA.into(),
+            id: String::new(),
+            title: None,
+            layers: Vec::new(),
+            assets: BTreeMap::new(),
+            artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }),
+        }
+    }
+}
+//#endregion 🔖️Snapshot
+
+
+==== DRAW DIFF RT ====
+//! 🔺️ Draw artifact — sparse field-delta diff codec and apply/absorb.
+
+use crate::artifacts::draw::diff::schema::{
+    DrawAssetsDelta, DrawDiff, DrawLayerPatch, DrawLayerPatchEntry, DrawLayersDelta, DrawStringList,
+};
+use crate::artifacts::draw::engine::{layer_base_mut, remove_layer_from_tree, update_layer_in_tree};
+use crate::artifacts::draw::schema::DrawArtifact;
+use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
+use protocol::MutationDiff;
+
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+#[allow(unused_imports)]
+pub use super::schema::*;
+
+//#region 🔖️Apply
+impl DrawDiff {
+    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &DrawArtifact) -> DrawArtifact {
+        if let Some(replacement) = &self.artifact {
+            return (**replacement).clone();
+        }
+        let mut next = artifact.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(delta) = &self.layers {
+            next.layers = apply_layers_delta(&next.layers, delta);
+        }
+        if let Some(assets) = &self.assets {
+            for (key, value) in &assets.entries {
+                match value {
+                    Some(asset) => {
+                        next.assets.insert(key.clone(), asset.clone());
+                    }
+                    None => {
+                        next.assets.remove(key);
+                    }
+                }
+            }
+        }
+        if let Some(artboard) = &self.artboard {
+            next.artboard = artboard.clone();
+        }
+        if let Some(list) = &self.selected_ids {
+            next.selected_ids = list.values.clone();
+        }
+        if let Some(value) = &self.active_utility_id {
+            next.active_utility_id = value.clone();
+        }
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = self.camera_x {
+            next.camera_x = value;
+        }
+        if let Some(value) = self.camera_y {
+            next.camera_y = value;
+        }
+        if let Some(value) = self.camera_zoom {
+            next.camera_zoom = value;
+        }
+        if let Some(value) = &self.locale {
+            next.locale = value.clone();
+        }
+        if let Some(value) = &self.hovered_id {
+            next.hovered_id = value.clone();
+        }
+        next
+    }
+}
+
+/// 🧩 Applies an identified-collection delta to a layer tree (root + nested removes/patches).
+pub fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> Vec<DrawLayerNode> {
+    let mut next = layers.to_vec();
+    for id in &delta.removed {
+        remove_layer_from_tree(&mut next, id);
+    }
+    for item in &delta.added {
+        next.push(item.clone());
+    }
+    for entry in &delta.patched {
+        apply_layer_patch_entry(&mut next, entry);
+    }
+    if let Some(order) = &delta.reordered {
+        let mut by_id: std::collections::BTreeMap<_, _> = next
+            .into_iter()
+            .map(|layer| (crate::artifacts::draw::engine::layer_id(&layer).to_string(), layer))
+            .collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            if let Some(layer) = by_id.remove(id) {
+                ordered.push(layer);
+            }
+        }
+        ordered.extend(by_id.into_values());
+        next = ordered;
+    }
+    next
+}
+
+fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLayerPatchEntry) {
+    update_layer_in_tree(layers, &entry.id, &mut |layer| {
+        apply_layer_patch(layer, &entry.patch);
+    });
+}
+
+fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) {
+    if let Some(layer_json) = &patch.layer_json {
+        if let Ok(replacement) = serde_json::from_str::<DrawLayerNode>(layer_json) {
+            *layer = replacement;
+            return;
+        }
+    }
+    let base = layer_base_mut(layer);
+    if let Some(visible) = patch.visible {
+        base.visible = visible;
+    }
+    if let Some(locked) = patch.locked {
+        base.locked = locked;
+    }
+    if let Some(name) = &patch.name {
+        base.name = name.clone();
+    }
+    if let Some(opacity) = patch.opacity {
+        base.opacity = opacity;
+    }
+    if let Some(blend_mode) = &patch.blend_mode {
+        base.blend_mode = blend_mode.clone();
+    }
+    if let Some(transform_json) = &patch.transform_json {
+        if let Ok(transform) = serde_json::from_str(transform_json) {
+            base.transform = transform;
+        }
+    }
+    if let Some(fill_json) = &patch.fill_json {
+        base.attributes.fill = serde_json::from_str::<Option<FillStyle>>(fill_json).ok().flatten();
+    }
+    if let Some(stroke_json) = &patch.stroke_json {
+        base.attributes.stroke = serde_json::from_str::<Option<StrokeStyle>>(stroke_json).ok().flatten();
+    }
+    if let Some(operation) = &patch.boolean_operation {
+        if let DrawLayerNode::Boolean(boolean) = layer {
+            boolean.operation = operation.clone();
+        }
+    }
+    if let Some(params_json) = &patch.trace_params_json {
+        if let DrawLayerNode::Trace(trace) = layer {
+            if let Ok(params) = serde_json::from_str(params_json) {
+                trace.params = params;
+            }
+        }
+    }
+}
+
+impl MutationDiff<DrawSnapshot> for DrawDiff {
+    fn apply(&self, snapshot: &DrawSnapshot) -> DrawSnapshot {
+        if let Some(replacement) = &self.artifact {
+            return rep
+
+==== DRAW MUT ====
+//! 🧬️ Draw artifact — document mutation dispatch enum + apply helpers.
+
+use crate::artifacts::draw::diff::{
+    diff_add_layer, diff_from_snapshot, diff_remove_layer, diff_set_boolean_operation, diff_set_fill,
+    diff_set_layer_blend_mode, diff_set_layer_locked, diff_set_layer_name, diff_set_layer_opacity,
+    diff_set_layer_transform, diff_set_layer_visible, diff_set_snapshot, diff_set_stroke,
+    diff_set_trace_params, DrawDiff,
+};
+use crate::artifacts::draw::engine::{
+    clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba,
+    insert_layer, layer_base, layer_base_mut, mutate_draw_layer, remove_layer_from_tree,
+};
+use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
+use protocol::Mutation;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutations
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+pub enum DrawMutation {
+    SetLayerVisible {
+        layer_id: String,
+        visible: bool,
+    },
+    SetLayerLocked {
+        layer_id: String,
+        locked: bool,
+    },
+    SetLayerOpacity {
+        layer_id: String,
+        opacity: f64,
+    },
+    SetLayerBlendMode {
+        layer_id: String,
+        blend_mode: String,
+    },
+    SetLayerName {
+        layer_id: String,
+        name: String,
+    },
+    SetLayerTransform {
+        layer_id: String,
+        #[dsl(block)]
+        transform: crate::artifacts::draw::DrawTransform,
+    },
+    SetFill {
+        layer_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[dsl(statements, block)]
+        fill: Option<FillStyle>,
+    },
+    SetStroke {
+        layer_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[dsl(block)]
+        stroke: Option<StrokeStyle>,
+    },
+    SetBooleanOperation {
+        layer_id: String,
+        boolean_operation: String,
+    },
+    SetTraceParams {
+        layer_id: String,
+        #[dsl(block)]
+        params: crate::artifacts::draw::DrawTraceParams,
+    },
+    AddLayer {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        parent_id: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        index: Option<usize>,
+        #[dsl(statements)]
+        layer: Box<DrawLayerNode>,
+    },
+    DuplicateLayer {
+        layer_id: String,
+    },
+    RemoveLayer {
+        layer_id: String,
+    },
+    ReorderLayer {
+        layer_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        parent_id: Option<String>,
+        index: usize,
+    },
+    SetSnapshot {
+        #[dsl(block)]
+        snapshot: DrawSnapshot,
+    },
+}
+pub fn apply_draw_edit_mutation(doc: &DrawSnapshot, edit: &DrawMutation) -> DrawSnapshot {
+    match edit {
+        DrawMutation::SetSnapshot { snapshot } => snapshot.clone(),
+        DrawMutation::SetLayerVisible { layer_id, visible } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).visible = *visible;
+        }),
+        DrawMutation::SetLayerLocked { layer_id, locked } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).locked = *locked;
+        }),
+        DrawMutation::SetLayerOpacity { layer_id, opacity } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).opacity = *opacity;
+        }),
+        DrawMutation::SetLayerBlendMode { layer_id, blend_mode } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).blend_mode = blend_mode.clone();
+        }),
+        DrawMutation::SetLayerName { layer_id, name } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).name = name.clone();
+        }),
+        DrawMutation::SetLayerTransform { layer_id, transform } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).transform = transform.clone();
+        }),
+        DrawMutation::SetFill { layer_id, fill } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).attributes.fill = fill.clone();
+        }),
+        DrawMutation::SetStroke { layer_id, stroke } => mutate_draw_layer(doc, layer_id, |layer| {
+            layer_base_mut(layer).attributes.stroke = stroke.clone();
+        }),
+        DrawMutation::SetBooleanOperation { layer_id, boolean_operation } => mutate_draw_layer(doc, layer_id, |layer| {
+            if let DrawLayerNode::Boolean(boolean) = layer {
+                boolean.operation = boolean_operation.clone();
+            }
+        }),
+        DrawMutation::SetTraceParams { layer_id, params } => mutate_draw_layer(doc, layer_id, |layer| {
+            if let DrawLayerNode::Trace(trace) = layer {
+                trace.params = params.clone();
+            }
+        }),
+        DrawMutation::AddLayer { parent_id, index, layer } => {
+            let mut next = doc.clone();
+            let at = index.unwrap_or(next.layers.len());
+            insert_layer(&mut next.layers, parent_id.as_deref(), at, layer.as_ref().clone());
+            next
+        }
+        DrawMutation::DuplicateLayer { layer_id: source_id } => {
+            if let Some(layer) = find_draw_layer(doc, source_id).cloned() {
+                let duplicate = clone_draw_layer_node(&layer, " copy");
+                let mut next = doc.clone();
+                if let Some(location) = find_draw_layer_location(doc, source_id) {
+                    insert_layer(&mut next.layers, location.parent_id.as_deref(), location.index + 1, duplicate);
+                } else {
+                    next.layers.push(duplicate);
+                }
+                next
+            } else {
+                doc.clone()
+            }
+        }
+        DrawMutation::RemoveLayer { layer_id } => {
+            let mut next = doc.clone();
+            remove_layer_from_tree(&mut next.layers, layer_id);
+            next
+        }
+        DrawMutation::ReorderLayer { layer_id, parent_id, index } => {
+            let mut next = doc.clone();
+            if let Some(node) = extract_layer_node(&mut next.layers, layer_id) {
+                insert_layer(&mut next.layers, parent_id.as_deref(), *index, node);
+            }
+            next
+        }
+    }
+}
+
+pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
+    let layer = find_draw_layer(doc, layer_id)?;
+    let operation = match field {
+        "name" => DrawMutation::SetLayerName { layer_id: layer_id.into(), name: value.as_str().unwrap_or("").into() },
+        "opacity" => DrawMutation::SetLayerOpacity { layer_id: layer_id.into(), opacity: value.as_f64().unwrap_or(1.0) },
+        "visible" => DrawMutation::SetLayerVisible { layer_id: layer_id.into(), visible: value.as_bool().unwrap_or(true) },
+        "locked" => DrawMutation::SetLayerLocked { layer_id: layer_id.into(), locked: value.as_bool().unwrap_or(false) },
+        "blendMode" => DrawMutation::SetLayerBlendMode { layer_id: layer_id.into(), blend_mode: value.as_str().unwrap_or("normal").into() },
+        "booleanOperation" => DrawMutation::SetBooleanOperation { layer_id: layer_id.into(), boolean_operation: value.as_str().unwrap_or("union").into() },
+        "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" => {
+            let mut transform = layer_base(layer).transform.clone();
+            match field {
+                "transformX" => transform.x = value.as_f64().unwrap_or(0.0),
+                "transformY" => transform.y = value.as_f64().unwrap_or(0.0),
+                "transformScaleX" => transform.scale_x = value.as_f64().unwrap_or(1.0),
+                "transformScaleY" => transform.scale_y = value.as_f64().unwrap_or(1.0),
+                _ => transform.rotation = value.as_f64().unwrap_or(0.0),
+            }
+            DrawMutation::SetLayerTransform { layer_id: layer_id.into(), transform }
+        }
+        "fillColor" => {
+            let alpha = layer_base(layer)
+ 

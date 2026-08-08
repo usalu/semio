@@ -9,20 +9,20 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::puzzle2d::Puzzle2dProjection;
+use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle2d` DSL.
 pub const PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio");
 /// 📄️ The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle2d` DSL.
 pub const PUZZLE2D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio");
 
-/// 📖️ Parses `.puzzle2d` DSL text into a `Puzzle2dProjection`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle2dProjection, store::TextError> {
-    <Puzzle2dProjection as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.puzzle2d` DSL text into a `Puzzle2dSnapshot`.
+pub fn parse_dsl(text: &str) -> Result<Puzzle2dSnapshot, store::TextError> {
+    <Puzzle2dSnapshot as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `Puzzle2dProjection` back to `.puzzle2d` DSL text.
-pub fn print_dsl(document: &Puzzle2dProjection) -> String {
+/// 🖨️ Prints a `Puzzle2dSnapshot` back to `.puzzle2d` DSL text.
+pub fn print_dsl(document: &Puzzle2dSnapshot) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 
@@ -39,17 +39,17 @@ mod tests {
     fn puzzle2d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE2D_NAKAGIN_EXAMPLE_TEXT] {
             let projection = parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            store::test_support::assert_dsl_round_trip(&projection);
-            store::test_support::assert_dsl_pack_equivalence(&projection);
+            semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+            semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
         }
     }
 
     #[test]
     fn puzzle2d_projection_dsl_round_trips() {
-        let empty = Puzzle2dProjection::default();
-        store::test_support::assert_dsl_round_trip(&empty);
-        store::test_support::assert_dsl_pack_equivalence(&empty);
-        let mut with_content = Puzzle2dProjection { camera: Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 }, ..Puzzle2dProjection::default() };
+        let empty = Puzzle2dSnapshot::default();
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+        let mut with_content = Puzzle2dSnapshot { camera: Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 }, ..Puzzle2dSnapshot::default() };
         with_content.nodes.push(Puzzle2dNode {
             id: "n1".into(),
             node_kind: Some("seed".into()),
@@ -90,8 +90,8 @@ mod tests {
             kind_compatibility: vec![Puzzle2dKindCompatibility { bidirectional: true, specificity: Puzzle2dCompatSpecificity::Vortex, source: "b-l".into(), target: "b-l".into() }],
             kind_catalogs: None,
         };
-        store::test_support::assert_dsl_round_trip(&with_content);
-        store::test_support::assert_dsl_pack_equivalence(&with_content);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_content);
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&with_content);
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -107,11 +107,11 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dProjection::default(), None));
+        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None));
         let node = Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() };
         store.dispatch(DocumentCommand::Apply { mutations: vec![Puzzle2dMutation::SetNode { index: 0, node }], description: None }).expect("apply");
         let edit: &Edit<Puzzle2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<Puzzle2dProjection, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

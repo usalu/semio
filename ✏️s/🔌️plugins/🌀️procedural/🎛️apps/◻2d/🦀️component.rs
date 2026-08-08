@@ -16,7 +16,7 @@ use crate::apps::procedural2d::panels::{catalogue as catalogue_panel, document a
 use crate::apps::procedural2d::terminology::{procedural2d_labels, Procedural2dLabels};
 use crate::artifacts::procedural2d::engine::procedural2d_io;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
-use crate::artifacts::procedural2d::{artifact_kind, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
+use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCEDURAL_2D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
 use store::EngineHandles;
@@ -38,7 +38,7 @@ semio_framework_plugin::app_commands! {
     /// Each row states BOTH the manifest action id (`command_id()`) and the `dsl` wire keyword
     /// (`#[dsl(key = ..)]`) — genuinely different vocabularies; `setLocale`/`locale` proves it. **Row
     /// order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Procedural2dCommand for Procedural2dDocument, Procedural2dMutation, Procedural2dConfig, Procedural2dConfigMutation, ctx = FlowEvalSession {
+    pub enum Procedural2dCommand for Procedural2dSnapshot, Procedural2dMutation, Procedural2dConfig, Procedural2dConfigMutation, ctx = FlowEvalSession {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "moveMediaNode" as "move-media-node" => move_media_node::MoveMediaNode,
         "addWidget" as "add-widget" => add_widget::AddWidget,
@@ -87,7 +87,7 @@ use widget::{add_widget, remove_widget};
 pub struct Procedural2dPlayApp;
 
 impl DocumentApp for Procedural2dPlayApp {
-    type Projection = Procedural2dDocument;
+    type Snapshot = Procedural2dSnapshot;
     type Mutation = Procedural2dMutation;
     type Config = Procedural2dConfig;
     type ConfigMutation = Procedural2dConfigMutation;
@@ -99,8 +99,8 @@ impl DocumentApp for Procedural2dPlayApp {
     const APP_ID: &'static str = PROCEDURAL2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
 
-    fn initial_projection() -> Procedural2dDocument {
-        crate::artifacts::procedural2d::engine::default_projection()
+    fn initial_snapshot() -> Procedural2dSnapshot {
+        crate::artifacts::procedural2d::engine::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -182,16 +182,16 @@ impl DocumentApp for Procedural2dPlayApp {
         }
     }
 
-    fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
-    fn pending_effects(doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
+    fn pending_effects(doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
         with_process_flow_eval_session(|session| {
-            let host = crate::artifacts::procedural2d::engine::host_from_fixture_with_session(&doc.projection.fixture, session);
+            let host = crate::artifacts::procedural2d::engine::host_from_fixture_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
                 vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
@@ -200,9 +200,9 @@ impl DocumentApp for Procedural2dPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
-        let document = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
+        let document = doc.snapshot;
+        let config = cfg.snapshot;
         let labels = procedural2d_labels(config);
         with_process_flow_eval_session(|session| match body_key {
             flow_window::PROCEDURAL2D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
@@ -220,10 +220,10 @@ impl DocumentApp for Procedural2dPlayApp {
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
     /// toggle, generation authoring, and generation selection each fold into their own taxonomy group;
     /// the delete-selection item stays a direct destructive item last.
-    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let config = cfg.projection;
+        let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<Procedural2dLabels>(&config.locale);
         let is_de = config.locale.starts_with("de");
         let selected = config.selected_ids.clone();
@@ -235,17 +235,17 @@ impl DocumentApp for Procedural2dPlayApp {
         menu.build()
     }
 
-    /// 🎞️ Declares `export_media`'s default document schema — pack-encodes `doc.projection`, wrapped
+    /// 🎞️ Declares `export_media`'s default document schema — pack-encodes `doc.snapshot`, wrapped
     /// `Structured{schema: Self::DOCUMENT_SCHEMA, json: base64}` — plus `"drawing:out"`.
-    fn export_media(port: &str, doc: &DocumentView<'_, Procedural2dDocument>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Procedural2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
         match port {
             "drawing:out" => {
-                let eval_json = crate::artifacts::procedural2d::engine::evaluate_generation_preview(&doc.projection.fixture, &serde_json::Map::new());
+                let eval_json = crate::artifacts::procedural2d::engine::evaluate_generation_preview(&doc.snapshot.fixture, &serde_json::Map::new());
                 let layers_json = crate::artifacts::procedural2d::engine::generation_preview_layers(&eval_json);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "document:out" => {
-                let bytes = store::DocumentPack::encode_pack(doc.projection);
+                let bytes = store::DocumentPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
                     payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
@@ -257,7 +257,7 @@ impl DocumentApp for Procedural2dPlayApp {
 
     /// 🎞️ `"params:in"`: a generic Data×Value JSON object `{widgetId: number}` — patches matching
     /// `InputSlider` widgets' `value` field, leaving unmatched keys/widget kinds untouched.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural2dDocument>) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &DocumentView<'_, Procedural2dSnapshot>) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
         if port != "params:in" {
             return Err(semio_framework_plugin::MediaError::NotImplemented);
         }
@@ -271,7 +271,7 @@ impl DocumentApp for Procedural2dPlayApp {
         let mut operations = Vec::new();
         for (widget_id_key, value) in object {
             let Some(number) = value.as_f64() else { continue };
-            let Some((index, widget)) = doc.projection.fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
+            let Some((index, widget)) = doc.snapshot.fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
             if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
                 operations.push(Procedural2dMutation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
             }
@@ -342,7 +342,7 @@ pub fn create_procedural2d_app() -> App {
             .config(Procedural2dPlayApp::config_spec())
             .io(procedural2d_io()),
     )
-    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&crate::artifacts::procedural2d::engine::default_projection()).unwrap(), "file")
+    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&crate::artifacts::procedural2d::engine::default_snapshot()).unwrap(), "file")
     .workflow("procedural2d", "Procedural 2D", "layout")
 }
 //#endregion 🔖️Manifest
@@ -502,29 +502,29 @@ mod tests {
     #[test]
     fn add_widget_materializes_declared_kind_default_into_an_operation() {
         let mut app = app_with_registry();
-        let before = app.projection().expect("projection").fixture.widgets.len();
+        let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         app.dispatch_typed(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add widget");
-        assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
+        assert_eq!(app.snapshot().expect("snapshot").fixture.widgets.len(), before + 1);
     }
 
     #[test]
     fn add_widget_undo_redo_round_trip() {
         let mut app = app();
-        let before = app.projection().expect("projection").fixture.widgets.len();
-        assert_undo_redo_round_trip(&mut app, Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.projection().expect("projection").fixture.widgets.len(), before, before + 1);
+        let before = app.snapshot().expect("snapshot").fixture.widgets.len();
+        assert_undo_redo_round_trip(&mut app, Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1);
     }
 
     #[test]
-    fn document_from_dwg_returns_valid_default_projection() {
+    fn document_from_dwg_returns_valid_default_snapshot() {
         let drawing = semio_framework::DwgDrawing::default();
         let document = crate::artifacts::procedural2d::engine::procedural2d_document_from_dwg(&drawing).expect("dwg import document");
-        let projection: Procedural2dDocument = serde_json::from_value(document).expect("parseable projection");
+        let projection: Procedural2dSnapshot = serde_json::from_value(document).expect("parseable projection");
         assert_eq!(projection.fixture.schema, "flow.fixture");
     }
 
     #[test]
     fn two_instances_converge_disjoint_widget_moves() {
-        let widgets: Vec<String> = app().projection().expect("projection").fixture.widgets.iter().map(|widget| crate::artifacts::procedural2d::widget_id(widget).to_string()).collect();
+        let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural2d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
         semio_framework_plugin::testkit::assert_two_instances_converge::<Procedural2dPlayApp, (Option<f64>, Option<f64>)>(
@@ -532,7 +532,7 @@ mod tests {
             Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
             Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
             move |app| {
-                let layout = &app.projection().expect("projection").fixture.layout;
+                let layout = &app.snapshot().expect("snapshot").fixture.layout;
                 (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
             },
         );
@@ -580,8 +580,8 @@ mod tests {
         let mut app = app();
         app.dispatch_typed(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");
         let slider_id = app
-            .projection()
-            .expect("projection")
+            .snapshot()
+            .expect("snapshot")
             .fixture
             .widgets
             .iter()
@@ -595,7 +595,7 @@ mod tests {
             payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
         };
         app.import_media("params:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import params");
-        let value = app.projection().expect("projection").fixture.widgets.iter().find_map(|widget| match widget {
+        let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
             _ => None,
         });

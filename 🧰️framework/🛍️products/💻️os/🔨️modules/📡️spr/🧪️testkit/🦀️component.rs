@@ -445,7 +445,7 @@ pub fn assert_recovery_truncates_to_commit(bytes: &[u8], level: CorruptionLevel)
 /// 🧮️ The `(kind, payload bytes)` multiset of every structural record (`REC_DOC`/`REC_EDIT`/
 /// `REC_CHANGE`/`REC_CHECKPOINT`/`REC_ALTERNATIVE`/`REC_ACTIVE`) in `bytes`'s trusted prefix —
 /// deliberately excludes `REC_COMMIT` (chain metadata, expected to differ across a compaction that
-/// restarts the commit chain) and dictionary/index/sealed/compaction/projection/ephemeral kinds
+/// restarts the commit chain) and dictionary/index/sealed/compaction/snapshot/ephemeral kinds
 /// (physical layout compaction is explicitly allowed to rewrite).
 #[cfg(not(target_arch = "wasm32"))]
 fn structural_records(bytes: &[u8], limits: &crate::os_spr::ProtocolLimits) -> std::collections::BTreeMap<(u8, Vec<u8>), usize> {

@@ -5,7 +5,7 @@ use family-scene
 start mutation
 
 mutation = op-line+
-op-line = add-object | remove-object | patch-object | translate-objects | rotate-objects | scale-objects | set-pane-objects | add-node | remove-node | rename-node | patch-reference | set-references | set-active-model-definition | set-scene
+op-line = add-object | remove-object | patch-object | translate-objects | rotate-objects | scale-objects | set-pane-objects | add-node | remove-node | rename-node | patch-reference | set-references | set-active-model-definition | set-snapshot
 add-object = "add-object" "pane" "=" pane-id object-block
 remove-object = "remove-object" "pane" "=" pane-id "object-id" "=" IDENT
 patch-object = "patch-object" "pane" "=" pane-id "object-id" "=" IDENT object-patch-block
@@ -19,7 +19,7 @@ rename-node = "rename-node" "node-id" "=" IDENT "label" "=" TEXT
 patch-reference = "patch-reference" "model-definition-id" "=" IDENT "reference-id" "=" IDENT reference-patch-block
 set-references = "set-references" "model-definition-id" "=" IDENT reference-list-block
 set-active-model-definition = "set-active-model-definition" "model-definition-id" "=" IDENT
-set-scene = "set-scene" scene-block
+set-snapshot = "set-snapshot" scene-block
 schema-field = "schema" "=" IDENT
 id-field = "id" "=" IDENT
 scene-block = "scene" "{" scene-field* "}"

@@ -3,7 +3,7 @@
 //! ↔ Undirected adjacency logic — canonical pairs, matrix view, conflicts, and graph edges.
 
 use crate::artifacts::program::kernel::EntityId;
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::registers::{Adjacency, AdjacencyKind, SeparationKind};
 use math::graph::{orient_endpoints, Undirected};
 use serde::{Deserialize, Serialize};
@@ -18,7 +18,7 @@ pub fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
 
 // #region 🔖️Mutations
 /// @emoji ➕️ Upserts an adjacency row with normalized endpoints; replaces same pair if present.
-pub fn set_adjacency(program: &mut Program, mut adjacency: Adjacency) {
+pub fn set_adjacency(program: &mut ProgramSnapshot, mut adjacency: Adjacency) {
     let (a, b) = normalize_pair(&adjacency.element_a_id, &adjacency.element_b_id);
     adjacency.element_a_id = a;
     adjacency.element_b_id = b;
@@ -31,7 +31,7 @@ pub fn set_adjacency(program: &mut Program, mut adjacency: Adjacency) {
 }
 
 /// @emoji ➖️ Removes an adjacency by id or by normalized element pair.
-pub fn clear_adjacency(program: &mut Program, id: &EntityId) {
+pub fn clear_adjacency(program: &mut ProgramSnapshot, id: &EntityId) {
     if let Some(index) = program.adjacencies.iter().position(|row| &row.header.id == id) {
         program.adjacencies.remove(index);
         return;
@@ -60,7 +60,7 @@ pub struct AdjacencyCell {
 }
 
 /// @emoji 📊️ Builds a lower-triangle matrix view over program elements and adjacencies.
-pub fn adjacency_matrix(program: &Program) -> AdjacencyMatrix {
+pub fn adjacency_matrix(program: &ProgramSnapshot) -> AdjacencyMatrix {
     let mut element_ids: Vec<EntityId> = program.elements.iter().map(|e| e.header.id.clone()).collect();
     element_ids.sort();
     let n = element_ids.len();
@@ -79,7 +79,7 @@ pub fn adjacency_matrix(program: &Program) -> AdjacencyMatrix {
 }
 
 /// @emoji 🕸️ Undirected edge list for graph rendering (`a`, `b`, weight).
-pub fn undirected_edges(program: &Program) -> Vec<(EntityId, EntityId, f64)> {
+pub fn undirected_edges(program: &ProgramSnapshot) -> Vec<(EntityId, EntityId, f64)> {
     program.adjacencies.iter().map(|adjacency| (adjacency.element_a_id.clone(), adjacency.element_b_id.clone(), adjacency.weight)).collect()
 }
 // #endregion
@@ -95,7 +95,7 @@ pub struct AdjacencyConflict {
 }
 
 /// @emoji 🔍️ Detects duplicate pairs, kind conflicts, separation/distance/level violations.
-pub fn detect_adjacency_conflicts(program: &Program) -> Vec<AdjacencyConflict> {
+pub fn detect_adjacency_conflicts(program: &ProgramSnapshot) -> Vec<AdjacencyConflict> {
     let mut conflicts = Vec::new();
     for (i, left) in program.adjacencies.iter().enumerate() {
         if let (Some(min), Some(max)) = (left.distance_min_m, left.distance_max_m) {

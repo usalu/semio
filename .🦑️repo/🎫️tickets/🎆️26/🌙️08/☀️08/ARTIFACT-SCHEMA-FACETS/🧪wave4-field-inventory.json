@@ -1,0 +1,273 @@
+{
+  "artifact": [
+    {
+      "name": "schema",
+      "state": "persistent",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "objects",
+      "state": "persistent",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "LowpolyObject"
+    },
+    {
+      "name": "activeObjectId",
+      "state": "shared-ui",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "selection",
+      "state": "shared-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "LowpolySelection"
+    },
+    {
+      "name": "selectedObjectIds",
+      "state": "shared-ui",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "string"
+    },
+    {
+      "name": "paintUtility",
+      "state": "shared-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "activePaintLayer",
+      "state": "shared-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "uint32"
+    },
+    {
+      "name": "activeUtilityId",
+      "state": "shared-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "showEdges",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool"
+    },
+    {
+      "name": "sunEnabled",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool"
+    },
+    {
+      "name": "sunAzimuth",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "sunElevation",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "sunIntensity",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "sunColor",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "worldCameraPositionX",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "worldCameraPositionY",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "worldCameraPositionZ",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "worldCameraTargetX",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "worldCameraTargetY",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "worldCameraTargetZ",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "worldCameraFov",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64"
+    },
+    {
+      "name": "utilityParamsJson",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "paintColorR",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "uint32"
+    },
+    {
+      "name": "paintColorG",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "uint32"
+    },
+    {
+      "name": "paintColorB",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "uint32"
+    },
+    {
+      "name": "paintColorA",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "uint32"
+    },
+    {
+      "name": "selectionMethod",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "selectionModeDefault",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "engagementInput",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "locale",
+      "state": "local-ui",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "hoveredObjectId",
+      "state": "preview",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "hoveredTargetObjectId",
+      "state": "preview",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "hoveredTargetMode",
+      "state": "preview",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string"
+    },
+    {
+      "name": "hoveredTargetId",
+      "state": "preview",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "uint32"
+    },
+    {
+      "name": "strokeDragActive",
+      "state": "preview",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool"
+    },
+    {
+      "name": "transformDragActive",
+      "state": "preview",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool"
+    },
+    {
+      "name": "previewSeq",
+      "state": "preview",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "int64"
+    }
+  ],
+  "snapshot": [
+    {
+      "name": "schema",
+      "state": "persistent"
+    },
+    {
+      "name": "objects",
+      "state": "persistent"
+    }
+  ]
+}

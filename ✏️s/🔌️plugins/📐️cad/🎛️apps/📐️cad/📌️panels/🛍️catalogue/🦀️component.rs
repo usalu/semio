@@ -53,7 +53,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = DocumentView { projection: &scene, history: &history };
+        let doc = DocumentView { snapshot: &scene, history: &history };
         let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
         let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();

@@ -277,9 +277,9 @@ mod tests {
 
     #[test]
     fn fem3d_config_operation_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() });
-        store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
-        store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::SetCamera { camera: FemCamera { json: "{\"x\":1}".into() } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dConfigMutation::SetCamera { camera: FemCamera { json: "{\"x\":1}".into() } });
     }
 }
 // #endregion 🧪️Tests

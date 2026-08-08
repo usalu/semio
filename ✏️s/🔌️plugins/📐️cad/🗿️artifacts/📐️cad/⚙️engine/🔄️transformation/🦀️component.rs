@@ -372,11 +372,21 @@ mod tests {
             solid_handle: Some(solid.0.clone()),
             primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: solid.0, kind: "solid".into() }],
         }];
+        let solid = semio_s_3d::brep::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box2");
+        let topology = semio_s_3d::brep::engine::block_on(kernel.deconstruct(&solid)).expect("deconstruct");
+        eprintln!("FACES={} edges={} verts={}", topology.faces.len(), topology.edges.len(), topology.vertices.len());
+        for (i, face) in topology.faces.iter().enumerate() {
+            let n = face_normal_sync(&kernel, face);
+            let c = face_centroid_sync(&kernel, face);
+            eprintln!("FACE {i} normal={n:?} centroid={c:?}");
+        }
         let derived = run_derive_from_geometry(&mut kernel, &source, "energy");
-        assert!(derived.iter().any(|object| object.typology == "energy.energy.hull"));
-        assert!(derived.iter().any(|object| object.typology == "energy.energy.roof" || object.typology == "energy.energy.baseplate"));
-        assert!(derived.iter().any(|object| object.typology == "energy.energy.externalwall"));
-        assert!(derived.iter().any(|object| object.typology == "energy.energy.windows"));
+        let typos: Vec<_> = derived.iter().map(|o| o.typology.as_str()).collect();
+        eprintln!("DERIVED_TYPOS={typos:?} count={}", derived.len());
+        assert!(derived.iter().any(|object| object.typology == "energy.energy.hull"), "missing hull in {typos:?}");
+        assert!(derived.iter().any(|object| object.typology == "energy.energy.roof" || object.typology == "energy.energy.baseplate"), "missing roof/baseplate in {typos:?}");
+        assert!(derived.iter().any(|object| object.typology == "energy.energy.externalwall"), "missing wall in {typos:?}");
+        assert!(derived.iter().any(|object| object.typology == "energy.energy.windows"), "missing windows in {typos:?}");
     }
 
     #[test]

@@ -1,0 +1,137 @@
+syntax = "proto3";
+package semio.s.fem.fem2d.diff;
+
+// 🧬️ Fem2d diff schema
+message Fem2dDiff {
+  // @state persistent
+  optional Fem2dArtifact artifact = 1;
+  // @state persistent
+  optional Fem2dNodesDelta nodes = 2;
+  // @state persistent
+  optional Fem2dElementsDelta elements = 3;
+  // @state persistent
+  optional Fem2dRegionsDelta regions = 4;
+  // @state persistent
+  optional Fem2dMaterialsDelta materials = 5;
+  // @state persistent
+  optional Fem2dSectionsDelta sections = 6;
+  // @state persistent
+  optional Fem2dSupportsDelta supports = 7;
+  // @state persistent
+  optional Fem2dLoadCasesDelta load_cases = 8;
+  // @state persistent
+  optional Fem2dCombinationsDelta combinations = 9;
+  // @state persistent
+  optional FemAnalysisSettings analysis = 10;
+  // @state shared-ui
+  optional string result_source_id = 11;
+  // @state shared-ui
+  optional string result_mode = 12;
+  // @state shared-ui
+  optional uint32 result_mode_index = 13;
+  // @state local-ui
+  optional FemCamera camera = 14;
+  // @state local-ui
+  optional string locale = 15;
+  // @state preview
+  optional string solver_results_json = 16;
+  // @state preview
+  optional string mesh_preview_json = 17;
+}
+
+message Fem2dNodesDelta {
+  repeated FemNode added = 1;
+  repeated string removed = 2;
+  repeated Fem2dNodesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dNodesPatchEntry {
+  string id = 1;
+  FemNode item = 2;
+}
+
+message Fem2dElementsDelta {
+  repeated FemElement added = 1;
+  repeated string removed = 2;
+  repeated Fem2dElementsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dElementsPatchEntry {
+  string id = 1;
+  FemElement item = 2;
+}
+
+message Fem2dRegionsDelta {
+  repeated FemRegion added = 1;
+  repeated string removed = 2;
+  repeated Fem2dRegionsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dRegionsPatchEntry {
+  string id = 1;
+  FemRegion item = 2;
+}
+
+message Fem2dMaterialsDelta {
+  repeated FemMaterial added = 1;
+  repeated string removed = 2;
+  repeated Fem2dMaterialsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dMaterialsPatchEntry {
+  string id = 1;
+  FemMaterial item = 2;
+}
+
+message Fem2dSectionsDelta {
+  repeated FemSection added = 1;
+  repeated string removed = 2;
+  repeated Fem2dSectionsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dSectionsPatchEntry {
+  string id = 1;
+  FemSection item = 2;
+}
+
+message Fem2dSupportsDelta {
+  repeated FemSupport added = 1;
+  repeated string removed = 2;
+  repeated Fem2dSupportsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dSupportsPatchEntry {
+  string id = 1;
+  FemSupport item = 2;
+}
+
+message Fem2dLoadCasesDelta {
+  repeated FemLoadCase added = 1;
+  repeated string removed = 2;
+  repeated Fem2dLoadCasesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dLoadCasesPatchEntry {
+  string id = 1;
+  FemLoadCase item = 2;
+}
+
+message Fem2dCombinationsDelta {
+  repeated FemCombination added = 1;
+  repeated string removed = 2;
+  repeated Fem2dCombinationsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dCombinationsPatchEntry {
+  string id = 1;
+  FemCombination item = 2;
+}
+

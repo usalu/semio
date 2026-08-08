@@ -1,0 +1,8 @@
+=== bun ./📜️script.ts policy | rg -i fem ===
+(no stdout matches — breaches live in cache / probe API)
+=== policyArtifactSchemaBreaches filter fem ===
+fem artifact-schema breaches: 0
+fem total policy breaches: 129
+byKind {
+  "app-plugin/app-coupling": 1,
+  "taxonomy/dead-example-leaf": 5,

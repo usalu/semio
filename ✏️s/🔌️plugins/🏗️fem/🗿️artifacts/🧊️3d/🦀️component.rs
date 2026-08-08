@@ -10,7 +10,7 @@ pub const FEM_3D_SCHEMA: &str = "fem.3d";
 /// 🔁️ fem_3d's own DSL-printable mirror of `crate::model::Dof` — `crate::model::Dof` can't derive
 /// `dsl::DslScalar` from outside its own defining module the same way a foreign crate couldn't (the
 /// orphan rule blocks implementing a foreign `dsl::DslField` for it from here), so every DOF-typed
-/// field in the `Fem3dDocument` grammar (`FemSupport::fixed`, `FemLoad::Nodal::dof`) uses this local tag
+/// field in the `Fem3dSnapshot` grammar (`FemSupport::fixed`, `FemLoad::Nodal::dof`) uses this local tag
 /// instead, converting to/from `crate::model::Dof` at the `crate::model::Model`/`Support`/`NodalLoad`
 /// boundary (see `crate::artifacts::fem3d::engine::meshing::resolve_geometry`, `translate_loads`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
@@ -175,7 +175,7 @@ pub struct FemCombination {
 /// (meter-scale) displacements only; modal/buckling mode shapes are dimensionless (mass/Kg-
 /// orthonormalized) and the viewer normalizes them to a fixed fraction of the model's own extent
 /// instead of using this factor.
-// No `#[dsl(keyword = ...)]` here: the only field embedding this type (`Fem3dDocument::analysis`,
+// No `#[dsl(keyword = ...)]` here: the only field embedding this type (`Fem3dSnapshot::analysis`,
 // `Fem3dMutation::SetAnalysisSettings::settings`) is itself `#[dsl(block)]`, which already supplies
 // the bare leading keyword from the FIELD's own name — an inner keyword too would double it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -226,88 +226,9 @@ impl Default for FemCamera {
     }
 }
 
-/// 🧾️ Persistent fem-3d document — nodes, members, catalogs, supports and load cases. The camera is
-/// session-only view state (never a VCS-tracked document field) — see `Fem3dConfig::camera` in the
-/// app's `🎚️config`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(id = "fem.fem3d", layout = "lines")]
-pub struct Fem3dDocument {
-    #[dsl(table)]
-    pub nodes: Vec<FemNode>,
-    #[dsl(statements, block)]
-    pub elements: Vec<FemElement>,
-    #[dsl(table)]
-    pub materials: Vec<FemMaterial>,
-    #[dsl(table)]
-    pub sections: Vec<FemSection>,
-    #[dsl(table)]
-    pub solids: Vec<FemSolid>,
-    #[dsl(table)]
-    pub supports: Vec<FemSupport>,
-    #[dsl(table)]
-    pub load_cases: Vec<FemLoadCase>,
-    #[dsl(table)]
-    pub combinations: Vec<FemCombination>,
-    #[dsl(block)]
-    pub analysis: FemAnalysisSettings,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Fem3dDocument {
-    const EXTENSION: &'static str = "fem3d";
-    fn envelope_id() -> &'static str { "fem.fem3d" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for Fem3dDocument {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
+/// 📸️ `Fem3dSnapshot` lives in `📸️snapshot/🧬️schema` — re-exported here for crate consumers.
+pub use crate::artifacts::fem3d::snapshot::schema::Fem3dSnapshot;
+pub use crate::artifacts::fem3d::schema::Fem3dArtifact;
 
 // #endregion 🔖️Document
 

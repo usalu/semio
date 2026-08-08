@@ -7433,7 +7433,7 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 
 /// 📦️ Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionMutation}
 /// for granular convergence; `SetNodes`/`SetEdges` are bulk writes (relayout/rename) and `SetDocument`
-/// replaces the whole projection (import/reset).
+/// replaces the whole snapshot (import/reset).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
@@ -7459,11 +7459,11 @@ pub struct DagDiff {
 }
 
 impl MutationDiff<DagDocument> for DagDiff {
-    fn apply(&self, projection: &DagDocument) -> DagDocument {
+    fn apply(&self, snapshot: &DagDocument) -> DagDocument {
         if let Some(document) = &self.document {
             return document.clone();
         }
-        let mut next = projection.clone();
+        let mut next = snapshot.clone();
         if let Some(nodes) = &self.set_nodes {
             next.nodes = nodes.clone();
         }
@@ -7498,23 +7498,23 @@ impl MutationDiff<DagDocument> for DagDiff {
 impl Mutation<DagDocument> for DagMutation {
     type Diff = DagDiff;
 
-    fn diff(&self, projection: &DagDocument) -> DagDiff {
+    fn diff(&self, snapshot: &DagDocument) -> DagDiff {
         match self {
-            DagMutation::Nodes(operation) => DagDiff { nodes: Some(collection_diff_from_mutation(&projection.nodes, operation)), ..Default::default() },
-            DagMutation::Edges(operation) => DagDiff { edges: Some(collection_diff_from_mutation(&projection.edges, operation)), ..Default::default() },
+            DagMutation::Nodes(operation) => DagDiff { nodes: Some(collection_diff_from_mutation(&snapshot.nodes, operation)), ..Default::default() },
+            DagMutation::Edges(operation) => DagDiff { edges: Some(collection_diff_from_mutation(&snapshot.edges, operation)), ..Default::default() },
             DagMutation::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
             DagMutation::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
             DagMutation::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
         }
     }
 
-    fn inverse(&self, projection: &DagDocument) -> Vec<Self> {
+    fn inverse(&self, snapshot: &DagDocument) -> Vec<Self> {
         match self {
-            DagMutation::Nodes(operation) => vec![DagMutation::Nodes(inverse_collection_mutation(&projection.nodes, operation))],
-            DagMutation::Edges(operation) => vec![DagMutation::Edges(inverse_collection_mutation(&projection.edges, operation))],
-            DagMutation::SetNodes { .. } => vec![DagMutation::SetNodes { nodes: projection.nodes.clone() }],
-            DagMutation::SetEdges { .. } => vec![DagMutation::SetEdges { edges: projection.edges.clone() }],
-            DagMutation::SetDocument { .. } => vec![DagMutation::SetDocument { document: projection.clone() }],
+            DagMutation::Nodes(operation) => vec![DagMutation::Nodes(inverse_collection_mutation(&snapshot.nodes, operation))],
+            DagMutation::Edges(operation) => vec![DagMutation::Edges(inverse_collection_mutation(&snapshot.edges, operation))],
+            DagMutation::SetNodes { .. } => vec![DagMutation::SetNodes { nodes: snapshot.nodes.clone() }],
+            DagMutation::SetEdges { .. } => vec![DagMutation::SetEdges { edges: snapshot.edges.clone() }],
+            DagMutation::SetDocument { .. } => vec![DagMutation::SetDocument { document: snapshot.clone() }],
         }
     }
 }
@@ -8006,9 +8006,9 @@ mod wasm_bridge {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = snapshotJson)]
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
@@ -8046,7 +8046,7 @@ mod dag_vcs_tests {
     fn dag_document_vcs_replays_node_operations() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
         store.dispatch(DocumentCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
-        assert_eq!(store.projection().expect("projection").nodes.len(), 1);
+        assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
     }
 
     #[test]

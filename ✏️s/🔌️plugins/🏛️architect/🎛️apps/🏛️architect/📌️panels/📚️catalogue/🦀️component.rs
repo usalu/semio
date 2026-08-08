@@ -5,6 +5,7 @@ use crate::apps::architect::catalog::REGISTER_IDS;
 use crate::apps::architect::chrome::{tree_item_with_action, tree_node, tree_section};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
+use crate::artifacts::program::ProgramSnapshot;
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_CATALOGUE: &str = "architect.catalogue";
@@ -37,12 +38,12 @@ pub fn render() -> UiNode {
                     tree_item_with_action("architect-catalogue.validate", "Run Validation", None, architect_action("runValidation", None)),
                     tree_item_with_action("architect-catalogue.analysis", "Run Analysis", None, architect_action("runAnalysis", Some(json!({ "analysisKind": "gap" })))),
                     tree_item_with_action("architect-catalogue.report", "Run Report", None, architect_action("runReport", Some(json!({ "reportKind": "executiveSummary" })))),
-                    tree_item_with_action("architect-catalogue.export", "Export Program", None, architect_action("exportProgram", None)),
-                    tree_item_with_action("architect-catalogue.import", "Import Program", None, architect_action("importProgramRequest", None)),
+                    tree_item_with_action("architect-catalogue.export", "Export ProgramSnapshot", None, architect_action("exportProgram", None)),
+                    tree_item_with_action("architect-catalogue.import", "Import ProgramSnapshot", None, architect_action("importProgramRequest", None)),
                     tree_item_with_action("architect-catalogue.export-csv", "Export Registers CSV", None, architect_action("exportRegistersCsv", None)),
                     tree_item_with_action("architect-catalogue.import-csv", "Import Registers CSV", None, architect_action("importRegistersCsv", Some(json!({ "csv": "", "strategy": "upsert" })))),
                     tree_item_with_action("architect-catalogue.apply-template", "Apply Template", None, architect_action("applyTemplate", Some(json!({ "templateId": "" })))),
-                    tree_item_with_action("architect-catalogue.search", "Search Program", None, architect_action("search", Some(json!({ "query": "" })))),
+                    tree_item_with_action("architect-catalogue.search", "Search ProgramSnapshot", None, architect_action("search", Some(json!({ "query": "" })))),
                 ],
             ),
             tree_section("architect-catalogue.registers", Some("Registers".into()), register_items),

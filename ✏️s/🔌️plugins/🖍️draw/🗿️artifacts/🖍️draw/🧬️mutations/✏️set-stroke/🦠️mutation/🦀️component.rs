@@ -1,6 +1,6 @@
 //! Draw mutation — `SetStroke` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_stroke(layer_id: String, stroke: Option<crate::artifacts::draw::Strok
     DrawMutation::SetStroke { layer_id, stroke }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, stroke: &Option<crate::artifacts::draw::StrokeStyle>) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, stroke: &Option<crate::artifacts::draw::StrokeStyle>) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetStroke { layer_id: layer_id.into(), stroke: stroke.clone() });
 }
 //#endregion 🔖️Mutation

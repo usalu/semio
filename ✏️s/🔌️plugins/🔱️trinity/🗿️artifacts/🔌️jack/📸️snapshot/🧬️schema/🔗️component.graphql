@@ -1,0 +1,57 @@
+# 🧬️ Jack snapshot schema — persistent fields only.
+
+type JackSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  name: String! @state(class: PERSISTENT)
+  manifestId: String @state(class: PERSISTENT)
+  manifest: Manifest! @state(class: PERSISTENT)
+  camera: Camera! @state(class: PERSISTENT)
+  nodes: [Node!]! @state(class: PERSISTENT)
+  edges: [Edge!]! @state(class: PERSISTENT)
+  rootNodeId: String @state(class: PERSISTENT)
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type Port {
+  id: String!
+  kind: String!
+  direction: String!
+}
+
+type Node {
+  id: String!
+  kind: String!
+  name: String!
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  ports: [Port!]!
+}
+
+type Edge {
+  id: String!
+  kind: String!
+  source: String!
+  target: String!
+}
+
+type Manifest {
+  nodeKinds: [ManifestKind!]!
+  edgeKinds: [ManifestKind!]!
+  portKinds: [ManifestPortKind!]!
+}
+
+type ManifestKind {
+  name: String!
+}
+
+type ManifestPortKind {
+  name: String!
+  direction: String!
+}

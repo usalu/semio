@@ -1,10 +1,10 @@
 //! ⚙️ Architect program artifact engine — the `analyze` topic.
 
-//! 🔬️ Program analysis — gap, conflict, dependency, capacity, and related kinds.
+//! 🔬️ ProgramSnapshot analysis — gap, conflict, dependency, capacity, and related kinds.
 
 use crate::artifacts::program::engine::adjacency::detect_adjacency_conflicts;
 use crate::artifacts::program::kernel::{DiagnosticSeverity, EntityHeader, EntityId, ProgramDiagnostic, TextField};
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::registers::{AnalysisKind, AnalysisRecord, RelationshipKind, RiskLevel, ValidationStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -35,7 +35,7 @@ pub struct AnalysisMetric {
 
 // #region 🔖️RunAnalysis
 /// @emoji 🧮️ Runs the requested analysis kind over a plugin snapshot.
-pub fn run_analysis(program: &Program, kind: AnalysisKind) -> AnalysisResult {
+pub fn run_analysis(program: &ProgramSnapshot, kind: AnalysisKind) -> AnalysisResult {
     match kind {
         AnalysisKind::Gap => analyze_gap(program),
         AnalysisKind::Conflict => analyze_conflict(program),
@@ -61,7 +61,7 @@ pub fn run_analysis(program: &Program, kind: AnalysisKind) -> AnalysisResult {
 }
 
 /// @emoji 📝️ Runs analysis and appends an `AnalysisRecord` to the program.
-pub fn run_analysis_and_record(program: &mut Program, kind: AnalysisKind) -> AnalysisResult {
+pub fn run_analysis_and_record(program: &mut ProgramSnapshot, kind: AnalysisKind) -> AnalysisResult {
     let result = run_analysis(program, kind);
     let record = AnalysisRecord {
         header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
@@ -88,7 +88,7 @@ pub fn run_analysis_and_record(program: &mut Program, kind: AnalysisKind) -> Ana
     result
 }
 
-fn analyze_gap(program: &Program) -> AnalysisResult {
+fn analyze_gap(program: &ProgramSnapshot) -> AnalysisResult {
     let mut findings = Vec::new();
     if program.requirements.is_empty() {
         findings.push("no requirements registered".into());
@@ -115,7 +115,7 @@ fn analyze_gap(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_conflict(program: &Program) -> AnalysisResult {
+fn analyze_conflict(program: &ProgramSnapshot) -> AnalysisResult {
     let adjacency_conflicts = detect_adjacency_conflicts(program);
     let mut findings: Vec<String> = adjacency_conflicts.iter().map(|c| format!("{}: {}", c.adjacency_a_id, c.message)).collect();
     findings.extend(program.conflicts.iter().map(|c| format!("{} — {:?} between {} and {}", c.header.name, c.kind, c.entity_a_id, c.entity_b_id)));
@@ -135,7 +135,7 @@ fn analyze_conflict(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_dependency(program: &Program) -> AnalysisResult {
+fn analyze_dependency(program: &ProgramSnapshot) -> AnalysisResult {
     let depends: Vec<String> = program.relationships.iter().filter(|r| matches!(r.kind, RelationshipKind::DependsOn)).map(|r| format!("{} depends on {}", r.source_id, r.target_id)).collect();
     let process_deps: usize = program.processes.iter().map(|p| p.dependencies.len()).sum();
     AnalysisResult {
@@ -149,7 +149,7 @@ fn analyze_dependency(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_capacity(program: &Program) -> AnalysisResult {
+fn analyze_capacity(program: &ProgramSnapshot) -> AnalysisResult {
     let total_area: f64 = program.elements.iter().filter_map(|e| e.area.target).sum();
     let total_occupancy: f64 = program.elements.iter().filter_map(|e| e.occupancy.target.or(e.occupancy.peak)).sum();
     let area_per_person = if total_occupancy > 0.0 { total_area / total_occupancy } else { 0.0 };
@@ -168,7 +168,7 @@ fn analyze_capacity(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_demand(program: &Program) -> AnalysisResult {
+fn analyze_demand(program: &ProgramSnapshot) -> AnalysisResult {
     let peak_occupancy: f64 = program.elements.iter().filter_map(|e| e.occupancy.peak.or(e.occupancy.target)).sum();
     let schedule_demand = program.schedules.len();
     AnalysisResult {
@@ -182,7 +182,7 @@ fn analyze_demand(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_utilization(program: &Program) -> AnalysisResult {
+fn analyze_utilization(program: &ProgramSnapshot) -> AnalysisResult {
     let activities = program.activities.len();
     let elements = program.elements.len();
     let ratio = if elements == 0 { 0.0 } else { activities as f64 / elements as f64 };
@@ -198,7 +198,7 @@ fn analyze_utilization(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_workflow(program: &Program) -> AnalysisResult {
+fn analyze_workflow(program: &ProgramSnapshot) -> AnalysisResult {
     let critical: Vec<_> = program.processes.iter().filter(|p| p.critical_path).collect();
     AnalysisResult {
         kind: AnalysisKind::Workflow,
@@ -211,7 +211,7 @@ fn analyze_workflow(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_risk(program: &Program) -> AnalysisResult {
+fn analyze_risk(program: &ProgramSnapshot) -> AnalysisResult {
     let high: Vec<_> = program.risks.iter().filter(|r| matches!(r.probability, RiskLevel::High | RiskLevel::Critical) || matches!(r.impact, RiskLevel::High | RiskLevel::Critical)).map(|r| r.header.id.clone()).collect();
     let score_sum: f64 = program.risks.iter().map(|r| risk_score(&r.probability) * risk_score(&r.impact)).sum();
     AnalysisResult {
@@ -235,7 +235,7 @@ fn risk_score(level: &RiskLevel) -> f64 {
     }
 }
 
-fn analyze_cost(program: &Program) -> AnalysisResult {
+fn analyze_cost(program: &ProgramSnapshot) -> AnalysisResult {
     let total_capital: f64 = program.costs.iter().filter_map(|c| c.amount).sum();
     AnalysisResult {
         kind: AnalysisKind::Cost,
@@ -248,7 +248,7 @@ fn analyze_cost(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_scenario(program: &Program) -> AnalysisResult {
+fn analyze_scenario(program: &ProgramSnapshot) -> AnalysisResult {
     let evaluated = program.options.iter().filter(|o| o.evaluation_status == ValidationStatus::Passed).count();
     AnalysisResult {
         kind: AnalysisKind::Scenario,
@@ -261,7 +261,7 @@ fn analyze_scenario(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_sensitivity(program: &Program) -> AnalysisResult {
+fn analyze_sensitivity(program: &ProgramSnapshot) -> AnalysisResult {
     let mandatory = program.requirements.iter().filter(|r| r.header.priority == crate::artifacts::program::kernel::Priority::Mandatory).count();
     AnalysisResult {
         kind: AnalysisKind::Sensitivity,
@@ -274,7 +274,7 @@ fn analyze_sensitivity(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_impact(program: &Program) -> AnalysisResult {
+fn analyze_impact(program: &ProgramSnapshot) -> AnalysisResult {
     let impacted: usize = program.decisions.iter().map(|d| d.impacted_requirement_ids.len() + d.impacted_element_ids.len()).sum();
     AnalysisResult {
         kind: AnalysisKind::Impact,
@@ -287,7 +287,7 @@ fn analyze_impact(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_trend(program: &Program) -> AnalysisResult {
+fn analyze_trend(program: &ProgramSnapshot) -> AnalysisResult {
     let change_velocity = program.changes.len();
     AnalysisResult {
         kind: AnalysisKind::Trend,
@@ -300,7 +300,7 @@ fn analyze_trend(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_comparison(program: &Program) -> AnalysisResult {
+fn analyze_requirement_comparison(program: &ProgramSnapshot) -> AnalysisResult {
     let mut by_kind: HashMap<String, usize> = HashMap::new();
     for req in &program.requirements {
         *by_kind.entry(format!("{:?}", req.kind)).or_default() += 1;
@@ -317,7 +317,7 @@ fn analyze_requirement_comparison(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_clustering(program: &Program) -> AnalysisResult {
+fn analyze_requirement_clustering(program: &ProgramSnapshot) -> AnalysisResult {
     let mut clusters: HashMap<String, Vec<EntityId>> = HashMap::new();
     for req in &program.requirements {
         let key = format!("{:?}-{:?}", req.kind, req.header.priority);
@@ -335,7 +335,7 @@ fn analyze_requirement_clustering(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_filtering(program: &Program) -> AnalysisResult {
+fn analyze_requirement_filtering(program: &ProgramSnapshot) -> AnalysisResult {
     let pending: Vec<_> = program.requirements.iter().filter(|r| r.validation_status == ValidationStatus::Pending).map(|r| r.header.id.clone()).collect();
     let findings: Vec<String> = pending.iter().map(|id| format!("pending validation: {id}")).collect();
     AnalysisResult {
@@ -349,7 +349,7 @@ fn analyze_requirement_filtering(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_sorting(program: &Program) -> AnalysisResult {
+fn analyze_requirement_sorting(program: &ProgramSnapshot) -> AnalysisResult {
     let mut sorted: Vec<_> = program.requirements.iter().collect();
     sorted.sort_by_key(|r| r.header.priority);
     let findings: Vec<String> = sorted.iter().map(|r| format!("{:?} — {}", r.header.priority, r.header.name)).collect();
@@ -375,7 +375,7 @@ fn priority_weight(priority: &crate::artifacts::program::kernel::Priority) -> f6
     }
 }
 
-fn analyze_requirement_scoring(program: &Program) -> AnalysisResult {
+fn analyze_requirement_scoring(program: &ProgramSnapshot) -> AnalysisResult {
     let mut scored: Vec<(EntityId, f64)> = program
         .requirements
         .iter()
@@ -405,7 +405,7 @@ fn analyze_requirement_scoring(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_weighting(program: &Program) -> AnalysisResult {
+fn analyze_requirement_weighting(program: &ProgramSnapshot) -> AnalysisResult {
     let mut weights: HashMap<EntityId, f64> = HashMap::new();
     for record in &program.priorities {
         if let Some(weight) = record.weight {
@@ -425,7 +425,7 @@ fn analyze_requirement_weighting(program: &Program) -> AnalysisResult {
     }
 }
 
-fn analyze_relationship(program: &Program) -> AnalysisResult {
+fn analyze_relationship(program: &ProgramSnapshot) -> AnalysisResult {
     let mut nodes: HashSet<EntityId> = HashSet::new();
     for rel in &program.relationships {
         nodes.insert(rel.source_id.clone());

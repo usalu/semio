@@ -3,7 +3,7 @@
 use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::apps::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use crate::artifacts::procedural2d::engine::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::Value;
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
-pub fn render(document: &Procedural2dDocument, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
+pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
     let fixture = &document.fixture;
     let eval_json = session.eval_json();
     let prefix = "procedural2d-preview";

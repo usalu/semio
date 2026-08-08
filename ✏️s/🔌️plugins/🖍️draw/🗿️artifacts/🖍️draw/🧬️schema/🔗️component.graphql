@@ -1,0 +1,39 @@
+# 🧬️ Draw artifact schema — every field with its state class.
+
+type DrawArtifact {
+  schema: String! @state(class: PERSISTENT)
+  id: String! @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: [DrawLayerNode!]! @state(class: PERSISTENT)
+  assets: [DrawImageAssetEntry!]! @state(class: PERSISTENT)
+  artboard: DrawArtboard @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  engagementInput: String! @state(class: LOCAL_UI)
+  cameraX: Float! @state(class: LOCAL_UI)
+  cameraY: Float! @state(class: LOCAL_UI)
+  cameraZoom: Float! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type DrawLayerNode {
+  kind: String!
+}
+
+type DrawImageAssetEntry {
+  key: String!
+  value: DrawImageAsset!
+}
+
+type DrawImageAsset {
+  mime: String!
+  data: String!
+  width: Int
+  height: Int
+}
+
+type DrawArtboard {
+  width: Float!
+  height: Float!
+}

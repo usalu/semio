@@ -4,7 +4,7 @@
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
 
@@ -25,15 +25,15 @@ pub fn decode_op(bytes: &[u8]) -> Result<CadMutation, protocol::ProtocolError> {
 }
 
 //#region 🔖️Store
-pub type CadEnvelope = DocumentEnvelope<CadProjection, CadMutation>;
-pub type CadStore = DocumentStore<CadProjection, CadMutation>;
+pub type CadEnvelope = DocumentEnvelope<CadSnapshot, CadMutation>;
+pub type CadStore = DocumentStore<CadSnapshot, CadMutation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::{empty_cad_projection, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CAD_DOCUMENT_SCHEMA};
+    use crate::artifacts::cad::{empty_cad_snapshot, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CAD_DOCUMENT_SCHEMA};
     use store::{create_document_envelope, DocumentCommand};
 
     #[test]
@@ -45,13 +45,13 @@ mod tests {
 
     #[test]
     fn cad_projection_defaults() {
-        let store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
-        assert_eq!(store.projection().expect("projection").id, "cad");
+        let store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
+        assert_eq!(store.snapshot().expect("projection").id, "cad");
     }
 
     #[test]
     fn add_object_round_trips_through_store() {
-        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
         let object = CadObject {
             id: "object-1".into(),
             label: "Box".into(),
@@ -67,17 +67,16 @@ mod tests {
             primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }],
         };
         store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
-        let scene = store.projection().expect("projection");
+        let scene = store.snapshot().expect("projection");
         assert_eq!(scene.objects.len(), 1);
         assert_eq!(scene.objects[0].primitives[0].kind, "solid");
     }
 
     #[test]
     fn translate_objects_updates_origin() {
-        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
         store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![CadMutation::AddObject {
+            .dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::AddObject {
                     pane: CadPaneId::Shape,
                     object: CadObject {
                         id: "object-1".into(),
@@ -98,21 +97,21 @@ mod tests {
             })
             .expect("apply");
         store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
-        let scene = store.projection().expect("projection");
+        let scene = store.snapshot().expect("projection");
         assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
     }
 
     #[test]
     fn set_scene_replaces_projection_and_inverts() {
-        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
-        let mut replacement = empty_cad_projection();
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
+        let mut replacement = empty_cad_snapshot();
         replacement.id = "replaced".into();
         replacement.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
-        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::SetScene { scene: Box::new(replacement) }], description: None }).expect("set scene");
-        assert_eq!(store.projection().expect("projection").id, "replaced");
+        store.dispatch(DocumentCommand::Apply { mutations: vec![CadMutation::SetSnapshot { snapshot: Box::new(replacement) }], description: None }).expect("set scene");
+        assert_eq!(store.snapshot().expect("projection").id, "replaced");
         store.dispatch(DocumentCommand::Undo).expect("undo");
-        assert_eq!(store.projection().expect("projection").id, "cad");
-        assert!(store.projection().expect("projection").nodes.is_empty());
+        assert_eq!(store.snapshot().expect("projection").id, "cad");
+        assert!(store.snapshot().expect("projection").nodes.is_empty());
     }
 }
 //#endregion 🧪️Tests

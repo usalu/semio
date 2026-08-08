@@ -3,7 +3,7 @@
 //! 📤️ Data exchange — JSON and CSV import/export for program_registers.
 
 use crate::artifacts::program::kernel::{EntityHeader, EntityId, PluginError, TextField};
-use crate::artifacts::program::{Program, ARCHITECT_PROGRAM_SCHEMA};
+use crate::artifacts::program::{ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use crate::artifacts::program::registers::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -21,13 +21,13 @@ pub enum MergeStrategy {
 
 // #region 🔖️JsonExchange
 /// @emoji 📤️ Serializes a plugin to pretty JSON.
-pub fn export_json(program: &Program) -> Result<String, PluginError> {
+pub fn export_json(program: &ProgramSnapshot) -> Result<String, PluginError> {
     serde_json::to_string_pretty(program).map_err(|e| PluginError::Serialize(e.to_string()))
 }
 
 /// @emoji 📥️ Deserializes a plugin from JSON with schema validation.
-pub fn import_json(json: &str) -> Result<Program, PluginError> {
-    let program: Program = serde_json::from_str(json).map_err(|e| PluginError::Deserialize(e.to_string()))?;
+pub fn import_json(json: &str) -> Result<ProgramSnapshot, PluginError> {
+    let program: ProgramSnapshot = serde_json::from_str(json).map_err(|e| PluginError::Deserialize(e.to_string()))?;
     if program.schema != ARCHITECT_PROGRAM_SCHEMA {
         return Err(PluginError::InvalidSchema { expected: ARCHITECT_PROGRAM_SCHEMA.into(), actual: program.schema });
     }
@@ -50,27 +50,27 @@ pub struct RegisterCsvRow {
 }
 
 /// @emoji 📤️ Flattens all registers into CSV rows.
-pub fn export_registers_csv(program: &Program) -> Result<String, PluginError> {
+pub fn export_registers_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
     Ok(write_delimited(&collect_rows(program), ','))
 }
 
 /// @emoji 📥️ Merges CSV rows into matching register collections.
-pub fn import_registers_csv(program: &mut Program, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+pub fn import_registers_csv(program: &mut ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
     import_delimited(program, csv, ',', strategy)
 }
 
 /// @emoji 📤️ Flattens all registers into TSV rows.
-pub fn export_registers_tsv(program: &Program) -> Result<String, PluginError> {
+pub fn export_registers_tsv(program: &ProgramSnapshot) -> Result<String, PluginError> {
     Ok(write_delimited(&collect_rows(program), '\t'))
 }
 
 /// @emoji 📥️ Merges TSV rows into matching register collections.
-pub fn import_registers_tsv(program: &mut Program, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+pub fn import_registers_tsv(program: &mut ProgramSnapshot, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
     import_delimited(program, tsv, '\t', strategy)
 }
 
 /// @emoji ↔ Exports relationships as CSV rows preserving endpoints.
-pub fn export_relationships_csv(program: &Program) -> Result<String, PluginError> {
+pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
     let mut out = String::from("id,source_id,target_id,kind,name\n");
     for rel in &program.relationships {
         out.push_str(&format!("{},{},{},{:?},{}\n", escape_field(&rel.header.id.to_string(), ','), escape_field(&rel.source_id.to_string(), ','), escape_field(&rel.target_id.to_string(), ','), rel.kind, escape_field(&rel.header.name, ','),));
@@ -78,7 +78,7 @@ pub fn export_relationships_csv(program: &Program) -> Result<String, PluginError
     Ok(out)
 }
 
-fn collect_rows(program: &Program) -> Vec<RegisterCsvRow> {
+fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     let mut rows = Vec::new();
     macro_rules! push_rows {
         ($register:literal, $collection:expr) => {
@@ -242,7 +242,7 @@ fn parse_record(line: &str, delimiter: char) -> Vec<String> {
     fields
 }
 
-fn import_delimited(program: &mut Program, input: &str, delimiter: char, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+fn import_delimited(program: &mut ProgramSnapshot, input: &str, delimiter: char, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
     let rows = parse_delimited(input, delimiter)?;
     let mut touched = Vec::new();
     let mut seen: HashSet<(String, EntityId)> = HashSet::new();
@@ -263,7 +263,7 @@ fn import_delimited(program: &mut Program, input: &str, delimiter: char, strateg
     Ok(touched)
 }
 
-fn register_contains(program: &Program, register: &str, id: &EntityId) -> bool {
+fn register_contains(program: &ProgramSnapshot, register: &str, id: &EntityId) -> bool {
     match register {
         "elements" => program.elements.iter().any(|e| &e.header.id == id),
         "stakeholders" => program.stakeholders.iter().any(|s| &s.header.id == id),
@@ -274,7 +274,7 @@ fn register_contains(program: &Program, register: &str, id: &EntityId) -> bool {
     }
 }
 
-fn remove_register_item(program: &mut Program, register: &str, id: &EntityId) {
+fn remove_register_item(program: &mut ProgramSnapshot, register: &str, id: &EntityId) {
     match register {
         "elements" => program.elements.retain(|e| &e.header.id != id),
         "stakeholders" => program.stakeholders.retain(|s| &s.header.id != id),
@@ -285,7 +285,7 @@ fn remove_register_item(program: &mut Program, register: &str, id: &EntityId) {
     }
 }
 
-fn upsert_register_row(program: &mut Program, row: RegisterCsvRow) -> Result<(), PluginError> {
+fn upsert_register_row(program: &mut ProgramSnapshot, row: RegisterCsvRow) -> Result<(), PluginError> {
     match row.register.as_str() {
         "elements" => upsert_element(program, row),
         "stakeholders" => upsert_stakeholder(program, row),
@@ -299,7 +299,7 @@ fn upsert_register_row(program: &mut Program, row: RegisterCsvRow) -> Result<(),
     Ok(())
 }
 
-fn upsert_element(program: &mut Program, row: RegisterCsvRow) {
+fn upsert_element(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
     if let Some(element) = program.elements.iter_mut().find(|e| e.header.id == row.id) {
         element.header.name = row.name;
         return;
@@ -334,7 +334,7 @@ fn upsert_element(program: &mut Program, row: RegisterCsvRow) {
     });
 }
 
-fn upsert_stakeholder(program: &mut Program, row: RegisterCsvRow) {
+fn upsert_stakeholder(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
     if let Some(stakeholder) = program.stakeholders.iter_mut().find(|s| s.header.id == row.id) {
         stakeholder.header.name = row.name;
         return;
@@ -368,7 +368,7 @@ fn upsert_stakeholder(program: &mut Program, row: RegisterCsvRow) {
     });
 }
 
-fn upsert_requirement(program: &mut Program, row: RegisterCsvRow) {
+fn upsert_requirement(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
     if let Some(requirement) = program.requirements.iter_mut().find(|r| r.header.id == row.id) {
         requirement.header.name = row.name;
         if !row.source.is_empty() {
@@ -401,7 +401,7 @@ fn upsert_requirement(program: &mut Program, row: RegisterCsvRow) {
     });
 }
 
-fn upsert_relationship_stub(program: &mut Program, row: RegisterCsvRow) {
+fn upsert_relationship_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
     if program.relationships.iter().any(|r| r.header.id == row.id) {
         return;
     }
@@ -435,7 +435,7 @@ fn upsert_relationship_stub(program: &mut Program, row: RegisterCsvRow) {
     });
 }
 
-fn upsert_adjacency_stub(program: &mut Program, row: RegisterCsvRow) {
+fn upsert_adjacency_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
     if program.adjacencies.iter().any(|a| a.header.id == row.id) {
         return;
     }

@@ -1,6 +1,6 @@
 //! Draw mutation — `SetLayerVisible` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_layer_visible(layer_id: String, visible: bool) -> DrawMutation {
     DrawMutation::SetLayerVisible { layer_id, visible }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, visible: bool) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, visible: bool) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetLayerVisible { layer_id: layer_id.into(), visible });
 }
 //#endregion 🔖️Mutation

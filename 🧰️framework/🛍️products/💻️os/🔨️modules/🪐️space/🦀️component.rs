@@ -1,5 +1,5 @@
-//! 🪐️ Space/collection/artifact model — `SpaceProjection` (atelier/studio/archive manifest: name,
-//! kind, visibility, users, collection refs) and `CollectionProjection` (flat parent-linked folder
+//! 🪐️ Space/collection/artifact model — `SpaceSnapshot` (atelier/studio/archive manifest: name,
+//! kind, visibility, users, collection refs) and `CollectionSnapshot` (flat parent-linked folder
 //! tree + artifact entries), the roles/kinds/visibility laws (`space_role_of`/`can_write`, the atelier
 //! single-author invariant), a pure path resolver, backbone URI helpers, the draft/asset volatility
 //! model (`DraftCatalog`), and IO-free zip import/export. Unifies the target model from
@@ -83,7 +83,7 @@ impl From<&SpaceUser> for vcs::Author {
 //#region 🔖️Space
 pub const S_SPACE_SCHEMA: &str = "s.space";
 
-/// 🔗️ One entry in `SpaceProjection.collections` — the collection's identity, display name, and the
+/// 🔗️ One entry in `SpaceSnapshot.collections` — the collection's identity, display name, and the
 /// `s.collection` document id it addresses (see `🔖️Addressing` in the plan: `CollectionEntry.id ==
 /// artifact id == DocumentEnvelope.id` for document artifacts; a `CollectionRef` follows the same
 /// convention one level up).
@@ -96,12 +96,12 @@ pub struct CollectionRef {
 
 /// 🏠️ A space's manifest: name, kind, visibility, membership, the collections it hosts, the
 /// workflow plugin ids installed into it (`programs`, moved down from os-core's dissolved
-/// `OsProjection` in W3 — see `## The inversion` in the plan), and the durable extension ledger
+/// `OsSnapshot` in W3 — see `## The inversion` in the plan), and the durable extension ledger
 /// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
 /// by design (transient UI state, not manifest data) — see os-core's space app glue.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[dsl(extension = "space")]
-pub struct SpaceProjection {
+pub struct SpaceSnapshot {
     pub schema: String,
     pub name: String,
     pub kind: SpaceKind,
@@ -128,8 +128,8 @@ pub struct InstalledExtension {
     pub enabled: bool,
 }
 
-pub fn empty_space_projection(name: &str, kind: SpaceKind, visibility: SpaceVisibility) -> SpaceProjection {
-    SpaceProjection {
+pub fn empty_space_snapshot(name: &str, kind: SpaceKind, visibility: SpaceVisibility) -> SpaceSnapshot {
+    SpaceSnapshot {
         schema: S_SPACE_SCHEMA.into(),
         name: name.into(),
         kind,
@@ -220,8 +220,8 @@ pub struct SpaceDiff {
     pub set_extension_enabled: Option<bool>,
 }
 
-impl protocol::MutationDiff<SpaceProjection> for SpaceDiff {
-    fn apply(&self, base: &SpaceProjection) -> SpaceProjection {
+impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
+    fn apply(&self, base: &SpaceSnapshot) -> SpaceSnapshot {
         let mut next = base.clone();
         if let Some(name) = &self.name {
             next.name = name.clone();
@@ -326,10 +326,10 @@ impl protocol::MutationDiff<SpaceProjection> for SpaceDiff {
     }
 }
 
-impl protocol::Mutation<SpaceProjection> for SpaceMutation {
+impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
     type Diff = SpaceDiff;
 
-    fn diff(&self, _base: &SpaceProjection) -> SpaceDiff {
+    fn diff(&self, _base: &SpaceSnapshot) -> SpaceDiff {
         let mut diff = SpaceDiff::default();
         match self {
             SpaceMutation::SetName { name } => diff.name = Some(name.clone()),
@@ -363,7 +363,7 @@ impl protocol::Mutation<SpaceProjection> for SpaceMutation {
         diff
     }
 
-    fn inverse(&self, base: &SpaceProjection) -> Vec<Self> {
+    fn inverse(&self, base: &SpaceSnapshot) -> Vec<Self> {
         match self {
             SpaceMutation::SetName { .. } => vec![SpaceMutation::SetName { name: base.name.clone() }],
             SpaceMutation::SetKind { .. } => vec![SpaceMutation::SetKind { kind: base.kind }],
@@ -436,8 +436,8 @@ impl protocol::Mutation<SpaceProjection> for SpaceMutation {
     }
 
     /// 🤝️ Atelier single-author invariant — see `reconcile_space_atelier_invariant` below.
-    fn reconcile(&self, projection: SpaceProjection) -> (SpaceProjection, Vec<protocol::ReconcileReport>) {
-        reconcile_space_atelier_invariant(projection)
+    fn reconcile(&self, snapshot: SpaceSnapshot) -> (SpaceSnapshot, Vec<protocol::ReconcileReport>) {
+        reconcile_space_atelier_invariant(snapshot)
     }
 }
 //#endregion 🔖️SpaceMutation
@@ -554,7 +554,7 @@ pub struct CollectionEntry {
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[dsl(extension = "collection")]
-pub struct CollectionProjection {
+pub struct CollectionSnapshot {
     pub schema: String,
     pub name: String,
     #[dsl(table)]
@@ -566,8 +566,8 @@ pub struct CollectionProjection {
     pub entries: Vec<CollectionEntry>,
 }
 
-pub fn empty_collection_projection(name: &str) -> CollectionProjection {
-    CollectionProjection { schema: S_COLLECTION_SCHEMA.into(), name: name.into(), folders: Vec::new(), entries: Vec::new() }
+pub fn empty_collection_snapshot(name: &str) -> CollectionSnapshot {
+    CollectionSnapshot { schema: S_COLLECTION_SCHEMA.into(), name: name.into(), folders: Vec::new(), entries: Vec::new() }
 }
 
 //#region 🔖️CollectionMutation
@@ -660,8 +660,8 @@ fn replace_entry(entries: &mut Vec<CollectionEntry>, replacement: CollectionEntr
     }
 }
 
-impl protocol::MutationDiff<CollectionProjection> for CollectionDiff {
-    fn apply(&self, base: &CollectionProjection) -> CollectionProjection {
+impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
+    fn apply(&self, base: &CollectionSnapshot) -> CollectionSnapshot {
         let mut next = base.clone();
         if let Some(name) = &self.name {
             next.name = name.clone();
@@ -739,10 +739,10 @@ impl protocol::MutationDiff<CollectionProjection> for CollectionDiff {
     }
 }
 
-impl protocol::Mutation<CollectionProjection> for CollectionMutation {
+impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
     type Diff = CollectionDiff;
 
-    fn diff(&self, base: &CollectionProjection) -> CollectionDiff {
+    fn diff(&self, base: &CollectionSnapshot) -> CollectionDiff {
         let mut diff = CollectionDiff::default();
         match self {
             CollectionMutation::SetName { name } => diff.name = Some(name.clone()),
@@ -795,7 +795,7 @@ impl protocol::Mutation<CollectionProjection> for CollectionMutation {
         diff
     }
 
-    fn inverse(&self, base: &CollectionProjection) -> Vec<Self> {
+    fn inverse(&self, base: &CollectionSnapshot) -> Vec<Self> {
         match self {
             CollectionMutation::SetName { .. } => vec![CollectionMutation::SetName { name: base.name.clone() }],
             CollectionMutation::AddFolder { folder, .. } => vec![CollectionMutation::RemoveFolder { folder_id: folder.id.clone() }],
@@ -834,8 +834,8 @@ impl protocol::Mutation<CollectionProjection> for CollectionMutation {
     }
 
     /// 🤝️ Referential-integrity pass — see `reconcile_collection_integrity` below.
-    fn reconcile(&self, projection: CollectionProjection) -> (CollectionProjection, Vec<protocol::ReconcileReport>) {
-        reconcile_collection_integrity(projection)
+    fn reconcile(&self, snapshot: CollectionSnapshot) -> (CollectionSnapshot, Vec<protocol::ReconcileReport>) {
+        reconcile_collection_integrity(snapshot)
     }
 }
 //#endregion 🔖️CollectionMutation
@@ -843,14 +843,14 @@ impl protocol::Mutation<CollectionProjection> for CollectionMutation {
 
 //#region 🔖️Laws
 /// 🔎️ Looks up a member's role in a space, if they are one.
-pub fn space_role_of(space: &SpaceProjection, user_id: &str) -> Option<SpaceRole> {
+pub fn space_role_of(space: &SpaceSnapshot, user_id: &str) -> Option<SpaceRole> {
     space.users.iter().find(|user| user.id == user_id).map(|user| user.role)
 }
 
 /// ✍️ Archive spaces never accept writes; atelier/studio spaces accept writes from any `Author`
 /// member (the atelier "exactly one author" cardinality is a reconcile-enforced invariant, not a
 /// `can_write` distinction — see `reconcile_space_atelier_invariant`).
-pub fn can_write(space: &SpaceProjection, user_id: &str) -> bool {
+pub fn can_write(space: &SpaceSnapshot, user_id: &str) -> bool {
     match space.kind {
         SpaceKind::Archive => false,
         SpaceKind::Atelier | SpaceKind::Studio => space_role_of(space, user_id) == Some(SpaceRole::Author),
@@ -861,14 +861,14 @@ pub fn can_write(space: &SpaceProjection, user_id: &str) -> bool {
 /// (a concurrent membership merge), every author but the lexicographically-smallest-id one is demoted
 /// to `Spectator`, deterministically across peers replaying the same operation — surfaced as conflict
 /// `"space/atelier-multi-author"`.
-pub fn reconcile_space_atelier_invariant(mut projection: SpaceProjection) -> (SpaceProjection, Vec<protocol::ReconcileReport>) {
+pub fn reconcile_space_atelier_invariant(mut snapshot: SpaceSnapshot) -> (SpaceSnapshot, Vec<protocol::ReconcileReport>) {
     let mut reports = Vec::new();
-    if projection.kind == SpaceKind::Atelier {
-        let mut author_ids: Vec<String> = projection.users.iter().filter(|user| user.role == SpaceRole::Author).map(|user| user.id.clone()).collect();
+    if snapshot.kind == SpaceKind::Atelier {
+        let mut author_ids: Vec<String> = snapshot.users.iter().filter(|user| user.role == SpaceRole::Author).map(|user| user.id.clone()).collect();
         author_ids.sort();
         if author_ids.len() > 1 {
             let keep = author_ids[0].clone();
-            for user in &mut projection.users {
+            for user in &mut snapshot.users {
                 if user.role == SpaceRole::Author && user.id != keep {
                     user.role = SpaceRole::Spectator;
                 }
@@ -880,7 +880,7 @@ pub fn reconcile_space_atelier_invariant(mut projection: SpaceProjection) -> (Sp
             });
         }
     }
-    (projection, reports)
+    (snapshot, reports)
 }
 
 /// 🌳️ Which folder ids are cyclic (each folder's own id is in the returned set exactly when walking
@@ -962,12 +962,12 @@ fn dedupe_entry_names(entries: &mut [CollectionEntry], reports: &mut Vec<protoco
 /// to root, (3) sibling folders/entries with a name collision (same parent) get a numeric suffix, (4)
 /// an entry whose `folder_id` references a missing folder moves to root. Each rule operates on the
 /// state the previous one produced — mirrors os-core's `reconcile_os_workflow` ordered-rules style.
-pub fn reconcile_collection_integrity(mut projection: CollectionProjection) -> (CollectionProjection, Vec<protocol::ReconcileReport>) {
+pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (CollectionSnapshot, Vec<protocol::ReconcileReport>) {
     let mut reports = Vec::new();
 
     //#region OrphanFolderReparent
-    let folder_ids: HashSet<String> = projection.folders.iter().map(|folder| folder.id.clone()).collect();
-    for folder in &mut projection.folders {
+    let folder_ids: HashSet<String> = snapshot.folders.iter().map(|folder| folder.id.clone()).collect();
+    for folder in &mut snapshot.folders {
         if let Some(parent_id) = &folder.parent_id {
             if !folder_ids.contains(parent_id) {
                 reports.push(protocol::ReconcileReport {
@@ -982,8 +982,8 @@ pub fn reconcile_collection_integrity(mut projection: CollectionProjection) -> (
     //#endregion OrphanFolderReparent
 
     //#region FolderCycleCut
-    let cyclic = folders_in_cycle(&projection.folders);
-    for folder in &mut projection.folders {
+    let cyclic = folders_in_cycle(&snapshot.folders);
+    for folder in &mut snapshot.folders {
         if cyclic.contains(&folder.id) {
             reports.push(protocol::ReconcileReport { id: "collection/folder-cycle".into(), message: format!("folder {} participates in a parent cycle; cut to root", folder.id), severity: protocol::ReconcileSeverity::Blocking });
             folder.parent_id = None;
@@ -992,13 +992,13 @@ pub fn reconcile_collection_integrity(mut projection: CollectionProjection) -> (
     //#endregion FolderCycleCut
 
     //#region SiblingNameCollisionSuffix
-    dedupe_folder_names(&mut projection.folders, &mut reports);
-    dedupe_entry_names(&mut projection.entries, &mut reports);
+    dedupe_folder_names(&mut snapshot.folders, &mut reports);
+    dedupe_entry_names(&mut snapshot.entries, &mut reports);
     //#endregion SiblingNameCollisionSuffix
 
     //#region EntryMissingFolderReparent
-    let folder_ids: HashSet<String> = projection.folders.iter().map(|folder| folder.id.clone()).collect();
-    for entry in &mut projection.entries {
+    let folder_ids: HashSet<String> = snapshot.folders.iter().map(|folder| folder.id.clone()).collect();
+    for entry in &mut snapshot.entries {
         if let Some(folder_id) = &entry.folder_id {
             if !folder_ids.contains(folder_id) {
                 reports.push(protocol::ReconcileReport {
@@ -1012,12 +1012,12 @@ pub fn reconcile_collection_integrity(mut projection: CollectionProjection) -> (
     }
     //#endregion EntryMissingFolderReparent
 
-    (projection, reports)
+    (snapshot, reports)
 }
 
 /// 🧵️ Root-to-leaf folder path (slash-joined names), or `None` if `folder_id` is absent or its parent
 /// chain is cyclic (a resolver never persists — never trust it over reconciled data with a real cycle).
-pub fn folder_path(collection: &CollectionProjection, folder_id: &str) -> Option<String> {
+pub fn folder_path(collection: &CollectionSnapshot, folder_id: &str) -> Option<String> {
     let by_id: HashMap<&str, &CollectionFolder> = collection.folders.iter().map(|folder| (folder.id.as_str(), folder)).collect();
     let mut segments: Vec<String> = Vec::new();
     let mut current = folder_id.to_string();
@@ -1040,7 +1040,7 @@ pub fn folder_path(collection: &CollectionProjection, folder_id: &str) -> Option
 
 /// 🧵️ Full slash-joined path to an entry (its folder path plus its own name), or `None` if the entry
 /// doesn't exist or its folder chain doesn't resolve.
-pub fn entry_path(collection: &CollectionProjection, entry_id: &str) -> Option<String> {
+pub fn entry_path(collection: &CollectionSnapshot, entry_id: &str) -> Option<String> {
     let entry = collection.entries.iter().find(|entry| entry.id == entry_id)?;
     let prefix = match &entry.folder_id {
         Some(folder_id) => folder_path(collection, folder_id)?,
@@ -1049,10 +1049,10 @@ pub fn entry_path(collection: &CollectionProjection, entry_id: &str) -> Option<S
     Some(if prefix.is_empty() { entry.name.clone() } else { format!("{prefix}/{}", entry.name) })
 }
 
-/// 🔎️ Resolves a slash-joined path to its `CollectionEntry`, pure over the live projection — moves
+/// 🔎️ Resolves a slash-joined path to its `CollectionEntry`, pure over the live snapshot — moves
 /// and renames never break a persisted ref because paths are never persisted, only ids (see
 /// `🔖️Addressing`).
-pub fn resolve_entry_by_path<'a>(collection: &'a CollectionProjection, path: &str) -> Option<&'a CollectionEntry> {
+pub fn resolve_entry_by_path<'a>(collection: &'a CollectionSnapshot, path: &str) -> Option<&'a CollectionEntry> {
     collection.entries.iter().find(|entry| entry_path(collection, &entry.id).as_deref() == Some(path))
 }
 
@@ -1223,7 +1223,7 @@ impl DraftCatalog {
     /// before and after, just at a different backbone uri — the plan's exact promotion invariant),
     /// then tombstones the draft uri. Only removes the draft bookkeeping once the byte move fully
     /// succeeds. Returns the draft bookkeeping (removed from this catalog) plus the
-    /// `CollectionMutation::AddEntry` the caller applies to their `CollectionProjection` — promotion
+    /// `CollectionMutation::AddEntry` the caller applies to their `CollectionSnapshot` — promotion
     /// stays operation-sourced even though it now really touches bytes. The artifact keeps its id
     /// (`entry.id == draft.artifact_id == document id`); a caller who knows the artifact's concrete
     /// `<P, Mutation>` pair can reconstruct a live `store::DocumentStore<P, Mutation>` from the SAME
@@ -1269,7 +1269,7 @@ impl DraftCatalog {
     /// byte-for-byte, tombstones the asset uri, and re-registers fresh draft bookkeeping (`now_ms`/
     /// `ttl_ms` are caller-supplied, same convention as `create_draft` — a demoted draft gets a fresh
     /// TTL window, it doesn't inherit whatever deadline it had before its original promotion). Returns
-    /// the `CollectionMutation::RemoveEntry` for the caller to apply to their `CollectionProjection`
+    /// the `CollectionMutation::RemoveEntry` for the caller to apply to their `CollectionSnapshot`
     /// (identical to `demote_operation`'s output — this is the byte-touching sibling of that pure
     /// helper, needed whenever a demotion must actually relocate bytes rather than just undo an
     /// in-hand `AddEntry`).
@@ -1321,11 +1321,11 @@ pub enum SpaceZipError {
     MissingPath(String),
 }
 
-/// 📤️ Everything `import_collection_zip` recovers from a zip byte stream: the collection projection
+/// 📤️ Everything `import_collection_zip` recovers from a zip byte stream: the collection snapshot
 /// itself (plus its own serialized history bytes), and per-entry artifact/blob bytes keyed by the
 /// entry they belong to.
 pub struct ImportedCollection {
-    pub collection: CollectionProjection,
+    pub collection: CollectionSnapshot,
     pub collection_spr: Vec<u8>,
     pub artifacts: Vec<(CollectionEntry, Vec<u8>, Vec<u8>)>,
     pub blobs: Vec<(store::BlobRef, Vec<u8>)>,
@@ -1357,7 +1357,7 @@ fn read_zip_entry<R: std::io::Read + Seek>(archive: &mut zip::ZipArchive<R>, nam
 /// already-serialized bytes from wherever they actually live (a `DocumentEnvelope`'s pack/spr, a
 /// `BlobStore`). Entries are written in id order for determinism (the byte-stability law below).
 pub fn export_collection_zip(
-    collection: &CollectionProjection,
+    collection: &CollectionSnapshot,
     collection_spr: &[u8],
     read_artifact: &dyn Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError>,
     read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>,
@@ -1396,7 +1396,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
     let mut archive = zip::ZipArchive::new(Cursor::new(bytes))?;
     let collection_pack = read_zip_entry(&mut archive, "collection.collection.pack")?;
     let collection_spr = read_zip_entry(&mut archive, "collection.collection.spr")?;
-    let collection = <CollectionProjection as store::DocumentPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let collection = <CollectionSnapshot as store::DocumentPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
 
     let mut artifacts = Vec::new();
     let mut blobs = Vec::new();
@@ -1503,15 +1503,15 @@ mod tests {
         }
     }
 
-    fn demo_space() -> SpaceProjection {
-        let mut space = empty_space_projection("Atelier Demo", SpaceKind::Atelier, SpaceVisibility::Private);
+    fn demo_space() -> SpaceSnapshot {
+        let mut space = empty_space_snapshot("Atelier Demo", SpaceKind::Atelier, SpaceVisibility::Private);
         space.users.push(demo_user("u1", SpaceRole::Author));
         space.collections.push(CollectionRef { id: "c1".into(), name: "Main".into(), document_id: "doc-c1".into() });
         space
     }
 
-    fn demo_collection() -> CollectionProjection {
-        let mut collection = empty_collection_projection("Main");
+    fn demo_collection() -> CollectionSnapshot {
+        let mut collection = empty_collection_snapshot("Main");
         collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: None, name: "Renders".into() });
         collection.entries.push(CollectionEntry {
             id: "e1".into(),
@@ -1533,30 +1533,30 @@ mod tests {
 
     //#region 🧪️SpaceDocumentLaws
     #[test]
-    fn empty_space_projection_matches_schema() {
-        let space = empty_space_projection("Demo", SpaceKind::Studio, SpaceVisibility::Public);
+    fn empty_space_snapshot_matches_schema() {
+        let space = empty_space_snapshot("Demo", SpaceKind::Studio, SpaceVisibility::Public);
         assert_eq!(space.schema, S_SPACE_SCHEMA);
         assert!(space.users.is_empty());
         assert!(space.collections.is_empty());
     }
 
     #[test]
-    fn space_projection_dsl_pack_round_trips() {
+    fn space_snapshot_dsl_pack_round_trips() {
         store::test_support::assert_dsl_pack_equivalence(&demo_space());
     }
 
     #[test]
     fn space_default_example_dsl_round_trips() {
         let text = include_str!("../../📚️examples/🎬️demo.space");
-        let parsed = <SpaceProjection as DocumentDsl>::parse_dsl(text).expect("parse default .space example");
+        let parsed = <SpaceSnapshot as DocumentDsl>::parse_dsl(text).expect("parse default .space example");
         store::test_support::assert_dsl_round_trip(&parsed);
     }
     //#endregion 🧪️SpaceDocumentLaws
 
     //#region 🧪️CollectionDocumentLaws
     #[test]
-    fn empty_collection_projection_matches_schema() {
-        let collection = empty_collection_projection("Demo");
+    fn empty_collection_snapshot_matches_schema() {
+        let collection = empty_collection_snapshot("Demo");
         assert_eq!(collection.schema, S_COLLECTION_SCHEMA);
         assert!(collection.folders.is_empty());
         assert!(collection.entries.is_empty());
@@ -1570,7 +1570,7 @@ mod tests {
     #[test]
     fn collection_default_example_dsl_round_trips() {
         let text = include_str!("../../📚️examples/🎬️demo.collection");
-        let parsed = <CollectionProjection as DocumentDsl>::parse_dsl(text).expect("parse default .collection example");
+        let parsed = <CollectionSnapshot as DocumentDsl>::parse_dsl(text).expect("parse default .collection example");
         store::test_support::assert_dsl_round_trip(&parsed);
     }
     //#endregion 🧪️CollectionDocumentLaws
@@ -1720,11 +1720,11 @@ mod tests {
     //#region 🧪️RoleLaws
     #[test]
     fn can_write_follows_kind_and_role() {
-        let mut archive = empty_space_projection("Frozen", SpaceKind::Archive, SpaceVisibility::Public);
+        let mut archive = empty_space_snapshot("Frozen", SpaceKind::Archive, SpaceVisibility::Public);
         archive.users.push(demo_user("u1", SpaceRole::Author));
         assert!(!can_write(&archive, "u1"), "archive never accepts writes, even from an author");
 
-        let mut studio = empty_space_projection("Studio", SpaceKind::Studio, SpaceVisibility::Private);
+        let mut studio = empty_space_snapshot("Studio", SpaceKind::Studio, SpaceVisibility::Private);
         studio.users.push(demo_user("u1", SpaceRole::Author));
         studio.users.push(demo_user("u2", SpaceRole::Spectator));
         assert!(can_write(&studio, "u1"));
@@ -1734,7 +1734,7 @@ mod tests {
 
     #[test]
     fn atelier_reconcile_keeps_a_single_author_by_smallest_id() {
-        let mut atelier = empty_space_projection("Atelier", SpaceKind::Atelier, SpaceVisibility::Private);
+        let mut atelier = empty_space_snapshot("Atelier", SpaceKind::Atelier, SpaceVisibility::Private);
         atelier.users.push(demo_user("u2", SpaceRole::Author));
         atelier.users.push(demo_user("u1", SpaceRole::Author));
         let (reconciled, reports) = reconcile_space_atelier_invariant(atelier);
@@ -1754,7 +1754,7 @@ mod tests {
     //#region 🧪️CollectionReconcileLaws
     #[test]
     fn reconcile_reparents_orphan_folder_to_root() {
-        let mut collection = empty_collection_projection("Demo");
+        let mut collection = empty_collection_snapshot("Demo");
         collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: Some("missing".into()), name: "Orphan".into() });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
         assert!(reports.iter().any(|r| r.id == "collection/folder-orphaned"));
@@ -1763,7 +1763,7 @@ mod tests {
 
     #[test]
     fn reconcile_cuts_folder_cycle() {
-        let mut collection = empty_collection_projection("Demo");
+        let mut collection = empty_collection_snapshot("Demo");
         collection.folders.push(CollectionFolder { id: "a".into(), parent_id: Some("b".into()), name: "A".into() });
         collection.folders.push(CollectionFolder { id: "b".into(), parent_id: Some("a".into()), name: "B".into() });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
@@ -1773,7 +1773,7 @@ mod tests {
 
     #[test]
     fn reconcile_suffixes_duplicate_sibling_folder_names() {
-        let mut collection = empty_collection_projection("Demo");
+        let mut collection = empty_collection_snapshot("Demo");
         collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: None, name: "Renders".into() });
         collection.folders.push(CollectionFolder { id: "f2".into(), parent_id: None, name: "Renders".into() });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
@@ -1784,7 +1784,7 @@ mod tests {
 
     #[test]
     fn reconcile_reparents_entry_pointing_at_missing_folder() {
-        let mut collection = empty_collection_projection("Demo");
+        let mut collection = empty_collection_snapshot("Demo");
         collection.entries.push(CollectionEntry {
             id: "e1".into(),
             folder_id: Some("missing".into()),
@@ -1903,7 +1903,7 @@ mod tests {
         assert_eq!(demote, CollectionMutation::RemoveEntry { entry_id: entry.id.clone() });
 
         // Mutation-sourced round trip: AddEntry then its inverse restores the empty collection.
-        let empty = empty_collection_projection("Demo");
+        let empty = empty_collection_snapshot("Demo");
         store::test_support::assert_operation_round_trip(&empty, operation);
     }
 
@@ -2037,7 +2037,7 @@ mod tests {
     }
 
     /// 🧪️ End-to-end law with REAL `store` types (not the fixture-string readers `zip_fixture_bytes`
-    /// injects above): a real `store::DocumentStore<SpaceProjection, SpaceMutation>` document
+    /// injects above): a real `store::DocumentStore<SpaceSnapshot, SpaceMutation>` document
     /// artifact (itself an ordinary `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` document —
     /// exercising exactly the same `DocumentPack`/`OpBinary`/`OpText` machinery any real app document
     /// would) plus a real blob round-trip through `real_artifact_reader`/`real_blob_reader`/
@@ -2046,7 +2046,7 @@ mod tests {
     /// that export->import->export stays byte-stable with real data too.
     #[test]
     fn zip_export_import_round_trips_real_store_documents_and_blob() {
-        let mut nested_space_store = store::DocumentStore::new(store::create_document_envelope::<SpaceProjection, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
+        let mut nested_space_store = store::DocumentStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
         nested_space_store.dispatch(store::DocumentCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
         nested_space_store.dispatch(store::DocumentCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit checkpoint");
         let original_pack_files = nested_space_store.snapshot_pack().expect("snapshot pack");
@@ -2054,7 +2054,7 @@ mod tests {
         let blob_store = TestBlobStore::default();
         let blob_ref = blob_store.put(b"hello blob bytes", "text/plain").expect("put blob");
 
-        let mut collection = empty_collection_projection("RealDemo");
+        let mut collection = empty_collection_snapshot("RealDemo");
         collection.entries.push(CollectionEntry {
             id: "art-nested-space".into(),
             folder_id: None,
@@ -2079,8 +2079,8 @@ mod tests {
         assert_eq!(imported_pack, &original_pack_files.pack, "artifact pack bytes are byte-identical after the round trip");
         assert_eq!(imported_spr, &original_pack_files.spr, "artifact spr bytes are byte-identical after the round trip");
 
-        let restored_store = import_document_artifact::<SpaceProjection, SpaceMutation>(imported_pack, imported_spr).expect("reconstruct store");
-        assert_eq!(restored_store.projection().expect("projection"), nested_space_store.projection().expect("projection"), "reconstructed document projection matches the original exactly");
+        let restored_store = import_document_artifact::<SpaceSnapshot, SpaceMutation>(imported_pack, imported_spr).expect("reconstruct store");
+        assert_eq!(restored_store.snapshot().expect("projection"), nested_space_store.snapshot().expect("projection"), "reconstructed document projection matches the original exactly");
 
         let (imported_blob, imported_blob_bytes) = imported.blobs.iter().find(|(blob, _)| blob.hash == blob_ref.hash).expect("blob present");
         assert_eq!(imported_blob_bytes, b"hello blob bytes");

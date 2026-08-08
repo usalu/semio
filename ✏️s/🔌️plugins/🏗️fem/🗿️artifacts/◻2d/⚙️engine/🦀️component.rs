@@ -4,20 +4,35 @@
 //! top-level `fem2d_io()`/solve entry points that aren't specific to any of those three.
 
 use crate::artifacts::fem2d::engine::meshing::{area_load_nodal_loads, build_nodes_and_elements, self_weight_nodal_loads, GRAVITY_G};
-use crate::artifacts::fem2d::{Fem2dDocument, FemLoad};
+use crate::artifacts::fem2d::{Fem2dSnapshot, FemLoad};
 use crate::model::{MemberUdl, NodalLoad, Support};
 use std::collections::HashMap;
 
 // #region 🔖️Register
-/// 🗂️ Registers `Fem2dDocument`'s pack↔dsl codec under `FEM_2D_SCHEMA` so `framework/sync`'s
+/// 🗂️ Registers `Fem2dSnapshot`'s pack↔dsl codec under `FEM_2D_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse fem2d documents without
 /// depending on its concrete `Projection`/`Mutation` types. Reached from the plugin root's
 /// `semio_plugin!{ setup: … }` via `crate::model::register_all_engines`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
+    
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem2d::Fem2dPlayApp>(crate::artifacts::fem2d::FEM_2D_SCHEMA);
 }
 
+
+
+static FEM2D_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the fem2d artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = FEM2D_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::fem2d::schema::fem2d_artifact_schema_descriptor());
+}
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
@@ -27,8 +42,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("fem.fem2d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -52,32 +67,32 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("fem.fem2d.diff"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "2d.pack",
+        id: "fem2d.pack",
         extension: None,
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("2d.pack"),
+        protocol: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("fem2d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "2d.spr",
+        id: "fem2d.spr",
         extension: None,
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("2d.spr"),
+        hooks: dsl::passthrough_hooks("fem2d.spr"),
     });
 }
 
 
 // #endregion 🔖️Register
 
-pub fn empty_fem2d_projection() -> Fem2dDocument {
-    Fem2dDocument::default()
+pub fn empty_fem2d_snapshot() -> Fem2dSnapshot {
+    Fem2dSnapshot::default()
 }
 
 // #region 🔖️Io
@@ -127,7 +142,7 @@ pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 // #endregion 🔖️Io
 
 // #region 🔖️Errors
-/// ⚠️ Everything that can go wrong resolving or solving a `Fem2dDocument`.
+/// ⚠️ Everything that can go wrong resolving or solving a `Fem2dSnapshot`.
 #[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum Fem2dError {
     #[error("unknown node id: {0}")]
@@ -150,9 +165,9 @@ pub enum Fem2dError {
 // #endregion 🔖️Errors
 
 // #region 🔖️Solve
-/// 🌉️ Resolves a `Fem2dDocument` plus a named load case into a `crate::model::Model`, erroring
+/// 🌉️ Resolves a `Fem2dSnapshot` plus a named load case into a `crate::model::Model`, erroring
 /// descriptively on any dangling material/section/node/region reference.
-pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<crate::model::Model, Fem2dError> {
+pub fn build_model(doc: &Fem2dSnapshot, case_id: &str) -> Result<crate::model::Model, Fem2dError> {
     let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
 
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
@@ -179,10 +194,10 @@ pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<crate::model::M
     Ok(crate::model::Model { nodes, elements, supports, nodal_loads, member_loads })
 }
 
-/// 🌉️ Frozen public entry point: solves a `Fem2dDocument`'s named load case for linear-static
+/// 🌉️ Frozen public entry point: solves a `Fem2dSnapshot`'s named load case for linear-static
 /// equilibrium. Signature is a contract consumed directly by the plugin host; do not rename or
 /// change it.
-pub fn fem2d_solve(doc: &Fem2dDocument, case_id: &str) -> Result<crate::model::StaticResult, String> {
+pub fn fem2d_solve(doc: &Fem2dSnapshot, case_id: &str) -> Result<crate::model::StaticResult, String> {
     let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
     crate::model::solve_linear_static(&model).map_err(|e| e.to_string())
 }
@@ -192,7 +207,7 @@ pub fn fem2d_solve(doc: &Fem2dDocument, case_id: &str) -> Result<crate::model::S
 /// together via `crate::analyses::solve_multi_case` — self-weight honored per-case through
 /// `doc.materials`' `rho` (see `self_weight_nodal_loads`'s doc for the `Tri3Cst` caveat), gravity
 /// fixed at `[0.0, -9.81, 0.0]`. Returns results keyed by case id ∪ combination id.
-pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, crate::model::StaticResult>, Fem2dError> {
+pub fn fem2d_solve_all(doc: &Fem2dSnapshot) -> Result<HashMap<String, crate::model::StaticResult>, Fem2dError> {
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
@@ -259,8 +274,8 @@ mod tests {
     // #endregion 🔖️Io
 
     // #region 🔖️Fixtures
-    fn simply_supported_beam_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn simply_supported_beam_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
             elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
             regions: vec![],
@@ -273,8 +288,8 @@ mod tests {
         }
     }
 
-    fn simply_supported_beam_two_span_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn simply_supported_beam_two_span_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0 }, FemNode { id: "n3".into(), x: 6.0, y: 0.0 }],
             elements: vec![
                 FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() },
@@ -295,8 +310,8 @@ mod tests {
         }
     }
 
-    fn truss_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn truss_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 4.0, y: 0.0 }, FemNode { id: "n3".into(), x: 4.0, y: 3.0 }],
             elements: vec![
                 FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
@@ -320,8 +335,8 @@ mod tests {
     /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
     /// document nodes (so `build_nodes_and_elements`'s exact-position reuse binds the mesh boundary
     /// to them) — 2 adjacent corners fully pinned, enough to remove all 3 in-plane rigid-body modes.
-    fn rectangle_region_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn rectangle_region_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
             elements: vec![],
             regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],
@@ -335,7 +350,7 @@ mod tests {
     }
 
     /// 🕳️ Same rectangle as `rectangle_region_doc` but with a small square hole near the center.
-    fn rectangle_with_hole_region_doc() -> Fem2dDocument {
+    fn rectangle_with_hole_region_doc() -> Fem2dSnapshot {
         let mut doc = rectangle_region_doc();
         doc.regions[0].holes = vec![vec![[1.5, 0.75], [2.5, 0.75], [2.5, 1.25], [1.5, 1.25]]];
         doc
@@ -526,7 +541,7 @@ mod tests {
     #[test]
     fn example_fixture_parses_and_solves() {
         use store::DocumentDsl;
-        let doc: Fem2dDocument = Fem2dDocument::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
+        let doc: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
         assert_eq!(doc.nodes.len(), 12);
         assert_eq!(doc.elements.len(), 9);
         assert_eq!(doc.regions.len(), 1);
@@ -554,32 +569,42 @@ mod tests {
 
 //#region 🔖️ArtifactEngine
 pub struct Fem2dEngine {
-    projection: crate::artifacts::fem2d::Fem2dDocument,
+    artifact: crate::artifacts::fem2d::schema::Fem2dArtifact,
+    snapshot: crate::artifacts::fem2d::Fem2dSnapshot,
 }
 
 impl Fem2dEngine {
-    pub fn new(projection: crate::artifacts::fem2d::Fem2dDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
+        Self {
+            artifact: crate::artifacts::fem2d::schema::Fem2dArtifact::from_snapshot(snapshot.clone()),
+            snapshot,
+        }
     }
 }
 
 impl protocol::ArtifactEngine for Fem2dEngine {
-    type Projection = crate::artifacts::fem2d::Fem2dDocument;
+    type Artifact = crate::artifacts::fem2d::schema::Fem2dArtifact;
+    type Snapshot = crate::artifacts::fem2d::Fem2dSnapshot;
     type Mutation = crate::artifacts::fem2d::mutations::Fem2dMutation;
     type Diff = crate::artifacts::fem2d::diff::Fem2dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::fem2d::mutations::apply_fem2d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::fem2d::mutations::apply_fem2d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

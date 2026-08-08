@@ -1,0 +1,41 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gisterrain/artifact.json",
+  "title": "GisTerrainArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "exaggeration",
+    "importedFeaturesJson",
+    "selectedIds",
+    "cameraJson",
+    "locale"
+  ],
+  "properties": {
+    "exaggeration": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "persistent"
+    },
+    "importedFeaturesJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "persistent"
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "shared-ui"
+    },
+    "cameraJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "local-ui"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "local-ui"
+    }
+  }
+}

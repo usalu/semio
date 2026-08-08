@@ -86,13 +86,13 @@ export function decodeDocumentPackBytes(bytes: Uint8Array): { readonly pack: Uin
   return { pack, spr: bytes.subarray(pos[0]) };
 }
 
-/** @emoji 📦️ Packs a projection value into a document bundle (`pack` + `spr`). */
-export function encodeDocumentPackBundle(projection: unknown, spr: Uint8Array = new Uint8Array()): Uint8Array {
-  return encodeDocumentPackBytes(encodePackValue(projection), spr);
+/** @emoji 📦️ Packs a snapshot value into a document bundle (`pack` + `spr`). */
+export function encodeDocumentPackBundle(snapshot: unknown, spr: Uint8Array = new Uint8Array()): Uint8Array {
+  return encodeDocumentPackBytes(encodePackValue(snapshot), spr);
 }
 
-/** @emoji 📥️ Decodes the projection from a document bundle (ignores `spr` history). */
-export function decodeDocumentPackProjection(bundle: Uint8Array): unknown {
+/** @emoji 📥️ Decodes the snapshot from a document bundle (ignores `spr` history). */
+export function decodeDocumentPackSnapshot(bundle: Uint8Array): unknown {
   const { pack } = decodeDocumentPackBytes(bundle);
   return decodePackValue(pack);
 }
@@ -136,9 +136,9 @@ export async function writeBackboneEnvelope(uri: string, bundle: Uint8Array): Pr
   console.log("[DEBUG] backbone synced", uri);
 }
 
-/** @deprecated Use {@link decodeDocumentPackProjection}. */
+/** @deprecated Use {@link decodeDocumentPackSnapshot}. */
 export function documentFromEnvelopeJson(_envelopeJson: string): unknown {
-  throw new Error("documentFromEnvelopeJson removed — use decodeDocumentPackProjection on binary bundle bytes");
+  throw new Error("documentFromEnvelopeJson removed — use decodeDocumentPackSnapshot on binary bundle bytes");
 }
 
 /** @deprecated Use {@link encodeDocumentPackBundle}. */
@@ -2177,7 +2177,7 @@ if (import.meta.vitest) {
 
     it("packs and unpacks document bundles", () => {
       const bundle = encodeDocumentPackBundle({ nodes: [] });
-      expect(decodeDocumentPackProjection(bundle)).toEqual({ nodes: [] });
+      expect(decodeDocumentPackSnapshot(bundle)).toEqual({ nodes: [] });
     });
 
     it("round-trips backbone snapshot messages", () => {

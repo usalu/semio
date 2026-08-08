@@ -1,4 +1,4 @@
-//! 🧩️ Puzzle 3d artifact — the `puzzle.3d` document schema: the `Puzzle3dProjection`
+//! 🧩️ Puzzle 3d artifact — the `puzzle.3d` document schema: the `Puzzle3dSnapshot`
 //! (schema/domain/meta/objects/attractions/targetVolumes/references), its object/vortex/attraction/
 //! target-volume/reference/kind-catalog records, the `Puzzle3dScale` scalar-or-triple pose scale, the
 //! shared `Puzzle3dError`, and the `artifact_kind()` spec the play app's manifest binds. Sibling
@@ -335,96 +335,9 @@ pub struct Puzzle3dMeta {
     pub kind_compatibility: Vec<Puzzle3dKindCompatibility>,
 }
 
-/// 🧩️ The puzzle-3d projection: a typed fixture document (schema/domain/meta/objects/
-/// attractions/targetVolumes/references) — see `puzzle/3d/example/*.3d.json` for real-world shapes.
-/// Camera is intentionally absent: it is session-only per-window runtime state (never a document
-/// field), owned by the app's `Puzzle3dWindowOptions` — see that crate's ticket-driven cutover.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(id = "puzzle.puzzle3d", layout = "lines")]
-pub struct Puzzle3dProjection {
-    pub schema: String,
-    #[serde(default)]
-    pub domain: String,
-    #[dsl(block)]
-    #[serde(default)]
-    pub meta: Puzzle3dMeta,
-    #[serde(default)]
-    #[dsl(table)]
-    pub objects: Vec<Puzzle3dObject>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub attractions: Vec<Puzzle3dAttraction>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub target_volumes: Vec<Puzzle3dTargetVolume>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub references: Vec<Puzzle3dReference>,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Puzzle3dProjection {
-    const EXTENSION: &'static str = "puzzle3d";
-    fn envelope_id() -> &'static str { "puzzle.puzzle3d" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for Puzzle3dProjection {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-impl Default for Puzzle3dProjection {
-    fn default() -> Self {
-        Self { schema: PUZZLE_3D_SCHEMA.to_string(), domain: "architecture".to_string(), meta: Puzzle3dMeta::default(), objects: Vec::new(), attractions: Vec::new(), target_volumes: Vec::new(), references: Vec::new() }
-    }
-}
+//#region 🔖️Snapshot
+pub use crate::artifacts::puzzle3d::snapshot::schema::Puzzle3dSnapshot;
+//#endregion 🔖️Snapshot
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The `3d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so

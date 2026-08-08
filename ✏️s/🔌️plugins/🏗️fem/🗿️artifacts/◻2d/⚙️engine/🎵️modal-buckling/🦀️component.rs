@@ -3,7 +3,7 @@
 
 use crate::artifacts::fem2d::engine::meshing::build_nodes_and_elements;
 use crate::artifacts::fem2d::engine::Fem2dError;
-use crate::artifacts::fem2d::{Fem2dDocument, FemLoad};
+use crate::artifacts::fem2d::{Fem2dSnapshot, FemLoad};
 use crate::model::{Dof, Element, MemberUdl, Node, Support};
 use std::collections::HashMap;
 
@@ -34,7 +34,7 @@ fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String,
 }
 
 /// 🎵️ Modal analysis: lowest `doc.analysis.modal_count` natural frequencies/mode shapes.
-pub fn fem2d_modal(doc: &Fem2dDocument) -> Result<crate::analyses::ModalResult, Fem2dError> {
+pub fn fem2d_modal(doc: &Fem2dSnapshot) -> Result<crate::analyses::ModalResult, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
@@ -45,7 +45,7 @@ pub fn fem2d_modal(doc: &Fem2dDocument) -> Result<crate::analyses::ModalResult, 
 /// `mode_index`'s shape `VecD` into a friendly per-node `[f64;6]` displacement map (see `mode_dof_order`),
 /// ready to feed the same deformed-shape rendering the results window already uses for static results.
 /// Returns `(frequency_hz, node_id -> displacement values)`.
-pub fn fem2d_modal_mode_values(doc: &Fem2dDocument, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
+pub fn fem2d_modal_mode_values(doc: &Fem2dSnapshot, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
@@ -67,7 +67,7 @@ type BucklingInputs = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, crate::an
 /// geometry plus the ONE named `case_id`'s `analyses::LoadCase`, mirroring `fem2d_solve_all`'s
 /// per-case load translation (nodal/member-UDL/area loads), erroring `"load case not found: {case_id}"`
 /// if `case_id` isn't in `doc.load_cases`.
-fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<BucklingInputs, Fem2dError> {
+fn buckling_inputs(doc: &Fem2dSnapshot, case_id: &str) -> Result<BucklingInputs, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let member_node_ids: std::collections::HashSet<String> = doc.nodes.iter().map(|n| n.id.clone()).collect();
     let nodes: Vec<Node> = nodes.into_iter().filter(|n| member_node_ids.contains(&n.id)).collect();
@@ -89,7 +89,7 @@ fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<BucklingInputs,
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
-pub fn fem2d_buckling(doc: &Fem2dDocument, case_id: &str) -> Result<crate::analyses::BucklingResult, Fem2dError> {
+pub fn fem2d_buckling(doc: &Fem2dSnapshot, case_id: &str) -> Result<crate::analyses::BucklingResult, Fem2dError> {
     let (nodes, elements, supports, case) = buckling_inputs(doc, case_id)?;
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
     crate::analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(Fem2dError::from)
@@ -98,7 +98,7 @@ pub fn fem2d_buckling(doc: &Fem2dDocument, case_id: &str) -> Result<crate::analy
 /// 🌉️ Richer buckling entry point: mirrors `fem2d_modal_mode_values` — solves the same buckling
 /// analysis as `fem2d_buckling` but also unpacks mode `mode_index`'s shape into a per-node
 /// displacement map. Returns `(load_factor, node_id -> displacement values)`.
-pub fn fem2d_buckling_mode_values(doc: &Fem2dDocument, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
+pub fn fem2d_buckling_mode_values(doc: &Fem2dSnapshot, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
     let (nodes, elements, supports, case) = buckling_inputs(doc, case_id)?;
     let order = mode_dof_order(&nodes, &elements);
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
@@ -119,8 +119,8 @@ mod tests {
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 
     // #region 🔖️Fixtures
-    fn simply_supported_beam_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn simply_supported_beam_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
             elements: vec![crate::artifacts::fem2d::FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
             regions: vec![],
@@ -135,8 +135,8 @@ mod tests {
 
     /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
     /// document nodes.
-    fn rectangle_region_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn rectangle_region_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
             elements: vec![],
             regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],

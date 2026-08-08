@@ -1,5 +1,5 @@
 //! ➕️ Lowpoly mutation — `AddPaintLayer` payload + builder + apply.
-use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolyProjection};
+use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolySnapshot};
 use crate::artifacts::lowpoly::mutations::LowpolyMutation;
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +19,7 @@ pub fn add_paint_layer(object_id: impl Into<String>, index: usize, layer: Lowpol
     LowpolyMutation::AddPaintLayer { object_id: object_id.into(), index, layer }
 }
 
-pub fn apply(projection: &mut LowpolyProjection, object_id: &str, index: usize, layer: &LowpolyPaintLayer) {
+pub fn apply(projection: &mut LowpolySnapshot, object_id: &str, index: usize, layer: &LowpolyPaintLayer) {
     if let Some(object) = crate::artifacts::lowpoly::engine::object_mut(projection, object_id) {
         let at = index.min(object.paint_layers.len());
         object.paint_layers.insert(at, layer.clone());

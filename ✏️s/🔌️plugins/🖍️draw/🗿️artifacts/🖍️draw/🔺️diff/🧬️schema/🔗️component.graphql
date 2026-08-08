@@ -1,0 +1,96 @@
+# 🧬️ Draw diff schema — sparse field delta.
+
+type DrawDiff {
+  artifact: DrawArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  id: String @state(class: PERSISTENT)
+  title: String @state(class: PERSISTENT)
+  layers: DrawLayersDelta @state(class: PERSISTENT)
+  assets: DrawAssetsDelta @state(class: PERSISTENT)
+  artboard: DrawArtboard @state(class: PERSISTENT)
+  selectedIds: DrawStringList @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  engagementInput: String @state(class: LOCAL_UI)
+  cameraX: Float @state(class: LOCAL_UI)
+  cameraY: Float @state(class: LOCAL_UI)
+  cameraZoom: Float @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  hoveredId: String @state(class: PREVIEW)
+}
+
+type DrawArtifact {
+  schema: String!
+  id: String!
+  title: String
+  layers: [DrawLayerNode!]!
+  assets: [DrawImageAssetEntry!]!
+  artboard: DrawArtboard
+  selectedIds: [String!]!
+  activeUtilityId: String!
+  engagementInput: String!
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  locale: String!
+  hoveredId: String
+}
+
+type DrawAssetsDelta {
+  entries: [DrawImageAssetDiffEntry!]!
+}
+
+type DrawStringList {
+  values: [String!]!
+}
+
+type DrawLayersDelta {
+  added: [DrawLayerNode!]!
+  removed: [String!]!
+  patched: [DrawLayerPatchEntry!]!
+  reordered: [String!]
+}
+
+type DrawLayerPatchEntry {
+  id: String!
+  patch: DrawLayerPatch!
+}
+
+type DrawLayerPatch {
+  visible: Boolean
+  locked: Boolean
+  name: String
+  opacity: Float
+  blendMode: String
+  transformJson: String
+  fillJson: String
+  strokeJson: String
+  booleanOperation: String
+  traceParamsJson: String
+  layerJson: String
+}
+
+type DrawLayerNode {
+  kind: String!
+}
+
+type DrawImageAssetEntry {
+  key: String!
+  value: DrawImageAsset!
+}
+
+type DrawImageAssetDiffEntry {
+  key: String!
+  value: DrawImageAsset
+}
+
+type DrawImageAsset {
+  mime: String!
+  data: String!
+  width: Int
+  height: Int
+}
+
+type DrawArtboard {
+  width: Float!
+  height: Float!
+}

@@ -1,7 +1,7 @@
 //! 🧬️ Lowpoly artifact — document mutation dispatch enum + shared paint helpers. Per-mutation
 //! apply/inverse/diff live under each `🧬️mutations/<emoji><name>/` leaf; this root wraps them.
 
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolyProjection};
+use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySnapshot};
 use protocol::{CollectionMutation, Mutation};
 use serde::{Deserialize, Serialize};
 
@@ -123,9 +123,9 @@ pub enum LowpolyMutation {
         #[dsl(table)]
         runs: Vec<PixelRun>,
     },
-    SetProjection {
+    SetSnapshot {
         #[dsl(block)]
-        projection: LowpolyProjection,
+        snapshot: LowpolySnapshot,
     },
 }
 
@@ -140,44 +140,76 @@ pub fn objects_mutation_from_collection(mutation: CollectionMutation<String, Low
 }
 
 /// @emoji ▶️ Applies one mutation to the projection in place.
-pub fn apply_lowpoly_mutation(projection: &mut LowpolyProjection, mutation: &LowpolyMutation) {
+pub fn apply_lowpoly_mutation(snapshot: &mut LowpolySnapshot, mutation: &LowpolyMutation) {
     match mutation {
-        LowpolyMutation::ObjectsAdd { index, item } => super::objects_add::mutation::apply(projection, *index, item),
-        LowpolyMutation::ObjectsRemove { id } => super::objects_remove::mutation::apply(projection, id),
-        LowpolyMutation::ObjectsMove { id, to_index } => super::objects_move::mutation::apply(projection, id, *to_index),
-        LowpolyMutation::ObjectsPatch { id, patch } => super::objects_patch::mutation::apply(projection, id, patch),
-        LowpolyMutation::AddPaintLayer { object_id, index, layer } => super::add_paint_layer::mutation::apply(projection, object_id, *index, layer),
-        LowpolyMutation::RemovePaintLayer { object_id, index } => super::remove_paint_layer::mutation::apply(projection, object_id, *index),
-        LowpolyMutation::PatchPaintLayer { object_id, index, patch } => super::patch_paint_layer::mutation::apply(projection, object_id, *index, patch),
-        LowpolyMutation::PaintStroke { object_id, layer_index, runs } => super::paint_stroke::mutation::apply(projection, object_id, *layer_index, runs),
-        LowpolyMutation::SetProjection { projection: replacement } => super::set_projection::mutation::apply(projection, replacement),
+        LowpolyMutation::ObjectsAdd { index, item } => super::objects_add::mutation::apply(snapshot, *index, item),
+        LowpolyMutation::ObjectsRemove { id } => super::objects_remove::mutation::apply(snapshot, id),
+        LowpolyMutation::ObjectsMove { id, to_index } => super::objects_move::mutation::apply(snapshot, id, *to_index),
+        LowpolyMutation::ObjectsPatch { id, patch } => super::objects_patch::mutation::apply(snapshot, id, patch),
+        LowpolyMutation::AddPaintLayer { object_id, index, layer } => super::add_paint_layer::mutation::apply(snapshot, object_id, *index, layer),
+        LowpolyMutation::RemovePaintLayer { object_id, index } => super::remove_paint_layer::mutation::apply(snapshot, object_id, *index),
+        LowpolyMutation::PatchPaintLayer { object_id, index, patch } => super::patch_paint_layer::mutation::apply(snapshot, object_id, *index, patch),
+        LowpolyMutation::PaintStroke { object_id, layer_index, runs } => super::paint_stroke::mutation::apply(snapshot, object_id, *layer_index, runs),
+        LowpolyMutation::SetSnapshot { snapshot: replacement } => super::set_snapshot::mutation::apply(snapshot, replacement),
     }
 }
 
 /// @emoji ↩️ Computes the inverse mutations from pre-state.
-pub fn inverse_lowpoly_mutation(projection: &LowpolyProjection, mutation: &LowpolyMutation) -> Vec<LowpolyMutation> {
+pub fn inverse_lowpoly_mutation(snapshot: &LowpolySnapshot, mutation: &LowpolyMutation) -> Vec<LowpolyMutation> {
     match mutation {
-        LowpolyMutation::ObjectsAdd { index, item } => super::objects_add::inverse::inverse(projection, *index, item),
-        LowpolyMutation::ObjectsRemove { id } => super::objects_remove::inverse::inverse(projection, id),
-        LowpolyMutation::ObjectsMove { id, to_index } => super::objects_move::inverse::inverse(projection, id, *to_index),
-        LowpolyMutation::ObjectsPatch { id, patch } => super::objects_patch::inverse::inverse(projection, id, patch),
-        LowpolyMutation::AddPaintLayer { object_id, index, layer } => super::add_paint_layer::inverse::inverse(projection, object_id, *index, layer),
-        LowpolyMutation::RemovePaintLayer { object_id, index } => super::remove_paint_layer::inverse::inverse(projection, object_id, *index),
-        LowpolyMutation::PatchPaintLayer { object_id, index, patch } => super::patch_paint_layer::inverse::inverse(projection, object_id, *index, patch),
-        LowpolyMutation::PaintStroke { object_id, layer_index, runs } => super::paint_stroke::inverse::inverse(projection, object_id, *layer_index, runs),
-        LowpolyMutation::SetProjection { projection: replacement } => super::set_projection::inverse::inverse(projection, replacement),
+        LowpolyMutation::ObjectsAdd { index, item } => super::objects_add::inverse::inverse(snapshot, *index, item),
+        LowpolyMutation::ObjectsRemove { id } => super::objects_remove::inverse::inverse(snapshot, id),
+        LowpolyMutation::ObjectsMove { id, to_index } => super::objects_move::inverse::inverse(snapshot, id, *to_index),
+        LowpolyMutation::ObjectsPatch { id, patch } => super::objects_patch::inverse::inverse(snapshot, id, patch),
+        LowpolyMutation::AddPaintLayer { object_id, index, layer } => super::add_paint_layer::inverse::inverse(snapshot, object_id, *index, layer),
+        LowpolyMutation::RemovePaintLayer { object_id, index } => super::remove_paint_layer::inverse::inverse(snapshot, object_id, *index),
+        LowpolyMutation::PatchPaintLayer { object_id, index, patch } => super::patch_paint_layer::inverse::inverse(snapshot, object_id, *index, patch),
+        LowpolyMutation::PaintStroke { object_id, layer_index, runs } => super::paint_stroke::inverse::inverse(snapshot, object_id, *layer_index, runs),
+        LowpolyMutation::SetSnapshot { snapshot: replacement } => super::set_snapshot::inverse::inverse(snapshot, replacement),
     }
 }
 
-impl Mutation<LowpolyProjection> for LowpolyMutation {
+impl Mutation<LowpolySnapshot> for LowpolyMutation {
     type Diff = crate::artifacts::lowpoly::diff::LowpolyDiff;
 
-    fn diff(&self, _projection: &LowpolyProjection) -> Self::Diff {
-        crate::artifacts::lowpoly::diff::LowpolyDiff { mutations: vec![self.clone()] }
+    fn diff(&self, base: &LowpolySnapshot) -> Self::Diff {
+        use crate::artifacts::lowpoly::diff::{
+            diff_add_paint_layer, diff_objects_add, diff_objects_move, diff_objects_patch, diff_objects_remove,
+            diff_paint_stroke, diff_patch_paint_layer, diff_remove_paint_layer, diff_replace_snapshot,
+        };
+        use crate::artifacts::lowpoly::diff::schema::{LowpolyPaintLayerPatch, PixelRun as SchemaPixelRun};
+        match self {
+            LowpolyMutation::ObjectsAdd { index, item } => diff_objects_add(*index, item.clone(), base),
+            LowpolyMutation::ObjectsRemove { id } => diff_objects_remove(id.clone()),
+            LowpolyMutation::ObjectsMove { id, to_index } => diff_objects_move(id, *to_index, base),
+            LowpolyMutation::ObjectsPatch { id, patch } => diff_objects_patch(id.clone(), patch.clone()),
+            LowpolyMutation::AddPaintLayer { object_id, index, layer } => {
+                diff_add_paint_layer(object_id.clone(), *index, layer.clone())
+            }
+            LowpolyMutation::RemovePaintLayer { object_id, index } => {
+                diff_remove_paint_layer(object_id.clone(), *index)
+            }
+            LowpolyMutation::PatchPaintLayer { object_id, index, patch } => diff_patch_paint_layer(
+                object_id.clone(),
+                *index,
+                LowpolyPaintLayerPatch {
+                    name: patch.name.clone(),
+                    visible: patch.visible,
+                    opacity: patch.opacity,
+                    blend_mode: patch.blend_mode.clone(),
+                },
+            ),
+            LowpolyMutation::PaintStroke { object_id, layer_index, runs } => diff_paint_stroke(
+                object_id.clone(),
+                *layer_index,
+                runs.iter().map(|run| SchemaPixelRun { offset: run.offset, bytes: run.bytes.clone() }).collect(),
+            ),
+            LowpolyMutation::SetSnapshot { snapshot } => diff_replace_snapshot(base, snapshot),
+        }
     }
 
-    fn inverse(&self, projection: &LowpolyProjection) -> Vec<Self> {
-        inverse_lowpoly_mutation(projection, self)
+    fn inverse(&self, snapshot: &LowpolySnapshot) -> Vec<Self> {
+        inverse_lowpoly_mutation(snapshot, self)
     }
 }
 
@@ -189,19 +221,19 @@ pub use super::add_paint_layer::mutation::{add_paint_layer, AddPaintLayer};
 pub use super::remove_paint_layer::mutation::{remove_paint_layer, RemovePaintLayer};
 pub use super::patch_paint_layer::mutation::{patch_paint_layer, PatchPaintLayer};
 pub use super::paint_stroke::mutation::{paint_stroke, PaintStroke};
-pub use super::set_projection::mutation::{set_projection, SetProjection};
+pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::engine::default_projection;
+    use crate::artifacts::lowpoly::engine::default_snapshot;
 
     //#region 🔖️MutationsCoverage
     #[test]
     fn apply_mutations_on_missing_object_are_no_ops() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let mut mutated = projection.clone();
         apply_lowpoly_mutation(&mut mutated, &LowpolyMutation::AddPaintLayer { object_id: "missing".into(), index: 0, layer: LowpolyPaintLayer::new("X") });
         apply_lowpoly_mutation(&mut mutated, &LowpolyMutation::RemovePaintLayer { object_id: "missing".into(), index: 0 });
@@ -212,7 +244,7 @@ mod tests {
 
     #[test]
     fn apply_remove_and_patch_and_stroke_out_of_range_are_no_ops() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let mut mutated = projection.clone();
         apply_lowpoly_mutation(&mut mutated, &LowpolyMutation::RemovePaintLayer { object_id: object_id.clone(), index: 99 });
@@ -222,16 +254,16 @@ mod tests {
     }
 
     #[test]
-    fn apply_set_projection_replaces_entire_projection() {
-        let mut projection = default_projection();
-        let replacement = crate::artifacts::lowpoly::projection_from_mesh_json(&tiny_mesh_json(), "obj-x", "X");
-        apply_lowpoly_mutation(&mut projection, &LowpolyMutation::SetProjection { projection: replacement.clone() });
+    fn apply_set_snapshot_replaces_entire_projection() {
+        let mut projection = default_snapshot();
+        let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&tiny_mesh_json(), "obj-x", "X");
+        apply_lowpoly_mutation(&mut projection, &LowpolyMutation::SetSnapshot { snapshot: replacement.clone() });
         assert_eq!(projection, replacement);
     }
 
     #[test]
     fn inverse_add_paint_layer_produces_remove_at_same_index() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let mutation = LowpolyMutation::AddPaintLayer { object_id: projection.objects[0].id.clone(), index: 1, layer: LowpolyPaintLayer::new("New") };
         let inverse = inverse_lowpoly_mutation(&projection, &mutation);
         match &inverse[..] {
@@ -245,7 +277,7 @@ mod tests {
 
     #[test]
     fn inverse_remove_paint_layer_restores_the_removed_layer_by_content() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let mutation = LowpolyMutation::RemovePaintLayer { object_id, index: 0 };
         let inverse = inverse_lowpoly_mutation(&projection, &mutation);
@@ -260,7 +292,7 @@ mod tests {
 
     #[test]
     fn inverse_remove_paint_layer_on_missing_layer_falls_back_to_default_layer() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let mutation = LowpolyMutation::RemovePaintLayer { object_id: projection.objects[0].id.clone(), index: 99 };
         let inverse = inverse_lowpoly_mutation(&projection, &mutation);
         match &inverse[..] {
@@ -274,7 +306,7 @@ mod tests {
 
     #[test]
     fn inverse_patch_paint_layer_round_trips_through_apply() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let patch = LowpolyPaintLayerPatch { name: Some("Renamed".into()), visible: Some(false), opacity: Some(0.3), blend_mode: Some("screen".into()) };
         let mutation = LowpolyMutation::PatchPaintLayer { object_id, index: 0, patch };
@@ -289,14 +321,14 @@ mod tests {
     }
 
     #[test]
-    fn inverse_set_projection_captures_pre_state() {
-        let projection = default_projection();
-        let replacement = crate::artifacts::lowpoly::projection_from_mesh_json(&tiny_mesh_json(), "obj-x", "X");
-        let mutation = LowpolyMutation::SetProjection { projection: replacement };
+    fn inverse_set_snapshot_captures_pre_state() {
+        let projection = default_snapshot();
+        let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&tiny_mesh_json(), "obj-x", "X");
+        let mutation = LowpolyMutation::SetSnapshot { snapshot: replacement };
         let inverse = inverse_lowpoly_mutation(&projection, &mutation);
         match &inverse[..] {
-            [LowpolyMutation::SetProjection { projection: restored }] => assert_eq!(restored, &projection),
-            other => panic!("expected SetProjection, got {other:?}"),
+            [LowpolyMutation::SetSnapshot { snapshot: restored }] => assert_eq!(restored, &projection),
+            other => panic!("expected SetSnapshot, got {other:?}"),
         }
     }
 
@@ -316,7 +348,7 @@ mod tests {
 
     #[test]
     fn paint_stroke_mutation_inverse_restores_prior_pixels() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let mutation = LowpolyMutation::PaintStroke { object_id, layer_index: 0, runs: vec![PixelRun { offset: 0, bytes: vec![1, 2, 3, 4] }] };
         let inverse = mutation.inverse(&projection);
@@ -331,7 +363,7 @@ mod tests {
 
     #[test]
     fn objects_patch_mutation_inverse_restores_prior_mesh_and_name() {
-        let projection = default_projection();
+        let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let mutation = LowpolyMutation::ObjectsPatch { id: object_id, patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } };
         let inverse = mutation.inverse(&projection);

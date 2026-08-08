@@ -2,7 +2,7 @@
 //! verbatim from the old `⚙️engine` crate's `🔖️ModalBuckling` region).
 
 use crate::artifacts::fem3d::engine::{meshing, Fem3dError};
-use crate::artifacts::fem3d::Fem3dDocument;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::model::{Dof, Element, Node};
 use crate::analyses;
 
@@ -31,7 +31,7 @@ fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String,
 }
 
 /// 🎵️ Modal analysis: lowest `doc.analysis.modal_count` natural frequencies/mode shapes.
-pub fn fem3d_modal(doc: &Fem3dDocument) -> Result<analyses::ModalResult, Fem3dError> {
+pub fn fem3d_modal(doc: &Fem3dSnapshot) -> Result<analyses::ModalResult, Fem3dError> {
     let (nodes, elements, _solids, supports) = meshing::resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     analyses::modal(&model, doc.analysis.modal_count).map_err(Fem3dError::from)
@@ -40,7 +40,7 @@ pub fn fem3d_modal(doc: &Fem3dDocument) -> Result<analyses::ModalResult, Fem3dEr
 /// 🌉️ Richer modal entry point: solves the same modal analysis as `fem3d_modal` but also unpacks mode
 /// `mode_index`'s shape into a per-node `[f64;6]` displacement map. Returns
 /// `(frequency_hz, node_id -> displacement values)`.
-pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
+pub fn fem3d_modal_mode_values(doc: &Fem3dSnapshot, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
     let (nodes, elements, _solids, supports) = meshing::resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let model = analyses::AnalysisModel { nodes, elements, supports };
@@ -56,14 +56,14 @@ pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result
 
 /// 🌉️ Shared buckling-case resolution for `fem3d_buckling`/`fem3d_buckling_mode_values`, mirroring
 /// `fem2d`'s `buckling_inputs` — translates the named case's loads (incl. `Area` against `solids`).
-fn buckling_case(doc: &Fem3dDocument, case_id: &str, solids: &[meshing::MeshedSolid]) -> Result<analyses::LoadCase, Fem3dError> {
+fn buckling_case(doc: &Fem3dSnapshot, case_id: &str, solids: &[meshing::MeshedSolid]) -> Result<analyses::LoadCase, Fem3dError> {
     let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     let (nodal_loads, member_loads) = meshing::translate_loads(&case.loads, solids)?;
     Ok(analyses::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight })
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
-pub fn fem3d_buckling(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::BucklingResult, Fem3dError> {
+pub fn fem3d_buckling(doc: &Fem3dSnapshot, case_id: &str) -> Result<analyses::BucklingResult, Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let case = buckling_case(doc, case_id, &solids)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
@@ -73,7 +73,7 @@ pub fn fem3d_buckling(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::Bu
 /// 🌉️ Richer buckling entry point: mirrors `fem3d_modal_mode_values` — solves the same buckling
 /// analysis as `fem3d_buckling` but also unpacks mode `mode_index`'s shape into a per-node
 /// displacement map. Returns `(load_factor, node_id -> displacement values)`.
-pub fn fem3d_buckling_mode_values(doc: &Fem3dDocument, case_id: &str, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
+pub fn fem3d_buckling_mode_values(doc: &Fem3dSnapshot, case_id: &str, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let case = buckling_case(doc, case_id, &solids)?;
@@ -94,9 +94,9 @@ mod tests {
     use super::*;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
 
-    fn cantilever_fixture() -> Fem3dDocument {
+    fn cantilever_fixture() -> Fem3dSnapshot {
         let (e, g, a, iy, iz, j, l, p) = (210e9, 80.77e9, 0.00538, 0.0000369, 0.0000133, 0.00000060, 3.0, 5000.0);
-        Fem3dDocument {
+        Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
             materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],

@@ -1,4 +1,5 @@
-//! 🔍 Program mutation — `SearchFilters` leaf.
+//! 🔍 ProgramSnapshot mutation — `SearchFilters` leaf.
 //#region 🔖️Mutation
 // Apply/inverse for `SearchFilters` is dispatched from the root `ProgramMutation` component.
 //#endregion 🔖️Mutation
+use crate::artifacts::program::ProgramSnapshot;

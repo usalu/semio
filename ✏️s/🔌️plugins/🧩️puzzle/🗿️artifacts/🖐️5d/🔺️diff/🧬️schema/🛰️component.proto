@@ -1,0 +1,93 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle5d.diff;
+
+// 🧬️ Puzzle5d diff schema — sparse field delta.
+
+message Puzzle5dDiff {
+  // @state persistent
+  optional Puzzle5dArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional string domain = 3;
+  // @state persistent
+  optional string label = 4;
+  // @state persistent
+  optional Puzzle5dMeta meta = 5;
+  // @state persistent
+  optional Puzzle5dKindCatalogs kind_catalogs = 6;
+  // @state persistent
+  optional Puzzle5dKindCompatibilityDelta kind_compatibility = 7;
+  // @state persistent
+  optional Puzzle5dPartsDelta parts = 8;
+  // @state persistent
+  optional Puzzle5dFastenersDelta fasteners = 9;
+  // @state shared-ui
+  optional Puzzle5dStringList selected_part_ids = 10;
+  // @state shared-ui
+  optional Puzzle5dStringList selected_grip_ids = 11;
+  // @state shared-ui
+  optional Puzzle5dStringList selected_fastener_ids = 12;
+  // @state shared-ui
+  optional string active_utility_id = 13;
+  // @state local-ui
+  optional double camera2d_x = 14;
+  // @state local-ui
+  optional double camera2d_y = 15;
+  // @state local-ui
+  optional double camera2d_zoom = 16;
+  // @state local-ui
+  optional double camera3d_position_x = 17;
+  // @state local-ui
+  optional double camera3d_position_y = 18;
+  // @state local-ui
+  optional double camera3d_position_z = 19;
+  // @state local-ui
+  optional double camera3d_target_x = 20;
+  // @state local-ui
+  optional double camera3d_target_y = 21;
+  // @state local-ui
+  optional double camera3d_target_z = 22;
+  // @state local-ui
+  optional double camera3d_zoom = 23;
+  // @state local-ui
+  optional string selection_method = 24;
+  // @state local-ui
+  optional bool grid_snap_enabled = 25;
+  // @state local-ui
+  optional double grid_factor = 26;
+  // @state local-ui
+  optional double suggestion_offset = 27;
+  // @state local-ui
+  optional double overlap_budget = 28;
+  // @state local-ui
+  optional uint32 fill_count = 29;
+  // @state local-ui
+  optional uint32 brush_candidate_index = 30;
+  // @state local-ui
+  optional string lod_mode = 31;
+  // @state local-ui
+  optional string locale = 32;
+  // @state local-ui
+  optional string runtime_extras_json = 33;
+  // @state preview
+  optional string hovered_part_id = 34;
+  // @state preview
+  optional int64 preview_seq = 35;
+}
+
+message Puzzle5dArtifact { string schema = 1; }
+message Puzzle5dStringList { repeated string values = 1; }
+message Puzzle5dPartsDelta { repeated Puzzle5dPart added = 1; repeated string removed = 2; repeated Puzzle5dPartPatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle5dPartPatchEntry { string id = 1; Puzzle5dPartPatch patch = 2; }
+message Puzzle5dPartPatch { optional Puzzle5dPart replacement = 1; }
+message Puzzle5dPart { string id = 1; }
+message Puzzle5dFastenersDelta { repeated Puzzle5dFastener added = 1; repeated string removed = 2; repeated Puzzle5dFastenerPatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle5dFastenerPatchEntry { string id = 1; Puzzle5dFastenerPatch patch = 2; }
+message Puzzle5dFastenerPatch { optional Puzzle5dFastener replacement = 1; }
+message Puzzle5dFastener { string id = 1; }
+message Puzzle5dKindCompatibility { string id = 1; }
+message Puzzle5dMeta { bool _placeholder = 1; }
+message Puzzle5dKindCatalogs { bool _placeholder = 1; }
+
+message Puzzle5dKindCompatibilityList { repeated Puzzle5dKindCompatibility values = 1; }

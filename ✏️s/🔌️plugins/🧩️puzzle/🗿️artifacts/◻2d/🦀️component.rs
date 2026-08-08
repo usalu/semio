@@ -1,4 +1,4 @@
-//! 🧩️ Puzzle 2d artifact — the `puzzle.2d.fixture` document schema: the `Puzzle2dProjection`
+//! 🧩️ Puzzle 2d artifact — the `puzzle.2d.fixture` document schema: the `Puzzle2dSnapshot`
 //! (schema/camera/nodes/edges/meta), its node/handle/edge/kind-compatibility records, and the
 //! `artifact_kind()` spec the play app's manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`,
 //! `🎒️pack`, `📡️spr`, `⚙️engine`.
@@ -143,89 +143,9 @@ pub struct Puzzle2dMeta {
     pub kind_catalogs: Option<dsl::DslValue>,
 }
 
-/// 🧩️ The puzzle-2d projection: a typed fixture document (schema/camera/nodes/edges/meta) — see
-/// `infinite_board_port_directed::scene_json::FixtureJson` for the canonical parser it round-trips
-/// through and the two example fixtures under `puzzle/2d/example/` for real-world shapes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(id = "puzzle.puzzle2d", layout = "lines")]
-pub struct Puzzle2dProjection {
-    pub schema: String,
-    #[dsl(block)]
-    pub camera: Puzzle2dCamera,
-    #[serde(default)]
-    #[dsl(table)]
-    pub nodes: Vec<Puzzle2dNode>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub edges: Vec<Puzzle2dEdge>,
-    #[serde(default)]
-    #[dsl(block)]
-    pub meta: Puzzle2dMeta,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for Puzzle2dProjection {
-    const EXTENSION: &'static str = "puzzle2d";
-    fn envelope_id() -> &'static str { "puzzle.puzzle2d" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for Puzzle2dProjection {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-impl Default for Puzzle2dProjection {
-    fn default() -> Self {
-        Self { schema: PUZZLE_2D_SCHEMA.to_string(), camera: Puzzle2dCamera::default(), nodes: Vec::new(), edges: Vec::new(), meta: Puzzle2dMeta::default() }
-    }
-}
+//#region 🔖️Snapshot
+pub use crate::artifacts::puzzle2d::snapshot::schema::Puzzle2dSnapshot;
+//#endregion 🔖️Snapshot
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The `2d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so

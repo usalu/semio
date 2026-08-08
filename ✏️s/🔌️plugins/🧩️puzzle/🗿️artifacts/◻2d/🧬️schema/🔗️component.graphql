@@ -1,0 +1,32 @@
+# 🧬️ Puzzle2d artifact schema — every field with its state class.
+
+type Puzzle2dArtifact {
+  schema: String! @state(class: PERSISTENT)
+  camera: Puzzle2dCamera! @state(class: PERSISTENT)
+  nodes: [Puzzle2dNode!]! @state(class: PERSISTENT)
+  edges: [Puzzle2dEdge!]! @state(class: PERSISTENT)
+  meta: Puzzle2dMeta! @state(class: PERSISTENT)
+  selectedIds: [String!]! @state(class: SHARED_UI)
+  activeUtilityId: String! @state(class: SHARED_UI)
+  cameraX: Float! @state(class: LOCAL_UI)
+  cameraY: Float! @state(class: LOCAL_UI)
+  cameraZoom: Float! @state(class: LOCAL_UI)
+  selectionMethod: String! @state(class: LOCAL_UI)
+  gridSnapEnabled: Boolean! @state(class: LOCAL_UI)
+  gridFactor: Float! @state(class: LOCAL_UI)
+  suggestionOffset: Float! @state(class: LOCAL_UI)
+  fillCount: Int! @state(class: LOCAL_UI)
+  brushCandidateIndex: Int! @state(class: LOCAL_UI)
+  brushCandidateSourceHandleId: String! @state(class: LOCAL_UI)
+  locale: String! @state(class: LOCAL_UI)
+  terminology: String! @state(class: LOCAL_UI)
+  lodModeByPaneJson: String! @state(class: LOCAL_UI)
+  engagementInputByPaneJson: String! @state(class: LOCAL_UI)
+  brushCandidatesJson: String! @state(class: LOCAL_UI)
+  nodeKindWeightsJson: String! @state(class: LOCAL_UI)
+  handleKindWeightsJson: String! @state(class: LOCAL_UI)
+  activeUtilityByWindowIdJson: String! @state(class: LOCAL_UI)
+  hoveredNodeId: String @state(class: PREVIEW)
+  previewSeq: Int! @state(class: PREVIEW)
+}
+

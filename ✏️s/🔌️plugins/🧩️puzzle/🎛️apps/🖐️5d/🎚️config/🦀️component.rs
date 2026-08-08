@@ -181,7 +181,7 @@ impl Default for Puzzle5dRuntime {
 /// 🧮️ B1: puzzle5d's real `DocumentApp::Config` — `Puzzle5dRuntime` itself doubles as the config
 /// record (an alias, not a new type), mirroring `Puzzle3dConfig`'s identical recipe, so every helper
 /// taking `&Puzzle5dRuntime`/`&mut Puzzle5dRuntime` keeps working unchanged; every read comes from
-/// `cfg.projection`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`
+/// `cfg.snapshot`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`
 /// instead of a silent `self` mutation.
 pub type Puzzle5dConfig = Puzzle5dRuntime;
 

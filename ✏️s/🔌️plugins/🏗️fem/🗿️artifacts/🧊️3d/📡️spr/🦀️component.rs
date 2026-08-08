@@ -30,8 +30,8 @@ mod tests {
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
     use store::{create_document_envelope, DocumentCommand};
 
-    fn cantilever_fixture() -> crate::artifacts::fem3d::Fem3dDocument {
-        crate::artifacts::fem3d::Fem3dDocument {
+    fn cantilever_fixture() -> crate::artifacts::fem3d::Fem3dSnapshot {
+        crate::artifacts::fem3d::Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
             materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }],
@@ -47,7 +47,7 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = Fem3dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
-        store::test_support::assert_op_text_binary_equivalence(&operation);
+        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -66,10 +66,10 @@ mod tests {
 
     #[test]
     fn fem3d_document_text_round_trips_through_the_store() {
-        let mut store = crate::artifacts::fem3d::op::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", engine::empty_fem3d_projection(), None));
-        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem3dMutation::SetDocument { document: cantilever_fixture() }], description: None }).expect("apply");
-        store::test_support::assert_document_text_round_trip(&store);
-        store::test_support::assert_document_pack_round_trip(&store);
+        let mut store = crate::artifacts::fem3d::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", engine::empty_fem3d_snapshot(), None));
+        store.dispatch(DocumentCommand::Apply { mutations: vec![Fem3dMutation::SetSnapshot { snapshot: cantilever_fixture() }], description: None }).expect("apply");
+        semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store);
+        semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 }
 // #endregion 🧪️Tests

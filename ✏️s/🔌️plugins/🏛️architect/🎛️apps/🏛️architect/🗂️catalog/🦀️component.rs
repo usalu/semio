@@ -15,7 +15,7 @@ use crate::artifacts::program::registers::{
     Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ProgramElementPatch, ReportKind,
     ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, StakeholderPatch, UserCategory, UserProfile, ValidationStatus,
 };
-use crate::artifacts::program::{EntityHeader, EntityId, Program, TextField, TraceKind, TraceLink};
+use crate::artifacts::program::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
 use protocol::CollectionMutation;
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
 use serde::de::DeserializeOwned;
@@ -100,7 +100,7 @@ pub fn next_adjacency_kind(current: Option<&AdjacencyKind>) -> Option<AdjacencyK
     }
 }
 
-pub fn find_adjacency<'a>(program: &'a Program, a: &EntityId, b: &EntityId) -> Option<&'a Adjacency> {
+pub fn find_adjacency<'a>(program: &'a ProgramSnapshot, a: &EntityId, b: &EntityId) -> Option<&'a Adjacency> {
     let (left, right) = normalize_pair(a, b);
     program.adjacencies.iter().find(|row| row.element_a_id == left && row.element_b_id == right)
 }
@@ -136,7 +136,7 @@ pub fn default_element(name: impl Into<String>) -> ProgramElement {
     }
 }
 
-pub fn new_adjacency(program: &Program, a: &EntityId, b: &EntityId, kind: AdjacencyKind) -> Adjacency {
+pub fn new_adjacency(program: &ProgramSnapshot, a: &EntityId, b: &EntityId, kind: AdjacencyKind) -> Adjacency {
     let (left, right) = normalize_pair(a, b);
     Adjacency {
         header: EntityHeader::new(EntityId::new_serial("adjacency", "adjacency"), format!("{} ↔ {}", element_label(program, &left), element_label(program, &right))),
@@ -172,7 +172,7 @@ pub fn parse_entity_id_from_args(args: Option<&Value>, key: &str) -> Option<Enti
 }
 
 
-pub fn register_entities(program: &Program, register: &str) -> Vec<Value> {
+pub fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value> {
     macro_rules! collect {
         ($($name:literal => $field:ident),+ $(,)?) => {
             match register {
@@ -251,11 +251,11 @@ pub fn register_entities(program: &Program, register: &str) -> Vec<Value> {
     }
 }
 
-pub fn register_len(program: &Program, register: &str) -> usize {
+pub fn register_len(program: &ProgramSnapshot, register: &str) -> usize {
     register_entities(program, register).len()
 }
 
-pub fn find_register_for_entity(program: &Program, id: &EntityId) -> Option<&'static str> {
+pub fn find_register_for_entity(program: &ProgramSnapshot, id: &EntityId) -> Option<&'static str> {
     if program.traces.iter().any(|row| row.id == *id) {
         return Some("traces");
     }
@@ -515,7 +515,7 @@ pub fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra
     serde_json::from_value(value).ok()
 }
 
-pub fn add_register_item_operation(program: &Program, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
+pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
     macro_rules! add {
         ($field:ident, $operation:ident, $item:expr) => {{
             let item = $item;
@@ -677,7 +677,7 @@ pub fn patch_register_item_operation(register: &str, entity_id: EntityId, patch:
     })
 }
 
-pub fn analysis_record_from(program: &Program, kind: AnalysisKind, result: &AnalysisResult) -> AnalysisRecord {
+pub fn analysis_record_from(program: &ProgramSnapshot, kind: AnalysisKind, result: &AnalysisResult) -> AnalysisRecord {
     AnalysisRecord {
         header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
         kind,
@@ -701,7 +701,7 @@ pub fn analysis_record_from(program: &Program, kind: AnalysisKind, result: &Anal
     }
 }
 
-pub fn report_record_from(program: &Program, kind: ReportKind, report: &ProgramReport) -> ReportRecord {
+pub fn report_record_from(program: &ProgramSnapshot, kind: ReportKind, report: &ProgramReport) -> ReportRecord {
     ReportRecord {
         header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
         kind,
@@ -824,7 +824,7 @@ pub fn analysis_kind_picker_options() -> Vec<ActionArgOption> {
 pub fn report_kind_picker_options() -> Vec<ActionArgOption> {
     vec![
         ("executiveSummary", "Executive Summary", "Kurzfassung"),
-        ("programOverview", "Program Overview", "Programmübersicht"),
+        ("programOverview", "ProgramSnapshot Overview", "Programmübersicht"),
         ("stakeholderSummary", "Stakeholder Summary", "Stakeholder-Übersicht"),
         ("requirementsMatrix", "Requirements Matrix", "Anforderungsmatrix"),
         ("adjacencyMatrix", "Adjacency Matrix", "Adjazenzmatrix"),

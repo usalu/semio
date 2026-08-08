@@ -1114,8 +1114,24 @@ describe("resolveCargoPackageName", () => {
 describe("loadTaxonomy", () => {
   test("parses 🔣️taxonomy.json into the expected shape", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.artifactComponentDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine"]);
+    expect(taxonomy.artifactComponentDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🧬️schema", "📸️snapshot", "🔧️op", "📡️spr", "⚙️engine"]);
     expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+    expect(taxonomy.snapshotChildDirs).toEqual(["🧬️schema", "🎒️pack"]);
+    expect(taxonomy.diffChildDirs).toEqual(["🧬️schema"]);
+    expect(taxonomy.schemaFormats).toEqual({
+      "🦀️rust": { leafFilename: "🦀️component.rs", extension: ".rs", fieldCasing: "snake" },
+      "🟦️typescript": { leafFilename: "🟦️component.ts", extension: ".ts", fieldCasing: "camel" },
+      "🔗️graphql": { leafFilename: "🔗️component.graphql", extension: ".graphql", fieldCasing: "camel" },
+      "🔣️jsonschema": { leafFilename: "🔣️component.json", extension: ".json", fieldCasing: "camel" },
+      "🛰️protobuf": { leafFilename: "🛰️component.proto", extension: ".proto", fieldCasing: "snake" },
+    });
+    expect(taxonomy.artifactSchemaSpecFilenames).toEqual({
+      "🧬️schema": "🔣️component.json",
+      "📸️snapshot/🧬️schema": "🔣️component.json",
+      "🔺️diff/🧬️schema": "🔣️component.json",
+    });
+    expect(taxonomy.artifactSpecFilenames["📸️snapshot/🎒️pack"]).toBe("📡️component.protocol.semio");
+    expect("🎒️pack" in taxonomy.artifactSpecFilenames).toBe(false);
     expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
     expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
     expect(taxonomy.taxonomyLeafFilenames["🟦️typescript"]).toBe("🟦️component.ts");
@@ -1129,7 +1145,7 @@ describe("loadTaxonomy", () => {
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
     const taxonomy = loadTaxonomy();
     // ⚙️ Completeness includes 🧬️mutations + ⚙️engine; structural-only extra is 📚️examples.
-    expect(taxonomy.artifactChildDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
+    expect(taxonomy.artifactChildDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🧬️schema", "📸️snapshot", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
     expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples"]);
   });
 
@@ -1173,6 +1189,7 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🦠️mutation");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("↩️inverse");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🔺️diff");
+    expect(taxonomy.taxonomyLeafParentDirs).toContain("🧬️schema");
     expect("exampleComponentDirs" in taxonomy).toBe(false);
   });
 
@@ -1258,6 +1275,51 @@ describe("validateTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, exampleSlugPattern: "" };
     expect(validateTaxonomy(broken).some((problem) => problem.includes("exampleSlugPattern"))).toBe(true);
+  });
+
+  test("reports empty snapshotChildDirs", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, snapshotChildDirs: [] };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("snapshotChildDirs"))).toBe(true);
+  });
+
+  test("reports empty diffChildDirs", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, diffChildDirs: [] };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("diffChildDirs"))).toBe(true);
+  });
+
+  test("rejects bare pack in artifactComponentDirs", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, artifactComponentDirs: [...taxonomy.artifactComponentDirs, "🎒️pack"], artifactChildDirs: [...taxonomy.artifactChildDirs, "🎒️pack"] };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes('bare "🎒️pack"'))).toBe(true);
+  });
+
+  test("rejects bare pack key in artifactSpecFilenames", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, artifactSpecFilenames: { ...taxonomy.artifactSpecFilenames, "🎒️pack": "📡️component.protocol.semio" } };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes('bare "🎒️pack" key'))).toBe(true);
+  });
+
+  test("reports schemaFormats leafFilename/extension mismatch", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = {
+      ...taxonomy,
+      schemaFormats: {
+        ...taxonomy.schemaFormats,
+        "🦀️rust": { ...taxonomy.schemaFormats["🦀️rust"], leafFilename: "🦀️component.ts" },
+      },
+    };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("leafFilename must end with its extension"))).toBe(true);
+  });
+
+  test("reports artifactSchemaSpecFilenames drift from jsonschema leaf", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = {
+      ...taxonomy,
+      artifactSchemaSpecFilenames: { ...taxonomy.artifactSchemaSpecFilenames, "🧬️schema": "wrong.json" },
+    };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("artifactSchemaSpecFilenames"))).toBe(true);
   });
 });
 

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain.artifact;
+
+// 🧬️ GIS terrain artifact schema — every field with its state class.
+
+message GisTerrainArtifact {
+  // @state persistent
+  double exaggeration = 1;
+  // @state persistent
+  string imported_features_json = 2;
+  // @state shared-ui
+  repeated string selected_ids = 3;
+  // @state local-ui
+  string camera_json = 4;
+  // @state local-ui
+  string locale = 5;
+}

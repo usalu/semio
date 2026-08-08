@@ -1,7 +1,7 @@
 //! ⚡️ FEM 2D artifact — operation enum + laws (constitutional: op).
 
 use crate::artifacts::fem2d::diff::{index_of, Fem2dDiff};
-use crate::artifacts::fem2d::{element_id, Fem2dDocument, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 // #region 🔖️Operation
 /// 🧮️ Fem-2d operation: id-keyed document-collection edits, each with a true inverse computed from
-/// the pre-operation projection.
+/// the pre-operation snapshot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum Fem2dMutation {
@@ -88,9 +88,9 @@ pub enum Fem2dMutation {
         settings: FemAnalysisSettings,
     },
     /// 🌍️ Replaces the whole document (example import / reset).
-    SetDocument {
+    SetSnapshot {
         #[dsl(block)]
-        document: Fem2dDocument,
+        snapshot: Fem2dSnapshot,
     },
 }
 
@@ -98,84 +98,82 @@ pub enum Fem2dMutation {
 
 
 
-impl Mutation<Fem2dDocument> for Fem2dMutation {
+impl Mutation<Fem2dSnapshot> for Fem2dMutation {
     type Diff = Fem2dDiff;
 
-    fn diff(&self, _projection: &Fem2dDocument) -> Fem2dDiff {
-        let mut diff = Fem2dDiff::default();
+    fn diff(&self, base: &Fem2dSnapshot) -> Fem2dDiff {
         match self {
-            Fem2dMutation::SetNode { index, node } => diff.nodes.set.push((*index, node.clone())),
-            Fem2dMutation::RemoveNode { id } => diff.nodes.removed.push(id.clone()),
-            Fem2dMutation::SetElement { index, element } => diff.elements.set.push((*index, (**element).clone())),
-            Fem2dMutation::RemoveElement { id } => diff.elements.removed.push(id.clone()),
-            Fem2dMutation::SetMaterial { index, material } => diff.materials.set.push((*index, material.clone())),
-            Fem2dMutation::RemoveMaterial { id } => diff.materials.removed.push(id.clone()),
-            Fem2dMutation::SetSection { index, section } => diff.sections.set.push((*index, section.clone())),
-            Fem2dMutation::RemoveSection { id } => diff.sections.removed.push(id.clone()),
-            Fem2dMutation::SetSupport { index, support } => diff.supports.set.push((*index, support.clone())),
-            Fem2dMutation::RemoveSupport { id } => diff.supports.removed.push(id.clone()),
-            Fem2dMutation::SetLoadCase { index, load_case } => diff.load_cases.set.push((*index, load_case.clone())),
-            Fem2dMutation::RemoveLoadCase { id } => diff.load_cases.removed.push(id.clone()),
-            Fem2dMutation::SetRegion { index, region } => diff.regions.set.push((*index, region.clone())),
-            Fem2dMutation::RemoveRegion { id } => diff.regions.removed.push(id.clone()),
-            Fem2dMutation::SetCombination { index, combination } => diff.combinations.set.push((*index, combination.clone())),
-            Fem2dMutation::RemoveCombination { id } => diff.combinations.removed.push(id.clone()),
-            Fem2dMutation::SetAnalysisSettings { settings } => diff.analysis = Some(settings.clone()),
-            Fem2dMutation::SetDocument { document } => diff.document = Some(document.clone()),
+            Fem2dMutation::SetNode { index, node } => crate::artifacts::fem2d::diff::diff_set_node(*index, node.clone(), base),
+            Fem2dMutation::RemoveNode { id } => crate::artifacts::fem2d::diff::diff_remove_node(id.clone()),
+            Fem2dMutation::SetElement { index, element } => crate::artifacts::fem2d::diff::diff_set_element(*index, (**element).clone(), base),
+            Fem2dMutation::RemoveElement { id } => crate::artifacts::fem2d::diff::diff_remove_element(id.clone()),
+            Fem2dMutation::SetMaterial { index, material } => crate::artifacts::fem2d::diff::diff_set_material(*index, material.clone(), base),
+            Fem2dMutation::RemoveMaterial { id } => crate::artifacts::fem2d::diff::diff_remove_material(id.clone()),
+            Fem2dMutation::SetSection { index, section } => crate::artifacts::fem2d::diff::diff_set_section(*index, section.clone(), base),
+            Fem2dMutation::RemoveSection { id } => crate::artifacts::fem2d::diff::diff_remove_section(id.clone()),
+            Fem2dMutation::SetSupport { index, support } => crate::artifacts::fem2d::diff::diff_set_support(*index, support.clone(), base),
+            Fem2dMutation::RemoveSupport { id } => crate::artifacts::fem2d::diff::diff_remove_support(id.clone()),
+            Fem2dMutation::SetLoadCase { index, load_case } => crate::artifacts::fem2d::diff::diff_set_load_case(*index, load_case.clone(), base),
+            Fem2dMutation::RemoveLoadCase { id } => crate::artifacts::fem2d::diff::diff_remove_load_case(id.clone()),
+            Fem2dMutation::SetRegion { index, region } => crate::artifacts::fem2d::diff::diff_set_region(*index, region.clone(), base),
+            Fem2dMutation::RemoveRegion { id } => crate::artifacts::fem2d::diff::diff_remove_region(id.clone()),
+            Fem2dMutation::SetCombination { index, combination } => crate::artifacts::fem2d::diff::diff_set_combination(*index, combination.clone(), base),
+            Fem2dMutation::RemoveCombination { id } => crate::artifacts::fem2d::diff::diff_remove_combination(id.clone()),
+            Fem2dMutation::SetAnalysisSettings { settings } => crate::artifacts::fem2d::diff::diff_set_analysis(settings.clone()),
+            Fem2dMutation::SetSnapshot { snapshot } => crate::artifacts::fem2d::diff::diff_set_snapshot(snapshot.clone()),
         }
-        diff
     }
 
-    fn inverse(&self, projection: &Fem2dDocument) -> Vec<Self> {
+    fn inverse(&self, snapshot: &Fem2dSnapshot) -> Vec<Self> {
         match self {
-            Fem2dMutation::SetNode { node, .. } => match index_of(&projection.nodes, &node.id) {
-                Some(index) => vec![Fem2dMutation::SetNode { index, node: projection.nodes[index].clone() }],
+            Fem2dMutation::SetNode { node, .. } => match index_of(&snapshot.nodes, &node.id) {
+                Some(index) => vec![Fem2dMutation::SetNode { index, node: snapshot.nodes[index].clone() }],
                 None => vec![Fem2dMutation::RemoveNode { id: node.id.clone() }],
             },
-            Fem2dMutation::RemoveNode { id } => index_of(&projection.nodes, id).map(|index| vec![Fem2dMutation::SetNode { index, node: projection.nodes[index].clone() }]).unwrap_or_default(),
-            Fem2dMutation::SetElement { element, .. } => match index_of(&projection.elements, element_id(element)) {
-                Some(index) => vec![Fem2dMutation::SetElement { index, element: Box::new(projection.elements[index].clone()) }],
+            Fem2dMutation::RemoveNode { id } => index_of(&snapshot.nodes, id).map(|index| vec![Fem2dMutation::SetNode { index, node: snapshot.nodes[index].clone() }]).unwrap_or_default(),
+            Fem2dMutation::SetElement { element, .. } => match index_of(&snapshot.elements, element_id(element)) {
+                Some(index) => vec![Fem2dMutation::SetElement { index, element: Box::new(snapshot.elements[index].clone()) }],
                 None => vec![Fem2dMutation::RemoveElement { id: element_id(element).to_string() }],
             },
-            Fem2dMutation::RemoveElement { id } => index_of(&projection.elements, id).map(|index| vec![Fem2dMutation::SetElement { index, element: Box::new(projection.elements[index].clone()) }]).unwrap_or_default(),
-            Fem2dMutation::SetMaterial { material, .. } => match index_of(&projection.materials, &material.id) {
-                Some(index) => vec![Fem2dMutation::SetMaterial { index, material: projection.materials[index].clone() }],
+            Fem2dMutation::RemoveElement { id } => index_of(&snapshot.elements, id).map(|index| vec![Fem2dMutation::SetElement { index, element: Box::new(snapshot.elements[index].clone()) }]).unwrap_or_default(),
+            Fem2dMutation::SetMaterial { material, .. } => match index_of(&snapshot.materials, &material.id) {
+                Some(index) => vec![Fem2dMutation::SetMaterial { index, material: snapshot.materials[index].clone() }],
                 None => vec![Fem2dMutation::RemoveMaterial { id: material.id.clone() }],
             },
-            Fem2dMutation::RemoveMaterial { id } => index_of(&projection.materials, id).map(|index| vec![Fem2dMutation::SetMaterial { index, material: projection.materials[index].clone() }]).unwrap_or_default(),
-            Fem2dMutation::SetSection { section, .. } => match index_of(&projection.sections, &section.id) {
-                Some(index) => vec![Fem2dMutation::SetSection { index, section: projection.sections[index].clone() }],
+            Fem2dMutation::RemoveMaterial { id } => index_of(&snapshot.materials, id).map(|index| vec![Fem2dMutation::SetMaterial { index, material: snapshot.materials[index].clone() }]).unwrap_or_default(),
+            Fem2dMutation::SetSection { section, .. } => match index_of(&snapshot.sections, &section.id) {
+                Some(index) => vec![Fem2dMutation::SetSection { index, section: snapshot.sections[index].clone() }],
                 None => vec![Fem2dMutation::RemoveSection { id: section.id.clone() }],
             },
-            Fem2dMutation::RemoveSection { id } => index_of(&projection.sections, id).map(|index| vec![Fem2dMutation::SetSection { index, section: projection.sections[index].clone() }]).unwrap_or_default(),
-            Fem2dMutation::SetSupport { support, .. } => match index_of(&projection.supports, &support.id) {
-                Some(index) => vec![Fem2dMutation::SetSupport { index, support: projection.supports[index].clone() }],
+            Fem2dMutation::RemoveSection { id } => index_of(&snapshot.sections, id).map(|index| vec![Fem2dMutation::SetSection { index, section: snapshot.sections[index].clone() }]).unwrap_or_default(),
+            Fem2dMutation::SetSupport { support, .. } => match index_of(&snapshot.supports, &support.id) {
+                Some(index) => vec![Fem2dMutation::SetSupport { index, support: snapshot.supports[index].clone() }],
                 None => vec![Fem2dMutation::RemoveSupport { id: support.id.clone() }],
             },
-            Fem2dMutation::RemoveSupport { id } => index_of(&projection.supports, id).map(|index| vec![Fem2dMutation::SetSupport { index, support: projection.supports[index].clone() }]).unwrap_or_default(),
-            Fem2dMutation::SetLoadCase { load_case, .. } => match index_of(&projection.load_cases, &load_case.id) {
-                Some(index) => vec![Fem2dMutation::SetLoadCase { index, load_case: projection.load_cases[index].clone() }],
+            Fem2dMutation::RemoveSupport { id } => index_of(&snapshot.supports, id).map(|index| vec![Fem2dMutation::SetSupport { index, support: snapshot.supports[index].clone() }]).unwrap_or_default(),
+            Fem2dMutation::SetLoadCase { load_case, .. } => match index_of(&snapshot.load_cases, &load_case.id) {
+                Some(index) => vec![Fem2dMutation::SetLoadCase { index, load_case: snapshot.load_cases[index].clone() }],
                 None => vec![Fem2dMutation::RemoveLoadCase { id: load_case.id.clone() }],
             },
-            Fem2dMutation::RemoveLoadCase { id } => index_of(&projection.load_cases, id).map(|index| vec![Fem2dMutation::SetLoadCase { index, load_case: projection.load_cases[index].clone() }]).unwrap_or_default(),
-            Fem2dMutation::SetRegion { region, .. } => match index_of(&projection.regions, &region.id) {
-                Some(index) => vec![Fem2dMutation::SetRegion { index, region: projection.regions[index].clone() }],
+            Fem2dMutation::RemoveLoadCase { id } => index_of(&snapshot.load_cases, id).map(|index| vec![Fem2dMutation::SetLoadCase { index, load_case: snapshot.load_cases[index].clone() }]).unwrap_or_default(),
+            Fem2dMutation::SetRegion { region, .. } => match index_of(&snapshot.regions, &region.id) {
+                Some(index) => vec![Fem2dMutation::SetRegion { index, region: snapshot.regions[index].clone() }],
                 None => vec![Fem2dMutation::RemoveRegion { id: region.id.clone() }],
             },
-            Fem2dMutation::RemoveRegion { id } => index_of(&projection.regions, id).map(|index| vec![Fem2dMutation::SetRegion { index, region: projection.regions[index].clone() }]).unwrap_or_default(),
-            Fem2dMutation::SetCombination { combination, .. } => match index_of(&projection.combinations, &combination.id) {
-                Some(index) => vec![Fem2dMutation::SetCombination { index, combination: projection.combinations[index].clone() }],
+            Fem2dMutation::RemoveRegion { id } => index_of(&snapshot.regions, id).map(|index| vec![Fem2dMutation::SetRegion { index, region: snapshot.regions[index].clone() }]).unwrap_or_default(),
+            Fem2dMutation::SetCombination { combination, .. } => match index_of(&snapshot.combinations, &combination.id) {
+                Some(index) => vec![Fem2dMutation::SetCombination { index, combination: snapshot.combinations[index].clone() }],
                 None => vec![Fem2dMutation::RemoveCombination { id: combination.id.clone() }],
             },
-            Fem2dMutation::RemoveCombination { id } => index_of(&projection.combinations, id).map(|index| vec![Fem2dMutation::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
-            Fem2dMutation::SetAnalysisSettings { .. } => vec![Fem2dMutation::SetAnalysisSettings { settings: projection.analysis.clone() }],
-            Fem2dMutation::SetDocument { .. } => vec![Fem2dMutation::SetDocument { document: projection.clone() }],
+            Fem2dMutation::RemoveCombination { id } => index_of(&snapshot.combinations, id).map(|index| vec![Fem2dMutation::SetCombination { index, combination: snapshot.combinations[index].clone() }]).unwrap_or_default(),
+            Fem2dMutation::SetAnalysisSettings { .. } => vec![Fem2dMutation::SetAnalysisSettings { settings: snapshot.analysis.clone() }],
+            Fem2dMutation::SetSnapshot { .. } => vec![Fem2dMutation::SetSnapshot { snapshot: snapshot.clone() }],
         }
     }
 }
 
-pub type Fem2dEnvelope = DocumentEnvelope<Fem2dDocument, Fem2dMutation>;
-pub type Fem2dStore = DocumentStore<Fem2dDocument, Fem2dMutation>;
+pub type Fem2dEnvelope = DocumentEnvelope<Fem2dSnapshot, Fem2dMutation>;
+pub type Fem2dStore = DocumentStore<Fem2dSnapshot, Fem2dMutation>;
 // #endregion 🔖️Operation
 
 // #region 🧪️Tests
@@ -184,8 +182,8 @@ mod tests {
     use super::*;
 
     // #region 🔖️Fixtures
-    fn simply_supported_beam_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn simply_supported_beam_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
             elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
             regions: vec![],
@@ -198,8 +196,8 @@ mod tests {
         }
     }
 
-    fn rectangle_region_doc() -> Fem2dDocument {
-        Fem2dDocument {
+    fn rectangle_region_doc() -> Fem2dSnapshot {
+        Fem2dSnapshot {
             nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
             elements: vec![],
             regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],
@@ -214,13 +212,13 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     // #region 🔖️OpRoundTrip
-    fn round_trip(projection: &Fem2dDocument, operation: &Fem2dMutation) -> Fem2dDocument {
-        let forward = vcs::apply_mutation(projection, operation);
+    fn round_trip(snapshot: &Fem2dSnapshot, operation: &Fem2dMutation) -> Fem2dSnapshot {
+        let forward = vcs::apply_mutation(snapshot, operation);
         let mut restored = forward.clone();
-        for back in operation.inverse(projection) {
+        for back in operation.inverse(snapshot) {
             restored = vcs::apply_mutation(&restored, &back);
         }
-        assert_eq!(&restored, projection, "backwards() must restore the pre-operation document");
+        assert_eq!(&restored, snapshot, "backwards() must restore the pre-operation document");
         forward
     }
 
@@ -298,7 +296,7 @@ mod tests {
     fn document_op_round_trips() {
         let base = simply_supported_beam_doc();
         let replacement = rectangle_region_doc();
-        let after = round_trip(&base, &Fem2dMutation::SetDocument { document: replacement.clone() });
+        let after = round_trip(&base, &Fem2dMutation::SetSnapshot { snapshot: replacement.clone() });
         assert_eq!(after, replacement);
     }
     // #endregion 🔖️OpRoundTrip
@@ -306,18 +304,18 @@ mod tests {
     // #region 🔖️OpText
     #[test]
     fn fem2d_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetNode { index: 0, node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveNode { id: "n1".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetElement { index: 0, element: Box::new(FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }) });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetElement { index: 0, element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }) });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveElement { id: "e1".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetMaterial { index: 0, material: FemMaterial { id: "steel".into(), name: "Steel S235".into(), e: 210e9, nu: 0.3, rho: 7850.0 } });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveMaterial { id: "steel".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetSection { index: 0, section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 } });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveSection { id: "ipe300".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetSupport { index: 0, support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![crate::artifacts::fem2d::FemDof::Tx, crate::artifacts::fem2d::FemDof::Ty] } });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveSupport { id: "s1".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetLoadCase {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetNode { index: 0, node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveNode { id: "n1".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetElement { index: 0, element: Box::new(FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }) });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetElement { index: 0, element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }) });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveElement { id: "e1".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetMaterial { index: 0, material: FemMaterial { id: "steel".into(), name: "Steel S235".into(), e: 210e9, nu: 0.3, rho: 7850.0 } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveMaterial { id: "steel".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetSection { index: 0, section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveSection { id: "ipe300".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetSupport { index: 0, support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![crate::artifacts::fem2d::FemDof::Tx, crate::artifacts::fem2d::FemDof::Ty] } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveSupport { id: "s1".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetLoadCase {
             index: 0,
             load_case: FemLoadCase {
                 id: "dead".into(),
@@ -330,8 +328,8 @@ mod tests {
                 self_weight: true,
             },
         });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveLoadCase { id: "dead".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetRegion {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveLoadCase { id: "dead".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetRegion {
             index: 0,
             region: FemRegion {
                 id: "r1".into(),
@@ -343,14 +341,14 @@ mod tests {
                 mesh_size: 0.5,
             },
         });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveRegion { id: "r1".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetCombination {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveRegion { id: "r1".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetCombination {
             index: 0,
             combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::artifacts::fem2d::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] },
         });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveCombination { id: "uls".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
-        store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetDocument { document: simply_supported_beam_doc() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveCombination { id: "uls".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::SetSnapshot { snapshot: simply_supported_beam_doc() });
     }
     // #endregion 🔖️OpText
 }
@@ -371,10 +369,10 @@ mod semio_grammar_conformance {
 
 
 
-pub fn apply_fem2d_mutation(projection: &mut Fem2dDocument, mutation: &Fem2dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_fem2d_mutation(snapshot: &mut Fem2dSnapshot, mutation: &Fem2dMutation) {
+    *snapshot = vcs::apply_mutation(snapshot, mutation);
 }
 
-pub fn inverse_fem2d_mutation(projection: &Fem2dDocument, mutation: &Fem2dMutation) -> Vec<Fem2dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation) -> Vec<Fem2dMutation> {
+    mutation.inverse(snapshot)
 }

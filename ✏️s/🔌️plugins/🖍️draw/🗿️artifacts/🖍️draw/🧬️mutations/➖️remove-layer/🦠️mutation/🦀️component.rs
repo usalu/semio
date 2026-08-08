@@ -1,6 +1,6 @@
 //! Draw mutation — `RemoveLayer` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -15,7 +15,7 @@ pub fn remove_layer(layer_id: String) -> DrawMutation {
     DrawMutation::RemoveLayer { layer_id }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::RemoveLayer { layer_id: layer_id.into() });
 }
 //#endregion 🔖️Mutation

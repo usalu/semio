@@ -1,6 +1,6 @@
 //! Draw mutation — `AddLayer` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -17,7 +17,7 @@ pub fn add_layer(parent_id: Option<String>, index: Option<usize>, layer: crate::
     DrawMutation::AddLayer { parent_id, index, layer: Box::new(layer) }
 }
 
-pub fn apply(doc: &mut DrawDocument, parent_id: &Option<String>, index: Option<usize>, layer: &crate::artifacts::draw::DrawLayerNode) {
+pub fn apply(doc: &mut DrawSnapshot, parent_id: &Option<String>, index: Option<usize>, layer: &crate::artifacts::draw::DrawLayerNode) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::AddLayer { parent_id: parent_id.clone(), index, layer: Box::new(layer.clone()) });
 }
 //#endregion 🔖️Mutation

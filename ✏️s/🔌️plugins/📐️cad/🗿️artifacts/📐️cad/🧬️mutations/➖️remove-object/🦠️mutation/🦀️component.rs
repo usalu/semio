@@ -1,6 +1,6 @@
 //! ➖️ CAD mutation — `RemoveObject` payload + builder + apply.
 use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::{CadPaneId, CadProjection};
+use crate::artifacts::cad::{CadPaneId, CadSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,9 +16,9 @@ pub fn remove_object(pane: CadPaneId, object_id: String) -> CadMutation {
     CadMutation::RemoveObject { pane, object_id }
 }
 
-pub fn apply(projection: &mut CadProjection, pane: CadPaneId, object_id: &str) {
+pub fn apply(projection: &mut CadSnapshot, pane: CadPaneId, object_id: &str) {
     let mutation = CadMutation::RemoveObject { pane, object_id: object_id.into() };
-    let diff = <CadMutation as protocol::Mutation<CadProjection>>::diff(&mutation, projection);
-    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadProjection>>::apply(&diff, projection);
+    let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, projection);
+    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, projection);
 }
 //#endregion 🔖️Mutation

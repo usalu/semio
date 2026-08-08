@@ -7,7 +7,7 @@ use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{apply_component_selection, selection_keys_for, selection_targets_from_config};
 use crate::artifacts::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolyProjection;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -21,8 +21,8 @@ pub mod set_active_object {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &SetActiveObject, doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        if doc.projection.objects.iter().any(|object| object.id == payload.object_id) {
+    pub fn handle(payload: &SetActiveObject, doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        if doc.snapshot.objects.iter().any(|object| object.id == payload.object_id) {
             Ok(Emit::config(vec![LowpolyConfigMutation::SetActiveObject { object_id: payload.object_id.clone() }]))
         } else {
             Ok(Emit::default())
@@ -42,9 +42,9 @@ pub mod set_selection {
         pub ids: Vec<u32>,
     }
 
-    pub fn handle(payload: &SetSelection, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let normalized = LowpolyDocument::normalize_selection_mode(&payload.mode);
-        let keys = selection_keys_for(doc.projection, cfg.projection, &normalized, &payload.ids);
+        let keys = selection_keys_for(doc.snapshot, cfg.snapshot, &normalized, &payload.ids);
         Ok(Emit::config(vec![LowpolyConfigMutation::SetSelection { mode: normalized, ids: payload.ids.clone() }, LowpolyConfigMutation::SetSelectionKeys { keys }]))
     }
 }
@@ -60,8 +60,8 @@ pub mod toggle_selection_kind {
         pub kind: String,
     }
 
-    pub fn handle(payload: &ToggleSelectionKind, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let config = cfg.projection;
+    pub fn handle(payload: &ToggleSelectionKind, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        let config = cfg.snapshot;
         let mut targets = selection_targets_from_config(config);
         let enabled = match payload.kind.as_str() {
             "vertex" => {
@@ -105,8 +105,8 @@ pub mod toggle_selection_target {
         pub merge: String,
     }
 
-    pub fn handle(payload: &ToggleSelectionTarget, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let (projection, config) = (doc.projection, cfg.projection);
+    pub fn handle(payload: &ToggleSelectionTarget, doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        let (projection, config) = (doc.snapshot, cfg.snapshot);
         if !projection.objects.iter().any(|object| object.id == payload.object_id) {
             return Ok(Emit::default());
         }
@@ -131,7 +131,7 @@ pub mod set_active_paint_layer {
         pub layer_index: u32,
     }
 
-    pub fn handle(payload: &SetActivePaintLayer, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActivePaintLayer, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![LowpolyConfigMutation::SetActivePaintLayer { value: payload.layer_index }]))
     }
 }
@@ -147,7 +147,7 @@ pub mod set_selection_method {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![LowpolyConfigMutation::SetSelectionMethod { value: payload.value.clone() }]))
     }
 }
@@ -163,10 +163,10 @@ pub mod set_selection_mode_default {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetSelectionModeDefault, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelectionModeDefault, _doc: &DocumentView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let next = match payload.value.as_str() {
             "additive" | "subtractive" | "invertive" | "default" => payload.value.clone(),
-            _ => cfg.projection.selection_mode_default.clone(),
+            _ => cfg.snapshot.selection_mode_default.clone(),
         };
         Ok(Emit::config(vec![LowpolyConfigMutation::SetSelectionModeDefault { value: next }]))
     }

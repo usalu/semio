@@ -52,7 +52,7 @@ fn default_terminology() -> String {
 //#region 🔖️Config
 /// 🧮️ B1: puzzle2d's real `DocumentApp::Config`. `Puzzle2dConfig` is an alias for it (not a new
 /// type), mirroring `Puzzle3dConfig = Puzzle3dRuntime`, so every helper taking a
-/// `&Puzzle2dPlayRuntime` keeps working unchanged; every read comes from `cfg.projection`, every
+/// `&Puzzle2dPlayRuntime` keeps working unchanged; every read comes from `cfg.snapshot`, every
 /// write flows out as a `Puzzle2dConfigMutation` in the returned `Emit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

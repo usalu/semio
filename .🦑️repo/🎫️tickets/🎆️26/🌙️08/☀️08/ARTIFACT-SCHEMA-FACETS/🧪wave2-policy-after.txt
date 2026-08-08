@@ -1,0 +1,8 @@
+# After W2 via runPolicyScript → compose.json (and policyArtifactSchemaBreaches)
+total=1983
+artifactSchema=214
+facetCompleteness=162  # 54 artifacts × 3 missing facets
+packRelocation=52
+deltaArtifactSchema=+214
+budgetLineChurn=+4/-4  # no-budget-null id line shifts only
+beforeTotal=1769

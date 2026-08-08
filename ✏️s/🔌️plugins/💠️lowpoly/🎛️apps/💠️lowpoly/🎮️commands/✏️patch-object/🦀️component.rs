@@ -5,7 +5,7 @@
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::{LowpolyObjectPatch, LowpolyProjection};
+use crate::artifacts::lowpoly::{LowpolyObjectPatch, LowpolySnapshot};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -19,8 +19,8 @@ pub struct PatchObject {
     pub value_json: Option<String>,
 }
 
-pub fn handle(payload: &PatchObject, doc: &DocumentView<'_, LowpolyProjection>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-    let projection = doc.projection;
+pub fn handle(payload: &PatchObject, doc: &DocumentView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    let projection = doc.snapshot;
     let value = payload.value_json.as_deref().and_then(|json| serde_json::from_str::<Value>(json).ok());
     let Some(object) = projection.objects.iter().find(|object| object.id == payload.object_id) else { return Ok(Emit::default()) };
     let patch = match payload.field.as_str() {
@@ -45,9 +45,9 @@ mod tests {
     #[test]
     fn patch_object_name_emits_operation() {
         let mut a = app();
-        let object_id = a.projection().expect("projection").objects[0].id.clone();
+        let object_id = a.snapshot().expect("projection").objects[0].id.clone();
         dispatch(&mut a, LowpolyCommand::PatchObject(PatchObject { object_id, field: "name".into(), value_json: Some(serde_json::to_string("Renamed").unwrap()) }));
-        assert_eq!(a.projection().expect("projection").objects[0].name, "Renamed");
+        assert_eq!(a.snapshot().expect("projection").objects[0].name, "Renamed");
     }
 }
 //#endregion 🧪️Tests

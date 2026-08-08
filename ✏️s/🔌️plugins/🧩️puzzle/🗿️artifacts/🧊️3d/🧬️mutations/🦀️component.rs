@@ -12,8 +12,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::puzzle3d::diff::{puzzle3d_diff_absorb, puzzle3d_index_of, Puzzle3dDiff};
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
+use crate::artifacts::puzzle3d::diff::{puzzle3d_index_of, Puzzle3dDiff};
+use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dSnapshot, Puzzle3dReference, Puzzle3dTargetVolume};
 use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 
@@ -64,7 +64,7 @@ pub enum Puzzle3dMutation {
     #[dsl(key = "setDocument")]
     SetDocument {
         #[dsl(block)]
-        document: Puzzle3dProjection,
+        snapshot: Puzzle3dSnapshot,
     },
 }
 
@@ -72,31 +72,29 @@ pub enum Puzzle3dMutation {
 
 
 
-fn puzzle3d_mutation_diff(operation: &Puzzle3dMutation) -> Puzzle3dDiff {
-    let mut diff = Puzzle3dDiff::default();
+fn puzzle3d_mutation_diff(operation: &Puzzle3dMutation, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
     match operation {
-        Puzzle3dMutation::SetObject { index, object } => diff.objects.set.push((*index, object.clone())),
-        Puzzle3dMutation::RemoveObject { id } => diff.objects.removed.push(id.clone()),
-        Puzzle3dMutation::SetAttraction { index, attraction } => diff.attractions.set.push((*index, attraction.clone())),
-        Puzzle3dMutation::RemoveAttraction { id } => diff.attractions.removed.push(id.clone()),
-        Puzzle3dMutation::SetTargetVolume { index, target_volume } => diff.target_volumes.set.push((*index, target_volume.clone())),
-        Puzzle3dMutation::RemoveTargetVolume { id } => diff.target_volumes.removed.push(id.clone()),
-        Puzzle3dMutation::SetReference { index, reference } => diff.references.set.push((*index, reference.clone())),
-        Puzzle3dMutation::RemoveReference { id } => diff.references.removed.push(id.clone()),
-        Puzzle3dMutation::SetMeta { meta } => diff.meta = Some(meta.clone()),
-        Puzzle3dMutation::SetDocument { document } => diff.document = Some(document.clone()),
+        Puzzle3dMutation::SetObject { index, object } => crate::artifacts::puzzle3d::diff::diff_set_object(*index, object.clone(), base),
+        Puzzle3dMutation::RemoveObject { id } => crate::artifacts::puzzle3d::diff::diff_remove_object(id.clone()),
+        Puzzle3dMutation::SetAttraction { index, attraction } => crate::artifacts::puzzle3d::diff::diff_set_attraction(*index, attraction.clone(), base),
+        Puzzle3dMutation::RemoveAttraction { id } => crate::artifacts::puzzle3d::diff::diff_remove_attraction(id.clone()),
+        Puzzle3dMutation::SetTargetVolume { index, target_volume } => crate::artifacts::puzzle3d::diff::diff_set_target_volume(*index, target_volume.clone(), base),
+        Puzzle3dMutation::RemoveTargetVolume { id } => crate::artifacts::puzzle3d::diff::diff_remove_target_volume(id.clone()),
+        Puzzle3dMutation::SetReference { index, reference } => crate::artifacts::puzzle3d::diff::diff_set_reference(*index, reference.clone(), base),
+        Puzzle3dMutation::RemoveReference { id } => crate::artifacts::puzzle3d::diff::diff_remove_reference(id.clone()),
+        Puzzle3dMutation::SetMeta { meta } => crate::artifacts::puzzle3d::diff::diff_set_meta(meta.clone()),
+        Puzzle3dMutation::SetDocument { snapshot } => crate::artifacts::puzzle3d::diff::diff_set_snapshot(snapshot.clone()),
     }
-    diff
 }
 
-impl Mutation<Puzzle3dProjection> for Puzzle3dMutation {
+impl Mutation<Puzzle3dSnapshot> for Puzzle3dMutation {
     type Diff = Puzzle3dDiff;
 
-    fn diff(&self, _projection: &Puzzle3dProjection) -> Puzzle3dDiff {
-        puzzle3d_mutation_diff(self)
+    fn diff(&self, projection: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+        puzzle3d_mutation_diff(self, projection)
     }
 
-    fn inverse(&self, projection: &Puzzle3dProjection) -> Vec<Self> {
+    fn inverse(&self, projection: &Puzzle3dSnapshot) -> Vec<Self> {
         match self {
             Puzzle3dMutation::SetObject { object, .. } => match puzzle3d_index_of(&projection.objects, &object.id) {
                 Some(index) => vec![Puzzle3dMutation::SetObject { index, object: projection.objects[index].clone() }],
@@ -121,7 +119,7 @@ impl Mutation<Puzzle3dProjection> for Puzzle3dMutation {
             },
             Puzzle3dMutation::RemoveReference { id } => puzzle3d_index_of(&projection.references, id).map(|index| vec![Puzzle3dMutation::SetReference { index, reference: projection.references[index].clone() }]).unwrap_or_default(),
             Puzzle3dMutation::SetMeta { .. } => vec![Puzzle3dMutation::SetMeta { meta: projection.meta.clone() }],
-            Puzzle3dMutation::SetDocument { .. } => vec![Puzzle3dMutation::SetDocument { document: projection.clone() }],
+            Puzzle3dMutation::SetDocument { .. } => vec![Puzzle3dMutation::SetDocument { snapshot: projection.clone() }],
         }
     }
 }
@@ -174,7 +172,7 @@ fn apply_puzzle3d_operation_to_value(document: &mut serde_json::Value, operation
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(serde_json::Value::Null));
             }
         }
-        Puzzle3dMutation::SetDocument { document: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
+        Puzzle3dMutation::SetDocument { snapshot: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
     }
 }
 
@@ -188,54 +186,126 @@ fn puzzle3d_value_item_index<T: serde::de::DeserializeOwned>(document: &serde_js
     serde_json::from_value(items[index].clone()).ok().map(|item| (index, item))
 }
 
+fn puzzle3d_reorder_value_collection(document: &mut serde_json::Value, collection: &str, order: &[String]) {
+    let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) else {
+        return;
+    };
+    let mut by_id: std::collections::BTreeMap<String, serde_json::Value> = std::collections::BTreeMap::new();
+    for item in array.drain(..) {
+        if let Some(id) = puzzle3d_value_item_id(&item).map(str::to_string) {
+            by_id.insert(id, item);
+        }
+    }
+    let mut ordered = Vec::with_capacity(order.len());
+    for id in order {
+        if let Some(item) = by_id.remove(id) {
+            ordered.push(item);
+        }
+    }
+    ordered.extend(by_id.into_values());
+    *array = ordered;
+}
+
 impl MutationDiff<serde_json::Value> for Puzzle3dDiff {
     fn apply(&self, projection: &serde_json::Value) -> serde_json::Value {
-        if let Some(document) = &self.document {
-            return serde_json::to_value(document).unwrap_or_else(|_| projection.clone());
+        if let Some(artifact) = &self.artifact {
+            // Preserve play-Value shape: only serialize the snapshot fields the caller already uses.
+            return serde_json::to_value(artifact.to_snapshot()).unwrap_or_else(|_| projection.clone());
         }
         let mut next = projection.clone();
-        for id in &self.objects.removed {
-            puzzle3d_remove_value_item(&mut next, "objects", id);
+        if let Some(delta) = &self.objects {
+            for id in &delta.removed {
+                puzzle3d_remove_value_item(&mut next, "objects", id);
+            }
+            for object in &delta.added {
+                puzzle3d_upsert_value_item(&mut next, "objects", usize::MAX, serde_json::to_value(object).unwrap_or(serde_json::Value::Null));
+            }
+            for entry in &delta.patched {
+                if let Some(object) = &entry.patch.replacement {
+                    puzzle3d_upsert_value_item(&mut next, "objects", usize::MAX, serde_json::to_value(object).unwrap_or(serde_json::Value::Null));
+                }
+            }
+            if let Some(order) = &delta.reordered {
+                puzzle3d_reorder_value_collection(&mut next, "objects", order);
+            }
         }
-        for (index, object) in &self.objects.set {
-            puzzle3d_upsert_value_item(&mut next, "objects", *index, serde_json::to_value(object).unwrap_or(serde_json::Value::Null));
+        if let Some(delta) = &self.attractions {
+            for id in &delta.removed {
+                puzzle3d_remove_value_item(&mut next, "attractions", id);
+            }
+            for attraction in &delta.added {
+                puzzle3d_upsert_value_item(&mut next, "attractions", usize::MAX, serde_json::to_value(attraction).unwrap_or(serde_json::Value::Null));
+            }
+            for entry in &delta.patched {
+                if let Some(attraction) = &entry.patch.replacement {
+                    puzzle3d_upsert_value_item(&mut next, "attractions", usize::MAX, serde_json::to_value(attraction).unwrap_or(serde_json::Value::Null));
+                }
+            }
+            if let Some(order) = &delta.reordered {
+                puzzle3d_reorder_value_collection(&mut next, "attractions", order);
+            }
         }
-        for id in &self.attractions.removed {
-            puzzle3d_remove_value_item(&mut next, "attractions", id);
+        if let Some(delta) = &self.target_volumes {
+            for id in &delta.removed {
+                puzzle3d_remove_value_item(&mut next, "targetVolumes", id);
+            }
+            for volume in &delta.added {
+                puzzle3d_upsert_value_item(&mut next, "targetVolumes", usize::MAX, serde_json::to_value(volume).unwrap_or(serde_json::Value::Null));
+            }
+            for entry in &delta.patched {
+                if let Some(volume) = &entry.patch.replacement {
+                    puzzle3d_upsert_value_item(&mut next, "targetVolumes", usize::MAX, serde_json::to_value(volume).unwrap_or(serde_json::Value::Null));
+                }
+            }
+            if let Some(order) = &delta.reordered {
+                puzzle3d_reorder_value_collection(&mut next, "targetVolumes", order);
+            }
         }
-        for (index, attraction) in &self.attractions.set {
-            puzzle3d_upsert_value_item(&mut next, "attractions", *index, serde_json::to_value(attraction).unwrap_or(serde_json::Value::Null));
-        }
-        for id in &self.target_volumes.removed {
-            puzzle3d_remove_value_item(&mut next, "targetVolumes", id);
-        }
-        for (index, target_volume) in &self.target_volumes.set {
-            puzzle3d_upsert_value_item(&mut next, "targetVolumes", *index, serde_json::to_value(target_volume).unwrap_or(serde_json::Value::Null));
-        }
-        for id in &self.references.removed {
-            puzzle3d_remove_value_item(&mut next, "references", id);
-        }
-        for (index, reference) in &self.references.set {
-            puzzle3d_upsert_value_item(&mut next, "references", *index, serde_json::to_value(reference).unwrap_or(serde_json::Value::Null));
+        if let Some(delta) = &self.references {
+            for id in &delta.removed {
+                puzzle3d_remove_value_item(&mut next, "references", id);
+            }
+            for reference in &delta.added {
+                puzzle3d_upsert_value_item(&mut next, "references", usize::MAX, serde_json::to_value(reference).unwrap_or(serde_json::Value::Null));
+            }
+            for entry in &delta.patched {
+                if let Some(reference) = &entry.patch.replacement {
+                    puzzle3d_upsert_value_item(&mut next, "references", usize::MAX, serde_json::to_value(reference).unwrap_or(serde_json::Value::Null));
+                }
+            }
+            if let Some(order) = &delta.reordered {
+                puzzle3d_reorder_value_collection(&mut next, "references", order);
+            }
         }
         if let Some(meta) = &self.meta {
             if let Some(object) = next.as_object_mut() {
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(serde_json::Value::Null));
             }
         }
+        if let Some(schema) = &self.schema {
+            if let Some(object) = next.as_object_mut() {
+                object.insert("schema".to_string(), serde_json::Value::String(schema.clone()));
+            }
+        }
+        if let Some(domain) = &self.domain {
+            if let Some(object) = next.as_object_mut() {
+                object.insert("domain".to_string(), serde_json::Value::String(domain.clone()));
+            }
+        }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        puzzle3d_diff_absorb(self, other);
+        MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
     }
 }
 
 impl Mutation<serde_json::Value> for Puzzle3dMutation {
     type Diff = Puzzle3dDiff;
 
-    fn diff(&self, _projection: &serde_json::Value) -> Puzzle3dDiff {
-        puzzle3d_mutation_diff(self)
+    fn diff(&self, projection: &serde_json::Value) -> Puzzle3dDiff {
+        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        puzzle3d_mutation_diff(self, &base)
     }
 
     fn inverse(&self, projection: &serde_json::Value) -> Vec<Self> {
@@ -268,7 +338,7 @@ impl Mutation<serde_json::Value> for Puzzle3dMutation {
                 let meta: Puzzle3dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 vec![Puzzle3dMutation::SetMeta { meta }]
             }
-            Puzzle3dMutation::SetDocument { .. } => vec![Puzzle3dMutation::SetDocument { document: serde_json::from_value(projection.clone()).unwrap_or_default() }],
+            Puzzle3dMutation::SetDocument { .. } => vec![Puzzle3dMutation::SetDocument { snapshot: serde_json::from_value(projection.clone()).unwrap_or_default() }],
         }
     }
 }
@@ -312,7 +382,9 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
     if before == after {
         return Vec::new();
     }
-    let fallback = |after: &serde_json::Value| vec![Puzzle3dMutation::SetDocument { document: serde_json::from_value(after.clone()).unwrap_or_default() }];
+    let fallback = |after: &serde_json::Value| {
+        vec![Puzzle3dMutation::SetDocument { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }]
+    };
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
         return fallback(after);
     };
@@ -359,7 +431,10 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
     for operation in &operations {
         apply_puzzle3d_operation_to_value(&mut replay, operation);
     }
-    if &replay == after {
+    let normalize = |value: &serde_json::Value| {
+        serde_json::to_value(serde_json::from_value::<Puzzle3dSnapshot>(value.clone()).unwrap_or_default()).unwrap_or_else(|_| value.clone())
+    };
+    if normalize(&replay) == normalize(after) {
         operations
     } else {
         fallback(after)
@@ -367,7 +442,7 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
 }
 
 //#region 🔖️PlayProjection
-/// 🌱️ `Puzzle3dPlayApp` predates the typed `Puzzle3dProjection` above and stays on this ad-hoc
+/// 🌱️ `Puzzle3dPlayApp` predates the typed `Puzzle3dSnapshot` above and stays on this ad-hoc
 /// `serde_json::Value` fixture shape for its scene-mutation helpers. This newtype exists only to
 /// satisfy `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack` post the repo-wide
 /// `store::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax convergence gate);
@@ -413,7 +488,7 @@ impl MutationDiff<Puzzle3dPlayProjection> for Puzzle3dDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        puzzle3d_diff_absorb(self, other);
+        MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
     }
 }
 
@@ -506,10 +581,10 @@ mod tests {
 //#endregion 🧪️Tests
 
 
-pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dProjection, mutation: &Puzzle3dMutation) {
+pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) {
     *projection = vcs::apply_mutation(projection, mutation);
 }
 
-pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dProjection, mutation: &Puzzle3dMutation) -> Vec<Puzzle3dMutation> {
+pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> Vec<Puzzle3dMutation> {
     mutation.inverse(projection)
 }

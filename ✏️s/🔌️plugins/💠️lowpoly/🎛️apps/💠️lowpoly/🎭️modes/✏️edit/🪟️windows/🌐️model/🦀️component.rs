@@ -31,10 +31,10 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::artifacts::lowpoly::engine::default_projection();
+    let projection = crate::artifacts::lowpoly::engine::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
-    let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
+    let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
     WindowKindDefinition {
         id: LOWPOLY_PLAY_WINDOW_MAIN.into(),
         label: semio_framework_plugin::LocalizedLabel::native("Model", "Modell"),
@@ -64,22 +64,22 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 //#region 🔖️Scene
 fn gumball_target_world(doc: &LowpolyDocument, view: LowpolyView<'_>) -> Option<[f64; 3]> {
     let pivot = doc.selection_transform_pivot().ok()?;
-    let active = resolve_active_object_id(view.projection, view.config);
-    let object = view.projection.objects.iter().find(|entry| entry.id == active)?;
+    let active = resolve_active_object_id(view.snapshot, view.config);
+    let object = view.snapshot.objects.iter().find(|entry| entry.id == active)?;
     let position = &object.transform.position;
     Some([position[0] as f64 + pivot.x() as f64, position[1] as f64 + pivot.y() as f64, position[2] as f64 + pivot.z() as f64])
 }
 
 fn gumball_active(view: LowpolyView<'_>) -> bool {
     let config = view.config;
-    let active = resolve_active_object_id(view.projection, config);
+    let active = resolve_active_object_id(view.snapshot, config);
     !config.selection_ids.is_empty() || (config.selection_targets_mesh && config.selected_object_ids.iter().any(|id| id == &active))
 }
 
 fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str, doc: Option<&LowpolyDocument>) -> String {
     use crate::apps::lowpoly::view::selection_targets_from_config;
     let config = view.config;
-    let active = resolve_active_object_id(view.projection, config);
+    let active = resolve_active_object_id(view.snapshot, config);
     let mut value: Value = serde_json::from_str(&world3d_selection_json(&config.selection_method, &config.selected_object_ids, config.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!(config.selection_mode));
@@ -124,7 +124,7 @@ fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, Stri
 fn world_instances_json(view: LowpolyView<'_>) -> String {
     let config = view.config;
     let instances: Vec<Value> = view
-        .projection
+        .snapshot
         .objects
         .iter()
         .enumerate()

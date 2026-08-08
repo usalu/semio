@@ -51,7 +51,7 @@ impl protocol::OpBinary for LowpolyMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::engine::default_projection;
+    use crate::artifacts::lowpoly::engine::default_snapshot;
     use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer};
 
     fn tiny_mesh_json() -> String {
@@ -120,8 +120,8 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trip_set_projection() {
-        let mutation = LowpolyMutation::SetProjection { projection: default_projection() };
+    fn op_text_round_trip_set_snapshot() {
+        let mutation = LowpolyMutation::SetSnapshot { snapshot: default_snapshot() };
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&mutation);
     }
 

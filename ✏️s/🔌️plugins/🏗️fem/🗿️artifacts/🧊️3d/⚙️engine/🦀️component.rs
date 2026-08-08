@@ -8,7 +8,7 @@
 //! lives in `🕸️meshing`, modal/buckling in `🎵️modal-buckling`, mesh preview + nodal stress in
 //! `🗺️mesh-preview`.
 
-use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
 use crate::model::{Dof};
 use crate::analyses;
 use serde_json::{json, Value};
@@ -20,15 +20,30 @@ use std::collections::HashMap;
 use crate::artifacts::fem3d::engine::{mesh_preview, meshing};
 
 // #region 🔖️Register
-/// 🗂️ Registers `Fem3dDocument`'s pack↔dsl codec under `FEM_3D_SCHEMA` so `framework/sync`'s
+/// 🗂️ Registers `Fem3dSnapshot`'s pack↔dsl codec under `FEM_3D_SCHEMA` so `framework/sync`'s
 /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse fem3d documents without
 /// depending on its concrete `Projection`/`Mutation` types. Reached from the plugin root's
 /// `semio_plugin!{ setup: … }` via `crate::model::register_all_engines`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
+    
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem3d::Fem3dPlayApp>(crate::artifacts::fem3d::FEM_3D_SCHEMA);
 }
 
+
+
+static FEM3D_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the fem3d artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = FEM3D_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::fem3d::schema::fem3d_artifact_schema_descriptor());
+}
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
@@ -63,24 +78,24 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("fem.fem3d.diff"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "3d.pack",
+        id: "fem3d.pack",
         extension: None,
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::fem3d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::fem3d::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("3d.pack"),
+        protocol: Some(crate::artifacts::fem3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("fem3d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "3d.spr",
+        id: "fem3d.spr",
         extension: None,
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::artifacts::fem3d::spr::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::fem3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("3d.spr"),
+        hooks: dsl::passthrough_hooks("fem3d.spr"),
     });
 }
 
@@ -88,12 +103,12 @@ pub fn register_pilot_languages() {
 
 // #endregion 🔖️Register
 
-pub fn empty_fem3d_projection() -> Fem3dDocument {
-    Fem3dDocument::default()
+pub fn empty_fem3d_snapshot() -> Fem3dSnapshot {
+    Fem3dSnapshot::default()
 }
 
 // #region 🔖️Errors
-/// ⚠️ Everything that can go wrong resolving or solving a `Fem3dDocument`.
+/// ⚠️ Everything that can go wrong resolving or solving a `Fem3dSnapshot`.
 #[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum Fem3dError {
     #[error("material not found: {0}")]
@@ -163,9 +178,9 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 // #endregion 🔖️Io
 
 // #region 🔖️Bridge
-/// 🌉️ Resolves a `Fem3dDocument` load case into a `crate::model::Model`: nodes, `Bar3`/`Frame3`/`Tet4`
+/// 🌉️ Resolves a `Fem3dSnapshot` load case into a `crate::model::Model`: nodes, `Bar3`/`Frame3`/`Tet4`
 /// elements (materials/sections looked up by id), supports, and the named load case's translated loads.
-pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<crate::model::Model, Fem3dError> {
+pub fn build_model(doc: &Fem3dSnapshot, case_id: &str) -> Result<crate::model::Model, Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     let (nodal_loads, member_loads) = meshing::translate_loads(&case.loads, &solids)?;
@@ -174,7 +189,7 @@ pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<crate::model::M
 
 /// 🚀️ Frozen entry point: builds the model for `case_id` and runs `crate::model::solve_linear_static`.
 /// Consumed directly by `fem-plugin`; do not rename or change this signature.
-pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<crate::model::StaticResult, String> {
+pub fn fem3d_solve(doc: &Fem3dSnapshot, case_id: &str) -> Result<crate::model::StaticResult, String> {
     let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
     crate::model::solve_linear_static(&model).map_err(|e| e.to_string())
 }
@@ -184,7 +199,7 @@ pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<crate::model::S
 /// `crate::analyses::solve_multi_case` (self-weight honored via `doc.materials`' `rho`, gravity
 /// fixed at `[0.0, 0.0, -9.81]` — this crate is Z-up, per `FemNode`'s `{x,y,z}` fields and the existing
 /// cantilever test's `Dof::Tz` tip load). Returns results keyed by case id ∪ combination id.
-pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, crate::model::StaticResult>, Fem3dError> {
+pub fn fem3d_solve_all(doc: &Fem3dSnapshot) -> Result<HashMap<String, crate::model::StaticResult>, Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     let mut cases = Vec::with_capacity(doc.load_cases.len());
@@ -266,7 +281,7 @@ fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&s
 /// at the (possibly deformed) midpoint, `scale=[t,t,length]` so the mesh's own long (local Z) axis
 /// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
 /// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
-fn fem3d_structural_instances(doc: &Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
+fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
     let node_pos = |node: &crate::artifacts::fem3d::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
 
     let mut instances: Vec<Value> = Vec::new();
@@ -314,7 +329,7 @@ fn fem3d_structural_instances(doc: &Fem3dDocument, displacements: Option<&HashMa
 /// solids' averaged values), driving the react renderer's vertex-color contour (see
 /// `PaintTexturedMesh`). `displacements` deforms vertex positions the same way
 /// `fem3d_structural_instances` deforms node/member instances.
-fn fem3d_solid_mesh_entries(doc: &Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
+fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
     use crate::app_surface::{hex_to_rgb01, von_mises_color};
 
     let mut meshes = Vec::new();
@@ -372,7 +387,7 @@ fn fem3d_solid_mesh_entries(doc: &Fem3dDocument, displacements: Option<&HashMap<
 /// 🧊️ Builds the FULL `(meshes_json, instances_json)` pair for a 3D scene: the `"box"` primitive mesh
 /// plus every `FemSolid`'s custom surface mesh, and every node/member/solid instance — shared by the
 /// model window and every results view (static/modal/buckling).
-pub fn fem3d_scene_parts(doc: &Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
+pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
     let mut meshes: Vec<Value> = serde_json::from_str(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()])).unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
     let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
@@ -431,7 +446,7 @@ mod tests {
     // #endregion 🔖️Io
 
     // #region 🔖️Fixtures
-    fn cantilever_fixture() -> (Fem3dDocument, f64, f64, f64, f64, f64) {
+    fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
         let e = 210e9;
         let g = 80.77e9;
         let a = 0.00538;
@@ -440,7 +455,7 @@ mod tests {
         let j = 0.00000060;
         let l = 3.0;
         let p = 5000.0;
-        let doc = Fem3dDocument {
+        let doc = Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
             materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
@@ -456,8 +471,8 @@ mod tests {
 
     /// 🔺️ A free 3D joint needs at least 3 non-coplanar bars to be kinematically determinate — two
     /// bars only span a plane, leaving one direction with zero stiffness (a mechanism). Hence n4/b3.
-    fn truss_fixture() -> Fem3dDocument {
-        Fem3dDocument {
+    fn truss_fixture() -> Fem3dSnapshot {
+        Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
             elements: vec![
                 FemElement::Bar { id: "b1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
@@ -481,8 +496,8 @@ mod tests {
     /// 🧱️ A 2m x 1m x 0.5m slab footprint at the origin, meshed at `mesh_size`, with all 4 footprint
     /// corners as pre-placed document nodes fully fixed in translation (`Tet4` has no rotational DOF) —
     /// mirrors `fem_2d`'s `rectangle_region_doc` fixture pattern for `FemSolid`.
-    fn solid_slab_doc() -> Fem3dDocument {
-        Fem3dDocument {
+    fn solid_slab_doc() -> Fem3dSnapshot {
+        Fem3dSnapshot {
             nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
             materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
@@ -685,7 +700,7 @@ mod tests {
     /// (`mesh_preview.rs`) and `fem3d_buckling` (`modal_buckling.rs`) together.
     #[test]
     fn example_fixture_parses() {
-        let doc: Fem3dDocument = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
+        let doc: Fem3dSnapshot = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
         assert_eq!(doc.nodes.len(), 16);
         assert_eq!(doc.elements.len(), 16);
         assert_eq!(doc.solids.len(), 1);
@@ -736,7 +751,7 @@ mod tests {
 
     #[test]
     fn fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances() {
-        let doc: Fem3dDocument = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
+        let doc: Fem3dSnapshot = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
         let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None);
         assert!(meshes_json.contains("solid-sol1"), "expected a solid- mesh id for the example fixture's solid: {meshes_json}");
         assert!(instances_json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {instances_json}");
@@ -748,32 +763,42 @@ mod tests {
 
 //#region 🔖️ArtifactEngine
 pub struct Fem3dEngine {
-    projection: crate::artifacts::fem3d::Fem3dDocument,
+    artifact: crate::artifacts::fem3d::schema::Fem3dArtifact,
+    snapshot: crate::artifacts::fem3d::Fem3dSnapshot,
 }
 
 impl Fem3dEngine {
-    pub fn new(projection: crate::artifacts::fem3d::Fem3dDocument) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::fem3d::Fem3dSnapshot) -> Self {
+        Self {
+            artifact: crate::artifacts::fem3d::schema::Fem3dArtifact::from_snapshot(snapshot.clone()),
+            snapshot,
+        }
     }
 }
 
 impl protocol::ArtifactEngine for Fem3dEngine {
-    type Projection = crate::artifacts::fem3d::Fem3dDocument;
+    type Artifact = crate::artifacts::fem3d::schema::Fem3dArtifact;
+    type Snapshot = crate::artifacts::fem3d::Fem3dSnapshot;
     type Mutation = crate::artifacts::fem3d::mutations::Fem3dMutation;
     type Diff = crate::artifacts::fem3d::diff::Fem3dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::fem3d::mutations::apply_fem3d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::fem3d::mutations::apply_fem3d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

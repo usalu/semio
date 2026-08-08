@@ -90,7 +90,7 @@
                 "label": "Line",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -106,7 +106,7 @@
                     }
                   },
                   {
-                    "operation": "interaction.call",
+                    "mutation": "interaction.call",
                     "interaction": "curve.line",
                     "outputs": [
                       {
@@ -250,7 +250,7 @@
                 "label": "Polyline",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -266,7 +266,7 @@
                     }
                   },
                   {
-                    "operation": "interaction.call",
+                    "mutation": "interaction.call",
                     "interaction": "curve.polyline",
                     "outputs": [
                       {
@@ -410,7 +410,7 @@
                 "label": "Arc",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -426,7 +426,7 @@
                     }
                   },
                   {
-                    "operation": "interaction.call",
+                    "mutation": "interaction.call",
                     "interaction": "curve.arc",
                     "outputs": [
                       {
@@ -570,7 +570,7 @@
                 "label": "Circle",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -586,7 +586,7 @@
                     }
                   },
                   {
-                    "operation": "interaction.call",
+                    "mutation": "interaction.call",
                     "interaction": "curve.circle",
                     "outputs": [
                       {
@@ -730,7 +730,7 @@
                 "label": "Interpolate",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -746,7 +746,7 @@
                     }
                   },
                   {
-                    "operation": "interaction.call",
+                    "mutation": "interaction.call",
                     "interaction": "curve.interpolateCurve",
                     "outputs": [
                       {
@@ -890,7 +890,7 @@
                 "label": "Pick wires (loft)",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -928,7 +928,7 @@
                 "label": "Add",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addSelection",
                     "params": {
                       "field": {

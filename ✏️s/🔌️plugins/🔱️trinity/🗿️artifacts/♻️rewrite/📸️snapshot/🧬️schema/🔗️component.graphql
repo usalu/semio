@@ -1,0 +1,24 @@
+# 🧬️ Rewrite snapshot schema — persistent fields only.
+
+type RewriteSnapshot {
+  beforeFixtureJson: String! @state(class: PERSISTENT)
+  lhsJson: String! @state(class: PERSISTENT)
+  rhsJson: String! @state(class: PERSISTENT)
+  parameterBindings: [PropertyValueEntry!]! @state(class: PERSISTENT)
+  ruleLayout: [LayoutPointEntry!]! @state(class: PERSISTENT)
+}
+
+type PropertyValueEntry {
+  key: String!
+  value: String!
+}
+
+type LayoutPointEntry {
+  key: String!
+  value: LayoutPoint!
+}
+
+type LayoutPoint {
+  x: Float!
+  y: Float!
+}

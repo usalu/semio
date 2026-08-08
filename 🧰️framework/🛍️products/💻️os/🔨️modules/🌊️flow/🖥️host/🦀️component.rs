@@ -1769,7 +1769,7 @@ impl FlowHost {
     fn commit_gesture_history(&mut self) {
         if self.gesture_active {
             self.gesture_active = false;
-            let committed = self.history_store.projection().unwrap_or_else(|_| self.fixture.clone());
+            let committed = self.history_store.snapshot().unwrap_or_else(|_| self.fixture.clone());
             if Self::content_changed(&committed, &self.fixture) {
                 let _ = self.history_store.dispatch(DocumentCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
             }
@@ -1783,7 +1783,7 @@ impl FlowHost {
         if self.history_store.dispatch(DocumentCommand::Undo).is_err() {
             return false;
         }
-        let Ok(mut restored) = self.history_store.projection() else {
+        let Ok(mut restored) = self.history_store.snapshot() else {
             return false;
         };
         restored.camera = camera;
@@ -1798,7 +1798,7 @@ impl FlowHost {
         if self.history_store.dispatch(DocumentCommand::Redo).is_err() {
             return false;
         }
-        let Ok(mut restored) = self.history_store.projection() else {
+        let Ok(mut restored) = self.history_store.snapshot() else {
             return false;
         };
         restored.camera = camera;
@@ -2996,15 +2996,15 @@ mod tests {
         let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
         let mut store = FlowStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { mutations, description: None }).expect("apply add-widget operations");
-        assert_eq!(store.projection().expect("projection").widgets.len(), count_before + 1);
+        assert_eq!(store.snapshot().expect("projection").widgets.len(), count_before + 1);
 
         store.dispatch(DocumentCommand::Undo).expect("undo");
-        let after_undo = store.projection().expect("projection");
+        let after_undo = store.snapshot().expect("projection");
         assert_eq!(after_undo.widgets.len(), count_before);
         assert!(!after_undo.widgets.iter().any(|w| widget_id_for(w) == id));
 
         store.dispatch(DocumentCommand::Redo).expect("redo");
-        let after_redo = store.projection().expect("projection");
+        let after_redo = store.snapshot().expect("projection");
         assert!(after_redo.widgets.iter().any(|w| widget_id_for(w) == id));
     }
 

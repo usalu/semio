@@ -34,7 +34,7 @@ pub struct SchemaId(pub String);
 #[serde(transparent)]
 pub struct SchemaVersion(pub u32);
 
-/// @emoji #⃣ A blake3 content hash over an operation/projection payload.
+/// @emoji #⃣ A blake3 content hash over an operation/snapshot payload.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 pub struct PayloadHash(pub [u8; 32]);

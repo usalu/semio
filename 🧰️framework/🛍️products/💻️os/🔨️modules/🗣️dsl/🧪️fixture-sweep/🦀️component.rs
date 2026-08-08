@@ -81,7 +81,7 @@ mod tests {
     use sequence::artifacts::sequence::SequenceFixture;
     use shooting::artifacts::shooting::ShootingFixture;
     use sourcing::artifacts::curate::CurateDocument;
-    use space::{CollectionProjection, SpaceProjection};
+    use space::{CollectionSnapshot, SpaceSnapshot};
     use trinity::artifacts::jack::GraphFixture;
     use vcs_app::artifacts::vcs::VcsDemoProjection;
     use norm::artifacts::vdi3805::Document as Vdi3805Document;
@@ -151,8 +151,8 @@ mod tests {
             // registered here under the file's real suffix too since `parse_dsl`/`print_dsl` only
             // care about the grammar's field shape, never the extension string.
             ("forms", "forms", crate::os_store::test_support::check_dsl_fixture_text_laws::<FormSpec>),
-            ("space", <SpaceProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SpaceProjection>),
-            ("space", <CollectionProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CollectionProjection>),
+            ("space", <SpaceSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SpaceSnapshot>),
+            ("space", <CollectionSnapshot as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CollectionSnapshot>),
         ]
     }
     //#endregion 🔖️Registry

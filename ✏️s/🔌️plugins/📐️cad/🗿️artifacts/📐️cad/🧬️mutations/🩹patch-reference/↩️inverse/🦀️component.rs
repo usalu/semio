@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `PatchReference`.
 use crate::artifacts::cad::mutations::{reverse_reference_patch, CadMutation, CadReferencePatch};
-use crate::artifacts::cad::CadProjection;
+use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(base: &CadProjection, model_definition_id: &str, reference_id: &str, patch: &CadReferencePatch) -> Vec<CadMutation> {
+pub fn inverse(base: &CadSnapshot, model_definition_id: &str, reference_id: &str, patch: &CadReferencePatch) -> Vec<CadMutation> {
     base.references_by_model_definition_id
         .get(model_definition_id)
         .and_then(|references| {

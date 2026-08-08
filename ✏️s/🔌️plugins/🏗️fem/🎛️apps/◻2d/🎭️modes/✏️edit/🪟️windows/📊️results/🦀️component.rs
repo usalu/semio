@@ -4,7 +4,7 @@
 use crate::apps::fem2d::modes::edit::windows::model::{
     fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D,
 };
-use crate::artifacts::fem2d::{element_id, Fem2dDocument, FemCamera};
+use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera};
 use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use crate::model::ElementResult;
 use semio_framework_plugin::{build_canvas_2d_scene, ui_text, Canvas2dScene, Label, UiNode};
@@ -115,7 +115,7 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
 
 //#region 🔖️Render
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem2dDocument, display: &ResultDisplay, camera: &FemCamera) -> UiNode {
+pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> UiNode {
     match display.mode {
         DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera),
         DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera),
@@ -128,7 +128,7 @@ pub fn render(doc: &Fem2dDocument, display: &ResultDisplay, camera: &FemCamera) 
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn render_static(doc: &Fem2dDocument, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
+fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
     let results = match crate::artifacts::fem2d::engine::fem2d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return ui_text(Label::data(format!("Analysis error: {e}"))),
@@ -231,7 +231,7 @@ fn render_static(doc: &Fem2dDocument, source_id: Option<&str>, camera: &FemCamer
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-fn render_modal(doc: &Fem2dDocument, mode_index: usize, camera: &FemCamera) -> UiNode {
+fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
     let (freq_hz, mut disp_map) = match crate::artifacts::fem2d::engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(Label::data(format!("Modal analysis error: {e}"))),
@@ -252,7 +252,7 @@ fn render_modal(doc: &Fem2dDocument, mode_index: usize, camera: &FemCamera) -> U
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-fn render_buckling(doc: &Fem2dDocument, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
+fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text(Label::data("No load case defined"));
     };
@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
-        let doc = crate::artifacts::fem2d::engine::empty_fem2d_projection();
+        let doc = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
         let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
         let camera = FemCamera::default();
         let json = serde_json::to_string(&render(&doc, &display, &camera)).unwrap();

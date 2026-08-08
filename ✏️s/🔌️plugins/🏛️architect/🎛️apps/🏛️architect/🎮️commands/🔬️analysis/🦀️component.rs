@@ -5,7 +5,7 @@ pub mod run_validation {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::validate::validate_plugin;
     use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::Program;
+    use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -13,9 +13,9 @@ pub mod run_validation {
     #[dsl(keyword = "run-validation")]
     pub struct RunValidation {}
 
-    pub fn handle(_payload: &RunValidation, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let diagnostics = validate_plugin(doc.projection);
-        let mut next = cfg.projection.clone();
+    pub fn handle(_payload: &RunValidation, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        let diagnostics = validate_plugin(doc.snapshot);
+        let mut next = cfg.snapshot.clone();
         next.last_result_json = serde_json::to_string_pretty(&diagnostics).unwrap_or_else(|_| "{}".into());
         Ok(Emit::config(snapshot(next)))
     }
@@ -26,7 +26,7 @@ pub mod run_analysis {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::analyze::run_analysis;
     use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::Program;
+    use crate::artifacts::program::ProgramSnapshot;
     use protocol::CollectionMutation;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -37,12 +37,12 @@ pub mod run_analysis {
         pub analysis_kind: String,
     }
 
-    pub fn handle(payload: &RunAnalysis, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let program = doc.projection;
+    pub fn handle(payload: &RunAnalysis, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        let program = doc.snapshot;
         let kind = analysis_kind_from_str(&payload.analysis_kind);
         let result = run_analysis(program, kind);
         let record = analysis_record_from(program, kind, &result);
-        let mut next = cfg.projection.clone();
+        let mut next = cfg.snapshot.clone();
         let result_json = serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".into());
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
@@ -59,7 +59,7 @@ pub mod run_report {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::engine::report::build_report;
     use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::Program;
+    use crate::artifacts::program::ProgramSnapshot;
     use protocol::CollectionMutation;
     use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -70,12 +70,12 @@ pub mod run_report {
         pub report_kind: String,
     }
 
-    pub fn handle(payload: &RunReport, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let program = doc.projection;
+    pub fn handle(payload: &RunReport, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        let program = doc.snapshot;
         let kind = report_kind_from_str(&payload.report_kind);
         let report = build_report(program, kind);
         let record = report_record_from(program, kind, &report);
-        let mut next = cfg.projection.clone();
+        let mut next = cfg.snapshot.clone();
         next.active_report_json = serde_json::to_string(&report).unwrap_or_else(|_| "{}".into());
         next.last_result_json = serde_json::to_string_pretty(&report).unwrap_or_else(|_| "{}".into());
         Ok(Emit {

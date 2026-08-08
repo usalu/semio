@@ -3,7 +3,7 @@
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::engine::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dMutation};
-use crate::artifacts::procedural3d::Procedural3dDocument;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{FlowEvalSession, Widget};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,9 +17,9 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
-        let selected = cfg.projection.selected_node_ids.clone();
+    pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
+        let selected = cfg.snapshot.selected_node_ids.clone();
         let mut host = host_from_fixture(fixture);
         let mut cleared = false;
         for id in &selected {
@@ -44,13 +44,13 @@ pub mod remove_widget {
         pub widget_id: String,
     }
 
-    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(payload: &RemoveWidget, doc: &DocumentView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         let target_id = &payload.widget_id;
         let mut host = host_from_fixture(fixture);
         if host.remove_widget(target_id).is_ok() {
             let operations = commit_fixture(fixture, &host.fixture);
-            let mut remaining = cfg.projection.selected_node_ids.clone();
+            let mut remaining = cfg.snapshot.selected_node_ids.clone();
             remaining.retain(|id| id != target_id);
             Ok(Emit { document_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: remaining }], ..Default::default() })
         } else {
@@ -72,8 +72,8 @@ pub mod add_widget {
         pub y: Option<f64>,
     }
 
-    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(payload: &AddWidget, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         let descriptor = if let Some((base, neuron)) = payload.kind.split_once('|') {
             if base == "neuron" {
                 json!({ "kind": "neuron", "neuronKind": neuron }).to_string()
@@ -108,8 +108,8 @@ pub mod patch_flow_widgets {
         pub value: Option<f64>,
     }
 
-    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-        let fixture = &doc.projection.fixture;
+    pub fn handle(payload: &PatchFlowWidgets, doc: &DocumentView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+        let fixture = &doc.snapshot.fixture;
         let mut host = host_from_fixture(fixture);
         let baseline = host.fixture.clone();
         for widget in host.fixture.widgets.iter_mut() {
@@ -138,9 +138,9 @@ mod tests {
     fn add_widget_action_appends_widget() {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        let before = app.projection().expect("projection").fixture.widgets.len();
+        let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         dispatch(&mut app, Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }));
-        assert!(app.projection().expect("projection").fixture.widgets.len() > before);
+        assert!(app.snapshot().expect("snapshot").fixture.widgets.len() > before);
     }
 
     #[test]
@@ -148,7 +148,7 @@ mod tests {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
-        let value = app.projection().expect("projection").fixture.widgets.iter().find_map(|widget| match widget {
+        let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == "height" => Some(*value),
             _ => None,
         });
@@ -159,9 +159,9 @@ mod tests {
     fn remove_widget_action_deletes_by_id() {
         let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        assert!(app.projection().expect("projection").fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget) == "sides"));
+        assert!(app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget) == "sides"));
         dispatch(&mut app, Procedural3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "sides".into() }));
-        assert!(!app.projection().expect("projection").fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget) == "sides"));
+        assert!(!app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget) == "sides"));
     }
 }
 //#endregion 🧪️Tests

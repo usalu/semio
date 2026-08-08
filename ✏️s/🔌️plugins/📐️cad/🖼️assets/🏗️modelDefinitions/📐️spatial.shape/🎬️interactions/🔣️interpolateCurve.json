@@ -58,7 +58,7 @@
                 "label": "Start",
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -74,7 +74,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -90,7 +90,7 @@
                     }
                   },
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -121,7 +121,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -153,7 +153,7 @@
                 "target": "next_point",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -188,7 +188,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "operation": "assign",
+                    "mutation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -220,7 +220,7 @@
                 "target": "next_point",
                 "effects": [
                   {
-                    "operation": "action",
+                    "mutation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {

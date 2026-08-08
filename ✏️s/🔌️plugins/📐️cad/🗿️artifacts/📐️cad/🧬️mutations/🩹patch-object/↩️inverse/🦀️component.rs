@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `PatchObject`.
 use crate::artifacts::cad::mutations::{reverse_object_patch, CadMutation, CadObjectPatch};
-use crate::artifacts::cad::{cad_pane_objects, CadPaneId, CadProjection};
+use crate::artifacts::cad::{cad_pane_objects, CadPaneId, CadSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(base: &CadProjection, pane: CadPaneId, object_id: &str, patch: &CadObjectPatch) -> Vec<CadMutation> {
+pub fn inverse(base: &CadSnapshot, pane: CadPaneId, object_id: &str, patch: &CadObjectPatch) -> Vec<CadMutation> {
     cad_pane_objects(base, pane)
         .iter()
         .find(|object| object.id == *object_id)

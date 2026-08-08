@@ -1,0 +1,132 @@
+{
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/snapshot.json",
+  "title": "LowpolySnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "objects"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "persistent"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LowpolyObject"
+      },
+      "x-semio-state": "persistent"
+    }
+  },
+  "$defs": {
+    "LowpolyObject": {
+      "title": "LowpolyObject",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "transform",
+        "smoothShading",
+        "meshJson",
+        "paintLayers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "#/$defs/LowpolyTransform"
+        },
+        "smoothShading": {
+          "type": "boolean"
+        },
+        "meshJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "paintLayers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyPaintLayer"
+          }
+        }
+      }
+    },
+    "LowpolyTransform": {
+      "title": "LowpolyTransform",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "rotation",
+        "scale"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "rotation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "scale": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "LowpolyPaintLayer": {
+      "title": "LowpolyPaintLayer",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "visible",
+        "opacity",
+        "blendMode",
+        "pixels"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number",
+          "format": "float"
+        },
+        "blendMode": {
+          "type": "string"
+        },
+        "pixels": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      }
+    }
+  }
+}

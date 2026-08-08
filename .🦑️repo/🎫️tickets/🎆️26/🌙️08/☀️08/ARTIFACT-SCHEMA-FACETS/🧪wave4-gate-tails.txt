@@ -1,0 +1,41 @@
+### cargo check -p semio-s-plugin-lowpoly
+```
+
+warning: `semio-s-plugin-lowpoly` (lib) generated 22 warnings (run `cargo fix --lib -p semio-s-plugin-lowpoly` to apply 16 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 2.07s
+```
+
+### cargo test -p semio-s-plugin-lowpoly --lib
+```
+test apps::lowpoly::component::tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+test apps::lowpoly::commands::add_primitive::tests::add_primitive_supports_every_known_kind ... ok
+
+test result: ok. 139 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.64s
+
+```
+
+### cargo test -p semio-framework-schema
+```
+running 3 tests
+test component::tests::graphql_state_preamble_matches_normative_sdl ... ok
+test component::tests::registry_descriptors_carry_valid_snapshot_state_and_match_field_states ... ok
+test component::tests::schema_catalog_still_registers_json ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_framework_schema
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+```
+
+### bun ./� /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️08/ARTIFACT-SCHEMA-FACETS/🧪wave4-gate-schema-final.log
+```
+
+### bun ./📜️script.ts policy 2>&1 | rg -i lowpoly
+```
+(empty — no lines)
+lowpoly artifact-schema breaches: 0
+```

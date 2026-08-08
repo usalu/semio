@@ -5,6 +5,7 @@
 //! hook plus a flat re-export of every topic, so `crate::artifacts::program::engine::*` reaches all of
 //! them without a caller needing to know which topic file owns a given function.
 
+use crate::artifacts::program::ProgramSnapshot;
 pub use crate::artifacts::program::engine::adjacency::*;
 pub use crate::artifacts::program::engine::analyze::*;
 pub use crate::artifacts::program::engine::exchange::*;
@@ -17,16 +18,30 @@ pub use crate::artifacts::program::engine::trace::*;
 pub use crate::artifacts::program::engine::validate::*;
 
 //#region 🔖️Register
-/// 🗂️ Registers `Program`'s pack↔dsl codec under `ARCHITECT_PROGRAM_SCHEMA`. Called from the plugin
+/// 🗂️ Registers `ProgramSnapshot`'s pack↔dsl codec under `ARCHITECT_PROGRAM_SCHEMA`. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
     register_pilot_languages();
+    register_artifact_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::architect::ArchitectPlayApp>(crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA);
 }
 
 /// 🗂️ Plugin setup entry — same as `register`, named for `Plugin::builder(...).setup(...)`.
 pub fn register_architect_exports() {
     register();
+}
+
+
+static PROGRAM_SCHEMA_REGISTRY: std::sync::OnceLock<std::sync::Mutex<schema::ArtifactSchemaRegistry>> =
+    std::sync::OnceLock::new();
+
+/// 📎 Registers the program artifact schema descriptor into the process-local registry.
+pub fn register_artifact_schema() {
+    let registry = PROGRAM_SCHEMA_REGISTRY.get_or_init(|| std::sync::Mutex::new(schema::ArtifactSchemaRegistry::new()));
+    registry
+        .lock()
+        .expect("schema registry lock")
+        .register(crate::artifacts::program::schema::program_artifact_schema_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
@@ -37,8 +52,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::program::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::program::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::program::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::program::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("architect.program"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -67,8 +82,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::program::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::program::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("program.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -109,36 +124,43 @@ mod tests {
 //#endregion 🧪️Tests
 
 
+
 //#region 🔖️ArtifactEngine
-/// @emoji ⚙️ UI-independent program artifact engine — owns the projection; every transition is a mutation.
+/// @emoji ⚙️ UI-independent program artifact engine — owns full artifact + cached snapshot.
 pub struct ProgramEngine {
-    projection: crate::artifacts::program::Program,
+    artifact: crate::artifacts::program::schema::ProgramArtifact,
+    snapshot: crate::artifacts::program::ProgramSnapshot,
 }
 
 impl ProgramEngine {
-    pub fn new(projection: crate::artifacts::program::Program) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::program::ProgramSnapshot) -> Self {
+        let artifact = crate::artifacts::program::schema::ProgramArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
     }
-    pub fn into_projection(self) -> crate::artifacts::program::Program {
-        self.projection
+    pub fn into_snapshot(self) -> crate::artifacts::program::ProgramSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for ProgramEngine {
-    type Projection = crate::artifacts::program::Program;
+    type Artifact = crate::artifacts::program::schema::ProgramArtifact;
+    type Snapshot = crate::artifacts::program::ProgramSnapshot;
     type Mutation = crate::artifacts::program::mutations::ProgramMutation;
     type Diff = crate::artifacts::program::diff::ProgramDiff;
 
-    fn projection(&self) -> &Self::Projection { &self.projection }
+    fn artifact(&self) -> &Self::Artifact { &self.artifact }
+    fn snapshot(&self) -> &Self::Snapshot { &self.snapshot }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::program::mutations::apply_program_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::program::mutations::apply_program_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine
+

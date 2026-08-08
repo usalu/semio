@@ -3,7 +3,7 @@
 // #region 🔖️InstanceIdentity
 //! 🪪️ A `WorkflowNode.id` **is** the app-instance identity now — there is no separate instance
 //! record layered on top of it. This crate becomes the single persisted-graph source of truth once
-//! `framework/product/os/core`'s `OsProjection` is updated to embed `Workflow` directly instead of
+//! `framework/product/os/core`'s `OsSnapshot` is updated to embed `Workflow` directly instead of
 //! its own in-file `OsWorkflow`/`OsAppInstance` pair (future work, not this ticket).
 // #endregion 🔖️InstanceIdentity
 
@@ -1013,7 +1013,7 @@ pub struct WorkflowOutputBinding {
 
 /// 🕸️ The `s.workflow` persisted artifact — a non-destructive pipeline of connected apps (`graph`),
 /// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
-/// dissolved `OsProjection` (`programs` moved to `space::SpaceProjection`, `active_plugin_id`/
+/// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[dsl(extension = "workflow-document")]
@@ -1941,8 +1941,8 @@ impl protocol::Mutation<RunDocument> for RunMutation {
     /// `DocumentStore`; `run::SpaceRunner`'s write path instead always goes through
     /// `apply_run_operation_checked` (below), which calls this before ever calling
     /// `apply_run_operation` — the one real write seam this crate ships for a `RunDocument`.
-    fn validate(&self, projection: &RunDocument) -> Result<(), String> {
-        if projection.sealed {
+    fn validate(&self, snapshot: &RunDocument) -> Result<(), String> {
+        if snapshot.sealed {
             return Err(format!("run document is sealed; cannot apply {self:?}"));
         }
         Ok(())

@@ -1,6 +1,6 @@
 //! 📎 CAD mutation — `SetReferences` payload + builder + apply.
 use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::{CadReference, CadProjection};
+use crate::artifacts::cad::{CadReference, CadSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,9 +16,9 @@ pub fn set_references(model_definition_id: String, references: Vec<CadReference>
     CadMutation::SetReferences { model_definition_id, references }
 }
 
-pub fn apply(projection: &mut CadProjection, model_definition_id: &str, references: &[CadReference]) {
+pub fn apply(projection: &mut CadSnapshot, model_definition_id: &str, references: &[CadReference]) {
     let mutation = CadMutation::SetReferences { model_definition_id: model_definition_id.into(), references: references.to_vec() };
-    let diff = <CadMutation as protocol::Mutation<CadProjection>>::diff(&mutation, projection);
-    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadProjection>>::apply(&diff, projection);
+    let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, projection);
+    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, projection);
 }
 //#endregion 🔖️Mutation

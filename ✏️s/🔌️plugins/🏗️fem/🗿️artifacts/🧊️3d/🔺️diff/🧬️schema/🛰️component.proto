@@ -1,0 +1,135 @@
+syntax = "proto3";
+package semio.s.fem.fem3d.diff;
+
+// 🧬️ Fem3d diff schema
+message Fem3dDiff {
+  // @state persistent
+  optional Fem3dArtifact artifact = 1;
+  // @state persistent
+  optional Fem3dNodesDelta nodes = 2;
+  // @state persistent
+  optional Fem3dElementsDelta elements = 3;
+  // @state persistent
+  optional Fem3dMaterialsDelta materials = 4;
+  // @state persistent
+  optional Fem3dSectionsDelta sections = 5;
+  // @state persistent
+  optional Fem3dSolidsDelta solids = 6;
+  // @state persistent
+  optional Fem3dSupportsDelta supports = 7;
+  // @state persistent
+  optional Fem3dLoadCasesDelta load_cases = 8;
+  // @state persistent
+  optional Fem3dCombinationsDelta combinations = 9;
+  // @state persistent
+  optional FemAnalysisSettings analysis = 10;
+  // @state shared-ui
+  optional string result_source_id = 11;
+  // @state shared-ui
+  optional string result_mode = 12;
+  // @state shared-ui
+  optional uint32 result_mode_index = 13;
+  // @state local-ui
+  optional FemCamera camera = 14;
+  // @state preview
+  optional string solver_results_json = 15;
+  // @state preview
+  optional string mesh_preview_json = 16;
+}
+
+message Fem3dNodesDelta {
+  repeated FemNode added = 1;
+  repeated string removed = 2;
+  repeated Fem3dNodesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dNodesPatchEntry {
+  string id = 1;
+  FemNode item = 2;
+}
+
+message Fem3dElementsDelta {
+  repeated FemElement added = 1;
+  repeated string removed = 2;
+  repeated Fem3dElementsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dElementsPatchEntry {
+  string id = 1;
+  FemElement item = 2;
+}
+
+message Fem3dMaterialsDelta {
+  repeated FemMaterial added = 1;
+  repeated string removed = 2;
+  repeated Fem3dMaterialsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dMaterialsPatchEntry {
+  string id = 1;
+  FemMaterial item = 2;
+}
+
+message Fem3dSectionsDelta {
+  repeated FemSection added = 1;
+  repeated string removed = 2;
+  repeated Fem3dSectionsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dSectionsPatchEntry {
+  string id = 1;
+  FemSection item = 2;
+}
+
+message Fem3dSolidsDelta {
+  repeated FemSolid added = 1;
+  repeated string removed = 2;
+  repeated Fem3dSolidsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dSolidsPatchEntry {
+  string id = 1;
+  FemSolid item = 2;
+}
+
+message Fem3dSupportsDelta {
+  repeated FemSupport added = 1;
+  repeated string removed = 2;
+  repeated Fem3dSupportsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dSupportsPatchEntry {
+  string id = 1;
+  FemSupport item = 2;
+}
+
+message Fem3dLoadCasesDelta {
+  repeated FemLoadCase added = 1;
+  repeated string removed = 2;
+  repeated Fem3dLoadCasesPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dLoadCasesPatchEntry {
+  string id = 1;
+  FemLoadCase item = 2;
+}
+
+message Fem3dCombinationsDelta {
+  repeated FemCombination added = 1;
+  repeated string removed = 2;
+  repeated Fem3dCombinationsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dCombinationsPatchEntry {
+  string id = 1;
+  FemCombination item = 2;
+}
+

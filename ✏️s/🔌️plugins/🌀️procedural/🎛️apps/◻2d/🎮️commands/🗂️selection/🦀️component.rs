@@ -2,7 +2,7 @@
 
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
-use crate::artifacts::procedural2d::Procedural2dDocument;
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -33,7 +33,7 @@ pub mod select_node {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SelectNode, _doc: &DocumentView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Procedural2dConfigMutation::SetSelection { ids: payload.ids.clone() }]))
     }
 }
@@ -49,9 +49,9 @@ mod tests {
     #[test]
     fn set_selection_updates_config_only() {
         let mut app = app();
-        let before = app.projection().expect("projection");
+        let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["w1".into()] }));
-        assert_eq!(app.projection().expect("projection"), before, "setSelection must not mutate the document");
+        assert_eq!(app.snapshot().expect("snapshot"), before, "setSelection must not mutate the document");
     }
 }
 //#endregion 🧪️Tests

@@ -4,7 +4,7 @@
 use crate::apps::architect::catalog::{find_register_for_entity, register_entities};
 use crate::apps::architect::chrome::{adjacency_kind_label, element_label, entity_id_from_json, entity_name_from_json, inspector_number_field, inspector_text_field, inspector_toggle_field};
 use crate::apps::architect::config::ArchitectConfig;
-use crate::artifacts::program::{EntityId, Program};
+use crate::artifacts::program::{EntityId, ProgramSnapshot};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(program: &Program, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     if cfg.selected_ids.is_empty() {
         return ui_stack_vertical(vec![ui_text(Label::data("Select an entity in the document or register view."))]);
     }

@@ -75,12 +75,21 @@ impl EngineHandles {
 /// Distinct from the byte-cache [`Engine`] trait above (content-addressed compute kernels).
 /// Document stores should drive apply/inverse through this surface rather than calling
 /// [`crate::os_spr::Mutation::diff`] / [`crate::os_spr::Mutation::inverse`] directly.
+///
+/// [`Self::Artifact`] is the full artifact state across every [`crate::os_spr::StateClass`].
+/// [`Self::Snapshot`] is only the persisted (`Persistent`) subset of that artifact.
 pub trait ArtifactEngine: Send + Sync {
-    type Projection;
-    type Mutation: crate::os_spr::Mutation<Self::Projection>;
-    type Diff: crate::os_spr::MutationDiff<Self::Projection>;
+    /// 🧬️ Full artifact state — persistent, shared UI, local UI, preview, and effect fields.
+    type Artifact;
+    /// 📸️ Persisted subset of [`Self::Artifact`] — the document store / pack / DSL surface.
+    type Snapshot;
+    type Mutation: crate::os_spr::Mutation<Self::Snapshot>;
+    type Diff: crate::os_spr::MutationDiff<Self::Snapshot>;
 
-    fn projection(&self) -> &Self::Projection;
+    /// 🧬️ Borrow the full artifact state the engine owns (all state classes).
+    fn artifact(&self) -> &Self::Artifact;
+    /// 📸️ Borrow only the persisted snapshot subset of [`Self::Artifact`].
+    fn snapshot(&self) -> &Self::Snapshot;
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, EngineFault>;
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation>;
 }

@@ -1,0 +1,87 @@
+# 🧬️ Lowpoly diff schema — sparse field delta.
+
+type LowpolyDiff {
+  artifact: LowpolyArtifact @state(class: PERSISTENT)
+  schema: String @state(class: PERSISTENT)
+  objects: LowpolyObjectsDelta @state(class: PERSISTENT)
+  activeObjectId: String @state(class: SHARED_UI)
+  selection: LowpolySelection @state(class: SHARED_UI)
+  selectedObjectIds: LowpolyStringList @state(class: SHARED_UI)
+  paintUtility: String @state(class: SHARED_UI)
+  activePaintLayer: Int @state(class: SHARED_UI)
+  activeUtilityId: String @state(class: SHARED_UI)
+  showEdges: Boolean @state(class: LOCAL_UI)
+  sunEnabled: Boolean @state(class: LOCAL_UI)
+  sunAzimuth: Float @state(class: LOCAL_UI)
+  sunElevation: Float @state(class: LOCAL_UI)
+  sunIntensity: Float @state(class: LOCAL_UI)
+  sunColor: String @state(class: LOCAL_UI)
+  worldCameraPositionX: Float @state(class: LOCAL_UI)
+  worldCameraPositionY: Float @state(class: LOCAL_UI)
+  worldCameraPositionZ: Float @state(class: LOCAL_UI)
+  worldCameraTargetX: Float @state(class: LOCAL_UI)
+  worldCameraTargetY: Float @state(class: LOCAL_UI)
+  worldCameraTargetZ: Float @state(class: LOCAL_UI)
+  worldCameraFov: Float @state(class: LOCAL_UI)
+  utilityParamsJson: String @state(class: LOCAL_UI)
+  paintColorR: Int @state(class: LOCAL_UI)
+  paintColorG: Int @state(class: LOCAL_UI)
+  paintColorB: Int @state(class: LOCAL_UI)
+  paintColorA: Int @state(class: LOCAL_UI)
+  selectionMethod: String @state(class: LOCAL_UI)
+  selectionModeDefault: String @state(class: LOCAL_UI)
+  engagementInput: String @state(class: LOCAL_UI)
+  locale: String @state(class: LOCAL_UI)
+  hoveredObjectId: String @state(class: PREVIEW)
+  hoveredTargetObjectId: String @state(class: PREVIEW)
+  hoveredTargetMode: String @state(class: PREVIEW)
+  hoveredTargetId: Int @state(class: PREVIEW)
+  strokeDragActive: Boolean @state(class: PREVIEW)
+  transformDragActive: Boolean @state(class: PREVIEW)
+  previewSeq: Int @state(class: PREVIEW)
+}
+
+type LowpolyStringList {
+  values: [String!]!
+}
+
+type LowpolyObjectsDelta {
+  added: [LowpolyObject!]!
+  removed: [String!]!
+  patched: [LowpolyObjectPatchEntry!]!
+  reordered: [String!]
+}
+
+type LowpolyObjectPatchEntry {
+  id: String!
+  patch: LowpolyObjectPatch!
+}
+
+type LowpolyObjectPatch {
+  name: String
+  smoothShading: Boolean
+  transform: LowpolyTransform
+  meshJson: String
+}
+
+type LowpolyArtifact {
+  schema: String!
+  objects: [LowpolyObject!]!
+}
+
+type LowpolySelection {
+  mode: String!
+  ids: [Int!]!
+  keys: [String!]!
+}
+
+type LowpolyTransform {
+  position: [Float!]!
+  rotation: [Float!]!
+  scale: [Float!]!
+}
+
+type LowpolyObject {
+  id: String!
+  name: String!
+}

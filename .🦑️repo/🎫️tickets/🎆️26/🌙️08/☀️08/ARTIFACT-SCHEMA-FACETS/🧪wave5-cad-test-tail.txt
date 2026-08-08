@@ -1,0 +1,29 @@
+test apps::cad::component::tests::engagement_starts_box_interaction_session ... FAILED
+test apps::cad::component::tests::engagement_input_and_possible_engagements_present ... FAILED
+test apps::cad::component::tests::gesture_preview_reflects_the_live_rubber_band_preview_and_clears_on_abort ... FAILED
+test apps::cad::component::tests::optional_field_rows_keep_their_pre_migration_bytes ... FAILED
+test apps::cad::component::tests::world_pointer_move_updates_live_preview_without_committing_or_emitting_mutations ... FAILED
+test apps::cad::config::tests::cad_config_dsl_round_trips_a_populated_record ... FAILED
+test apps::cad::config::tests::cad_config_pack_round_trips ... FAILED
+test artifacts::cad::dsl::tests::default_example_dsl_round_trips ... FAILED
+test artifacts::cad::engine::interaction::tests::box_interaction_commits_after_height ... FAILED
+test artifacts::cad::engine::interaction::tests::box_interaction_commits_via_shell_normalized_repl_line ... FAILED
+test artifacts::cad::engine::interaction::tests::catalog_includes_json_driven_and_legacy_building_entries ... FAILED
+test artifacts::cad::engine::geometry_import::tests::forest_shape_geometry_imports_solid_handle ... FAILED
+test artifacts::cad::engine::interaction::tests::box_interaction_default_mode_is_point_and_requires_length_prompt ... FAILED
+test artifacts::cad::engine::interaction::tests::external_wall_interaction_commits_via_generic_from_2_points_and_height ... FAILED
+test artifacts::cad::engine::interaction::tests::reinforced_concrete_column_interaction_commits_as_cylinder ... FAILED
+test artifacts::cad::engine::transformation::tests::derive_from_geometry_classifies_box ... FAILED
+test artifacts::cad::engine::interaction::tests::sphere_interaction_commits_via_command_finish ... FAILED
+test artifacts::cad::interaction_spec::tests::interaction_spec_guard_evaluates_against_context ... FAILED
+test artifacts::cad::engine::interaction::tests::slab_interaction_commits ... FAILED
+test artifacts::cad::interaction_spec::tests::interaction_spec_parses_all_energy_and_structure_classic_assets ... FAILED
+test artifacts::cad::interaction_spec::tests::interaction_spec_parses_sphere_asset_with_command_finish ... FAILED
+test artifacts::cad::interaction_spec::tests::interaction_spec_parses_box_asset ... FAILED
+test artifacts::cad::engine::interaction::tests::slab_preview_shows_footprint_point ... FAILED
+test artifacts::cad::interaction_spec::tests::every_interaction_asset_on_disk_parses_as_interaction_spec ... FAILED
+test result: FAILED. 99 passed; 25 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.34s
+
+    artifacts::cad::interaction_spec::tests::interaction_spec_parses_sphere_asset_with_command_finish
+
+test result: FAILED. 99 passed; 25 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.34s

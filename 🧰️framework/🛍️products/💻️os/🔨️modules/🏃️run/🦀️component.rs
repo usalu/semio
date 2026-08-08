@@ -456,10 +456,10 @@ fn node_fingerprints(node_id: &str, document_spr: &[u8], config_spr: &[u8], bind
 /// - root: `space.space.pack`+`space.space.spr` — the space manifest slot (the `OsDocument` VCS
 ///   envelope's binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`; today this
 ///   still carries a `workflow::WorkflowDocument`/`WorkflowMutation` pair per the os-core dissolve's
-///   `## The inversion`, not yet a real `space::SpaceProjection` manifest — wiring the ROOT slot's
-///   actual decoded type to `SpaceProjection` is later-wave work, this rewrite is the path/filename
+///   `## The inversion`, not yet a real `space::SpaceSnapshot` manifest — wiring the ROOT slot's
+///   actual decoded type to `SpaceSnapshot` is later-wave work, this rewrite is the path/filename
 ///   convention only, see `read_space_document`/`write_space_document`),
-/// - `collections/<collection id>.collection.pack|.spr` — one `space::CollectionProjection` per
+/// - `collections/<collection id>.collection.pack|.spr` — one `space::CollectionSnapshot` per
 ///   collection (`collection_pack_path`/`collection_spr_path`/`read_collection`/`write_collection` —
 ///   not yet called by anything in this crate; collections aren't wired into `SpaceRunner` until a
 ///   later wave, this is the reserved path convention those callers will use),

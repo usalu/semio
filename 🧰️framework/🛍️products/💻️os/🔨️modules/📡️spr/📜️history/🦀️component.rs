@@ -1455,7 +1455,7 @@ pub fn frontier_delta(local: &FrontierSummary, remote: &FrontierSummary) -> Fron
 pub const SEC_EDIT_OFFSETS: u8 = 0x01;
 pub const SEC_CHECKPOINT_OFFSETS: u8 = 0x02;
 pub const SEC_DICT_OFFSETS: u8 = 0x03;
-pub const SEC_PROJECTION_OFFSETS: u8 = 0x04;
+pub const SEC_SNAPSHOT_OFFSETS: u8 = 0x04;
 pub const SEC_SEALED_OFFSETS: u8 = 0x05;
 
 fn write_pair_section(out: &mut ByteWriter, kind: u8, entries: &[(u64, u64)]) {
@@ -1480,7 +1480,7 @@ pub struct IndexBuilder {
     edits: Vec<(u64, u64)>,
     checkpoints: Vec<(String, u64, u64)>,
     dict_offsets: Vec<u64>,
-    projections: Vec<(u64, u64)>,
+    snapshots: Vec<(u64, u64)>,
     sealed: Vec<u64>,
 }
 
@@ -1501,8 +1501,8 @@ impl IndexBuilder {
         self.dict_offsets.push(offset);
     }
 
-    pub fn record_projection(&mut self, edit_ordinal: u64, offset: u64) {
-        self.projections.push((edit_ordinal, offset));
+    pub fn record_snapshot(&mut self, edit_ordinal: u64, offset: u64) {
+        self.snapshots.push((edit_ordinal, offset));
     }
 
     pub fn record_sealed(&mut self, offset: u64) {
@@ -1521,7 +1521,7 @@ impl IndexBuilder {
             out.write_varint_u64(*edit_ordinal);
         }
         write_offsets_section(&mut out, SEC_DICT_OFFSETS, &self.dict_offsets);
-        write_pair_section(&mut out, SEC_PROJECTION_OFFSETS, &self.projections);
+        write_pair_section(&mut out, SEC_SNAPSHOT_OFFSETS, &self.snapshots);
         write_offsets_section(&mut out, SEC_SEALED_OFFSETS, &self.sealed);
         out.into_bytes()
     }
@@ -1530,7 +1530,7 @@ impl IndexBuilder {
 pub struct IndexReader<'a> {
     edits: Vec<(u64, u64)>,
     checkpoints: Vec<(&'a str, u64, u64)>,
-    projections: Vec<(u64, u64)>,
+    snapshots: Vec<(u64, u64)>,
 }
 
 impl<'a> IndexReader<'a> {
@@ -1542,7 +1542,7 @@ impl<'a> IndexReader<'a> {
         }
         let mut edits = Vec::new();
         let mut checkpoints = Vec::new();
-        let mut projections = Vec::new();
+        let mut snapshots = Vec::new();
         while input.remaining() > 0 {
             let kind = input.read_u8()?;
             let count = input.read_varint_u64()?;
@@ -1569,11 +1569,11 @@ impl<'a> IndexReader<'a> {
                         input.read_varint_u64()?;
                     }
                 }
-                SEC_PROJECTION_OFFSETS => {
+                SEC_SNAPSHOT_OFFSETS => {
                     for _ in 0..count {
                         let ordinal = input.read_varint_u64()?;
                         let offset = input.read_varint_u64()?;
-                        projections.push((ordinal, offset));
+                        snapshots.push((ordinal, offset));
                     }
                 }
                 SEC_SEALED_OFFSETS => {
@@ -1584,7 +1584,7 @@ impl<'a> IndexReader<'a> {
                 other => return Err(ProtocolError::Malformed { what: "index section kind", offset: 0, detail: format!("unknown section {other:#x}") }),
             }
         }
-        Ok(Self { edits, checkpoints, projections })
+        Ok(Self { edits, checkpoints, snapshots })
     }
 
     pub fn edit_offset_at_or_before(&self, ordinal: u64) -> Option<u64> {
@@ -1595,8 +1595,8 @@ impl<'a> IndexReader<'a> {
         self.checkpoints.iter().find(|(id, _, _)| *id == checkpoint_id).map(|(_, offset, edit_ordinal)| (*offset, *edit_ordinal))
     }
 
-    pub fn latest_projection_offset_at_or_before(&self, ordinal: u64) -> Option<u64> {
-        self.projections.iter().filter(|(o, _)| *o <= ordinal).max_by_key(|(o, _)| *o).map(|(_, offset)| *offset)
+    pub fn latest_snapshot_offset_at_or_before(&self, ordinal: u64) -> Option<u64> {
+        self.snapshots.iter().filter(|(o, _)| *o <= ordinal).max_by_key(|(o, _)| *o).map(|(_, offset)| *offset)
     }
 }
 //#endregion 🔖️Index
@@ -2056,13 +2056,13 @@ mod tests {
 
     //#region 🔖️Index
     #[test]
-    fn index_round_trips_edits_checkpoints_and_projections() {
+    fn index_round_trips_edits_checkpoints_and_snapshots() {
         let mut builder = IndexBuilder::new();
         builder.record_edit(0, 100);
         builder.record_edit(5, 300);
         builder.record_edit(10, 500);
         builder.record_checkpoint("ck-1", 700, 10);
-        builder.record_projection(5, 250);
+        builder.record_snapshot(5, 250);
         builder.record_sealed(50);
         let payload = builder.build();
 
@@ -2072,7 +2072,7 @@ mod tests {
         assert_eq!(reader.edit_offset_at_or_before(10), Some(500));
         assert_eq!(reader.checkpoint_offset("ck-1"), Some((700, 10)));
         assert_eq!(reader.checkpoint_offset("missing"), None);
-        assert_eq!(reader.latest_projection_offset_at_or_before(9), Some(250));
+        assert_eq!(reader.latest_snapshot_offset_at_or_before(9), Some(250));
     }
     //#endregion 🔖️Index
 }

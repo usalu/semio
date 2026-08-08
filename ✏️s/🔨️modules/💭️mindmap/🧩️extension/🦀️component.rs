@@ -20,7 +20,7 @@ pub trait MindmapExtension: GraphExtension {
 pub type TopicId = NodeId;
 pub type RelationshipId = EdgeId;
 
-/// 🧭️ Default mindmap extension stub (projection mirror — OS graph packs own topic authority).
+/// 🧭️ Default mindmap extension stub (snapshot mirror — OS graph packs own topic authority).
 #[derive(Clone, Debug, Default)]
 pub struct DefaultMindmapExtension {
     pub topics: std::collections::BTreeMap<TopicId, String>,

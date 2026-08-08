@@ -3,7 +3,7 @@
 
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dDocument;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -19,10 +19,10 @@ pub mod add_node {
         pub z: f64,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let id = crate::app_surface::next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
-        let index = projection.nodes.len();
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
+        let index = snapshot.nodes.len();
         Ok(Emit::mutations(vec![Fem3dMutation::SetNode { index, node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } }]))
     }
 }
@@ -42,10 +42,10 @@ pub mod add_bar {
         pub section_id: String,
     }
 
-    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let id = crate::app_surface::next_id(projection.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
-        let index = projection.elements.len();
+    pub fn handle(payload: &AddBar, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
+        let index = snapshot.elements.len();
         let element = crate::artifacts::fem3d::FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
         Ok(Emit::mutations(vec![Fem3dMutation::SetElement { index, element: Box::new(element) }]))
     }
@@ -67,10 +67,10 @@ pub mod add_frame {
         pub roll: f64,
     }
 
-    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let id = crate::app_surface::next_id(projection.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
-        let index = projection.elements.len();
+    pub fn handle(payload: &AddFrame, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
+        let index = snapshot.elements.len();
         let element = crate::artifacts::fem3d::FemElement::Frame { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone(), roll: payload.roll };
         Ok(Emit::mutations(vec![Fem3dMutation::SetElement { index, element: Box::new(element) }]))
     }
@@ -91,10 +91,10 @@ pub mod add_material {
 
     /// 🧱️ New materials default to `nu = 0.3`/`rho = 7850.0` (mild steel) — the manifest's `addMaterial`
     /// arg form only stages `name`/`e`/`g`, matching the pre-migration `handle_action` behavior verbatim.
-    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let id = crate::app_surface::next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
-        let index = projection.materials.len();
+    pub fn handle(payload: &AddMaterial, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let id = crate::app_surface::next_id(snapshot.materials.iter().map(|m| m.id.clone()), "m");
+        let index = snapshot.materials.len();
         Ok(Emit::mutations(vec![Fem3dMutation::SetMaterial { index, material: crate::artifacts::fem3d::FemMaterial { id, name: payload.name.clone(), e: payload.e, g: payload.g, nu: 0.3, rho: 7850.0 } }]))
     }
 }
@@ -114,10 +114,10 @@ pub mod add_section {
         pub j: f64,
     }
 
-    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let id = crate::app_surface::next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
-        let index = projection.sections.len();
+    pub fn handle(payload: &AddSection, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
+        let index = snapshot.sections.len();
         Ok(Emit::mutations(vec![Fem3dMutation::SetSection { index, section: crate::artifacts::fem3d::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j } }]))
     }
 }
@@ -135,10 +135,10 @@ pub mod add_support {
         pub fixed: Vec<crate::artifacts::fem3d::FemDof>,
     }
 
-    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let id = crate::app_surface::next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
-        let index = projection.supports.len();
+    pub fn handle(payload: &AddSupport, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let id = crate::app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
+        let index = snapshot.supports.len();
         Ok(Emit::mutations(vec![Fem3dMutation::SetSupport { index, support: crate::artifacts::fem3d::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
     }
 }
@@ -165,10 +165,10 @@ pub mod add_solid {
 
     /// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`
     /// defaulted to `0.0`/`1`/`0.5` when unspecified — mirrors the pre-migration `handle_action` defaults.
-    pub fn handle(payload: &AddSolid, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let projection = doc.projection;
-        let id = crate::app_surface::next_id(projection.solids.iter().map(|s| s.id.clone()), "sol");
-        let index = projection.solids.len();
+    pub fn handle(payload: &AddSolid, doc: &DocumentView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+        let snapshot = doc.snapshot;
+        let id = crate::app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
+        let index = snapshot.solids.len();
         let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.depth], [payload.x, payload.y + payload.depth]];
         let solid = crate::artifacts::fem3d::FemSolid {
             id,
@@ -197,8 +197,8 @@ mod tests {
     fn add_node_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }));
-        let projection = app.projection().expect("projection");
-        let node = projection.nodes.last().expect("node added");
+        let snapshot = app.snapshot().expect("snapshot");
+        let node = snapshot.nodes.last().expect("node added");
         assert_eq!((node.x, node.y, node.z), (1.0, 2.0, 3.0));
     }
 
@@ -206,24 +206,24 @@ mod tests {
     fn add_material_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11, g: 8.1e10 }));
-        let projection = app.projection().expect("projection");
-        assert_eq!(projection.materials.last().expect("material added").g, 8.1e10);
+        let snapshot = app.snapshot().expect("snapshot");
+        assert_eq!(snapshot.materials.last().expect("material added").g, 8.1e10);
     }
 
     #[test]
     fn add_section_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369, iz: 0.0000133, j: 0.0000006 }));
-        let projection = app.projection().expect("projection");
-        assert_eq!(projection.sections.last().expect("section added").j, 0.0000006);
+        let snapshot = app.snapshot().expect("snapshot");
+        assert_eq!(snapshot.sections.last().expect("section added").j, 0.0000006);
     }
 
     #[test]
     fn add_frame_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddFrame(add_frame::AddFrame { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into(), roll: 0.5 }));
-        let projection = app.projection().expect("projection");
-        match projection.elements.last().expect("element added") {
+        let snapshot = app.snapshot().expect("snapshot");
+        match snapshot.elements.last().expect("element added") {
             crate::artifacts::fem3d::FemElement::Frame { roll, .. } => assert_eq!(*roll, 0.5),
             _ => panic!("expected Frame"),
         }
@@ -233,8 +233,8 @@ mod tests {
     fn add_solid_action_emits_set_solid_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 2.0, depth: 1.0, height: 0.5, material_id: "concrete".into(), base_z: None, layers: None, mesh_size: None }));
-        let projection = app.projection().expect("projection");
-        let solid = projection.solids.last().expect("solid added");
+        let snapshot = app.snapshot().expect("snapshot");
+        let solid = snapshot.solids.last().expect("solid added");
         assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
         assert_eq!(solid.height, 0.5);
         assert_eq!(solid.layers, 1);

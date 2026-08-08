@@ -1,8 +1,8 @@
 //! 🧬️ CAD artifact — document mutation dispatch enum + shared patches/helpers.
 
-use crate::artifacts::cad::diff::{apply_reference_patch, CadDiff};
-use crate::artifacts::cad::{cad_pane_objects, CadNode, CadObject, CadPaneId, CadReference, CadProjection};
-use protocol::{CollectionDiff, ItemPatch, Mutation};
+use crate::artifacts::cad::diff::{apply_reference_patch, CadDiff, CadNodePatchEntry, CadNodesDelta, CadObjectPatchEntry, CadObjectsDelta};
+use crate::artifacts::cad::{cad_pane_objects, CadNode, CadObject, CadPaneId, CadReference, CadSnapshot};
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -109,9 +109,9 @@ pub enum CadMutation {
     SetActiveModelDefinition {
         model_definition_id: String,
     },
-    SetScene {
+    SetSnapshot {
         #[dsl(block)]
-        scene: Box<CadProjection>,
+        snapshot: Box<CadSnapshot>,
     },
 }
 
@@ -131,30 +131,30 @@ fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
     let s = half.sin();
     [ax / len * s, ay / len * s, az / len * s, half.cos()]
 }
-impl Mutation<CadProjection> for CadMutation {
+impl Mutation<CadSnapshot> for CadMutation {
     type Diff = CadDiff;
 
-    fn diff(&self, projection: &CadProjection) -> CadDiff {
+    fn diff(&self, projection: &CadSnapshot) -> CadDiff {
         match self {
             CadMutation::AddObject { pane, object } => CadDiff {
-                objects: pane_collection_diff_for_add(*pane, object),
-                building_objects: pane_collection_diff_for_add_if(*pane, CadPaneId::Building, object),
-                energy_objects: pane_collection_diff_for_add_if(*pane, CadPaneId::Energy, object),
-                structure_classic_objects: pane_collection_diff_for_add_if(*pane, CadPaneId::StructureClassic, object),
+                objects: pane_objects_delta_for_add(*pane, object),
+                building_objects: pane_objects_delta_for_add_if(*pane, CadPaneId::Building, object),
+                energy_objects: pane_objects_delta_for_add_if(*pane, CadPaneId::Energy, object),
+                structure_classic_objects: pane_objects_delta_for_add_if(*pane, CadPaneId::StructureClassic, object),
                 ..Default::default()
             },
             CadMutation::RemoveObject { pane, object_id } => CadDiff {
-                objects: pane_collection_diff_for_remove(*pane, CadPaneId::Shape, object_id),
-                building_objects: pane_collection_diff_for_remove(*pane, CadPaneId::Building, object_id),
-                energy_objects: pane_collection_diff_for_remove(*pane, CadPaneId::Energy, object_id),
-                structure_classic_objects: pane_collection_diff_for_remove(*pane, CadPaneId::StructureClassic, object_id),
+                objects: pane_objects_delta_for_remove(*pane, CadPaneId::Shape, object_id),
+                building_objects: pane_objects_delta_for_remove(*pane, CadPaneId::Building, object_id),
+                energy_objects: pane_objects_delta_for_remove(*pane, CadPaneId::Energy, object_id),
+                structure_classic_objects: pane_objects_delta_for_remove(*pane, CadPaneId::StructureClassic, object_id),
                 ..Default::default()
             },
             CadMutation::PatchObject { pane, object_id, patch } => CadDiff {
-                objects: pane_collection_diff_for_patch(*pane, CadPaneId::Shape, object_id, patch),
-                building_objects: pane_collection_diff_for_patch(*pane, CadPaneId::Building, object_id, patch),
-                energy_objects: pane_collection_diff_for_patch(*pane, CadPaneId::Energy, object_id, patch),
-                structure_classic_objects: pane_collection_diff_for_patch(*pane, CadPaneId::StructureClassic, object_id, patch),
+                objects: pane_objects_delta_for_patch(*pane, CadPaneId::Shape, object_id, patch),
+                building_objects: pane_objects_delta_for_patch(*pane, CadPaneId::Building, object_id, patch),
+                energy_objects: pane_objects_delta_for_patch(*pane, CadPaneId::Energy, object_id, patch),
+                structure_classic_objects: pane_objects_delta_for_patch(*pane, CadPaneId::StructureClassic, object_id, patch),
                 ..Default::default()
             },
             CadMutation::TranslateObjects { object_ids, dx, dy, dz } => {
@@ -174,13 +174,13 @@ impl Mutation<CadProjection> for CadMutation {
             CadMutation::SetPaneObjects { pane, objects } => {
                 let mut diff = CadDiff::default();
                 let removed: Vec<String> = cad_pane_objects(projection, *pane).iter().map(|object| object.id.clone()).collect();
-                let collection = CollectionDiff { removed, modified: Vec::new(), added: objects.clone() };
-                set_pane_collection_diff(&mut diff, *pane, collection);
+                let delta = CadObjectsDelta { removed, added: objects.clone(), ..Default::default() };
+                set_pane_objects_delta(&mut diff, *pane, delta);
                 diff
             }
-            CadMutation::AddNode { node } => CadDiff { nodes: Some(CollectionDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
-            CadMutation::RemoveNode { node_id } => CadDiff { nodes: Some(CollectionDiff { removed: vec![node_id.clone()], ..Default::default() }), ..Default::default() },
-            CadMutation::RenameNode { node_id, label } => CadDiff { nodes: Some(CollectionDiff { modified: vec![ItemPatch { id: node_id.clone(), patch: CadNodePatch { label: Some(label.clone()) } }], ..Default::default() }), ..Default::default() },
+            CadMutation::AddNode { node } => CadDiff { nodes: Some(CadNodesDelta { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
+            CadMutation::RemoveNode { node_id } => CadDiff { nodes: Some(CadNodesDelta { removed: vec![node_id.clone()], ..Default::default() }), ..Default::default() },
+            CadMutation::RenameNode { node_id, label } => CadDiff { nodes: Some(CadNodesDelta { patched: vec![CadNodePatchEntry { id: node_id.clone(), patch: CadNodePatch { label: Some(label.clone()) } }], ..Default::default() }), ..Default::default() },
             CadMutation::PatchReference { model_definition_id, reference_id, patch } => {
                 let references = projection.references_by_model_definition_id.get(model_definition_id).cloned().unwrap_or_default();
                 let next = references
@@ -196,11 +196,11 @@ impl Mutation<CadProjection> for CadMutation {
             }
             CadMutation::SetReferences { model_definition_id, references } => CadDiff { references_by_model_definition_id: Some(BTreeMap::from([(model_definition_id.clone(), references.clone())])), ..Default::default() },
             CadMutation::SetActiveModelDefinition { model_definition_id } => CadDiff { active_model_definition_id: Some(model_definition_id.clone()), ..Default::default() },
-            CadMutation::SetScene { scene } => CadDiff { scene: Some(scene.clone()), ..Default::default() },
+            CadMutation::SetSnapshot { snapshot } => CadDiff { artifact: Some(Box::new(crate::artifacts::cad::schema::CadArtifact::from_snapshot((**snapshot).clone()))), ..Default::default() },
         }
     }
 
-    fn inverse(&self, projection: &CadProjection) -> Vec<Self> {
+    fn inverse(&self, projection: &CadSnapshot) -> Vec<Self> {
         match self {
             CadMutation::AddObject { pane, object } => super::add_object::inverse::inverse(projection, *pane, object),
             CadMutation::RemoveObject { pane, object_id } => super::remove_object::inverse::inverse(projection, *pane, object_id),
@@ -215,7 +215,7 @@ impl Mutation<CadProjection> for CadMutation {
             CadMutation::PatchReference { model_definition_id, reference_id, patch } => super::patch_reference::inverse::inverse(projection, model_definition_id, reference_id, patch),
             CadMutation::SetReferences { model_definition_id, references } => super::set_references::inverse::inverse(projection, model_definition_id, references),
             CadMutation::SetActiveModelDefinition { model_definition_id } => super::set_active_model_definition::inverse::inverse(projection, model_definition_id),
-            CadMutation::SetScene { scene } => super::set_scene::inverse::inverse(projection, scene),
+            CadMutation::SetSnapshot { snapshot } => super::set_snapshot::inverse::inverse(projection, snapshot),
         }
     }
 }
@@ -249,55 +249,55 @@ pub fn reverse_reference_patch(before: &CadReference, patch: &CadReferencePatch)
     }
 }
 
-fn pane_collection_diff_for_add(pane: CadPaneId, object: &CadObject) -> Option<CollectionDiff<String, CadObjectPatch, CadObject>> {
-    pane_collection_diff_for_add_if(pane, CadPaneId::Shape, object)
+fn pane_objects_delta_for_add(pane: CadPaneId, object: &CadObject) -> Option<CadObjectsDelta> {
+    pane_objects_delta_for_add_if(pane, CadPaneId::Shape, object)
 }
 
-fn pane_collection_diff_for_add_if(pane: CadPaneId, target: CadPaneId, object: &CadObject) -> Option<CollectionDiff<String, CadObjectPatch, CadObject>> {
+fn pane_objects_delta_for_add_if(pane: CadPaneId, target: CadPaneId, object: &CadObject) -> Option<CadObjectsDelta> {
     if pane == target {
-        Some(CollectionDiff { added: vec![object.clone()], ..Default::default() })
+        Some(CadObjectsDelta { added: vec![object.clone()], ..Default::default() })
     } else {
         None
     }
 }
 
-fn pane_collection_diff_for_remove(pane: CadPaneId, target: CadPaneId, object_id: &str) -> Option<CollectionDiff<String, CadObjectPatch, CadObject>> {
+fn pane_objects_delta_for_remove(pane: CadPaneId, target: CadPaneId, object_id: &str) -> Option<CadObjectsDelta> {
     if pane == target {
-        Some(CollectionDiff { removed: vec![object_id.into()], ..Default::default() })
+        Some(CadObjectsDelta { removed: vec![object_id.into()], ..Default::default() })
     } else {
         None
     }
 }
 
-fn pane_collection_diff_for_patch(pane: CadPaneId, target: CadPaneId, object_id: &str, patch: &CadObjectPatch) -> Option<CollectionDiff<String, CadObjectPatch, CadObject>> {
+fn pane_objects_delta_for_patch(pane: CadPaneId, target: CadPaneId, object_id: &str, patch: &CadObjectPatch) -> Option<CadObjectsDelta> {
     if pane == target {
-        Some(CollectionDiff { modified: vec![ItemPatch { id: object_id.into(), patch: patch.clone() }], ..Default::default() })
+        Some(CadObjectsDelta { patched: vec![CadObjectPatchEntry { id: object_id.into(), patch: patch.clone() }], ..Default::default() })
     } else {
         None
     }
 }
 
-fn set_pane_collection_diff(diff: &mut CadDiff, pane: CadPaneId, collection: CollectionDiff<String, CadObjectPatch, CadObject>) {
+fn set_pane_objects_delta(diff: &mut CadDiff, pane: CadPaneId, delta: CadObjectsDelta) {
     match pane {
-        CadPaneId::Shape => diff.objects = Some(collection),
-        CadPaneId::Building => diff.building_objects = Some(collection),
-        CadPaneId::Energy => diff.energy_objects = Some(collection),
-        CadPaneId::StructureClassic => diff.structure_classic_objects = Some(collection),
+        CadPaneId::Shape => diff.objects = Some(delta),
+        CadPaneId::Building => diff.building_objects = Some(delta),
+        CadPaneId::Energy => diff.energy_objects = Some(delta),
+        CadPaneId::StructureClassic => diff.structure_classic_objects = Some(delta),
     }
 }
 
-fn transform_objects_diff(projection: &CadProjection, object_ids: &[String], patch_for: impl Fn(&CadObject) -> CadObjectPatch) -> CadDiff {
+fn transform_objects_diff(projection: &CadSnapshot, object_ids: &[String], patch_for: impl Fn(&CadObject) -> CadObjectPatch) -> CadDiff {
     let mut diff = CadDiff::default();
     for pane in CadPaneId::all() {
-        let mut modified = Vec::new();
+        let mut patched = Vec::new();
         for object in cad_pane_objects(projection, pane) {
             if !object_ids.contains(&object.id) {
                 continue;
             }
-            modified.push(ItemPatch { id: object.id.clone(), patch: patch_for(object) });
+            patched.push(CadObjectPatchEntry { id: object.id.clone(), patch: patch_for(object) });
         }
-        if !modified.is_empty() {
-            set_pane_collection_diff(&mut diff, pane, CollectionDiff { modified, ..Default::default() });
+        if !patched.is_empty() {
+            set_pane_objects_delta(&mut diff, pane, CadObjectsDelta { patched, ..Default::default() });
         }
     }
     diff
@@ -315,12 +315,12 @@ pub use super::rename_node::mutation::{rename_node, RenameNode};
 pub use super::patch_reference::mutation::{patch_reference, PatchReference};
 pub use super::set_references::mutation::{set_references, SetReferences};
 pub use super::set_active_model_definition::mutation::{set_active_model_definition, SetActiveModelDefinition};
-pub use super::set_scene::mutation::{set_scene, SetScene};
+pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::artifacts::cad::testkit::{sample_object, sample_reference, sample_scene};
 
@@ -340,7 +340,7 @@ mod tests {
             CadMutation::PatchReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), patch: CadReferencePatch { hidden: Some(true), ..Default::default() } },
             CadMutation::SetReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] },
             CadMutation::SetActiveModelDefinition { model_definition_id: "aec.building".into() },
-            CadMutation::SetScene { scene: Box::new(sample_scene()) },
+            CadMutation::SetSnapshot { snapshot: Box::new(sample_scene()) },
         ]
     }
 

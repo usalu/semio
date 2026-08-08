@@ -1,0 +1,25 @@
+5279 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5026:38
+     |
+5026 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4906:42
+     |
+4906 |                     let VcsDocumentApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1845:17
+     |
+1845 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+For more information about this error, try `rustc --explain E0599`.
+warning: `semio-framework-plugin` (lib) generated 14 warnings
+error: could not compile `semio-framework-plugin` (lib) due to 7 previous errors; 14 warnings emitted
+warning: build failed, waiting for other jobs to finish...

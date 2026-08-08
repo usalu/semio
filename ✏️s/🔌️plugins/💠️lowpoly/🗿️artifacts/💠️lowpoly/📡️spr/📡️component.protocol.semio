@@ -34,7 +34,7 @@ field object_id utf8
 field layer_index varint
 field run_count varint
 field runs array PixelRun
-record SetProjection tag 9
+record SetSnapshot tag 9
 field projection Projection
 struct Transform
 field position fixed 12

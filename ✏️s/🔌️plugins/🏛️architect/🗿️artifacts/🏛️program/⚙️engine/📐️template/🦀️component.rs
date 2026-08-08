@@ -5,7 +5,7 @@
 use crate::artifacts::program::engine::adjacency::{normalize_pair, set_adjacency};
 use crate::artifacts::program::kernel::{EntityHeader, EntityId, TextField};
 use crate::artifacts::program::op::ProgramMutation;
-use crate::artifacts::program::Program;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::registers::{
     Activity, Adjacency, AdjacencyKind, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile,
     ValidationStatus,
@@ -24,7 +24,7 @@ pub struct TemplateApplyResult {
 }
 
 /// @emoji 🧩️ Applies a template record and returns replayable `ProgramMutation`s.
-pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<ProgramMutation> {
+pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) -> Vec<ProgramMutation> {
     let mut operations = Vec::new();
     let mut element_ids = Vec::new();
     for field in &template.default_fields {

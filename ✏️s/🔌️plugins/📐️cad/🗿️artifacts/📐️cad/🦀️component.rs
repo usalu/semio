@@ -1,4 +1,4 @@
-//! 📐️ CAD artifact — the `cad.scene` document schema: the `CadProjection` projection, its object/
+//! 📐️ CAD artifact — the `cad.scene` document schema: the `CadSnapshot` projection, its object/
 //! reference/geometry/camera records, and the pane vocabulary every other cad node addresses them by.
 //! The declarative `spatial.interaction` spec types live beside this file in
 //! `🎬️interaction-spec/🦀️component.rs`.
@@ -191,6 +191,9 @@ fn default_width_world() -> f64 {
     10.0
 }
 
+/// 📎 Map-value scalar for `referencesByModelDefinitionId` (schema parity).
+pub type CadReferenceList = Vec<CadReference>;
+
 /// 📐️ Local twin of `semio_framework_plugin::WorldProjectionConfig`'s flat 15-field classical
 /// taxonomy (Parallel: Orthographic/Axonometric/Oblique, Perspective: 1/2/3-Point/Curvilinear) —
 /// mirrored here rather than imported because `cad/rs` has no dependency on the plugin layer;
@@ -288,103 +291,7 @@ pub struct CadNode {
     pub kind: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-#[dsl(id = "cad.cad", layout = "lines")]
-pub struct CadProjection {
-    pub schema: String,
-    pub id: String,
-    #[serde(default)]
-    #[dsl(table)]
-    pub objects: Vec<CadObject>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub building_objects: Vec<CadObject>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub energy_objects: Vec<CadObject>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub structure_classic_objects: Vec<CadObject>,
-    #[serde(default)]
-    pub references_by_model_definition_id: BTreeMap<String, Vec<CadReference>>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub nodes: Vec<CadNode>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(block)]
-    pub shape_geometry: Option<CadGeometry>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(block)]
-    pub building_geometry: Option<CadGeometry>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(block)]
-    pub energy_geometry: Option<CadGeometry>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(block)]
-    pub structure_classic_geometry: Option<CadGeometry>,
-    #[serde(default = "default_model_definition_id")]
-    pub active_model_definition_id: String,
-}
-//#region 🔖️HandcraftedDocumentCodecs
-/// ✉️ P6 handcrafted DocumentDsl/DocumentPack (derive no longer emits these traits).
-impl store::DocumentDsl for CadProjection {
-    const EXTENSION: &'static str = "cad";
-    fn envelope_id() -> &'static str { "cad.cad" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::DocumentPack for CadProjection {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::DocumentDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::DocumentDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::DocumentDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️HandcraftedDocumentCodecs
-
-
-
-
-pub fn cad_pane_geometry(scene: &CadProjection, pane: CadPaneId) -> Option<&CadGeometry> {
+pub fn cad_pane_geometry(scene: &CadSnapshot, pane: CadPaneId) -> Option<&CadGeometry> {
     match pane {
         CadPaneId::Shape => scene.shape_geometry.as_ref(),
         CadPaneId::Building => scene.building_geometry.as_ref(),
@@ -393,7 +300,7 @@ pub fn cad_pane_geometry(scene: &CadProjection, pane: CadPaneId) -> Option<&CadG
     }
 }
 
-pub fn cad_pane_geometry_mut(scene: &mut CadProjection, pane: CadPaneId) -> &mut Option<CadGeometry> {
+pub fn cad_pane_geometry_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Option<CadGeometry> {
     match pane {
         CadPaneId::Shape => &mut scene.shape_geometry,
         CadPaneId::Building => &mut scene.building_geometry,
@@ -406,8 +313,8 @@ fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
-pub fn empty_cad_projection() -> CadProjection {
-    CadProjection {
+pub fn empty_cad_snapshot() -> CadSnapshot {
+    CadSnapshot {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
         objects: Vec::new(),
@@ -424,7 +331,7 @@ pub fn empty_cad_projection() -> CadProjection {
     }
 }
 
-pub fn cad_pane_objects(scene: &CadProjection, pane: CadPaneId) -> &[CadObject] {
+pub fn cad_pane_objects(scene: &CadSnapshot, pane: CadPaneId) -> &[CadObject] {
     match pane {
         CadPaneId::Shape => &scene.objects,
         CadPaneId::Building => &scene.building_objects,
@@ -433,7 +340,7 @@ pub fn cad_pane_objects(scene: &CadProjection, pane: CadPaneId) -> &[CadObject] 
     }
 }
 
-pub fn cad_pane_objects_mut(scene: &mut CadProjection, pane: CadPaneId) -> &mut Vec<CadObject> {
+pub fn cad_pane_objects_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Vec<CadObject> {
     match pane {
         CadPaneId::Shape => &mut scene.objects,
         CadPaneId::Building => &mut scene.building_objects,
@@ -442,11 +349,11 @@ pub fn cad_pane_objects_mut(scene: &mut CadProjection, pane: CadPaneId) -> &mut 
     }
 }
 
-pub fn cad_find_object_pane(scene: &CadProjection, object_id: &str) -> Option<CadPaneId> {
+pub fn cad_find_object_pane(scene: &CadSnapshot, object_id: &str) -> Option<CadPaneId> {
     CadPaneId::all().into_iter().find(|&pane| cad_pane_objects(scene, pane).iter().any(|object| object.id == object_id))
 }
 
-pub fn cad_all_objects(scene: &CadProjection) -> impl Iterator<Item = (&CadObject, CadPaneId)> {
+pub fn cad_all_objects(scene: &CadSnapshot) -> impl Iterator<Item = (&CadObject, CadPaneId)> {
     CadPaneId::all().into_iter().flat_map(|pane| cad_pane_objects(scene, pane).iter().map(move |object| (object, pane)))
 }
 
@@ -454,21 +361,11 @@ pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<Ca
     CadPaneId::all().into_iter().find(|pane| pane.model_definition_id() == model_definition_id)
 }
 
-/// 🪆️ `Box<CadProjection>` needs its own `dsl::DslField` binding for `CadMutation::SetScene` — `Box` is
-/// `#[fundamental]` in `std`, so implementing a foreign trait (`dsl::DslField`) for `Box<CadProjection>`
-/// (a local type inside the foreign, fundamental `Box` wrapper) is permitted by the orphan rules;
-/// this delegates entirely to `CadProjection`'s own derive-generated `DslField` impl (from `DslDocument`).
-impl dsl::DslField for Box<CadProjection> {
-    fn shape() -> dsl::Shape {
-        <CadProjection as dsl::DslField>::shape()
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        <CadProjection as dsl::DslField>::to_value(self)
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <CadProjection as dsl::DslField>::from_value(value).map(Box::new)
-    }
-}
+//#region 🔖️Snapshot
+/// 📸️ Re-export persisted snapshot type (defined in snapshot schema facet).
+pub use crate::artifacts::cad::snapshot::schema::CadSnapshot;
+//#endregion 🔖️Snapshot
+
 //#endregion 🔖️Domain
 
 //#region 🔖️ArtifactKind
@@ -547,12 +444,12 @@ pub(crate) mod testkit {
         }
     }
 
-    pub fn sample_scene() -> CadProjection {
+    pub fn sample_scene() -> CadSnapshot {
         sample_scene_with(sample_geometry())
     }
 
-    pub fn sample_scene_with(geometry: CadGeometry) -> CadProjection {
-        let mut scene = empty_cad_projection();
+    pub fn sample_scene_with(geometry: CadGeometry) -> CadSnapshot {
+        let mut scene = empty_cad_snapshot();
         scene.objects.push(sample_object("object-1"));
         scene.building_objects.push(sample_object("object-2"));
         scene.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });

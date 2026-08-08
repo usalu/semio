@@ -1,0 +1,77 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle2d.diff;
+
+// 🧬️ Puzzle2d diff schema — sparse field delta.
+
+message Puzzle2dDiff {
+  // @state persistent
+  optional Puzzle2dArtifact artifact = 1;
+  // @state persistent
+  optional string schema = 2;
+  // @state persistent
+  optional Puzzle2dCamera camera = 3;
+  // @state persistent
+  optional Puzzle2dNodesDelta nodes = 4;
+  // @state persistent
+  optional Puzzle2dEdgesDelta edges = 5;
+  // @state persistent
+  optional Puzzle2dMeta meta = 6;
+  // @state shared-ui
+  optional Puzzle2dStringList selected_ids = 7;
+  // @state shared-ui
+  optional string active_utility_id = 8;
+  // @state local-ui
+  optional double camera_x = 9;
+  // @state local-ui
+  optional double camera_y = 10;
+  // @state local-ui
+  optional double camera_zoom = 11;
+  // @state local-ui
+  optional string selection_method = 12;
+  // @state local-ui
+  optional bool grid_snap_enabled = 13;
+  // @state local-ui
+  optional double grid_factor = 14;
+  // @state local-ui
+  optional double suggestion_offset = 15;
+  // @state local-ui
+  optional uint32 fill_count = 16;
+  // @state local-ui
+  optional uint32 brush_candidate_index = 17;
+  // @state local-ui
+  optional string brush_candidate_source_handle_id = 18;
+  // @state local-ui
+  optional string locale = 19;
+  // @state local-ui
+  optional string terminology = 20;
+  // @state local-ui
+  optional string lod_mode_by_pane_json = 21;
+  // @state local-ui
+  optional string engagement_input_by_pane_json = 22;
+  // @state local-ui
+  optional string brush_candidates_json = 23;
+  // @state local-ui
+  optional string node_kind_weights_json = 24;
+  // @state local-ui
+  optional string handle_kind_weights_json = 25;
+  // @state local-ui
+  optional string active_utility_by_window_id_json = 26;
+  // @state preview
+  optional string hovered_node_id = 27;
+  // @state preview
+  optional int64 preview_seq = 28;
+}
+
+message Puzzle2dArtifact { string schema = 1; }
+message Puzzle2dStringList { repeated string values = 1; }
+message Puzzle2dNodesDelta { repeated Puzzle2dNode added = 1; repeated string removed = 2; repeated Puzzle2dNodePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle2dNodePatchEntry { string id = 1; Puzzle2dNodePatch patch = 2; }
+message Puzzle2dNodePatch { optional Puzzle2dNode replacement = 1; }
+message Puzzle2dNode { string id = 1; }
+message Puzzle2dEdgesDelta { repeated Puzzle2dEdge added = 1; repeated string removed = 2; repeated Puzzle2dEdgePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle2dEdgePatchEntry { string id = 1; Puzzle2dEdgePatch patch = 2; }
+message Puzzle2dEdgePatch { optional Puzzle2dEdge replacement = 1; }
+message Puzzle2dEdge { string id = 1; }
+message Puzzle2dCamera { bool _placeholder = 1; }
+message Puzzle2dMeta { bool _placeholder = 1; }
+

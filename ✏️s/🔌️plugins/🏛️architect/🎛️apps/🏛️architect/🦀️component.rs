@@ -22,7 +22,7 @@ use crate::apps::architect::modes::edit::windows::{adjacency as adjacency_window
 use crate::apps::architect::modes::{report as report_mode, review as review_mode};
 use crate::apps::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::program::op::ProgramMutation;
-use crate::artifacts::program::{empty_plugin, sample_plugin, Program, ARCHITECT_PROGRAM_SCHEMA};
+use crate::artifacts::program::{empty_plugin, sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -48,7 +48,7 @@ semio_framework_plugin::app_commands! {
     /// JSON blob arguments (patches, CSV, DSL payloads, node-graph edit lists, viewport JSON) stay
     /// `String`-typed and are parsed inside each handler — mirrors `gis2d`'s `positions_json`/`camera_json`
     /// convention for the same reason (their shapes have no `dsl::DslField` binding of their own).
-    pub enum ArchitectCommand for Program, ProgramMutation, ArchitectConfig, ArchitectConfigMutation {
+    pub enum ArchitectCommand for ProgramSnapshot, ProgramMutation, ArchitectConfig, ArchitectConfigMutation {
         "setSelection" as "set-selection" => set_selection::SetSelection,
         "selectRegister" as "select-register" => select_register::SelectRegister,
         "addRegisterItem" as "add-register-item" => add_register_item::AddRegisterItem,
@@ -82,7 +82,7 @@ semio_framework_plugin::app_commands! {
 pub struct ArchitectPlayApp;
 
 impl DocumentApp for ArchitectPlayApp {
-    type Projection = Program;
+    type Snapshot = ProgramSnapshot;
     type Mutation = ProgramMutation;
     type Config = ArchitectConfig;
     type ConfigMutation = ArchitectConfigMutation;
@@ -94,7 +94,7 @@ impl DocumentApp for ArchitectPlayApp {
     const APP_ID: &'static str = ARCHITECT_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
-    fn initial_projection() -> Program {
+    fn initial_snapshot() -> ProgramSnapshot {
         sample_plugin()
     }
 
@@ -166,13 +166,13 @@ impl DocumentApp for ArchitectPlayApp {
         }
     }
 
-    fn handle(command: &ArchitectCommand, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &ArchitectCommand, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> UiNode {
-        let program = doc.projection;
-        let config = cfg.projection;
+    fn render(body_key: &str, doc: &DocumentView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> UiNode {
+        let program = doc.snapshot;
+        let config = cfg.snapshot;
         match body_key {
             adjacency_window::ARCHITECT_BODY_ADJACENCY => adjacency_window::render(program, config),
             graph_window::ARCHITECT_BODY_GRAPH => graph_window::render(program, config),
@@ -210,7 +210,7 @@ pub fn create_architect_app() -> App {
             .mutation("addRegisterItem", LocalizedLabel::native("Add Register Item", "Registereintrag hinzufügen"))
             .mutation("removeRegisterItem", LocalizedLabel::native("Remove Register Item", "Registereintrag entfernen"))
             .mutation("patchRegisterItem", LocalizedLabel::native("Patch Register Item", "Registereintrag patchen"))
-            .mutation("importProgram", LocalizedLabel::native("Import Program", "Programm importieren"))
+            .mutation("importProgram", LocalizedLabel::native("Import ProgramSnapshot", "Programm importieren"))
             .mutation("importRegistersCsv", LocalizedLabel::native("Import Registers CSV", "Register CSV importieren"))
             .mutation("applyTemplate", LocalizedLabel::native("Apply Template", "Vorlage anwenden"))
             .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
@@ -224,7 +224,7 @@ pub fn create_architect_app() -> App {
             .view_action("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))
             .view_action("search", LocalizedLabel::native("Search", "Suchen"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .shell_action("exportProgram", LocalizedLabel::native("Export Program", "Programm exportieren"))
+            .shell_action("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"))
             .shell_action("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
             .action_args("selectRegister", vec![ActionArgDef::select("registerId", LocalizedLabel::native("Register", "Register"), REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, LocalizedLabel::data(*register))).collect())])
@@ -283,11 +283,11 @@ pub fn create_architect_app() -> App {
             .action_args("runAnalysis", vec![ActionArgDef::select("analysisKind", LocalizedLabel::native("Analysis", "Analyse"), analysis_kind_picker_options())])
             .action_args("runReport", vec![ActionArgDef::select("reportKind", LocalizedLabel::native("Report", "Bericht"), report_kind_picker_options())])
             .action_args("search", vec![ActionArgDef::text("query", LocalizedLabel::native("Query", "Suchanfrage"))])
-            .action_args("importProgram", vec![ActionArgDef::text("payload", LocalizedLabel::native("Program DSL", "Programm-DSL"))])
+            .action_args("importProgram", vec![ActionArgDef::text("payload", LocalizedLabel::native("ProgramSnapshot DSL", "Programm-DSL"))])
             .default_layout(edit_mode::layout()),
     )
     .example("sample", LocalizedLabel::native("Sample Clinic", "Beispielklinik"), serde_json::to_string(&sample_plugin()).expect("sample_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "cylinder")
-    .example("empty", LocalizedLabel::native("Empty Program", "Leeres Programm"), serde_json::to_string(&empty_plugin()).expect("empty_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "file")
+    .example("empty", LocalizedLabel::native("Empty ProgramSnapshot", "Leeres Programm"), serde_json::to_string(&empty_plugin()).expect("empty_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "file")
     .workflow("architect", "Architect", "data")
 }
 //#endregion 🔖️Manifest
@@ -320,15 +320,18 @@ pub(crate) mod testkit {
 
     /// 🔀️ Drives a typed `ArchitectCommand` straight through `handle` against a bare
     /// `ArchitectPlayApp` — mirrors `cad`'s `drive`/`drive_with_config` harness.
-    pub fn drive(command: &ArchitectCommand, program: &Program) -> Emit<ProgramMutation, ArchitectConfigMutation> {
-        drive_with_config(command, program, &ArchitectPlayApp.initial_config())
+    pub fn drive(command: &ArchitectCommand, program: &ProgramSnapshot) -> Emit<ProgramMutation, ArchitectConfigMutation> {
+        drive_with_config(command, program, &ArchitectPlayApp::initial_config())
     }
 
-    pub fn drive_with_config(command: &ArchitectCommand, program: &Program, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
+    pub fn drive_with_config(command: &ArchitectCommand, program: &ProgramSnapshot, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         let history = HistoryView::empty();
-        let doc = DocumentView { projection: program, history: &history };
-        let cfg = ConfigView { projection: config };
-        ArchitectPlayApp.handle(command, &doc, &cfg).expect("handle")
+        let doc = DocumentView { snapshot: program, history: &history };
+        let cfg = ConfigView { snapshot: config };
+        let draft_snapshot = NoDraft::default();
+        let draft = DraftView { snapshot: &draft_snapshot };
+        let engines = EngineHandles::empty();
+        ArchitectPlayApp::handle(command, &doc, &cfg, &draft, &engines).expect("handle")
     }
 
     /// 🧮️ Folds an `Emit`'s `config_mutations` onto a base `ArchitectConfig` — mirrors what
@@ -342,9 +345,9 @@ pub(crate) mod testkit {
         next
     }
 
-    pub fn render_direct(body_key: &str, program: &Program, config: &ArchitectConfig) -> UiNode {
+    pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> UiNode {
         let history = HistoryView::empty();
-        ArchitectPlayApp.render(body_key, &DocumentView { projection: program, history: &history }, &ConfigView { projection: config })
+        ArchitectPlayApp::render(body_key, &DocumentView { snapshot: program, history: &history }, &ConfigView { snapshot: config })
     }
 }
 //#endregion 🧪️Testkit
@@ -404,7 +407,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
             let keyword = printed.split_whitespace().next().unwrap_or_default().to_string();
             assert!(keyword.contains('-') || keyword == "search", "row {} printed a non-kebab keyword {printed:?}", command.command_id());
@@ -448,7 +451,7 @@ mod tests {
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<ArchitectPlayApp>(create_architect_app);
-        assert!(ArchitectPlayApp.command_from_action("notARealAction", None).is_err());
+        assert!(ArchitectPlayApp::command_from_action("notARealAction", None).is_err());
     }
 
     /// 🎯️ Spot-check a representative sample of action ids round-tripping into the expected typed
@@ -456,10 +459,10 @@ mod tests {
     #[test]
     fn command_from_action_bridges_declared_actions() {
         let app = ArchitectPlayApp;
-        assert!(matches!(app.command_from_action("runValidation", None), Ok(ArchitectCommand::RunValidation(_))));
-        assert!(matches!(app.command_from_action("search", Some(&json!({ "query": "hall" }))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
+        assert!(matches!(ArchitectPlayApp::command_from_action("runValidation", None), Ok(ArchitectCommand::RunValidation(_))));
+        assert!(matches!(ArchitectPlayApp::command_from_action("search", Some(&json!({ "query": "hall" }))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
         assert!(matches!(
-            app.command_from_action("selectRegister", Some(&json!({ "registerId": "risks" }))),
+            ArchitectPlayApp::command_from_action("selectRegister", Some(&json!({ "registerId": "risks" }))),
             Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id })) if register_id == "risks"
         ));
     }
@@ -496,7 +499,7 @@ mod tests {
     #[test]
     fn adjacency_matrix_renders_triangle_strip() {
         let program = sample_plugin();
-        let json = serde_json::to_string(&testkit::render_direct(adjacency_window::ARCHITECT_BODY_ADJACENCY, &program, &ArchitectPlayApp.initial_config())).expect("json");
+        let json = serde_json::to_string(&testkit::render_direct(adjacency_window::ARCHITECT_BODY_ADJACENCY, &program, &ArchitectPlayApp::initial_config())).expect("json");
         assert!(json.contains('▲'));
         assert!(json.contains("Reception"));
     }
@@ -504,7 +507,7 @@ mod tests {
     #[test]
     fn graph_body_emits_node_graph_scene() {
         let program = sample_plugin();
-        let json = serde_json::to_string(&testkit::render_direct(graph_window::ARCHITECT_BODY_GRAPH, &program, &ArchitectPlayApp.initial_config())).expect("json");
+        let json = serde_json::to_string(&testkit::render_direct(graph_window::ARCHITECT_BODY_GRAPH, &program, &ArchitectPlayApp::initial_config())).expect("json");
         assert!(json.contains("node-graph"));
     }
 
@@ -525,7 +528,7 @@ mod tests {
     #[test]
     fn run_validation_populates_last_result_json() {
         let program = sample_plugin();
-        let initial = ArchitectPlayApp.initial_config();
+        let initial = ArchitectPlayApp::initial_config();
         let emit = testkit::drive_with_config(&ArchitectCommand::RunValidation(run_validation::RunValidation {}), &program, &initial);
         assert!(!testkit::config_after(&emit, &initial).last_result_json.is_empty());
     }
@@ -533,7 +536,7 @@ mod tests {
     #[test]
     fn search_finds_sample_elements() {
         let program = sample_plugin();
-        let initial = ArchitectPlayApp.initial_config();
+        let initial = ArchitectPlayApp::initial_config();
         let emit = testkit::drive_with_config(&ArchitectCommand::Search(query::Search { query: "Reception".into() }), &program, &initial);
         let config = testkit::config_after(&emit, &initial);
         assert!(!config.selected_ids.is_empty());
@@ -543,7 +546,7 @@ mod tests {
     #[test]
     fn select_register_switches_active_register() {
         let program = sample_plugin();
-        let initial = ArchitectPlayApp.initial_config();
+        let initial = ArchitectPlayApp::initial_config();
         let emit = testkit::drive_with_config(&ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "stakeholders".into() }), &program, &initial);
         assert_eq!(testkit::config_after(&emit, &initial).active_register, "stakeholders");
         assert!(!register_entities(&program, "stakeholders").is_empty());
@@ -566,7 +569,7 @@ mod tests {
     #[test]
     fn formatted_report_renders_section_headings() {
         let program = sample_plugin();
-        let initial = ArchitectPlayApp.initial_config();
+        let initial = ArchitectPlayApp::initial_config();
         let emit = testkit::drive_with_config(&ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
         let config = testkit::config_after(&emit, &initial);
         let json = serde_json::to_string(&testkit::render_direct(report_window::ARCHITECT_BODY_REPORT, &program, &config)).expect("json");
@@ -590,19 +593,19 @@ mod tests {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("export csv");
         let emit = testkit::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
-        assert!(matches!(emit.document_mutations.first(), Some(ProgramMutation::SetProgram { .. })));
+        assert!(matches!(emit.document_mutations.first(), Some(ProgramMutation::SetSnapshot { .. })));
     }
 
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        let before = app.projection().expect("projection").elements.len();
+        let before = app.snapshot().expect("projection").elements.len();
         testkit::dispatch(&mut app, ArchitectCommand::AddElement(add_element::AddElement { name: "Ward".into() }));
-        assert_eq!(app.projection().expect("projection").elements.len(), before + 1);
+        assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").elements.len(), before);
+        assert_eq!(app.snapshot().expect("projection").elements.len(), before);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").elements.len(), before + 1);
+        assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
     }
 
     /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document

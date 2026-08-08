@@ -1,6 +1,6 @@
 //! Draw mutation — `SetFill` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_fill(layer_id: String, fill: Option<crate::artifacts::draw::FillStyle
     DrawMutation::SetFill { layer_id, fill }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, fill: &Option<crate::artifacts::draw::FillStyle>) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, fill: &Option<crate::artifacts::draw::FillStyle>) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetFill { layer_id: layer_id.into(), fill: fill.clone() });
 }
 //#endregion 🔖️Mutation

@@ -3,7 +3,7 @@
 use crate::apps::architect::chrome::{tree_item, tree_node, tree_section};
 use crate::apps::architect::config::ArchitectConfig;
 use crate::artifacts::program::engine::trace::{audit_trail, trace_chain, trace_impact, TraceChain};
-use crate::artifacts::program::{EntityId, Program};
+use crate::artifacts::program::{EntityId, ProgramSnapshot};
 use semio_framework_plugin::{ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, UiTreeItemNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(program: &Program, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     if cfg.selected_ids.is_empty() {
         return ui_text(Label::data("Select an entity to inspect trace chains and impact."));
     }

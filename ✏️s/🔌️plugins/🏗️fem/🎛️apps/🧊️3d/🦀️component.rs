@@ -13,7 +13,7 @@ use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::apps::fem3d::modes::edit;
 use crate::apps::fem3d::modes::edit::windows::{model as window_model, results as window_results};
 use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dDocument;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     create_default_layout, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UiNode,
@@ -40,7 +40,7 @@ semio_framework_plugin::app_commands! {
     /// `result-display`. **Row order is the binary variant ordinal: appending is safe, reordering is a
     /// wire-format break.** Unlike fem2d, there is NO `setLocale`/`SetLocale` row — fem3d's pre-migration
     /// `Fem3dCommand` enum never had one (a pre-existing, intentional asymmetry between the two apps).
-    pub enum Fem3dCommand for Fem3dDocument, Fem3dMutation, Fem3dConfig, Fem3dConfigMutation {
+    pub enum Fem3dCommand for Fem3dSnapshot, Fem3dMutation, Fem3dConfig, Fem3dConfigMutation {
         "addNode" as "add-node" => add_node::AddNode,
         "addBar" as "add-bar" => add_bar::AddBar,
         "addFrame" as "add-frame" => add_frame::AddFrame,
@@ -128,7 +128,7 @@ fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 pub struct Fem3dPlayApp;
 
 impl DocumentApp for Fem3dPlayApp {
-    type Projection = Fem3dDocument;
+    type Snapshot = Fem3dSnapshot;
     type Mutation = Fem3dMutation;
     type Config = Fem3dConfig;
     type ConfigMutation = Fem3dConfigMutation;
@@ -141,8 +141,8 @@ impl DocumentApp for Fem3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
 
-    fn initial_projection() -> Fem3dDocument {
-        crate::artifacts::fem3d::engine::empty_fem3d_projection()
+    fn initial_snapshot() -> Fem3dSnapshot {
+        crate::artifacts::fem3d::engine::empty_fem3d_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -154,18 +154,18 @@ impl DocumentApp for Fem3dPlayApp {
     /// one). `"results:out"` runs every load case/combination's analysis fresh and returns them as plain
     /// JSON text in a `Structured` payload. A document with no load cases, or a solve failure, is
     /// reported as `MediaError::Payload` rather than an empty/panicking export.
-    fn export_media(port: &str, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Fem3dSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
                 let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
-                let bytes = <Fem3dDocument as store::DocumentPack>::encode_pack(doc.projection);
+                let bytes = <Fem3dSnapshot as store::DocumentPack>::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "results:out" => {
-                if doc.projection.load_cases.is_empty() {
+                if doc.snapshot.load_cases.is_empty() {
                     return Err(MediaError::Payload("results:out".into(), "no load cases defined".into()));
                 }
-                let results = crate::artifacts::fem3d::engine::fem3d_solve_all(doc.projection).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
+                let results = crate::artifacts::fem3d::engine::fem3d_solve_all(doc.snapshot).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
                 let json = fem3d_results_map_json(&results).to_string();
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.fem3d".into(), json } })
             }
@@ -173,8 +173,8 @@ impl DocumentApp for Fem3dPlayApp {
         }
     }
 
-    fn whole_document_operation(projection: Fem3dDocument) -> Option<Fem3dMutation> {
-        Some(Fem3dMutation::SetDocument { document: projection })
+    fn whole_document_operation(snapshot: Fem3dSnapshot) -> Option<Fem3dMutation> {
+        Some(Fem3dMutation::SetSnapshot { snapshot: snapshot })
     }
 
     /// 🎞️ `"document:in"` reproduces the trait's default whole-document-pack importer (overriding
@@ -183,15 +183,15 @@ impl DocumentApp for Fem3dPlayApp {
     /// usize}` extruded-footprint contract into a new `FemSolid`, defaulted to the document's first
     /// existing material if any, else an `"unassigned"` placeholder id — the solid simply won't solve
     /// until a real material is assigned.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem3dSnapshot>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <Fem3dDocument as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(projection) {
+                let snapshot = <Fem3dSnapshot as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -209,9 +209,9 @@ impl DocumentApp for Fem3dPlayApp {
                 let base_z = value.get("baseZ").and_then(Value::as_f64).unwrap_or(0.0);
                 let height = value.get("height").and_then(Value::as_f64).unwrap_or(1.0);
                 let layers = value.get("layers").and_then(Value::as_u64).map(|v| v as usize).unwrap_or(1);
-                let material_id = doc.projection.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
-                let id = crate::app_surface::next_id(doc.projection.solids.iter().map(|s| s.id.clone()), "sol");
-                let index = doc.projection.solids.len();
+                let material_id = doc.snapshot.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
+                let id = crate::app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
+                let index = doc.snapshot.solids.len();
                 let solid = crate::artifacts::fem3d::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
                 Ok(Emit::mutations(vec![Fem3dMutation::SetSolid { index, solid }]))
             }
@@ -230,15 +230,15 @@ impl DocumentApp for Fem3dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>) -> UiNode {
-        let camera = &cfg.projection.camera;
+    fn render(body_key: &str, doc: &DocumentView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>) -> UiNode {
+        let camera = &cfg.snapshot.camera;
         match body_key {
-            window_model::FEM3D_BODY_MODEL => window_model::render(doc.projection, camera),
-            window_results::FEM3D_BODY_RESULTS => window_results::render(doc.projection, cfg.projection),
+            window_model::FEM3D_BODY_MODEL => window_model::render(doc.snapshot, camera),
+            window_results::FEM3D_BODY_RESULTS => window_results::render(doc.snapshot, cfg.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -344,7 +344,7 @@ pub fn create_fem3d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
+    use semio_framework_plugin::{DocumentApp, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type Fem3dApp = VcsDocumentApp<Fem3dPlayApp>;
 
@@ -418,7 +418,7 @@ mod tests {
     #[test]
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-            store::test_support::assert_op_text_binary_equivalence(&command);
+            semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
@@ -524,8 +524,8 @@ mod tests {
     #[test]
     fn undo_restores_document_after_add_node() {
         let mut app = fem3d_app();
-        let before = app.projection().expect("projection").nodes.len();
-        assert_undo_redo_round_trip(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.projection().expect("projection").nodes.len(), before, before + 1);
+        let before = app.snapshot().expect("snapshot").nodes.len();
+        assert_undo_redo_round_trip(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1);
     }
 
     #[test]
@@ -544,10 +544,10 @@ mod tests {
     fn export_media_results_out_returns_solved_json_for_every_case_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }));
-        let projection = app.projection().expect("projection");
+        let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &projection, history: &history };
-        let media = Fem3dPlayApp.export_media("results:out", &doc).expect("results:out exports");
+        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let media = Fem3dPlayApp::export_media("results:out", &doc).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a Structured payload") };
@@ -561,10 +561,10 @@ mod tests {
     /// empty payload.
     #[test]
     fn export_media_results_out_errors_without_load_cases_3d() {
-        let projection = crate::artifacts::fem3d::engine::empty_fem3d_projection();
+        let snapshot = crate::artifacts::fem3d::engine::empty_fem3d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &projection, history: &history };
-        let err = Fem3dPlayApp.export_media("results:out", &doc).expect_err("no load cases should error");
+        let doc = DocumentView { snapshot: &snapshot, history: &history };
+        let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
         assert!(matches!(err, MediaError::Payload(..)));
     }
 
@@ -573,9 +573,9 @@ mod tests {
     fn import_media_geometry_in_adds_a_new_solid_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 }));
-        let projection = app.projection().expect("projection");
+        let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = DocumentView { projection: &projection, history: &history };
+        let doc = DocumentView { snapshot: &snapshot, history: &history };
         let json = serde_json::json!({
             "outline": [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
             "holes": [],
@@ -585,7 +585,7 @@ mod tests {
         })
         .to_string();
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any }, payload: MediaPayload::Structured { schema: "geometry".into(), json } };
-        let emit = Fem3dPlayApp.import_media("geometry:in", &media, &doc).expect("geometry:in imports");
+        let emit = Fem3dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.document_mutations.len(), 1);
         match &emit.document_mutations[0] {
             Fem3dMutation::SetSolid { solid, .. } => {

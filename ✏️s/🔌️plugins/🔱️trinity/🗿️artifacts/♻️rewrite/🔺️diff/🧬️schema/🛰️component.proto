@@ -1,0 +1,58 @@
+syntax = "proto3";
+package semio.s.trinity.rewrite.diff;
+
+// 🧬️ Rewrite diff schema — sparse field delta.
+
+message RewriteDiff {
+  // @state persistent
+  optional RewriteArtifact artifact = 1;
+  // @state persistent
+  optional string before_fixture_json = 2;
+  // @state persistent
+  optional string lhs_json = 3;
+  // @state persistent
+  optional string rhs_json = 4;
+  // @state persistent
+  optional map<string, string> parameter_bindings = 5;
+  // @state persistent
+  optional map<string, LayoutPoint> rule_layout = 6;
+  // @state shared-ui
+  optional RewriteStringList selected_node_ids = 7;
+  // @state shared-ui
+  optional string active_hover_var = 8;
+  // @state shared-ui
+  optional string active_select_var = 9;
+  // @state shared-ui
+  optional map<string, string> lod_mode_by_window = 10;
+  // @state local-ui
+  optional Camera before_pane_camera = 11;
+  // @state local-ui
+  optional int64 reorganize_epoch = 12;
+  // @state local-ui
+  optional int64 hover_epoch = 13;
+  // @state local-ui
+  optional int64 select_epoch = 14;
+  // @state local-ui
+  optional string locale = 15;
+}
+
+message RewriteStringList {
+  repeated string values = 1;
+}
+
+message RewriteArtifact {
+  string before_fixture_json = 1;
+  string lhs_json = 2;
+  string rhs_json = 3;
+}
+
+message LayoutPoint {
+  double x = 1;
+  double y = 2;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

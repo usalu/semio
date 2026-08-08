@@ -13,7 +13,7 @@
 //! that consumer's file; two or more consumers put it here. Helpers taking an app-only view-state
 //! type (`Puzzle3dConfig`, `Puzzle3dScene`) never come here — artifacts must not depend on apps.
 
-use crate::artifacts::puzzle3d::Puzzle3dProjection;
+use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Reexports
@@ -320,8 +320,8 @@ pub(crate) fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> Strin
 //#endregion 🔖️Model
 
 //#region 🔖️DocumentHelpers
-pub fn empty_puzzle3d_projection() -> Puzzle3dProjection {
-    Puzzle3dProjection::default()
+pub fn empty_puzzle3d_projection() -> Puzzle3dSnapshot {
+    Puzzle3dSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -495,8 +495,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("puzzle.puzzle3d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -525,8 +525,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("3d.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -543,33 +543,46 @@ pub fn register_pilot_languages() {
 
 
 //#region 🔖️ArtifactEngine
+/// ⚙️ UI-independent puzzle3d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Puzzle3dEngine {
-    projection: crate::artifacts::puzzle3d::Puzzle3dProjection,
+    artifact: crate::artifacts::puzzle3d::schema::Puzzle3dArtifact,
+    snapshot: crate::artifacts::puzzle3d::Puzzle3dSnapshot,
 }
 
 impl Puzzle3dEngine {
-    pub fn new(projection: crate::artifacts::puzzle3d::Puzzle3dProjection) -> Self {
-        Self { projection }
+    pub fn new(snapshot: crate::artifacts::puzzle3d::Puzzle3dSnapshot) -> Self {
+        let artifact = crate::artifacts::puzzle3d::schema::Puzzle3dArtifact::from_snapshot(snapshot.clone());
+        Self { artifact, snapshot }
+    }
+
+    pub fn into_snapshot(self) -> crate::artifacts::puzzle3d::Puzzle3dSnapshot {
+        self.snapshot
     }
 }
 
 impl protocol::ArtifactEngine for Puzzle3dEngine {
-    type Projection = crate::artifacts::puzzle3d::Puzzle3dProjection;
+    type Artifact = crate::artifacts::puzzle3d::schema::Puzzle3dArtifact;
+    type Snapshot = crate::artifacts::puzzle3d::Puzzle3dSnapshot;
     type Mutation = crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
     type Diff = crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
 
-    fn projection(&self) -> &Self::Projection {
-        &self.projection
+    fn artifact(&self) -> &Self::Artifact {
+        &self.artifact
+    }
+
+    fn snapshot(&self) -> &Self::Snapshot {
+        &self.snapshot
     }
 
     fn apply(&mut self, mutation: &Self::Mutation) -> Result<Self::Diff, protocol::EngineFault> {
-        let diff = <Self::Mutation as protocol::Mutation<Self::Projection>>::diff(mutation, &self.projection);
-        crate::artifacts::puzzle3d::mutations::apply_puzzle3d_mutation(&mut self.projection, mutation);
+        let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(mutation, &self.snapshot);
+        crate::artifacts::puzzle3d::mutations::apply_puzzle3d_mutation(&mut self.snapshot, mutation);
+        self.artifact.set_snapshot(self.snapshot.clone());
         Ok(diff)
     }
 
     fn inverse(&self, mutation: &Self::Mutation) -> Vec<Self::Mutation> {
-        <Self::Mutation as protocol::Mutation<Self::Projection>>::inverse(mutation, &self.projection)
+        <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, &self.snapshot)
     }
 }
 //#endregion 🔖️ArtifactEngine

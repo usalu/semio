@@ -1,6 +1,6 @@
 //! Draw mutation — `SetLayerLocked` payload + builder + apply.
 use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
-use crate::artifacts::draw::DrawDocument;
+use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub fn set_layer_locked(layer_id: String, locked: bool) -> DrawMutation {
     DrawMutation::SetLayerLocked { layer_id, locked }
 }
 
-pub fn apply(doc: &mut DrawDocument, layer_id: &str, locked: bool) {
+pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, locked: bool) {
     *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetLayerLocked { layer_id: layer_id.into(), locked });
 }
 //#endregion 🔖️Mutation

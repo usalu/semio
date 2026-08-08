@@ -6866,9 +6866,20 @@ version = "0.1.0"
 dependencies = [
  "jsonschema",
  "schemars 0.8.22",
+ "semio-framework-os-kernel",
+ "semio-framework-schema-derive",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-framework-schema-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -7053,6 +7064,7 @@ dependencies = [
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7078,6 +7090,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-framework-ui",
  "semio-s-3d",
  "serde",
@@ -7168,6 +7181,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-2d",
  "semio-s-plugin-draw-fsm",
  "serde",
@@ -7213,6 +7227,7 @@ dependencies = [
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "serde",
  "serde_json",
  "spade",
@@ -7489,6 +7504,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-3d",
  "semio-s-plugin-cad",
  "serde",
@@ -7569,6 +7585,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-framework-ui",
  "semio-framework-ui-styling",
  "semio-s-3d",
@@ -7657,6 +7674,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-s-mindmap",
  "serde",
  "serde_json",
